@@ -2089,3 +2089,626 @@
     </tbody>
 </table>
 <br></br>
+<h3>流水线（AppPipeline）</h3>
+<table>
+    <thead>
+        <tr>
+            <th>名称</th>
+            <th>显示名</th>
+            <th>类型</th>
+            <th>长度</th>
+            <th>精度</th>
+            <th>主键</th>
+            <th>允许空</th>
+            <th>备注</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Id</td>
+            <td>编号</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td title="自增">AI</td>
+            <td>N</td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>Name</td>
+            <td>名称</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td title="唯一索引">UQ</td>
+            <td>N</td>
+            <td>流水线名称，全局唯一</td>
+        </tr>
+
+        <tr>
+            <td>AppId</td>
+            <td>应用部署集</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>对应AppDeploy</td>
+        </tr>
+
+        <tr>
+            <td>ProjectId</td>
+            <td>项目</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>资源归属的团队项目</td>
+        </tr>
+
+        <tr>
+            <td>Branch</td>
+            <td>分支</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>触发的分支，支持精确匹配与前缀通配符，例如 release/*</td>
+        </tr>
+
+        <tr>
+            <td>Token</td>
+            <td>Token</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>webhook 鉴权 token，由系统自动生成</td>
+        </tr>
+
+        <tr>
+            <td>Secret</td>
+            <td>Secret</td>
+            <td>String</td>
+            <td>200</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>HMAC 签名密钥，可选，用于校验 webhook 来源</td>
+        </tr>
+
+        <tr>
+            <td>BuildNodeId</td>
+            <td>编译节点</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>对应Node.Id</td>
+        </tr>
+
+        <tr>
+            <td>DeployNodeIds</td>
+            <td>部署节点</td>
+            <td>String</td>
+            <td>500</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>部署节点 ID 列表，对应AppDeployNode.Id，多个分号分隔</td>
+        </tr>
+
+        <tr>
+            <td>AutoDeploy</td>
+            <td>自动部署</td>
+            <td>Boolean</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>编译成功后是否自动 install 到部署节点</td>
+        </tr>
+
+        <tr>
+            <td>Enable</td>
+            <td>启用</td>
+            <td>Boolean</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>TraceId</td>
+            <td>追踪</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</td>
+        </tr>
+
+        <tr>
+            <td>CreateUserId</td>
+            <td>创建者</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>CreateTime</td>
+            <td>创建时间</td>
+            <td>DateTime</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>CreateIP</td>
+            <td>创建地址</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>UpdateUserId</td>
+            <td>更新者</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>UpdateTime</td>
+            <td>更新时间</td>
+            <td>DateTime</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>UpdateIP</td>
+            <td>更新地址</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>Remark</td>
+            <td>备注</td>
+            <td>String</td>
+            <td>500</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+    </tbody>
+</table>
+<br></br>
+<h3>流水线运行（AppPipelineRun）</h3>
+<table>
+    <thead>
+        <tr>
+            <th>名称</th>
+            <th>显示名</th>
+            <th>类型</th>
+            <th>长度</th>
+            <th>精度</th>
+            <th>主键</th>
+            <th>允许空</th>
+            <th>备注</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Id</td>
+            <td>编号</td>
+            <td>Int64</td>
+            <td></td>
+            <td></td>
+            <td title="主键">PK</td>
+            <td>N</td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>PipelineId</td>
+            <td>流水线</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>对应AppPipeline.Id</td>
+        </tr>
+
+        <tr>
+            <td>Status</td>
+            <td>状态</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>Pending/Building/UploadSucceeded/Deploying/Success/Failed/Cancelled</td>
+        </tr>
+
+        <tr>
+            <td>TriggerSource</td>
+            <td>触发来源</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>webhook/manual/api</td>
+        </tr>
+
+        <tr>
+            <td>CommitId</td>
+            <td>提交SHA</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>触发本次运行的代码提交哈希</td>
+        </tr>
+
+        <tr>
+            <td>CommitMessage</td>
+            <td>提交信息</td>
+            <td>String</td>
+            <td>500</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>CommitAuthor</td>
+            <td>提交人</td>
+            <td>String</td>
+            <td>100</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>CommitTime</td>
+            <td>提交时间</td>
+            <td>DateTime</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>Branch</td>
+            <td>分支</td>
+            <td>String</td>
+            <td>200</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>BuildNodeId</td>
+            <td>编译节点</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>AppVersionId</td>
+            <td>产物版本</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>编译产物对应的部署版本AppDeployVersion.Id</td>
+        </tr>
+
+        <tr>
+            <td>BuildStartedTime</td>
+            <td>编译开始</td>
+            <td>DateTime</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>BuildFinishedTime</td>
+            <td>编译完成</td>
+            <td>DateTime</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>DeployStartedTime</td>
+            <td>部署开始</td>
+            <td>DateTime</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>DeployFinishedTime</td>
+            <td>部署完成</td>
+            <td>DateTime</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>TraceId</td>
+            <td>追踪</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</td>
+        </tr>
+
+        <tr>
+            <td>CreateUserId</td>
+            <td>创建者</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>CreateTime</td>
+            <td>创建时间</td>
+            <td>DateTime</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>CreateIP</td>
+            <td>创建地址</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>UpdateUserId</td>
+            <td>更新者</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>UpdateTime</td>
+            <td>更新时间</td>
+            <td>DateTime</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>UpdateIP</td>
+            <td>更新地址</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>Remark</td>
+            <td>备注</td>
+            <td>String</td>
+            <td>500</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+    </tbody>
+</table>
+<br></br>
+<h3>流水线步骤（AppPipelineStep）</h3>
+<table>
+    <thead>
+        <tr>
+            <th>名称</th>
+            <th>显示名</th>
+            <th>类型</th>
+            <th>长度</th>
+            <th>精度</th>
+            <th>主键</th>
+            <th>允许空</th>
+            <th>备注</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Id</td>
+            <td>编号</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td title="自增">AI</td>
+            <td>N</td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>RunId</td>
+            <td>运行</td>
+            <td>Int64</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>对应AppPipelineRun.Id</td>
+        </tr>
+
+        <tr>
+            <td>StepType</td>
+            <td>步骤类型</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>Build/Upload/Deploy</td>
+        </tr>
+
+        <tr>
+            <td>StepIndex</td>
+            <td>步骤序号</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>同一运行内从 0 开始递增</td>
+        </tr>
+
+        <tr>
+            <td>NodeId</td>
+            <td>节点</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>执行该步骤的节点</td>
+        </tr>
+
+        <tr>
+            <td>Status</td>
+            <td>状态</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>Pending/Running/Success/Failed/Skipped</td>
+        </tr>
+
+        <tr>
+            <td>Message</td>
+            <td>消息</td>
+            <td>String</td>
+            <td>2000</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>步骤执行输出与失败原因</td>
+        </tr>
+
+        <tr>
+            <td>StartedTime</td>
+            <td>开始</td>
+            <td>DateTime</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>FinishedTime</td>
+            <td>完成</td>
+            <td>DateTime</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>CreateTime</td>
+            <td>创建时间</td>
+            <td>DateTime</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+    </tbody>
+</table>
+<br></br>

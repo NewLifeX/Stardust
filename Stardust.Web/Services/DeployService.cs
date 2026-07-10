@@ -1,4 +1,4 @@
-﻿using System.IO.Compression;
+using System.IO.Compression;
 using System.Text.RegularExpressions;
 using NewLife;
 using NewLife.Log;

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model202509.xsd" Document="https://newlifex.com/xcode/model" ModelVersion="2.0.2026.130" xmlns="https://newlifex.com/Model202509.xsd">
   <Option>
     <!--类名模板。其中{name}替换为Table.Name，如{name}Model/I{name}Dto等-->
@@ -272,6 +272,81 @@
       <Indexes>
         <Index Columns="Domain,NotAfter" />
         <Index Columns="NotAfter" />
+      </Indexes>
+    </Table>
+    <Table Name="AppPipeline" Description="流水线。流水线配置，关联一个应用部署集与一个编译节点，监听指定分支的 webhook 触发，自动完成代码拉取、编译、上传、部署的全流程">
+      <Columns>
+        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称。流水线名称，全局唯一" />
+        <Column Name="DeployId" ColumnName="AppId" DataType="Int32" Map="AppDeploy@Id@$" Description="应用部署集。对应AppDeploy" />
+        <Column Name="ProjectId" DataType="Int32" Map="Stardust.Data.Platform.GalaxyProject@Id@Name" Description="项目。资源归属的团队项目" />
+        <Column Name="Branch" DataType="String" Description="分支。触发的分支，支持精确匹配与前缀通配符，例如 release/*" />
+        <Column Name="Token" DataType="String" Description="Token。webhook 鉴权 token，由系统自动生成" />
+        <Column Name="Secret" DataType="String" Length="200" Description="Secret。HMAC 签名密钥，可选，用于校验 webhook 来源" />
+        <Column Name="BuildNodeId" DataType="Int32" Description="编译节点。对应Node.Id" />
+        <Column Name="DeployNodeIds" DataType="String" ItemType="multipleSelect" Length="500" Description="部署节点。部署节点 ID 列表，对应AppDeployNode.Id，多个分号分隔" />
+        <Column Name="AutoDeploy" DataType="Boolean" Description="自动部署。编译成功后是否自动 install 到部署节点" />
+        <Column Name="Enable" DataType="Boolean" Description="启用" />
+        <Column Name="TraceId" DataType="String" Description="追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" Category="扩展" />
+        <Column Name="CreateUserId" DataType="Int32" Description="创建者" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+        <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+        <Column Name="UpdateUserId" DataType="Int32" Description="更新者" Category="扩展" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+        <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
+        <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="Name" Unique="True" />
+        <Index Columns="DeployId" />
+      </Indexes>
+    </Table>
+    <Table Name="AppPipelineRun" Description="流水线运行。流水线的一次运行实例，记录触发来源、提交信息、编译与部署时间线及状态流转">
+      <Columns>
+        <Column Name="Id" DataType="Int64" PrimaryKey="True" DataScale="time" Description="编号" />
+        <Column Name="PipelineId" DataType="Int32" Description="流水线。对应AppPipeline.Id" />
+        <Column Name="Status" DataType="Int32" Description="状态。Pending/Building/UploadSucceeded/Deploying/Success/Failed/Cancelled" Type="Stardust.Models.PipelineStatus" />
+        <Column Name="TriggerSource" DataType="String" Description="触发来源。webhook/manual/api" />
+        <Column Name="CommitId" DataType="String" Description="提交SHA。触发本次运行的代码提交哈希" />
+        <Column Name="CommitMessage" DataType="String" Length="500" Description="提交信息" />
+        <Column Name="CommitAuthor" DataType="String" Length="100" Description="提交人" />
+        <Column Name="CommitTime" DataType="DateTime" Description="提交时间" />
+        <Column Name="Branch" DataType="String" Length="200" Description="分支" />
+        <Column Name="BuildNodeId" DataType="Int32" Description="编译节点" />
+        <Column Name="AppVersionId" DataType="Int32" Description="产物版本。编译产物对应的部署版本AppDeployVersion.Id" />
+        <Column Name="BuildStartedTime" DataType="DateTime" Description="编译开始" />
+        <Column Name="BuildFinishedTime" DataType="DateTime" Description="编译完成" />
+        <Column Name="DeployStartedTime" DataType="DateTime" Description="部署开始" />
+        <Column Name="DeployFinishedTime" DataType="DateTime" Description="部署完成" />
+        <Column Name="TraceId" DataType="String" Description="追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" Category="扩展" />
+        <Column Name="CreateUserId" DataType="Int32" Description="创建者" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+        <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+        <Column Name="UpdateUserId" DataType="Int32" Description="更新者" Category="扩展" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+        <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
+        <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="PipelineId,Id" />
+        <Index Columns="Status,Id" />
+      </Indexes>
+    </Table>
+    <Table Name="AppPipelineStep" Description="流水线步骤。一次流水线运行中的单个步骤（Build/Upload/Deploy），记录每一步的执行节点、状态与消息">
+      <Columns>
+        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="RunId" DataType="Int64" Description="运行。对应AppPipelineRun.Id" />
+        <Column Name="StepType" DataType="String" Description="步骤类型。Build/Upload/Deploy" />
+        <Column Name="StepIndex" DataType="Int32" Description="步骤序号。同一运行内从 0 开始递增" />
+        <Column Name="NodeId" DataType="Int32" Description="节点。执行该步骤的节点" />
+        <Column Name="Status" DataType="String" Description="状态。Pending/Running/Success/Failed/Skipped" />
+        <Column Name="Message" DataType="String" Length="2000" Description="消息。步骤执行输出与失败原因" />
+        <Column Name="StartedTime" DataType="DateTime" Description="开始" />
+        <Column Name="FinishedTime" DataType="DateTime" Description="完成" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      </Columns>
+      <Indexes>
+        <Index Columns="RunId,StepIndex" />
       </Indexes>
     </Table>
   </Tables>

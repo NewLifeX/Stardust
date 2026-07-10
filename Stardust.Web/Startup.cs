@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.FileProviders;
@@ -60,6 +60,7 @@ public class Startup
         services.AddSingleton<ConfigService>();
         services.AddSingleton<AppOnlineService>();
         services.AddSingleton<DeployService>();
+        services.AddSingleton<PipelineService>();
         services.AddSingleton<HotAppService>();
         services.AddSingleton<NewLife.Cube.Services.TokenService>();
 
