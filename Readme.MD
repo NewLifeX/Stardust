@@ -31,7 +31,7 @@ Stardust  星尘，轻量级分布式服务框架！
 ### 🏗️ 主要组件架构
 | 文档 | 说明 |
 |------|------|
-| [StarServer 架构](Doc/M0-StarServer架构.md) | 服务端核心（应用/配置/注册/日志/平台） |
+| [StarServer 架构](Doc/StarServer架构.md) | 服务端核心（应用/配置/注册/日志/平台） |
 | [StarAgent 架构](Doc/M1-StarAgent架构.md) | 节点代理守护/监控/发布 |
 | [SDK 架构](Doc/M11-SDK架构.md) | 客户端 SDK（配置/追踪/注册发现） |
 | [M5-监控系统架构](Doc/M5-监控系统架构.md) | APM 监控子系统详细架构 |
