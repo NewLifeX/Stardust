@@ -12,7 +12,9 @@ using Stardust.Data;
 using Stardust.Data.Nodes;
 using Stardust.Extensions.Caches;
 using Stardust.Monitors;
+using Stardust.Dns;
 using Stardust.Registry;
+using Stardust.Services;
 using Stardust.Server.Services;
 using XCode;
 using XCode.DataAccessLayer;
@@ -86,6 +88,13 @@ public class Startup
         services.AddSingleton<MonitorService>();
         services.AddSingleton<AgentDeployService>();
         services.AddSingleton<GatewayService>();
+
+        // DDNS服务
+        services.AddSingleton<IDnsProvider, AliyunDnsProvider>();
+        services.AddSingleton<IDnsProvider, TencentCloudDnsProvider>();
+        services.AddSingleton<IDnsProvider, UCloudDnsProvider>();
+        services.AddSingleton<DnsProviderFactory>();
+        services.AddSingleton<DnsService>();
 
         services.AddSingleton<NodeSessionManager>();
         services.AddSingleton<AppSessionManager>();

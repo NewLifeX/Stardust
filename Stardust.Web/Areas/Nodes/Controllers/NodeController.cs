@@ -7,6 +7,9 @@ using NewLife.Data;
 using NewLife.Web;
 using Stardust.Data.Nodes;
 using Stardust.Models;
+using Stardust.Dns;
+using Stardust.Server.Services;
+using Stardust.Services;
 using XCode;
 using XCode.Membership;
 using XCode.Model;
@@ -19,6 +22,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers;
 public class NodeController : NodesEntityController<Node>
 {
     private readonly StarFactory _starFactory;
+    private readonly DnsService _dnsService;
 
     static NodeController()
     {
@@ -73,13 +77,19 @@ public class NodeController : NodesEntityController<Node>
             df.Url = "/Admin/Log?category=节点&linkId={ID}";
             df.Target = "_frame";
         }
+
+        // 表单字段：Domains添加到参数设置组
+        AddFormFields.AddField("Domains");
+        EditFormFields.AddField("Domains");
+        SearchFields.AddField("Domains");
     }
 
-    public NodeController(StarFactory starFactory)
+    public NodeController(StarFactory starFactory, DnsService dnsService)
     {
         LogOnChange = true;
 
         _starFactory = starFactory;
+        _dnsService = dnsService;
     }
 
     public override void OnActionExecuting(ActionExecutingContext filterContext)
@@ -92,6 +102,24 @@ public class NodeController : NodesEntityController<Node>
             PageSetting.NavView = "_Node_Nav";
             PageSetting.EnableNavbar = false;
         }
+    }
+
+    /// <summary>更新时检测域名变更并记录历史</summary>
+    /// <param name="entity"></param>
+    /// <returns></returns>
+    protected override Int32 OnUpdate(Node entity)
+    {
+        // 检测域名变更
+        if ((entity as IEntity).Dirtys["Domains"])
+        {
+            var old = Node.FindByID(entity.ID);
+            if (old != null && old.Domains != entity.Domains)
+            {
+                entity.WriteHistory("修改域名", true, $"域名变更：{old.Domains} -> {entity.Domains}", ManageProvider.UserHost);
+            }
+        }
+
+        return base.OnUpdate(entity);
     }
 
     protected override IEnumerable<Node> Search(Pager p)
@@ -241,5 +269,19 @@ public class NodeController : NodesEntityController<Node>
         list.Update(true);
 
         return JsonRefresh("操作成功！");
+    }
+
+    /// <summary>刷新DNS。触发指定节点的动态域名解析更新</summary>
+    /// <param name="id">节点ID</param>
+    /// <returns></returns>
+    [EntityAuthorize(PermissionFlags.Update)]
+    public async Task<ActionResult> RefreshDns(Int32 id)
+    {
+        var node = FindByID(id);
+        if (node == null) throw new InvalidOperationException("节点不存在");
+
+        await _dnsService.RefreshNodeDomainsAsync(node);
+
+        return JsonRefresh("DNS刷新操作已触发！");
     }
 }

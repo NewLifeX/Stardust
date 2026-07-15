@@ -71,9 +71,9 @@ public partial class DotNetPackage
     public String FileName { get => _FileName; set { if (OnPropertyChanging("FileName", value)) { _FileName = value; OnPropertyChanged("FileName"); } } }
 
     private String _Source;
-    /// <summary>下载源。下载URL或本地路径</summary>
+    /// <summary>下载源。Cube附件（手动上传）或外部URL（自动同步）</summary>
     [DisplayName("下载源")]
-    [Description("下载源。下载URL或本地路径")]
+    [Description("下载源。Cube附件（手动上传）或外部URL（自动同步）")]
     [DataObjectField(false, false, true, 200)]
     [BindColumn("Source", "下载源。Cube附件（手动上传）或外部URL（自动同步）", "", ItemType = "file-zip")]
     public String Source { get => _Source; set { if (OnPropertyChanging("Source", value)) { _Source = value; OnPropertyChanged("Source"); } } }
@@ -315,7 +315,7 @@ public partial class DotNetPackage
         /// <summary>文件名。官方文件名，如 aspnetcore-runtime-10.0.9-linux-x64.tar.gz</summary>
         public static readonly Field FileName = FindByName("FileName");
 
-        /// <summary>下载源。下载URL或本地路径</summary>
+        /// <summary>下载源。Cube附件（手动上传）或外部URL（自动同步）</summary>
         public static readonly Field Source = FindByName("Source");
 
         /// <summary>文件大小</summary>
@@ -378,7 +378,7 @@ public partial class DotNetPackage
         /// <summary>文件名。官方文件名，如 aspnetcore-runtime-10.0.9-linux-x64.tar.gz</summary>
         public const String FileName = "FileName";
 
-        /// <summary>下载源。下载URL或本地路径</summary>
+        /// <summary>下载源。Cube附件（手动上传）或外部URL（自动同步）</summary>
         public const String Source = "Source";
 
         /// <summary>文件大小</summary>

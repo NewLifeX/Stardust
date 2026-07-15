@@ -729,6 +729,20 @@ public partial class Node : Entity<Node>, IDeviceModel2, ILogProvider
         history.SaveAsync();
     }
 
+    /// <summary>更新域名列表。检测变化并记录历史</summary>
+    /// <param name="newDomains">新域名列表，多个逗号分隔</param>
+    /// <param name="ip">操作IP</param>
+    public void UpdateDomains(String newDomains, String ip)
+    {
+        var oldDomains = Domains;
+        if (oldDomains == newDomains) return;
+
+        Domains = newDomains;
+        Save();
+
+        WriteHistory("修改域名", true, $"域名变更：{oldDomains} -> {newDomains}", ip);
+    }
+
     /// <summary>创建在线对象</summary>
     /// <param name="sessionId"></param>
     /// <returns></returns>

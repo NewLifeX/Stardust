@@ -25,8 +25,9 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
     private readonly NodeSessionManager _sessionManager;
     private readonly ICacheProvider _cacheProvider;
     private readonly ITracer _tracer;
+    private readonly DnsService _dnsService;
 
-    public NodeService(ITokenService tokenService, IPasswordProvider passwordProvider, StarServerSetting setting, NodeSessionManager sessionManager, ICacheProvider cacheProvider, ITracer tracer, IServiceProvider serviceProvider) : base(sessionManager, passwordProvider, cacheProvider, serviceProvider)
+    public NodeService(ITokenService tokenService, IPasswordProvider passwordProvider, StarServerSetting setting, NodeSessionManager sessionManager, ICacheProvider cacheProvider, ITracer tracer, DnsService dnsService, IServiceProvider serviceProvider) : base(sessionManager, passwordProvider, cacheProvider, serviceProvider)
     {
         _tokenService = tokenService;
         _passwordProvider = passwordProvider;
@@ -34,6 +35,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         _sessionManager = sessionManager;
         _cacheProvider = cacheProvider;
         _tracer = tracer;
+        _dnsService = dnsService;
 
         Name = "Node";
     }
@@ -141,6 +143,10 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
 
         node.UpdateIP = ip;
         node.FixNameByRule();
+
+        // 记录旧IP，用于DDNS检测（Login会更新LastLoginIP）
+        var oldIp = node.LastLoginIP;
+
         node.Login(inf.Node, ip);
 
         var online = context.Online = GetOnline(context) ?? CreateOnline(context);
@@ -158,6 +164,9 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
 
         // 检查节点上线恢复
         NodeOnlineService.CheckOnline(node);
+
+        // DDNS检测。节点上线时检测IP变化并更新DNS记录
+        _ = _dnsService.CheckNodeIPChange(node, ip, oldIp);
     }
 
     /// <summary>注销</summary>
@@ -549,6 +558,9 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
 
         //// 下发部署的应用服务
         //rs.Services = GetServices(node.ID);
+
+        // DDNS检测。心跳时检测IP变化并更新DNS记录
+        _ = _dnsService.CheckNodeIPChange(node, context.UserHost);
 
         return online;
     }

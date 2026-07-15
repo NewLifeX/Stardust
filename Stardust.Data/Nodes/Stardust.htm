@@ -622,6 +622,17 @@
         </tr>
 
         <tr>
+            <td>Domains</td>
+            <td>域名列表</td>
+            <td>String</td>
+            <td>500</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>多个域名逗号分隔，如sh05.newlifex.com,sh05.feifan.link</td>
+        </tr>
+
+        <tr>
             <td>WebHook</td>
             <td>告警机器人</td>
             <td>String</td>
@@ -751,6 +762,210 @@
             <td></td>
             <td>N</td>
             <td>单位，秒</td>
+        </tr>
+
+        <tr>
+            <td>CreateUserID</td>
+            <td>创建者</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>CreateTime</td>
+            <td>创建时间</td>
+            <td>DateTime</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>CreateIP</td>
+            <td>创建地址</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>UpdateUserID</td>
+            <td>更新者</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>UpdateTime</td>
+            <td>更新时间</td>
+            <td>DateTime</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>UpdateIP</td>
+            <td>更新地址</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>Remark</td>
+            <td>备注</td>
+            <td>String</td>
+            <td>500</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+    </tbody>
+</table>
+<br></br>
+<h3>域名供应商（DomainProvider）</h3>
+<table>
+    <thead>
+        <tr>
+            <th>名称</th>
+            <th>显示名</th>
+            <th>类型</th>
+            <th>长度</th>
+            <th>精度</th>
+            <th>主键</th>
+            <th>允许空</th>
+            <th>备注</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Id</td>
+            <td>编号</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td title="自增">AI</td>
+            <td>N</td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>Provider</td>
+            <td>供应商</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>阿里云Aliyun，腾讯云TencentCloud，优刻得UCloud</td>
+        </tr>
+
+        <tr>
+            <td>Name</td>
+            <td>名称</td>
+            <td>String</td>
+            <td>100</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>凭据名称，如阿里云主账号</td>
+        </tr>
+
+        <tr>
+            <td>AppKey</td>
+            <td>AppKey</td>
+            <td>String</td>
+            <td>200</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>AccessKeyId/SecretId</td>
+        </tr>
+
+        <tr>
+            <td>AppSecret</td>
+            <td>AppSecret</td>
+            <td>String</td>
+            <td>500</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>AccessKeySecret/SecretKey</td>
+        </tr>
+
+        <tr>
+            <td>Domain</td>
+            <td>域名</td>
+            <td>String</td>
+            <td>200</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>管理的根域名，如newlifex.com</td>
+        </tr>
+
+        <tr>
+            <td>Endpoint</td>
+            <td>API端点</td>
+            <td>String</td>
+            <td>200</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>为空使用供应商默认值</td>
+        </tr>
+
+        <tr>
+            <td>DNSZoneId</td>
+            <td>DNSZoneID</td>
+            <td>String</td>
+            <td>200</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>DNS Zone ID。UCloud必填，其他供应商留空</td>
+        </tr>
+
+        <tr>
+            <td>Region</td>
+            <td>地域</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>UCloud使用，默认cn-bj2</td>
+        </tr>
+
+        <tr>
+            <td>Enable</td>
+            <td>启用</td>
+            <td>Boolean</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td></td>
         </tr>
 
         <tr>
@@ -3500,7 +3715,7 @@
             <td></td>
             <td></td>
             <td></td>
-            <td>下载URL或本地路径</td>
+            <td>Cube附件（手动上传）或外部URL（自动同步）</td>
         </tr>
 
         <tr>
@@ -3556,17 +3771,6 @@
             <td></td>
             <td>N</td>
             <td></td>
-        </tr>
-
-        <tr>
-            <td>AutoImport</td>
-            <td>自动导入</td>
-            <td>Boolean</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>是否从Microsoft官方源自动导入</td>
         </tr>
 
         <tr>
