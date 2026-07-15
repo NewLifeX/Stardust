@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using NewLife;
 using NewLife.Log;
+using NewLife.Data;
 using Stardust.Services;
 
 namespace Stardust.Dns;
@@ -14,6 +15,8 @@ namespace Stardust.Dns;
 ///   Endpoint — API端点，默认 https://api.ucloud.cn
 ///   DNSZoneId — DNS Zone ID（必填，通过 IExtend 弱类型获取）
 ///   Region   — 地域，默认 cn-bj2（通过 IExtend 弱类型获取）
+/// DNSZoneId 和 Region 不在 IDnsConfig 接口中，属于 UCloud 特有配置，
+/// 通过 IExtend.Items 从实体类 DomainProvider 的对应属性获取。
 /// </remarks>
 public class UCloudDnsProvider : IDnsProvider
 {
@@ -42,9 +45,13 @@ public class UCloudDnsProvider : IDnsProvider
     {
         if (config.AppKey.IsNullOrEmpty() || config.AppSecret.IsNullOrEmpty()) return false;
 
-        // 通过反射弱类型获取 UCloud 特有配置（DNSZoneId、Region）
-        var dnsZoneId = config.GetType().GetProperty("DNSZoneId")?.GetValue(config) as String;
-        var region = config.GetType().GetProperty("Region")?.GetValue(config) as String;
+        // 通过 IExtend 弱类型获取 UCloud 特有配置（DNSZoneId、Region）
+        String? dnsZoneId = null, region = null;
+        if (config is IExtend ext)
+        {
+            if (ext["DNSZoneId"] is String zoneId) dnsZoneId = zoneId;
+            if (ext["Region"] is String r) region = r;
+        }
         var endpoint = config.Endpoint;
 
         if (dnsZoneId.IsNullOrEmpty()) return false;

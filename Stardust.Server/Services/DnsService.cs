@@ -105,21 +105,10 @@ public class DnsService : IDisposable
 
         using var span = _tracer?.NewSpan("DnsRefreshDomain", new { node.Name, domainName, ip });
 
-        // 提取根域名，查找匹配的凭据
+        // 查找匹配的凭据。根据域名后缀匹配 DomainProvider.Domain
         var rootDomain = GetRootDomain(domainName);
-        var credentials = DomainProvider.FindAll()
-            .Where(e => e.Enable && !e.Domain.IsNullOrEmpty())
-            .ToList();
-
-        // 凭据的 Domain 字段可能包含 @ 分隔的附加信息（如 UCloud 的 DNSZoneId）
-        // 匹配时取 @ 前面的部分进行后缀匹配
-        var credential = credentials.FirstOrDefault(e =>
-        {
-            var matchDomain = e.Domain;
-            var p = matchDomain.IndexOf('@');
-            if (p > 0) matchDomain = matchDomain[..p];
-            return domainName.EndsWithIgnoreCase(matchDomain);
-        });
+        var credential = DomainProvider.FindAllWithCache()
+            .FirstOrDefault(e => e.Enable && !e.Domain.IsNullOrEmpty() && domainName.EndsWithIgnoreCase(e.Domain));
 
         if (credential == null)
         {
