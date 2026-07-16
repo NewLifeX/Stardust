@@ -235,5 +235,120 @@ public partial class DotNetPackage : Entity<DotNetPackage>
 
         return pkg;
     }
+
+    /// <summary>根据节点自动判断最合适的安装类型</summary>
+    /// <param name="node">节点</param>
+    /// <returns>安装类型，如 aspnet/desktop/host/runtime</returns>
+    public static String GetKindForNode(Node node)
+    {
+        var os = GetOSKind(node.OSKind);
+
+        if (os == OSKind.Linux || os == OSKind.LinuxMusl)
+            return "aspnet";
+
+        if (os == OSKind.Windows)
+        {
+            var osDetail = node.OSKind;
+            var v = (Int32)osDetail;
+            // Windows 桌面版 (win10/win11/win7)
+            if (osDetail == Stardust.Models.OSKinds.Win10 || osDetail == Stardust.Models.OSKinds.Win11 || osDetail == Stardust.Models.OSKinds.Win7)
+                return "desktop";
+            // Windows 服务器版
+            if (v == 68 || v == 64 || v == 66 || v == 69 || v == 72 || v == 70)
+                return "host";
+
+            return "desktop";
+        }
+
+        return "runtime";
+    }
+
+    /// <summary>获取安装类型列表，用于前台下拉选择。空字符串表示自动</summary>
+    /// <returns></returns>
+    public static IDictionary<String, String> GetKindList()
+    {
+        return new Dictionary<String, String>
+        {
+            ["auto"] = "自动",
+            ["runtime"] = "runtime",
+            ["aspnet"] = "aspnet",
+            ["desktop"] = "desktop",
+            ["host"] = "host",
+            ["sdk"] = "sdk",
+        };
+    }
+
+    /// <summary>为指定节点解析版本+类型到最优的安装包。逐节点匹配OS/Architecture</summary>
+    /// <param name="version">版本号</param>
+    /// <param name="kind">安装类型。auto或空表示自动判断</param>
+    /// <param name="node">目标节点</param>
+    /// <returns>匹配的安装包，若无匹配返回null</returns>
+    public static DotNetPackage ResolveForNode(String version, String kind, Node node)
+    {
+        // 自动判断安装类型
+        if (kind.IsNullOrEmpty() || kind.EqualIgnoreCase("auto"))
+            kind = GetKindForNode(node);
+
+        if (kind.IsNullOrEmpty()) return null;
+
+        var os = GetOSKind(node.OSKind);
+        var arch = GetCpuArch(node.Architecture);
+
+        // 查找匹配的包。使用 FindAll 按条件过滤
+        var list = Meta.Cache.FindAll(e => e.Enable && e.Kind == kind);
+        if (list.Count == 0) return null;
+
+        // 在内存中按版本号过滤
+        list = list.Where(e => e.Version == version).ToList();
+        if (list.Count == 0) return null;
+
+        return list
+            .Where(e => e.OSKind == os || e.OSKind == 0)
+            .Where(e => e.Architecture == arch || e.Architecture == 0)
+            .OrderByDescending(e => e.OSKind == os ? 1 : 0)
+            .ThenByDescending(e => e.Architecture == arch ? 1 : 0)
+            .ThenByDescending(e => e.Id)
+            .FirstOrDefault();
+    }
+
+    /// <summary>获取节点的推荐升级列表。按版本从高到低排序，自动过滤不兼容项</summary>
+    /// <param name="node">节点</param>
+    /// <returns>推荐列表，每项包含安装包和显示标签</returns>
+    public static IList<(DotNetPackage Package, String Label)> GetRecommendations(Node node)
+    {
+        var result = new List<(DotNetPackage, String)>();
+
+        var current = node.Framework;
+        System.Version.TryParse(current?.TrimStart('v', 'V'), out var currentVer);
+
+        var os = GetOSKind(node.OSKind);
+        var arch = GetCpuArch(node.Architecture);
+
+        var packages = Meta.Cache.FindAll(e => e.Enable)
+            .Where(e => e.OSKind == os || e.OSKind == 0)
+            .Where(e => e.Architecture == arch || e.Architecture == 0)
+            .OrderByDescending(e => e.Id)
+            .ToList();
+
+        // 去重：同 (Version, Kind) 只保留一条（最高匹配度那条已在上面排序）
+        var seen = new HashSet<String>();
+        foreach (var pkg in packages)
+        {
+            var key = $"{pkg.Version}-{pkg.Kind}";
+            if (!seen.Add(key)) continue;
+
+            // 检查版本是否高于当前已安装版本
+            if (currentVer != null)
+            {
+                if (!System.Version.TryParse(pkg.Version.TrimStart('v', 'V'), out var pkgVer)) continue;
+                if (pkgVer <= currentVer) continue;
+            }
+
+            var label = $"{pkg.Version} {pkg.Kind} ({pkg.OSKind} {pkg.Architecture})";
+            result.Add((pkg, label));
+        }
+
+        return result;
+    }
     #endregion
 }

@@ -271,6 +271,20 @@ public class NodeController : NodesEntityController<Node>
         return JsonRefresh("操作成功！");
     }
 
+    /// <summary>框架推荐。获取当前节点的.NET运行时推荐升级列表</summary>
+    /// <param name="id">节点ID</param>
+    /// <returns></returns>
+    [EntityAuthorize(PermissionFlags.Update)]
+    public ActionResult FrameworkRecommend(Int32 id)
+    {
+        var node = Node.FindByID(id);
+        if (node == null) return Content("节点不存在");
+
+        ViewBag.Node = node;
+        ViewBag.Recs = DotNetPackage.GetRecommendations(node);
+        return View("_Node_FrameworkRec");
+    }
+
     /// <summary>刷新DNS。触发指定节点的动态域名解析更新</summary>
     /// <param name="id">节点ID</param>
     /// <returns></returns>

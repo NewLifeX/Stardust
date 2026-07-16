@@ -1,0 +1,64 @@
+@using Stardust.Data.Nodes
+@using NewLife.Cube
+@using NewLife.Web
+@using XCode.Membership
+@{
+    var node = ViewBag.Node as Node;
+    var recs = ViewBag.Recs as IList<(DotNetPackage Package, String Label)>;
+    var page = ViewBag.Page as Pager;
+}
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <strong>框架推荐</strong>
+        <span class="pull-right text-muted" style="font-weight:normal;font-size:12px">
+            当前框架：<strong>@(node?.Framework ?? "未知")</strong>
+            &nbsp; 操作系统：<strong>@(node?.OSKind)</strong>
+            &nbsp; 架构：<strong>@(node?.Architecture)</strong>
+        </span>
+    </div>
+    <div class="panel-body">
+        @if (recs == null || recs.Count == 0)
+        {
+            <div class="alert alert-success" role="alert">
+                当前已是最新版本，无需升级。
+            </div>
+        }
+        else
+        {
+            <table class="table table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>版本</th>
+                        <th>安装类型</th>
+                        <th>目标系统</th>
+                        <th>架构</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var (pkg, label) in recs)
+                    {
+                        <tr>
+                            <td>@pkg.Version</td>
+                            <td>@pkg.Kind</td>
+                            <td>@pkg.OSKind</td>
+                            <td>@pkg.Architecture</td>
+                            <td>
+                                <form method="post" action="@Url.Action("InstallFramework", "NodeFramework", new { Area = "Nodes" })" style="display:inline">
+                                    @* 传入当前节点作为选中 key *@
+                                    <input type="hidden" name="keys" value="@node?.ID" />
+                                    <input type="hidden" name="ver" value="@pkg.Version" />
+                                    <input type="hidden" name="kind" value="@pkg.Kind" />
+                                    <button type="submit" class="btn btn-success btn-xs">安装</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <div class="text-muted" style="font-size:12px">
+                提示：安装将向节点下发 <code>framework/install</code> 指令，节点在线时会立即执行。
+            </div>
+        }
+    </div>
+</div>
