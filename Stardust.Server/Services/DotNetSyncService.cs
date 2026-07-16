@@ -23,6 +23,9 @@ public class DotNetSyncService : IHostedService
         _http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
     }
 
+    /// <summary>启动服务，初始化定时器。不管配置是否禁用都启动，DoSync 内判断配置</summary>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>任务</returns>
     public Task StartAsync(CancellationToken cancellationToken)
     {
         // 不管配置是否禁用，都启动定时器。DoSync内判断配置，每次执行后更新周期
@@ -35,6 +38,9 @@ public class DotNetSyncService : IHostedService
         return Task.CompletedTask;
     }
 
+    /// <summary>停止服务，销毁定时器</summary>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>任务</returns>
     public Task StopAsync(CancellationToken cancellationToken)
     {
         _timer.TryDispose();
@@ -61,6 +67,8 @@ public class DotNetSyncService : IHostedService
         }
     }
 
+    /// <summary>执行同步。扫描多个主版本的 .NET 运行时信息，从官方源拉取并更新到本地</summary>
+    /// <param name="state">定时器状态参数</param>
     private async void DoSync(Object state)
     {
         var period = _setting.DotNetSyncPeriod;
@@ -97,6 +105,10 @@ public class DotNetSyncService : IHostedService
         }
     }
 
+    /// <summary>同步指定主版本的 .NET 运行时信息</summary>
+    /// <param name="versionPrefix">版本前缀，如 "6.0"</param>
+    /// <param name="url">官方发布 API 地址</param>
+    /// <param name="span">跟踪跨度</param>
     private async Task SyncMajor(String versionPrefix, String url, ISpan span)
     {
         XTrace.WriteLine("DotNetSyncService.Sync {0}", url);

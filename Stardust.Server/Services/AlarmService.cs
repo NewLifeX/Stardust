@@ -10,6 +10,7 @@ using Stardust.Data.Nodes;
 
 namespace Stardust.Server.Services;
 
+/// <summary>告警服务。定时检查应用性能指标、节点在线状态和Redis健康状态，触发告警通知</summary>
 public class AlarmService(StarServerSetting setting, IServiceProvider serviceProvider, ITracer tracer) : IHostedService
 {
     /// <summary>计算周期。默认30秒</summary>
@@ -18,6 +19,9 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
     private TimerX _timer;
     private ICache _cache;
 
+    /// <summary>启动服务，初始化定时器</summary>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>任务</returns>
     public Task StartAsync(CancellationToken cancellationToken)
     {
         // 初始化定时器
@@ -26,6 +30,9 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         return Task.CompletedTask;
     }
 
+    /// <summary>停止服务，销毁定时器</summary>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>任务</returns>
     public Task StopAsync(CancellationToken cancellationToken)
     {
         _timer.TryDispose();
@@ -33,6 +40,8 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         return Task.CompletedTask;
     }
 
+    /// <summary>执行告警检查。遍历应用跟踪器、节点在线状态和Redis节点，触发告警规则判断</summary>
+    /// <param name="state">定时器状态参数</param>
     private void DoAlarm(Object state)
     {
         _cache ??= serviceProvider.GetService<ICacheProvider>()?.Cache;
@@ -67,6 +76,8 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
     }
 
     #region 应用性能追踪告警
+    /// <summary>处理应用性能告警。检查最近5分钟数据，判断是否超过阈值或错误率，触发通知</summary>
+    /// <param name="app">应用跟踪器</param>
     private void ProcessAppTracer(AppTracer app)
     {
         // 应用是否需要告警
@@ -106,6 +117,11 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         }
     }
 
+    /// <summary>生成告警消息的 Markdown 格式文本</summary>
+    /// <param name="app">应用跟踪器</param>
+    /// <param name="st">分钟统计数据</param>
+    /// <param name="includeTitle">是否包含标题行</param>
+    /// <returns>Markdown 格式的告警消息</returns>
     private String GetMarkdown(AppTracer app, AppMinuteStat st, Boolean includeTitle)
     {
         var sb = new StringBuilder();
@@ -183,6 +199,8 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         return str;
     }
 
+    /// <summary>处理跟踪项告警。检查各埋点项的分钟级数据，是否超过阈值或错误率</summary>
+    /// <param name="app">应用跟踪器</param>
     private void ProcessTraceItem(AppTracer app)
     {
         if (app == null || !app.Enable) return;
@@ -309,6 +327,8 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         return str;
     }
 
+    /// <summary>处理环比告警。对比今日与昨日相同时段的错误率变化趋势</summary>
+    /// <param name="app">应用跟踪器</param>
     private void ProcessRingRate(AppTracer app)
     {
         if (app == null || !app.Enable) return;
@@ -402,6 +422,8 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
     #endregion
 
     #region 节点告警
+    /// <summary>处理节点告警。检查节点的 CPU/内存/磁盘/温度/进程数/网络等指标是否超过阈值</summary>
+    /// <param name="node">节点</param>
     private void ProcessNode(Node node)
     {
         if (node == null || !node.Enable) return;
@@ -577,6 +599,8 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
     #endregion
 
     #region Redis告警
+    /// <summary>处理 Redis 节点告警。检查 Redis 节点和消息队列的健康状态</summary>
+    /// <param name="node">Redis 节点</param>
     private void ProcessRedisNode(RedisNode node)
     {
         if (node == null || !node.Enable) return;
@@ -778,6 +802,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
     #endregion
 
     #region 告警恢复
+    /// <summary>检查节点告警恢复。将已恢复正常状态的节点告警标记为已恢复</summary>
     private void CheckNodeAlarmRecovery()
     {
         using var span = tracer?.NewSpan("alarm:CheckRecovery");
