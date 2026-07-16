@@ -207,32 +207,28 @@ public class StarApi : IHttpController
     }
 
     /// <summary>新增或更新子服务</summary>
-    /// <param name="info">服务信息 JSON</param>
+    /// <param name="info">服务信息</param>
     /// <returns>操作结果</returns>
-    public Object AddService(Object info)
+    public Object AddService(ServiceInfo info)
     {
         if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
 
         var manager = GetManager();
         if (manager == null) return new { code = 500, message = "Service manager not available" };
 
+        if (info == null || info.Name.IsNullOrEmpty())
+            return new { code = 400, message = "服务名称不能为空" };
+
         try
         {
-            var json = info?.ToJson();
-            if (json.IsNullOrEmpty()) return new { code = 400, message = "服务信息不能为空" };
-
-            var si = JsonHelper.Convert<ServiceInfo>(json);
-            if (si == null || si.Name.IsNullOrEmpty())
-                return new { code = 400, message = "服务名称不能为空" };
-
-            manager.Add(si);
+            manager.Add(info);
 
             // 持久化到配置
             var set = StarAgentSetting.Current;
             set.Services = manager.Services;
             set.Save();
 
-            return new { code = 0, message = $"服务 [{si.Name}] 已添加/更新", serviceName = si.Name };
+            return new { code = 0, message = $"服务 [{info.Name}] 已添加/更新", serviceName = info.Name };
         }
         catch (Exception ex)
         {
