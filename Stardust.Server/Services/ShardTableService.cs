@@ -6,19 +6,26 @@ using XCode.DataAccessLayer;
 
 namespace Stardust.Server.Services;
 
-/// <summary>分表管理</summary>
+/// <summary>分表管理。按日序号（01~31）自动管理跟踪数据和采样数据的分表生命周期，支持 SQLite 和 MySQL</summary>
 public class ShardTableService : IHostedService
 {
     private readonly StarServerSetting _setting;
     private readonly ITracer _tracer;
     private TimerX _timer;
     private TimerX _timer2;
+
+    /// <summary>实例化分表管理服务</summary>
+    /// <param name="setting">服务端设置</param>
+    /// <param name="tracer">跟踪器</param>
     public ShardTableService(StarServerSetting setting, ITracer tracer)
     {
         _setting = setting;
         _tracer = tracer;
     }
 
+    /// <summary>启动服务，初始化分表检查和明细清理两个定时器</summary>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>任务</returns>
     public Task StartAsync(CancellationToken cancellationToken)
     {
         // 每小时执行
@@ -28,6 +35,9 @@ public class ShardTableService : IHostedService
         return Task.CompletedTask;
     }
 
+    /// <summary>停止服务，销毁定时器</summary>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>任务</returns>
     public Task StopAsync(CancellationToken cancellationToken)
     {
         _timer2.TryDispose();
@@ -36,6 +46,8 @@ public class ShardTableService : IHostedService
         return Task.CompletedTask;
     }
 
+    /// <summary>执行分表检查。确保 31 张循环天表已创建，SQLite 按天分库、MySQL 按天分表</summary>
+    /// <param name="state">定时器状态参数</param>
     private void DoShardTable(Object state)
     {
         using var span = _tracer?.NewSpan("ShardTable");
@@ -104,6 +116,10 @@ public class ShardTableService : IHostedService
         }
     }
 
+    /// <summary>清理明细数据。按保留期逐分片清理跟踪数据和采样数据</summary>
+    /// <param name="state">定时器状态参数</param>
+    /// <summary>清理明细数据。按保留期逐分片清理跟踪数据和采样数据</summary>
+    /// <param name="state">定时器状态参数</param>
     private void DoClearDetails(Object state)
     {
         var days = _setting.DataRetention;
@@ -264,6 +280,8 @@ public class ShardTableService : IHostedService
         dalTrace.Db.CreateMetaData().SetTables(Migration.On, [table1, table2]);
     }
 
+    /// <summary>删除旧版按完整日期命名的分表（yyyyMMdd 格式），迁移到循环天表（01~31）</summary>
+    /// <param name="dal">数据库访问层</param>
     static void DropOldTable(DAL dal)
     {
         using var showSql = dal.Session.SetShowSql(true);

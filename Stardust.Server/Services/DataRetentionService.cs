@@ -8,10 +8,14 @@ using Stardust.Data.Nodes;
 
 namespace Stardust.Server.Services;
 
+/// <summary>数据保留与清理服务。定期清理过期数据，支持多级保留期配置</summary>
 public class DataRetentionService(StarServerSetting setting, ITracer tracer) : IHostedService
 {
     private TimerX _timer;
 
+    /// <summary>启动服务，初始化定时器</summary>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>任务</returns>
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _timer = new TimerX(DoWork, null, DateTime.Now.AddSeconds(30), 600 * 1000) { Async = true };
@@ -19,6 +23,9 @@ public class DataRetentionService(StarServerSetting setting, ITracer tracer) : I
         return Task.CompletedTask;
     }
 
+    /// <summary>停止服务，销毁定时器</summary>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>任务</returns>
     public Task StopAsync(CancellationToken cancellationToken)
     {
         _timer.TryDispose();
@@ -26,6 +33,8 @@ public class DataRetentionService(StarServerSetting setting, ITracer tracer) : I
         return Task.CompletedTask;
     }
 
+    /// <summary>执行数据清理。按多级保留期删除节点数据、Redis数据、统计数据和历史记录</summary>
+    /// <param name="state">定时器状态参数</param>
     private void DoWork(Object state)
     {
         if (setting.DataRetention <= 0) return;
