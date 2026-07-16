@@ -101,9 +101,68 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
     protected Boolean RetrieveExeFile(DeployContext context, String workDir)
     {
         var args = context.Arguments;
+
+        // 如果没有zip包，直接按FileName处理，无需在工作目录中搜索
+        // 此时FileName可能是系统命令（如ping），也可能是带路径的可执行文件
+        if (context.ZipFile.IsNullOrEmpty())
+        {
+            var fileName = context.Service?.FileName;
+            if (!fileName.IsNullOrEmpty())
+            {
+                if (!fileName.Contains('/') && !fileName.Contains('\\'))
+                {
+                    // 不含路径分隔符的简单命令名（如ping），直接作为系统命令通过PATH解析
+                    context.WriteLog("使用系统命令：{0}", fileName);
+                    context.ExecuteFile = fileName;
+                    context.Arguments = args;
+                    return true;
+                }
+
+                // 含路径的FileName，直接检查文件是否存在
+                var fullPath = fileName.GetFullPath();
+                var fi = fullPath.AsFile();
+                if (fi != null && fi.Exists)
+                {
+                    context.ExecuteFile = fi.FullName;
+                    context.Arguments = args;
+                    return true;
+                }
+            }
+
+            context.WriteLog("无法找到可执行文件");
+            return false;
+        }
+
+        // 有zip包时，解压后在工作目录中查找可执行文件
         var runfile = FindExeFile(workDir, context.Name, ref args);
+
         if (runfile == null)
         {
+            // 按服务名找不到时，检查FileName。有两种情况：
+            // 1. 不含路径分隔符的简单命令名（如ping），直接作为系统命令通过PATH解析
+            // 2. 含路径分隔符，直接检查文件是否存在
+            var fileName = context.Service?.FileName;
+            if (!fileName.IsNullOrEmpty())
+            {
+                if (!fileName.Contains('/') && !fileName.Contains('\\'))
+                {
+                    context.WriteLog("使用系统命令：{0}", fileName);
+                    context.ExecuteFile = fileName;
+                    context.Arguments = args;
+                    return true;
+                }
+
+                // 含路径的FileName，直接检查文件是否存在
+                var fullPath = fileName.GetFullPath();
+                var fi = fullPath.AsFile();
+                if (fi != null && fi.Exists)
+                {
+                    context.ExecuteFile = fi.FullName;
+                    context.Arguments = args;
+                    return true;
+                }
+            }
+
             context.WriteLog("无法找到可执行文件");
             return false;
         }
@@ -416,6 +475,44 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
         }
 
         context.WriteLog("启动成功！PID={0}/{1}", p.Id, p.ProcessName);
+        return p;
+    }
+
+    /// <summary>作为系统命令执行。文件不存在时通过PATH解析，如ping等系统命令</summary>
+    /// <param name="context">部署上下文</param>
+    /// <returns>启动的进程</returns>
+    protected Process? ExecuteCommand(DeployContext context)
+    {
+        context.WriteLog("执行命令 {0} {1}", context.ExecuteFile, context.Arguments);
+
+        var psi = new ProcessStartInfo
+        {
+            FileName = context.ExecuteFile,
+            Arguments = context.Arguments ?? "",
+            WorkingDirectory = context.WorkingDirectory,
+            UseShellExecute = false,
+        };
+
+        Process? p = null;
+        try
+        {
+            p = Process.Start(psi);
+            if (p != null)
+            {
+                context.WriteLog("启动成功！PID={0}", p.Id);
+
+                // OOM分值。Linux下子进程默认继承父进程（StarAgent）的 -1000，需重置为普通进程
+                var oomScore = context.Service?.OomScoreAdjust ?? 0;
+                if (Runtime.Linux && oomScore != -1000)
+                    StarClient.SetOomScoreAdj(p.Id, oomScore);
+            }
+        }
+        catch (Exception ex)
+        {
+            context.LastError = ex.Message;
+            context.WriteLog("执行命令失败：{0}", ex.Message);
+        }
+
         return p;
     }
     #endregion

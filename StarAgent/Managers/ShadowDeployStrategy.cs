@@ -88,8 +88,8 @@ public class ShadowDeployStrategy : DeployStrategyBase
         var runFile = context.ExecuteFile.AsFile();
         if (runFile == null || !runFile.Exists)
         {
-            context.WriteLog("可执行文件不存在：{0}", context.ExecuteFile);
-            return null;
+            // 不是文件路径，尝试作为系统命令执行（如ping）
+            return ExecuteCommand(context);
         }
 
         context.WriteLog("运行文件：{0}", runFile.FullName);
