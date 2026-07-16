@@ -1,4 +1,4 @@
-﻿using NewLife;
+using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
@@ -50,6 +50,9 @@ public class AppHistoryController : RegistryEntityController<AppHistory>
         return base.SearchData(p);
     }
 
+    /// <summary>高级搜索。按条件分页查询</summary>
+    /// <param name="p">分页参数</param>
+    /// <returns>实体列表</returns>
     protected override IEnumerable<AppHistory> Search(Pager p)
     {
         //PageSetting.EnableAdd = false;

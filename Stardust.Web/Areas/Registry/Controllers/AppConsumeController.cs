@@ -1,4 +1,4 @@
-﻿using NewLife;
+using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.ViewModels;
 using NewLife.Web;
@@ -34,6 +34,9 @@ public class AppConsumeController : RegistryEntityController<AppConsume>
         }
     }
 
+    /// <summary>高级搜索。按条件分页查询</summary>
+    /// <param name="p">分页参数</param>
+    /// <returns>实体列表</returns>
     protected override IEnumerable<AppConsume> Search(Pager p)
     {
         //PageSetting.EnableAdd = false;

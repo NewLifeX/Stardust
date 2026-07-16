@@ -22,6 +22,9 @@ public class AppPipelineStepController : ReadOnlyEntityController<AppPipelineSte
     /// <summary>高级搜索。按所属运行编号过滤，按步骤顺序升序展示</summary>
     /// <param name="p">分页器。包含分页排序参数，以及Http请求参数</param>
     /// <returns></returns>
+    /// <summary>高级搜索。按条件分页查询</summary>
+    /// <param name="p">分页参数</param>
+    /// <returns>实体列表</returns>
     protected override IEnumerable<AppPipelineStep> Search(Pager p)
     {
         var runId = p["runId"].ToLong(-1);

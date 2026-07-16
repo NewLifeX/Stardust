@@ -8,10 +8,14 @@ using Stardust.Monitors;
 
 namespace Stardust.Server.Services;
 
+/// <summary>监控服务。通过 WebHook 将追踪数据推送到外部告警系统</summary>
 public class MonitorService(ITracer tracer)
 {
     private readonly ConcurrentDictionary<Int32, WebHookActor> _actors = new();
 
+    /// <summary>推送追踪数据到应用的 WebHook 地址。使用 Actor 模式异步处理</summary>
+    /// <param name="app">应用跟踪器</param>
+    /// <param name="model">追踪数据模型</param>
     public void WebHook(AppTracer app, TraceModel model)
     {
         if (app == null || model == null) return;

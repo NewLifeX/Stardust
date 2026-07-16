@@ -7,15 +7,22 @@ using Stardust.Models;
 
 namespace Stardust.Server.Services;
 
+/// <summary>部署服务。处理应用版本匹配、节点平台检测、SSL证书匹配等部署核心逻辑</summary>
 public class DeployService
 {
     private readonly RegistryService _registryService;
 
+    /// <summary>实例化部署服务</summary>
+    /// <param name="registryService">注册服务</param>
     public DeployService(RegistryService registryService)
     {
         _registryService = registryService;
     }
 
+    /// <summary>获取应用的最新部署版本。支持多版本匹配（按操作系统/架构/框架运行时筛选）</summary>
+    /// <param name="app">应用部署配置</param>
+    /// <param name="node">目标节点</param>
+    /// <returns>匹配的部署版本，未找到时返回 null</returns>
     public AppDeployVersion GetDeployVersion(AppDeploy app, Node node)
     {
         if (app.MultiVersion)

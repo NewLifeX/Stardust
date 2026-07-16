@@ -68,6 +68,9 @@ public class AppPipelineController : EntityController<AppPipeline>
     /// <summary>高级搜索</summary>
     /// <param name="p">分页器。包含分页排序参数，以及Http请求参数</param>
     /// <returns></returns>
+    /// <summary>高级搜索。按条件分页查询</summary>
+    /// <param name="p">分页参数</param>
+    /// <returns>实体列表</returns>
     protected override IEnumerable<AppPipeline> Search(Pager p)
     {
         var deployId = p["deployId"].ToInt(-1);

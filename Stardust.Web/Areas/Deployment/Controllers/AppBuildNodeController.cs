@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
@@ -65,6 +65,9 @@ public class AppBuildNodeController : DeploymentEntityController<AppBuildNode>
     /// <summary>高级搜索。列表页查询、导出Excel、导出Json、分享页等使用</summary>
     /// <param name="p">分页器。包含分页排序参数，以及Http请求参数</param>
     /// <returns></returns>
+    /// <summary>高级搜索。按条件分页查询</summary>
+    /// <param name="p">分页参数</param>
+    /// <returns>实体列表</returns>
     protected override IEnumerable<AppBuildNode> Search(Pager p)
     {
         var deployId = p["deployId"].ToInt(-1);

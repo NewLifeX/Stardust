@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Web;
@@ -37,6 +37,9 @@ public class AlarmGroupController : EntityController<AlarmGroup>
         }
     }
 
+    /// <summary>高级搜索。按条件分页查询</summary>
+    /// <param name="p">分页参数</param>
+    /// <returns>实体列表</returns>
     protected override IEnumerable<AlarmGroup> Search(Pager p)
     {
         var id = p["Id"].ToInt(-1);

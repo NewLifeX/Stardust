@@ -9,14 +9,21 @@ using Stardust.Data.Configs;
 
 namespace Stardust.Server.Services;
 
+/// <summary>配置服务。处理应用配置解析、内嵌变量替换、缓存和定时刷新</summary>
 public class ConfigService
 {
     private TimerX _timer;
     private readonly StarFactory _starFactory;
     private readonly ICacheProvider _cacheService;
     private readonly ITracer _tracer;
+
+    /// <summary>WorkerId 配置键名</summary>
     public String WorkerIdName { get; set; } = "NewLife.WorkerId";
 
+    /// <summary>实例化配置服务</summary>
+    /// <param name="starFactory">星尘工厂</param>
+    /// <param name="cacheService">缓存服务</param>
+    /// <param name="tracer">跟踪器</param>
     public ConfigService(StarFactory starFactory, ICacheProvider cacheService, ITracer tracer)
     {
         _starFactory = starFactory;

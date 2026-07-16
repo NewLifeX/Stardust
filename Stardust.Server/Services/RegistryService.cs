@@ -16,6 +16,7 @@ using Service = Stardust.Data.Service;
 
 namespace Stardust.Server.Services;
 
+/// <summary>注册服务。处理应用注册、登录认证、服务注册与发现的核心服务</summary>
 public class RegistryService : DefaultDeviceService<Node, NodeOnline>
 {
     private readonly AppOnlineService _appOnline;
@@ -25,6 +26,14 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
     private readonly StarServerSetting _setting;
     private readonly ITracer _tracer;
 
+    /// <summary>实例化注册服务</summary>
+    /// <param name="appOnline">应用在线服务</param>
+    /// <param name="passwordProvider">密码提供者</param>
+    /// <param name="sessionManager">会话管理器</param>
+    /// <param name="cacheProvider">缓存提供者</param>
+    /// <param name="setting">服务端设置</param>
+    /// <param name="tracer">跟踪器</param>
+    /// <param name="serviceProvider">服务提供者</param>
     public RegistryService(AppOnlineService appOnline, IPasswordProvider passwordProvider, AppSessionManager sessionManager, ICacheProvider cacheProvider, StarServerSetting setting, ITracer tracer, IServiceProvider serviceProvider) : base(sessionManager, passwordProvider, cacheProvider, serviceProvider)
     {
         _appOnline = appOnline;

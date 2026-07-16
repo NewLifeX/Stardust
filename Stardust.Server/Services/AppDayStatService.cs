@@ -29,10 +29,12 @@ public class AppDayStatService : IAppDayStatService
     private readonly ConcurrentBag<DateTime> _bag = [];
     private readonly ITracer _tracer;
 
+    /// <summary>实例化应用统计服务</summary>
+    /// <param name="tracer">跟踪器</param>
     public AppDayStatService(ITracer tracer) => _tracer = tracer;
 
-    /// <summary>添加需要统计的应用，去重</summary>
-    /// <param name="date"></param>
+    /// <summary>添加需要统计的应用日期，去重</summary>
+    /// <param name="date">统计日期</param>
     public void Add(DateTime date)
     {
         if (!_bag.Contains(date)) _bag.Add(date);
@@ -47,6 +49,8 @@ public class AppDayStatService : IAppDayStatService
         }
     }
 
+    /// <summary>执行批计算。从 TraceDayStat 聚合生成 AppDayStat（应用天统计）</summary>
+    /// <param name="state">定时器状态参数</param>
     private void DoTraceStat(Object state)
     {
         while (_bag.TryTake(out var time))

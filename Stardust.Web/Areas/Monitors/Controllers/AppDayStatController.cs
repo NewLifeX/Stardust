@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
 using NewLife.Cube;
@@ -35,6 +35,9 @@ public class AppDayStatController : MonitorsEntityController<AppDayStat>
         PageSetting.EnableAdd = false;
     }
 
+    /// <summary>高级搜索。按条件分页查询</summary>
+    /// <param name="p">分页参数</param>
+    /// <returns>实体列表</returns>
     protected override IEnumerable<AppDayStat> Search(Pager p)
     {
         var appId = p["monitorId"].ToInt(-1);

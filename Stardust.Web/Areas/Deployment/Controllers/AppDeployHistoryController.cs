@@ -1,4 +1,4 @@
-﻿using NewLife;
+using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
@@ -29,6 +29,9 @@ public class AppDeployHistoryController : DeploymentEntityController<AppDeployHi
         }
     }
 
+    /// <summary>高级搜索。按条件分页查询</summary>
+    /// <param name="p">分页参数</param>
+    /// <returns>实体列表</returns>
     protected override IEnumerable<AppDeployHistory> Search(Pager p)
     {
         var id = p["id"].ToInt(-1);

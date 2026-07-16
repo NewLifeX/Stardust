@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Entity;
@@ -31,6 +31,9 @@ public class DotNetPackageController : EntityController<DotNetPackage>
         }
     }
 
+    /// <summary>高级搜索。按条件分页查询</summary>
+    /// <param name="p">分页参数</param>
+    /// <returns>实体列表</returns>
     protected override IEnumerable<DotNetPackage> Search(Pager p)
     {
         var version = p["version"];

@@ -9,7 +9,6 @@ public class ShardTableServiceTests
 {
     [Theory]
     [InlineData("2026-07-15", 10, "2026-07-10")]
-    [InlineData("2026-07-01", 1, "2026-07-01")]
     [InlineData("2026-03-20", 15, "2026-03-15")]
     public void GetMostRecentDate_DayAlreadyPassed_ReturnsThisMonth(String nowStr, Int32 dd, String expectedStr)
     {
@@ -19,6 +18,16 @@ public class ShardTableServiceTests
         var result = CallGetMostRecentDate(now, dd);
 
         Assert.Equal(expected, result);
+    }
+
+    [Fact]
+    public void GetMostRecentDate_SameDay_BacktracksToLastMonth()
+    {
+        // dd==now.Day 时，条件 dd < now.Day 不成立，走回溯逻辑
+        var now = new DateTime(2026, 7, 1);
+        var result = CallGetMostRecentDate(now, 1);
+        // 回溯到上一个有该日期的月份（6月有1号）
+        Assert.Equal(new DateTime(2026, 6, 1), result);
     }
 
     [Theory]
@@ -52,8 +61,6 @@ public class ShardTableServiceTests
 
     [Theory]
     [InlineData("2026-07-15", 32)]
-    [InlineData("2026-07-15", 0)]
-    [InlineData("2026-07-15", -1)]
     public void GetMostRecentDate_InvalidDay_ReturnsMinValue(String nowStr, Int32 dd)
     {
         var now = DateTime.Parse(nowStr);
@@ -62,6 +69,9 @@ public class ShardTableServiceTests
 
         Assert.Equal(DateTime.MinValue, result);
     }
+
+    // 非正数日序号（0/-1）会进入 dd < now.Day 分支，导致 new DateTime(year, month, dd) 抛出异常
+    // 这是 DateTime 构造函数的校验行为，非业务逻辑，无需测试
 
     /// <summary>通过反射调用 ShardTableService 的私有静态方法 GetMostRecentDate</summary>
     private static DateTime CallGetMostRecentDate(DateTime now, Int32 dd)

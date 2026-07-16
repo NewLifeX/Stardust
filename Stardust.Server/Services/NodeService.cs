@@ -17,6 +17,7 @@ using XCode.Configuration;
 
 namespace Stardust.Server.Services;
 
+/// <summary>节点服务。处理 StarAgent 节点的注册登录、心跳保活、在线状态管理和命令下发</summary>
 public class NodeService : DefaultDeviceService<Node, NodeOnline>
 {
     private readonly ITokenService _tokenService;
@@ -27,6 +28,15 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
     private readonly ITracer _tracer;
     private readonly DnsService _dnsService;
 
+    /// <summary>实例化节点服务</summary>
+    /// <param name="tokenService">令牌服务</param>
+    /// <param name="passwordProvider">密码提供者</param>
+    /// <param name="setting">服务端设置</param>
+    /// <param name="sessionManager">节点会话管理器</param>
+    /// <param name="cacheProvider">缓存提供者</param>
+    /// <param name="tracer">跟踪器</param>
+    /// <param name="dnsService">DDNS 服务</param>
+    /// <param name="serviceProvider">服务提供者</param>
     public NodeService(ITokenService tokenService, IPasswordProvider passwordProvider, StarServerSetting setting, NodeSessionManager sessionManager, ICacheProvider cacheProvider, ITracer tracer, DnsService dnsService, IServiceProvider serviceProvider) : base(sessionManager, passwordProvider, cacheProvider, serviceProvider)
     {
         _tokenService = tokenService;

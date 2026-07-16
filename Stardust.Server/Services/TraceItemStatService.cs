@@ -28,10 +28,12 @@ public class TraceItemStatService : ITraceItemStatService
     private readonly ConcurrentBag<Int32> _bag = [];
     private readonly ITracer _tracer;
 
+    /// <summary>实例化跟踪项统计服务</summary>
+    /// <param name="tracer">跟踪器</param>
     public TraceItemStatService(ITracer tracer) => _tracer = tracer;
 
     /// <summary>添加需要统计的应用，去重</summary>
-    /// <param name="appId"></param>
+    /// <param name="appId">应用编号</param>
     public void Add(Int32 appId)
     {
         if (!_bag.Contains(appId)) _bag.Add(appId);
@@ -48,6 +50,8 @@ public class TraceItemStatService : ITraceItemStatService
         //if (_timer.NextTime > DateTime.Now.AddSeconds(5)) _timer.SetNext(-1);
     }
 
+    /// <summary>执行批计算。从 TraceDayStat 聚合生成 TraceItem 统计，按应用统计 7 天数据</summary>
+    /// <param name="state">定时器状态参数</param>
     private void DoTraceStat(Object state)
     {
         while (_bag.TryTake(out var appId))
