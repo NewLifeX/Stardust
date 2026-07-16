@@ -267,6 +267,19 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
             }
         }
 
+        // 根据 MaxMemory 设置 .NET GC 堆硬上限
+        // DOTNET_GCHeapHardLimit 让 GC 主动控制堆大小不超过限制，跨平台有效
+        if (service.MaxMemory > 0)
+        {
+            // 仅对 .NET 应用（dotnet 运行时 或 .dll 文件）
+            if (si.FileName.EqualIgnoreCase("dotnet") ||
+                (runFile.Extension?.EqualIgnoreCase(".dll") == true))
+            {
+                var bytes = (UInt64)service.MaxMemory * 1024 * 1024;
+                si.EnvironmentVariables["DOTNET_GCHeapHardLimit"] = bytes.ToString("x");
+            }
+        }
+
         return si;
     }
 
