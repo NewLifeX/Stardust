@@ -449,10 +449,12 @@ public class StarApi : IHttpController
                 }).ToArray();
 
             // 网络信息
+            var _Excludes = new[] { "Loopback", "VMware", "VBox", "Virtual", "Teredo", "Tunnel", "VPN", "VNIC", "IEEE", "Filter", "Npcap", "QoS", "Miniport", "Kernel Debug" };
             var nics = NetworkInterface.GetAllNetworkInterfaces()
                 .Where(n => n.OperationalStatus == OperationalStatus.Up &&
                        n.NetworkInterfaceType != NetworkInterfaceType.Loopback &&
-                       n.NetworkInterfaceType != NetworkInterfaceType.Tunnel)
+                       n.NetworkInterfaceType != NetworkInterfaceType.Tunnel &&
+                       !_Excludes.Any(e => n.Description.Contains(e)))
                 .Select(n =>
                 {
                     var props = n.GetIPProperties();
