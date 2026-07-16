@@ -77,6 +77,13 @@ public class Startup
         if (set.FileStorageProvide || set.FileStorageFetch)
             services.AddCubeFileStorage("Star");
 
+        // DDNS服务 - 必须在 NodeService 之前注册，因为 NodeService 依赖 DnsService
+        services.AddSingleton<IDnsProvider, AliyunDnsProvider>();
+        services.AddSingleton<IDnsProvider, TencentCloudDnsProvider>();
+        services.AddSingleton<IDnsProvider, UCloudDnsProvider>();
+        services.AddSingleton<DnsProviderFactory>();
+        services.AddSingleton<DnsService>();
+
         // 业务服务
         services.AddSingleton<NodeService>();
         services.AddSingleton<AppTokenService>();
@@ -88,13 +95,6 @@ public class Startup
         services.AddSingleton<MonitorService>();
         services.AddSingleton<AgentDeployService>();
         services.AddSingleton<GatewayService>();
-
-        // DDNS服务
-        services.AddSingleton<IDnsProvider, AliyunDnsProvider>();
-        services.AddSingleton<IDnsProvider, TencentCloudDnsProvider>();
-        services.AddSingleton<IDnsProvider, UCloudDnsProvider>();
-        services.AddSingleton<DnsProviderFactory>();
-        services.AddSingleton<DnsService>();
 
         services.AddSingleton<NodeSessionManager>();
         services.AddSingleton<AppSessionManager>();

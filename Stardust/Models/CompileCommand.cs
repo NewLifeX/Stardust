@@ -1,10 +1,13 @@
-﻿namespace Stardust.Models;
+namespace Stardust.Models;
 
 /// <summary>编译命令参数</summary>
 public class CompileCommand
 {
     /// <summary>代码库。下载代码的位置</summary>
     public String? Repository { get; set; }
+
+    /// <summary>仓库密钥。SSH 私钥，用于非交互式拉取私有仓库代码</summary>
+    public String? DeployKey { get; set; }
 
     /// <summary>分支</summary>
     public String? Branch { get; set; }
@@ -41,4 +44,30 @@ public class CompileCommand
 
     /// <summary>上传应用包</summary>
     public Boolean UploadPackage { get; set; }
+
+    /// <summary>生成脱敏后的历史记录副本，去掉 DeployKey 和 Repository 中的凭据</summary>
+    /// <returns>脱敏后的副本</returns>
+    public CompileCommand RedactForHistory()
+    {
+        var safe = (CompileCommand)MemberwiseClone();
+
+        // 去掉 DeployKey 私钥
+        safe.DeployKey = null;
+
+        // 从 Repository URL 中移除凭据（如 http://user:pass@host → http://host）
+        if (safe.Repository != null)
+        {
+            var idx = safe.Repository.IndexOf("://", StringComparison.Ordinal);
+            if (idx > 0)
+            {
+                var atIdx = safe.Repository.IndexOf('@', idx + 3);
+                if (atIdx > idx + 3)
+                {
+                    safe.Repository = safe.Repository[..(idx + 3)] + safe.Repository[(atIdx + 1)..];
+                }
+            }
+        }
+
+        return safe;
+    }
 }

@@ -136,6 +136,15 @@ public partial class AppDeploy
     [BindColumn("Repository", "代码库。下载代码的位置", "", ItemType = "url")]
     public String Repository { get => _Repository; set { if (OnPropertyChanging("Repository", value)) { _Repository = value; OnPropertyChanged("Repository"); } } }
 
+    private String _DeployKey;
+    /// <summary>仓库密钥。SSH 私钥，用于非交互式拉取私有仓库代码</summary>
+    [Category("编译参数")]
+    [DisplayName("仓库密钥")]
+    [Description("仓库密钥。SSH 私钥，用于非交互式拉取私有仓库代码")]
+    [DataObjectField(false, false, true, -1)]
+    [BindColumn("DeployKey", "仓库密钥。SSH 私钥，用于非交互式拉取私有仓库代码", "")]
+    public String DeployKey { get => _DeployKey; set { if (OnPropertyChanging("DeployKey", value)) { _DeployKey = value; OnPropertyChanged("DeployKey"); } } }
+
     private String _Branch;
     /// <summary>分支。默认main</summary>
     [Category("编译参数")]
@@ -384,6 +393,7 @@ public partial class AppDeploy
             "Port" => _Port,
             "Urls" => _Urls,
             "Repository" => _Repository,
+            "DeployKey" => _DeployKey,
             "Branch" => _Branch,
             "ProjectPath" => _ProjectPath,
             "ProjectKind" => _ProjectKind,
@@ -429,6 +439,7 @@ public partial class AppDeploy
                 case "Port": _Port = value.ToInt(); break;
                 case "Urls": _Urls = Convert.ToString(value); break;
                 case "Repository": _Repository = Convert.ToString(value); break;
+                case "DeployKey": _DeployKey = Convert.ToString(value); break;
                 case "Branch": _Branch = Convert.ToString(value); break;
                 case "ProjectPath": _ProjectPath = Convert.ToString(value); break;
                 case "ProjectKind": _ProjectKind = (Stardust.Models.ProjectKinds)value.ToInt(); break;
@@ -558,6 +569,9 @@ public partial class AppDeploy
         /// <summary>代码库。下载代码的位置</summary>
         public static readonly Field Repository = FindByName("Repository");
 
+        /// <summary>仓库密钥。SSH 私钥，用于非交互式拉取私有仓库代码</summary>
+        public static readonly Field DeployKey = FindByName("DeployKey");
+
         /// <summary>分支。默认main</summary>
         public static readonly Field Branch = FindByName("Branch");
 
@@ -680,6 +694,9 @@ public partial class AppDeploy
 
         /// <summary>代码库。下载代码的位置</summary>
         public const String Repository = "Repository";
+
+        /// <summary>仓库密钥。SSH 私钥，用于非交互式拉取私有仓库代码</summary>
+        public const String DeployKey = "DeployKey";
 
         /// <summary>分支。默认main</summary>
         public const String Branch = "Branch";

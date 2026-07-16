@@ -13,6 +13,11 @@ public class StarSetting : Config<StarSetting>, IClientSetting
     [Description("调试开关。默认false")]
     public Boolean Debug { get; set; }
 
+    /// <summary>禁用 SSH 严格主机密钥校验。默认false（启用校验）</summary>
+    /// <remarks>设为true时跳过主机密钥校验，存在MITM风险，仅在明确知晓风险时使用</remarks>
+    [Description("禁用 SSH 严格主机密钥校验。默认false（启用校验）")]
+    public Boolean DisableSshStrictChecking { get; set; }
+
     /// <summary>星尘服务端地址。如http://star.newlifex.com:6600，默认为空</summary>
     [Description("星尘服务端地址。如http://star.newlifex.com:6600，默认为空")]
     public String Server { get; set; } = "";

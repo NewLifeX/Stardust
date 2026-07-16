@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO.Compression;
 using System.Text;
 using NewLife;
@@ -93,9 +93,55 @@ internal class DeployService : ServiceBase
     }
     #endregion
 
+    #region SSH 密钥管理
+    /// <summary>设置 SSH 密钥。将私钥写入临时文件，返回文件路径</summary>
+    private String? SetupSshKey(String? deployKey)
+    {
+        if (deployKey.IsNullOrEmpty()) return null;
+
+        // TrimStart 兼容用户粘贴时前导空白/换行
+        var trimmedKey = deployKey.TrimStart();
+        if (!trimmedKey.StartsWith("-----BEGIN"))
+        {
+            XTrace.WriteLine("警告：仓库密钥格式无效，跳过 SSH 密钥设置");
+            return null;
+        }
+
+        var keyFile = Path.Combine(Path.GetTempPath(), $"stardust-deploy-key-{Guid.NewGuid():N}");
+        // 显式指定 UTF-8 无 BOM 以减少跨平台歧义
+        File.WriteAllText(keyFile, trimmedKey, new UTF8Encoding(false));
+
+        // Linux 下设置仅 owner 可读写权限
+        if (!Runtime.Windows)
+        {
+            try { File.SetUnixFileMode(keyFile, UnixFileMode.UserRead | UnixFileMode.UserWrite); }
+            catch { }
+        }
+
+        XTrace.WriteLine("已设置 SSH 密钥：{0}", keyFile);
+        return keyFile;
+    }
+
+    /// <summary>清理 SSH 密钥临时文件</summary>
+    private void CleanupSshKey(String? keyFile)
+    {
+        if (keyFile.IsNullOrEmpty() || !File.Exists(keyFile)) return;
+
+        try
+        {
+            File.Delete(keyFile);
+            XTrace.WriteLine("已清理 SSH 密钥：{0}", keyFile);
+        }
+        catch (Exception ex)
+        {
+            XTrace.WriteLine("警告：清理 SSH 密钥失败：{0}", ex.Message);
+        }
+    }
+    #endregion
+
     #region 编译命令处理
     /// <summary>处理编译命令</summary>
-    private String OnCompile(String? args)
+    private async Task<String> OnCompile(String? args)
     {
         if (args.IsNullOrEmpty()) throw new ArgumentNullException(nameof(args));
 
@@ -105,6 +151,8 @@ internal class DeployService : ServiceBase
         XTrace.WriteLine("========== 开始编译任务 ==========");
         XTrace.WriteLine("仓库：{0}", cmd.Repository);
         XTrace.WriteLine("分支：{0}", cmd.Branch ?? "main");
+
+        var sshKeyFile = SetupSshKey(cmd.DeployKey);
 
         var workDir = "";
         try
@@ -127,14 +175,14 @@ internal class DeployService : ServiceBase
                     Directory.CreateDirectory(cmd.SourcePath);
                     try
                     {
-                        GitClone(cmd.Repository, cmd.Branch ?? "main", repoDir);
+                        GitClone(cmd.Repository, cmd.Branch ?? "main", repoDir, sshKeyFile);
                         XTrace.WriteLine("代码拉取完成：{0}", repoDir);
                     }
                     catch (Exception ex)
                     {
                         XTrace.WriteLine("Git 克隆失败：{0}", ex.Message);
                         XTrace.WriteException(ex);
-                        TryRecoverAndReclone(cmd.Repository, cmd.Branch ?? "main", repoDir);
+                        TryRecoverAndReclone(cmd.Repository, cmd.Branch ?? "main", repoDir, sshKeyFile);
                     }
                 }
                 // 拉取最新代码
@@ -142,14 +190,14 @@ internal class DeployService : ServiceBase
                 {
                     try
                     {
-                        GitPull(repoDir, cmd.Branch);
+                        GitPull(repoDir, cmd.Branch, sshKeyFile);
                         XTrace.WriteLine("代码拉取完成");
                     }
                     catch (Exception ex)
                     {
                         XTrace.WriteLine("Git 拉取失败：{0}", ex.Message);
                         XTrace.WriteException(ex);
-                        TryRecoverAndReclone(cmd.Repository, cmd.Branch ?? "main", repoDir);
+                        TryRecoverAndReclone(cmd.Repository, cmd.Branch ?? "main", repoDir, sshKeyFile);
                     }
                 }
             }
@@ -163,14 +211,14 @@ internal class DeployService : ServiceBase
                 repoDir = Path.Combine(workDir, "repo");
                 try
                 {
-                    GitClone(cmd.Repository, cmd.Branch ?? "main", repoDir);
+                    GitClone(cmd.Repository, cmd.Branch ?? "main", repoDir, sshKeyFile);
                     XTrace.WriteLine("代码拉取完成：{0}", repoDir);
                 }
                 catch (Exception ex)
                 {
                     XTrace.WriteLine("Git 克隆失败：{0}", ex.Message);
                     XTrace.WriteException(ex);
-                    TryRecoverAndReclone(cmd.Repository, cmd.Branch ?? "main", repoDir);
+                    TryRecoverAndReclone(cmd.Repository, cmd.Branch ?? "main", repoDir, sshKeyFile);
                 }
             }
             else
@@ -223,7 +271,7 @@ internal class DeployService : ServiceBase
                 if (cmd.DeployName.IsNullOrEmpty())
                     throw new InvalidOperationException("未指定应用部署集名称，无法上传");
 
-                UploadPackage(_client.Server, cmd.DeployName, zipFile, commitId, commitLog, commitTime);
+                await UploadPackageAsync(_client.Server, cmd.DeployName, zipFile, commitId, commitLog, commitTime);
                 XTrace.WriteLine("上传成功：{0}", zipFile);
             }
 
@@ -240,6 +288,8 @@ internal class DeployService : ServiceBase
         }
         finally
         {
+            CleanupSshKey(sshKeyFile);
+
             // 清理临时工作目录（本地源代码目录不清理）
             if (!workDir.IsNullOrEmpty() && Directory.Exists(workDir))
             {
@@ -317,9 +367,9 @@ internal class DeployService : ServiceBase
     }
 
     /// <summary>执行通用进程</summary>
-    private void ExecuteProcess(String fileName, String arguments, String workingDirectory)
+    private void ExecuteProcess(String fileName, String arguments, String? workingDirectory, String? sshKeyFile = null)
     {
-        var psi = CreateProcessStartInfo(fileName, arguments, workingDirectory);
+        var psi = CreateProcessStartInfo(fileName, arguments, workingDirectory, sshKeyFile);
 
         using var p = new Process { StartInfo = psi, EnableRaisingEvents = true };
 
@@ -362,12 +412,12 @@ internal class DeployService : ServiceBase
     }
 
     /// <summary>Git 克隆仓库</summary>
-    private void GitClone(String repoUrl, String branch, String targetPath)
+    private void GitClone(String repoUrl, String branch, String targetPath, String? sshKeyFile = null)
     {
         XTrace.WriteLine("开始克隆仓库：{0} 分支：{1}", repoUrl, branch);
 
         var args = $"clone -b {branch} --depth 1 {repoUrl} \"{targetPath}\"";
-        ExecuteProcess("git", args, null);
+        ExecuteProcess("git", args, null, sshKeyFile);
 
         XTrace.WriteLine("Git 克隆成功");
     }
@@ -375,17 +425,17 @@ internal class DeployService : ServiceBase
     /// <summary>Git 拉取最新代码</summary>
     /// <param name="repoDir">本地仓库目录</param>
     /// <param name="branch">分支名称</param>
-    private void GitPull(String repoDir, String? branch)
+    private void GitPull(String repoDir, String? branch, String? sshKeyFile = null)
     {
         XTrace.WriteLine("开始拉取代码：{0}", repoDir);
 
         // 如果指定了分支则先切换
         if (!branch.IsNullOrEmpty())
         {
-            ExecuteProcess("git", $"checkout {branch}", repoDir);
+            ExecuteProcess("git", $"checkout {branch}", repoDir, sshKeyFile);
         }
 
-        ExecuteProcess("git", "pull", repoDir);
+        ExecuteProcess("git", "pull", repoDir, sshKeyFile);
 
         XTrace.WriteLine("Git 拉取成功");
     }
@@ -515,7 +565,7 @@ internal class DeployService : ServiceBase
     }
 
     /// <summary>尝试备份现有仓库并重新克隆（失败则尝试还原备份）</summary>
-    private void TryRecoverAndReclone(String repoUrl, String branch, String repoDir)
+    private void TryRecoverAndReclone(String repoUrl, String branch, String repoDir, String? sshKeyFile = null)
     {
         XTrace.WriteLine("尝试备份并重新拉取仓库：{0}", repoDir);
 
@@ -537,7 +587,7 @@ internal class DeployService : ServiceBase
 
         try
         {
-            GitClone(repoUrl, branch ?? "main", repoDir);
+            GitClone(repoUrl, branch ?? "main", repoDir, sshKeyFile);
             XTrace.WriteLine("重新克隆成功：{0}", repoDir);
 
             if (!string.IsNullOrEmpty(backupDir) && Directory.Exists(backupDir))
@@ -589,7 +639,7 @@ internal class DeployService : ServiceBase
     /// <param name="commitId">提交标识</param>
     /// <param name="commitLog">提交记录</param>
     /// <param name="commitTime">提交时间</param>
-    private void UploadPackage(String server, String deployName, String packagePath, String? commitId = null, String? commitLog = null, String? commitTime = null)
+    private async Task UploadPackageAsync(String server, String deployName, String packagePath, String? commitId = null, String? commitLog = null, String? commitTime = null)
     {
         XTrace.WriteLine("开始上传包文件：{0}", packagePath);
 
@@ -606,10 +656,10 @@ internal class DeployService : ServiceBase
 
         var version = $"v{DateTime.Now:yyyyMMdd-HHmmss}";
 
-        // 使用MultipartFormData上传，对应Deploy/UploadBuildFile接口
+        // 使用流式上传，避免大文件内存峰值
+        await using var fileStream = new FileStream(packagePath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.Asynchronous | FileOptions.SequentialScan);
         using var content = new MultipartFormDataContent();
-        var fileBytes = File.ReadAllBytes(packagePath);
-        var fileContent = new ByteArrayContent(fileBytes);
+        var fileContent = new StreamContent(fileStream);
         fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/zip");
         content.Add(fileContent, "file", Path.GetFileName(packagePath));
 
@@ -619,23 +669,41 @@ internal class DeployService : ServiceBase
         if (!commitTime.IsNullOrEmpty()) uploadUrl += $"&commitTime={Uri.EscapeDataString(commitTime)}";
         XTrace.WriteLine("上传 URL: {0}{1}", server, uploadUrl);
 
-        var response = httpClient.PostAsync(uploadUrl, content).Result;
-        var responseContent = response.Content.ReadAsStringAsync().Result;
+        var response = await httpClient.PostAsync(uploadUrl, content);
+        var responseContent = await response.Content.ReadAsStringAsync();
 
         if (!response.IsSuccessStatusCode)
             throw new Exception($"上传失败：{response.StatusCode} - {responseContent}");
+
+        // 检查响应体中的应用层错误码（ApiFilter 返回 HTTP 200，错误信息在 body 中）
+        // 捕获解析异常：接口返回的成功内容可能不是该结构（如 { id, version, ... }），此时应视为成功
+        if (!responseContent.IsNullOrEmpty())
+        {
+            try
+            {
+                var result = responseContent.ToJsonEntity<UploadResult>();
+                if (result != null && result.Code != 0)
+                    throw new Exception($"上传失败：{result.Code} - {result.Message}");
+            }
+            catch (Exception ex)
+            {
+                XTrace.WriteException(ex);
+                // 仅在能成功解析且 Code!=0 时才抛错；解析失败则视为成功
+                if (ex.Message.StartsWith("上传失败：")) throw;
+            }
+        }
 
         XTrace.WriteLine("上传成功：{0}", responseContent);
     }
 
     /// <summary>创建进程启动信息</summary>
-    private ProcessStartInfo CreateProcessStartInfo(String fileName, String arguments, String? workingDirectory = null)
+    private ProcessStartInfo CreateProcessStartInfo(String fileName, String arguments, String? workingDirectory = null, String? sshKeyFile = null)
     {
-        return new ProcessStartInfo
+        var psi = new ProcessStartInfo
         {
             FileName = fileName,
             Arguments = arguments,
-            WorkingDirectory = workingDirectory,
+            WorkingDirectory = String.IsNullOrEmpty(workingDirectory) ? Environment.CurrentDirectory : workingDirectory,
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -643,6 +711,85 @@ internal class DeployService : ServiceBase
             StandardOutputEncoding = System.Text.Encoding.UTF8,
             StandardErrorEncoding = System.Text.Encoding.UTF8
         };
+
+        // 服务模式运行在 Session 0，没有桌面/TTY，禁止 Git 交互式认证
+        // GIT_TERMINAL_PROMPT=0：禁止 Git 尝试从 stdin 读取用户名密码
+        // GCM_INTERACTIVE=Never：禁止 Git Credential Manager 弹出认证窗口
+        psi.Environment["GIT_TERMINAL_PROMPT"] = "0";
+        psi.Environment["GCM_INTERACTIVE"] = "Never";
+
+        if (!sshKeyFile.IsNullOrEmpty())
+        {
+            // 构建 SSH 命令：默认启用严格主机密钥校验，可通过 StarSetting 的 DisableSshStrictChecking 关闭
+            var strictChecking = !StarSetting.Current.DisableSshStrictChecking;
+            if (strictChecking)
+            {
+                // 严格模式：使用专用 known_hosts 文件
+                var knownHostsFile = GetSshKnownHostsFile();
+                // accept-new 在 OpenSSH 7.3+ 支持，旧版本不识别会直接失败
+                // 检测版本并选择合适的策略：accept-new(7.3+) -> yes(旧版本)
+                var strictMode = GetSshStrictHostKeyCheckingMode();
+                psi.Environment["GIT_SSH_COMMAND"] = $"ssh -i \"{sshKeyFile}\" -o StrictHostKeyChecking={strictMode} -o UserKnownHostsFile=\"{knownHostsFile}\"";
+            }
+            else
+            {
+                // 兼容模式：跳过主机密钥校验（MITM 风险，仅在明确知晓风险时使用）
+                // 注意：Windows 上 /dev/null 不存在，需使用 NUL 或临时文件
+                var nullDevice = Environment.OSVersion.Platform == PlatformID.Unix ? "/dev/null" : "NUL";
+                psi.Environment["GIT_SSH_COMMAND"] = $"ssh -i \"{sshKeyFile}\" -o StrictHostKeyChecking=no -o UserKnownHostsFile={nullDevice}";
+            }
+        }
+
+        return psi;
+    }
+
+    /// <summary>获取 SSH known_hosts 文件路径</summary>
+    private static String GetSshKnownHostsFile()
+    {
+        var dir = Path.Combine(AppContext.BaseDirectory, ".ssh");
+        if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+        return Path.Combine(dir, "known_hosts");
+    }
+
+    /// <summary>获取 SSH 严格主机密钥校验模式</summary>
+    private static String GetSshStrictHostKeyCheckingMode()
+    {
+        // accept-new 在 OpenSSH 7.3+ 支持，自动接受新主机但拒绝更改的主机
+        // 旧版本不识别会直接失败，此时回退到 yes（接受新主机）
+        try
+        {
+            var startInfo = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "ssh",
+                Arguments = "-V",
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            };
+            using var process = System.Diagnostics.Process.Start(startInfo);
+            if (process == null) return "yes";
+            var output = process.StandardError.ReadToEnd();
+            process.WaitForExit(1000);
+
+            // OpenSSH 版本格式: "OpenSSH_7.3p1 ..." 或 "OpenSSH_8.0p1 ..."
+            var match = System.Text.RegularExpressions.Regex.Match(output, @"OpenSSH_(\d+)\.(\d+)");
+            if (match.Success)
+            {
+                var major = int.Parse(match.Groups[1].Value);
+                var minor = int.Parse(match.Groups[2].Value);
+                // 7.3+ 支持 accept-new
+                if (major > 7 || (major == 7 && minor >= 3)) return "accept-new";
+            }
+        }
+        catch { }
+        return "yes";
     }
     #endregion
+
+    private class UploadResult
+    {
+        public Int32 Code { get; set; }
+        public String? Message { get; set; }
+    }
 }
