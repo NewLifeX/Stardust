@@ -350,6 +350,7 @@ public partial class NodeOnline : Entity<NodeOnline>, IOnlineModel2
             Delay = inf.Delay,
             LocalTime = dt,
             Offset = olt.Offset,
+            TraceId = DefaultSpan.Current?.TraceId,
             CreateIP = ip,
             Creator = Environment.MachineName,
         };

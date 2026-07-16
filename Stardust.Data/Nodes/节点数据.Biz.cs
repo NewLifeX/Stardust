@@ -6,6 +6,7 @@ using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
+using NewLife.Log;
 using XCode;
 
 namespace Stardust.Data.Nodes;
@@ -25,6 +26,7 @@ public partial class NodeData : Entity<NodeData>
         // 过滤器 UserInterceptor、TimeInterceptor、IPInterceptor
         Meta.Interceptors.Add<TimeInterceptor>();
         Meta.Interceptors.Add<IPInterceptor>();
+        Meta.Interceptors.Add<TraceInterceptor>();
 
         // 针对Mysql启用压缩表
         var table = Meta.Table.DataTable;
@@ -44,6 +46,8 @@ public partial class NodeData : Entity<NodeData>
         // 在新插入数据或者修改了指定字段时进行修正
         //if (isNew && !Dirtys[nameof(CreateTime)]) CreateTime = DateTime.Now;
         //if (isNew && !Dirtys[nameof(CreateIP)]) CreateIP = ManageProvider.UserHost;
+
+        if (TraceId.IsNullOrEmpty()) TraceId = DefaultSpan.Current?.TraceId;
     }
     #endregion
 

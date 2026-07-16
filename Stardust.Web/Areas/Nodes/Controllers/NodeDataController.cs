@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Charts;
+using NewLife.Cube.Extensions;
 using NewLife.Web;
 using Stardust.Data.Nodes;
 using XCode;
@@ -14,7 +15,11 @@ namespace Stardust.Web.Areas.Nodes.Controllers;
 [NodesArea]
 public class NodeDataController : NodesEntityController<NodeData>
 {
-    static NodeDataController() => ListFields.RemoveField("Id", "*Latency", "*LossRate");
+    static NodeDataController()
+    {
+        ListFields.RemoveField("Id", "*Latency", "*LossRate");
+        ListFields.TraceUrl();
+    }
 
     protected override IEnumerable<NodeData> Search(Pager p)
     {

@@ -720,6 +720,14 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
     {
         if ((context.Online ?? GetOnline(context)) is NodeOnline olt)
         {
+            // 下线时检查是否有活跃会话，避免旧会话断开时覆盖新会话的状态
+            if (!online && context.Device is Node node)
+            {
+                var session = _sessionManager.Get(node.Code);
+                if (session != null && session.Active)
+                    return;
+            }
+
             olt.WebSocket = online;
             olt.Update();
         }
