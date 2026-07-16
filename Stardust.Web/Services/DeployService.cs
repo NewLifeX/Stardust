@@ -1,4 +1,4 @@
-using System.IO.Compression;
+﻿using System.IO.Compression;
 using System.Text.RegularExpressions;
 using NewLife;
 using NewLife.Log;
@@ -51,6 +51,7 @@ public class DeployService(StarFactory starFactory, ITracer tracer)
             var cmd = new CompileCommand
             {
                 Repository = app.Repository,
+                DeployKey = app.DeployKey,
                 Branch = app.Branch,
                 SourcePath = buildNode.SourcePath,
                 ProjectPath = app.ProjectPath,
@@ -65,7 +66,9 @@ public class DeployService(StarFactory starFactory, ITracer tracer)
                 UploadPackage = uploadPackage,
             };
             var args = cmd.ToJson();
-            msg = args;
+            // 脱敏：生成历史记录副本，去掉 DeployKey 和 Repository 中的凭据
+            var safeCmd = cmd.RedactForHistory();
+            msg = safeCmd.ToJson();
 
             await starFactory.SendNodeCommandAsync(buildNode.Node.Code, "deploy/compile", args, 0, 3600, 0, cancellationToken);
         }

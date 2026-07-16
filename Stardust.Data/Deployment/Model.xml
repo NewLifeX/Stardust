@@ -57,6 +57,7 @@
         <Column Name="Port" DataType="Int32" Description="监听端口。应用自身监听的端口，如果是dotnet应用会增加urls参数" />
         <Column Name="Urls" DataType="String" Description="服务地址。对外提供服务的域名端口地址，自动生成nginx配置，如https://sso.newlifex.com" />
         <Column Name="Repository" DataType="String" ItemType="url" Length="200" Description="代码库。下载代码的位置" Category="编译参数" />
+        <Column Name="DeployKey" DataType="String" Length="-1" Description="仓库密钥。SSH 私钥，用于非交互式拉取私有仓库代码" Category="编译参数" />
         <Column Name="Branch" DataType="String" DefaultValue="master" Description="分支。默认main" Category="编译参数" />
         <Column Name="ProjectPath" DataType="String" Description="项目路径。需要编译的项目路径，相对于代码库根目录" Category="编译参数" />
         <Column Name="ProjectKind" DataType="Int32" DefaultValue="1" Description="项目类型。默认dotnet" Type="Stardust.Models.ProjectKinds" Category="编译参数" />

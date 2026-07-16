@@ -6,6 +6,9 @@ public class CompileCommand
     /// <summary>代码库。下载代码的位置</summary>
     public String? Repository { get; set; }
 
+    /// <summary>仓库密钥。SSH 私钥，用于非交互式拉取私有仓库代码</summary>
+    public String? DeployKey { get; set; }
+
     /// <summary>分支</summary>
     public String? Branch { get; set; } = "main";
 

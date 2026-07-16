@@ -52,8 +52,8 @@ internal class Program
             }
         }
 
-        // 没有命令时，进入服务模式（支持 -install/-uninstall/-start/-stop/-run/-s 等）
-        if (cmd.IsNullOrEmpty())
+        // 没有命令，或命令不是已知命令时，进入服务模式（支持 -install/-uninstall/-start/-stop/-run/-s 等）
+        if (cmd.IsNullOrEmpty() || !cmds.ContainsKey(cmd))
         {
             var svc = new DeployService
             {
