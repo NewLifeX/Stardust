@@ -502,7 +502,7 @@ function updateDashboard(d,health){
 async function loadMachineDetail(){
  const el=$('machine-detail');if(!el)return;
  try{
-  const j=await api('/api/star/machine');
+  const j=await api('/star/machine');
   if(j.code!==0){el.innerHTML=`<p class="text-muted">加载失败</p>`;return}
   const d=j.data;
   let html='';
@@ -632,7 +632,7 @@ let _servicesData=null;
 async function loadServices(){
  if(!document.querySelector('#panel-services.active'))return;
  try{
-  const j=await api('/api/star/services');
+  const j=await api('/star/services');
   if(j.code!==0)return;
   _servicesData=j.data;
   renderServices();
@@ -673,7 +673,7 @@ async function doSvcAction(action,name){
  const labels={start:'启动',stop:'停止',restart:'重启'};
  const endpoints={start:'startService',stop:'stopService',restart:'restartService'};
  try{
-  const j=await api(`/api/star/${endpoints[action]}`,{method:'POST',body:JSON.stringify({serviceName:name})});
+  const j=await api(`/star/${endpoints[action]}`,{method:'POST',body:JSON.stringify({serviceName:name})});
   showToast(j.message||(labels[action]+'操作完成'),j.code?'error':'success');
   setTimeout(loadServices,1000);
  }catch(e){showToast('操作失败','error')}
@@ -733,7 +733,7 @@ function showServiceForm(svc,title){
 
 async function saveService(info){
  try{
-  const j=await api('/api/star/addService',{method:'POST',body:JSON.stringify(info)});
+  const j=await api('/star/addService',{method:'POST',body:JSON.stringify(info)});
   showToast(j.message||'保存成功',j.code?'error':'success');
   if(j.code===0){loadServices();closeModal()}
  }catch(e){showToast('保存失败','error')}
@@ -742,7 +742,7 @@ async function saveService(info){
 function confirmRemoveService(name){
  showModal('确认删除',`确定要删除子服务 <strong>${esc(name)}</strong> 吗？<br><span style="color:var(--text-tertiary)">如果服务正在运行，会先停止再删除。</span>`,'删除',async()=>{
   try{
-   const j=await api('/api/star/removeService',{method:'POST',body:JSON.stringify({serviceName:name})});
+   const j=await api('/star/removeService',{method:'POST',body:JSON.stringify({serviceName:name})});
    showToast(j.message||'删除成功',j.code?'error':'success');
    if(j.code===0){loadServices();closeModal()}
   }catch(e){showToast('删除失败','error')}
@@ -834,7 +834,7 @@ let _starDirtyFields=new Set();
 
 async function loadStarConfig(){
  try{
-  const j=await api('/api/star/getStarConfig');
+  const j=await api('/star/getStarConfig');
   if(j.code!==0){$('panel-starconfig').innerHTML=`<div class="glass-card card"><h2>🌐 星尘设置</h2><p class="text-muted">加载失败</p></div>`;return}
   const groups=j.data.groups||[];
   let html=`<div class="glass-card card"><h2>🌐 星尘设置</h2>`;
@@ -876,7 +876,7 @@ async function saveStarConfig(){
  });
  if(Object.keys(updates).length===0){showToast('没有需要保存的修改','info');return}
  try{
-  const j=await api('/api/star/updateStarConfig',{method:'POST',body:JSON.stringify(updates)});
+  const j=await api('/star/updateStarConfig',{method:'POST',body:JSON.stringify(updates)});
   if(j.code===0){_starDirtyFields.clear();showToast(j.message,'success');loadStarConfig()}
   else showToast(j.message,'error');
  }catch(e){showToast('保存失败','error')}

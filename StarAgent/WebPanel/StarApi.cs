@@ -63,7 +63,7 @@ public class StarApi : IHttpController
     #region 子服务管理
     /// <summary>获取所有子服务列表</summary>
     /// <returns>服务列表，含运行状态</returns>
-    public Object GetServices()
+    public Object Services()
     {
         if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
 
@@ -383,7 +383,7 @@ public class StarApi : IHttpController
     #region 本机信息
     /// <summary>获取本机详细信息</summary>
     /// <returns>丰富的本机信息</returns>
-    public Object GetMachineInfo()
+    public Object Machine()
     {
         if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
 

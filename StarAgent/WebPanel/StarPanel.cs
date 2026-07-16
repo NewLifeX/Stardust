@@ -38,13 +38,18 @@ public class StarPanel : AgentWebPanel
 
     #region 路由注册
     /// <summary>注册所有路由</summary>
+    /// <remarks>
+    /// 先注册 StarApi 路由，再调用基类注册内置 API 和静态文件。
+    /// 基类注册的 /* 通配符会放在 Dictionary 末尾，因此通配匹配时
+    /// /star/* 会优先于 /* 被检查到，避免被静态文件处理器拦截。
+    /// </remarks>
     protected override void RegisterRoutes()
     {
-        // 先注册基类路由（内置 ApiController + 静态文件）
-        base.RegisterRoutes();
+        // 1. 先注册 StarApi 控制器（通配 /star/*），确保排在 /* 前面
+        Server.MapController<StarApi>("/star");
 
-        // 注册 StarAgent 专有 API 控制器，路由前缀 /api/star
-        Server.MapController<StarApi>("/api/star");
+        // 2. 再调用基类注册内置 API（/api/*）+ 静态文件（/*）
+        base.RegisterRoutes();
     }
     #endregion
 

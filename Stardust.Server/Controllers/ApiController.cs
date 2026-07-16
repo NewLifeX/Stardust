@@ -24,7 +24,7 @@ public class ApiController : ControllerBase
     /// <returns></returns>
     [Route("[controller]")]
     [HttpGet]
-    public Object Get(String state)
+    public Object Get(String? state)
     {
         var asmx = AssemblyX.Entry;
         var conn = HttpContext.Connection;
