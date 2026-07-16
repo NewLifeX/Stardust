@@ -1,4 +1,4 @@
-﻿using System.Runtime.Intrinsics.Arm;
+using System.Runtime.Intrinsics.Arm;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Log;
@@ -190,7 +190,7 @@ public class DeployController(NodeService nodeService, DeployService deployServi
     /// <param name="file">zip文件</param>
     /// <returns></returns>
     [HttpPost]
-    public async Task<Object> UploadBuildFile(String deployName, String version, String? commitId, String? commitLog, String? commitTime, [FromForm] IFormFile file)
+    public async Task<Object> UploadBuildFile([FromQuery] String deployName, [FromQuery] String version, [FromQuery] String? commitId, [FromQuery] String? commitLog, [FromQuery] String? commitTime, [FromForm] IFormFile file)
     {
         if (deployName.IsNullOrEmpty()) throw new ApiException(400, "应用部署集名称不能为空");
         if (version.IsNullOrEmpty()) throw new ApiException(400, "版本号不能为空");
