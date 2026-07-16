@@ -352,10 +352,10 @@ function switchPanel(name){
  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
  const panel=$('panel-'+name);if(panel)panel.classList.add('active');
  if(!panel)return;
+ // 切换 tab 时立即加载对应数据
  const loaders={
-  dashboard:()=>{},
-  services:()=>{},
-  control:()=>{},
+  dashboard:loadDashboard,
+  services:loadServices,
   config:loadConfig,
   starconfig:loadStarConfig,
   logs:loadLogs,
@@ -433,7 +433,7 @@ function buildDashboard(d,health){
   html+=`<div class="collapse-body" id="gc-body"><div class="gc-stats">`;
   html+=gcStat('Gen 0',health.gcCollections.gen0,'gc-gen0')+gcStat('Gen 1',health.gcCollections.gen1,'gc-gen1')+gcStat('Gen 2',health.gcCollections.gen2,'gc-gen2');
   html+=gcStat('GC 内存',health.gcTotalMemory+' MB','gc-mem')+gcStat('CPU 时间',health.totalProcessorTime+'s','gc-cpu');
-  html+=`</div></div></div>`;
+  html+=`</div><div style="margin-top:12px;text-align:right"><button class="btn btn-ghost btn-sm" onclick="freeMemory()">🗑 释放内存</button></div></div></div>`;
  }
  html+=`</div>`;
 
@@ -647,26 +647,32 @@ function renderServices(){
  if(svcs.length===0){
   html+=`<div class="empty-state"><div class="empty-icon">📦</div><p>暂无子服务</p><p style="font-size:11px;margin-top:4px">点击"添加服务"按钮创建第一个子服务</p></div>`;
  }else{
-  html+=`<table class="svc-table"><thead><tr><th>名称</th><th>文件</th><th>启用</th><th>状态</th><th>进程</th><th style="min-width:160px">操作</th></tr></thead><tbody>`;
-  svcs.forEach(s=>{
-   const run=s.running;
-   html+=`<tr><td><div class="svc-name">${esc(s.name)}</div></td>`;
-   html+=`<td><div class="svc-file">${esc(s.fileName||'')}${s.arguments?' '+esc(s.arguments):''}</div></td>`;
-   html+=`<td><span class="badge ${s.enable?'badge-green':'badge-gray'}">${s.enable?'启用':'禁用'}</span></td>`;
+  html+=`<table class="svc-table"><thead><tr><th>名称</th><th>文件</th><th>启用</th><th>状态</th><th>进程</th><th style="min-width:180px">操作</th></tr></thead><tbody>`;
+  svcs.forEach((s,idx)=>{
+   const run=s.Running;
+   html+=`<tr><td><div class="svc-name">${esc(s.Name)}</div></td>`;
+   html+=`<td><div class="svc-file">${esc(s.FileName||'')}${s.Arguments?' '+esc(s.Arguments):''}</div></td>`;
+   html+=`<td><span class="badge ${s.Enable?'badge-green':'badge-gray'}">${s.Enable?'启用':'禁用'}</span></td>`;
    html+=`<td><span class="badge ${run?'badge-green':'badge-red'}">${run?'运行中':'已停止'}</span></td>`;
-   html+=`<td style="font-family:var(--font-mono);font-size:12px">${run?(s.processId||'')+(s.processName?' '+esc(s.processName):''):'-'}</td>`;
+   html+=`<td style="font-family:var(--font-mono);font-size:12px">${run?(s.ProcessId||'')+(s.ProcessName?' '+esc(s.ProcessName):''):'-'}</td>`;
    html+=`<td><div class="svc-actions">`;
-   html+=`<button class="btn btn-primary btn-sm" onclick="doSvcAction('start','${escAttr(s.name)}')" ${run?'disabled':''}>▶ 启动</button>`;
-   html+=`<button class="btn btn-danger btn-sm" onclick="doSvcAction('stop','${escAttr(s.name)}')" ${!run?'disabled':''}>⏹ 停止</button>`;
-   html+=`<button class="btn btn-sm" style="background:var(--orange);color:#fff" onclick="doSvcAction('restart','${escAttr(s.name)}')" ${!run?'disabled':''}>↻ 重启</button>`;
-   html+=`<button class="btn btn-secondary btn-sm" onclick="showEditService(${escAttr(JSON.stringify(s))})">✏</button>`;
-   html+=`<button class="btn btn-ghost btn-sm" onclick="confirmRemoveService('${escAttr(s.name)}')" style="color:var(--red)">🗑</button>`;
+   html+=`<button class="btn btn-primary btn-sm" onclick="doSvcAction('start','${escAttr(s.Name)}')" ${run?'disabled':''}>▶ 启动</button>`;
+   html+=`<button class="btn btn-danger btn-sm" onclick="doSvcAction('stop','${escAttr(s.Name)}')" ${!run?'disabled':''}>⏹ 停止</button>`;
+   html+=`<button class="btn btn-sm" style="background:var(--orange);color:#fff" onclick="doSvcAction('restart','${escAttr(s.Name)}')" ${!run?'disabled':''}>↻ 重启</button>`;
+   html+=`<button class="btn btn-secondary btn-sm" onclick="editServiceByIdx(${idx})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>`;
+   html+=`<button class="btn btn-ghost btn-sm" onclick="confirmRemoveService('${escAttr(s.Name)}')" style="color:var(--red)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>`;
    html+=`</div></td></tr>`;
   });
   html+=`</tbody></table>`;
  }
  html+=`</div>`;
  $('panel-services').innerHTML=html;
+}
+
+function editServiceByIdx(idx){
+ const svc=_servicesData?.services?.[idx];
+ if(!svc)return;
+ showServiceForm(svc,'编辑子服务');
 }
 
 async function doSvcAction(action,name){
@@ -680,34 +686,42 @@ async function doSvcAction(action,name){
 }
 
 function showAddService(){showServiceForm(null,'添加子服务')}
-function showEditService(svcStr){
- let svc;
- try{svc=JSON.parse(svcStr)}catch(e){return}
- showServiceForm(svc,'编辑子服务');
-}
 
 function showServiceForm(svc,title){
  const isEdit=svc!==null;
- const s=svc||{name:'',fileName:'',arguments:'',workingDirectory:'',enable:true,mode:'Standard',maxMemory:0,healthCheck:'',environments:'',allowMultiple:false,autoStop:false,reloadOnChange:false,oomScoreAdjust:0,priority:'Normal',userName:''};
+ // 兼容 C# PascalCase 和 JS camelCase 的属性名
+ const s=svc||{};
+ const name=s.Name||s.name||'';
+ const fileName=s.FileName||s.fileName||'';
+ const args=s.Arguments||s.arguments||'';
+ const cwd=s.WorkingDirectory||s.workingDirectory||'';
+ const enable=s.Enable??s.enable??true;
+ const mode=s.Mode||s.mode||'Standard';
+ const maxMem=s.MaxMemory??s.maxMemory??0;
+ const health=s.HealthCheck||s.healthCheck||'';
+ const env=s.Environments||s.environments||'';
+ const autoStop=s.AutoStop??s.autoStop??false;
+ const reload=s.ReloadOnChange??s.reloadOnChange??false;
+ const multi=s.AllowMultiple??s.allowMultiple??false;
  const html=`<div class="form-row">
-  <div class="form-group"><label>服务名称 *</label><input type="text" id="sf-name" value="${esc(s.name)}" placeholder="全局唯一标识"></div>
-  <div class="form-group"><label>文件名 *</label><input type="text" id="sf-file" value="${esc(s.fileName)}" placeholder="启动进程时使用的可执行文件或zip包"></div>
+  <div class="form-group"><label>服务名称 *</label><input type="text" id="sf-name" value="${esc(name)}" placeholder="全局唯一标识"></div>
+  <div class="form-group"><label>文件名 *</label><input type="text" id="sf-file" value="${esc(fileName)}" placeholder="启动进程时使用的可执行文件或zip包"></div>
  </div>
- <div class="form-group"><label>参数</label><input type="text" id="sf-args" value="${esc(s.arguments||'')}" placeholder="启动参数"></div>
- <div class="form-group"><label>工作目录</label><input type="text" id="sf-cwd" value="${esc(s.workingDirectory||'')}" placeholder="留空使用默认目录"></div>
+ <div class="form-group"><label>参数</label><input type="text" id="sf-args" value="${esc(args)}" placeholder="启动参数"></div>
+ <div class="form-group"><label>工作目录</label><input type="text" id="sf-cwd" value="${esc(cwd)}" placeholder="留空使用默认目录"></div>
  <div class="form-row">
-  <div class="form-group"><label>部署模式</label><select id="sf-mode"><option value="Standard" ${s.mode==='Standard'?'selected':''}>Standard</option><option value="Shadow" ${s.mode==='Shadow'?'selected':''}>Shadow</option><option value="Hosted" ${s.mode==='Hosted'?'selected':''}>Hosted</option><option value="Task" ${s.mode==='Task'?'selected':''}>Task</option></select></div>
-  <div class="form-group"><label>最大内存 (MB)</label><input type="number" id="sf-maxmem" value="${s.maxMemory||0}" placeholder="0 不限制"></div>
+  <div class="form-group"><label>部署模式</label><select id="sf-mode"><option value="Standard" ${mode==='Standard'?'selected':''}>Standard</option><option value="Shadow" ${mode==='Shadow'?'selected':''}>Shadow</option><option value="Hosted" ${mode==='Hosted'?'selected':''}>Hosted</option><option value="Task" ${mode==='Task'?'selected':''}>Task</option></select></div>
+  <div class="form-group"><label>最大内存 (MB)</label><input type="number" id="sf-maxmem" value="${maxMem}" placeholder="0 不限制"></div>
  </div>
- <div class="form-group"><label>健康检查地址</label><input type="text" id="sf-health" value="${esc(s.healthCheck||'')}" placeholder="http://localhost:port/health"></div>
- <div class="form-group"><label>环境变量</label><input type="text" id="sf-env" value="${esc(s.environments||'')}" placeholder="KEY=VALUE;KEY2=VALUE2"></div>
+ <div class="form-group"><label>健康检查地址</label><input type="text" id="sf-health" value="${esc(health)}" placeholder="http://localhost:port/health"></div>
+ <div class="form-group"><label>环境变量</label><input type="text" id="sf-env" value="${esc(env)}" placeholder="KEY=VALUE;KEY2=VALUE2"></div>
  <div class="form-row">
-  <div class="form-group"><label class="toggle"><input type="checkbox" id="sf-enable" ${s.enable?'checked':''}><span class="track"><span class="thumb"></span></span></label><div style="font-size:12px;color:var(--text-tertiary)">启用</div></div>
-  <div class="form-group"><label class="toggle"><input type="checkbox" id="sf-autostop" ${s.autoStop?'checked':''}><span class="track"><span class="thumb"></span></span></label><div style="font-size:12px;color:var(--text-tertiary)">自动停止（随宿主退出）</div></div>
+  <div class="form-group"><label class="toggle"><input type="checkbox" id="sf-enable" ${enable?'checked':''}><span class="track"><span class="thumb"></span></span></label><div style="font-size:12px;color:var(--text-tertiary)">启用</div></div>
+  <div class="form-group"><label class="toggle"><input type="checkbox" id="sf-autostop" ${autoStop?'checked':''}><span class="track"><span class="thumb"></span></span></label><div style="font-size:12px;color:var(--text-tertiary)">自动停止（随宿主退出）</div></div>
  </div>
  <div class="form-row">
-  <div class="form-group"><label class="toggle"><input type="checkbox" id="sf-reload" ${s.reloadOnChange?'checked':''}><span class="track"><span class="thumb"></span></span></label><div style="font-size:12px;color:var(--text-tertiary)">文件变动自动重启</div></div>
-  <div class="form-group"><label class="toggle"><input type="checkbox" id="sf-multi" ${s.allowMultiple?'checked':''}><span class="track"><span class="thumb"></span></span></label><div style="font-size:12px;color:var(--text-tertiary)">允许多实例</div></div>
+  <div class="form-group"><label class="toggle"><input type="checkbox" id="sf-reload" ${reload?'checked':''}><span class="track"><span class="thumb"></span></span></label><div style="font-size:12px;color:var(--text-tertiary)">文件变动自动重启</div></div>
+  <div class="form-group"><label class="toggle"><input type="checkbox" id="sf-multi" ${multi?'checked':''}><span class="track"><span class="thumb"></span></span></label><div style="font-size:12px;color:var(--text-tertiary)">允许多实例</div></div>
  </div>`;
 
  showModal(title,html,isEdit?'保存':'添加',()=>{
@@ -750,6 +764,53 @@ function confirmRemoveService(name){
 }
 
 /* ── Control ── */
+let _freeMemRunning=false;
+
+async function freeMemory(){
+ if(_freeMemRunning)return;_freeMemRunning=true;
+ const btn=$('btn-free-mem');if(btn)btn.disabled=true;
+ showToast('正在释放内存...','info');
+ try{
+  const j=await api('/api/freeMemory');
+  if(j.code===0){
+   showToast(`✅ ${j.message}`,'success');
+  }else{
+   showToast('❌ '+(j.message||'释放失败'),'error');
+  }
+  setTimeout(()=>{loadDashboard();},1000);
+ }catch(e){showToast('❌ 请求失败','error')}
+ finally{if(btn)btn.disabled=false;_freeMemRunning=false}
+}
+
+async function changePassword(){
+ const oldPwd=$('pwd-old').value;
+ const newPwd=$('pwd-new').value;
+ const confirmPwd=$('pwd-confirm').value;
+ const msg=$('pwd-msg');
+
+ if(!oldPwd){msg.textContent='请输入旧密码';msg.style.color='var(--red)';return}
+ if(!newPwd){msg.textContent='请输入新密码';msg.style.color='var(--red)';return}
+ if(newPwd.length<4){msg.textContent='新密码至少 4 位';msg.style.color='var(--red)';return}
+ if(newPwd!==confirmPwd){msg.textContent='两次输入的新密码不一致';msg.style.color='var(--red)';return}
+
+ msg.textContent='修改中...';msg.style.color='var(--text-muted)';
+ try{
+  const j=await api('/api/changePassword',{
+   method:'POST',
+   body:JSON.stringify({oldPassword:oldPwd,newPassword:newPwd})
+  });
+  if(j.code===0){
+   msg.textContent='✅ 密码已修改，下次登录请使用新密码';msg.style.color='var(--green)';
+   $('pwd-old').value='';$('pwd-new').value='';$('pwd-confirm').value='';
+   showToast('密码已修改','success');
+  }else{
+   msg.textContent='❌ '+(j.message||'修改失败');msg.style.color='var(--red)';
+  }
+ }catch(e){
+  msg.textContent='❌ 网络错误';msg.style.color='var(--red)';
+ }
+}
+
 (function initControl(){
  let html=`<div class="glass-card card"><h2>⚡ 服务控制</h2>`;
  html+=`<div id="ctrl-status" class="mb-16" style="font-size:14px;color:var(--text-secondary)">加载中...</div>`;
@@ -757,6 +818,7 @@ function confirmRemoveService(name){
  <button class="btn btn-primary btn-lg" onclick="doControl('start')" id="btn-start">▶ 启动服务</button>
  <button class="btn btn-danger btn-lg" onclick="doControl('stop')" id="btn-stop">⏹ 停止服务</button>
  <button class="btn btn-lg" style="background:var(--orange);color:#fff;box-shadow:0 2px 8px rgba(249,115,22,0.3)" onclick="doControl('restart')" id="btn-restart">↻ 重启服务</button>
+ <button class="btn btn-lg" style="background:var(--gradient-brand);color:#fff;box-shadow:0 2px 8px rgba(91,91,255,0.3)" onclick="freeMemory()" id="btn-free-mem">🗑 释放内存</button>
  </div>`;
  html+=`<div class="section-title">操作记录</div><div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">通过本面板发起的启停操作，保存在浏览器本地存储</div><div class="cmd-history" id="cmd-history">`;
  if(cmdHistory.length===0)html+=`<div class="text-muted" style="font-size:12px">暂无操作记录</div>`;
@@ -799,6 +861,18 @@ async function loadConfig(){
    html+=`<tr><td>${esc(item.displayName)}</td><td>${renderConfigInput(item)}</td><td>${esc(item.description)}</td></tr>`;
   });
   html+=`</tbody></table><div class="mt-16"><button class="btn btn-primary" onclick="saveConfig()">💾 保存配置</button> <span style="font-size:12px;color:var(--text-muted);margin-left:12px">部分配置需重启服务后生效</span></div></div>`;
+
+  // 修改密码卡片
+  html+=`<div class="glass-card card" style="margin-top:16px"><h2>🔑 修改密码</h2>`;
+  html+=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:end">`;
+  html+=`<div><label style="display:block;font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">旧密码</label><input type="password" id="pwd-old" placeholder="请输入旧密码" autocomplete="off"></div>`;
+  html+=`<div><label style="display:block;font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">新密码</label><input type="password" id="pwd-new" placeholder="请输入新密码" autocomplete="new-password"></div>`;
+  html+=`<div><label style="display:block;font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">确认新密码</label><input type="password" id="pwd-confirm" placeholder="再次输入新密码" autocomplete="new-password"></div>`;
+  html+=`</div>`;
+  html+=`<div style="margin-top:14px;display:flex;align-items:center;gap:12px">`;
+  html+=`<button class="btn btn-primary" onclick="changePassword()">修改密码</button>`;
+  html+=`<span id="pwd-msg" style="font-size:12px;color:var(--text-muted)"></span></div></div>`;
+
   $('panel-config').innerHTML=html;
  }catch(e){$('panel-config').innerHTML=`<div class="glass-card card"><h2>⚙ Agent 配置</h2><p class="text-muted">加载失败</p></div>`}
 }
