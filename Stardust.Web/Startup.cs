@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.FileProviders;
@@ -24,6 +24,8 @@ using Stardust.Server.Services;
 using Stardust.Web.Services;
 using XCode;
 using XCode.DataAccessLayer;
+using Stardust.Dns;
+using Stardust.Services;
 
 namespace Stardust.Web;
 
@@ -99,6 +101,13 @@ public class Startup
         {
             options.MaxRequestBodySize = Int32.MaxValue;
         });
+
+        // DDNS服务
+        services.AddSingleton<IDnsProvider, AliyunDnsProvider>();
+        services.AddSingleton<IDnsProvider, TencentCloudDnsProvider>();
+        services.AddSingleton<IDnsProvider, UCloudDnsProvider>();
+        services.AddSingleton<DnsProviderFactory>();
+        services.AddSingleton<DnsService>();
 
         services.AddControllersWithViews();
         services.AddCube();
