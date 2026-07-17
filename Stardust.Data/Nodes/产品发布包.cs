@@ -183,6 +183,9 @@ public partial class ProductPackage
     public ProductRelease Release => Extends.Get(nameof(Release), k => ProductRelease.FindById(ReleaseId));
 
     /// <summary>发布版本</summary>
+    [Map(nameof(ReleaseId), typeof(ProductRelease), "Id")]
+    public String ReleaseVersion => Release?.Version;
+
     #endregion
 
     #region 扩展查询

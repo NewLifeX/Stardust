@@ -411,7 +411,7 @@
     <Table Name="ProductRelease" Description="产品版本。产品发布版本，一个版本包含多个面向不同.NET运行时的包">
       <Columns>
         <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-        <Column Name="Version" DataType="String" Description="版本号。完整版本号，如 3.7.2026.0611" />
+        <Column Name="Version" DataType="String" Master="True" Description="版本号。完整版本号，如 3.7.2026.0611" />
         <Column Name="ProductCode" DataType="String" Description="产品编码。StarAgent/CrazyCoder/XCoder 等，用于区分不同类型产品" />
         <Column Name="Enable" DataType="Boolean" Description="启用。启用/停用" />
         <Column Name="Force" DataType="Boolean" Description="强制。强制升级" />
