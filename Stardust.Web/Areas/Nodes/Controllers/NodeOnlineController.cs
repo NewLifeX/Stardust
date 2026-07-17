@@ -98,7 +98,7 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
             var online = NodeOnline.FindById(item.ToInt());
             if (online?.Node != null)
             {
-                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/upgrade", null, 0, 600, 0, HttpContext.RequestAborted)));
+                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/upgrade", null, 0, 600, 10, HttpContext.RequestAborted)));
             }
         }
 
@@ -187,7 +187,7 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
             var online = NodeOnline.FindById(item.ToInt());
             if (online?.Node != null)
             {
-                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/syncTime", null, 0, 600, 0, HttpContext.RequestAborted)));
+                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/syncTime", null, 0, 600, 5, HttpContext.RequestAborted)));
             }
         }
 
@@ -216,7 +216,7 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
             var online = NodeOnline.FindById(item.ToInt());
             if (online?.Node != null)
             {
-                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/restart", null, 0, 600, 0, HttpContext.RequestAborted)));
+                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/restart", null, 0, 600, 5, HttpContext.RequestAborted)));
             }
         }
 
@@ -245,7 +245,7 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
             var online = NodeOnline.FindById(item.ToInt());
             if (online?.Node != null)
             {
-                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/reboot", null, 0, 600, 0, HttpContext.RequestAborted)));
+                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/reboot", null, 0, 600, 5, HttpContext.RequestAborted)));
             }
         }
 
