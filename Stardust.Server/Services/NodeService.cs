@@ -728,7 +728,8 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
     /// <returns></returns>
     public override void SetOnline(DeviceContext context, Boolean online)
     {
-        if ((context.Online ?? GetOnline(context)) is NodeOnline olt)
+        // 优先从缓存/数据库获取最新在线记录，避免 context.Online 持有过期实例
+        if ((GetOnline(context) ?? context.Online) is NodeOnline olt)
         {
             // 下线时检查是否有活跃会话，避免旧会话断开时覆盖新会话的状态
             if (!online && context.Device is Node node)
@@ -740,6 +741,10 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
 
             olt.WebSocket = online;
             olt.Update();
+
+            // 更新缓存，确保后续 GetOnline 能拿到最新值
+            if (context.Device is Node node2)
+                UpdateOnline(node2, olt);
         }
     }
 
