@@ -1,4 +1,4 @@
-using System.Runtime.Intrinsics.Arm;
+﻿using System.Runtime.Intrinsics.Arm;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Log;
@@ -190,7 +190,11 @@ public class DeployController(NodeService nodeService, DeployService deployServi
     /// <param name="file">zip文件</param>
     /// <returns></returns>
     [HttpPost]
-    public async Task<Object> UploadBuildFile([FromQuery] String deployName, [FromQuery] String version, [FromQuery] String? commitId, [FromQuery] String? commitLog, [FromQuery] String? commitTime, [FromForm] IFormFile file)
+    // 此值的意义是确保 multipart 解析不成为瓶颈（设为200MB），真正的上传包大小上限由入口处的 Startup 中间件控制：
+    // 中间件根据 StarServerSetting.MaxUploadSize 动态设置 Kestrel 的 IHttpMaxRequestBodySizeFeature，
+    // 在请求到达 Controller 之前即可拒绝超限请求，此特性仅作为 multipart 解析的上限兜底
+    [RequestFormLimits(MultipartBodyLengthLimit = 200 * 1024 * 1024)]
+    public async Task<Object> UploadBuildFile(String deployName, String version, String? commitId, String? commitLog, String? commitTime, [FromForm] IFormFile file)
     {
         if (deployName.IsNullOrEmpty()) throw new ApiException(400, "应用部署集名称不能为空");
         if (version.IsNullOrEmpty()) throw new ApiException(400, "版本号不能为空");
