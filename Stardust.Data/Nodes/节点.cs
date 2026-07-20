@@ -484,6 +484,15 @@ public partial class Node
     [BindColumn("Channel", "通道。升级通道，默认Release通道，使用Beta通道可以得到较新版本", "")]
     public NodeChannels Channel { get => _Channel; set { if (OnPropertyChanging("Channel", value)) { _Channel = value; OnPropertyChanged("Channel"); } } }
 
+    private String _Domains;
+    /// <summary>域名列表。多个域名逗号分隔，如sh05.newlifex.com,sh05.feifan.link</summary>
+    [Category("参数设置")]
+    [DisplayName("域名列表")]
+    [Description("域名列表。多个域名逗号分隔，如sh05.newlifex.com,sh05.feifan.link")]
+    [DataObjectField(false, false, true, 500)]
+    [BindColumn("Domains", "域名列表。多个域名逗号分隔，如sh05.newlifex.com,sh05.feifan.link", "")]
+    public String Domains { get => _Domains; set { if (OnPropertyChanging("Domains", value)) { _Domains = value; OnPropertyChanged("Domains"); } } }
+
     private String _WebHook;
     /// <summary>告警机器人。钉钉、企业微信等</summary>
     [Category("告警")]
@@ -716,6 +725,7 @@ public partial class Node
             "NewServer" => _NewServer,
             "LastVersion" => _LastVersion,
             "Channel" => _Channel,
+            "Domains" => _Domains,
             "WebHook" => _WebHook,
             "AlarmCpuRate" => _AlarmCpuRate,
             "AlarmMemoryRate" => _AlarmMemoryRate,
@@ -793,6 +803,7 @@ public partial class Node
                 case "NewServer": _NewServer = Convert.ToString(value); break;
                 case "LastVersion": _LastVersion = Convert.ToString(value); break;
                 case "Channel": _Channel = (NodeChannels)value.ToInt(); break;
+                case "Domains": _Domains = Convert.ToString(value); break;
                 case "WebHook": _WebHook = Convert.ToString(value); break;
                 case "AlarmCpuRate": _AlarmCpuRate = value.ToInt(); break;
                 case "AlarmMemoryRate": _AlarmMemoryRate = value.ToInt(); break;
@@ -1049,6 +1060,9 @@ public partial class Node
         /// <summary>通道。升级通道，默认Release通道，使用Beta通道可以得到较新版本</summary>
         public static readonly Field Channel = FindByName("Channel");
 
+        /// <summary>域名列表。多个域名逗号分隔，如sh05.newlifex.com,sh05.feifan.link</summary>
+        public static readonly Field Domains = FindByName("Domains");
+
         /// <summary>告警机器人。钉钉、企业微信等</summary>
         public static readonly Field WebHook = FindByName("WebHook");
 
@@ -1267,6 +1281,9 @@ public partial class Node
 
         /// <summary>通道。升级通道，默认Release通道，使用Beta通道可以得到较新版本</summary>
         public const String Channel = "Channel";
+
+        /// <summary>域名列表。多个域名逗号分隔，如sh05.newlifex.com,sh05.feifan.link</summary>
+        public const String Domains = "Domains";
 
         /// <summary>告警机器人。钉钉、企业微信等</summary>
         public const String WebHook = "WebHook";

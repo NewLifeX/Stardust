@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
@@ -64,6 +64,9 @@ public class AppOnlineController : RegistryEntityController<AppOnline>
         PageSetting.EnableAdd = false;
     }
 
+    /// <summary>高级搜索。按条件分页查询</summary>
+    /// <param name="p">分页参数</param>
+    /// <returns>实体列表</returns>
     protected override IEnumerable<AppOnline> Search(Pager p)
     {
         var appId = p["appId"].ToInt(-1);
@@ -119,7 +122,7 @@ public class AppOnlineController : RegistryEntityController<AppOnline>
             var online = AppOnline.FindById(item.ToInt());
             if (online != null && online.App != null)
             {
-                ts.Add((online.AppName, _starFactory.SendAppCommandAsync(online.App.Name, online.Client, "app/freeMemory", null, 0, 300, 0, HttpContext.RequestAborted)));
+                ts.Add((online.AppName, _starFactory.SendAppCommandAsync(online.App.Name, online.Client, "app/freeMemory", null, 0, 300, 5, HttpContext.RequestAborted)));
             }
         }
 

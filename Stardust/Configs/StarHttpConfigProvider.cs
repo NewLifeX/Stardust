@@ -11,13 +11,17 @@ using Stardust.Registry;
 
 namespace Stardust.Configs;
 
+/// <summary>HTTP 配置提供者。从 StarServer 配置中心拉取应用配置，支持 WorkerId 分配和插件服务器动态更新</summary>
 internal class StarHttpConfigProvider : HttpConfigProvider
 {
+    /// <summary>配置信息。包含配置字典和版本号</summary>
     public ConfigInfo? ConfigInfo { get; set; }
 
     const String REGISTRY = "$Registry:";
     private Boolean _useWorkerId;
 
+    /// <summary>从服务端获取全部配置。解析 WorkerId、PluginServer 等特殊配置项</summary>
+    /// <returns>配置字典</returns>
     protected override IDictionary<String, Object?>? GetAll()
     {
         try

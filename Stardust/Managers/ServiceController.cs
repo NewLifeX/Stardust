@@ -638,27 +638,34 @@ public class ServiceController : DisposeBase
             // 检查内存限制
             if (inf.MaxMemory <= 0) return p;
 
-            var mem = p.WorkingSet64 / 1024 / 1024;
-            span?.AppendTag($"MaxMemory={inf.MaxMemory}M WorkingSet64={mem}M");
+            // PrivateMemorySize64 反映进程真实已提交私有内存，不受 OS 换页影响
+            // WorkingSet64 仅反映当前物理驻留集，内存紧张时会被 OS 自动修剪导致误判
+            var ws = p.WorkingSet64 / 1024 / 1024;
+            var prv = p.PrivateMemorySize64 / 1024 / 1024;
+            span?.AppendTag($"MaxMemory={inf.MaxMemory}M WorkingSet64={ws}M PrivateMemorySize64={prv}M");
 
-            // 定期清理内存
+            var mem = prv;
+
+            // 定期清理内存（仅 Windows，Linux 上 GC 会自动归还 OS）
             if (Runtime.Windows && _nextCollect < DateTime.Now && mem > inf.MaxMemory)
             {
-                _nextCollect = DateTime.Now.AddSeconds(600);
+                _nextCollect = DateTime.Now.AddSeconds(120);
 
                 try
                 {
                     Runtime.FreeMemory(p.Id);
-                    //NativeMethods.EmptyWorkingSet(p.Handle);
                 }
                 catch { }
 
                 p.Refresh();
-                mem = p.WorkingSet64 / 1024 / 1024;
+                ws = p.WorkingSet64 / 1024 / 1024;
+                prv = p.PrivateMemorySize64 / 1024 / 1024;
+                mem = prv;
+                span?.AppendTag($"After FreeMemory: WorkingSet64={ws}M PrivateMemorySize64={prv}M");
             }
             if (mem <= inf.MaxMemory) return p;
 
-            WriteLog("内存超限！{0}>{1}", mem, inf.MaxMemory);
+            WriteLog("内存超限！PrivateMemorySize64={0}M / WorkingSet64={1}M > MaxMemory={2}M", prv, ws, inf.MaxMemory);
 
             Stop("内存超限");
 

@@ -1,0 +1,85 @@
+@model EntityField
+@using NewLife;
+@using NewLife.Cube
+@using NewLife.Cube.ViewModels
+@using Stardust.Data.Deployment
+@using XCode;
+@using XCode.Configuration;
+@using System.Collections;
+@{
+    var defaultIP = "空";
+    var entity = Model.Entity as AppPipeline;
+    var item = Model.Field;
+    var selectedValue = entity?.DeployNodeIds ?? "";
+
+    var set = NewLife.Cube.CubeSetting.Current;
+    var cls = set.FormGroupClass;
+    if (cls.IsNullOrEmpty()) { cls = "form-group col-xs-12 col-sm-6 col-lg-4"; }
+}
+<div class="@cls">
+    <label class="control-label col-xs-3 col-sm-3">@item.DisplayName</label>
+    <div class="input-group col-xs-9 col-sm-9">
+        <input type="hidden" name="@item.Name" id="@(item.Name)_hidden" value="@selectedValue" />
+        @if (entity != null && entity.DeployId > 0)
+        {
+            var nodes = AppDeployNode.FindAllByDeployId(entity.DeployId).Where(e => e.Enable);
+            var dic = new Dictionary<String, String>();
+            foreach (var dn in nodes)
+            {
+                var ip = dn.IP != null ? dn.IP : defaultIP;
+                dic[dn.Id.ToString()] = $"{dn.NodeName} ({ip})";
+            }
+            @await Html.PartialAsync("_Form_ListBox", new ListBoxModel(item.Name, dic, selectedValue))
+        }
+        else
+        {
+            @await Html.PartialAsync("_Form_ListBox", new ListBoxModel(item.Name, new Dictionary<String, String>(), selectedValue))
+        }
+    </div>
+</div>
+<script>
+    (function() {
+        debugger
+        var hid = document.getElementById('DeployNodeIds_hidden');
+        var sel = document.querySelector('select[name="DeployNodeIds"]');
+        var deployIdField = document.getElementById('DeployId');
+
+        function syncHidden() {
+            if (!sel || !hid) return;
+            var vals = [];
+            for (var i = 0; i < sel.options.length; i++) {
+                if (sel.options[i].selected) vals.push(sel.options[i].value);
+            }
+            hid.value = vals.join(',');
+        }
+
+        function loadNodes(deployId) {
+            if (!sel) return;
+            while (sel.options.length > 0) sel.remove(0);
+            if (deployId > 0) {
+                fetch('/Deployment/AppPipeline/GetDeployNodes?deployId=' + deployId)
+                    .then(function(r) { return r.json(); })
+                    .then(function(d) {
+                        if (d.code === 0 && d.data) {
+                            d.data.forEach(function(item) {
+                                var opt = document.createElement('option');
+                                opt.value = item.id;
+                                opt.text = item.name;
+                                sel.appendChild(opt);
+                            });
+                        }
+                    });
+            }
+        }
+
+        if (sel) sel.addEventListener('change', syncHidden);
+        if (deployIdField) {
+            deployIdField.addEventListener('change', function() {
+                loadNodes(parseInt(this.value) || 0);
+            });
+        }
+
+        var form = sel ? sel.closest('form') : null;
+        if (form) form.addEventListener('submit', syncHidden);
+    })();
+</script>

@@ -8,6 +8,7 @@ namespace Stardust.Server.Controllers;
 
 [ApiController]
 [Route("[controller]")]
+/// <summary>控制器名</summary>
 public class LogController(StarServerSetting setting) : ControllerBase
 {
     [HttpGet]

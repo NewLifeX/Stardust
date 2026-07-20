@@ -13,6 +13,7 @@ using Stardust.Deployment;
 using Stardust.Managers;
 using Stardust.Models;
 using Stardust.Plugins;
+using StarAgent.WebPanel;
 using IHost = NewLife.Agent.IHost;
 using ServiceModel = NewLife.Agent.Models.ServiceModel;
 
@@ -138,6 +139,17 @@ internal class MyService : ServiceBase, IServiceProvider
         _container = ObjectContainer.Current;
         Provider = ObjectContainer.Provider;
     }
+
+    #region Web面板
+    /// <summary>创建Web管理面板。返回 StarAgent 定制面板实例</summary>
+    /// <param name="service">所属服务</param>
+    /// <returns>StarAgent Web管理面板</returns>
+    protected override NewLife.Agent.WebPanel.AgentWebPanel CreateWebPanel(ServiceBase service)
+    {
+        WriteLog("创建 StarAgent Web 管理面板");
+        return new StarPanel(service);
+    }
+    #endregion
 
     #region 服务控制
     protected override void Init()

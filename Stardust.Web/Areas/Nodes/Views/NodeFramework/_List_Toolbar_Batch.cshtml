@@ -1,5 +1,7 @@
 ﻿@using NewLife.Common;
-@using System.Collections.Generic;
+@using NewLife.Web;
+@using NewLife.Cube;
+@using Stardust.Data.Nodes;
 @{
     var set = ViewBag.PageSetting as PageSetting;
     var page = ViewBag.Page as Pager;
@@ -8,14 +10,14 @@
 {
     <div class="form-group">
         <label for="ver" class="control-label">版本：</label>
-        @Html.TextBox("ver", page["ver"])
-        <label for="baseUrl" class="control-label">基地址：</label>
-        @Html.TextBox("baseUrl", page["baseUrl"])
+        @Html.ForDropDownList("ver", DotNetPackage.GetVersionList(), page["ver"], "全部", true)
+        <label for="kind" class="control-label">类型：</label>
+        @Html.ForDropDownList("kind", DotNetPackage.GetKindList(), page["kind"], "全部", true)
     </div>
-    <button type="button" class="btn btn-purple btn-sm" data-action="action" data-url="@Url.Action("InstallFramework")" data-fields="keys,ver,baseUrl">
+    <button type="button" class="btn btn-purple btn-sm" data-action="action" data-url="@Url.Action("InstallFramework")" data-fields="keys,ver,kind">
         安装框架
     </button>
-    <button type="button" class="btn btn-purple btn-sm" data-action="action" data-url="@Url.Action("UninstallFramework")" data-fields="keys,ver,baseUrl">
+    <button type="button" class="btn btn-purple btn-sm" data-action="action" data-url="@Url.Action("UninstallFramework")" data-fields="keys,ver">
         卸载框架
     </button>
 }

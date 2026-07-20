@@ -9,10 +9,18 @@ using Stardust.Models;
 
 namespace Stardust.Server.Services;
 
+/// <summary>应用在线服务。管理应用实例的在线状态、会话缓存和心跳保活</summary>
 public class AppOnlineService(ICacheProvider cacheProvider, ITracer tracer)
 {
     private readonly ICache _cache = cacheProvider.InnerCache;
 
+    /// <summary>获取或创建应用在线会话。按 ClientId → Token → IP 顺序匹配</summary>
+    /// <param name="app">应用</param>
+    /// <param name="clientId">客户端标识</param>
+    /// <param name="token">访问令牌</param>
+    /// <param name="localIp">本机IP</param>
+    /// <param name="ip">远程IP</param>
+    /// <returns>在线会话和是否新建</returns>
     public (AppOnline, Boolean isNew) GetOnline(App app, String clientId, String token, String localIp, String ip)
     {
         if (app == null) return (null, false);
@@ -76,6 +84,9 @@ public class AppOnlineService(ICacheProvider cacheProvider, ITracer tracer)
         return (online, isNew);
     }
 
+    /// <summary>按客户端标识获取在线会话。优先从缓存读取，未命中时查数据库</summary>
+    /// <param name="clientId">客户端标识</param>
+    /// <returns>在线会话，未找到时返回 null</returns>
     public AppOnline GetOnline(String clientId)
     {
         if (clientId.IsNullOrEmpty()) return null;
@@ -89,9 +100,9 @@ public class AppOnlineService(ICacheProvider cacheProvider, ITracer tracer)
         return online;
     }
 
-    /// <summary>在缓存中删除在线记录</summary>
-    /// <param name="clientId"></param>
-    /// <returns></returns>
+    /// <summary>从缓存中删除在线记录</summary>
+    /// <param name="clientId">客户端标识</param>
+    /// <returns>是否成功</returns>
     public Boolean RemoveOnline(String clientId)
     {
         if (clientId.IsNullOrEmpty()) return false;
@@ -99,15 +110,13 @@ public class AppOnlineService(ICacheProvider cacheProvider, ITracer tracer)
         return _cache.Remove(clientId) > 0;
     }
 
-    /// <summary>
-    /// 更新在线状态
-    /// </summary>
-    /// <param name="app"></param>
-    /// <param name="clientId"></param>
-    /// <param name="ip"></param>
-    /// <param name="token"></param>
-    /// <param name="info"></param>
-    /// <returns></returns>
+    /// <summary>更新在线状态。更新会话信息和关联节点</summary>
+    /// <param name="app">应用</param>
+    /// <param name="clientId">客户端标识</param>
+    /// <param name="ip">远程IP</param>
+    /// <param name="token">访问令牌</param>
+    /// <param name="info">应用信息（可选）</param>
+    /// <returns>更新后的在线会话</returns>
     public AppOnline UpdateOnline(App app, String clientId, String ip, String token, AppInfo info = null)
     {
         var (online, isNew) = GetOnline(app, clientId, token, info?.IP, ip);
@@ -142,7 +151,10 @@ public class AppOnlineService(ICacheProvider cacheProvider, ITracer tracer)
 
         return online;
     }
-
+    /// <summary>根据 IP 匹配节点。优先本机IP，再查远程IP</summary>
+    /// <param name="localIp">本机IP</param>
+    /// <param name="ip">远程IP</param>
+    /// <returns>匹配的节点，未找到返回 null</returns>
     private Node GetNodeByIP(String localIp, String ip)
     {
         if (localIp.IsNullOrEmpty()) return null;
@@ -161,11 +173,11 @@ public class AppOnlineService(ICacheProvider cacheProvider, ITracer tracer)
         return node;
     }
 
-    /// <summary>检查或添加节点。主要服务于仅有跟踪数据的客户端接入</summary>
-    /// <param name="inf"></param>
-    /// <param name="localIp"></param>
-    /// <param name="ip"></param>
-    /// <returns></returns>
+    /// <summary>获取或创建节点。根据应用信息查找已注册节点，未找到时自动注册</summary>
+    /// <param name="inf">应用信息</param>
+    /// <param name="localIp">本机IP</param>
+    /// <param name="ip">远程IP</param>
+    /// <returns>匹配或创建的节点，未找到返回 null</returns>
     public Node GetOrAddNode(AppInfo inf, String localIp, String ip)
     {
         // 根据节点IP规则，自动创建节点

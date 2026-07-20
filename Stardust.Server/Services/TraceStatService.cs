@@ -8,16 +8,16 @@ using XCode.Model;
 
 namespace Stardust.Server.Services;
 
-/// <summary>追踪统计服务</summary>
+/// <summary>追踪统计服务。定义追踪数据统计的入口，支持批量添加和按应用+时间统计</summary>
 public interface ITraceStatService
 {
     /// <summary>添加需要统计的追踪数据</summary>
-    /// <param name="traces"></param>
+    /// <param name="traces">追踪数据列表</param>
     void Add(IList<TraceData> traces);
 
     /// <summary>统计特定应用和时间</summary>
-    /// <param name="appId"></param>
-    /// <param name="time"></param>
+    /// <param name="appId">应用编号</param>
+    /// <param name="time">统计时间</param>
     void Add(Int32 appId, DateTime time);
 
     /// <summary>设置热门应用。监控中心正在查看的应用，缩短计算周期以提供更实时的统计数据</summary>
@@ -75,10 +75,12 @@ public class TraceStatService : ITraceStatService
     private Int32 _count;
     private readonly ITracer _tracer;
 
+    /// <summary>实例化追踪统计服务</summary>
+    /// <param name="tracer">跟踪器</param>
     public TraceStatService(ITracer tracer) => _tracer = tracer;
 
     /// <summary>添加需要统计的追踪数据</summary>
-    /// <param name="traces"></param>
+    /// <param name="traces">追踪数据列表</param>
     public void Add(IList<TraceData> traces)
     {
         if (traces == null || traces.Count == 0) return;
@@ -116,8 +118,8 @@ public class TraceStatService : ITraceStatService
     }
 
     /// <summary>统计特定应用和时间</summary>
-    /// <param name="appId"></param>
-    /// <param name="time"></param>
+    /// <param name="appId">应用编号</param>
+    /// <param name="time">统计时间</param>
     public void Add(Int32 appId, DateTime time)
     {
         Init();
@@ -183,7 +185,7 @@ public class TraceStatService : ITraceStatService
     /// 性能优化：只计算分钟级统计（告警数据源），小时/天级统计由批量计算处理。
     /// 批量计算能完全修正流式计算的偏差，因此可以放心精简流式计算。
     /// </remarks>
-    /// <param name="state"></param>
+    /// <param name="state">定时器状态参数</param>
     private void DoFlowStat(Object state)
     {
         if (_queue.IsEmpty) return;

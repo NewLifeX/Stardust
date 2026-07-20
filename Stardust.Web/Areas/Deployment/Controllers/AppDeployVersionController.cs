@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
@@ -55,6 +55,9 @@ public class AppDeployVersionController : DeploymentEntityController<AppDeployVe
         _tracer = tracer;
     }
 
+    /// <summary>高级搜索。按条件分页查询</summary>
+    /// <param name="p">分页参数</param>
+    /// <returns>实体列表</returns>
     protected override IEnumerable<AppDeployVersion> Search(Pager p)
     {
         var id = p["id"].ToInt(-1);

@@ -1,0 +1,41 @@
+# PUB-19 应用包规范
+
+> 版本：v1.0 | 日期：2026-07-15
+> 对应需求：PUB-19 应用包格式与规范
+
+---
+
+## 背景
+
+参考 Docker 容器化以及前端 Node 的包管理，星尘增加包管理功能。**方向：为了简化应用部署！**
+
+## 应用包格式
+
+每一个应用包就是一个 zip 文件，内含 `star.json` 配置文件。一个应用包内含多个应用，每个应用包括名字、文件名、参数、工作目录等参数。
+
+## CLI 命令
+
+`star` 即星尘代理 CLI，负责下载管理应用包，并启动/停止/删除应用。
+
+| 命令 | 说明 | 示例 |
+|------|------|------|
+| `star pull` | 拉取应用包 | `star pull redis` |
+| `star run` | 运行应用 | `star run [-d] [应用包名] [参数]` |
+| `star start` | 启动应用 | `star start [应用名]` |
+| `star stop` | 停止应用 | `star stop [应用名]` |
+| `star restart` | 重启应用 | `star restart [应用名]` |
+| `star rm` | 删除应用 | `star rm [应用名]` |
+| `star search` | 搜索应用包 | `star search [应用包名]` |
+| `star ls` | 列出应用 | `star ls` |
+
+## 运行模式
+
+- **直接运行**：`star run [应用包名]` — 控制台直接下载并拉起应用进程
+- **后台运行**：`star run -d [应用包名]` — 连接后台 StarAgent 由它管理应用进程
+- **参数**：`--name` 指定应用名，`--workdir` 指定工作目录
+
+## 终极目标
+
+1. 部署星尘服务端：`star run -d newlife/star`
+2. 部署 Redis：`star run redis -port 6379`
+3. 部署 MySQL：`star run -d --name mysql80 mysql/mysql:8.0.21`

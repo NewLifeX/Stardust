@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="/favicon.ico">
+<title>StarAgent 管理面板</title>
+<style>
+/* ══════════════════════════════════════════
+   CSS Design System — 星语 UI 规范
+   ══════════════════════════════════════════ */
+:root{
+  --brand-50:#eef0ff;--brand-100:#dee1ff;--brand-200:#c2c6ff;--brand-300:#9ea3ff;
+  --brand-400:#7a7eff;--brand-500:#5b5bff;--brand-600:#4a4ae6;--brand-700:#3b3bbf;
+  --brand-800:#2f2f99;--brand-900:#25257a;
+  --color-primary:var(--brand-500);
+  --accent-500:#8b5cf6;--accent-600:#7a3ee6;
+  --cyan-glow:#22d3ee;--pink-glow:#f472b6;
+  --surface-0:#0d0d12;--surface-1:#161620;--surface-2:#1f1f2c;--surface-3:#2a2a3a;
+  --text-primary:#f1f5f9;--text-secondary:#cbd5e1;--text-tertiary:#94a3b8;--text-muted:#64748b;
+  --border-subtle:rgba(255,255,255,0.06);--border-default:rgba(255,255,255,0.10);--border-strong:rgba(255,255,255,0.18);
+  --gradient-brand:linear-gradient(135deg,#5b5bff,#8b5cf6);
+  --gradient-brand-soft:linear-gradient(135deg,rgba(91,91,255,0.12),rgba(139,92,246,0.12));
+  --shadow-soft:0 2px 8px rgba(0,0,0,0.3);--shadow-card:0 4px 16px rgba(0,0,0,0.4);
+  --shadow-modal:0 16px 48px rgba(0,0,0,0.5);--shadow-glow:0 0 20px rgba(91,91,255,0.3);
+  --radius-sm:6px;--radius-md:10px;--radius-lg:14px;--radius-xl:20px;
+  --ease-out-expo:cubic-bezier(0.22,1,0.36,1);--ease-out-quart:cubic-bezier(0.25,1,0.5,1);
+  --duration-fast:120ms;--duration-normal:200ms;--duration-slow:320ms;
+  --font-body:'Inter',-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;
+  --font-mono:'JetBrains Mono','Cascadia Code','Consolas','Monaco',monospace;
+  --green:#22c55e;--green-bg:rgba(34,197,94,0.12);--red:#ef4444;--red-bg:rgba(239,68,68,0.12);
+  --yellow:#f59e0b;--yellow-bg:rgba(245,158,11,0.12);--orange:#f97316;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{font:14px/1.6 var(--font-body);background:var(--surface-0);color:var(--text-primary);min-height:100vh;-webkit-font-smoothing:antialiased;letter-spacing:-0.005em}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% -20%,rgba(91,91,255,0.08),transparent),radial-gradient(ellipse 60% 50% at 80% 80%,rgba(139,92,246,0.06),transparent);pointer-events:none;z-index:0}
+.glass{background:rgba(22,22,32,0.7);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--border-subtle)}
+.glass-card{background:rgba(22,22,32,0.65);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);transition:transform var(--duration-normal) var(--ease-out-quart),box-shadow var(--duration-normal) var(--ease-out-quart)}
+.glass-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-modal)}
+.login-box{max-width:400px;margin:120px auto 0;padding:40px 36px;position:relative;z-index:1}
+.login-box h1{text-align:center;margin-bottom:8px;font-size:22px;font-weight:700;background:var(--gradient-brand);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.login-box .sub{text-align:center;color:var(--text-tertiary);font-size:13px;margin-bottom:28px}
+.login-box label{display:block;font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
+.login-box input{width:100%;padding:12px 14px;margin-bottom:18px;border:1px solid var(--border-default);border-radius:var(--radius-md);background:var(--surface-2);color:var(--text-primary);font-size:14px;outline:none;transition:border-color var(--duration-fast),box-shadow var(--duration-fast)}
+.login-box input:focus{border-color:var(--brand-500);box-shadow:0 0 0 3px rgba(91,91,255,0.25)}
+.login-box .err{color:var(--red);text-align:center;margin-top:12px;font-size:13px;display:none}
+.login-box .err.show{display:block}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 20px;border:none;border-radius:var(--radius-md);font-size:14px;font-weight:600;cursor:pointer;transition:all var(--duration-normal) var(--ease-out-quart);outline:none;white-space:nowrap;letter-spacing:-0.005em}
+.btn:focus-visible{box-shadow:0 0 0 3px rgba(91,91,255,0.4)}
+.btn:disabled{opacity:0.45;cursor:not-allowed;transform:none!important}
+.btn-primary{background:var(--gradient-brand);color:#fff;box-shadow:0 2px 8px rgba(91,91,255,0.3)}
+.btn-primary:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 4px 16px rgba(91,91,255,0.45)}
+.btn-secondary{background:var(--surface-2);color:var(--text-primary);border:1px solid var(--border-default)}
+.btn-secondary:hover:not(:disabled){background:var(--surface-3);border-color:var(--border-strong)}
+.btn-danger{background:var(--red);color:#fff;box-shadow:0 2px 8px rgba(239,68,68,0.3)}
+.btn-danger:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 4px 16px rgba(239,68,68,0.45)}
+.btn-ghost{background:transparent;color:var(--text-secondary);padding:8px 14px}
+.btn-ghost:hover:not(:disabled){background:var(--surface-2);color:var(--text-primary)}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:var(--radius-sm)}
+.btn-lg{padding:14px 28px;font-size:16px;border-radius:var(--radius-lg)}
+input[type=text],input[type=password],input[type=number],input[type=search]{padding:10px 12px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text-primary);font-size:13px;outline:none;transition:border-color var(--duration-fast),box-shadow var(--duration-fast);width:100%}
+input:focus{border-color:var(--brand-500);box-shadow:0 0 0 3px rgba(91,91,255,0.2)}
+input[type=number]{font-family:var(--font-mono);max-width:140px}
+select{padding:10px 12px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text-primary);font-size:13px;outline:none;width:100%}
+select:focus{border-color:var(--brand-500)}
+.toggle{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle .track{position:absolute;inset:0;background:var(--surface-3);border-radius:24px;cursor:pointer;transition:background var(--duration-normal)}
+.toggle .thumb{position:absolute;top:2px;left:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform var(--duration-normal) var(--ease-out-quart);box-shadow:0 1px 3px rgba(0,0,0,0.3)}
+.toggle input:checked+.track{background:var(--gradient-brand);box-shadow:0 2px 8px rgba(91,91,255,0.45)}
+.toggle input:checked+.track .thumb{transform:translateX(20px)}
+.toggle input:focus-visible+.track{box-shadow:0 0 0 3px rgba(91,91,255,0.4)}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;position:sticky;top:0;z-index:100}
+header .logo{display:flex;align-items:center;gap:10px}
+header .logo .dot{width:10px;height:10px;border-radius:50%;background:var(--gradient-brand);box-shadow:var(--shadow-glow)}
+header h1{font-size:17px;font-weight:700;background:var(--gradient-brand);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+header .meta{font-size:11px;color:var(--text-tertiary);margin-left:4px}
+nav{display:flex;gap:2px;padding:6px 16px;overflow-x:auto;position:sticky;top:60px;z-index:99}
+nav a{position:relative;color:var(--text-secondary);text-decoration:none;padding:10px 18px;border-radius:var(--radius-md);font-size:13px;font-weight:500;white-space:nowrap;cursor:pointer;transition:all var(--duration-normal)}
+nav a:hover{color:var(--text-primary);background:rgba(255,255,255,0.04)}
+nav a.active{color:#fff;background:var(--gradient-brand-soft)}
+nav a.active::after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:60%;height:2px;background:var(--gradient-brand);border-radius:2px}
+main{padding:20px 24px;max-width:1320px;margin:0 auto;position:relative;z-index:1}
+.panel{display:none;animation:fadeIn var(--duration-slow) var(--ease-out-expo)}
+.panel.active{display:block}
+.section-title{font-size:13px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:14px}
+.card{padding:20px 24px;margin-bottom:16px}
+.card h2{font-size:15px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.stat{padding:16px;background:rgba(255,255,255,0.03);border-radius:var(--radius-md);text-align:center;border:1px solid var(--border-subtle)}
+.stat .stat-val{font-size:26px;font-weight:700;margin-bottom:4px;letter-spacing:-0.02em}
+.stat .stat-lbl{font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px}
+.status-indicator{display:inline-flex;align-items:center;gap:10px;padding:10px 18px;border-radius:var(--radius-xl);font-size:14px;font-weight:600}
+.status-indicator.running{background:var(--green-bg);color:var(--green)}
+.status-indicator.stopped{background:var(--red-bg);color:var(--red)}
+.status-dot{width:10px;height:10px;border-radius:50%}
+.status-dot.on{background:var(--green);box-shadow:0 0 12px var(--green);animation:pulse 2s ease-in-out infinite}
+.status-dot.off{background:var(--red)}
+.gauge-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.gauge-card{padding:20px;text-align:center}
+.ring-wrap{position:relative;width:120px;height:120px;margin:0 auto 12px}
+.ring-wrap svg{transform:rotate(-90deg)}
+.ring-wrap .ring-bg{fill:none;stroke:var(--surface-3);stroke-width:8}
+.ring-wrap .ring-fill{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset 0.8s var(--ease-out-expo)}
+.ring-wrap .ring-text{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-wrap .ring-text .pct{font-size:28px;font-weight:700}
+.ring-wrap .ring-text .unit{font-size:11px;color:var(--text-tertiary)}
+.gauge-label{font-size:13px;font-weight:600;margin-bottom:4px}
+.gauge-detail{font-size:11px;color:var(--text-tertiary)}
+.config-table{width:100%;border-collapse:collapse}
+.config-table td{padding:12px 14px;border-bottom:1px solid var(--border-subtle);vertical-align:middle}
+.config-table td:first-child{font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;width:160px}
+.config-table td:nth-child(2){width:auto}
+.config-table td:last-child{font-size:11px;color:var(--text-tertiary);max-width:240px;line-height:1.5}
+.config-table tr:last-child td{border-bottom:none}
+.config-table input[type=text],.config-table input[type=number]{margin:0}
+.log-layout{display:grid;grid-template-columns:220px 1fr;gap:16px;min-height:500px}
+.log-files{overflow-y:auto;max-height:560px}
+.log-file-item{padding:10px 14px;border-radius:var(--radius-sm);cursor:pointer;font-size:12px;transition:all var(--duration-fast);border:1px solid transparent;margin-bottom:2px}
+.log-file-item:hover{background:rgba(255,255,255,0.04)}
+.log-file-item.active{background:var(--gradient-brand-soft);border-color:rgba(91,91,255,0.3)}
+.log-file-item .fn{font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--text-primary);word-break:break-all}
+.log-file-item .fm{font-size:10px;color:var(--text-muted);margin-top:2px}
+.log-content{background:rgba(0,0,0,0.3);border-radius:var(--radius-md);padding:14px;overflow-y:auto;max-height:560px;font-family:var(--font-mono);font-size:12px;line-height:1.7;white-space:pre-wrap;word-break:break-all;border:1px solid var(--border-subtle)}
+.log-line{padding:1px 0}
+.log-line.warn{color:#f59e0b}
+.log-line.error{color:#ef4444;background:rgba(239,68,68,0.06)}
+.log-line.debug{color:var(--text-muted)}
+.log-toolbar{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.log-toolbar .filter-btn{padding:4px 12px;border-radius:var(--radius-sm);font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border-default);background:transparent;color:var(--text-secondary);transition:all var(--duration-fast)}
+.log-toolbar .filter-btn:hover{border-color:var(--border-strong);color:var(--text-primary)}
+.log-toolbar .filter-btn.active{background:var(--gradient-brand);color:#fff;border-color:transparent}
+.log-empty{text-align:center;color:var(--text-muted);padding:60px 0;font-size:14px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;animation:fadeIn var(--duration-fast) ease-out}
+.modal-box{background:var(--surface-1);border:1px solid var(--border-subtle);border-radius:var(--radius-xl);padding:28px;max-width:500px;width:90%;box-shadow:var(--shadow-modal);animation:scaleIn var(--duration-slow) var(--ease-out-expo)}
+.modal-box h3{font-size:17px;font-weight:700;margin-bottom:10px}
+.modal-box p{font-size:13px;color:var(--text-secondary);margin-bottom:22px;line-height:1.6}
+.modal-box .modal-actions{display:flex;gap:10px;justify-content:flex-end}
+.toast{position:fixed;top:20px;right:20px;padding:14px 22px;border-radius:var(--radius-lg);font-size:13px;font-weight:600;z-index:9999;box-shadow:var(--shadow-modal);animation:slideInRight var(--duration-slow) var(--ease-out-expo);display:none;max-width:380px}
+.toast.success{background:#065f46;color:#d1fae5;border:1px solid rgba(34,197,94,0.3)}
+.toast.error{background:#7f1d1d;color:#fecaca;border:1px solid rgba(239,68,68,0.3)}
+.toast.info{background:#1e3a5f;color:#dbeafe;border:1px solid rgba(59,130,246,0.3)}
+.toast.show{display:block}
+.cmd-history{margin-top:16px}
+.cmd-history .cmd-item{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border-subtle);font-size:12px}
+.cmd-history .cmd-time{color:var(--text-muted);font-family:var(--font-mono);min-width:140px}
+.cmd-history .cmd-action{font-weight:600;min-width:50px}
+.cmd-history .cmd-result{color:var(--text-tertiary)}
+.empty-state{text-align:center;padding:40px 0;color:var(--text-muted)}
+.empty-state .empty-icon{font-size:48px;margin-bottom:12px;opacity:0.5}
+.gc-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:16px}
+.gc-stat{padding:12px;background:rgba(255,255,255,0.03);border-radius:var(--radius-sm);text-align:center;border:1px solid var(--border-subtle)}
+.gc-stat .gc-val{font-size:18px;font-weight:700;font-family:var(--font-mono)}
+.gc-stat .gc-lbl{font-size:10px;color:var(--text-tertiary);margin-top:2px}
+.collapse-header{cursor:pointer;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--text-secondary);padding:8px 0;user-select:none;transition:color var(--duration-fast)}
+.collapse-header:hover{color:var(--text-primary)}
+.collapse-header .arrow{transition:transform var(--duration-normal);font-size:10px}
+.collapse-header.open .arrow{transform:rotate(90deg)}
+.collapse-body{display:none}
+.collapse-body.open{display:block;animation:fadeIn var(--duration-normal) ease-out}
+/* 服务表格 */
+.svc-table{width:100%;border-collapse:collapse;font-size:13px}
+.svc-table th{padding:10px 12px;border-bottom:2px solid var(--border-default);color:var(--text-tertiary);font-weight:600;text-transform:uppercase;font-size:11px;letter-spacing:0.5px;text-align:left}
+.svc-table td{padding:10px 12px;border-bottom:1px solid var(--border-subtle);vertical-align:middle}
+.svc-table tr:hover td{background:rgba(255,255,255,0.02)}
+.svc-table .svc-name{font-weight:600;color:var(--text-primary)}
+.svc-table .svc-file{font-size:11px;color:var(--text-tertiary);font-family:var(--font-mono)}
+.svc-actions{display:flex;gap:6px;flex-wrap:nowrap}
+.badge{padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;display:inline-block}
+.badge-green{background:var(--green-bg);color:var(--green)}
+.badge-red{background:var(--red-bg);color:var(--red)}
+.badge-gray{background:rgba(255,255,255,0.06);color:var(--text-muted)}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:4px}
+.form-group .form-desc{font-size:11px;color:var(--text-tertiary);margin-top:2px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-inline{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+@media(max-width:768px){
+  .form-row{grid-template-columns:1fr}
+  header{padding:12px 16px}header h1{font-size:14px}nav{padding:4px 8px;gap:0;top:52px}nav a{padding:8px 12px;font-size:12px}
+  main{padding:14px}.stats-grid{grid-template-columns:repeat(2,1fr)}.gauge-row{grid-template-columns:1fr}
+  .log-layout{grid-template-columns:1fr}.log-files{max-height:160px;display:flex;overflow-x:auto;gap:4px}
+  .log-file-item{min-width:140px;white-space:nowrap;flex-shrink:0}
+  .config-table td:first-child{width:auto;font-size:12px}.config-table td:last-child{display:none}
+  .svc-actions{flex-wrap:wrap}
+}
+#app{display:none}.hidden{display:none!important}
+.flex-between{display:flex;align-items:center;justify-content:space-between}
+.mt-12{margin-top:12px}.mt-16{margin-top:16px}.mt-20{margin-top:20px}
+.mb-8{margin-bottom:8px}.mb-12{margin-bottom:12px}.mb-16{margin-bottom:16px}
+.text-green{color:var(--green)}.text-red{color:var(--red)}.text-yellow{color:var(--yellow)}
+.text-muted{color:var(--text-muted)}.text-secondary{color:var(--text-secondary)}
+.font-mono{font-family:var(--font-mono)}
+/* 浅色主题 */
+html.light{
+  --surface-0:#ffffff;--surface-1:#f7f7fb;--surface-2:#eef0f6;--surface-3:#e2e5ee;
+  --text-primary:#0f172a;--text-secondary:#475569;--text-tertiary:#94a3b8;--text-muted:#cbd5e1;
+  --border-subtle:rgba(15,23,42,0.06);--border-default:rgba(15,23,42,0.10);--border-strong:rgba(15,23,42,0.18);
+  --shadow-soft:0 2px 8px rgba(0,0,0,0.06);--shadow-card:0 4px 16px rgba(0,0,0,0.08);
+  --shadow-modal:0 16px 48px rgba(0,0,0,0.15);
+}
+html.light body::before{background:radial-gradient(ellipse 80% 60% at 50% -20%,rgba(91,91,255,0.04),transparent),radial-gradient(ellipse 60% 50% at 80% 80%,rgba(139,92,246,0.03),transparent)}
+html.light .glass{background:rgba(255,255,255,0.6)}
+html.light .glass-card{background:rgba(255,255,255,0.55)}
+html.light .log-content{background:rgba(0,0,0,0.03)}
+html.light input[type=text],html.light input[type=password],html.light input[type=number]{background:var(--surface-2)}
+html.light .stat{background:rgba(0,0,0,0.02)}
+html.light .gc-stat{background:rgba(0,0,0,0.02)}
+html.light nav a.active{color:var(--brand-700)}
+html.light .info-table td{border-bottom-color:rgba(0,0,0,0.06)}
+.info-table{width:100%;border-collapse:collapse}
+.info-table td{padding:10px 14px;border-bottom:1px solid var(--border-subtle);vertical-align:middle}
+.info-table td:first-child{font-size:13px;font-weight:600;color:var(--text-secondary);white-space:nowrap;width:200px;padding-right:20px}
+.info-table td:last-child{font-size:13px;color:var(--text-primary);word-break:break-all}
+.info-table tr:last-child td{border-bottom:none}
+</style>
+</head>
+<body>
+
+<div id="login" class="login-box glass-card">
+<h1>🔐 StarAgent 管理面板</h1>
+<p class="sub">请输入凭据以继续</p>
+<label>用户名</label>
+<input id="luser" placeholder="请输入用户名" autocomplete="username" autofocus>
+<label>密码</label>
+<input id="lpass" type="password" placeholder="请输入密码" autocomplete="current-password">
+<button class="btn btn-primary btn-lg" style="width:100%;margin-top:8px" onclick="doLogin()">登 录</button>
+<script>
+document.getElementById('luser').addEventListener('keydown', e => {
+ if (e.key === 'Enter') document.getElementById('lpass').focus();
+});
+document.getElementById('lpass').addEventListener('keydown', e => {
+ if (e.key === 'Enter') doLogin();
+});
+</script>
+<div id="lerr" class="err"></div>
+</div>
+
+<div id="app">
+<header class="glass">
+<div class="logo">
+<div class="dot" id="status-dot-header"></div>
+<h1 id="header-title">StarAgent 管理面板</h1>
+<span class="meta" id="header-meta"></span>
+</div>
+<div style="display:flex;align-items:center;gap:10px">
+<button class="btn btn-ghost btn-sm" id="theme-toggle" onclick="toggleTheme()" title="切换浅色/深色主题">🌓</button>
+<button class="btn btn-ghost btn-sm" onclick="logout()">退出</button>
+</div>
+</header>
+
+<nav id="nav-bar" class="glass">
+<a data-panel="dashboard" class="active">📊 状态</a>
+<a data-panel="services">📦 子服务</a>
+<a data-panel="control">⚡ 控制</a>
+<a data-panel="config">⚙ 配置</a>
+<a data-panel="starconfig">🌐 星尘设置</a>
+<a data-panel="logs">📋 日志</a>
+<a data-panel="watchdog">🐕 看门狗</a>
+</nav>
+
+<main>
+<div id="panel-dashboard" class="panel active"></div>
+<div id="panel-services" class="panel"></div>
+<div id="panel-control" class="panel"></div>
+<div id="panel-config" class="panel"></div>
+<div id="panel-starconfig" class="panel"></div>
+<div id="panel-logs" class="panel"></div>
+<div id="panel-watchdog" class="panel"></div>
+</main>
+</div>
+
+<div id="modal-overlay" class="modal-overlay hidden">
+<div class="modal-box">
+<h3 id="modal-title"></h3>
+<div id="modal-body" style="font-size:13px;color:var(--text-secondary);margin-bottom:22px;line-height:1.6"></div>
+<div class="modal-actions">
+<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+<button class="btn btn-primary" id="modal-confirm-btn" onclick="confirmModal()">确认</button>
+</div>
+</div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+let token='',timer=null,statusData=null,logFiles=[],currentLogFile=null;
+let svcTimer=null,starTimer=null;
+let cmdHistory=JSON.parse(sessionStorage.getItem('agent_cmd_history')||'[]');
+const $=id=>document.getElementById(id);
+
+async function doLogin(){
+ const u=$('luser').value,p=$('lpass').value,e=$('lerr');
+ e.classList.remove('show');
+ if(!u&&!p){e.textContent='请输入用户名和密码';e.classList.add('show');return}
+ if(!u){e.textContent='请输入用户名';e.classList.add('show');return}
+ if(!p){e.textContent='请输入密码';e.classList.add('show');return}
+ try{
+  const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user:u,password:p})});
+  const j=await r.json();
+  if(j.code===429){e.textContent='登录失败次数过多，请稍后再试';e.classList.add('show');return}
+  if(j.code!==0){
+   if(j.message&&j.message.includes('credentials'))e.textContent='用户名或密码错误';
+   else if(j.message&&j.message.includes('configured'))e.textContent='服务未配置登录凭据';
+   else e.textContent=j.message||'登录失败';
+   e.classList.add('show');return
+  }
+  token=j.data.token;sessionStorage.setItem('agent_token',token);showApp();
+ }catch(ex){e.textContent='网络错误，请检查服务是否正常运行';e.classList.add('show')}
+}
+
+async function logout(){
+ try{await fetch('/api/logout',{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'}})}catch(e){}
+ sessionStorage.removeItem('agent_token');token='';
+ clearInterval(timer);if(svcTimer)clearInterval(svcTimer);if(starTimer)clearInterval(starTimer);
+ $('login').style.display='';$('app').style.display='none';$('luser').focus()
+}
+
+function showApp(){
+ $('login').style.display='none';$('app').style.display='block';
+ loadDashboard();timer=setInterval(loadDashboard,10000);
+ loadServices();svcTimer=setInterval(loadServices,10000);
+}
+
+async function api(url,opt={}){
+ const h=opt.headers||{};
+ if(token)h['Authorization']='Bearer '+token;
+ const r=await fetch(url,{...opt,headers:{...h,'Content-Type':'application/json'}});
+ const j=await r.json();
+ if(j.code===401||r.status===401){logout();showToast('登录已过期，请重新登录','error');throw new Error('Unauthorized')}
+ return j;
+}
+
+function showToast(msg,type='info'){
+ const t=$('toast');t.textContent=msg;t.className='toast '+type+' show';
+ clearTimeout(t._tid);t._tid=setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+let _modalCb=null;
+function showModal(title,body,confirmText,cb){
+ $('modal-title').textContent=title;
+ $('modal-body').innerHTML=body;
+ $('modal-confirm-btn').textContent=confirmText||'确认';
+ $('modal-overlay').classList.remove('hidden');_modalCb=cb;
+}
+function closeModal(){$('modal-overlay').classList.add('hidden');_modalCb=null}
+function confirmModal(){const cb=_modalCb;closeModal();if(cb)cb()}
+
+function switchPanel(name){
+ document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
+ const link=document.querySelector(`nav a[data-panel="${name}"]`);if(link)link.classList.add('active');
+ document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+ const panel=$('panel-'+name);if(panel)panel.classList.add('active');
+ if(!panel)return;
+ // 切换 tab 时立即加载对应数据
+ const loaders={
+  dashboard:loadDashboard,
+  services:loadServices,
+  config:loadConfig,
+  starconfig:loadStarConfig,
+  logs:loadLogs,
+  watchdog:loadWatchDog
+ };
+ if(loaders[name])loaders[name]();
+}
+
+document.querySelector('#nav-bar').addEventListener('click',e=>{
+ const a=e.target.closest('a[data-panel]');if(!a)return;switchPanel(a.dataset.panel);
+});
+
+/* ── Dashboard ── */
+let _dashboardBuilt=false;
+let _machineInfoBuilt=false;
+
+async function loadDashboard(){
+ try{
+  const[s,h]=await Promise.all([api('/api/status'),api('/api/health')]);
+  if(s.code!==0)return;statusData=s.data;
+  const d=s.data;
+  const title='StarAgent';
+  document.title=title+' 管理面板';
+  $('header-title').textContent=title+' 管理面板';
+  $('header-meta').textContent='PID '+d.processId;
+  const dot=$('status-dot-header');
+  dot.className='dot status-dot '+(d.running?'on':'off');
+
+  if(!_dashboardBuilt){
+   _dashboardBuilt=true;
+   buildDashboard(d,h.data);
+  }else{
+   updateDashboard(d,h.data);
+  }
+ }catch(e){}
+}
+
+function buildDashboard(d,health){
+ const running=d.running;
+ let html='';
+
+ // 服务状态卡片
+ html+=`<div class="glass-card card"><div class="flex-between mb-16"><h2>📊 服务状态</h2><span id="svc-indicator" class="status-indicator ${running?'running':'stopped'}"><span class="status-dot ${running?'on':'off'}"></span>${running?'运行中':'已停止'}</span></div>`;
+ html+=`<div class="stats-grid">`;
+ html+=statCard('服务名',d.displayName||d.serviceName,'','svc-name');
+ html+=statCard('运行时长',d.uptime,'','svc-uptime');
+ html+=statCard('进程 ID',d.processId,'font-mono','svc-pid');
+ html+=statCard('监听端口',d.port,'font-mono','svc-port');
+ html+=statCard('内存占用',d.memoryMB+' MB','','svc-mem',d.memoryMB>500?'text-yellow':'');
+ html+=statCard('启动时间',d.startTime,'text-secondary','svc-start');
+ html+=`</div></div>`;
+
+ // 资源监控
+ const memLimit = health && health.memoryLimitMB > 0 ? health.memoryLimitMB : 0;
+ const memTotal = memLimit > 0 ? memLimit : (d.memoryTotalMB || 0);
+ const memPct = memTotal > 0 ? pct(d.memoryMB, memTotal) : 0;
+ const thrPct = health ? pct(health.threadCount, health.threadLimit) : 0;
+ const hndPct = health ? pct(health.handleCount, health.handleLimit) : 0;
+ const cpuPct = d.cpuRateValue>0 ? Math.min(100, d.cpuRateValue) : (d.cpuRate?Math.min(100, parseFloat(d.cpuRate)):0);
+
+ html+=`<div class="glass-card card"><h2>💚 资源监控</h2><div class="gauge-row">`;
+ html+=ringGauge('CPU 使用率', cpuPct+'%', '100%', cpuPct, 'gauge-cpu');
+ html+=ringGauge('内存', d.memoryMB+' MB', memTotal>0?memTotal+' MB':'∞', memPct, 'gauge-mem');
+ html+=ringGauge('线程数', d.threadCount, (health&&health.threadLimit>0)?health.threadLimit+'':'∞', thrPct, 'gauge-thr');
+ html+=ringGauge('句柄数', d.handleCount, (health&&health.handleLimit>0)?health.handleLimit+'':'∞', hndPct, 'gauge-hnd');
+ html+=`</div>`;
+ html+=`<div class="gauge-row" style="margin-top:8px">`;
+ html+=connCard('连接数', d.tcpConnections||0);
+ html+=numCard('上行速率', d.uplinkSpeed||'0 bps', 'font-mono', 'net-up');
+ html+=numCard('下行速率', d.downlinkSpeed||'0 bps', 'font-mono', 'net-down');
+ html+=numCard('磁盘 IO', d.diskIops!=null?formatIops(d.diskIops):'0 ops/s', 'font-mono', 'disk-iops');
+ html+=`</div>`;
+ if(health){
+  html+=`<div class="mt-12"><div class="collapse-header" onclick="this.classList.toggle('open');document.getElementById('gc-body').classList.toggle('open')"><span class="arrow">▶</span> GC 与 CPU 统计</div>`;
+  html+=`<div class="collapse-body" id="gc-body"><div class="gc-stats">`;
+  html+=gcStat('Gen 0',health.gcCollections.gen0,'gc-gen0')+gcStat('Gen 1',health.gcCollections.gen1,'gc-gen1')+gcStat('Gen 2',health.gcCollections.gen2,'gc-gen2');
+  html+=gcStat('GC 内存',health.gcTotalMemory+' MB','gc-mem')+gcStat('CPU 时间',health.totalProcessorTime+'s','gc-cpu');
+  html+=`</div><div style="margin-top:12px;text-align:right"><button class="btn btn-ghost btn-sm" onclick="freeMemory()">🗑 释放内存</button></div></div></div>`;
+ }
+ html+=`</div>`;
+
+ // 系统信息
+ html+=`<div class="glass-card card"><h2>🖥 系统信息</h2><table class="info-table">`;
+ html+=infoRow('操作系统',d.platform+(d.osVersion?'  '+d.osVersion:''));
+ html+=infoRow('主机名',d.hostMachine);
+ html+=infoRow('CPU',(d.cpuName||'-')+(d.cpuCount?' — '+d.cpuCount+' 核':''));
+ if(d.cpuRate)html+=infoRow('CPU 使用率',d.cpuRate+'%',parseFloat(d.cpuRate)>80?'text-yellow':'');
+ if(d.totalMemory)html+=infoRow('物理内存',d.totalMemory+(d.availableMemory?' — 可用 '+d.availableMemory+(d.freeMemory?' / 空闲 '+d.freeMemory:''):''));
+ if(d.board)html+=infoRow('主板',d.board);
+ if(d.machineGuid)html+=infoRow('设备 ID',d.machineGuid,'font-mono');
+ if(d.hostUptime)html+=infoRow('主机运行',d.hostUptime);
+ html+=`</table></div>`;
+
+ // 本机信息（折叠区块）
+ html+=`<div class="glass-card card"><div class="collapse-header open" onclick="this.classList.toggle('open');document.getElementById('machine-body').classList.toggle('open')"><span class="arrow">▶</span> 本机详情</div>`;
+ html+=`<div class="collapse-body open" id="machine-body"><div id="machine-detail" style="padding:8px 0"><p class="text-muted" style="text-align:center;padding:20px">加载中...</p></div></div></div>`;
+
+ $('panel-dashboard').innerHTML=html;
+
+ // 异步加载本机详情
+ loadMachineDetail();
+}
+
+function updateDashboard(d,health){
+ setText('svc-name',d.displayName||d.serviceName);
+ setText('svc-uptime',d.uptime);
+ setText('svc-pid',d.processId);
+ setText('svc-port',d.port);
+ setText('svc-mem',d.memoryMB+' MB');
+ setText('svc-start',d.startTime);
+ const ind=$('svc-indicator');
+ if(ind){
+  ind.className='status-indicator '+(d.running?'running':'stopped');
+  ind.innerHTML=`<span class="status-dot ${d.running?'on':'off'}"></span>${d.running?'运行中':'已停止'}`;
+ }
+ const memLimit = health && health.memoryLimitMB > 0 ? health.memoryLimitMB : 0;
+ const memTotal = memLimit > 0 ? memLimit : (d.memoryTotalMB || 0);
+ const memPct = memTotal > 0 ? pct(d.memoryMB, memTotal) : 0;
+ const thrPct = health ? pct(health.threadCount, health.threadLimit) : 0;
+ const hndPct = health ? pct(health.handleCount, health.handleLimit) : 0;
+ const cpuPct = d.cpuRateValue>0 ? Math.min(100, d.cpuRateValue) : (d.cpuRate?Math.min(100, parseFloat(d.cpuRate)):0);
+ updateGauge('gauge-cpu', cpuPct, cpuPct+'%', '100%');
+ updateGauge('gauge-mem', memPct, d.memoryMB+' MB', memTotal>0?memTotal+' MB':'∞');
+ updateGauge('gauge-thr', thrPct, d.threadCount, (health&&health.threadLimit>0)?health.threadLimit+'':'∞');
+ updateGauge('gauge-hnd', hndPct, d.handleCount, (health&&health.handleLimit>0)?health.handleLimit+'':'∞');
+ setText('conn-val', d.tcpConnections||0);
+ setConnColor('conn-val', d.tcpConnections||0);
+ setText('net-up', d.uplinkSpeed||'0 bps');
+ setText('net-down', d.downlinkSpeed||'0 bps');
+ setText('disk-iops', d.diskIops!=null?formatIops(d.diskIops):'0 ops/s');
+ if(health){
+  if(health.gcCollections){
+   setText('gc-gen0',health.gcCollections.gen0);
+   setText('gc-gen1',health.gcCollections.gen1);
+   setText('gc-gen2',health.gcCollections.gen2);
+   setText('gc-mem',health.gcTotalMemory+' MB');
+   setText('gc-cpu',health.totalProcessorTime+'s');
+  }
+ }
+ // 每30秒刷新本机详情
+ if(!_machineInfoBuilt){_machineInfoBuilt=true;setInterval(loadMachineDetail,30000)}
+}
+
+async function loadMachineDetail(){
+ const el=$('machine-detail');if(!el)return;
+ try{
+  const j=await api('/star/machine');
+  if(j.code!==0){el.innerHTML=`<p class="text-muted">加载失败</p>`;return}
+  const d=j.data;
+  let html='';
+
+  // 系统概览
+  html+=`<div class="section-title">系统概览</div><table class="info-table">`;
+  html+=infoRow('操作系统',d.os.os);
+  html+=infoRow('主机名',d.os.hostName);
+  html+=infoRow('运行时',d.os.runtime+' ('+d.os.processArch+')');
+  html+=infoRow('系统架构',d.os.systemArch);
+  html+=infoRow('处理器数',d.os.processorCount+' 核');
+  html+=infoRow('运行时长',d.os.hostUptime);
+  html+=`</table>`;
+
+  // CPU 信息
+  html+=`<div class="section-title mt-16">CPU</div><table class="info-table">`;
+  html+=infoRow('型号',d.cpu.cpuName);
+  html+=infoRow('逻辑核数',d.cpu.cpuCount);
+  html+=infoRow('使用率',d.cpu.cpuRatePercent,parseFloat(d.cpu.cpuRate)>0.8?'text-yellow':'');
+  html+=`</table>`;
+
+  // 内存信息
+  html+=`<div class="section-title mt-16">内存</div><table class="info-table">`;
+  html+=infoRow('总量',d.memory.totalMemory);
+  html+=infoRow('已用',d.memory.usedMemory,parseFloat(d.memory.memoryRate)>0.8?'text-yellow':'');
+  html+=infoRow('可用',d.memory.availableMemory,'text-green');
+  html+=infoRow('使用率',d.memory.memoryRatePercent,parseFloat(d.memory.memoryRate)>0.8?'text-yellow':'');
+  html+=`</table>`;
+
+  // 磁盘分区
+  if(d.drives&&d.drives.length>0){
+   html+=`<div class="section-title mt-16">磁盘分区</div><table class="info-table">`;
+   html+=`<tr><td style="font-size:11px;color:var(--text-tertiary)">分区</td><td style="font-size:11px;color:var(--text-tertiary)">总量</td><td style="font-size:11px;color:var(--text-tertiary)">已用</td><td style="font-size:11px;color:var(--text-tertiary)">可用</td><td style="font-size:11px;color:var(--text-tertiary)">使用率</td></tr>`;
+   d.drives.forEach(dr=>{
+    const pct=parseFloat(dr.usedPercent);
+    html+=`<tr><td style="font-family:var(--font-mono);font-size:12px">${esc(dr.name)} ${dr.label?esc('('+dr.label+')'):''}</td><td>${esc(dr.totalSize)}</td><td${pct>80?' class="text-yellow"':''}>${esc(dr.usedSize)}</td><td class="text-green">${esc(dr.freeSize)}</td><td>${esc(dr.usedPercent)}</td></tr>`;
+   });
+   html+=`</table>`;
+  }
+
+  // 网络接口
+  if(d.nics&&d.nics.length>0){
+   html+=`<div class="section-title mt-16">网络接口</div><table class="info-table">`;
+   d.nics.forEach(n=>{
+    html+=infoRow(n.name||n.description,`IP: ${n.ip}  MAC: ${n.mac}  速率: ${n.speed}  收: ${n.bytesReceived}  发: ${n.bytesSent}`);
+   });
+   html+=`</table>`;
+  }
+
+  // 进程 Top
+  if(d.processes&&d.processes.length>0){
+   html+=`<div class="section-title mt-16">进程 Top 15（按内存排序）</div><table class="info-table">`;
+   html+=`<tr><td style="font-size:11px;color:var(--text-tertiary)">进程名</td><td style="font-size:11px;color:var(--text-tertiary)">PID</td><td style="font-size:11px;color:var(--text-tertiary)">内存</td><td style="font-size:11px;color:var(--text-tertiary)">线程</td><td style="font-size:11px;color:var(--text-tertiary)">CPU时间</td></tr>`;
+   d.processes.forEach(p=>{
+    html+=`<tr><td style="font-family:var(--font-mono);font-size:12px">${esc(p.name)}</td><td>${p.pid}</td><td>${p.memoryMB} MB</td><td>${p.threadCount}</td><td>${p.cpuTime}</td></tr>`;
+   });
+   html+=`</table>`;
+  }
+
+  // GPU 信息
+  if(d.gpu&&d.gpu.length>0){
+   html+=`<div class="section-title mt-16">GPU</div><table class="info-table">`;
+   d.gpu.forEach(g=>{
+    html+=infoRow(g.name||'显卡',`显存: ${g.ram}  驱动: ${g.driverVersion}`);
+   });
+   html+=`</table>`;
+  }
+
+  el.innerHTML=html;
+ }catch(e){el.innerHTML=`<p class="text-muted">加载失败</p>`}
+}
+
+function formatIops(v){
+ v=parseInt(v)||0;
+ if(v>=1000)return (v/1000).toFixed(1)+' K ops/s';
+ return v+' ops/s';
+}
+
+function connCard(lbl,val){
+ const cls=val>1000?'text-red':val>100?'text-yellow':'text-green';
+ return `<div class="stat"><div class="stat-val ${cls}" id="conn-val">${esc(val)}</div><div class="stat-lbl">${lbl}</div></div>`;
+}
+function setConnColor(id,val){
+ const el=document.getElementById(id);if(!el)return;
+ el.className='stat-val '+(val>1000?'text-red':val>100?'text-yellow':'text-green');
+}
+function setText(id,val){
+ const el=document.getElementById(id);if(el)el.textContent=val;
+}
+function updateGauge(id,pctVal,val,max){
+ const pctEl=document.getElementById(id+'-pct');
+ const valEl=document.getElementById(id+'-val');
+ const maxEl=document.getElementById(id+'-max');
+ const fillEl=document.getElementById(id+'-fill');
+ if(pctEl)pctEl.textContent=pctVal+'%';
+ if(valEl)valEl.textContent=val;
+ if(maxEl)maxEl.textContent=max;
+ if(fillEl){
+  const r=48,c=2*Math.PI*r,offset=c-(pctVal/100)*c;
+  fillEl.setAttribute('stroke-dashoffset',offset);
+  fillEl.setAttribute('stroke',pctVal>80?'#ef4444':pctVal>50?'#f59e0b':'url(#gaugeGrad)');
+ }
+}
+function statCard(lbl,val,cls='',id='',valCls=''){
+ return `<div class="stat"${id?` id="${id}-card"`:''}><div class="stat-val ${valCls||cls}"${id?` id="${id}"`:''}>${esc(val)}</div><div class="stat-lbl">${lbl}</div></div>`;
+}
+function infoRow(lbl,val,cls=''){return `<tr><td>${esc(lbl)}</td><td><span${cls?` class="${cls}"`:''}>${esc(val)}</span></td></tr>`}
+function gcStat(lbl,val,id=''){return `<div class="gc-stat"><div class="gc-val"${id?` id="${id}"`:''}>${esc(val)}</div><div class="gc-lbl">${lbl}</div></div>`}
+function numCard(lbl,val,cls='',id=''){
+ return `<div class="stat"${id?` id="${id}-card"`:''}><div class="stat-val ${cls}"${id?` id="${id}"`:''}>${esc(val)}</div><div class="stat-lbl">${lbl}</div></div>`;
+}
+function pct(v,max){return max>0?Math.min(100,Math.round(v/max*100)):0}
+function ringGauge(label,val,max,pctVal,id){
+ const r=48,c=2*Math.PI*r,offset=c-(pctVal/100)*c;
+ const cls=pctVal>80?'#ef4444':pctVal>50?'#f59e0b':'url(#gaugeGrad)';
+ return `<div class="gauge-card glass-card"${id?` id="${id}-card"`:''}><div class="gauge-label">${label}</div>
+ <div class="ring-wrap">
+ <svg width="120" height="120" viewBox="0 0 120 120"><defs><linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#5b5bff"/><stop offset="100%" stop-color="#8b5cf6"/></linearGradient></defs>
+ <circle class="ring-bg" cx="60" cy="60" r="${r}"/><circle class="ring-fill" cx="60" cy="60" r="${r}" stroke="${cls}" stroke-dasharray="${c}" stroke-dashoffset="${offset}"${id?` id="${id}-fill"`:''}/></svg>
+ <div class="ring-text"><span class="pct"${id?` id="${id}-pct"`:''}>${pctVal}%</span><span class="unit">已使用</span></div></div>
+ <div class="gauge-detail">${id?`<span id="${id}-val">${esc(val)}</span>`:esc(val)} / ${id?`<span id="${id}-max">${esc(max)}</span>`:esc(max)}</div></div>`;
+}
+
+/* ── 子服务管理 ── */
+let _servicesData=null;
+
+async function loadServices(){
+ if(!document.querySelector('#panel-services.active'))return;
+ try{
+  const j=await api('/star/services');
+  if(j.code!==0)return;
+  _servicesData=j.data;
+  renderServices();
+ }catch(e){}
+}
+
+function renderServices(){
+ const d=_servicesData;if(!d)return;
+ const svcs=d.services||[];
+ let html=`<div class="glass-card card"><div class="flex-between mb-16"><h2>📦 子服务管理</h2><span style="font-size:12px;color:var(--text-tertiary)">运行 ${d.running||0} / 总计 ${d.total||0}</span></div>`;
+ html+=`<div class="mb-12 form-inline"><button class="btn btn-primary btn-sm" onclick="showAddService()">➕ 添加服务</button></div>`;
+ if(svcs.length===0){
+  html+=`<div class="empty-state"><div class="empty-icon">📦</div><p>暂无子服务</p><p style="font-size:11px;margin-top:4px">点击"添加服务"按钮创建第一个子服务</p></div>`;
+ }else{
+  html+=`<table class="svc-table"><thead><tr><th>名称</th><th>文件</th><th>启用</th><th>状态</th><th>进程</th><th style="min-width:180px">操作</th></tr></thead><tbody>`;
+  svcs.forEach((s,idx)=>{
+   const run=s.Running;
+   html+=`<tr><td><div class="svc-name">${esc(s.Name)}</div></td>`;
+   html+=`<td><div class="svc-file">${esc(s.FileName||'')}${s.Arguments?' '+esc(s.Arguments):''}</div></td>`;
+   html+=`<td><span class="badge ${s.Enable?'badge-green':'badge-gray'}">${s.Enable?'启用':'禁用'}</span></td>`;
+   html+=`<td><span class="badge ${run?'badge-green':'badge-red'}">${run?'运行中':'已停止'}</span></td>`;
+   html+=`<td style="font-family:var(--font-mono);font-size:12px">${run?(s.ProcessId||'')+(s.ProcessName?' '+esc(s.ProcessName):''):'-'}</td>`;
+   html+=`<td><div class="svc-actions">`;
+   html+=`<button class="btn btn-primary btn-sm" onclick="doSvcAction('start','${escAttr(s.Name)}')" ${run?'disabled':''}>▶ 启动</button>`;
+   html+=`<button class="btn btn-danger btn-sm" onclick="doSvcAction('stop','${escAttr(s.Name)}')" ${!run?'disabled':''}>⏹ 停止</button>`;
+   html+=`<button class="btn btn-sm" style="background:var(--orange);color:#fff" onclick="doSvcAction('restart','${escAttr(s.Name)}')" ${!run?'disabled':''}>↻ 重启</button>`;
+   html+=`<button class="btn btn-secondary btn-sm" onclick="editServiceByIdx(${idx})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>`;
+   html+=`<button class="btn btn-ghost btn-sm" onclick="confirmRemoveService('${escAttr(s.Name)}')" style="color:var(--red)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>`;
+   html+=`</div></td></tr>`;
+  });
+  html+=`</tbody></table>`;
+ }
+ html+=`</div>`;
+ $('panel-services').innerHTML=html;
+}
+
+function editServiceByIdx(idx){
+ const svc=_servicesData?.services?.[idx];
+ if(!svc)return;
+ showServiceForm(svc,'编辑子服务');
+}
+
+async function doSvcAction(action,name){
+ const labels={start:'启动',stop:'停止',restart:'重启'};
+ const endpoints={start:'startService',stop:'stopService',restart:'restartService'};
+ try{
+  const j=await api(`/star/${endpoints[action]}`,{method:'POST',body:JSON.stringify({serviceName:name})});
+  showToast(j.message||(labels[action]+'操作完成'),j.code?'error':'success');
+  setTimeout(loadServices,1000);
+ }catch(e){showToast('操作失败','error')}
+}
+
+function showAddService(){showServiceForm(null,'添加子服务')}
+
+function showServiceForm(svc,title){
+ const isEdit=svc!==null;
+ // 兼容 C# PascalCase 和 JS camelCase 的属性名
+ const s=svc||{};
+ const name=s.Name||s.name||'';
+ const fileName=s.FileName||s.fileName||'';
+ const args=s.Arguments||s.arguments||'';
+ const cwd=s.WorkingDirectory||s.workingDirectory||'';
+ const enable=s.Enable??s.enable??true;
+ const mode=s.Mode||s.mode||'Standard';
+ const maxMem=s.MaxMemory??s.maxMemory??0;
+ const health=s.HealthCheck||s.healthCheck||'';
+ const env=s.Environments||s.environments||'';
+ const autoStop=s.AutoStop??s.autoStop??false;
+ const reload=s.ReloadOnChange??s.reloadOnChange??false;
+ const multi=s.AllowMultiple??s.allowMultiple??false;
+ const html=`<div class="form-row">
+  <div class="form-group"><label>服务名称 *</label><input type="text" id="sf-name" value="${esc(name)}" placeholder="全局唯一标识"></div>
+  <div class="form-group"><label>文件名 *</label><input type="text" id="sf-file" value="${esc(fileName)}" placeholder="启动进程时使用的可执行文件或zip包"></div>
+ </div>
+ <div class="form-group"><label>参数</label><input type="text" id="sf-args" value="${esc(args)}" placeholder="启动参数"></div>
+ <div class="form-group"><label>工作目录</label><input type="text" id="sf-cwd" value="${esc(cwd)}" placeholder="留空使用默认目录"></div>
+ <div class="form-row">
+  <div class="form-group"><label>部署模式</label><select id="sf-mode"><option value="Standard" ${mode==='Standard'?'selected':''}>Standard</option><option value="Shadow" ${mode==='Shadow'?'selected':''}>Shadow</option><option value="Hosted" ${mode==='Hosted'?'selected':''}>Hosted</option><option value="Task" ${mode==='Task'?'selected':''}>Task</option></select></div>
+  <div class="form-group"><label>最大内存 (MB)</label><input type="number" id="sf-maxmem" value="${maxMem}" placeholder="0 不限制"></div>
+ </div>
+ <div class="form-group"><label>健康检查地址</label><input type="text" id="sf-health" value="${esc(health)}" placeholder="http://localhost:port/health"></div>
+ <div class="form-group"><label>环境变量</label><input type="text" id="sf-env" value="${esc(env)}" placeholder="KEY=VALUE;KEY2=VALUE2"></div>
+ <div class="form-row">
+  <div class="form-group"><label class="toggle"><input type="checkbox" id="sf-enable" ${enable?'checked':''}><span class="track"><span class="thumb"></span></span></label><div style="font-size:12px;color:var(--text-tertiary)">启用</div></div>
+  <div class="form-group"><label class="toggle"><input type="checkbox" id="sf-autostop" ${autoStop?'checked':''}><span class="track"><span class="thumb"></span></span></label><div style="font-size:12px;color:var(--text-tertiary)">自动停止（随宿主退出）</div></div>
+ </div>
+ <div class="form-row">
+  <div class="form-group"><label class="toggle"><input type="checkbox" id="sf-reload" ${reload?'checked':''}><span class="track"><span class="thumb"></span></span></label><div style="font-size:12px;color:var(--text-tertiary)">文件变动自动重启</div></div>
+  <div class="form-group"><label class="toggle"><input type="checkbox" id="sf-multi" ${multi?'checked':''}><span class="track"><span class="thumb"></span></span></label><div style="font-size:12px;color:var(--text-tertiary)">允许多实例</div></div>
+ </div>`;
+
+ showModal(title,html,isEdit?'保存':'添加',()=>{
+  const info={
+   name:$('sf-name').value.trim(),
+   fileName:$('sf-file').value.trim(),
+   arguments:$('sf-args').value.trim()||null,
+   workingDirectory:$('sf-cwd').value.trim()||null,
+   mode:$('sf-mode').value,
+   maxMemory:parseInt($('sf-maxmem').value)||0,
+   healthCheck:$('sf-health').value.trim()||null,
+   environments:$('sf-env').value.trim()||null,
+   enable:$('sf-enable').checked,
+   autoStop:$('sf-autostop').checked,
+   reloadOnChange:$('sf-reload').checked,
+   allowMultiple:$('sf-multi').checked,
+  };
+  if(!info.name){showToast('服务名称不能为空','error');return}
+  if(!info.fileName){showToast('文件名不能为空','error');return}
+  saveService(info);
+ });
+}
+
+async function saveService(info){
+ try{
+  const j=await api('/star/addService',{method:'POST',body:JSON.stringify(info)});
+  showToast(j.message||'保存成功',j.code?'error':'success');
+  if(j.code===0){loadServices();closeModal()}
+ }catch(e){showToast('保存失败','error')}
+}
+
+function confirmRemoveService(name){
+ showModal('确认删除',`确定要删除子服务 <strong>${esc(name)}</strong> 吗？<br><span style="color:var(--text-tertiary)">如果服务正在运行，会先停止再删除。</span>`,'删除',async()=>{
+  try{
+   const j=await api('/star/removeService',{method:'POST',body:JSON.stringify({serviceName:name})});
+   showToast(j.message||'删除成功',j.code?'error':'success');
+   if(j.code===0){loadServices();closeModal()}
+  }catch(e){showToast('删除失败','error')}
+ });
+}
+
+/* ── Control ── */
+let _freeMemRunning=false;
+
+async function freeMemory(){
+ if(_freeMemRunning)return;_freeMemRunning=true;
+ const btn=$('btn-free-mem');if(btn)btn.disabled=true;
+ showToast('正在释放内存...','info');
+ try{
+  const j=await api('/api/freeMemory');
+  if(j.code===0){
+   showToast(`✅ ${j.message}`,'success');
+  }else{
+   showToast('❌ '+(j.message||'释放失败'),'error');
+  }
+  setTimeout(()=>{loadDashboard();},1000);
+ }catch(e){showToast('❌ 请求失败','error')}
+ finally{if(btn)btn.disabled=false;_freeMemRunning=false}
+}
+
+async function changePassword(){
+ const oldPwd=$('pwd-old').value;
+ const newPwd=$('pwd-new').value;
+ const confirmPwd=$('pwd-confirm').value;
+ const msg=$('pwd-msg');
+
+ if(!oldPwd){msg.textContent='请输入旧密码';msg.style.color='var(--red)';return}
+ if(!newPwd){msg.textContent='请输入新密码';msg.style.color='var(--red)';return}
+ if(newPwd.length<4){msg.textContent='新密码至少 4 位';msg.style.color='var(--red)';return}
+ if(newPwd!==confirmPwd){msg.textContent='两次输入的新密码不一致';msg.style.color='var(--red)';return}
+
+ msg.textContent='修改中...';msg.style.color='var(--text-muted)';
+ try{
+  const j=await api('/api/changePassword',{
+   method:'POST',
+   body:JSON.stringify({oldPassword:oldPwd,newPassword:newPwd})
+  });
+  if(j.code===0){
+   msg.textContent='✅ 密码已修改，下次登录请使用新密码';msg.style.color='var(--green)';
+   $('pwd-old').value='';$('pwd-new').value='';$('pwd-confirm').value='';
+   showToast('密码已修改','success');
+  }else{
+   msg.textContent='❌ '+(j.message||'修改失败');msg.style.color='var(--red)';
+  }
+ }catch(e){
+  msg.textContent='❌ 网络错误';msg.style.color='var(--red)';
+ }
+}
+
+(function initControl(){
+ let html=`<div class="glass-card card"><h2>⚡ 服务控制</h2>`;
+ html+=`<div id="ctrl-status" class="mb-16" style="font-size:14px;color:var(--text-secondary)">加载中...</div>`;
+ html+=`<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+ <button class="btn btn-primary btn-lg" onclick="doControl('start')" id="btn-start">▶ 启动服务</button>
+ <button class="btn btn-danger btn-lg" onclick="doControl('stop')" id="btn-stop">⏹ 停止服务</button>
+ <button class="btn btn-lg" style="background:var(--orange);color:#fff;box-shadow:0 2px 8px rgba(249,115,22,0.3)" onclick="doControl('restart')" id="btn-restart">↻ 重启服务</button>
+ <button class="btn btn-lg" style="background:var(--gradient-brand);color:#fff;box-shadow:0 2px 8px rgba(91,91,255,0.3)" onclick="freeMemory()" id="btn-free-mem">🗑 释放内存</button>
+ </div>`;
+ html+=`<div class="section-title">操作记录</div><div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">通过本面板发起的启停操作，保存在浏览器本地存储</div><div class="cmd-history" id="cmd-history">`;
+ if(cmdHistory.length===0)html+=`<div class="text-muted" style="font-size:12px">暂无操作记录</div>`;
+ else cmdHistory.slice(-8).reverse().forEach(h=>{
+  html+=`<div class="cmd-item"><span class="cmd-time">${esc(h.time)}</span><span class="cmd-action">${esc(h.action)}</span><span class="cmd-result">${esc(h.result)}</span></div>`;
+ });
+ html+=`</div></div>`;$('panel-control').innerHTML=html;
+ setInterval(updateControlStatus,5000);updateControlStatus();
+})();
+
+async function updateControlStatus(){
+ if(!document.querySelector('#panel-control.active'))return;
+ try{
+  const j=await api('/api/status');if(j.code!==0)return;const d=j.data;
+  const el=$('ctrl-status');if(!el)return;
+  el.innerHTML=`当前状态：<span class="status-indicator ${d.running?'running':'stopped'}"><span class="status-dot ${d.running?'on':'off'}"></span>${d.running?'运行中':'已停止'}</span> &nbsp; 运行时长：${esc(d.uptime)}`;
+  $('btn-start').disabled=d.running;$('btn-stop').disabled=!d.running;$('btn-restart').disabled=!d.running;
+ }catch(e){}
+}
+
+async function doControl(action){
+ const labels={stop:'停止',start:'启动',restart:'重启'};
+ showModal(`${labels[action]}服务`,`确定要${labels[action]}服务吗？${action==='restart'?'重启后服务将自动恢复。':''}`,labels[action],async()=>{
+  try{
+   const j=await api('/api/control',{method:'POST',body:JSON.stringify({action})});
+   cmdHistory.push({time:new Date().toLocaleString(),action:labels[action],result:j.message||'完成'});
+   sessionStorage.setItem('agent_cmd_history',JSON.stringify(cmdHistory));
+   showToast(j.message||'操作已提交',j.code?'error':'success');
+   setTimeout(()=>{updateControlStatus();loadDashboard();},2000);
+  }catch(e){showToast('操作失败','error')}
+ });
+}
+
+/* ── Config ── */
+async function loadConfig(){
+ try{
+  const j=await api('/api/configMetadata');if(j.code!==0)return;const items=j.data.items||[];
+  let html=`<div class="glass-card card"><h2>⚙ Agent 配置</h2><table class="config-table"><tbody>`;
+  items.forEach(item=>{
+   html+=`<tr><td>${esc(item.displayName)}</td><td>${renderConfigInput(item)}</td><td>${esc(item.description)}</td></tr>`;
+  });
+  html+=`</tbody></table><div class="mt-16"><button class="btn btn-primary" onclick="saveConfig()">💾 保存配置</button> <span style="font-size:12px;color:var(--text-muted);margin-left:12px">部分配置需重启服务后生效</span></div></div>`;
+
+  // 修改密码卡片
+  html+=`<div class="glass-card card" style="margin-top:16px"><h2>🔑 修改密码</h2>`;
+  html+=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:end">`;
+  html+=`<div><label style="display:block;font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">旧密码</label><input type="password" id="pwd-old" placeholder="请输入旧密码" autocomplete="off"></div>`;
+  html+=`<div><label style="display:block;font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">新密码</label><input type="password" id="pwd-new" placeholder="请输入新密码" autocomplete="new-password"></div>`;
+  html+=`<div><label style="display:block;font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">确认新密码</label><input type="password" id="pwd-confirm" placeholder="再次输入新密码" autocomplete="new-password"></div>`;
+  html+=`</div>`;
+  html+=`<div style="margin-top:14px;display:flex;align-items:center;gap:12px">`;
+  html+=`<button class="btn btn-primary" onclick="changePassword()">修改密码</button>`;
+  html+=`<span id="pwd-msg" style="font-size:12px;color:var(--text-muted)"></span></div></div>`;
+
+  $('panel-config').innerHTML=html;
+ }catch(e){$('panel-config').innerHTML=`<div class="glass-card card"><h2>⚙ Agent 配置</h2><p class="text-muted">加载失败</p></div>`}
+}
+
+function renderConfigInput(item){
+ const v=item.value,n=item.name;
+ if(item.type==='Boolean')
+  return `<label class="toggle"><input type="checkbox" id="cfg-${n}" ${v?'checked':''} onchange="markDirty('${n}')"><span class="track"><span class="thumb"></span></span></label>`;
+ if(item.type==='Int32')
+  return `<input type="number" id="cfg-${n}" value="${v??0}" onchange="markDirty('${n}')">`;
+ return `<input type="text" id="cfg-${n}" value="${esc(v??'')}" onchange="markDirty('${n}')">`;
+}
+let dirtyFields=new Set();
+function markDirty(name){dirtyFields.add(name)}
+async function saveConfig(){
+ if(dirtyFields.size===0){showToast('没有需要保存的修改','info');return}
+ const updates={};
+ dirtyFields.forEach(n=>{
+  const el=$('cfg-'+n);if(!el)return;let v;
+  if(el.type==='checkbox')v=el.checked;
+  else if(el.type==='number')v=parseInt(el.value)||0;
+  else v=el.value;updates[n]=v;
+ });
+ try{
+  const j=await api('/api/updateConfig',{method:'POST',body:JSON.stringify(updates)});
+  if(j.code===0){dirtyFields.clear();showToast(j.message,'success');loadConfig()}
+  else showToast(j.message,'error');
+ }catch(e){showToast('保存失败','error')}
+}
+
+/* ── 星尘设置 ── */
+let _starDirtyFields=new Set();
+
+async function loadStarConfig(){
+ try{
+  const j=await api('/star/getStarConfig');
+  if(j.code!==0){$('panel-starconfig').innerHTML=`<div class="glass-card card"><h2>🌐 星尘设置</h2><p class="text-muted">加载失败</p></div>`;return}
+  const groups=j.data.groups||[];
+  let html=`<div class="glass-card card"><h2>🌐 星尘设置</h2>`;
+  groups.forEach(g=>{
+   html+=`<div class="section-title" style="margin-top:${groups.indexOf(g)>0?'20px':'0'}">${esc(g.group)}</div>`;
+   html+=`<table class="config-table"><tbody>`;
+   g.items.forEach(item=>{
+    html+=`<tr><td>${esc(item.displayName)}</td><td>${renderStarConfigInput(item)}</td><td>${esc(item.description)}</td></tr>`;
+   });
+   html+=`</tbody></table>`;
+  });
+  html+=`<div class="mt-16"><button class="btn btn-primary" onclick="saveStarConfig()">💾 保存星尘配置</button> <span style="font-size:12px;color:var(--text-muted);margin-left:12px">修改 StarServer 地址后需重启 StarAgent 生效</span></div></div>`;
+  $('panel-starconfig').innerHTML=html;
+ }catch(e){$('panel-starconfig').innerHTML=`<div class="glass-card card"><h2>🌐 星尘设置</h2><p class="text-muted">加载失败</p></div>`}
+}
+
+function renderStarConfigInput(item){
+ const v=item.value,n=item.name;
+ if(item.type==='Boolean')
+  return `<label class="toggle"><input type="checkbox" id="scfg-${n}" ${v?'checked':''} onchange="markStarDirty('${n}')"><span class="track"><span class="thumb"></span></span></label>`;
+ if(item.type==='Int32')
+  return `<input type="number" id="scfg-${n}" value="${v??0}" onchange="markStarDirty('${n}')">`;
+ if(item.type==='Password')
+  return `<input type="password" id="scfg-${n}" placeholder="输入新值以修改" onchange="markStarDirty('${n}')">`;
+ return `<input type="text" id="scfg-${n}" value="${esc(v??'')}" onchange="markStarDirty('${n}')">`;
+}
+function markStarDirty(name){_starDirtyFields.add(name)}
+async function saveStarConfig(){
+ if(_starDirtyFields.size===0){showToast('没有需要保存的修改','info');return}
+ const updates={};
+ _starDirtyFields.forEach(n=>{
+  const el=$('scfg-'+n);if(!el)return;let v;
+  if(el.type==='checkbox')v=el.checked;
+  else if(el.type==='number')v=parseInt(el.value)||0;
+  else if(el.type==='password'){
+   if(el.value)v=el.value;else return;
+  }
+  else v=el.value;updates[n]=v;
+ });
+ if(Object.keys(updates).length===0){showToast('没有需要保存的修改','info');return}
+ try{
+  const j=await api('/star/updateStarConfig',{method:'POST',body:JSON.stringify(updates)});
+  if(j.code===0){_starDirtyFields.clear();showToast(j.message,'success');loadStarConfig()}
+  else showToast(j.message,'error');
+ }catch(e){showToast('保存失败','error')}
+}
+
+/* ── Logs ── */
+async function loadLogs(){await loadLogFiles();renderLogPanel();if(currentLogFile||logFiles.length>0)await fetchLogContent();else $('log-content').innerHTML=`<div class="log-empty">📂 未找到日志文件<br><span style="font-size:11px;color:var(--text-muted)">请确保 Log 目录中存在 .log 文件</span></div>`}
+async function loadLogFiles(){
+ try{const j=await api('/api/logFiles');if(j.code===0)logFiles=j.data.files||[]}catch(e){logFiles=[]}
+ if(!currentLogFile&&logFiles.length>0)currentLogFile=logFiles[0].name;
+}
+function renderLogPanel(){
+ let html=`<div class="glass-card card"><h2>📋 系统日志</h2>`;
+ html+=`<div class="log-layout"><div class="log-files" id="log-file-list">`;
+ if(logFiles.length===0)html+=`<div class="text-muted" style="font-size:11px;padding:8px">无日志文件</div>`;
+ else logFiles.forEach(f=>{
+  const active=currentLogFile===f.name;
+  html+=`<div class="log-file-item${active?' active':''}" onclick="selectLogFile('${escAttr(f.name)}')"><div class="fn">${esc(f.name)}</div><div class="fm">${esc(f.sizeDisplay)} · ${esc(f.lastModified)}</div></div>`;
+ });
+ html+=`</div><div><div class="log-toolbar">`;
+ html+=`<span style="flex:1"></span><button class="btn btn-ghost btn-sm" onclick="refreshLogs()">🔄 刷新</button></div>`;
+ html+=`<div class="log-content" id="log-content"><div class="log-empty">加载中...</div></div></div></div></div>`;
+ $('panel-logs').innerHTML=html;
+}
+async function selectLogFile(name){currentLogFile=name;renderLogPanel();await fetchLogContent()}
+async function refreshLogs(){await loadLogFiles();renderLogPanel();await fetchLogContent()}
+async function fetchLogContent(){
+ const el=$('log-content');if(!el)return;el.innerHTML=`<div class="log-empty">加载中...</div>`;
+ try{
+  let url=`/api/logs?count=500`;
+  if(currentLogFile)url+=`&file=${encodeURIComponent(currentLogFile)}`;
+  const j=await api(url);
+  if(j.code!==0){el.innerHTML=`<div class="log-empty">❌ ${esc(j.message||'加载失败')}</div>`;return}
+  const lines=j.data.lines||[];
+  if(lines.length===0){el.innerHTML=`<div class="log-empty">📄 无日志内容</div>`;return}
+  el.innerHTML=lines.map(l=>{
+   let cls='';
+   if(l.includes('ERROR')||l.includes('FATAL'))cls='error';
+   else if(l.includes('WARN'))cls='warn';
+   else if(l.includes('DEBUG'))cls='debug';
+   return `<div class="log-line ${cls}">${esc(l)}</div>`;
+  }).join('');el.scrollTop=el.scrollHeight;
+ }catch(e){el.innerHTML=`<div class="log-empty">❌ 加载失败</div>`}
+}
+
+/* ── Watchdog ── */
+async function loadWatchDog(){
+ try{
+  const j=await api('/api/watchdog');if(j.code!==0)return;const svcs=j.data.services||[];
+  let html=`<div class="glass-card card"><h2>🐕 看门狗</h2>`;
+  if(svcs.length===0){html+=`<div class="empty-state"><div class="empty-icon">🐕</div><p>未配置看门狗服务</p><p style="font-size:11px;margin-top:4px">在配置中设置 WatchDog 字段，多个服务名用逗号分隔</p></div>`}
+  else{
+   html+=`<div class="stats-grid">`;
+   svcs.forEach(s=>{
+    const cls=s.running===true?'text-green':s.running===false?'text-red':'text-yellow';
+    const txt=s.running===true?'运行中':s.running===false?'已停止':'状态未知';
+    html+=`<div class="stat"><div class="stat-val ${cls}">${txt}</div><div class="stat-lbl">${esc(s.name)}</div></div>`;
+   });
+   html+=`</div>`;
+  }
+  html+=`</div>`;$('panel-watchdog').innerHTML=html;
+ }catch(e){}
+}
+
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function escAttr(s){return String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+/* ── Theme ── */
+function getTheme(){return localStorage.getItem('agent_theme')||'auto'}
+function applyTheme(theme){
+ if(theme==='auto')theme=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+ document.documentElement.classList.toggle('light',theme==='light');
+ localStorage.setItem('agent_theme',getTheme());
+}
+function toggleTheme(){
+ const cur=document.documentElement.classList.contains('light')?'light':'dark';
+ const next=cur==='light'?'dark':'light';
+ applyTheme(next);
+ localStorage.setItem('agent_theme',next);
+}
+applyTheme(getTheme());
+window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{if(getTheme()==='auto')applyTheme('auto')});
+
+token=sessionStorage.getItem('agent_token')||'';
+if(token)showApp();
+</script>
+</body>
+</html>

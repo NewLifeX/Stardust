@@ -7,10 +7,14 @@ using XCode;
 
 namespace Stardust.Server.Services;
 
+/// <summary>Apollo 配置集成服务。定时从 Apollo 配置中心同步配置到本地 StarServer</summary>
 public class ApolloService : IHostedService
 {
     private TimerX _timer;
 
+    /// <summary>启动服务，初始化定时器</summary>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>任务</returns>
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _timer = new TimerX(DoApolloSync, null, 60_000, 300_000) { Async = true };
@@ -18,6 +22,9 @@ public class ApolloService : IHostedService
         return Task.CompletedTask;
     }
 
+    /// <summary>停止服务，销毁定时器</summary>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>任务</returns>
     public Task StopAsync(CancellationToken cancellationToken)
     {
         _timer.TryDispose();
@@ -25,6 +32,8 @@ public class ApolloService : IHostedService
         return Task.CompletedTask;
     }
 
+    /// <summary>执行 Apollo 配置同步。遍历已启用 Apollo 的应用配置，拉取并更新本地配置</summary>
+    /// <param name="state">定时器状态参数</param>
     private void DoApolloSync(Object state)
     {
         foreach (var item in AppConfig.FindAllWithCache())

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Log;
@@ -45,6 +45,12 @@ public class ConfigDataController : ConfigsEntityController<ConfigData>
         _tracer = tracer;
     }
 
+    /// <summary>高级搜索。按配置、键名、作用域、时间范围分页查询配置数据</summary>
+    /// <param name="p">分页参数</param>
+    /// <returns>配置数据列表</returns>
+    /// <summary>高级搜索。按条件分页查询</summary>
+    /// <param name="p">分页参数</param>
+    /// <returns>实体列表</returns>
     protected override IEnumerable<ConfigData> Search(Pager p)
     {
         var configId = p["configId"].ToInt(-1);

@@ -1206,7 +1206,7 @@ targetCompatibility = '8'
 ## 相关资源
 
 - [星尘监控平台文档](https://github.com/NewLifeX/Stardust)
-- [星尘监控接入 API 文档](../星尘监控接入Api文档.md)
+- [M8-17-监控接入API](../M8-17-监控接入API.md)
 - [.NET SDK 文档](https://github.com/NewLifeX/Stardust/tree/master/Stardust)
 - [Go SDK 文档](./stardust-sdk-go.md)
 - [Python SDK 文档](./stardust-sdk-python.md)

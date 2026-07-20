@@ -270,6 +270,15 @@ public partial class NodeData
     [BindColumn("Uptime", "开机时间。单位s", "", ItemType = "TimeSpan")]
     public Int32 Uptime { get => _Uptime; set { if (OnPropertyChanging("Uptime", value)) { _Uptime = value; OnPropertyChanged("Uptime"); } } }
 
+    private String _TraceId;
+    /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+    [Category("扩展")]
+    [DisplayName("追踪")]
+    [Description("追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("TraceId", "追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递", "")]
+    public String TraceId { get => _TraceId; set { if (OnPropertyChanging("TraceId", value)) { _TraceId = value; OnPropertyChanged("TraceId"); } } }
+
     private String _Creator;
     /// <summary>创建者。服务端节点</summary>
     [Category("扩展")]
@@ -337,6 +346,7 @@ public partial class NodeData
             "Offset" => _Offset,
             "LocalTime" => _LocalTime,
             "Uptime" => _Uptime,
+            "TraceId" => _TraceId,
             "Creator" => _Creator,
             "CreateTime" => _CreateTime,
             "CreateIP" => _CreateIP,
@@ -377,6 +387,7 @@ public partial class NodeData
                 case "Offset": _Offset = value.ToInt(); break;
                 case "LocalTime": _LocalTime = value.ToDateTime(); break;
                 case "Uptime": _Uptime = value.ToInt(); break;
+                case "TraceId": _TraceId = Convert.ToString(value); break;
                 case "Creator": _Creator = Convert.ToString(value); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -510,6 +521,9 @@ public partial class NodeData
         /// <summary>开机时间。单位s</summary>
         public static readonly Field Uptime = FindByName("Uptime");
 
+        /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+        public static readonly Field TraceId = FindByName("TraceId");
+
         /// <summary>创建者。服务端节点</summary>
         public static readonly Field Creator = FindByName("Creator");
 
@@ -617,6 +631,9 @@ public partial class NodeData
 
         /// <summary>开机时间。单位s</summary>
         public const String Uptime = "Uptime";
+
+        /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+        public const String TraceId = "TraceId";
 
         /// <summary>创建者。服务端节点</summary>
         public const String Creator = "Creator";

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Stardust.Data.Gateway;
 using NewLife;
 using NewLife.Cube;
@@ -30,6 +30,9 @@ public class GatewayRouteController : EntityController<GatewayRoute>
         SearchFields.AddField("CreateTime");
     }
 
+    /// <summary>高级搜索。按条件分页查询</summary>
+    /// <param name="p">分页参数</param>
+    /// <returns>实体列表</returns>
     protected override IEnumerable<GatewayRoute> Search(Pager p)
     {
         var projectId = p["projectId"].ToInt(-1);

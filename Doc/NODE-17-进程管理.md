@@ -1,0 +1,36 @@
+# NODE-17 进程管理
+
+> 版本：v1.0 | 日期：2026-07-15
+> 对应需求：NODE-17 StarAgent 进程管理
+
+---
+
+## Process 启动进程研究
+
+> 研究目标：A应用通过 Process 类启动 B 应用，研究不同参数设置下进程的跟随退出行为。
+
+### 测试准备
+
+- .NET 版本：net8.0
+- A目录：`/root/TestA` 主程序
+- B目录：`/root/TestB` 目标 NewLife 应用
+- C目录：`/root/TestC` 目标 net8 应用
+- D目录：`/root/TestD` 目标非托管应用
+
+**跟随退出**：随着 A 应用退出，B 应用跟随退出。
+
+### 测试结果
+
+| 参数 | UseShellExecute | WorkingDirectory | Environment | 跟随退出 |
+|------|:---------------:|:----------------:|:-----------:|:--------:|
+| 默认 | false | 空 | 无 | ❌ |
+| `-s` | true | 空 | 无 | ✅ |
+| `-w` | false | 设置目标路径 | 无 | ❌ |
+| `-b` | false | 空 | 设置 BasePath | ❌ |
+| `-e` | false | 空 | 设置 star | ❌ |
+
+### 关键结论
+
+- `UseShellExecute=true` 时子进程跟随父进程退出
+- `UseShellExecute=false` 时子进程独立运行，不跟随退出
+- StarAgent 的 `ServiceManager` 使用 `UseShellExecute=false` 启动应用进程，确保应用独立于 Agent 生命周期

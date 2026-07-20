@@ -41,14 +41,16 @@
     <Compile Include="..\Stardust.Server\Services\RedisService.cs" Link="Services\RedisService.cs" />
     <Compile Include="..\Stardust.Server\Services\TraceItemStatService.cs" Link="Services\TraceItemStatService.cs" />
     <Compile Include="..\Stardust.Server\Services\TraceStatService.cs" Link="Services\TraceStatService.cs" />
+    <Compile Include="..\Stardust.Server\Services\DnsProviderFactory.cs" Link="Services\DnsProviderFactory.cs" />
+    <Compile Include="..\Stardust.Server\Services\DnsService.cs" Link="Services\DnsService.cs" />
     <Compile Include="..\Stardust.Server\Setting.cs" Link="Setting.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Cube.Core" Version="6.12.2026.708" />
+    <PackageReference Include="NewLife.Cube.Core" Version="6.12.2026.713-beta0809" />
     <PackageReference Include="NewLife.IP" Version="2.4.2026.501" />
-    <PackageReference Include="NewLife.Redis" Version="6.5.2026.701" />
-    <PackageReference Include="NewLife.Remoting.Extensions" Version="3.8.2026.706" />
+    <PackageReference Include="NewLife.Redis" Version="6.5.2026.713-beta0858" />
+    <PackageReference Include="NewLife.Remoting.Extensions" Version="3.8.2026.716-beta0416" />
   </ItemGroup>
 
   <ItemGroup>

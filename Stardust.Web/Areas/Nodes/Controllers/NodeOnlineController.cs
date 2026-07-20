@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
@@ -52,6 +52,9 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
         PageSetting.EnableAdd = false;
     }
 
+    /// <summary>高级搜索。按条件分页查询</summary>
+    /// <param name="p">分页参数</param>
+    /// <returns>实体列表</returns>
     protected override IEnumerable<NodeOnline> Search(Pager p)
     {
         var nodeId = p["nodeId"].ToInt(-1);
@@ -95,7 +98,7 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
             var online = NodeOnline.FindById(item.ToInt());
             if (online?.Node != null)
             {
-                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/upgrade", null, 0, 600, 0, HttpContext.RequestAborted)));
+                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/upgrade", null, 0, 600, 10, HttpContext.RequestAborted)));
             }
         }
 
@@ -184,7 +187,7 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
             var online = NodeOnline.FindById(item.ToInt());
             if (online?.Node != null)
             {
-                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/syncTime", null, 0, 600, 0, HttpContext.RequestAborted)));
+                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/syncTime", null, 0, 600, 5, HttpContext.RequestAborted)));
             }
         }
 
@@ -213,7 +216,7 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
             var online = NodeOnline.FindById(item.ToInt());
             if (online?.Node != null)
             {
-                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/restart", null, 0, 600, 0, HttpContext.RequestAborted)));
+                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/restart", null, 0, 600, 5, HttpContext.RequestAborted)));
             }
         }
 
@@ -242,7 +245,7 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
             var online = NodeOnline.FindById(item.ToInt());
             if (online?.Node != null)
             {
-                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/reboot", null, 0, 600, 0, HttpContext.RequestAborted)));
+                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/reboot", null, 0, 600, 5, HttpContext.RequestAborted)));
             }
         }
 

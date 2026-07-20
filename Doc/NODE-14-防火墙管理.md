@@ -1,0 +1,38 @@
+# NODE-14 防火墙管理
+
+> 版本：v1.0 | 日期：2026-07-15
+> 对应需求：NODE-14 防火墙管理
+
+---
+
+## 功能概述
+
+从 v3.7 开始，星尘发布支持自动检测应用监听端口并开放防火墙规则，免去手动配置防火墙的繁琐步骤。该功能在应用部署启动后自动执行。
+
+## 功能特点
+
+1. **自动检测**：自动识别系统防火墙类型和可用性
+2. **智能提取**：从应用配置文件自动提取监听端口
+3. **多平台支持**：支持 Windows 和主流 Linux 防火墙
+4. **无侵入设计**：配置失败不影响应用正常部署
+
+## 支持的防火墙类型
+
+| 平台 | 防火墙系统 | 命令工具 |
+|------|-----------|----------|
+| Windows | Windows Firewall | `netsh advfirewall` |
+| Linux (CentOS/RHEL) | firewalld | `firewall-cmd` |
+| Linux (Ubuntu/Debian) | ufw | `ufw` |
+| Linux (通用) | iptables | `iptables` |
+
+## 端口检测机制
+
+系统自动从以下配置文件提取监听端口：
+- **Nginx 配置**：从 `listen` 指令提取
+- **ASP.NET Core 配置**：从 `urls` 或 `Kestrel:Endpoints` 提取
+- **IIS 配置**：从 `web.config` 的 `bindingInformation` 提取
+
+## 相关代码
+
+- `StarAgent/FirewallManager.cs` — 防火墙管理实现
+- `StarAgent/Managers/FirewallManager.cs` — 跨平台防火墙接口

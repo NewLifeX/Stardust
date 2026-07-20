@@ -17,6 +17,7 @@ using XCode.Configuration;
 
 namespace Stardust.Server.Services;
 
+/// <summary>节点服务。处理 StarAgent 节点的注册登录、心跳保活、在线状态管理和命令下发</summary>
 public class NodeService : DefaultDeviceService<Node, NodeOnline>
 {
     private readonly ITokenService _tokenService;
@@ -25,8 +26,18 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
     private readonly NodeSessionManager _sessionManager;
     private readonly ICacheProvider _cacheProvider;
     private readonly ITracer _tracer;
+    private readonly DnsService _dnsService;
 
-    public NodeService(ITokenService tokenService, IPasswordProvider passwordProvider, StarServerSetting setting, NodeSessionManager sessionManager, ICacheProvider cacheProvider, ITracer tracer, IServiceProvider serviceProvider) : base(sessionManager, passwordProvider, cacheProvider, serviceProvider)
+    /// <summary>实例化节点服务</summary>
+    /// <param name="tokenService">令牌服务</param>
+    /// <param name="passwordProvider">密码提供者</param>
+    /// <param name="setting">服务端设置</param>
+    /// <param name="sessionManager">节点会话管理器</param>
+    /// <param name="cacheProvider">缓存提供者</param>
+    /// <param name="tracer">跟踪器</param>
+    /// <param name="dnsService">DDNS 服务</param>
+    /// <param name="serviceProvider">服务提供者</param>
+    public NodeService(ITokenService tokenService, IPasswordProvider passwordProvider, StarServerSetting setting, NodeSessionManager sessionManager, ICacheProvider cacheProvider, ITracer tracer, DnsService dnsService, IServiceProvider serviceProvider) : base(sessionManager, passwordProvider, cacheProvider, serviceProvider)
     {
         _tokenService = tokenService;
         _passwordProvider = passwordProvider;
@@ -34,6 +45,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         _sessionManager = sessionManager;
         _cacheProvider = cacheProvider;
         _tracer = tracer;
+        _dnsService = dnsService;
 
         Name = "Node";
     }
@@ -141,6 +153,10 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
 
         node.UpdateIP = ip;
         node.FixNameByRule();
+
+        // 记录旧IP，用于DDNS检测（Login会更新LastLoginIP）
+        var oldIp = node.LastLoginIP;
+
         node.Login(inf.Node, ip);
 
         var online = context.Online = GetOnline(context) ?? CreateOnline(context);
@@ -158,6 +174,9 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
 
         // 检查节点上线恢复
         NodeOnlineService.CheckOnline(node);
+
+        // DDNS检测。节点上线时检测IP变化并更新DNS记录
+        _ = _dnsService.CheckNodeIPChange(node, ip, oldIp);
     }
 
     /// <summary>注销</summary>
@@ -550,6 +569,9 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         //// 下发部署的应用服务
         //rs.Services = GetServices(node.ID);
 
+        // DDNS检测。心跳时检测IP变化并更新DNS记录
+        _ = _dnsService.CheckNodeIPChange(node, context.UserHost);
+
         return online;
     }
 
@@ -706,10 +728,23 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
     /// <returns></returns>
     public override void SetOnline(DeviceContext context, Boolean online)
     {
-        if ((context.Online ?? GetOnline(context)) is NodeOnline olt)
+        // 优先从缓存/数据库获取最新在线记录，避免 context.Online 持有过期实例
+        if ((GetOnline(context) ?? context.Online) is NodeOnline olt)
         {
+            // 下线时检查是否有活跃会话，避免旧会话断开时覆盖新会话的状态
+            if (!online && context.Device is Node node)
+            {
+                var session = _sessionManager.Get(node.Code);
+                if (session != null && session.Active)
+                    return;
+            }
+
             olt.WebSocket = online;
             olt.Update();
+
+            // 更新缓存，确保后续 GetOnline 能拿到最新值
+            if (context.Device is Node node2)
+                UpdateOnline(node2, olt);
         }
     }
 

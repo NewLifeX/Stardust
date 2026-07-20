@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Charts;
@@ -29,6 +29,9 @@ public class AppMeterController : RegistryEntityController<AppMeter>
         }
     }
 
+    /// <summary>高级搜索。按条件分页查询</summary>
+    /// <param name="p">分页参数</param>
+    /// <returns>实体列表</returns>
     protected override IEnumerable<AppMeter> Search(Pager p)
     {
         PageSetting.EnableAdd = false;

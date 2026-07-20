@@ -151,7 +151,7 @@ span.Finish
 ## 相关链接
 
 - [星尘项目主页](https://github.com/NewLifeX/Stardust)
-- [接入 API 文档](/Doc/星尘监控接入Api文档.md)
+- [M5-17-监控接入API](/Doc/M5-17-监控接入API.md)
 - [ASP SDK 详细文档](/Doc/SDK/stardust-sdk-asp.md)
 
 ## 许可证

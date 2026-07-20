@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Charts;
@@ -18,6 +18,9 @@ public class TraceDayStatController : ReadOnlyEntityController<TraceDayStat>
 
     public TraceDayStatController(HotAppService hotApp) => _hotApp = hotApp;
 
+    /// <summary>高级搜索。按条件分页查询</summary>
+    /// <param name="p">分页参数</param>
+    /// <returns>实体列表</returns>
     protected override IEnumerable<TraceDayStat> Search(Pager p)
     {
         var appId = p["appId"].ToInt(-1);

@@ -1,0 +1,63 @@
+# NODE-9 指令下发架构
+
+> 版本：v1.0 | 日期：2026-07-15
+> 对应需求：NODE-9 节点命令下发
+> 安全相关：[SVR-8-远程命令执行安全](SVR-8-远程命令执行安全.md)
+
+---
+
+## 架构概览
+
+星尘平台指令下发采用 **双通道互为备份** 的架构设计：
+
+| 通道 | 机制 | 延迟 |
+|------|------|------|
+| **WebSocket 实时推送** | SessionManager → RedisStream 事件总线 → WebSocket 长连接 | 实时（毫秒级） |
+| **HTTP 心跳拉取** | Ping → AcquireCommands → PingResponse.Commands | 最多 60 秒 |
+
+### 组件关系
+
+```
+StarWeb (管理端)                    StarServer (服务端)                    StarAgent (节点端)
+      │                                  │                                  │
+      │ HTTP POST Node/SendCommand        │                                  │
+      ├─────────────────────────────────►│                                  │
+      │                                  │  命令写入数据库                    │
+      │                                  ├──► NodeCommand 表                  │
+      │                                  │                                  │
+      │                                  │  WebSocket 实时推送               │
+      │                                  ├════════════════════════════════►│
+      │                                  │                                  │
+      │                                  │  HTTP Ping 心跳拉取（备用）       │
+      │                                  │◄════════════════════════════════┤
+      │                                  │                                  │
+```
+
+## 双通道详述
+
+### 主通道：WebSocket 实时推送
+
+1. StarServer 收到命令后写入 `NodeCommand` 表
+2. `SessionManager` 通过 Redis 事件总线发布命令事件
+3. 消费循环读取事件，查找目标节点的 WebSocket 会话
+4. 通过 `WebSocket.SendAsync` 实时推送到 StarAgent
+5. StarAgent 的 `WsChannelCore` 接收并处理
+
+### 备用通道：HTTP 心跳拉取
+
+1. StarAgent 每次心跳（默认 60 秒）发送 Ping 请求
+2. `NodeController.Ping` 处理时调用 `AcquireCommands` 查询待处理命令
+3. 将命令列表放入 Ping 响应中返回
+4. StarAgent 的 `ClientBase` 处理返回的命令
+
+## 关键设计
+
+- **双通道互为备份**：WebSocket 通道故障时自动降级到心跳通道
+- **Redis 事件总线**：解耦命令生产者和消费者，支持多 StarServer 实例
+- **会话池**：`NodeCommandSession` 维护所有在线节点的 WebSocket 连接
+
+## 相关代码
+
+- `Stardust.Server/Services/NodeSessionManager.cs` — WebSocket 会话管理
+- `Stardust.Server/Services/NodeService.cs` — 命令处理
+- `Stardust/StarClient.cs` — 客户端连接管理

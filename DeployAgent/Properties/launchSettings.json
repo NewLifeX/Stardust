@@ -2,10 +2,19 @@
   "profiles": {
     "DeployAgent": {
       "commandName": "Project",
+      "commandLineArgs": "-run"
     },
-    "DeployAgent2": {
+    "DeployAgentPack": {
       "commandName": "Project",
       "commandLineArgs": "pack -r ../star.zip ../../star/*.exe ../../star/*.dll ../../star/*.runtimeconfig.json ../../../Doc *.dll"
+    },
+    "DeployAgentInstall": {
+      "commandName": "Project",
+      "commandLineArgs": "-install"
+    },
+    "DeployAgentUninstall": {
+      "commandName": "Project",
+      "commandLineArgs": "-uninstall"
     }
   }
 }

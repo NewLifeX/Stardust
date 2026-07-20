@@ -16,6 +16,9 @@ public class MySqlDataController : ReadOnlyEntityController<MySqlData>
         ListFields.RemoveRemarkField();
     }
 
+    /// <summary>高级搜索。按条件分页查询</summary>
+    /// <param name="p">分页参数</param>
+    /// <returns>实体列表</returns>
     protected override IEnumerable<MySqlData> Search(Pager p)
     {
         var mysqlId = p["mysqlId"].ToInt(-1);

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
@@ -104,6 +104,12 @@ public class AppConfigController : ConfigsEntityController<AppConfig>
         _tracer = tracer;
     }
 
+    /// <summary>高级搜索。按应用、项目、分类、启用状态等条件分页查询应用配置</summary>
+    /// <param name="p">分页参数</param>
+    /// <returns>应用配置列表</returns>
+    /// <summary>高级搜索。按条件分页查询</summary>
+    /// <param name="p">分页参数</param>
+    /// <returns>实体列表</returns>
     protected override IEnumerable<AppConfig> Search(Pager p)
     {
         var id = p["configId"].ToInt(-1);

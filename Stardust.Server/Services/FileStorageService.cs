@@ -11,8 +11,12 @@ using XCode;
 
 namespace Stardust.Server.Services;
 
+/// <summary>分布式文件存储服务。延迟初始化文件存储引擎，避免服务启动时资源争抢</summary>
 public class FileStorageService(IFileStorage fileStorage) : IHostedService
 {
+    /// <summary>启动服务。延迟10秒后初始化文件存储</summary>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>任务</returns>
     Task IHostedService.StartAsync(CancellationToken cancellationToken)
     {
         // 延迟10秒后初始化，避免和其它服务争抢资源
@@ -22,8 +26,13 @@ public class FileStorageService(IFileStorage fileStorage) : IHostedService
         return Task.CompletedTask;
     }
 
+    /// <summary>停止服务</summary>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>任务</returns>
     Task IHostedService.StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
+    /// <summary>延迟初始化文件存储引擎</summary>
+    /// <param name="cancellationToken">取消令牌</param>
     private async Task InitializeLaterAsync(CancellationToken cancellationToken)
     {
         await Task.Delay(10_000, cancellationToken);

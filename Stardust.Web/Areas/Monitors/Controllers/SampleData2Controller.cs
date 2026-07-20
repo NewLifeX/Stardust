@@ -1,4 +1,4 @@
-﻿using NewLife;
+using NewLife;
 using NewLife.Cube;
 using NewLife.Web;
 using Stardust.Data.Monitors;
@@ -21,6 +21,9 @@ public class SampleData2Controller : ReadOnlyEntityController<SampleData2>
         df.Url = "/trace?id={TraceId}";
     }
 
+    /// <summary>高级搜索。按条件分页查询</summary>
+    /// <param name="p">分页参数</param>
+    /// <returns>实体列表</returns>
     protected override IEnumerable<SampleData2> Search(Pager p)
     {
         var traceId = p["traceId"];
