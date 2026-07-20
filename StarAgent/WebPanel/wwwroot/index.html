@@ -38,7 +38,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .glass-card{background:rgba(22,22,32,0.65);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);transition:transform var(--duration-normal) var(--ease-out-quart),box-shadow var(--duration-normal) var(--ease-out-quart)}
 .glass-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-modal)}
 .login-box{max-width:400px;margin:120px auto 0;padding:40px 36px;position:relative;z-index:1}
-.login-box h1{text-align:center;margin-bottom:8px;font-size:22px;font-weight:700;background:var(--gradient-brand);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.login-box h1{text-align:center;margin-bottom:8px;font-size:22px;font-weight:700;background:var(--gradient-brand);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}.login-box h1 .emoji{background:none;-webkit-background-clip:initial;background-clip:initial;-webkit-text-fill-color:initial}
 .login-box .sub{text-align:center;color:var(--text-tertiary);font-size:13px;margin-bottom:28px}
 .login-box label{display:block;font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
 .login-box input{width:100%;padding:12px 14px;margin-bottom:18px;border:1px solid var(--border-default);border-radius:var(--radius-md);background:var(--surface-2);color:var(--text-primary);font-size:14px;outline:none;transition:border-color var(--duration-fast),box-shadow var(--duration-fast)}
@@ -218,7 +218,7 @@ html.light .info-table td{border-bottom-color:rgba(0,0,0,0.06)}
 <body>
 
 <div id="login" class="login-box glass-card">
-<h1>🔐 StarAgent 管理面板</h1>
+<h1><span class="emoji">🔐</span> StarAgent 管理面板</h1>
 <p class="sub">请输入凭据以继续</p>
 <label>用户名</label>
 <input id="luser" placeholder="请输入用户名" autocomplete="username" autofocus>
