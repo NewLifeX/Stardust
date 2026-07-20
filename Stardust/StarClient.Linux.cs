@@ -1151,11 +1151,14 @@ public partial class StarClient
         {
             var stat = File.ReadAllText($"/proc/{pid}/stat");
             // Format: pid (name) state ppid ...
-            // Process name may contain spaces but is enclosed in parentheses
+            // Process name may contain spaces but is enclosed in parentheses;
+            // parse from the last ')' to avoid splitting on spaces inside the name.
+            // After the last ')' and trim: parts[0]=state, parts[1]=ppid, ...
             var lastParen = stat.LastIndexOf(')');
             if (lastParen < 0) return false;
 
             var parts = stat[(lastParen + 1)..].Trim().Split(' ');
+            // parts[0] is state (e.g. "S"), parts[1] is ppid
             if (parts.Length >= 2 && Int32.TryParse(parts[1], out var ppid))
                 return ppid == Process.GetCurrentProcess().Id;
         }
