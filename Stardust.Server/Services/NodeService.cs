@@ -1172,10 +1172,15 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         if (ex != null) throw ex;
 
         var app = App.FindByName(jwt?.Subject);
-        if (app == null || app.AllowControlNodes.IsNullOrEmpty()) throw new ApiException(ApiCode.Unauthorized, "无权操作！");
+        if (app == null) throw new ApiException(ApiCode.Unauthorized, "无权操作！");
 
-        if (app.AllowControlNodes != "*" && !node.Code.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
-            throw new ApiException(ApiCode.Forbidden, $"[{app}]无权操作节点[{node}]！\n安全设计需要，默认禁止所有应用向任意节点发送控制指令。\n可在注册中心应用系统中修改[{app}]的可控节点，添加[{node.Code}]，或者设置为*所有节点。");
+        if (!app.AllowControlNodes.IsNullOrEmpty())
+        {
+            if (app.AllowControlNodes != "*" && !node.Code.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
+                throw new ApiException(ApiCode.Forbidden, $"[{app}]无权操作节点[{node}]！\n安全设计需要，默认禁止所有应用向任意节点发送控制指令。\n可在注册中心应用系统中修改[{app}]的可控节点，添加[{node.Code}]，或者设置为*所有节点。");
+        }
+        else if (!_setting.AllowControlNodesWhenEmpty)
+            throw new ApiException(ApiCode.Unauthorized, "无权操作！");
 
         return SendCommand(node, model, app + "", cancellationToken);
     }

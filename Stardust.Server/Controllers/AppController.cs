@@ -20,7 +20,7 @@ namespace Stardust.Server.Controllers;
 /// <summary>应用接口控制器</summary>
 [ApiController]
 [Route("[controller]")]
-public class AppController(RegistryService registryService, ITokenService tokenService, DeployService deployService, AppSessionManager sessionManager, IServiceProvider serviceProvider, ITracer tracer) : BaseController(registryService, tokenService, serviceProvider)
+public class AppController(RegistryService registryService, ITokenService tokenService, DeployService deployService, AppSessionManager sessionManager, IServiceProvider serviceProvider, ITracer tracer, StarServerSetting setting) : BaseController(registryService, tokenService, serviceProvider)
 {
     #region 登录注销
     [AllowAnonymous]
@@ -231,10 +231,15 @@ public class AppController(RegistryService registryService, ITokenService tokenS
         var target = App.FindByName(code) ?? throw new ArgumentOutOfRangeException(nameof(model.Code), "无效应用");
 
         var app = Context.Device as App;
-        if (app == null || app.AllowControlNodes.IsNullOrEmpty()) throw new ApiException(ApiCode.Unauthorized, "无权操作！");
+        if (app == null) throw new ApiException(ApiCode.Unauthorized, "无权操作！");
 
-        if (app.AllowControlNodes != "*" && !target.Name.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
-            throw new ApiException(ApiCode.Forbidden, $"[{app}]无权操作应用[{target}]！\n安全设计需要，默认禁止所有应用向其它应用发送控制指令。\n可在注册中心应用系统中修改[{app}]的可控节点，添加[{target.Name}]，或者设置为*所有应用。");
+        if (!app.AllowControlNodes.IsNullOrEmpty())
+        {
+            if (app.AllowControlNodes != "*" && !target.Name.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
+                throw new ApiException(ApiCode.Forbidden, $"[{app}]无权操作应用[{target}]！\n安全设计需要，默认禁止所有应用向其它应用发送控制指令。\n可在注册中心应用系统中修改[{app}]的可控节点，添加[{target.Name}]，或者设置为*所有应用。");
+        }
+        else if (!setting.AllowControlNodesWhenEmpty)
+            throw new ApiException(ApiCode.Unauthorized, "无权操作！");
 
         return registryService.SendCommand(target, clientId, model, app + "");
     }
