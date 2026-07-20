@@ -232,25 +232,37 @@ public class MachineInfoProvider : IMachineInfo
 
             if (signal == 0)
             {
-                var rs = Execute("iw", "dev wlan0 link", 1_000);
-                if (!rs.IsNullOrEmpty())
-                {
-                    /*
-                     * Connected to 24:4b:fe:6d:5c:f8 (on wlan0)
-                     * SSID: FeiFan
-                     * freq: 2462
-                     * RX: 36978860 bytes (198669 packets)
-                     * TX: 12425460 bytes (48657 packets)
-                     * signal: -31 dBm
-                     * tx bitrate: 78.0 MBit/s VHT-MCS 8 VHT-NSS 1
-                     * 
-                     */
-                    var dic = rs.SplitAsDictionary(":", "\n");
-                    if (dic.TryGetValue("SSID", out var value))
-                        info["SSID"] = value;
+                // 动态查找无线网卡，兼容 wlan0/wlp2s0/wlan1 等各种命名，避免无 WiFi 设备时启动 iw 进程
+                var wirelessInterfaces = NetworkInterface.GetAllNetworkInterfaces()
+                    .Where(e => e.NetworkInterfaceType == NetworkInterfaceType.Wireless80211
+                                && e.OperationalStatus == OperationalStatus.Up)
+                    .Select(e => e.Name)
+                    .ToList();
 
-                    if (dic.TryGetValue("signal", out value))
-                        info["Signal"] = signal = value.TrimSuffix("dBm").Trim().ToInt();
+                foreach (var ifName in wirelessInterfaces)
+                {
+                    var linkOutput = Execute("iw", $"dev {ifName} link", 1_000);
+                    if (!linkOutput.IsNullOrEmpty())
+                    {
+                        /*
+                         * Connected to 24:4b:fe:6d:5c:f8 (on wlan0)
+                         * SSID: FeiFan
+                         * freq: 2462
+                         * RX: 36978860 bytes (198669 packets)
+                         * TX: 12425460 bytes (48657 packets)
+                         * signal: -31 dBm
+                         * tx bitrate: 78.0 MBit/s VHT-MCS 8 VHT-NSS 1
+                         * 
+                         */
+                        var dic = linkOutput.SplitAsDictionary(":", "\n");
+                        if (dic.TryGetValue("SSID", out var value))
+                            info["SSID"] = value;
+
+                        if (dic.TryGetValue("signal", out value))
+                            info["Signal"] = signal = value.TrimSuffix("dBm").Trim().ToInt();
+
+                        if (signal != 0) break;
+                    }
                 }
             }
         }
@@ -287,7 +299,7 @@ public class MachineInfoProvider : IMachineInfo
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Hidden,
                 RedirectStandardOutput = true,
-                //RedirectStandardError = true,
+                RedirectStandardError = true,
             };
             var process = Process.Start(psi);
             if (process == null) return null;
