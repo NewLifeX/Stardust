@@ -79,7 +79,7 @@ public class StarAgentSetting : Config<StarAgentSetting>, IClientSetting
     #region 方法
     protected override void OnLoaded()
     {
-        if (Services == null || Services.Length == 0)
+        if ((Services == null || Services.Length == 0) && IsNew)
         {
             var si = new ServiceInfo
             {
@@ -118,6 +118,10 @@ public class StarAgentSetting : Config<StarAgentSetting>, IClientSetting
             };
 
             Services = [si, si2, si3, si4];
+        }
+        else
+        {
+            Services ??= [];
         }
 
         base.OnLoaded();
