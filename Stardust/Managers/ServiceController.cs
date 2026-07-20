@@ -693,9 +693,9 @@ public class ServiceController : DisposeBase
 
         SetProcess(p);
 
-        // OOM分值。接管已存在进程时修正其OOM分值，避免StarAgent重启后旧子进程仍保持 -1000
+        // OOM分值。接管已存在进程时修正其OOM分值，仅对 StarAgent 启动的子进程有效（避免对非子进程写入失败）
         var oomScore = Info?.OomScoreAdjust ?? 0;
-        if (Runtime.Linux && oomScore != -1000)
+        if (Runtime.Linux && oomScore != -1000 && StarClient.IsChildProcess(p.Id))
             StarClient.SetOomScoreAdj(p.Id, oomScore);
 
         var service = Info;
