@@ -1128,10 +1128,40 @@ public partial class StarClient
             var path = $"/proc/{pid}/oom_score_adj";
             File.WriteAllText(path, score.ToString());
         }
+        catch (UnauthorizedAccessException) { }
         catch (Exception ex)
         {
             XTrace.WriteLine("设置进程[{0}] OOM分值={1} 失败：{2}", pid, score, ex.Message);
         }
+    }
+
+    /// <summary>判断指定进程是否为当前进程的子进程（仅 Linux 生效）</summary>
+    /// <param name="pid">目标进程ID</param>
+    /// <returns>是子进程返回 true，否则返回 false</returns>
+    /// <remarks>
+    /// 通过读取 /proc/{pid}/stat 获取 PPID，判断是否等于当前进程 ID。
+    /// 用于区分 StarAgent 自身启动的子进程和接管的外部进程，避免对非子进程执行无效操作。
+    /// </remarks>
+    public static Boolean IsChildProcess(Int32 pid)
+    {
+        if (!Runtime.Linux) return false;
+        if (pid <= 0) return false;
+
+        try
+        {
+            var stat = File.ReadAllText($"/proc/{pid}/stat");
+            // Format: pid (name) state ppid ...
+            // Process name may contain spaces but is enclosed in parentheses
+            var lastParen = stat.LastIndexOf(')');
+            if (lastParen < 0) return false;
+
+            var parts = stat[(lastParen + 1)..].Trim().Split(' ');
+            if (parts.Length >= 2 && Int32.TryParse(parts[1], out var ppid))
+                return ppid == Process.GetCurrentProcess().Id;
+        }
+        catch { }
+
+        return false;
     }
     #endregion
 }
