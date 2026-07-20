@@ -1,6 +1,7 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
+using Microsoft.AspNetCore.Http.Features;
 using NewLife;
 using NewLife.Caching;
 using NewLife.Caching.Services;
@@ -201,6 +202,25 @@ public class Startup
         {
             app.UseDeveloperExceptionPage();
         }
+
+        // 动态调整请求体大小限制。仅对 /Deploy/UploadBuildFile 路径生效，从 StarServerSetting.MaxUploadSize 读取
+        // Kestrel 默认 MaxRequestBodySize=30MB，会在此接口拒绝大包；此处按配置项放宽，0 表示保持 Kestrel 默认
+        app.Use(async (context, next) =>
+        {
+            var path = context.Request.Path.Value;
+            if (!String.IsNullOrEmpty(path)
+                && path.Equals("/Deploy/UploadBuildFile", StringComparison.OrdinalIgnoreCase))
+            {
+                var feature = context.Features.Get<IHttpMaxRequestBodySizeFeature>();
+                if (feature != null && !feature.IsReadOnly)
+                {
+                    var maxSize = StarServerSetting.Current.MaxUploadSize;
+                    if (maxSize > 0) feature.MaxRequestBodySize = maxSize;
+                }
+            }
+
+            await next();
+        });
 
         // 调整自动分表表名。20250103起使用新的分表格式，固定31张表
         ShardTableService.FixShardTable();

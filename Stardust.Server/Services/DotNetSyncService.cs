@@ -29,11 +29,14 @@ public class DotNetSyncService : IHostedService
     public Task StartAsync(CancellationToken cancellationToken)
     {
         // 不管配置是否禁用，都启动定时器。DoSync内判断配置，每次执行后更新周期
-        // _lastPeriod 保持默认值 0，确保首次 DoSync 完成后 UpdateTimer 能正确设置周期
-        _timer = new TimerX(DoSync, null, 5_000, 60_000)
+        var period = _setting.DotNetSyncPeriod;
+        // 初始周期直接用配置值（默认43200秒=12小时），禁用时退回到60秒占位
+        var initPeriod = period > 0 ? period * 1000 : 60_000;
+        _timer = new TimerX(DoSync, null, 5_000, initPeriod)
         {
             Async = true,
         };
+        _lastPeriod = period;
 
         return Task.CompletedTask;
     }
@@ -118,6 +121,10 @@ public class DotNetSyncService : IHostedService
         var releases = js["releases"] as IList<Object>;
         if (releases == null) return;
 
+        // 预查当前大版本下所有 SDK 记录，供 SyncSdk 复用，避免循环内反复查库
+        var sdkPkgs = DotNetPackage.FindAll(DotNetPackage._.Kind == "sdk" &
+            DotNetPackage._.Version.StartsWith(versionPrefix));
+
         foreach (var item in releases)
         {
             var rel = item as IDictionary<String, Object>;
@@ -138,13 +145,13 @@ public class DotNetSyncService : IHostedService
             // dotnet-hosting 不在顶级 key 中，而是在 aspnetcore-runtime.files 的最后一项，由 SyncRuntime 内识别
 
             // 处理 sdk（单个主 SDK，如 10.0.301）→ Kind=sdk
-            SyncSdk(rel["sdk"] as IDictionary<String, Object>, ver);
+            SyncSdk(rel["sdk"] as IDictionary<String, Object>, sdkPkgs);
             // 处理 sdks（多个 SDK 版本数组，如 [10.0.301, 10.0.109]）→ Kind=sdk
             var sdks = rel["sdks"] as IList<Object>;
             if (sdks != null)
             {
                 foreach (var s in sdks)
-                    SyncSdk(s as IDictionary<String, Object>, ver);
+                    SyncSdk(s as IDictionary<String, Object>, sdkPkgs);
             }
         }
     }
@@ -206,15 +213,16 @@ public class DotNetSyncService : IHostedService
             // Windows 上跳过 .zip（只保留 .exe 安装包）
             if (os == (Int32)OSKind.Windows && name.EndsWithIgnoreCase(".zip")) continue;
 
-            // 在调用方传入的内存列表中查找（无需再次查库）
-            var pkg = allPkgs.FirstOrDefault(e =>
+            // 查出所有匹配记录（allPkgs 是版本维度的快照，此处做 Kind+OS+Arch 维度的去重）
+            var matched = allPkgs.Where(e =>
                 e.Kind == actualKind &&
                 e.OSKind == (OSKind)os &&
-                e.Architecture == (CpuArch)arch);
+                e.Architecture == (CpuArch)arch).ToList();
 
-            if (pkg == null)
+            if (matched.Count == 0)
             {
-                pkg = new DotNetPackage
+                // 无记录 → 新建
+                var pkg = new DotNetPackage
                 {
                     Version = version,
                     Kind = actualKind,
@@ -228,22 +236,39 @@ public class DotNetSyncService : IHostedService
                     Force = false,
                 };
                 pkg.Insert();
+                allPkgs.Add(pkg);
             }
-            // 手动上传的记录（Source 指向 Cube 附件）不被自动同步覆盖
-            else if (!pkg.Source.StartsWith("/cube/file"))
+            else
             {
-                pkg.FileName = name;
-                pkg.Source = url;
-                pkg.FileHash = hash;
-                pkg.Update();
+                // 同 (Version, Kind, OS, Arch) 有多条 → 保留最老一条（最小 ID），删其余重复
+                var keep = matched.OrderBy(e => e.Id).First();
+                foreach (var dup in matched)
+                {
+                    if (dup == keep) continue;
+                    dup.Delete();
+                    allPkgs.Remove(dup);
+                }
+
+                // 手动上传的记录（Source 指向 Cube 附件）不被自动同步覆盖
+                if (!keep.Source.StartsWith("/cube/file"))
+                {
+                    // 仅字段实际变化才更新，避免 XCode 拦截器触发无意义 UPDATE
+                    if (keep.FileName != name || keep.Source != url || keep.FileHash != hash)
+                    {
+                        keep.FileName = name;
+                        keep.Source = url;
+                        keep.FileHash = hash;
+                        keep.Update();
+                    }
+                }
             }
         }
     }
 
     /// <summary>同步 SDK 安装包（单个 SDK 对象或 sdks 数组中的每个元素）</summary>
     /// <param name="sdkObj">sdk 对象，含 version / files 字段</param>
-    /// <param name="runtimeVersion">所属运行时版本号（仅日志用）</param>
-    private void SyncSdk(IDictionary<String, Object> sdkObj, String runtimeVersion)
+    /// <param name="sdkPkgs">当前大版本下所有 SDK 记录列表（避免循环内反复查库）</param>
+    private void SyncSdk(IDictionary<String, Object> sdkObj, IList<DotNetPackage> sdkPkgs)
     {
         if (sdkObj == null) return;
 
@@ -252,8 +277,6 @@ public class DotNetSyncService : IHostedService
 
         var files = sdkObj["files"] as IList<Object>;
         if (files == null) return;
-
-        //XTrace.WriteLine("DotNetSyncService.SyncSdk {0} (runtime={1})", sdkVersion, runtimeVersion);
 
         foreach (var item in files)
         {
@@ -286,18 +309,19 @@ public class DotNetSyncService : IHostedService
             // Windows 上跳过 .zip（只保留 .exe 安装包）
             if (os == (Int32)OSKind.Windows && name.EndsWithIgnoreCase(".zip")) continue;
 
-            // 按运行时版本查已有 SDK 记录（文件名中已含 SDK 版本号）
-            var sdkPkgs = DotNetPackage.FindAllByVersion(runtimeVersion);
-            var pkg = sdkPkgs.FirstOrDefault(e =>
+            // 按 SDK 版本号查已有 SDK 记录（SDK 版本号作 Version）
+            var matched = sdkPkgs.Where(e =>
+                e.Version == sdkVersion &&
                 e.Kind == "sdk" &&
                 e.OSKind == (OSKind)os &&
-                e.Architecture == (CpuArch)arch);
+                e.Architecture == (CpuArch)arch).ToList();
 
-            if (pkg == null)
+            if (matched.Count == 0)
             {
-                pkg = new DotNetPackage
+                // 无记录 → 新建
+                var pkg = new DotNetPackage
                 {
-                    Version = runtimeVersion,
+                    Version = sdkVersion,
                     Kind = "sdk",
                     OSKind = (OSKind)os,
                     Architecture = (CpuArch)arch,
@@ -309,14 +333,31 @@ public class DotNetSyncService : IHostedService
                     Force = false,
                 };
                 pkg.Insert();
+                sdkPkgs.Add(pkg);
             }
-            // 手动上传的记录不被自动同步覆盖
-            else if (!pkg.Source.StartsWith("/cube/file"))
+            else
             {
-                pkg.FileName = name;
-                pkg.Source = url;
-                pkg.FileHash = hash;
-                pkg.Update();
+                // 同 (SDK Version, Kind, OS, Arch) 有多条 → 保留最老一条，删其余重复
+                var keep = matched.OrderBy(e => e.Id).First();
+                foreach (var dup in matched)
+                {
+                    if (dup == keep) continue;
+                    dup.Delete();
+                    sdkPkgs.Remove(dup);
+                }
+
+                // 手动上传的记录不被自动同步覆盖
+                if (!keep.Source.StartsWith("/cube/file"))
+                {
+                    // 仅字段实际变化才更新
+                    if (keep.FileName != name || keep.Source != url || keep.FileHash != hash)
+                    {
+                        keep.FileName = name;
+                        keep.Source = url;
+                        keep.FileHash = hash;
+                        keep.Update();
+                    }
+                }
             }
         }
     }

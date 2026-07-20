@@ -270,6 +270,15 @@ public partial class NodeData
     [BindColumn("Uptime", "开机时间。单位s", "", ItemType = "TimeSpan")]
     public Int32 Uptime { get => _Uptime; set { if (OnPropertyChanging("Uptime", value)) { _Uptime = value; OnPropertyChanged("Uptime"); } } }
 
+    private String _TraceId;
+    /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+    [Category("扩展")]
+    [DisplayName("追踪")]
+    [Description("追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("TraceId", "追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递", "")]
+    public String TraceId { get => _TraceId; set { if (OnPropertyChanging("TraceId", value)) { _TraceId = value; OnPropertyChanged("TraceId"); } } }
+
     private String _Creator;
     /// <summary>创建者。服务端节点</summary>
     [Category("扩展")]
@@ -287,15 +296,6 @@ public partial class NodeData
     [DataObjectField(false, false, true, 0)]
     [BindColumn("CreateTime", "创建时间", "")]
     public DateTime CreateTime { get => _CreateTime; set { if (OnPropertyChanging("CreateTime", value)) { _CreateTime = value; OnPropertyChanged("CreateTime"); } } }
-
-    private String _TraceId;
-    /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
-    [Category("扩展")]
-    [DisplayName("追踪")]
-    [Description("追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("TraceId", "追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递", "")]
-    public String TraceId { get => _TraceId; set { if (OnPropertyChanging("TraceId", value)) { _TraceId = value; OnPropertyChanged("TraceId"); } } }
 
     private String _CreateIP;
     /// <summary>创建地址</summary>
@@ -521,14 +521,14 @@ public partial class NodeData
         /// <summary>开机时间。单位s</summary>
         public static readonly Field Uptime = FindByName("Uptime");
 
+        /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+        public static readonly Field TraceId = FindByName("TraceId");
+
         /// <summary>创建者。服务端节点</summary>
         public static readonly Field Creator = FindByName("Creator");
 
         /// <summary>创建时间</summary>
         public static readonly Field CreateTime = FindByName("CreateTime");
-
-        /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
-        public static readonly Field TraceId = FindByName("TraceId");
 
         /// <summary>创建地址</summary>
         public static readonly Field CreateIP = FindByName("CreateIP");
@@ -632,14 +632,14 @@ public partial class NodeData
         /// <summary>开机时间。单位s</summary>
         public const String Uptime = "Uptime";
 
+        /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+        public const String TraceId = "TraceId";
+
         /// <summary>创建者。服务端节点</summary>
         public const String Creator = "Creator";
 
         /// <summary>创建时间</summary>
         public const String CreateTime = "CreateTime";
-
-        /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
-        public const String TraceId = "TraceId";
 
         /// <summary>创建地址</summary>
         public const String CreateIP = "CreateIP";

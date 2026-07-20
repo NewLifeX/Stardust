@@ -36,7 +36,7 @@ public partial class ProductRelease
     [DisplayName("版本号")]
     [Description("版本号。完整版本号，如 3.7.2026.0611")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("Version", "版本号。完整版本号，如 3.7.2026.0611", "")]
+    [BindColumn("Version", "版本号。完整版本号，如 3.7.2026.0611", "", Master = true)]
     public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
 
     private String _ProductCode;
@@ -231,7 +231,10 @@ public partial class ProductRelease
         // 实体缓存
         if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.Find(e => e.Version.EqualIgnoreCase(version));
 
-        return Find(_.Version == version);
+        // 单对象缓存
+        return Meta.SingleCache.GetItemWithSlaveKey(version) as ProductRelease;
+
+        //return Find(_.Version == version);
     }
 
     /// <summary>根据产品编码查找</summary>
@@ -250,7 +253,6 @@ public partial class ProductRelease
 
     #region 高级查询
     /// <summary>高级查询</summary>
-    /// <param name="version">版本号。完整版本号，如 3.7.2026.0611</param>
     /// <param name="productCode">产品编码。StarAgent/CrazyCoder/XCoder 等，用于区分不同类型产品</param>
     /// <param name="force">强制。强制升级</param>
     /// <param name="channel">升级通道</param>
@@ -260,11 +262,10 @@ public partial class ProductRelease
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<ProductRelease> Search(String version, String productCode, Boolean? force, NodeChannels channel, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<ProductRelease> Search(String productCode, Boolean? force, NodeChannels channel, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
-        if (!version.IsNullOrEmpty()) exp &= _.Version == version;
         if (!productCode.IsNullOrEmpty()) exp &= _.ProductCode == productCode;
         if (force != null) exp &= _.Force == force;
         if (channel >= 0) exp &= _.Channel == channel;
