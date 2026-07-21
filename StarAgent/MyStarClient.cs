@@ -230,7 +230,7 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
             // 兼容 dotnet/mono 启动模式（Linux 常见：dotnet StarAgent.dll）
             // 参考 ProcessHelper.GetProcessName 的检测逻辑
             var pname = process.ProcessName;
-            if (pname.EqualIgnoreCase("dotnet", "dotnet.exe") || pname.EndsWith("/dotnet"))
+            if (pname.EqualIgnoreCase("dotnet", "dotnet.exe") || pname?.EndsWith("/dotnet") == true)
             {
                 var dll = Environment.GetCommandLineArgs()[0].GetFullPath();
                 if (dll.Contains(' ')) dll = $"\"{dll}\"";
