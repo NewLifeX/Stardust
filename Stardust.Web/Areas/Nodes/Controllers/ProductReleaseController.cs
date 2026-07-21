@@ -61,7 +61,7 @@ public class ProductReleaseController : EntityController<ProductRelease>
 
         if (channel <= 0) channel = (NodeChannels)(-1);
 
-        return ProductRelease.Search(version, productCode, force, channel, enable, start, end, key, p);
+        return ProductRelease.Search(productCode, force, channel, enable, start, end, key, p);
     }
 
     protected override Int32 OnDelete(ProductRelease entity)
