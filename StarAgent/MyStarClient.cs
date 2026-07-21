@@ -212,22 +212,39 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
         }
     }
 
-    /// <summary>获取当前进程可执行文件名（不含扩展名），支持重命名场景</summary>
+    /// <summary>获取当前进程可执行文件名（不含扩展名），支持重命名场景。dotnet/mono 宿主下返回真正目标程序集名</summary>
     private static String GetExecutableName() =>
-        Path.GetFileNameWithoutExtension(Process.GetCurrentProcess().MainModule?.FileName) ?? "StarAgent";
+        Process.GetCurrentProcess().GetProcessName() ?? "StarAgent";
 
     /// <summary>使用当前进程可执行文件完整路径启动新进程，避免依赖工作目录中的文件名</summary>
     private static Boolean RunCurrentProcess(String args)
     {
         try
         {
-            var exePath = Process.GetCurrentProcess().MainModule?.FileName;
-            if (exePath == null || exePath.Length == 0) return false;
+            var process = Process.GetCurrentProcess();
+            var exePath = process.MainModule?.FileName;
+            if (exePath.IsNullOrEmpty()) return false;
+
+            var arguments = args;
+
+            // 兼容 dotnet/mono 启动模式（Linux 常见：dotnet StarAgent.dll）
+            // 参考 ProcessHelper.GetProcessName 的检测逻辑
+            var pname = process.ProcessName;
+            if (pname.EqualIgnoreCase("dotnet", "dotnet.exe") || pname.EndsWith("/dotnet"))
+            {
+                var dll = Environment.GetCommandLineArgs()[0].GetFullPath();
+                if (dll.Contains(' ')) dll = $"\"{dll}\"";
+                arguments = $"{dll} {args}";
+            }
+            else if (pname.EqualIgnoreCase("mono", "mono.exe", "mono-sgen"))
+            {
+                exePath = Environment.GetCommandLineArgs()[0].GetFullPath();
+            }
 
             var si = new ProcessStartInfo
             {
                 FileName = exePath,
-                Arguments = args,
+                Arguments = arguments,
                 UseShellExecute = false,
             };
 
