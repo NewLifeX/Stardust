@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using NewLife;
@@ -271,6 +271,21 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
         var service = context.Service;
         var workDir = context.WorkingDirectory;
         var arguments = context.Arguments ?? "";
+
+        // 确保工作目录存在，避免 Process.Start 在 Linux 上因 GetCwd() 失败而抛 FileNotFoundException
+        if (!String.IsNullOrEmpty(workDir) && !Directory.Exists(workDir))
+        {
+            context.WriteLog("工作目录不存在，尝试创建：{0}", workDir);
+            try
+            {
+                Directory.CreateDirectory(workDir);
+            }
+            catch (Exception ex)
+            {
+                context.WriteLog("创建工作目录失败，使用当前目录：{0}", ex.Message);
+                workDir = Environment.CurrentDirectory;
+            }
+        }
 
         var si = new ProcessStartInfo
         {
