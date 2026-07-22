@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.IO.Compression;
 using System.Text;
 using NewLife;
@@ -655,7 +655,96 @@ internal class DeployService : ServiceBase
             httpClient.DefaultRequestHeaders.Add("X-Token", token);
 
         var version = $"v{DateTime.Now:yyyyMMdd-HHmmss}";
+        var uploadUrl = $"/Deploy/UploadBuildFile?deployName={Uri.EscapeDataString(deployName)}&version={Uri.EscapeDataString(version)}";
+        if (!commitId.IsNullOrEmpty()) uploadUrl += $"&commitId={Uri.EscapeDataString(commitId)}";
+        if (!commitLog.IsNullOrEmpty()) uploadUrl += $"&commitLog={Uri.EscapeDataString(commitLog)}";
+        if (!commitTime.IsNullOrEmpty()) uploadUrl += $"&commitTime={Uri.EscapeDataString(commitTime)}";
+        XTrace.WriteLine("上传 URL: {0}{1}", server, uploadUrl);
 
+        const Int32 maxRetries = 3;
+        Exception lastError = null;
+
+        for (var attempt = 0; attempt <= maxRetries; attempt++)
+        {
+            try
+            {
+                var result = await PostUploadAsync(httpClient, uploadUrl, packagePath).ConfigureAwait(false);
+
+                // 检测 401 认证失效
+                if (result.StatusCode == 401 || IsUnauthorizedBody(result.Body))
+                {
+                    XTrace.WriteLine("上传收到 401 认证失效，尝试重新登录");
+                    var newToken = await EnsureLoginAsync().ConfigureAwait(false);
+                    // 更新 HttpClient 的 X-Token 头
+                    httpClient.DefaultRequestHeaders.Remove("X-Token");
+                    if (!newToken.IsNullOrEmpty())
+                        httpClient.DefaultRequestHeaders.Add("X-Token", newToken);
+                    // 401 不消耗重试配额，立即重试
+                    attempt--;
+                    continue;
+                }
+
+                // 非 2xx 状态码
+                if (result.StatusCode < 200 || result.StatusCode >= 300)
+                {
+                    throw new Exception($"上传失败：HTTP {result.StatusCode} - {result.Body}");
+                }
+
+                // 检查响应体中的应用层错误码（ApiFilter 返回 HTTP 200，错误信息在 body 中）
+                if (!result.Body.IsNullOrEmpty())
+                {
+                    try
+                    {
+                        var uploadResult = result.Body.ToJsonEntity<UploadResult>();
+                        if (uploadResult != null && uploadResult.Code != 0 && uploadResult.Code == 401)
+                        {
+                            XTrace.WriteLine("响应体 code=401，尝试重新登录");
+                            var newToken = await EnsureLoginAsync().ConfigureAwait(false);
+                            httpClient.DefaultRequestHeaders.Remove("X-Token");
+                            if (!newToken.IsNullOrEmpty())
+                                httpClient.DefaultRequestHeaders.Add("X-Token", newToken);
+                            attempt--;
+                            continue;
+                        }
+                        if (uploadResult != null && uploadResult.Code != 0)
+                            throw new Exception($"上传失败：{uploadResult.Code} - {uploadResult.Message}");
+                    }
+                    catch (Exception ex) when (!ex.Message.StartsWith("上传失败："))
+                    {
+                        // 解析失败视为成功（响应可能不是 UploadResult 结构）
+                    }
+                }
+
+                XTrace.WriteLine("上传成功：{0}", result.Body);
+                return;
+            }
+            catch (Exception ex) when (ex is HttpRequestException or IOException or System.Net.Sockets.SocketException or TaskCanceledException)
+            {
+                lastError = ex;
+                if (attempt >= maxRetries)
+                {
+                    XTrace.WriteException(ex);
+                    throw new Exception($"上传失败，已重试 {maxRetries} 次：{ex.Message}", ex);
+                }
+
+                var delay = (Int32)Math.Pow(2, attempt) * 1000; // 1s, 2s, 4s
+                XTrace.WriteLine("第 {0} 次重试，原因：{1}，等待 {2} 秒", attempt + 1, ex.Message, delay / 1000);
+                await Task.Delay(delay).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                // 非网络异常（如业务错误、重新登录失败）直接抛出
+                XTrace.WriteException(ex);
+                throw;
+            }
+        }
+
+        if (lastError != null) throw new Exception($"上传失败，已重试 {maxRetries} 次：{lastError.Message}", lastError);
+    }
+
+    /// <summary>执行单次上传请求。封装打开文件流→构建内容→POST→解析响应的完整流程，供重试调用</summary>
+    private async Task<UploadAttempt> PostUploadAsync(HttpClient httpClient, String uploadUrl, String packagePath)
+    {
         // 使用流式上传，避免大文件内存峰值
         await using var fileStream = new FileStream(packagePath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.Asynchronous | FileOptions.SequentialScan);
         using var content = new MultipartFormDataContent();
@@ -663,37 +752,39 @@ internal class DeployService : ServiceBase
         fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/zip");
         content.Add(fileContent, "file", Path.GetFileName(packagePath));
 
-        var uploadUrl = $"/Deploy/UploadBuildFile?deployName={Uri.EscapeDataString(deployName)}&version={Uri.EscapeDataString(version)}";
-        if (!commitId.IsNullOrEmpty()) uploadUrl += $"&commitId={Uri.EscapeDataString(commitId)}";
-        if (!commitLog.IsNullOrEmpty()) uploadUrl += $"&commitLog={Uri.EscapeDataString(commitLog)}";
-        if (!commitTime.IsNullOrEmpty()) uploadUrl += $"&commitTime={Uri.EscapeDataString(commitTime)}";
-        XTrace.WriteLine("上传 URL: {0}{1}", server, uploadUrl);
+        var response = await httpClient.PostAsync(uploadUrl, content).ConfigureAwait(false);
+        var body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
-        var response = await httpClient.PostAsync(uploadUrl, content);
-        var responseContent = await response.Content.ReadAsStringAsync();
+        return new UploadAttempt { StatusCode = (Int32)response.StatusCode, Body = body };
+    }
 
-        if (!response.IsSuccessStatusCode)
-            throw new Exception($"上传失败：{response.StatusCode} - {responseContent}");
-
-        // 检查响应体中的应用层错误码（ApiFilter 返回 HTTP 200，错误信息在 body 中）
-        // 捕获解析异常：接口返回的成功内容可能不是该结构（如 { id, version, ... }），此时应视为成功
-        if (!responseContent.IsNullOrEmpty())
+    /// <summary>重新登录获取新 token。在 401 认证失效时调用</summary>
+    private async Task<String?> EnsureLoginAsync()
+    {
+        XTrace.WriteLine("Token 失效，重新登录后重试上传");
+        try
         {
-            try
-            {
-                var result = responseContent.ToJsonEntity<UploadResult>();
-                if (result != null && result.Code != 0)
-                    throw new Exception($"上传失败：{result.Code} - {result.Message}");
-            }
-            catch (Exception ex)
-            {
-                XTrace.WriteException(ex);
-                // 仅在能成功解析且 Code!=0 时才抛错；解析失败则视为成功
-                if (ex.Message.StartsWith("上传失败：")) throw;
-            }
+            await _client.Login("上传认证失效重试").ConfigureAwait(false);
+            var newToken = _client.Client?.Token;
+            if (newToken.IsNullOrEmpty()) throw new Exception("重新登录后 token 仍为空");
+            return newToken;
         }
+        catch (Exception ex)
+        {
+            XTrace.WriteException(ex);
+            throw new Exception($"重新登录失败：{ex.Message}", ex);
+        }
+    }
 
-        XTrace.WriteLine("上传成功：{0}", responseContent);
+    private static Boolean IsUnauthorizedBody(String body)
+    {
+        if (body.IsNullOrEmpty()) return false;
+        try
+        {
+            var r = body.ToJsonEntity<UploadResult>();
+            return r != null && r.Code == 401;
+        }
+        catch { return false; }
     }
 
     /// <summary>创建进程启动信息</summary>
@@ -791,5 +882,11 @@ internal class DeployService : ServiceBase
     {
         public Int32 Code { get; set; }
         public String? Message { get; set; }
+    }
+
+    private class UploadAttempt
+    {
+        public Int32 StatusCode { get; set; }
+        public String Body { get; set; } = "";
     }
 }
