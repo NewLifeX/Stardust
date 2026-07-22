@@ -204,7 +204,8 @@ public class Startup
         }
 
         // 动态调整请求体大小限制。仅对 /Deploy/UploadBuildFile 路径生效，从 StarServerSetting.MaxUploadSize 读取
-        // Kestrel 默认 MaxRequestBodySize=30MB，会在此接口拒绝大包；此处按配置项放宽，0 表示保持 Kestrel 默认
+        // Kestrel 默认 MaxRequestBodySize=30MB，会在此接口拒绝大包；此处按配置项放宽（默认100MB，最大1GB），0 表示保持 Kestrel 默认
+        // 注意：UploadBuildFile 接口的 MultipartBodyLengthLimit 设为 1GB，因此 MaxUploadSize 不应超过 1GB
         app.Use(async (context, next) =>
         {
             var path = context.Request.Path.Value;
@@ -215,7 +216,7 @@ public class Startup
                 if (feature != null && !feature.IsReadOnly)
                 {
                     var maxSize = StarServerSetting.Current.MaxUploadSize;
-                    if (maxSize > 0) feature.MaxRequestBodySize = maxSize;
+                    if (maxSize > 0) feature.MaxRequestBodySize = Math.Min(maxSize, 1L * 1024 * 1024 * 1024);
                 }
             }
 

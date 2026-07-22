@@ -114,9 +114,9 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     [Description("上传目录。存放升级包，需要跟StarWeb配置为同一个目录，默认../Uploads")]
     public String UploadPath { get; set; } = "../Uploads";
 
-    /// <summary>上传包最大大小。仅作用于 Deploy/UploadBuildFile 接口允许的最大请求体字节数，默认30000000（30MB），0表示使用Kestrel默认限制</summary>
-    [Description("上传包最大大小。仅作用于 Deploy/UploadBuildFile 接口允许的最大请求体字节数，默认30000000（30MB），0表示使用Kestrel默认限制")]
-    public Int64 MaxUploadSize { get; set; } = 30000000;
+    /// <summary>上传包最大大小。仅作用于 Deploy/UploadBuildFile 接口允许的最大请求体字节数，默认100000000（100MB），0表示使用Kestrel默认限制，最大不超过1GB</summary>
+    [Description("上传包最大大小。仅作用于 Deploy/UploadBuildFile 接口允许的最大请求体字节数，默认100000000（100MB），0表示使用Kestrel默认限制，最大不超过1GB")]
+    public Int64 MaxUploadSize { get; set; } = 100000000;
 
     /// <summary>文件缓存目录。存放数据库驱动等缓存文件，为空时不启用，默认../FileCache</summary>
     [Description("文件缓存目录。存放数据库驱动等缓存文件，为空时不启用，默认../FileCache")]
