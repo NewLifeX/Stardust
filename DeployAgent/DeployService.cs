@@ -141,7 +141,7 @@ internal class DeployService : ServiceBase
 
     #region 编译命令处理
     /// <summary>处理编译命令</summary>
-    private async Task<String> OnCompile(String? args)
+    private async Task<String?> OnCompile(String? args)
     {
         if (args.IsNullOrEmpty()) throw new ArgumentNullException(nameof(args));
 
@@ -153,6 +153,9 @@ internal class DeployService : ServiceBase
         XTrace.WriteLine("分支：{0}", cmd.Branch ?? "main");
 
         var sshKeyFile = SetupSshKey(cmd.DeployKey);
+
+        // 累计构建日志，便于回传服务端写入部署历史
+        var buildLog = new StringBuilder();
 
         var workDir = "";
         try
@@ -175,8 +178,10 @@ internal class DeployService : ServiceBase
                     Directory.CreateDirectory(cmd.SourcePath);
                     try
                     {
-                        GitClone(cmd.Repository, cmd.Branch ?? "main", repoDir, sshKeyFile);
+                        var lenGit = buildLog.Length;
+                        GitClone(cmd.Repository, cmd.Branch ?? "main", repoDir, buildLog, sshKeyFile);
                         XTrace.WriteLine("代码拉取完成：{0}", repoDir);
+                        ReportDeployEvent(cmd.DeployName, "gitclone", buildLog.ToString(lenGit, buildLog.Length - lenGit));
                     }
                     catch (Exception ex)
                     {
@@ -190,8 +195,10 @@ internal class DeployService : ServiceBase
                 {
                     try
                     {
-                        GitPull(repoDir, cmd.Branch, sshKeyFile);
+                        var lenPull = buildLog.Length;
+                        GitPull(repoDir, cmd.Branch, buildLog, sshKeyFile);
                         XTrace.WriteLine("代码拉取完成");
+                        ReportDeployEvent(cmd.DeployName, "gitpull", buildLog.ToString(lenPull, buildLog.Length - lenPull));
                     }
                     catch (Exception ex)
                     {
@@ -211,8 +218,10 @@ internal class DeployService : ServiceBase
                 repoDir = Path.Combine(workDir, "repo");
                 try
                 {
-                    GitClone(cmd.Repository, cmd.Branch ?? "main", repoDir, sshKeyFile);
+                    var lenGit = buildLog.Length;
+                    GitClone(cmd.Repository, cmd.Branch ?? "main", repoDir, buildLog, sshKeyFile);
                     XTrace.WriteLine("代码拉取完成：{0}", repoDir);
+                    ReportDeployEvent(cmd.DeployName, "gitclone", buildLog.ToString(lenGit, buildLog.Length - lenGit));
                 }
                 catch (Exception ex)
                 {
@@ -230,8 +239,10 @@ internal class DeployService : ServiceBase
             var publishDir = "";
             if (cmd.BuildProject)
             {
-                publishDir = BuildProject(cmd, repoDir, outputPath);
+                var lenBuild = buildLog.Length;
+                publishDir = BuildProject(cmd, repoDir, outputPath, buildLog);
                 XTrace.WriteLine("编译完成，输出目录：{0}", publishDir);
+                ReportDeployEvent(cmd.DeployName, "build", buildLog.ToString(lenBuild, buildLog.Length - lenBuild));
             }
             else
             {
@@ -263,6 +274,7 @@ internal class DeployService : ServiceBase
                 zipFile = Path.Combine(zipDir, $"{packageName}-{DateTime.Now:yyyyMMdd-HHmmss}.zip");
                 ZipCompress(publishDir, zipFile, cmd.PackageFilters);
                 XTrace.WriteLine("打包完成：{0} ({1:n0} bytes)", zipFile, new FileInfo(zipFile).Length);
+                ReportDeployEvent(cmd.DeployName, "package", $"打包完成：{zipFile} ({new FileInfo(zipFile).Length:n0} bytes)");
             }
 
             // 上传到星尘
@@ -273,18 +285,28 @@ internal class DeployService : ServiceBase
 
                 await UploadPackageAsync(_client.Server, cmd.DeployName, zipFile, commitId, commitLog, commitTime);
                 XTrace.WriteLine("上传成功：{0}", zipFile);
+                ReportDeployEvent(cmd.DeployName, "upload", $"上传成功：{zipFile}");
             }
 
             XTrace.WriteLine("========== 编译任务完成 ==========");
 
-            return zipFile;
+            // 上报部署完成事件，服务端 PostEvents 复用 ServiceController 分支写入 AppDeployHistory
+            ReportDeployEvent(cmd.DeployName, "done", $"部署代理处理完成（应用：{cmd.DeployName}，产物：{zipFile}）");
+
+            return buildLog.ToString();
         }
         catch (Exception ex)
         {
             XTrace.WriteLine("编译任务失败：{0}", ex.Message);
             XTrace.WriteException(ex);
 
-            throw;
+            // 将累计构建日志带入异常，便于服务端回传（仅保留尾部，避免消息过大）
+            var tail = buildLog.Length > 6000 ? buildLog.ToString(buildLog.Length - 6000, 6000) : buildLog.ToString();
+
+            // 上报失败事件（含日志），服务端写入 AppDeployHistory
+            ReportDeployEvent(cmd.DeployName, "error", tail);
+
+            throw new Exception($"编译任务失败：{ex.Message}\n----累计构建日志----\n{tail}");
         }
         finally
         {
@@ -298,12 +320,54 @@ internal class DeployService : ServiceBase
         }
     }
 
+    /// <summary>上报部署事件到服务端，复用 PostEvents 对 ServiceController 事件的现成写入逻辑</summary>
+    /// <remarks>
+    /// 事件 Name 必须为 "ServiceController"（写死，原因见下方 WriteEvent 调用处注释）：服务端 NodeService.PostEvents
+    /// 仅对 Name=="ServiceController" 写 AppDeployHistory，且该 Name 即为历史行的 Action 列。改它则不落库。
+    /// Type 格式为“部署集名-步骤”，仅取前缀解析 appId、不持久化；动作区分靠 Type 前缀与 Remark 末尾的 [动作] 标签。
+    /// </remarks>
+    private void ReportDeployEvent(String? deployName, String step, String log)
+    {
+        if (_client == null) return;
+
+        // Type 格式“部署集名-步骤”，步骤非 error 即成功；服务端 PostEvents 复用 ServiceController 分支写入 AppDeployHistory
+        var type = $"{deployName}-{step}";
+
+        // Remark 上限 2000。服务端不持久化 Type（仅取前缀解析 appId），故动作标签写入 Remark 才能落库区分。
+        // 标签置于末尾，确保尾部截断后仍保留，使 AppDeployHistory 每行都能看出是哪个动作（gitclone/build…）。
+        const Int32 maxRemark = 2000;
+        var label = $"\n[{step}]";
+        var remark = (log ?? "") + label;
+        if (remark.Length > maxRemark)
+        {
+            var keep = maxRemark - 30 - label.Length;
+            remark = $"…(日志过长已截断，保留尾部{keep}字符)\n{log.Substring(log.Length - keep)}{label}";
+            if (remark.Length > maxRemark) remark = remark.Substring(remark.Length - maxRemark);
+        }
+
+        try
+        {
+            // 【必须写死 "ServiceController"，切勿改成动作名或其它值】
+            // 原因：服务端 NodeService.PostEvents 仅当 EventModel.Name == "ServiceController" 时才写入 AppDeployHistory（部署历史）；
+            //       且该 Name 会直接成为历史行的 Action 列（部署历史.cs:51 Action 上限50）。
+            // 若改成其它值（如 "gitclone"/"build"），服务端判定非 ServiceController，将不落库部署历史，
+            //       导致“服务端看不到部署情况”，与需求背道而驰。
+            // 此名称为既有服务端契约，改动需同步修改 Stardust.Server（当前按需求只改 Agent、不动 Server），故保持不变。
+            // 动作区分不靠 Name，而靠 Type（deployName-动作，仅取前缀解析 appId）与 Remark 末尾的 [动作] 标签。
+            ((IEventProvider)_client).WriteEvent(type, "ServiceController", remark);
+        }
+        catch (Exception ex)
+        {
+            XTrace.WriteLine("上报部署事件失败：{0}", ex.Message);
+        }
+    }
+
     /// <summary>编译项目</summary>
     /// <param name="cmd">编译命令参数</param>
     /// <param name="repoDir">源代码目录</param>
     /// <param name="outputPath">输出目录名</param>
     /// <returns>编译输出的绝对路径</returns>
-    private String BuildProject(CompileCommand cmd, String repoDir, String outputPath)
+    private String BuildProject(CompileCommand cmd, String repoDir, String outputPath, StringBuilder? log = null)
     {
         var publishDir = Path.Combine(repoDir, outputPath);
 
@@ -324,7 +388,7 @@ internal class DeployService : ServiceBase
                     if (!cmd.BuildArgs.IsNullOrEmpty()) arguments += $" {cmd.BuildArgs}";
 
                     XTrace.WriteLine("dotnet {0}", arguments);
-                    ExecuteProcess("dotnet", arguments, repoDir);
+                    ExecuteProcess("dotnet", arguments, repoDir, log);
                 }
                 break;
             case 2: // MSBuild
@@ -334,7 +398,7 @@ internal class DeployService : ServiceBase
                     if (!cmd.BuildArgs.IsNullOrEmpty()) arguments += $" {cmd.BuildArgs}";
 
                     XTrace.WriteLine("msbuild {0}", arguments);
-                    ExecuteProcess("msbuild", arguments, repoDir);
+                    ExecuteProcess("msbuild", arguments, repoDir, log);
                 }
                 break;
             case 99: // Custom - 自定义项目，执行项目 build 文件夹下的 build.sh 脚本
@@ -347,7 +411,7 @@ internal class DeployService : ServiceBase
                     if (!File.Exists(buildScript))
                         throw new FileNotFoundException($"构建脚本不存在：{buildScript}");
 
-                    ExecuteBuildScript(buildScript, repoDir);
+                    ExecuteBuildScript(buildScript, repoDir, log);
                 }
                 break;
             default:
@@ -358,7 +422,7 @@ internal class DeployService : ServiceBase
                     if (!cmd.BuildArgs.IsNullOrEmpty()) arguments += $" {cmd.BuildArgs}";
 
                     XTrace.WriteLine("dotnet {0}", arguments);
-                    ExecuteProcess("dotnet", arguments, repoDir);
+                    ExecuteProcess("dotnet", arguments, repoDir, log);
                 }
                 break;
         }
@@ -367,7 +431,7 @@ internal class DeployService : ServiceBase
     }
 
     /// <summary>执行通用进程</summary>
-    private void ExecuteProcess(String fileName, String arguments, String? workingDirectory, String? sshKeyFile = null)
+    private void ExecuteProcess(String fileName, String arguments, String? workingDirectory, StringBuilder? log = null, String? sshKeyFile = null)
     {
         var psi = CreateProcessStartInfo(fileName, arguments, workingDirectory, sshKeyFile);
 
@@ -402,22 +466,34 @@ internal class DeployService : ServiceBase
         if (!p.WaitForExit(timeout))
         {
             try { p.Kill(); } catch { }
-            throw new Exception($"{fileName} 执行超时，已终止（{timeout} ms）");
+            log?.AppendLine($"{fileName} 执行超时，已终止（{timeout} ms）");
+            log?.Append(outputSb);
+            log?.Append(errorSb);
+            throw new Exception($"{fileName} 执行超时，已终止（{timeout} ms）\n{outputSb}\n{errorSb}");
         }
 
         p.WaitForExit();
 
         if (p.ExitCode != 0)
-            throw new Exception($"{fileName} 执行失败，退出码：{p.ExitCode}\n{errorSb}");
+        {
+            log?.AppendLine($"{fileName} 执行失败，退出码：{p.ExitCode}");
+            log?.Append(outputSb);
+            log?.Append(errorSb);
+            throw new Exception($"{fileName} 执行失败，退出码：{p.ExitCode}\n{outputSb}\n{errorSb}");
+        }
+
+        // 记录成功输出，供上层回传构建日志
+        log?.Append(outputSb);
+        log?.Append(errorSb);
     }
 
     /// <summary>Git 克隆仓库</summary>
-    private void GitClone(String repoUrl, String branch, String targetPath, String? sshKeyFile = null)
+    private void GitClone(String repoUrl, String branch, String targetPath, StringBuilder? log = null, String? sshKeyFile = null)
     {
         XTrace.WriteLine("开始克隆仓库：{0} 分支：{1}", repoUrl, branch);
 
         var args = $"clone -b {branch} --depth 1 {repoUrl} \"{targetPath}\"";
-        ExecuteProcess("git", args, null, sshKeyFile);
+        ExecuteProcess("git", args, null, log, sshKeyFile);
 
         XTrace.WriteLine("Git 克隆成功");
     }
@@ -425,23 +501,23 @@ internal class DeployService : ServiceBase
     /// <summary>Git 拉取最新代码</summary>
     /// <param name="repoDir">本地仓库目录</param>
     /// <param name="branch">分支名称</param>
-    private void GitPull(String repoDir, String? branch, String? sshKeyFile = null)
+    private void GitPull(String repoDir, String? branch, StringBuilder? log = null, String? sshKeyFile = null)
     {
         XTrace.WriteLine("开始拉取代码：{0}", repoDir);
 
         // 如果指定了分支则先切换
         if (!branch.IsNullOrEmpty())
         {
-            ExecuteProcess("git", $"checkout {branch}", repoDir, sshKeyFile);
+            ExecuteProcess("git", $"checkout {branch}", repoDir, log, sshKeyFile);
         }
 
-        ExecuteProcess("git", "pull", repoDir, sshKeyFile);
+        ExecuteProcess("git", "pull", repoDir, log, sshKeyFile);
 
         XTrace.WriteLine("Git 拉取成功");
     }
 
     /// <summary>执行构建脚本。自动判断执行环境，Linux直接使用bash，Windows使用Git Bash</summary>
-    private void ExecuteBuildScript(String scriptPath, String workingDirectory)
+    private void ExecuteBuildScript(String scriptPath, String workingDirectory, StringBuilder? log = null)
     {
         XTrace.WriteLine("开始执行构建脚本：{0}", scriptPath);
 
@@ -453,7 +529,7 @@ internal class DeployService : ServiceBase
                 throw new Exception("未找到 Git Bash，请安装 Git for Windows");
 
             XTrace.WriteLine("使用 Git Bash: {0}", gitBash);
-            ExecuteProcess(gitBash, $"-l -c \"bash '{scriptPath}'\"", workingDirectory);
+            ExecuteProcess(gitBash, $"-l -c \"bash '{scriptPath}'\"", workingDirectory, log);
         }
         else
         {
@@ -461,8 +537,8 @@ internal class DeployService : ServiceBase
             XTrace.WriteLine("使用 bash 执行脚本");
 
             // 确保脚本有执行权限
-            ExecuteProcess("chmod", $"+x \"{scriptPath}\"", workingDirectory);
-            ExecuteProcess("bash", $"\"{scriptPath}\"", workingDirectory);
+            ExecuteProcess("chmod", $"+x \"{scriptPath}\"", workingDirectory, log);
+            ExecuteProcess("bash", $"\"{scriptPath}\"", workingDirectory, log);
         }
 
         XTrace.WriteLine("构建脚本执行成功");
@@ -587,7 +663,7 @@ internal class DeployService : ServiceBase
 
         try
         {
-            GitClone(repoUrl, branch ?? "main", repoDir, sshKeyFile);
+            GitClone(repoUrl, branch ?? "main", repoDir, null, sshKeyFile);
             XTrace.WriteLine("重新克隆成功：{0}", repoDir);
 
             if (!string.IsNullOrEmpty(backupDir) && Directory.Exists(backupDir))
