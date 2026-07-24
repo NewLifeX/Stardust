@@ -145,6 +145,24 @@ public partial class AppDeploy
     [BindColumn("DeployKey", "仓库密钥。SSH 私钥，用于非交互式拉取私有仓库代码", "")]
     public String DeployKey { get => _DeployKey; set { if (OnPropertyChanging("DeployKey", value)) { _DeployKey = value; OnPropertyChanged("DeployKey"); } } }
 
+    private String _RepoUserName;
+    /// <summary>仓库用户名。HTTPS 克隆时的用户名，与运行时执行用户的 UserName 字段区分</summary>
+    [Category("编译参数")]
+    [DisplayName("仓库用户名")]
+    [Description("仓库用户名。HTTPS 克隆时的用户名，与运行时执行用户的 UserName 字段区分")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("RepoUserName", "仓库用户名。HTTPS 克隆时的用户名，与运行时执行用户的 UserName 字段区分", "")]
+    public String RepoUserName { get => _RepoUserName; set { if (OnPropertyChanging("RepoUserName", value)) { _RepoUserName = value; OnPropertyChanged("RepoUserName"); } } }
+
+    private String _RepoPassword;
+    /// <summary>仓库密码。HTTPS 克隆时的密码，AES 加密存储（密钥派生自 TokenSecret），回显为 5 个 *</summary>
+    [Category("编译参数")]
+    [DisplayName("仓库密码")]
+    [Description("仓库密码。HTTPS 克隆时的密码，AES 加密存储（密钥派生自 TokenSecret），回显为 5 个 *")]
+    [DataObjectField(false, false, true, 200)]
+    [BindColumn("RepoPassword", "仓库密码。HTTPS 克隆时的密码，AES 加密存储（密钥派生自 TokenSecret），回显为 5 个 *", "")]
+    public String RepoPassword { get => _RepoPassword; set { if (OnPropertyChanging("RepoPassword", value)) { _RepoPassword = value; OnPropertyChanged("RepoPassword"); } } }
+
     private String _Branch;
     /// <summary>分支。默认main</summary>
     [Category("编译参数")]
@@ -394,6 +412,8 @@ public partial class AppDeploy
             "Urls" => _Urls,
             "Repository" => _Repository,
             "DeployKey" => _DeployKey,
+            "RepoUserName" => _RepoUserName,
+            "RepoPassword" => _RepoPassword,
             "Branch" => _Branch,
             "ProjectPath" => _ProjectPath,
             "ProjectKind" => _ProjectKind,
@@ -440,6 +460,8 @@ public partial class AppDeploy
                 case "Urls": _Urls = Convert.ToString(value); break;
                 case "Repository": _Repository = Convert.ToString(value); break;
                 case "DeployKey": _DeployKey = Convert.ToString(value); break;
+                case "RepoUserName": _RepoUserName = Convert.ToString(value); break;
+                case "RepoPassword": _RepoPassword = Convert.ToString(value); break;
                 case "Branch": _Branch = Convert.ToString(value); break;
                 case "ProjectPath": _ProjectPath = Convert.ToString(value); break;
                 case "ProjectKind": _ProjectKind = (Stardust.Models.ProjectKinds)value.ToInt(); break;
@@ -572,6 +594,12 @@ public partial class AppDeploy
         /// <summary>仓库密钥。SSH 私钥，用于非交互式拉取私有仓库代码</summary>
         public static readonly Field DeployKey = FindByName("DeployKey");
 
+        /// <summary>仓库用户名。HTTPS 克隆时的用户名，与运行时执行用户的 UserName 字段区分</summary>
+        public static readonly Field RepoUserName = FindByName("RepoUserName");
+
+        /// <summary>仓库密码。HTTPS 克隆时的密码，AES 加密存储（密钥派生自 TokenSecret），回显为 5 个 *</summary>
+        public static readonly Field RepoPassword = FindByName("RepoPassword");
+
         /// <summary>分支。默认main</summary>
         public static readonly Field Branch = FindByName("Branch");
 
@@ -697,6 +725,12 @@ public partial class AppDeploy
 
         /// <summary>仓库密钥。SSH 私钥，用于非交互式拉取私有仓库代码</summary>
         public const String DeployKey = "DeployKey";
+
+        /// <summary>仓库用户名。HTTPS 克隆时的用户名，与运行时执行用户的 UserName 字段区分</summary>
+        public const String RepoUserName = "RepoUserName";
+
+        /// <summary>仓库密码。HTTPS 克隆时的密码，AES 加密存储（密钥派生自 TokenSecret），回显为 5 个 *</summary>
+        public const String RepoPassword = "RepoPassword";
 
         /// <summary>分支。默认main</summary>
         public const String Branch = "Branch";

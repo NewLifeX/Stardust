@@ -1,3 +1,4 @@
+﻿using System.Collections.Concurrent;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -19,6 +20,9 @@ public class PipelineService
     /// <summary>防抖时间窗口。同一 commit 在窗口内只允许触发一次</summary>
     private static readonly TimeSpan DedupWindow = TimeSpan.FromMinutes(5);
 
+    /// <summary>运行中的 CancellationTokenSource 字典（按 runId 索引）。用于支持流水线取消</summary>
+    private readonly ConcurrentDictionary<Int64, CancellationTokenSource> _runningCts = new();
+
     public PipelineService(DeployService deployService, ITracer tracer)
     {
         _deployService = deployService;
@@ -39,8 +43,8 @@ public class PipelineService
         var app = AppDeploy.FindById(pipeline.DeployId);
         if (app == null) throw new InvalidOperationException($"应用部署集[{pipeline.DeployId}]不存在");
 
-        var buildNode = AppBuildNode.FindById(pipeline.BuildNodeId);
-        if (buildNode == null) throw new InvalidOperationException($"编译节点[{pipeline.BuildNodeId}]不存在");
+        var buildNode = AppBuildNode.FindAllByNodeId(pipeline.BuildNodeId).FirstOrDefault(e => e.DeployId == pipeline.DeployId);
+        if (buildNode == null) throw new InvalidOperationException($"编译节点[{pipeline.BuildNodeId}]不存在或未关联到部署集[{pipeline.DeployId}]");
         if (!buildNode.Enable) throw new InvalidOperationException($"编译节点[{buildNode}]未启用");
 
         var run = new AppPipelineRun
@@ -53,7 +57,9 @@ public class PipelineService
         };
         run.Insert();
 
-        _ = Task.Run(() => RunAsync(run, pipeline, app, buildNode, userHost, CancellationToken.None));
+        var cts = new CancellationTokenSource();
+        _runningCts[run.Id] = cts;
+        _ = Task.Run(() => RunAsync(run, pipeline, app, buildNode, userHost, cts.Token));
 
         return run;
     }
@@ -62,7 +68,7 @@ public class PipelineService
     /// <param name="runId">原运行记录编号</param>
     /// <param name="userHost">触发者 IP</param>
     /// <returns>新创建的运行记录</returns>
-    public async Task<AppPipelineRun> Reprocess(Int64 runId, String userHost)
+    public async Task<AppPipelineRun> Reprocess(Int32 runId, String userHost)
     {
         var src = AppPipelineRun.FindById(runId);
         if (src == null) throw new ArgumentNullException(nameof(runId), "运行记录不存在");
@@ -74,8 +80,8 @@ public class PipelineService
         var app = AppDeploy.FindById(pipeline.DeployId);
         if (app == null) throw new InvalidOperationException($"应用部署集[{pipeline.DeployId}]不存在");
 
-        var buildNode = AppBuildNode.FindById(pipeline.BuildNodeId);
-        if (buildNode == null) throw new InvalidOperationException($"编译节点[{pipeline.BuildNodeId}]不存在");
+        var buildNode = AppBuildNode.FindAllByNodeId(pipeline.BuildNodeId).FirstOrDefault(e => e.DeployId == pipeline.DeployId);
+        if (buildNode == null) throw new InvalidOperationException($"编译节点[{pipeline.BuildNodeId}]不存在或未关联到部署集[{pipeline.DeployId}]");
         if (!buildNode.Enable) throw new InvalidOperationException($"编译节点[{buildNode}]未启用");
 
         var run = new AppPipelineRun
@@ -92,7 +98,9 @@ public class PipelineService
         };
         run.Insert();
 
-        _ = Task.Run(() => RunAsync(run, pipeline, app, buildNode, userHost, CancellationToken.None));
+        var cts = new CancellationTokenSource();
+        _runningCts[run.Id] = cts;
+        _ = Task.Run(() => RunAsync(run, pipeline, app, buildNode, userHost, cts.Token));
 
         return run;
     }
@@ -131,7 +139,7 @@ public class PipelineService
             return new { result = "skipped", reason = "duplicate" };
 
         // 关联实体校验，避免创建无法执行的 run
-        var buildNode = AppBuildNode.FindById(pipeline.BuildNodeId);
+        var buildNode = AppBuildNode.FindAllByNodeId(pipeline.BuildNodeId).FirstOrDefault(e => e.DeployId == pipeline.DeployId);
         if (buildNode == null || !buildNode.Enable) return new { result = "error", reason = "build node unavailable" };
 
         var app = AppDeploy.FindById(pipeline.DeployId);
@@ -153,15 +161,59 @@ public class PipelineService
         run.Insert();
 
         // 异步执行，不阻塞 webhook 响应
-        _ = Task.Run(() => RunAsync(run, pipeline, app, buildNode, "webhook", CancellationToken.None));
+        var cts = new CancellationTokenSource();
+        _runningCts[run.Id] = cts;
+        _ = Task.Run(() => RunAsync(run, pipeline, app, buildNode, "webhook", cts.Token));
 
         return new { result = "accepted", runId = run.Id, status = run.Status.ToString() };
     }
     #endregion
 
+    #region 取消
+    /// <summary>取消运行中的流水线。校验状态后置为 Cancelled，并触发 CTS 中断后续步骤</summary>
+    /// <param name="runId">运行记录编号</param>
+    /// <param name="userHost">取消者 IP</param>
+    /// <returns>是否取消成功（run 不存在或已终态返回 false）</returns>
+    public Boolean Cancel(Int32 runId, String userHost)
+    {
+        var run = AppPipelineRun.FindById(runId);
+        if (run == null) throw new ArgumentNullException(nameof(runId), "运行记录不存在");
+
+        // 仅允许取消未到终态的 run
+        if (run.Status is PipelineStatus.Success or PipelineStatus.Failed or PipelineStatus.Cancelled)
+            return false;
+
+        // 触发 CTS 中断 RunAsync 中的后续步骤
+        if (_runningCts.TryRemove(runId, out var cts))
+        {
+            try { cts.Cancel(); } catch { /* 忽略取消异常 */ }
+            cts.Dispose();
+        }
+
+        // 标记为已取消
+        run.Status = PipelineStatus.Cancelled;
+        run.Remark = $"用户取消（IP: {userHost}）";
+        if (run.BuildStartedTime != default && run.BuildFinishedTime == default) run.BuildFinishedTime = DateTime.Now;
+        if (run.DeployStartedTime != default && run.DeployFinishedTime == default) run.DeployFinishedTime = DateTime.Now;
+        run.Update();
+
+        // 把还在 Running 的 step 标记为 Skipped
+        var steps = AppPipelineStep.FindAll(AppPipelineStep._.RunId == runId & AppPipelineStep._.Status == "Running");
+        foreach (var s in steps)
+        {
+            s.Status = "Skipped";
+            s.Message = "运行被取消";
+            s.FinishedTime = DateTime.Now;
+            s.Update();
+        }
+
+        return true;
+    }
+    #endregion
+
     #region 主流程
-    /// <summary>异步执行流水线编排：编译 → 查版本 → 使用版本 → 部署。
-    /// webhook 与手动两条路径共用此方法，严格复用 DeployService.Compile/Control。
+    /// <summary>异步执行流水线编排：仅负责「下发编译命令并记录 CommandId」，绝不等待编译结果、绝不在此标成功。
+    /// 编译真正完成后由 StarServer 的 CommandReply 事件驱动续跑（取版本 / 使用版本 / 自动部署），webhook 与手动两条路径共用此方法，严格复用 DeployService.Compile。
     /// 每个阶段写入 AppPipelineStep 记录，方便从 run 详情页查看各阶段状态。</summary>
     private async Task RunAsync(AppPipelineRun run, AppPipeline pipeline, AppDeploy app, AppBuildNode buildNode, String userHost, CancellationToken cancellationToken)
     {
@@ -171,7 +223,15 @@ public class PipelineService
 
         try
         {
-            // ---------- 编译阶段 ----------
+            // ★ 编译前检查取消
+            if (cancellationToken.IsCancellationRequested)
+            {
+                run.Status = PipelineStatus.Cancelled;
+                run.Update();
+                return;
+            }
+
+            // ---------- 编译阶段：仅下发编译命令并记 CommandId，不等待、不标成功 ----------
             run.Status = PipelineStatus.Building;
             run.BuildStartedTime = DateTime.Now;
             run.Update();
@@ -190,124 +250,42 @@ public class PipelineService
 
             try
             {
-                // 复用手动「编译上传」操作
-                await _deployService.Compile(app, buildNode, "Build-Upload", userHost, cancellationToken);
-                buildStep.Status = "Success";
-                buildStep.FinishedTime = DateTime.Now;
+                // 复用手动「编译上传」；writeHistory:false（真实历史由节点 PostEvents 与 CommandReply 事件写入）
+                // fire-and-forget 下发：返回 NodeCommand.Id；编译真正完成由 StarServer 的 CommandReply 事件驱动续跑
+                var cmdId = await _deployService.Compile(app, buildNode, "Build-Upload", userHost, cancellationToken, writeHistory: false);
+                buildStep.CommandId = cmdId;
                 buildStep.Update();
+
+                // 命令未真正发出（如 StarFactory 未就绪），reply?.Id 为 0：再不会有回包事件，必须立即失败，否则永远卡 Building
+                if (cmdId == 0)
+                {
+                    buildStep.Status = "Failed";
+                    buildStep.FinishedTime = DateTime.Now;
+                    buildStep.Message = "编译命令未发出（节点可能未就绪）";
+                    buildStep.Update();
+                    run.BuildFinishedTime = DateTime.Now;
+                    run.Status = PipelineStatus.Failed;
+                    run.Remark = "编译命令未发出（节点可能未就绪）";
+                    run.Update();
+                    return;
+                }
             }
             catch (Exception ex)
             {
+                // 命令下发即失败（如节点不存在）：立即标记失败
                 buildStep.Status = "Failed";
                 buildStep.FinishedTime = DateTime.Now;
                 buildStep.Message = ex.Message;
                 buildStep.Update();
                 run.BuildFinishedTime = DateTime.Now;
-                throw;
-            }
-
-            // 编译完成，查询版本
-            AppDeployVersion version = null;
-            if (buildNode.UploadPackage)
-            {
-                var vers = AppDeployVersion.FindAllByDeployId(pipeline.DeployId, 1);
-                version = vers.FirstOrDefault();
-            }
-            run.AppVersionId = version?.Id ?? 0;
-
-            // ★【使用版本】对齐手动「使用版本」操作，确保后续 Control(install) 部署该版本
-            if (version != null)
-            {
-                app.Version = version.Version;
-                app.Update();
-            }
-
-            run.BuildFinishedTime = DateTime.Now;
-            run.Status = PipelineStatus.UploadSucceeded;
-            run.Update();
-
-            // ---------- 自动部署 ----------
-            if (!pipeline.AutoDeploy)
-            {
-                run.Status = PipelineStatus.Success;
-                run.Update();
-                return;
-            }
-
-            run.Status = PipelineStatus.Deploying;
-            run.DeployStartedTime = DateTime.Now;
-            run.Update();
-
-            String firstError = null;
-            var nodeIds = (pipeline.DeployNodeIds ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries);
-            for (var idx = 0; idx < nodeIds.Length; idx++)
-            {
-                var dn = AppDeployNode.FindById(nodeIds[idx].ToInt());
-
-                var deployStep = new AppPipelineStep
-                {
-                    RunId = run.Id,
-                    StepType = "Deploy",
-                    StepIndex = idx,
-                    NodeId = dn?.NodeId ?? 0,
-                    Status = "Running",
-                    StartedTime = DateTime.Now,
-                    CreateTime = DateTime.Now,
-                };
-                deployStep.Insert();
-
-                if (dn == null)
-                {
-                    deployStep.Status = "Skipped";
-                    deployStep.Message = "节点不存在";
-                    deployStep.FinishedTime = DateTime.Now;
-                }
-                else if (!dn.Enable)
-                {
-                    deployStep.Status = "Skipped";
-                    deployStep.Message = "节点未启用";
-                    deployStep.FinishedTime = DateTime.Now;
-                }
-                else if (dn.DeployId != pipeline.DeployId)
-                {
-                    deployStep.Status = "Skipped";
-                    deployStep.Message = "DeployId 不匹配";
-                    deployStep.FinishedTime = DateTime.Now;
-                }
-                else
-                {
-                    try
-                    {
-                        // 复用手动「发布」操作
-                        await _deployService.Control(app, dn, "install", userHost, 0, 0, null, cancellationToken);
-                        deployStep.Status = "Success";
-                    }
-                    catch (Exception ex)
-                    {
-                        deployStep.Status = "Failed";
-                        deployStep.Message = ex.Message;
-                        firstError ??= ex.Message;
-                    }
-                    finally
-                    {
-                        deployStep.FinishedTime = DateTime.Now;
-                    }
-                }
-                deployStep.Update();
-            }
-
-            run.DeployFinishedTime = DateTime.Now;
-
-            if (firstError != null)
-            {
                 run.Status = PipelineStatus.Failed;
-                run.Remark = firstError;
+                run.Remark = ex.Message;
                 run.Update();
                 return;
             }
 
-            run.Status = PipelineStatus.Success;
-            run.Update();
+            // 编译已下发，等待节点真正执行完后的 CommandReply 事件来更新步骤/run（不轮询、不等待）
+            return;
         }
         catch (Exception ex)
         {
@@ -315,6 +293,14 @@ public class PipelineService
             run.Status = PipelineStatus.Failed;
             run.Remark = ex.Message;
             run.Update();
+        }
+        finally
+        {
+            // 清理 CTS 字典（无论成功/失败/取消，run 已终态）
+            if (_runningCts.TryRemove(run.Id, out var cts))
+            {
+                try { cts.Dispose(); } catch { /* 忽略 */ }
+            }
         }
     }
     #endregion

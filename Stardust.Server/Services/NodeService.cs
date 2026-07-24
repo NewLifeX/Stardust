@@ -1104,7 +1104,23 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         var code = node.Code;
 
         // 通过SessionManager发布命令，内置timeout机制等待响应（跨实例广播）
-        return await _sessionManager.PublishAsync(code, commandModel, null, model.Timeout, cancellationToken);
+        var reply = await _sessionManager.PublishAsync(code, commandModel, null, model.Timeout, cancellationToken);
+        if (reply != null)
+        {
+            // 埋点
+            using var span = _tracer?.NewSpan($"mq:NodeCommandReply", reply);
+
+            if (reply.Status == CommandStatus.错误)
+                throw new Exception($"命令错误！{reply.Data}");
+            else if (reply.Status == CommandStatus.取消)
+                throw new Exception($"命令已取消！{reply.Data}");
+
+            return reply;
+        }
+
+        // fire-and-forget（timeout<=0）时 PublishAsync 立即返回 null，命令已写入 NodeCommand 并推送给节点，
+        // 但这里仍需返回命令 Id 与当前状态，供调用方（如流水线）记录 CommandId 以便按回包事件精确命中
+        return new CommandReplyModel { Id = cmd.Id, Status = cmd.Status };
     }
     #endregion
 
@@ -1121,7 +1137,254 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         // 通过会话管理器内置的响应事件总线广播响应（跨实例广播不阻塞）
         _ = _sessionManager.PublishResponseAsync(model, default);
 
+        // 流水线续跑：按命令回包事件驱动步骤/run 状态更新（不轮询、不等待）
+        var ip = context.UserHost;
+        _ = Task.Run(() => ProcessPipelineReplyAsync(cmd, model, ip));
+
         return 1;
+    }
+
+    /// <summary>按命令回包事件驱动流水线步骤/run 状态机更新，并在编译成功后续发部署。
+    /// 仅处理关联了流水线步骤的命令（普通命令 FindAllByCommandId 返回空，直接跳过）。
+    /// 同一命令回包可能因网络重试/多实例到达多次，用「条件更新（仅当步骤仍 Running 才迁移到终态）」保证续跑幂等、不双发部署。</summary>
+    private async Task ProcessPipelineReplyAsync(NodeCommand cmd, CommandReplyModel model, String ip)
+    {
+        try
+        {
+            // 仅处理关联了流水线步骤的命令（普通命令 FindAllByCommandId 返回空，直接跳过）
+            var step = AppPipelineStep.FindAllByCommandId(cmd.Id).FirstOrDefault();
+            if (step == null) return;
+
+            // 防重入快路径：步骤已非 Running（可能已被处理或重试）直接跳过，避免不必要工作
+            if (step.Status != "Running") return;
+
+            var run = AppPipelineRun.FindById(step.RunId);
+            if (run == null) return;
+
+            // 已取消/失败的 run 不再续跑，避免取消后又下发部署
+            if (run.Status is PipelineStatus.Cancelled or PipelineStatus.Failed) return;
+
+            var isError = model.Status == CommandStatus.错误;
+            var isCancel = model.Status == CommandStatus.取消;
+            // 已完成 等视为成功（仅 错误/取消 为失败）
+            var isSuccess = !isError && !isCancel;
+
+            var finishedTime = DateTime.Now;
+            var targetStatus = isSuccess ? "Success" : (isCancel ? "Cancelled" : "Failed");
+
+            if (step.StepType.EqualIgnoreCase("Build"))
+            {
+                // 原子迁移：仅当 DB 中该步骤仍为 Running 时才置终态；影响行数为 0 表示已被其他线程/实例处理，直接返回，
+                // 杜绝并发回包（网络重试）重复续跑导致双发部署/双写历史/双设版本
+                if (TransitionStepToTerminal(step.Id, targetStatus, finishedTime, isSuccess ? null : model.Data) == 0) return;
+                // 本线程已抢到续跑权，同步内存对象供后续逻辑使用
+                step.Status = targetStatus;
+                step.FinishedTime = finishedTime;
+
+                var pipeline = AppPipeline.FindById(run.PipelineId);
+                var app = pipeline != null ? AppDeploy.FindById(pipeline.DeployId) : null;
+
+                if (isSuccess)
+                {
+                    // 写编译成功历史（粒度日志由 Agent PostEvents 负责）
+                    if (pipeline != null)
+                        AppDeployHistory.Create(pipeline.DeployId, cmd.NodeID, "deploy/compile/Build-Upload", true, "编译完成", ip).Insert();
+
+                    // 取版本 + 使用版本（必须在部署下发前；等价于 Web「使用版本」按钮 app.Version=ver.Version）
+                    var version = pipeline != null ? AppDeployVersion.FindAllByDeployId(pipeline.DeployId, 1).FirstOrDefault() : null;
+                    if (version != null)
+                    {
+                        run.AppVersionId = version.Id;
+                        if (app != null)
+                        {
+                            app.Version = version.Version;
+                            app.Update();
+                        }
+                    }
+                    run.BuildFinishedTime = DateTime.Now;
+
+                    if (pipeline == null || !pipeline.AutoDeploy)
+                    {
+                        run.Status = PipelineStatus.Success;
+                        run.Update();
+                    }
+                    else
+                    {
+                        if (version == null)
+                        {
+                            // 编译成功但未产出可部署版本（如未开启上传），无法自动部署
+                            run.Status = PipelineStatus.Failed;
+                            run.Remark = "编译成功但未产出可部署版本（可能未开启上传），无法自动部署";
+                            run.Update();
+                            return;
+                        }
+                        run.Status = PipelineStatus.Deploying;
+                        run.DeployStartedTime = DateTime.Now;
+                        run.Update();
+                        await DispatchDeployAsync(run, pipeline, app, ip);
+
+                        // 收尾：本次实际下发的部署命令数为 0（节点为空 / 全部 Skipped / 全部下发失败）时直接完成判定，
+                        // 否则永远卡 Deploying（没有回包事件来触发完成判定）
+                        var deploySteps = AppPipelineStep.FindAll(AppPipelineStep._.RunId == run.Id & AppPipelineStep._.StepType == "Deploy");
+                        if (!deploySteps.Any(e => e.Status == "Running"))
+                        {
+                            run.DeployFinishedTime = DateTime.Now;
+                            if (deploySteps.Any(e => e.Status == "Failed"))
+                            {
+                                run.Status = PipelineStatus.Failed;
+                                run.Remark = "部署命令下发失败";
+                            }
+                            else
+                            {
+                                run.Status = PipelineStatus.Success;
+                            }
+                            run.Update();
+                            if (pipeline != null)
+                                AppDeployHistory.Create(pipeline.DeployId, 0, "deploy/install", run.Status == PipelineStatus.Success, run.Status == PipelineStatus.Success ? "部署完成" : "部署下发失败", ip).Insert();
+                            return;
+                        }
+                    }
+                }
+                else
+                {
+                    run.BuildFinishedTime = DateTime.Now;
+                    run.Status = isCancel ? PipelineStatus.Cancelled : PipelineStatus.Failed;
+                    run.Remark = model.Data;
+                    run.Update();
+                }
+            }
+            else if (step.StepType.EqualIgnoreCase("Deploy"))
+            {
+                // 原子迁移：仅当 DB 中该步骤仍为 Running 时才置终态，影响行数为 0 表示已处理，直接返回
+                if (TransitionStepToTerminal(step.Id, targetStatus, finishedTime, isSuccess ? null : model.Data) == 0) return;
+                step.Status = targetStatus;
+                step.FinishedTime = finishedTime;
+
+                var pipeline = AppPipeline.FindById(run.PipelineId);
+
+                if (isSuccess)
+                {
+                    // 完成判定：基于最新 DB 数据（用 FindAll 绕过实体缓存，确保读到其他部署步骤的最新状态），避免读旧快照卡 Deploying
+                    var deploySteps = AppPipelineStep.FindAll(AppPipelineStep._.RunId == run.Id & AppPipelineStep._.StepType == "Deploy");
+                    if (!deploySteps.Any(e => e.Status == "Running"))
+                    {
+                        run.DeployFinishedTime = DateTime.Now;
+                        run.Status = PipelineStatus.Success;
+                        run.Update();
+                        // 写部署完成历史（与 Build 分支风格一致）
+                        if (pipeline != null)
+                            AppDeployHistory.Create(pipeline.DeployId, step.NodeId, "deploy/install/Deploy", true, "部署成功", ip).Insert();
+                    }
+                }
+                else
+                {
+                    run.Status = isCancel ? PipelineStatus.Cancelled : PipelineStatus.Failed;
+                    run.Remark = model.Data;
+                    run.Update();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            XTrace.WriteException(ex);
+        }
+    }
+
+    /// <summary>原子地把步骤从 Running 迁移到指定终态，保证同一命令回包（含网络重试 / 多实例）只被处理一次。
+    /// 仅当数据库当前状态仍为 Running 时才更新，返回受影响行数（0 表示已被其他线程 / 实例处理）。</summary>
+    /// <param name="stepId">步骤 Id</param>
+    /// <param name="targetStatus">目标终态（Success/Failed/Cancelled）</param>
+    /// <param name="finishedTime">结束时间</param>
+    /// <param name="message">失败/取消时的错误信息；成功传 null（不写入）</param>
+    private static Int32 TransitionStepToTerminal(Int64 stepId, String targetStatus, DateTime finishedTime, String message)
+    {
+        // 参数化条件更新：仅当 Id 匹配且当前 Status='Running' 时才更新；
+        // 数据库层原子保证并发（含多实例）下只有一个线程能抢到续跑权，影响行数为 0 即已被处理
+        return AppPipelineStep.Update(
+            new[] { nameof(AppPipelineStep.Status), nameof(AppPipelineStep.FinishedTime), nameof(AppPipelineStep.Message) },
+            new Object[] { targetStatus, finishedTime, message ?? "" },
+            new[] { nameof(AppPipelineStep.Id), nameof(AppPipelineStep.Status) },
+            new Object[] { stepId, "Running" }
+        );
+    }
+
+    /// <summary>为每个部署节点建立「部署」步骤并下发 deploy/install 命令，记录各自 CommandId。
+    /// 仅在 StarServer 进程内调用（CommandReply 只在此进程触发），直接操作 NodeCommand 与 PipelineStep。</summary>
+    private async Task DispatchDeployAsync(AppPipelineRun run, AppPipeline pipeline, AppDeploy app, String ip)
+    {
+        var nodeIds = (pipeline.DeployNodeIds ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries);
+        // 部署步骤序号在 Build 步骤（索引 0）基础上递增，保证步骤顺序正确
+        var idx = 1;
+        foreach (var nid in nodeIds)
+        {
+            var dn = AppDeployNode.FindById(nid.ToInt());
+
+            var deployStep = new AppPipelineStep
+            {
+                RunId = run.Id,
+                StepType = "Deploy",
+                StepIndex = idx++,
+                NodeId = dn?.NodeId ?? 0,
+                Status = "Running",
+                StartedTime = DateTime.Now,
+                CreateTime = DateTime.Now,
+            };
+
+            if (dn == null)
+            {
+                deployStep.Status = "Skipped";
+                deployStep.Message = "节点不存在";
+            }
+            else if (!dn.Enable)
+            {
+                deployStep.Status = "Skipped";
+                deployStep.Message = "节点未启用";
+            }
+            else if (dn.DeployId != pipeline.DeployId)
+            {
+                deployStep.Status = "Skipped";
+                deployStep.Message = "DeployId 不匹配";
+            }
+            else
+            {
+                var node = Node.FindByID(dn.NodeId);
+                if (node == null)
+                {
+                    deployStep.Status = "Skipped";
+                    deployStep.Message = "节点不存在";
+                }
+                else
+                {
+                    try
+                    {
+                        // 使用版本后再下发：app.Version 已在上一步设为刚编译的新版本，Agent 拉部署任务时按 app.Version 取新包
+                        // 注意：不强制启用被禁节点，仅对已启用节点创建 Deploy 步骤（被禁/不存在节点在上方已置 Skipped）
+
+                        var deployName = dn.DeployName;
+                        if (deployName.IsNullOrEmpty()) deployName = app?.Name;
+                        var args = new { dn.Id, DeployName = deployName, app?.AppName }.ToJson();
+
+                        var cmdModel = new CommandInModel
+                        {
+                            Command = "deploy/install",
+                            Argument = args,
+                            Timeout = 0, // fire-and-forget，不等待回包
+                        };
+                        var reply = await SendCommand(node, cmdModel, "Pipeline");
+                        deployStep.CommandId = (Int32)(reply?.Id ?? 0);
+                    }
+                    catch (Exception ex)
+                    {
+                        deployStep.Status = "Failed";
+                        deployStep.FinishedTime = DateTime.Now;
+                        deployStep.Message = ex.Message;
+                    }
+                }
+            }
+
+            if (deployStep.Status != "Running") deployStep.FinishedTime = DateTime.Now;
+            deployStep.Insert();
+        }
     }
 
     public override Int32 PostEvents(DeviceContext context, EventModel[] events)

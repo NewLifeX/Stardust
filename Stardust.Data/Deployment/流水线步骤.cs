@@ -18,6 +18,7 @@ namespace Stardust.Data.Deployment;
 [DataObject]
 [Description("流水线步骤。一次流水线运行中的单个步骤（Build/Upload/Deploy），记录每一步的执行节点、状态与消息")]
 [BindIndex("IX_AppPipelineStep_RunId_StepIndex", false, "RunId,StepIndex")]
+[BindIndex("IX_AppPipelineStep_CommandId", false, "CommandId")]
 [BindTable("AppPipelineStep", Description = "流水线步骤。一次流水线运行中的单个步骤（Build/Upload/Deploy），记录每一步的执行节点、状态与消息", ConnName = "Stardust", DbType = DatabaseType.None)]
 public partial class AppPipelineStep
 {
@@ -30,13 +31,13 @@ public partial class AppPipelineStep
     [BindColumn("Id", "编号", "")]
     public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
-    private Int64 _RunId;
+    private Int32 _RunId;
     /// <summary>运行。对应AppPipelineRun.Id</summary>
     [DisplayName("运行")]
     [Description("运行。对应AppPipelineRun.Id")]
     [DataObjectField(false, false, false, 0)]
     [BindColumn("RunId", "运行。对应AppPipelineRun.Id", "")]
-    public Int64 RunId { get => _RunId; set { if (OnPropertyChanging("RunId", value)) { _RunId = value; OnPropertyChanged("RunId"); } } }
+    public Int32 RunId { get => _RunId; set { if (OnPropertyChanging("RunId", value)) { _RunId = value; OnPropertyChanged("RunId"); } } }
 
     private String _StepType;
     /// <summary>步骤类型。Build/Upload/Deploy</summary>
@@ -61,6 +62,14 @@ public partial class AppPipelineStep
     [DataObjectField(false, false, false, 0)]
     [BindColumn("NodeId", "节点。执行该步骤的节点", "")]
     public Int32 NodeId { get => _NodeId; set { if (OnPropertyChanging("NodeId", value)) { _NodeId = value; OnPropertyChanged("NodeId"); } } }
+
+    private Int32 _CommandId;
+    /// <summary>命令。对应NodeCommand.Id，用于按命令回包事件(CommandReply)精确命中该步骤，驱动状态更新</summary>
+    [DisplayName("命令")]
+    [Description("命令。对应NodeCommand.Id，用于按命令回包事件(CommandReply)精确命中该步骤，驱动状态更新")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("CommandId", "命令。对应NodeCommand.Id，用于按命令回包事件(CommandReply)精确命中该步骤，驱动状态更新", "")]
+    public Int32 CommandId { get => _CommandId; set { if (OnPropertyChanging("CommandId", value)) { _CommandId = value; OnPropertyChanged("CommandId"); } } }
 
     private String _Status;
     /// <summary>状态。Pending/Running/Success/Failed/Skipped</summary>
@@ -116,6 +125,7 @@ public partial class AppPipelineStep
             "StepType" => _StepType,
             "StepIndex" => _StepIndex,
             "NodeId" => _NodeId,
+            "CommandId" => _CommandId,
             "Status" => _Status,
             "Message" => _Message,
             "StartedTime" => _StartedTime,
@@ -128,10 +138,11 @@ public partial class AppPipelineStep
             switch (name)
             {
                 case "Id": _Id = value.ToInt(); break;
-                case "RunId": _RunId = value.ToLong(); break;
+                case "RunId": _RunId = value.ToInt(); break;
                 case "StepType": _StepType = Convert.ToString(value); break;
                 case "StepIndex": _StepIndex = value.ToInt(); break;
                 case "NodeId": _NodeId = value.ToInt(); break;
+                case "CommandId": _CommandId = value.ToInt(); break;
                 case "Status": _Status = Convert.ToString(value); break;
                 case "Message": _Message = Convert.ToString(value); break;
                 case "StartedTime": _StartedTime = value.ToDateTime(); break;
@@ -144,6 +155,14 @@ public partial class AppPipelineStep
     #endregion
 
     #region 关联映射
+    /// <summary>运行</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public AppPipelineRun Run => Extends.Get(nameof(Run), k => AppPipelineRun.FindById(RunId));
+
+    /// <summary>运行</summary>
+    [Map(nameof(RunId), typeof(AppPipelineRun), "Id")]
+    public Int32 RunPipelineId => Run != null ? Run.PipelineId : default;
+
     #endregion
 
     #region 扩展查询
@@ -167,7 +186,7 @@ public partial class AppPipelineStep
     /// <param name="runId">运行</param>
     /// <param name="stepIndex">步骤序号</param>
     /// <returns>实体列表</returns>
-    public static IList<AppPipelineStep> FindAllByRunIdAndStepIndex(Int64 runId, Int32 stepIndex)
+    public static IList<AppPipelineStep> FindAllByRunIdAndStepIndex(Int32 runId, Int32 stepIndex)
     {
         if (runId < 0) return [];
         if (stepIndex < 0) return [];
@@ -177,23 +196,38 @@ public partial class AppPipelineStep
 
         return FindAll(_.RunId == runId & _.StepIndex == stepIndex);
     }
+
+    /// <summary>根据命令查找</summary>
+    /// <param name="commandId">命令</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppPipelineStep> FindAllByCommandId(Int32 commandId)
+    {
+        if (commandId < 0) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.CommandId == commandId);
+
+        return FindAll(_.CommandId == commandId);
+    }
     #endregion
 
     #region 高级查询
     /// <summary>高级查询</summary>
     /// <param name="runId">运行。对应AppPipelineRun.Id</param>
     /// <param name="stepIndex">步骤序号。同一运行内从 0 开始递增</param>
+    /// <param name="commandId">命令。对应NodeCommand.Id，用于按命令回包事件(CommandReply)精确命中该步骤，驱动状态更新</param>
     /// <param name="start">创建时间开始</param>
     /// <param name="end">创建时间结束</param>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<AppPipelineStep> Search(Int64 runId, Int32 stepIndex, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<AppPipelineStep> Search(Int32 runId, Int32 stepIndex, Int32 commandId, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
         if (runId >= 0) exp &= _.RunId == runId;
         if (stepIndex >= 0) exp &= _.StepIndex == stepIndex;
+        if (commandId >= 0) exp &= _.CommandId == commandId;
         exp &= _.CreateTime.Between(start, end);
         if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
 
@@ -219,6 +253,9 @@ public partial class AppPipelineStep
 
         /// <summary>节点。执行该步骤的节点</summary>
         public static readonly Field NodeId = FindByName("NodeId");
+
+        /// <summary>命令。对应NodeCommand.Id，用于按命令回包事件(CommandReply)精确命中该步骤，驱动状态更新</summary>
+        public static readonly Field CommandId = FindByName("CommandId");
 
         /// <summary>状态。Pending/Running/Success/Failed/Skipped</summary>
         public static readonly Field Status = FindByName("Status");
@@ -255,6 +292,9 @@ public partial class AppPipelineStep
 
         /// <summary>节点。执行该步骤的节点</summary>
         public const String NodeId = "NodeId";
+
+        /// <summary>命令。对应NodeCommand.Id，用于按命令回包事件(CommandReply)精确命中该步骤，驱动状态更新</summary>
+        public const String CommandId = "CommandId";
 
         /// <summary>状态。Pending/Running/Success/Failed/Skipped</summary>
         public const String Status = "Status";

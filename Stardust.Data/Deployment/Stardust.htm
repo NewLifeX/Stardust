@@ -215,6 +215,28 @@
         </tr>
 
         <tr>
+            <td>RepoUserName</td>
+            <td>仓库用户名</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>HTTPS 克隆时的用户名，与运行时执行用户的 UserName 字段区分</td>
+        </tr>
+
+        <tr>
+            <td>RepoPassword</td>
+            <td>仓库密码</td>
+            <td>String</td>
+            <td>200</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>HTTPS 克隆时的密码，AES 加密存储（密钥派生自 TokenSecret），回显为 5 个 *</td>
+        </tr>
+
+        <tr>
             <td>Branch</td>
             <td>分支</td>
             <td>String</td>
@@ -2344,10 +2366,10 @@
         <tr>
             <td>Id</td>
             <td>编号</td>
-            <td>Int64</td>
+            <td>Int32</td>
             <td></td>
             <td></td>
-            <td title="主键">PK</td>
+            <td title="自增">AI</td>
             <td>N</td>
             <td></td>
         </tr>
@@ -2625,7 +2647,7 @@
         <tr>
             <td>RunId</td>
             <td>运行</td>
-            <td>Int64</td>
+            <td>Int32</td>
             <td></td>
             <td></td>
             <td></td>
@@ -2664,6 +2686,17 @@
             <td></td>
             <td>N</td>
             <td>执行该步骤的节点</td>
+        </tr>
+
+        <tr>
+            <td>CommandId</td>
+            <td>命令</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>对应NodeCommand.Id，用于按命令回包事件(CommandReply)精确命中该步骤，驱动状态更新</td>
         </tr>
 
         <tr>

@@ -118,5 +118,12 @@ public partial class AppPipelineStep : Entity<AppPipelineStep>
     #endregion
 
     #region 业务操作
+    /// <summary>根据运行查找</summary>
+    public static IList<AppPipelineStep> FindAllByRunId(Int64 runId)
+    {
+        if (runId < 0) return [];
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.RunId == runId);
+        return FindAll(_.RunId == runId);
+    }
     #endregion
 }

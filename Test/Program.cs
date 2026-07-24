@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -32,6 +32,9 @@ class Program
 
         // DeployKey 相关测试
         DeployKeyTests.RunAll();
+
+        // DeployCredentials 相关测试
+        DeployCredentialsTests.RunAll();
 
         Test3();
 

@@ -23,13 +23,13 @@ namespace Stardust.Data.Deployment;
 public partial class AppPipelineRun
 {
     #region 属性
-    private Int64 _Id;
+    private Int32 _Id;
     /// <summary>编号</summary>
     [DisplayName("编号")]
     [Description("编号")]
-    [DataObjectField(true, false, false, 0)]
-    [BindColumn("Id", "编号", "", DataScale = "time")]
-    public Int64 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
+    [DataObjectField(true, true, false, 0)]
+    [BindColumn("Id", "编号", "")]
+    public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
     private Int32 _PipelineId;
     /// <summary>流水线。对应AppPipeline.Id</summary>
@@ -253,7 +253,7 @@ public partial class AppPipelineRun
         {
             switch (name)
             {
-                case "Id": _Id = value.ToLong(); break;
+                case "Id": _Id = value.ToInt(); break;
                 case "PipelineId": _PipelineId = value.ToInt(); break;
                 case "Status": _Status = (Stardust.Models.PipelineStatus)value.ToInt(); break;
                 case "TriggerSource": _TriggerSource = Convert.ToString(value); break;
@@ -283,17 +283,31 @@ public partial class AppPipelineRun
     #endregion
 
     #region 关联映射
+    /// <summary>流水线</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public AppPipeline Pipeline => Extends.Get(nameof(Pipeline), k => AppPipeline.FindById(PipelineId));
+
+    /// <summary>流水线</summary>
+    [Map(nameof(PipelineId), typeof(AppPipeline), "Id")]
+    public String PipelineName => Pipeline?.Name;
+
     #endregion
 
     #region 扩展查询
     /// <summary>根据编号查找</summary>
     /// <param name="id">编号</param>
     /// <returns>实体对象</returns>
-    public static AppPipelineRun FindById(Int64 id)
+    public static AppPipelineRun FindById(Int32 id)
     {
         if (id < 0) return null;
 
-        return Find(_.Id == id);
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Id == id);
+
+        // 单对象缓存
+        return Meta.SingleCache[id];
+
+        //return Find(_.Id == id);
     }
 
     /// <summary>根据流水线查找</summary>
@@ -302,6 +316,9 @@ public partial class AppPipelineRun
     public static IList<AppPipelineRun> FindAllByPipelineId(Int32 pipelineId)
     {
         if (pipelineId < 0) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.PipelineId == pipelineId);
 
         return FindAll(_.PipelineId == pipelineId);
     }
@@ -313,6 +330,9 @@ public partial class AppPipelineRun
     {
         if (status < 0) return [];
 
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Status == status);
+
         return FindAll(_.Status == status);
     }
     #endregion
@@ -321,8 +341,8 @@ public partial class AppPipelineRun
     /// <summary>高级查询</summary>
     /// <param name="pipelineId">流水线。对应AppPipeline.Id</param>
     /// <param name="status">状态。Pending/Building/UploadSucceeded/Deploying/Success/Failed/Cancelled</param>
-    /// <param name="start">编号开始</param>
-    /// <param name="end">编号结束</param>
+    /// <param name="start">更新时间开始</param>
+    /// <param name="end">更新时间结束</param>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
@@ -332,22 +352,10 @@ public partial class AppPipelineRun
 
         if (pipelineId >= 0) exp &= _.PipelineId == pipelineId;
         if (status >= 0) exp &= _.Status == status;
-        exp &= _.Id.Between(start, end, Meta.Factory.Snow);
+        exp &= _.UpdateTime.Between(start, end);
         if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
 
         return FindAll(exp, page);
-    }
-    #endregion
-
-    #region 数据清理
-    /// <summary>清理指定时间段内的数据</summary>
-    /// <param name="start">开始时间。未指定时清理小于指定时间的所有数据</param>
-    /// <param name="end">结束时间</param>
-    /// <param name="maximumRows">最大删除行数。清理历史数据时，避免一次性删除过多导致数据库IO跟不上，0表示所有</param>
-    /// <returns>清理行数</returns>
-    public static Int32 DeleteWith(DateTime start, DateTime end, Int32 maximumRows = 0)
-    {
-        return Delete(_.Id.Between(start, end, Meta.Factory.Snow), maximumRows);
     }
     #endregion
 

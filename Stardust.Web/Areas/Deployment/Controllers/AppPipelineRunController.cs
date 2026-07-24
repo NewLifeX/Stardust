@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Stardust.Data.Deployment;
 using Stardust.Models;
 using Stardust.Web.Services;
@@ -69,22 +69,22 @@ public class AppPipelineRunController : EntityController<AppPipelineRun>
     /// <summary>详情页：实体已就绪后注入客户端轮询脚本</summary>
     /// <param name="id">运行编号</param>
     /// <returns></returns>
-    public ActionResult Detail(Int64 id)
+    public ActionResult Detail(Int32 id)
     {
         var entity = AppPipelineRun.FindById(id);
         if (entity == null) return Json(500, "运行记录不存在");
 
-        // 注入前端轮询脚本：状态为 Pending/Building/Deploying 时每 5 秒自动刷新一次
-        ViewBag.ClientScript = @"
-<script>
-(function(){
-  var status = " + (Int32)entity.Status + @";
-  // PipelineStatus: 1=Pending, 2=Building, 3=UploadSucceeded/Deploying
-  if (status >= 1 && status <= 3) {
-    setTimeout(function(){ location.reload(); }, 5000);
-  }
-})();
-</script>";
+        // 取消轮询        // 注入前端轮询脚本：状态为 Pending/Building/Deploying 时每 5 秒自动刷新一次
+        //         ViewBag.ClientScript = @"
+        // <script>
+        // (function(){
+        //   var status = " + (Int32)entity.Status + @";
+        //   // PipelineStatus: 1=Pending, 2=Building, 3=UploadSucceeded/Deploying
+        //   if (status >= 1 && status <= 3) {
+        //     setTimeout(function(){ location.reload(); }, 5000);
+        //   }
+        // })();
+        // </script>";
 
         return View(entity);
     }
@@ -93,7 +93,7 @@ public class AppPipelineRunController : EntityController<AppPipelineRun>
     /// <param name="id">运行编号</param>
     /// <returns></returns>
     [EntityAuthorize(PermissionFlags.Update)]
-    public async Task<ActionResult> Reprocess(Int64 id)
+    public async Task<ActionResult> Reprocess(Int32 id)
     {
         try
         {

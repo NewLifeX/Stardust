@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO.Compression;
 using System.Text;
 using NewLife;
@@ -141,15 +141,17 @@ internal class DeployService : ServiceBase
 
     #region 编译命令处理
     /// <summary>处理编译命令</summary>
-    private async Task<String?> OnCompile(String? args)
+    private String? OnCompile(String? args)
     {
         if (args.IsNullOrEmpty()) throw new ArgumentNullException(nameof(args));
 
-        var cmd = args.ToJsonEntity<CompileCommand>();
-        if (cmd == null) throw new ArgumentNullException(nameof(args), "无法解析编译命令参数");
+        var cmd = ParseCompileCommand(args);
+
+        // 解密仓库密码并用凭据组装克隆 URL
+        var cloneUrl = BuildCloneUrl(cmd);
 
         XTrace.WriteLine("========== 开始编译任务 ==========");
-        XTrace.WriteLine("仓库：{0}", cmd.Repository);
+        XTrace.WriteLine("仓库：{0}", Stardust.Models.CompileCommand.RedactUrlForLog(cloneUrl));
         XTrace.WriteLine("分支：{0}", cmd.Branch ?? "main");
 
         var sshKeyFile = SetupSshKey(cmd.DeployKey);
@@ -163,134 +165,24 @@ internal class DeployService : ServiceBase
             var outputPath = cmd.OutputPath;
             if (outputPath.IsNullOrEmpty()) outputPath = "publish";
 
-            // 确定源代码目录
-            var repoDir = "";
-            if (!cmd.SourcePath.IsNullOrEmpty())
-            {
-                // 先判断目录是否存在，不存在则创建并执行clone，否则pull
-
-                // 使用本地已有的源代码目录
-                repoDir = cmd.SourcePath;
-                XTrace.WriteLine("使用本地源代码目录：{0}", repoDir);
-
-                if (!Directory.Exists(cmd.SourcePath))
-                {
-                    Directory.CreateDirectory(cmd.SourcePath);
-                    try
-                    {
-                        var lenGit = buildLog.Length;
-                        GitClone(cmd.Repository, cmd.Branch ?? "main", repoDir, buildLog, sshKeyFile);
-                        XTrace.WriteLine("代码拉取完成：{0}", repoDir);
-                        ReportDeployEvent(cmd.DeployName, "gitclone", buildLog.ToString(lenGit, buildLog.Length - lenGit));
-                    }
-                    catch (Exception ex)
-                    {
-                        XTrace.WriteLine("Git 克隆失败：{0}", ex.Message);
-                        XTrace.WriteException(ex);
-                        TryRecoverAndReclone(cmd.Repository, cmd.Branch ?? "main", repoDir, sshKeyFile);
-                    }
-                }
-                // 拉取最新代码
-                else if (cmd.PullCode)
-                {
-                    try
-                    {
-                        var lenPull = buildLog.Length;
-                        GitPull(repoDir, cmd.Branch, buildLog, sshKeyFile);
-                        XTrace.WriteLine("代码拉取完成");
-                        ReportDeployEvent(cmd.DeployName, "gitpull", buildLog.ToString(lenPull, buildLog.Length - lenPull));
-                    }
-                    catch (Exception ex)
-                    {
-                        XTrace.WriteLine("Git 拉取失败：{0}", ex.Message);
-                        XTrace.WriteException(ex);
-                        TryRecoverAndReclone(cmd.Repository, cmd.Branch ?? "main", repoDir, sshKeyFile);
-                    }
-                }
-            }
-            else if (cmd.PullCode && !cmd.Repository.IsNullOrEmpty())
-            {
-                // 克隆远程仓库
-                workDir = Path.Combine(Path.GetTempPath(), $"stardust-build-{Guid.NewGuid():N}");
-                Directory.CreateDirectory(workDir);
-                XTrace.WriteLine("工作目录：{0}", workDir);
-
-                repoDir = Path.Combine(workDir, "repo");
-                try
-                {
-                    var lenGit = buildLog.Length;
-                    GitClone(cmd.Repository, cmd.Branch ?? "main", repoDir, buildLog, sshKeyFile);
-                    XTrace.WriteLine("代码拉取完成：{0}", repoDir);
-                    ReportDeployEvent(cmd.DeployName, "gitclone", buildLog.ToString(lenGit, buildLog.Length - lenGit));
-                }
-                catch (Exception ex)
-                {
-                    XTrace.WriteLine("Git 克隆失败：{0}", ex.Message);
-                    XTrace.WriteException(ex);
-                    TryRecoverAndReclone(cmd.Repository, cmd.Branch ?? "main", repoDir, sshKeyFile);
-                }
-            }
-            else
-            {
-                throw new InvalidOperationException("未指定源代码目录或代码仓库地址");
-            }
+            // 确定源代码目录，统一走 EnsureAndSyncRepo 处理 clone/pull
+            var repoDir = EnsureAndSyncRepo(cmd, cloneUrl, buildLog, sshKeyFile, ref workDir);
 
             // 编译项目
-            var publishDir = "";
-            if (cmd.BuildProject)
-            {
-                var lenBuild = buildLog.Length;
-                publishDir = BuildProject(cmd, repoDir, outputPath, buildLog);
-                XTrace.WriteLine("编译完成，输出目录：{0}", publishDir);
-                ReportDeployEvent(cmd.DeployName, "build", buildLog.ToString(lenBuild, buildLog.Length - lenBuild));
-            }
-            else
-            {
-                // 不编译时直接使用输出目录
-                publishDir = Path.Combine(repoDir, outputPath);
-            }
+            var publishDir = BuildOrResolvePublishDir(cmd, repoDir, outputPath, buildLog);
 
             // 获取Git提交信息
-            var commitId = "";
-            var commitLog = "";
-            var commitTime = "";
-            if (Directory.Exists(Path.Combine(repoDir, ".git")))
-            {
-                (commitId, commitLog, commitTime) = GetGitCommitInfo(repoDir);
-                if (!commitId.IsNullOrEmpty())
-                    XTrace.WriteLine("提交：{0} {1} {2}", commitId, commitLog, commitTime);
-            }
+            var (commitId, commitLog, commitTime) = GetCommitInfoIfGitRepo(repoDir);
 
-            // 打包
-            var zipFile = "";
-            if (cmd.PackageOutput)
-            {
-                if (!Directory.Exists(publishDir))
-                    throw new DirectoryNotFoundException($"产物目录不存在：{publishDir}");
-
-                var packageName = cmd.DeployName ?? "app";
-                // 如果没有临时工作目录，则在源代码目录上级创建临时目录存放zip
-                var zipDir = workDir.IsNullOrEmpty() ? Path.GetTempPath() : workDir;
-                zipFile = Path.Combine(zipDir, $"{packageName}-{DateTime.Now:yyyyMMdd-HHmmss}.zip");
-                ZipCompress(publishDir, zipFile, cmd.PackageFilters);
-                XTrace.WriteLine("打包完成：{0} ({1:n0} bytes)", zipFile, new FileInfo(zipFile).Length);
-                ReportDeployEvent(cmd.DeployName, "package", $"打包完成：{zipFile} ({new FileInfo(zipFile).Length:n0} bytes)");
-            }
+            // 打包（返回 zip 文件路径和版本号，确保版本号在打包和上传之间一致）
+            var (zipFile, version) = ZipOutput(cmd, publishDir, workDir, buildLog);
 
             // 上传到星尘
-            if (cmd.UploadPackage && !zipFile.IsNullOrEmpty())
-            {
-                if (cmd.DeployName.IsNullOrEmpty())
-                    throw new InvalidOperationException("未指定应用部署集名称，无法上传");
-
-                await UploadPackageAsync(_client.Server, cmd.DeployName, zipFile, commitId, commitLog, commitTime);
-                XTrace.WriteLine("上传成功：{0}", zipFile);
-                ReportDeployEvent(cmd.DeployName, "upload", $"上传成功：{zipFile}");
-            }
+            UploadBuildPackageSync(cmd, zipFile, version, commitId, commitLog, commitTime);
 
             XTrace.WriteLine("========== 编译任务完成 ==========");
 
-            // 上报部署完成事件，服务端 PostEvents 复用 ServiceController 分支写入 AppDeployHistory
+            // 上报部署完成事件
             ReportDeployEvent(cmd.DeployName, "done", $"部署代理处理完成（应用：{cmd.DeployName}，产物：{zipFile}）");
 
             return buildLog.ToString();
@@ -311,12 +203,118 @@ internal class DeployService : ServiceBase
         finally
         {
             CleanupSshKey(sshKeyFile);
+            CleanupWorkDir(workDir);
+        }
+    }
 
-            // 清理临时工作目录（本地源代码目录不清理）
-            if (!workDir.IsNullOrEmpty() && Directory.Exists(workDir))
+    /// <summary>解析编译命令参数</summary>
+    private static CompileCommand ParseCompileCommand(String args)
+    {
+        var cmd = args.ToJsonEntity<CompileCommand>();
+        if (cmd == null) throw new ArgumentNullException(nameof(args), "无法解析编译命令参数");
+        return cmd;
+    }
+
+    /// <summary>解密仓库密码并用凭据组装克隆 URL</summary>
+    private static String BuildCloneUrl(CompileCommand cmd)
+    {
+        var cloneUrl = cmd.Repository;
+        if (!cmd.RepoPassword.IsNullOrEmpty())
+        {
+            try
             {
-                try { Directory.Delete(workDir, true); } catch { }
+                var set = StarSetting.Current;
+                var pass = Encoding.UTF8.GetBytes(set.Secret);
+                using var aes = System.Security.Cryptography.Aes.Create();
+                var plainPassword = Encoding.UTF8.GetString(aes.Decrypt(cmd.RepoPassword.ToHex(), pass, System.Security.Cryptography.CipherMode.CBC, System.Security.Cryptography.PaddingMode.PKCS7));
+
+                cloneUrl = Stardust.Models.CompileCommand.BuildCloneUrl(cmd.Repository, cmd.RepoUserName, cmd.DeployKey, plainPassword);
             }
+            catch (Exception ex)
+            {
+                XTrace.WriteLine("解密仓库密码失败：{0}", ex.Message);
+            }
+        }
+        else if (!cmd.RepoUserName.IsNullOrEmpty())
+        {
+            // 有用户名无密码，也尝试组装 URL（可能用于 SSH 格式）
+            cloneUrl = Stardust.Models.CompileCommand.BuildCloneUrl(cmd.Repository, cmd.RepoUserName, cmd.DeployKey, null);
+        }
+        return cloneUrl;
+    }
+
+    /// <summary>编译项目或解析输出目录</summary>
+    private String BuildOrResolvePublishDir(CompileCommand cmd, String repoDir, String outputPath, StringBuilder buildLog)
+    {
+        if (cmd.BuildProject)
+        {
+            var lenBuild = buildLog.Length;
+            var publishDir = BuildProject(cmd, repoDir, outputPath, buildLog);
+            XTrace.WriteLine("编译完成，输出目录：{0}", publishDir);
+            ReportDeployEvent(cmd.DeployName, "build", buildLog.ToString(lenBuild, buildLog.Length - lenBuild));
+            return publishDir;
+        }
+
+        // 不编译时直接使用输出目录
+        return Path.Combine(repoDir, outputPath);
+    }
+
+    /// <summary>获取 Git 提交信息（仅 .git 目录存在时）</summary>
+    private (String commitId, String commitLog, String commitTime) GetCommitInfoIfGitRepo(String repoDir)
+    {
+        if (!Directory.Exists(Path.Combine(repoDir, ".git"))) return ("", "", "");
+
+        var (commitId, commitLog, commitTime) = GetGitCommitInfo(repoDir);
+        if (!commitId.IsNullOrEmpty())
+            XTrace.WriteLine("提交：{0} {1} {2}", commitId, commitLog, commitTime);
+
+        return (commitId, commitLog, commitTime);
+    }
+
+    /// <summary>打包输出目录。返回 zip 文件路径和版本号，版本号取自文件名中的时间戳，供上传复用</summary>
+    private (String zipFile, String version) ZipOutput(CompileCommand cmd, String publishDir, String workDir, StringBuilder buildLog)
+    {
+        if (!cmd.PackageOutput) return ("", "");
+
+        if (!Directory.Exists(publishDir))
+            throw new DirectoryNotFoundException($"产物目录不存在：{publishDir}");
+
+        var packageName = cmd.DeployName ?? "app";
+        // 如果没有临时工作目录，则在源代码目录上级创建临时目录存放zip
+        var zipDir = workDir.IsNullOrEmpty() ? Path.GetTempPath() : workDir;
+        var now = DateTime.Now;
+        var timestamp = now.ToString("yyyyMMdd-HHmmss");
+        var zipFile = Path.Combine(zipDir, $"{packageName}-{timestamp}.zip");
+        ZipCompress(publishDir, zipFile, cmd.PackageFilters);
+        XTrace.WriteLine("打包完成：{0} ({1:n0} bytes)", zipFile, new FileInfo(zipFile).Length);
+        ReportDeployEvent(cmd.DeployName, "package", $"打包完成：{zipFile} ({new FileInfo(zipFile).Length:n0} bytes)");
+
+        var version = $"v{now:yyyyMMdd-HHmmss}";
+        return (zipFile, version);
+    }
+
+    /// <summary>上传包文件到星尘平台（同步版本，避免 async 回调死锁）</summary>
+    private void UploadBuildPackageSync(CompileCommand cmd, String zipFile, String version, String commitId, String commitLog, String commitTime)
+    {
+        if (!cmd.UploadPackage || zipFile.IsNullOrEmpty()) return;
+
+        if (cmd.DeployName.IsNullOrEmpty())
+            throw new InvalidOperationException("未指定应用部署集名称，无法上传");
+
+        UploadPackageAsync(_client.Server, cmd.DeployName, zipFile, version, commitId, commitLog, commitTime)
+            .ConfigureAwait(false)
+            .GetAwaiter()
+            .GetResult();
+        XTrace.WriteLine("上传成功：{0}", zipFile);
+        ReportDeployEvent(cmd.DeployName, "upload", $"上传成功：{zipFile}");
+    }
+
+    /// <summary>清理临时工作目录（本地源代码目录不清理）</summary>
+    private static void CleanupWorkDir(String workDir)
+    {
+        if (!workDir.IsNullOrEmpty() && Directory.Exists(workDir))
+        {
+            try { Directory.Delete(workDir, true); } catch { }
         }
     }
 
@@ -458,10 +456,11 @@ internal class DeployService : ServiceBase
         };
 
         if (!p.Start()) throw new Exception($"无法启动进程：{fileName}");
-
+        p.StandardInput.Close();  // 关键：关闭标准输入，防止阻塞
         p.BeginOutputReadLine();
         p.BeginErrorReadLine();
 
+        // 超时时间设置为 10 分钟（600,000 毫秒），避免长时间挂起
         var timeout = 600_000;
         if (!p.WaitForExit(timeout))
         {
@@ -490,9 +489,11 @@ internal class DeployService : ServiceBase
     /// <summary>Git 克隆仓库</summary>
     private void GitClone(String repoUrl, String branch, String targetPath, StringBuilder? log = null, String? sshKeyFile = null)
     {
-        XTrace.WriteLine("开始克隆仓库：{0} 分支：{1}", repoUrl, branch);
+        var safeUrl = Stardust.Models.CompileCommand.RedactUrlForLog(repoUrl);
+        XTrace.WriteLine("开始克隆仓库：{0} 分支：{1}", safeUrl, branch);
 
         var args = $"clone -b {branch} --depth 1 {repoUrl} \"{targetPath}\"";
+        XTrace.WriteLine("git {0}", $"clone -b {branch} --depth 1 {safeUrl} \"{targetPath}\"");
         ExecuteProcess("git", args, null, log, sshKeyFile);
 
         XTrace.WriteLine("Git 克隆成功");
@@ -708,14 +709,161 @@ internal class DeployService : ServiceBase
         }
     }
 
+    /// <summary>确保本地仓库就绪。根据目录存在性和 .git 目录判断 clone 还是 pull，返回仓库目录</summary>
+    private String EnsureAndSyncRepo(CompileCommand cmd, String cloneUrl, StringBuilder buildLog, String? sshKeyFile, ref String workDir)
+    {
+        // 无 SourcePath 时克隆到临时目录
+        if (cmd.SourcePath.IsNullOrEmpty())
+        {
+            if (!cmd.PullCode || cmd.Repository.IsNullOrEmpty())
+                throw new InvalidOperationException("未指定源代码目录或代码仓库地址");
+
+            workDir = Path.Combine(Path.GetTempPath(), $"stardust-build-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(workDir);
+            XTrace.WriteLine("工作目录：{0}", workDir);
+
+            var repoDir = Path.Combine(workDir, "repo");
+            CloneWithRetry(cloneUrl, cmd.Branch ?? "main", repoDir, buildLog, sshKeyFile, cmd.DeployName);
+            return repoDir;
+        }
+
+        var repo = cmd.SourcePath;
+        XTrace.WriteLine("使用本地源代码目录：{0}", repo);
+
+        // 目录不存在或存在但 .git 不存在，都走 clone
+        var needClone = !Directory.Exists(repo) || !Directory.Exists(Path.Combine(repo, ".git"));
+        if (needClone)
+        {
+            if (!Directory.Exists(repo))
+                Directory.CreateDirectory(repo);
+
+            CloneWithRetry(cloneUrl, cmd.Branch ?? "main", repo, buildLog, sshKeyFile, cmd.DeployName);
+        }
+        else if (cmd.PullCode)
+        {
+            // 目录和 .git 都存在，拉取最新
+            PullWithRetry(repo, cmd.Branch, buildLog, sshKeyFile, cmd.DeployName, cmd.Repository, cloneUrl);
+        }
+        // else: 目录和 .git 都在，且不需要 pull → 啥也不做
+
+        return repo;
+    }
+
+    /// <summary>克隆仓库，失败时备份重试</summary>
+    private void CloneWithRetry(String repoUrl, String branch, String repoDir, StringBuilder buildLog, String? sshKeyFile, String? deployName)
+    {
+        try
+        {
+            var lenGit = buildLog.Length;
+            GitClone(repoUrl, branch, repoDir, buildLog, sshKeyFile);
+            XTrace.WriteLine("代码拉取完成：{0}", repoDir);
+            ReportDeployEvent(deployName, "gitclone", buildLog.ToString(lenGit, buildLog.Length - lenGit));
+        }
+        catch (Exception ex)
+        {
+            XTrace.WriteLine("Git 克隆失败：{0}", ex.Message);
+            XTrace.WriteException(ex);
+            RecoverAndReclone(repoUrl, branch, repoDir, sshKeyFile);
+        }
+    }
+
+    /// <summary>拉取仓库，失败时备份并重新克隆</summary>
+    private void PullWithRetry(String repoDir, String? branch, StringBuilder buildLog, String? sshKeyFile, String? deployName, String? cmdRepository, String cloneUrl)
+    {
+        try
+        {
+            var lenPull = buildLog.Length;
+            GitPull(repoDir, branch, buildLog, sshKeyFile);
+            XTrace.WriteLine("代码拉取完成");
+            ReportDeployEvent(deployName, "gitpull", buildLog.ToString(lenPull, buildLog.Length - lenPull));
+        }
+        catch (Exception ex)
+        {
+            XTrace.WriteLine("Git 拉取失败：{0}", ex.Message);
+            XTrace.WriteException(ex);
+            var repoUrl = cmdRepository.IsNullOrEmpty() ? cloneUrl : cmdRepository;
+            RecoverAndReclone(repoUrl, branch ?? "main", repoDir, sshKeyFile);
+        }
+    }
+
+    /// <summary>备份现有仓库并重新克隆，失败则尝试还原备份</summary>
+    private void RecoverAndReclone(String repoUrl, String branch, String repoDir, String? sshKeyFile = null)
+    {
+        var safeUrl = Stardust.Models.CompileCommand.RedactUrlForLog(repoUrl);
+        XTrace.WriteLine("尝试备份并重新拉取仓库：{0}", safeUrl);
+
+        var backupDir = "";
+        try
+        {
+            if (Directory.Exists(repoDir))
+            {
+                backupDir = repoDir + ".backup." + DateTime.Now.ToString("yyyyMMddHHmmss");
+                Directory.Move(repoDir, backupDir);
+                XTrace.WriteLine("已备份原仓库到：{0}", backupDir);
+            }
+        }
+        catch (Exception ex)
+        {
+            XTrace.WriteLine("备份原仓库失败：{0}", ex.Message);
+            XTrace.WriteException(ex);
+        }
+
+        try
+        {
+            GitClone(repoUrl, branch ?? "main", repoDir, null, sshKeyFile);
+            XTrace.WriteLine("重新克隆成功：{0}", repoDir);
+
+            if (!string.IsNullOrEmpty(backupDir) && Directory.Exists(backupDir))
+            {
+                try
+                {
+                    Directory.Delete(backupDir, true);
+                    XTrace.WriteLine("已删除备份：{0}", backupDir);
+                }
+                catch (Exception ex)
+                {
+                    XTrace.WriteLine("删除备份失败：{0}", ex.Message);
+                    XTrace.WriteException(ex);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            XTrace.WriteLine("重新克隆失败：{0}", ex.Message);
+            XTrace.WriteException(ex);
+
+            // 尝试还原备份
+            try
+            {
+                if (!string.IsNullOrEmpty(backupDir) && Directory.Exists(backupDir))
+                {
+                    if (Directory.Exists(repoDir))
+                    {
+                        try { Directory.Delete(repoDir, true); } catch { }
+                    }
+                    Directory.Move(backupDir, repoDir);
+                    XTrace.WriteLine("已还原备份到：{0}", repoDir);
+                }
+            }
+            catch (Exception ex2)
+            {
+                XTrace.WriteLine("还原备份失败：{0}", ex2.Message);
+                XTrace.WriteException(ex2);
+            }
+
+            throw;
+        }
+    }
+
     /// <summary>上传包文件到星尘平台。调用Deploy/UploadBuildFile接口创建应用版本</summary>
     /// <param name="server">服务器地址</param>
     /// <param name="deployName">应用部署集名称</param>
     /// <param name="packagePath">包文件路径</param>
+    /// <param name="version">版本号，需与 zip 打包时间一致</param>
     /// <param name="commitId">提交标识</param>
     /// <param name="commitLog">提交记录</param>
     /// <param name="commitTime">提交时间</param>
-    private async Task UploadPackageAsync(String server, String deployName, String packagePath, String? commitId = null, String? commitLog = null, String? commitTime = null)
+    private async Task UploadPackageAsync(String server, String deployName, String packagePath, String version, String? commitId = null, String? commitLog = null, String? commitTime = null)
     {
         XTrace.WriteLine("开始上传包文件：{0}", packagePath);
 
@@ -730,7 +878,7 @@ internal class DeployService : ServiceBase
         if (!token.IsNullOrEmpty())
             httpClient.DefaultRequestHeaders.Add("X-Token", token);
 
-        var version = $"v{DateTime.Now:yyyyMMdd-HHmmss}";
+        // version 由 ZipOutput 传入，确保与 zip 打包时间戳一致
         var uploadUrl = $"/Deploy/UploadBuildFile?deployName={Uri.EscapeDataString(deployName)}&version={Uri.EscapeDataString(version)}";
         if (!commitId.IsNullOrEmpty()) uploadUrl += $"&commitId={Uri.EscapeDataString(commitId)}";
         if (!commitLog.IsNullOrEmpty()) uploadUrl += $"&commitLog={Uri.EscapeDataString(commitLog)}";
@@ -875,6 +1023,7 @@ internal class DeployService : ServiceBase
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             CreateNoWindow = true,
+            RedirectStandardInput = true,
             StandardOutputEncoding = System.Text.Encoding.UTF8,
             StandardErrorEncoding = System.Text.Encoding.UTF8
         };

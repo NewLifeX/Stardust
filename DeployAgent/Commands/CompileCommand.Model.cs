@@ -13,6 +13,12 @@ public class CompileCommand
     /// <summary>仓库密钥。SSH 私钥，用于非交互式拉取私有仓库代码</summary>
     public String? DeployKey { get; set; }
 
+    /// <summary>仓库用户名。HTTPS 克隆时的用户名</summary>
+    public String? RepoUserName { get; set; }
+
+    /// <summary>仓库密码。AES 加密后的密文（Hex 格式），下发时用节点 Secret 加密</summary>
+    public String? RepoPassword { get; set; }
+
     /// <summary>分支</summary>
     public String? Branch { get; set; } = "main";
 
