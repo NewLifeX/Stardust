@@ -132,6 +132,10 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
     }
 
     /// <summary>鉴权后的登录处理。修改设备信息、创建在线记录和写日志</summary>
+    /// <remarks>
+    /// LoginTime 和 Fill 数据在本方法中设置后，由基类 <c>DefaultDeviceService.Login</c>
+    /// 统一调用 <c>(context.Online as IEntity)?.Update()</c> 持久化，此处无需单独保存。
+    /// </remarks>
     /// <param name="context">上下文</param>
     /// <param name="request">登录请求</param>
     public override void OnLogin(DeviceContext context, ILoginRequest request)
@@ -160,14 +164,11 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         node.Login(inf.Node, ip);
 
         var online = context.Online = GetOnline(context) ?? CreateOnline(context);
-        if (online is NodeOnline olt && inf.Node != null) olt.Fill(inf.Node);
-
-        //// 设置令牌
-        //var tokenModel = tokenService.IssueToken(node.Code, inf.ClientId);
-
-        //// 在线记录
-        //var olt = GetOrAddOnline(node, tokenModel.AccessToken, ip);
-        //olt.Save(inf.Node, null, tokenModel.AccessToken, ip);
+        if (online is NodeOnline olt)
+        {
+            olt.LoginTime = DateTime.Now;
+            if (inf.Node != null) olt.Fill(inf.Node);
+        }
 
         // 登录历史
         WriteHistory(context, "节点鉴权", true, $"[{node.Name}/{node.Code}]鉴权成功 " + inf.ToJson(false, false, false));
@@ -210,13 +211,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         var online = base.Logout(context, reason, source);
         if (online is NodeOnline online2 && context.Device is Node node)
         {
-            // 计算在线时长
-            if (online2.CreateTime.Year > 2000)
-            {
-                node.OnlineTime += (Int32)(DateTime.Now - online2.CreateTime).TotalSeconds;
-                node.Update();
-            }
-
+            // 注销时基类已通过 SettleOnline 结算在线时长并清空 LoginTime
             NodeOnlineService.CheckOffline(node, "注销");
         }
 
@@ -548,7 +543,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
             {
                 foreach (var f in fs)
                 {
-                    if (System.Version.TryParse(f, out var v) && (max == null || max < v))
+                    if (Version.TryParse(f, out var v) && (max == null || max < v))
                         max = v;
                 }
                 node.Framework = max?.ToString();
@@ -560,14 +555,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         //node.SaveAsync();
         node.Update();
 
-        //var online = GetOrAddOnline(node, context.Token, context.UserHost);
         var online = base.OnPing(context, request) as NodeOnline;
-        //online.Save(null, inf, context.Token, context.UserHost);
-
-        //context.Online = online;
-
-        //// 下发部署的应用服务
-        //rs.Services = GetServices(node.ID);
 
         // DDNS检测。心跳时检测IP变化并更新DNS记录
         _ = _dnsService.CheckNodeIPChange(node, context.UserHost);
@@ -634,92 +622,20 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         return rs.ToArray();
     }
 
-    /// <summary>获取在线。先查缓存再查库</summary>
-    /// <param name="context">上下文</param>
-    /// <returns></returns>
-    public override IOnlineModel? GetOnline(DeviceContext context) => base.GetOnline(context) as NodeOnline;
-
-    public NodeOnline GetOrAddOnline(Node node, String token, String ip)
+    /// <summary>结算在线时长。将本次会话时长累加到节点的 OnlineTime</summary>
+    /// <param name="online">在线实体</param>
+    /// <param name="device">设备信息</param>
+    protected override void OnSettleOnline(IOnlineModel online, IDeviceModel device)
     {
-        var localIp = node?.IP;
-        if (localIp.IsNullOrEmpty()) localIp = ip;
+        if (online is not NodeOnline online2 || device is not Node node) return;
 
-        return GetOnline(node, localIp) ?? CreateOnline(node, token, ip);
-    }
-
-    /// <summary>获取在线</summary>
-    /// <param name="node"></param>
-    /// <returns></returns>
-    public NodeOnline GetOnline(Node node, String ip)
-    {
-        //var sid = $"{node.ID}@{ip}";
-        var sid = node.Code;
-        var olt = _cacheProvider.InnerCache.Get<NodeOnline>($"NodeOnline:{sid}");
-        if (olt != null)
+        var end = online2.UpdateTime > online2.LoginTime ? online2.UpdateTime : DateTime.Now;
+        var delta = (Int32)(end - online2.LoginTime).TotalSeconds;
+        if (delta > 0)
         {
-            //_cacheProvider.InnerCache.SetExpire($"NodeOnline:{sid}", TimeSpan.FromSeconds(120));
-            return olt;
+            node.OnlineTime += delta;
+            node.Update();
         }
-
-        olt = NodeOnline.FindBySessionID(sid);
-        if (olt != null) UpdateOnline(node, olt);
-
-        return olt;
-    }
-
-    /// <summary>检查在线</summary>
-    /// <param name="node"></param>
-    /// <returns></returns>
-    public NodeOnline CreateOnline(Node node, String token, String ip)
-    {
-        using var span = _tracer?.NewSpan($"{Name}CreateOnline", new { node.Code, ip });
-
-        //var sid = $"{node.ID}@{ip}";
-        var sid = node.Code;
-        var olt = NodeOnline.GetOrAdd(sid);
-        olt.ProjectId = node.ProjectId;
-        olt.NodeID = node.ID;
-        olt.Name = node.Name;
-        olt.ProductCode = node.ProductCode;
-        olt.IP = node.IP;
-        olt.Category = node.Category;
-        olt.ProvinceID = node.ProvinceID;
-        olt.CityID = node.CityID;
-        olt.Address = node.Address;
-        olt.Location = node.Location;
-        olt.OSKind = node.OSKind;
-        olt.Version = node.Version;
-        olt.CompileTime = node.CompileTime;
-        olt.Memory = node.Memory;
-        olt.MACs = node.MACs;
-        //olt.COMs = node.COMs;
-        olt.Token = token;
-        olt.CreateIP = ip;
-        olt.UpdateIP = ip;
-
-        olt.Creator = Environment.MachineName;
-
-        //_cacheProvider.InnerCache.Set($"NodeOnline:{sid}", olt, 120);
-        UpdateOnline(node, olt);
-
-        return olt;
-    }
-
-    /// <summary>更新在线状态</summary>
-    /// <param name="node"></param>
-    /// <param name="online"></param>
-    public void UpdateOnline(Node node, NodeOnline online)
-    {
-        var sid = node.Code;
-        _cacheProvider.InnerCache.Set($"NodeOnline:{sid}", online, 120);
-    }
-
-    /// <summary>删除在线状态</summary>
-    /// <param name="node"></param>
-    public void RemoveOnline(Node node)
-    {
-        var sid = node.Code;
-        _cacheProvider.InnerCache.Remove($"NodeOnline:{sid}");
     }
 
     /// <summary>设置设备的长连接上线/下线</summary>
@@ -728,23 +644,21 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
     /// <returns></returns>
     public override void SetOnline(DeviceContext context, Boolean online)
     {
-        // 优先从缓存/数据库获取最新在线记录，避免 context.Online 持有过期实例
-        if ((GetOnline(context) ?? context.Online) is NodeOnline olt)
+        var node = context.Device as Node;
+
+        // 优先使用 context.Online（登录时设置的新对象），避免 GetOnline 返回缓存旧对象
+        if ((context.Online ?? GetOnline(context)) is NodeOnline olt)
         {
             // 下线时检查是否有活跃会话，避免旧会话断开时覆盖新会话的状态
-            if (!online && context.Device is Node node)
+            if (!online && node != null)
             {
                 var session = _sessionManager.Get(node.Code);
                 if (session != null && session.Active)
                     return;
             }
 
-            olt.WebSocket = online;
+            olt.LongLink = online;
             olt.Update();
-
-            // 更新缓存，确保后续 GetOnline 能拿到最新值
-            if (context.Device is Node node2)
-                UpdateOnline(node2, olt);
         }
     }
 
@@ -756,30 +670,8 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         if (context.Device is not Node node) return null;
 
         var online = base.CreateOnline(context) as NodeOnline;
-        //var online = NodeOnline.GetOrAdd(GetSessionId(context));
-        //online.ProjectId = node.ProjectId;
-        //online.NodeID = node.ID;
-        //online.Name = node.Name;
-        //online.ProductCode = node.ProductCode;
-        //online.IP = node.IP;
-        //online.Category = node.Category;
-        //online.ProvinceID = node.ProvinceID;
-        //online.CityID = node.CityID;
-        //online.Address = node.Address;
-        //online.Location = node.Location;
-        //online.OSKind = node.OSKind;
-        //online.Version = node.Version;
-        //online.CompileTime = node.CompileTime;
-        //online.Memory = node.Memory;
-        //online.MACs = node.MACs;
         online.Token = context.Token;
-        //online.CreateIP = context.UserHost;
-        //online.UpdateIP = context.UserHost;
-        //online.Creator = Environment.MachineName;
 
-        //context.Online = online;
-
-        //return base.CreateOnline(context);
         return online;
     }
     #endregion

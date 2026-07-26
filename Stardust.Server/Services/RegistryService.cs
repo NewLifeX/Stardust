@@ -540,18 +540,18 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
     ///// <returns></returns>
     //public override IOnlineModel GetOnline(DeviceContext context) => base.GetOnline(context) as AppOnline;
 
-    /// <summary>设置设备的长连接上线/下线</summary>
-    /// <param name="context">上下文</param>
-    /// <param name="online"></param>
-    /// <returns></returns>
-    public override void SetOnline(DeviceContext context, Boolean online)
-    {
-        if ((GetOnline(context) ?? context.Online) is AppOnline olt)
-        {
-            olt.WebSocket = online;
-            olt.Update();
-        }
-    }
+    ///// <summary>设置设备的长连接上线/下线</summary>
+    ///// <param name="context">上下文</param>
+    ///// <param name="online"></param>
+    ///// <returns></returns>
+    //public override void SetOnline(DeviceContext context, Boolean online)
+    //{
+    //    if ((GetOnline(context) ?? context.Online) is AppOnline olt)
+    //    {
+    //        olt.LongLink = online;
+    //        olt.Update();
+    //    }
+    //}
     #endregion
 
     #region 下行通知

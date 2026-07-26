@@ -172,7 +172,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
         {
             using var socket = await HttpContext.WebSockets.AcceptWebSocketAsync();
 
-            await HandleNotify(socket, HttpContext.RequestAborted);
+            await HandleNotify(Context, socket, HttpContext.RequestAborted);
         }
         else
         {
@@ -180,9 +180,12 @@ public class AppController(RegistryService registryService, ITokenService tokenS
         }
     }
 
-    private async Task HandleNotify(WebSocket socket, CancellationToken cancellationToken)
+    private async Task HandleNotify(DeviceContext context, WebSocket socket, CancellationToken cancellationToken)
     {
-        var app = Context.Device as App ?? throw new InvalidOperationException("未登录！");
+        var app = context.Device as App ?? throw new InvalidOperationException("未登录！");
+
+        // BaseController.OnAuthorize 中已通过 deviceService.GetOnline 设置 Context.Online，
+        // WebSocket 升级请求也走 OnAuthorize，后续心跳消息可直接复用。
 
         using var span = tracer?.NewSpan("cmd:WsApp:Create", app.Name);
         span?.Detach(HttpContext.Request.Headers);
@@ -198,7 +201,10 @@ public class AppController(RegistryService registryService, ITokenService tokenS
             };
             sessionManager.Add(session);
 
-            await session.WaitAsync(HttpContext, span, cancellationToken);
+            context["HttpContext"] = HttpContext;
+            context["Span"] = span;
+
+            await session.WaitAsync(context, cancellationToken);
         }
         catch (Exception ex)
         {

@@ -261,7 +261,7 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
         {
             using var socket = await HttpContext.WebSockets.AcceptWebSocketAsync();
 
-            await HandleNotify(socket, HttpContext.RequestAborted);
+            await HandleNotify(Context, socket, HttpContext.RequestAborted);
         }
         else
         {
@@ -269,9 +269,12 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
         }
     }
 
-    private async Task HandleNotify(WebSocket socket, CancellationToken cancellationToken)
+    private async Task HandleNotify(DeviceContext context, WebSocket socket, CancellationToken cancellationToken)
     {
-        var node = Context.Device as Node;
+        var node = context.Device as Node;
+
+        // BaseController.OnAuthorize 中已通过 deviceService.GetOnline 设置 Context.Online，
+        // WebSocket 升级请求也走 OnAuthorize，后续心跳消息可直接复用。
 
         using var span = tracer?.NewSpan("cmd:WsNode:Create", node.Code);
         span?.Detach(HttpContext.Request.Headers);
@@ -287,7 +290,10 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
             };
             sessionManager.Add(session);
 
-            await session.WaitAsync(HttpContext, span, cancellationToken);
+            context["HttpContext"] = HttpContext;
+            context["Span"] = span;
+
+            await session.WaitAsync(context, cancellationToken);
         }
         catch (Exception ex)
         {

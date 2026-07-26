@@ -50,13 +50,7 @@ public class NodeOnlineService(IServiceProvider serviceProvider, StarServerSetti
                         var msg = $"[{node}/{online?.SessionID}]登录于{online.CreateTime}，最后活跃于{online.UpdateTime}";
                         node.WriteHistory("超时下线", true, msg, online.CreateIP);
 
-                        // 计算在线时长
-                        if (online.CreateTime.Year > 2000 && online.UpdateTime.Year > 2000)
-                        {
-                            node.OnlineTime += (Int32)(online.UpdateTime - online.CreateTime).TotalSeconds;
-                            node.Update();
-                        }
-
+                        // 结算在线时长统一由 RemoveOnline 负责
                         _nodeService.RemoveOnline(new DeviceContext { Device = node, Online = online });
 
                         CheckOffline(node, "超时下线");
