@@ -17,12 +17,16 @@ public class ListServices : BaseCommandHandler
 
     public override void Process(String[] args)
     {
-        var client = new ApiHttpClient("http://localhost:5500/");
+        var port = StarAgentSetting.Current.LocalPort;
+        using var client = new ApiClient($"udp://127.0.0.1:{port}")
+        {
+            Timeout = 3_000,
+        };
 
         try
         {
-            // 调用GET请求。
-            var response = client.Get<ServicesInfo>("GetServices");
+            // 通过 UDP RPC 获取服务列表
+            var response = client.Invoke<ServicesInfo>("GetServices");
 
             if (response == null || response.Services == null)
             {

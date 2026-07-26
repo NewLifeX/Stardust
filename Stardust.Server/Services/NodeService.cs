@@ -1078,11 +1078,11 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
     }
 
     /// <summary>向节点发送命令。（内部用）</summary>
-    /// <param name="node"></param>
-    /// <param name="model"></param>
-    /// <param name="createUser"></param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
+    /// <param name="node">目标节点</param>
+    /// <param name="model">命令参数</param>
+    /// <param name="createUser">创建人</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>命令响应。超时返回 null，reply.Status 反映设备端执行结果</returns>
     public async Task<CommandReplyModel> SendCommand(Node node, CommandInModel model, String createUser = null, CancellationToken cancellationToken = default)
     {
         var cmd = new NodeCommand
@@ -1104,21 +1104,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         var code = node.Code;
 
         // 通过SessionManager发布命令，内置timeout机制等待响应（跨实例广播）
-        var reply = await _sessionManager.PublishAsync(code, commandModel, null, model.Timeout, cancellationToken);
-        if (reply != null)
-        {
-            // 埋点
-            using var span = _tracer?.NewSpan($"mq:NodeCommandReply", reply);
-
-            if (reply.Status == CommandStatus.错误)
-                throw new Exception($"命令错误！{reply.Data}");
-            else if (reply.Status == CommandStatus.取消)
-                throw new Exception($"命令已取消！{reply.Data}");
-
-            return reply;
-        }
-
-        return null;
+        return await _sessionManager.PublishAsync(code, commandModel, null, model.Timeout, cancellationToken);
     }
     #endregion
 

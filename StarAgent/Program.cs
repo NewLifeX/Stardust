@@ -1,10 +1,12 @@
 ﻿using System.Diagnostics;
+using System.Net;
 using System.Reflection;
 using NewLife;
 using NewLife.Agent;
 using NewLife.Agent.Models;
 using NewLife.Log;
 using NewLife.Model;
+using NewLife.Net;
 using NewLife.Remoting;
 using NewLife.Remoting.Clients;
 using NewLife.Threading;
@@ -16,6 +18,7 @@ using Stardust.Plugins;
 using StarAgent.WebPanel;
 using IHost = NewLife.Agent.IHost;
 using ServiceModel = NewLife.Agent.Models.ServiceModel;
+using NewLife.Agent.WebPanel;
 
 namespace StarAgent;
 
@@ -144,9 +147,14 @@ internal class MyService : ServiceBase, IServiceProvider
     /// <summary>创建Web管理面板。返回 StarAgent 定制面板实例</summary>
     /// <param name="service">所属服务</param>
     /// <returns>StarAgent Web管理面板</returns>
-    protected override NewLife.Agent.WebPanel.AgentWebPanel CreateWebPanel(ServiceBase service)
+    protected override AgentWebPanel CreateWebPanel(ServiceBase service)
     {
         WriteLog("创建 StarAgent Web 管理面板");
+
+        var set = NewLife.Agent.Setting.Current;
+        set.WebPort = AgentSetting.LocalPort;
+        set.Save();
+
         return new StarPanel(service);
     }
     #endregion
@@ -543,8 +551,8 @@ internal class MyService : ServiceBase, IServiceProvider
     {
         try
         {
-            // 必须支持Udp，因为需要支持局域网广播搜索功能
-            var svr = new ApiServer(port)
+            // 仅 Udp，局域网广播搜索 + 本地进程 UDP RPC；Tcp 由 HttpServer（Web 面板）接管
+            var svr = new ApiServer(new NetUri(NetType.Udp, IPAddress.Any.ToString(), port))
             {
                 ReuseAddress = true,
                 Tracer = _factory?.Tracer,

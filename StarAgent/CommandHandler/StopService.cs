@@ -17,10 +17,14 @@ public class StopService : BaseCommandHandler
 
     public override void Process(String[] args)
     {
-        var client = new ApiHttpClient("http://localhost:5500/");
+        var port = StarAgentSetting.Current.LocalPort;
+        using var client = new ApiClient($"udp://127.0.0.1:{port}")
+        {
+            Timeout = 3_000,
+        };
         
         // 获取服务列表
-        var services = client.Get<ServicesInfo>("GetServices");
+        var services = client.Invoke<ServicesInfo>("GetServices");
         if (services == null || services.Services == null || services.Services.Length == 0)
         {
             XTrace.WriteLine("没有找到任何子服务");
@@ -64,8 +68,8 @@ public class StopService : BaseCommandHandler
 
         try
         {
-            // 调用API停止服务
-            var response = client.Get<ServiceOperationResult>("StopService", new { serviceName });
+            // 通过 UDP RPC 停止服务
+            var response = client.Invoke<ServiceOperationResult>("StopService", new { serviceName });
 
             if (response == null)
             {

@@ -1,9 +1,6 @@
-#if !NET40
-using NewLife;
+﻿#if !NET40
 using NewLife.Agent;
 using NewLife.Agent.WebPanel;
-using NewLife.Http;
-using NewLife.Log;
 
 namespace StarAgent.WebPanel;
 
@@ -14,7 +11,9 @@ namespace StarAgent.WebPanel;
 /// - 注册自定义 API 控制器（子服务管理、星尘配置、本机信息）
 /// - 注册扩展面板
 /// </remarks>
-public class StarPanel : AgentWebPanel
+/// <remarks>实例化StarAgent Web管理面板</remarks>
+/// <param name="service">所属服务</param>
+public class StarPanel(ServiceBase service) : AgentWebPanel(service)
 {
     #region 属性
     /// <summary>嵌入式静态文件的资源命名空间前缀</summary>
@@ -24,16 +23,7 @@ public class StarPanel : AgentWebPanel
     protected override Type EmbeddedResourceAssemblyType => typeof(StarPanel);
 
     /// <summary>所属服务</summary>
-    public new ServiceBase Service { get; }
-    #endregion
-
-    #region 构造
-    /// <summary>实例化StarAgent Web管理面板</summary>
-    /// <param name="service">所属服务</param>
-    public StarPanel(ServiceBase service) : base(service)
-    {
-        Service = service;
-    }
+    public new ServiceBase Service { get; } = service;
     #endregion
 
     #region 路由注册
@@ -51,10 +41,6 @@ public class StarPanel : AgentWebPanel
         // 2. 再调用基类注册内置 API（/api/*）+ 静态文件（/*）
         base.RegisterRoutes();
     }
-    #endregion
-
-    #region 扩展面板
-    // 保留基类 GetExtensions()，子类可重写以添加自定义扩展面板
     #endregion
 }
 #endif

@@ -595,21 +595,7 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
         await Task.WhenAll(ts);
 
         // SessionManager.PublishAsync 内置timeout等待，取首个非空响应
-        var reply = ts.FirstOrDefault(t => t.Result != null)?.Result;
-        if (reply != null)
-        {
-            // 埋点
-            using var span = _tracer?.NewSpan($"mq:AppCommandReply", reply);
-
-            if (reply.Status == CommandStatus.错误)
-                throw new Exception($"命令错误！{reply.Data}");
-            else if (reply.Status == CommandStatus.取消)
-                throw new Exception($"命令已取消！{reply.Data}");
-
-            return reply;
-        }
-
-        return null;
+        return await ts.FirstOrDefault(t => t.Result != null);
     }
 
     public override Task<CommandReplyModel?> SendCommand(DeviceContext context, CommandInModel model, CancellationToken cancellationToken = default)

@@ -292,7 +292,7 @@ public class StarApi : IHttpController
 
         items.Add(new { group = "StarAgent 本地配置", items = new Object[]
         {
-            new { name = "LocalPort", displayName = "本地端口", value = (Object)agentSet.LocalPort, type = "Int32", description = "本地API通信端口，默认5500" },
+            new { name = "LocalPort", displayName = "本地端口(UDP)", value = (Object)agentSet.LocalPort, type = "Int32", description = "本地API通信端口（UDP），默认5500。与 Web 面板端口共用，UDP 用于本地 RPC，TCP 用于 Web 面板" },
             new { name = "Code", displayName = "节点编码", value = (Object)(agentSet.Code ?? ""), type = "String", description = "当前节点的唯一编码" },
             new { name = "Secret_Agent", displayName = "节点密钥", value = (Object)(agentSet.Secret ?? ""), type = "Password", description = "节点通信密钥" },
             new { name = "Project", displayName = "项目名", value = (Object)(agentSet.Project ?? ""), type = "String", description = "新节点默认所要加入的项目" },

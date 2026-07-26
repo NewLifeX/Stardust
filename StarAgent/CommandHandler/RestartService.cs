@@ -17,10 +17,14 @@ public class RestartService : BaseCommandHandler
 
     public override void Process(String[] args)
     {
-        var client = new ApiHttpClient("http://localhost:5500/");
+        var port = StarAgentSetting.Current.LocalPort;
+        using var client = new ApiClient($"udp://127.0.0.1:{port}")
+        {
+            Timeout = 3_000,
+        };
         
         // 获取服务列表
-        var services = client.Get<ServicesInfo>("GetServices");
+        var services = client.Invoke<ServicesInfo>("GetServices");
         if (services == null || services.Services == null || services.Services.Length == 0)
         {
             XTrace.WriteLine("没有找到任何子服务");
@@ -62,8 +66,8 @@ public class RestartService : BaseCommandHandler
 
         try
         {
-            // 调用API重启服务
-            var response = client.Get<ServiceOperationResult>("RestartService", new { serviceName });
+            // 通过 UDP RPC 重启服务
+            var response = client.Invoke<ServiceOperationResult>("RestartService", new { serviceName });
 
             if (response == null)
             {

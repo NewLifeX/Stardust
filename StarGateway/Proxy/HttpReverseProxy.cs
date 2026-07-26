@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
@@ -16,8 +15,11 @@ using NewLife.Data;
 using NewLife.Http;
 using NewLife.Log;
 using NewLife.Net;
+using NewLife.Remoting;
 using NewLife.Serialization;
 using NewLife.Threading;
+using Stardust;
+using Stardust.Models;
 using Stardust.Data.Deployment;
 using Stardust.Data.Gateway;
 
@@ -477,16 +479,18 @@ public class HttpReverseProxy : ProxyServer
     /// <summary>后端最后活动时间</summary>
     internal ConcurrentDictionary<String, DateTime> _lastActive = new(StringComparer.OrdinalIgnoreCase);
 
-    /// <summary>调用StarAgent启动服务</summary>
+    /// <summary>调用StarAgent启动服务（通过 UDP RPC）</summary>
     public async Task<Boolean> StartBackend(String address, String serviceName)
     {
         try
         {
-            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
-            var url = $"{AgentUrl}/api/StartService?serviceName={serviceName}";
-            var rs = await client.GetStringAsync(url);
-            AdminLog?.Info("StarAgent StartService {0}: {1}", serviceName, rs);
-            return true;
+            using var client = new ApiClient($"udp://127.0.0.1:{LocalStarClient.Port}")
+            {
+                Timeout = 5_000,
+            };
+            var rs = await client.InvokeAsync<ServiceOperationResult>("StartService", new { serviceName });
+            AdminLog?.Info("StarAgent StartService {0}: {1}", serviceName, rs?.Message);
+            return rs?.Success == true;
         }
         catch (Exception ex)
         {
@@ -495,16 +499,18 @@ public class HttpReverseProxy : ProxyServer
         }
     }
 
-    /// <summary>调用StarAgent停止服务</summary>
+    /// <summary>调用StarAgent停止服务（通过 UDP RPC）</summary>
     public async Task<Boolean> StopBackend(String address, String serviceName)
     {
         try
         {
-            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
-            var url = $"{AgentUrl}/api/StopService?serviceName={serviceName}";
-            var rs = await client.GetStringAsync(url);
-            AdminLog?.Info("StarAgent StopService {0}: {1}", serviceName, rs);
-            return true;
+            using var client = new ApiClient($"udp://127.0.0.1:{LocalStarClient.Port}")
+            {
+                Timeout = 5_000,
+            };
+            var rs = await client.InvokeAsync<ServiceOperationResult>("StopService", new { serviceName });
+            AdminLog?.Info("StarAgent StopService {0}: {1}", serviceName, rs?.Message);
+            return rs?.Success == true;
         }
         catch (Exception ex)
         {
