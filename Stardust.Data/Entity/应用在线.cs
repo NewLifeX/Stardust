@@ -123,13 +123,13 @@ public partial class AppOnline
     [BindColumn("WorkerId", "雪花标识。应用内唯一标识该节点", "")]
     public Int32 WorkerId { get => _WorkerId; set { if (OnPropertyChanging("WorkerId", value)) { _WorkerId = value; OnPropertyChanged("WorkerId"); } } }
 
-    private Boolean _WebSocket;
-    /// <summary>长连接。WebSocket长连接</summary>
+    private Boolean _LongLink;
+    /// <summary>长连接。是否保持长连接</summary>
     [DisplayName("长连接")]
-    [Description("长连接。WebSocket长连接")]
+    [Description("长连接。是否保持长连接")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("WebSocket", "长连接。WebSocket长连接", "")]
-    public Boolean WebSocket { get => _WebSocket; set { if (OnPropertyChanging("WebSocket", value)) { _WebSocket = value; OnPropertyChanged("WebSocket"); } } }
+    [BindColumn("LongLink", "长连接。是否保持长连接", "")]
+    public Boolean LongLink { get => _LongLink; set { if (OnPropertyChanging("LongLink", value)) { _LongLink = value; OnPropertyChanged("LongLink"); } } }
 
     private Int32 _ProcessId;
     /// <summary>进程</summary>
@@ -278,7 +278,7 @@ public partial class AppOnline
             "Compile" => _Compile,
             "PingCount" => _PingCount,
             "WorkerId" => _WorkerId,
-            "WebSocket" => _WebSocket,
+            "LongLink" => _LongLink,
             "ProcessId" => _ProcessId,
             "ProcessName" => _ProcessName,
             "CommandLine" => _CommandLine,
@@ -312,7 +312,7 @@ public partial class AppOnline
                 case "Compile": _Compile = value.ToDateTime(); break;
                 case "PingCount": _PingCount = value.ToInt(); break;
                 case "WorkerId": _WorkerId = value.ToInt(); break;
-                case "WebSocket": _WebSocket = value.ToBoolean(); break;
+                case "LongLink": _LongLink = value.ToBoolean(); break;
                 case "ProcessId": _ProcessId = value.ToInt(); break;
                 case "ProcessName": _ProcessName = Convert.ToString(value); break;
                 case "CommandLine": _CommandLine = Convert.ToString(value); break;
@@ -384,13 +384,13 @@ public partial class AppOnline
     /// <param name="ip">本地IP。节点本地IP地址</param>
     /// <param name="token">令牌</param>
     /// <param name="nodeId">节点。节点服务器</param>
-    /// <param name="webSocket">长连接。WebSocket长连接</param>
+    /// <param name="longLink">长连接。是否保持长连接</param>
     /// <param name="start">更新时间开始</param>
     /// <param name="end">更新时间结束</param>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<AppOnline> Search(Int32 projectId, Int32 appId, String client, String ip, String token, Int32 nodeId, Boolean? webSocket, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<AppOnline> Search(Int32 projectId, Int32 appId, String client, String ip, String token, Int32 nodeId, Boolean? longLink, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
@@ -400,7 +400,7 @@ public partial class AppOnline
         if (!ip.IsNullOrEmpty()) exp &= _.IP == ip;
         if (!token.IsNullOrEmpty()) exp &= _.Token == token;
         if (nodeId >= 0) exp &= _.NodeId == nodeId;
-        if (webSocket != null) exp &= _.WebSocket == webSocket;
+        if (longLink != null) exp &= _.LongLink == longLink;
         exp &= _.UpdateTime.Between(start, end);
         if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
 
@@ -448,8 +448,8 @@ public partial class AppOnline
         /// <summary>雪花标识。应用内唯一标识该节点</summary>
         public static readonly Field WorkerId = FindByName("WorkerId");
 
-        /// <summary>长连接。WebSocket长连接</summary>
-        public static readonly Field WebSocket = FindByName("WebSocket");
+        /// <summary>长连接。是否保持长连接</summary>
+        public static readonly Field LongLink = FindByName("LongLink");
 
         /// <summary>进程</summary>
         public static readonly Field ProcessId = FindByName("ProcessId");
@@ -538,8 +538,8 @@ public partial class AppOnline
         /// <summary>雪花标识。应用内唯一标识该节点</summary>
         public const String WorkerId = "WorkerId";
 
-        /// <summary>长连接。WebSocket长连接</summary>
-        public const String WebSocket = "WebSocket";
+        /// <summary>长连接。是否保持长连接</summary>
+        public const String LongLink = "LongLink";
 
         /// <summary>进程</summary>
         public const String ProcessId = "ProcessId";

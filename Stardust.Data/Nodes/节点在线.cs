@@ -146,13 +146,13 @@ public partial class NodeOnline
     [BindColumn("PingCount", "心跳", "")]
     public Int32 PingCount { get => _PingCount; set { if (OnPropertyChanging("PingCount", value)) { _PingCount = value; OnPropertyChanged("PingCount"); } } }
 
-    private Boolean _WebSocket;
-    /// <summary>长连接。WebSocket长连接</summary>
+    private Boolean _LongLink;
+    /// <summary>长连接。是否保持长连接</summary>
     [DisplayName("长连接")]
-    [Description("长连接。WebSocket长连接")]
+    [Description("长连接。是否保持长连接")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("WebSocket", "长连接。WebSocket长连接", "")]
-    public Boolean WebSocket { get => _WebSocket; set { if (OnPropertyChanging("WebSocket", value)) { _WebSocket = value; OnPropertyChanged("WebSocket"); } } }
+    [BindColumn("LongLink", "长连接。是否保持长连接", "")]
+    public Boolean LongLink { get => _LongLink; set { if (OnPropertyChanging("LongLink", value)) { _LongLink = value; OnPropertyChanged("LongLink"); } } }
 
     private String _Version;
     /// <summary>版本</summary>
@@ -435,6 +435,14 @@ public partial class NodeOnline
     [BindColumn("Uptime", "开机时间。单位s", "", ItemType = "TimeSpan")]
     public Int32 Uptime { get => _Uptime; set { if (OnPropertyChanging("Uptime", value)) { _Uptime = value; OnPropertyChanged("Uptime"); } } }
 
+    private DateTime _LoginTime;
+    /// <summary>登录时间。本次会话的登录时间，用于计算在线时长</summary>
+    [DisplayName("登录时间")]
+    [Description("登录时间。本次会话的登录时间，用于计算在线时长")]
+    [DataObjectField(false, false, true, 0)]
+    [BindColumn("LoginTime", "登录时间。本次会话的登录时间，用于计算在线时长", "")]
+    public DateTime LoginTime { get => _LoginTime; set { if (OnPropertyChanging("LoginTime", value)) { _LoginTime = value; OnPropertyChanged("LoginTime"); } } }
+
     private String _MACs;
     /// <summary>网卡</summary>
     [DisplayName("网卡")]
@@ -545,7 +553,7 @@ public partial class NodeOnline
             "Address" => _Address,
             "Location" => _Location,
             "PingCount" => _PingCount,
-            "WebSocket" => _WebSocket,
+            "LongLink" => _LongLink,
             "Version" => _Version,
             "CompileTime" => _CompileTime,
             "OSKind" => _OSKind,
@@ -581,6 +589,7 @@ public partial class NodeOnline
             "Offset" => _Offset,
             "LocalTime" => _LocalTime,
             "Uptime" => _Uptime,
+            "LoginTime" => _LoginTime,
             "MACs" => _MACs,
             "Processes" => _Processes,
             "Token" => _Token,
@@ -612,7 +621,7 @@ public partial class NodeOnline
                 case "Address": _Address = Convert.ToString(value); break;
                 case "Location": _Location = Convert.ToString(value); break;
                 case "PingCount": _PingCount = value.ToInt(); break;
-                case "WebSocket": _WebSocket = value.ToBoolean(); break;
+                case "LongLink": _LongLink = value.ToBoolean(); break;
                 case "Version": _Version = Convert.ToString(value); break;
                 case "CompileTime": _CompileTime = value.ToDateTime(); break;
                 case "OSKind": _OSKind = (Stardust.Models.OSKinds)value.ToInt(); break;
@@ -648,6 +657,7 @@ public partial class NodeOnline
                 case "Offset": _Offset = value.ToInt(); break;
                 case "LocalTime": _LocalTime = value.ToDateTime(); break;
                 case "Uptime": _Uptime = value.ToInt(); break;
+                case "LoginTime": _LoginTime = value.ToDateTime(); break;
                 case "MACs": _MACs = Convert.ToString(value); break;
                 case "Processes": _Processes = Convert.ToString(value); break;
                 case "Token": _Token = Convert.ToString(value); break;
@@ -704,14 +714,14 @@ public partial class NodeOnline
     /// <param name="provinceId">省份</param>
     /// <param name="cityId">城市</param>
     /// <param name="token">令牌</param>
-    /// <param name="webSocket">长连接。WebSocket长连接</param>
+    /// <param name="longLink">长连接。是否保持长连接</param>
     /// <param name="oSKind">系统种类。主流操作系统类型，不考虑子版本</param>
     /// <param name="start">更新时间开始</param>
     /// <param name="end">更新时间结束</param>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<NodeOnline> Search(Int32 projectId, String sessionId, Int32 provinceId, Int32 cityId, String token, Boolean? webSocket, Stardust.Models.OSKinds oSKind, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<NodeOnline> Search(Int32 projectId, String sessionId, Int32 provinceId, Int32 cityId, String token, Boolean? longLink, Stardust.Models.OSKinds oSKind, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
@@ -720,7 +730,7 @@ public partial class NodeOnline
         if (provinceId >= 0) exp &= _.ProvinceID == provinceId;
         if (cityId >= 0) exp &= _.CityID == cityId;
         if (!token.IsNullOrEmpty()) exp &= _.Token == token;
-        if (webSocket != null) exp &= _.WebSocket == webSocket;
+        if (longLink != null) exp &= _.LongLink == longLink;
         if (oSKind >= 0) exp &= _.OSKind == oSKind;
         exp &= _.UpdateTime.Between(start, end);
         if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
@@ -778,8 +788,8 @@ public partial class NodeOnline
         /// <summary>心跳</summary>
         public static readonly Field PingCount = FindByName("PingCount");
 
-        /// <summary>长连接。WebSocket长连接</summary>
-        public static readonly Field WebSocket = FindByName("WebSocket");
+        /// <summary>长连接。是否保持长连接</summary>
+        public static readonly Field LongLink = FindByName("LongLink");
 
         /// <summary>版本</summary>
         public static readonly Field Version = FindByName("Version");
@@ -886,6 +896,9 @@ public partial class NodeOnline
         /// <summary>开机时间。单位s</summary>
         public static readonly Field Uptime = FindByName("Uptime");
 
+        /// <summary>登录时间。本次会话的登录时间，用于计算在线时长</summary>
+        public static readonly Field LoginTime = FindByName("LoginTime");
+
         /// <summary>网卡</summary>
         public static readonly Field MACs = FindByName("MACs");
 
@@ -967,8 +980,8 @@ public partial class NodeOnline
         /// <summary>心跳</summary>
         public const String PingCount = "PingCount";
 
-        /// <summary>长连接。WebSocket长连接</summary>
-        public const String WebSocket = "WebSocket";
+        /// <summary>长连接。是否保持长连接</summary>
+        public const String LongLink = "LongLink";
 
         /// <summary>版本</summary>
         public const String Version = "Version";
@@ -1074,6 +1087,9 @@ public partial class NodeOnline
 
         /// <summary>开机时间。单位s</summary>
         public const String Uptime = "Uptime";
+
+        /// <summary>登录时间。本次会话的登录时间，用于计算在线时长</summary>
+        public const String LoginTime = "LoginTime";
 
         /// <summary>网卡</summary>
         public const String MACs = "MACs";

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model202509.xsd" Document="https://newlifex.com/xcode/model" ModelVersion="2.0.2026.130" xmlns="https://newlifex.com/Model202509.xsd">
   <Option>
     <!--类名模板。其中{name}替换为Table.Name，如{name}Model/I{name}Dto等-->
@@ -171,7 +171,7 @@
         <Column Name="Address" DataType="String" Length="200" Description="地址。该节点所处地理地址" />
         <Column Name="Location" DataType="String" Description="位置。场地安装位置，或者经纬度" />
         <Column Name="PingCount" DataType="Int32" Description="心跳" />
-        <Column Name="WebSocket" DataType="Boolean" Description="长连接。WebSocket长连接" />
+        <Column Name="LongLink" DataType="Boolean" Description="长连接。是否保持长连接" />
         <Column Name="Version" DataType="String" Description="版本" />
         <Column Name="CompileTime" DataType="DateTime" Description="编译时间" />
         <Column Name="OSKind" DataType="Int32" Description="系统种类。主流操作系统类型，不考虑子版本" Type="Stardust.Models.OSKinds" />
@@ -207,6 +207,7 @@
         <Column Name="Offset" DataType="Int32" Description="偏移。客户端UTC时间加上一半延迟再减服务端UTC时间，单位ms" />
         <Column Name="LocalTime" DataType="DateTime" Description="本地时间" />
         <Column Name="Uptime" DataType="Int32" ItemType="TimeSpan" Description="开机时间。单位s" />
+        <Column Name="LoginTime" DataType="DateTime" Description="登录时间。本次会话的登录时间，用于计算在线时长" />
         <Column Name="MACs" DataType="String" Length="200" Description="网卡" />
         <Column Name="Processes" DataType="String" Length="2000" Description="进程列表" />
         <Column Name="Token" DataType="String" Length="500" Description="令牌" />

@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
@@ -36,13 +36,13 @@ public class AppOnlineController : RegistryEntityController<AppOnline>
             df.Target = "_blank";
         }
         {
-            var df = ListFields.AddListField("Meter", "WebSocket");
+            var df = ListFields.AddListField("Meter", "LongLink");
             df.Header = "性能";
             df.DisplayName = "性能";
             df.Url = "/Registry/AppMeter?appId={AppId}&clientId={Client}";
         }
         {
-            var df = ListFields.AddListField("History", "WebSocket");
+            var df = ListFields.AddListField("History", "LongLink");
             df.DisplayName = "历史";
             df.Url = "/Registry/AppHistory?appId={AppId}&client={Client}";
         }

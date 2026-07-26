@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -82,6 +82,7 @@ public partial class AppOnline : Entity<AppOnline>, IOnlineModel2
     //public String NodeName => Node?.Name;
 
     String IOnlineModel.SessionId { get => Client; set => Client = value; }
+    DateTime IOnlineModel2.LoginTime { get; set; }
     #endregion
 
     #region 扩展查询

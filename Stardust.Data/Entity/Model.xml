@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model202509.xsd" Document="https://newlifex.com/xcode/model" ModelVersion="2.0.2026.130" xmlns="https://newlifex.com/Model202509.xsd">
   <Option>
     <!--类名模板。其中{name}替换为Table.Name，如{name}Model/I{name}Dto等-->
@@ -91,7 +91,7 @@
         <Column Name="Compile" DataType="DateTime" Description="编译时间。客户端" />
         <Column Name="PingCount" DataType="Int32" Description="心跳" />
         <Column Name="WorkerId" DataType="Int32" Description="雪花标识。应用内唯一标识该节点" />
-        <Column Name="WebSocket" DataType="Boolean" Description="长连接。WebSocket长连接" />
+        <Column Name="LongLink" DataType="Boolean" Description="长连接。是否保持长连接" />
         <Column Name="ProcessId" DataType="Int32" Description="进程" />
         <Column Name="ProcessName" DataType="String" Length="200" Description="进程名称" />
         <Column Name="CommandLine" DataType="String" Length="500" Description="命令行" />

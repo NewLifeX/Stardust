@@ -769,6 +769,7 @@ public partial class Node : Entity<Node>, IDeviceModel2, ILogProvider
         //online.CreateIP = context.UserHost;
         //online.UpdateIP = context.UserHost;
         online.Creator = Environment.MachineName;
+        online.LoginTime = DateTime.Now;
 
         return online;
     }
