@@ -18,7 +18,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="11.17.2026.721-beta0325" />
+    <PackageReference Include="NewLife.Core" Version="11.17.2026.726-beta0124" />
   </ItemGroup>
 
 </Project>
