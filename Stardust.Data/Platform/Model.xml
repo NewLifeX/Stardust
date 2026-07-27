@@ -86,5 +86,72 @@
         <Index Columns="UserId" />
       </Indexes>
     </Table>
+    <Table Name="McpToken" Description="MCP令牌。用于LLM/智能体调用MCP服务的资源授权凭证">
+      <Columns>
+        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称。便于管理员识别，如运维助手-小明" />
+        <Column Name="Token" DataType="String" Length="64" Nullable="False" Description="Token字符串。sdmcp_前缀+32位Base62随机字符，创建后不可修改" />
+        <Column Name="Enable" DataType="Boolean" Description="启用" />
+        <Column Name="ExpireTime" DataType="DateTime" Description="过期时间。空表示永不过期" />
+        <Column Name="LastTime" DataType="DateTime" Description="最后调用时间" />
+        <Column Name="LastIP" DataType="String" Description="最后调用地址" />
+        <Column Name="CallCount" DataType="Int32" Description="调用次数" />
+        <Column Name="TraceId" DataType="String" Description="链路追踪" Category="扩展" />
+        <Column Name="CreateUserId" DataType="Int32" Description="创建者" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+        <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+        <Column Name="UpdateUserId" DataType="Int32" Description="更新者" Category="扩展" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+        <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
+        <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="Token" Unique="True" />
+        <Index Columns="Name" />
+        <Index Columns="Enable" />
+      </Indexes>
+    </Table>
+    <Table Name="McpTokenResource" Description="MCP令牌资源授权。Token与项目/节点/应用的授权关系">
+      <Columns>
+        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="TokenId" DataType="Int32" Map="Stardust.Data.Platform.McpToken@Id@$@TokenName" Description="令牌" />
+        <Column Name="ResourceType" DataType="String" Length="20" Nullable="False" Description="资源类型。Project/Node/App" />
+        <Column Name="ResourceId" DataType="Int32" Description="资源编号。对应GalaxyProject.Id/Node.ID/App.Id" />
+        <Column Name="IsAll" DataType="Boolean" Description="全部资源。true时忽略ResourceId，授权该类型全部资源" />
+        <Column Name="Enable" DataType="Boolean" Description="启用" />
+        <Column Name="CreateTime" DataType="DateTime" Description="授权时间" Category="扩展" />
+        <Column Name="CreateIP" DataType="String" Description="授权地址" Category="扩展" />
+        <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="TokenId,ResourceType,ResourceId" Unique="True" />
+        <Index Columns="TokenId" />
+        <Index Columns="ResourceType,ResourceId" />
+      </Indexes>
+    </Table>
+    <Table Name="McpAudit" Description="MCP审计日志。记录每次MCP工具调用">
+      <Columns>
+        <Column Name="Id" DataType="Int64" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="TokenId" DataType="Int32" Map="Stardust.Data.Platform.McpToken@Id@$@TokenName" Description="令牌" />
+        <Column Name="TokenName" DataType="String" Description="令牌名称。快照，便于Token删除后审计" />
+        <Column Name="ToolName" DataType="String" Description="工具名。list_authorized_resources/search_resources/get_resource/list_actions/invoke_action" />
+        <Column Name="ActionName" DataType="String" Description="动作名。仅invoke_action时填写，如node_send_command" />
+        <Column Name="CallerIp" DataType="String" Description="调用方IP" />
+        <Column Name="CallerUserAgent" DataType="String" Length="200" Description="客户端UA" />
+        <Column Name="Arguments" DataType="String" Length="-1" Description="入参JSON。截断2000字符，敏感字段脱敏" />
+        <Column Name="Success" DataType="Boolean" Description="成功" />
+        <Column Name="ErrorMessage" DataType="String" Length="500" Description="错误信息" />
+        <Column Name="Duration" DataType="Int32" Description="耗时。毫秒" />
+        <Column Name="TraceId" DataType="String" Description="链路追踪" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="调用时间" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="TokenId,Id" />
+        <Index Columns="ToolName,CreateTime" />
+        <Index Columns="ActionName,CreateTime" />
+        <Index Columns="Success,CreateTime" />
+        <Index Columns="CreateTime" />
+      </Indexes>
+    </Table>
   </Tables>
 </EntityModel>

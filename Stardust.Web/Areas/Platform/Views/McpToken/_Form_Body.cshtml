@@ -1,0 +1,132 @@
+@model McpToken
+@using NewLife.Cube.ViewModels
+@using XCode.Configuration
+@{
+    var entity = Model;
+    var fields = ViewBag.Fields as FieldCollection;
+    var isNew = (entity as IEntity).IsNullKey;
+
+    // 获取已有授权（编辑时预选）
+    var auths = isNew ? new List<McpTokenResource>() : McpTokenResource.FindAllByToken(entity.Id).ToList();
+    var authSet = new HashSet<String>();
+    var allSet = new HashSet<String>();
+    foreach (var a in auths.Where(a => a.Enable))
+    {
+        if (a.IsAll) allSet.Add(a.ResourceType);
+        else authSet.Add($"{a.ResourceType}:{a.ResourceId}");
+    }
+
+    var set = CubeSetting.Current;
+    var cls = set.FormGroupClass;
+    if (cls.IsNullOrEmpty()) { cls = "form-group col-xs-12 col-sm-6 col-lg-4"; }
+}
+
+@foreach (var item in fields)
+{
+    if (!item.Field.IsIdentity)
+    {
+        var name = item.Name;
+        if (name == "Token")
+        {
+            if (!isNew)
+            {
+                <div class="@cls">
+                    <label class="control-label col-xs-3 col-sm-3">Token字符串</label>
+                    <div class="input-group col-xs-9 col-sm-9">
+                        <input type="text" class="form-control" name="Token" value="@entity.Token" readonly style="font-family:monospace; background-color:#f5f5f5;" />
+                        <span class="input-group-addon"><span class="fa fa-lock" title="Token创建后不可修改，可点击列表页"重置Token"重新生成"></span></span>
+                    </div>
+                </div>
+            }
+            // 新建时Token隐藏，由OnInsert自动生成
+        }
+        else
+        {
+            @await Html.PartialAsync("_Form_Group", new EntityField(entity, item))
+        }
+    }
+}
+
+<!-- 资源授权区域 -->
+<div class="form-group col-xs-12">
+    <h4>资源授权</h4>
+    <p class="text-muted">勾选授权该Token可访问的资源。勾选"全部"则授权该类型所有资源，无需逐个选择。</p>
+
+    <!-- 项目资源 -->
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <label class="checkbox-inline">
+                <input type="checkbox" name="res_all_project" value="true" @(allSet.Contains("project") ? "checked" : "") />
+                <strong>授权全部项目</strong>
+            </label>
+        </div>
+        <div class="panel-body" style="max-height:200px; overflow-y:auto;" data-type="project">
+            @foreach (var p in GalaxyProject.FindAllWithCache())
+            {
+                <label class="checkbox-inline col-xs-12 col-sm-6 col-md-4">
+                    <input type="checkbox" name="res_project" value="@p.Id" @(authSet.Contains($"project:{p.Id}") ? "checked" : "") />
+                    @p.Name
+                </label>
+            }
+        </div>
+    </div>
+
+    <!-- 节点资源 -->
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <label class="checkbox-inline">
+                <input type="checkbox" name="res_all_node" value="true" @(allSet.Contains("node") ? "checked" : "") />
+                <strong>授权全部节点</strong>
+            </label>
+        </div>
+        <div class="panel-body" style="max-height:200px; overflow-y:auto;" data-type="node">
+            @foreach (var n in Node.FindAllWithCache())
+            {
+                <label class="checkbox-inline col-xs-12 col-sm-6 col-md-4">
+                    <input type="checkbox" name="res_node" value="@n.ID" @(authSet.Contains($"node:{n.ID}") ? "checked" : "") />
+                    @n.Name <small class="text-muted">(@n.Code)</small>
+                </label>
+            }
+        </div>
+    </div>
+
+    <!-- 应用资源 -->
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <label class="checkbox-inline">
+                <input type="checkbox" name="res_all_app" value="true" @(allSet.Contains("app") ? "checked" : "") />
+                <strong>授权全部应用</strong>
+            </label>
+        </div>
+        <div class="panel-body" style="max-height:200px; overflow-y:auto;" data-type="app">
+            @foreach (var a in App.FindAllWithCache())
+            {
+                <label class="checkbox-inline col-xs-12 col-sm-6 col-md-4">
+                    <input type="checkbox" name="res_app" value="@a.Id" @(authSet.Contains($"app:{a.Id}") ? "checked" : "") />
+                    @a.Name
+                </label>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+// 勾选"全部"时，禁用具体资源勾选框
+document.querySelectorAll('.panel-heading input[type="checkbox"]').forEach(function(cb) {
+    cb.addEventListener('change', function() {
+        var panel = this.closest('.panel');
+        var body = panel.querySelector('.panel-body');
+        var checkboxes = body.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(function(c) {
+            c.disabled = cb.checked;
+            if (cb.checked) c.checked = false;
+        });
+    });
+    // 初始化：如果"全部"已勾选，禁用具体资源
+    if (cb.checked) {
+        var panel = cb.closest('.panel');
+        var body = panel.querySelector('.panel-body');
+        body.querySelectorAll('input[type="checkbox"]').forEach(function(c) { c.disabled = true; });
+    }
+});
+</script>

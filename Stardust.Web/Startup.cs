@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.FileProviders;
@@ -67,6 +67,7 @@ public class Startup
         services.AddSingleton<PipelineService>();
         services.AddSingleton<HotAppService>();
         services.AddSingleton<NewLife.Cube.Services.TokenService>();
+        services.AddSingleton<McpService>();
 
         // DDNS服务
         services.AddSingleton<IDnsProvider, AliyunDnsProvider>();

@@ -2,15 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <OutputPath>..\Bin\ServerTest</OutputPath>
+    <OutputPath>..\Bin\McpClientTests</OutputPath>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <IsTestProject>true</IsTestProject>
-    <SignAssembly>True</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\Doc\newlife.snk</AssemblyOriginatorKeyFile>
     <IsPackable>false</IsPackable>
-    <NoWarn>1701;1702;ASPDEPR008</NoWarn>
+    <NoWarn>1701;1702;CS1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,15 +24,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Data\**">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="10.0.10" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
-    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="ModelContextProtocol" Version="1.4.1" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
       <PrivateAssets>all</PrivateAssets>
@@ -47,8 +39,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Stardust.Server\Stardust.Server.csproj" />
-    <ProjectReference Include="..\Stardust.Web\Stardust.Web.csproj" Aliases="web" />
+    <ProjectReference Include="..\Stardust.Web\Stardust.Web.csproj" />
   </ItemGroup>
 
 </Project>
