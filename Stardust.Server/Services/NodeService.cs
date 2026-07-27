@@ -1110,11 +1110,6 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
             // 埋点
             using var span = _tracer?.NewSpan($"mq:NodeCommandReply", reply);
 
-            if (reply.Status == CommandStatus.错误)
-                throw new Exception($"命令错误！{reply.Data}");
-            else if (reply.Status == CommandStatus.取消)
-                throw new Exception($"命令已取消！{reply.Data}");
-
             return reply;
         }
 
