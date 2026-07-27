@@ -102,6 +102,12 @@
         <Column Name="Headers" DataType="String" Length="1000" Description="请求头匹配。JSON格式，如 {key:value}" />
         <Column Name="StripPrefix" DataType="Boolean" Description="去除前缀。转发时去除匹配的路径前缀" />
         <Column Name="AddHeaders" DataType="String" Length="1000" Description="添加请求头。JSON格式，如 {key:value}" />
+        <Column Name="WebSocket" DataType="Boolean" Description="WebSocket。是否允许WebSocket升级，开启后检测Upgrade头并透明转发帧数据" />
+        <Column Name="StaticRoot" DataType="String" Length="200" Description="静态文件根目录。设置后该路由不从反向代理转发，而是直接托管本地静态文件" />
+        <Column Name="IndexFile" DataType="String" Description="默认首页。默认index.html" />
+        <Column Name="DirectoryBrowse" DataType="Boolean" Description="目录浏览。是否允许浏览目录列表" />
+        <Column Name="IsStaticRoute" DataType="Boolean" Description="静态文件路由。开启后不走反向代理转发，改为直接托管本地静态文件" />
+        <Column Name="SPAFallback" DataType="Boolean" Description="SPA回退。文件不存在时回退到index.html，用于支持前端history路由模式" />
         <Column Name="Remark" DataType="String" Length="500" Description="备注" />
         <Column Name="CreateUser" DataType="String" Description="创建者" />
         <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />

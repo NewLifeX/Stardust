@@ -131,6 +131,46 @@ public partial class GatewayRoute
     [BindColumn("WebSocket", "WebSocket。是否允许WebSocket升级，开启后检测Upgrade头并透明转发帧数据", "")]
     public Boolean WebSocket { get => _WebSocket; set { if (OnPropertyChanging("WebSocket", value)) { _WebSocket = value; OnPropertyChanged("WebSocket"); } } }
 
+    private String _StaticRoot;
+    /// <summary>静态文件根目录。设置后该路由不从反向代理转发，而是直接托管本地静态文件</summary>
+    [DisplayName("静态文件根目录")]
+    [Description("静态文件根目录。设置后该路由不从反向代理转发，而是直接托管本地静态文件")]
+    [DataObjectField(false, false, true, 200)]
+    [BindColumn("StaticRoot", "静态文件根目录。设置后该路由不从反向代理转发，而是直接托管本地静态文件", "")]
+    public String StaticRoot { get => _StaticRoot; set { if (OnPropertyChanging("StaticRoot", value)) { _StaticRoot = value; OnPropertyChanged("StaticRoot"); } } }
+
+    private String _IndexFile;
+    /// <summary>默认首页。默认index.html</summary>
+    [DisplayName("默认首页")]
+    [Description("默认首页。默认index.html")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("IndexFile", "默认首页。默认index.html", "")]
+    public String IndexFile { get => _IndexFile; set { if (OnPropertyChanging("IndexFile", value)) { _IndexFile = value; OnPropertyChanged("IndexFile"); } } }
+
+    private Boolean _DirectoryBrowse;
+    /// <summary>目录浏览。是否允许浏览目录列表</summary>
+    [DisplayName("目录浏览")]
+    [Description("目录浏览。是否允许浏览目录列表")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("DirectoryBrowse", "目录浏览。是否允许浏览目录列表", "")]
+    public Boolean DirectoryBrowse { get => _DirectoryBrowse; set { if (OnPropertyChanging("DirectoryBrowse", value)) { _DirectoryBrowse = value; OnPropertyChanged("DirectoryBrowse"); } } }
+
+    private Boolean _IsStaticRoute;
+    /// <summary>静态文件路由。开启后不走反向代理转发，改为直接托管本地静态文件</summary>
+    [DisplayName("静态文件路由")]
+    [Description("静态文件路由。开启后不走反向代理转发，改为直接托管本地静态文件")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("IsStaticRoute", "静态文件路由。开启后不走反向代理转发，改为直接托管本地静态文件", "")]
+    public Boolean IsStaticRoute { get => _IsStaticRoute; set { if (OnPropertyChanging("IsStaticRoute", value)) { _IsStaticRoute = value; OnPropertyChanged("IsStaticRoute"); } } }
+
+    private Boolean _SPAFallback;
+    /// <summary>SPA回退。文件不存在时回退到index.html，用于支持前端history路由模式</summary>
+    [DisplayName("SPA回退")]
+    [Description("SPA回退。文件不存在时回退到index.html，用于支持前端history路由模式")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("SPAFallback", "SPA回退。文件不存在时回退到index.html，用于支持前端history路由模式", "")]
+    public Boolean SPAFallback { get => _SPAFallback; set { if (OnPropertyChanging("SPAFallback", value)) { _SPAFallback = value; OnPropertyChanged("SPAFallback"); } } }
+
     private String _Remark;
     /// <summary>备注</summary>
     [DisplayName("备注")]
@@ -193,6 +233,11 @@ public partial class GatewayRoute
             "StripPrefix" => _StripPrefix,
             "AddHeaders" => _AddHeaders,
             "WebSocket" => _WebSocket,
+            "StaticRoot" => _StaticRoot,
+            "IndexFile" => _IndexFile,
+            "DirectoryBrowse" => _DirectoryBrowse,
+            "IsStaticRoute" => _IsStaticRoute,
+            "SPAFallback" => _SPAFallback,
             "Remark" => _Remark,
             "CreateUser" => _CreateUser,
             "CreateTime" => _CreateTime,
@@ -217,6 +262,11 @@ public partial class GatewayRoute
                 case "StripPrefix": _StripPrefix = value.ToBoolean(); break;
                 case "AddHeaders": _AddHeaders = Convert.ToString(value); break;
                 case "WebSocket": _WebSocket = value.ToBoolean(); break;
+                case "StaticRoot": _StaticRoot = Convert.ToString(value); break;
+                case "IndexFile": _IndexFile = Convert.ToString(value); break;
+                case "DirectoryBrowse": _DirectoryBrowse = value.ToBoolean(); break;
+                case "IsStaticRoute": _IsStaticRoute = value.ToBoolean(); break;
+                case "SPAFallback": _SPAFallback = value.ToBoolean(); break;
                 case "Remark": _Remark = Convert.ToString(value); break;
                 case "CreateUser": _CreateUser = Convert.ToString(value); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -340,13 +390,17 @@ public partial class GatewayRoute
     /// <param name="clusterId">集群。目标后端集群</param>
     /// <param name="domain">域名匹配。支持通配符 *.example.com，多个用逗号分隔</param>
     /// <param name="stripPrefix">去除前缀。转发时去除匹配的路径前缀</param>
+    /// <param name="webSocket">WebSocket。是否允许WebSocket升级，开启后检测Upgrade头并透明转发帧数据</param>
+    /// <param name="directoryBrowse">目录浏览。是否允许浏览目录列表</param>
+    /// <param name="isStaticRoute">静态文件路由。开启后不走反向代理转发，改为直接托管本地静态文件</param>
+    /// <param name="sPAFallback">SPA回退。文件不存在时回退到index.html，用于支持前端history路由模式</param>
     /// <param name="enable">启用</param>
     /// <param name="start">更新时间开始</param>
     /// <param name="end">更新时间结束</param>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<GatewayRoute> Search(Int32 projectId, Int32 priority, Int32 clusterId, String domain, Boolean? stripPrefix, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<GatewayRoute> Search(Int32 projectId, Int32 priority, Int32 clusterId, String domain, Boolean? stripPrefix, Boolean? webSocket, Boolean? directoryBrowse, Boolean? isStaticRoute, Boolean? sPAFallback, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
@@ -355,6 +409,10 @@ public partial class GatewayRoute
         if (clusterId >= 0) exp &= _.ClusterId == clusterId;
         if (!domain.IsNullOrEmpty()) exp &= _.Domain == domain;
         if (stripPrefix != null) exp &= _.StripPrefix == stripPrefix;
+        if (webSocket != null) exp &= _.WebSocket == webSocket;
+        if (directoryBrowse != null) exp &= _.DirectoryBrowse == directoryBrowse;
+        if (isStaticRoute != null) exp &= _.IsStaticRoute == isStaticRoute;
+        if (sPAFallback != null) exp &= _.SPAFallback == sPAFallback;
         if (enable != null) exp &= _.Enable == enable;
         exp &= _.UpdateTime.Between(start, end);
         if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
@@ -402,6 +460,24 @@ public partial class GatewayRoute
 
         /// <summary>添加请求头。JSON格式，如 {key:value}</summary>
         public static readonly Field AddHeaders = FindByName("AddHeaders");
+
+        /// <summary>WebSocket。是否允许WebSocket升级，开启后检测Upgrade头并透明转发帧数据</summary>
+        public static readonly Field WebSocket = FindByName("WebSocket");
+
+        /// <summary>静态文件根目录。设置后该路由不从反向代理转发，而是直接托管本地静态文件</summary>
+        public static readonly Field StaticRoot = FindByName("StaticRoot");
+
+        /// <summary>默认首页。默认index.html</summary>
+        public static readonly Field IndexFile = FindByName("IndexFile");
+
+        /// <summary>目录浏览。是否允许浏览目录列表</summary>
+        public static readonly Field DirectoryBrowse = FindByName("DirectoryBrowse");
+
+        /// <summary>静态文件路由。开启后不走反向代理转发，改为直接托管本地静态文件</summary>
+        public static readonly Field IsStaticRoute = FindByName("IsStaticRoute");
+
+        /// <summary>SPA回退。文件不存在时回退到index.html，用于支持前端history路由模式</summary>
+        public static readonly Field SPAFallback = FindByName("SPAFallback");
 
         /// <summary>备注</summary>
         public static readonly Field Remark = FindByName("Remark");
@@ -459,6 +535,24 @@ public partial class GatewayRoute
 
         /// <summary>添加请求头。JSON格式，如 {key:value}</summary>
         public const String AddHeaders = "AddHeaders";
+
+        /// <summary>WebSocket。是否允许WebSocket升级，开启后检测Upgrade头并透明转发帧数据</summary>
+        public const String WebSocket = "WebSocket";
+
+        /// <summary>静态文件根目录。设置后该路由不从反向代理转发，而是直接托管本地静态文件</summary>
+        public const String StaticRoot = "StaticRoot";
+
+        /// <summary>默认首页。默认index.html</summary>
+        public const String IndexFile = "IndexFile";
+
+        /// <summary>目录浏览。是否允许浏览目录列表</summary>
+        public const String DirectoryBrowse = "DirectoryBrowse";
+
+        /// <summary>静态文件路由。开启后不走反向代理转发，改为直接托管本地静态文件</summary>
+        public const String IsStaticRoute = "IsStaticRoute";
+
+        /// <summary>SPA回退。文件不存在时回退到index.html，用于支持前端history路由模式</summary>
+        public const String SPAFallback = "SPAFallback";
 
         /// <summary>备注</summary>
         public const String Remark = "Remark";

@@ -52,6 +52,9 @@ public class HttpReverseProxy : ProxyServer
 
     /// <summary>管理员日志</summary>
     public ILog AdminLog { get; set; }
+
+    /// <summary>静态文件处理器</summary>
+    public StaticFileHandler StaticFiles { get; set; } = new();
     #endregion
 
     #region 构造
@@ -77,6 +80,13 @@ public class HttpReverseProxy : ProxyServer
 
         // 加载SSL证书
         LoadCertificates();
+
+        // 初始化静态文件处理器
+        {
+            var sfh = StaticFiles;
+            sfh.Log = AdminLog;
+            sfh.LogEnabled = set.Debug;
+        }
 
         _timer = new TimerX(DoRefreshConfig, null, ConfigRefreshInterval * 1000, ConfigRefreshInterval * 1000) { Async = true };
         _healthTimer = new TimerX(DoHealthCheck, null, HealthCheckInterval * 1000, HealthCheckInterval * 1000) { Async = true };
@@ -619,6 +629,53 @@ public class HttpReverseSession : ProxySession
 
         // 检查Admin API
         if (proxy.HandleAdminRequest(this, path, request)) return;
+
+        // 检查静态文件路由。路由开启了IsStaticRoute才走静态文件托管
+        if (route != null && route.IsStaticRoute)
+        {
+            var staticRoot = route.StaticRoot;
+            if (staticRoot.IsNullOrEmpty())
+            {
+                // 开启了静态路由但没设置根目录，直接返回404
+                proxy.AdminLog?.Info("Static {0} {1} -> 404 静态路由未配置根目录", method, path);
+                Send("HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"u8.ToArray());
+                Dispose();
+                return;
+            }
+
+            if (Path.IsPathRooted(staticRoot))
+            {
+                staticRoot = Path.GetFullPath(staticRoot);
+            }
+            else
+            {
+                // 相对路径，基于当前工作目录
+                staticRoot = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), staticRoot));
+            }
+
+            if (proxy.StaticFiles.TryHandle(method, path, staticRoot, route.IndexFile ?? "index.html", route.DirectoryBrowse, route.SPAFallback, out var response))
+            {
+                // 记录日志
+                proxy.AdminLog?.Info("Static {0} {1} [{2}]", method, path, route.Name);
+
+                // 创建APM追踪span
+                if (tracer != null)
+                {
+                    _span?.Dispose();
+                    _span = tracer.NewSpan($"static:{method}:{path}");
+                }
+
+                Send(response);
+                Dispose();
+                return;
+            }
+
+            // 静态文件处理失败（文件不存在等），不再继续转发
+            proxy.AdminLog?.Info("Static {0} {1} -> 404 文件不存在", method, path);
+            Send("HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"u8.ToArray());
+            Dispose();
+            return;
+        }
 
         if (route != null)
         {

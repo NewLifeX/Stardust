@@ -32,6 +32,10 @@ public partial class GatewayRoute : Entity<GatewayRoute>
         base.Valid(isNew);
 
         if (Name.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Name), "名称不能为空！");
+
+        // 开启了静态文件路由必须设置StaticRoot
+        if (IsStaticRoute && StaticRoot.IsNullOrEmpty())
+            throw new InvalidOperationException("开启静态文件路由后，静态文件根目录(StaticRoot)不能为空！");
     }
     #endregion
 
