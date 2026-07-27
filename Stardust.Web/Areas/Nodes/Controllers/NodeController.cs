@@ -78,10 +78,7 @@ public class NodeController : NodesEntityController<Node>
             df.Target = "_frame";
         }
 
-        // 表单字段：Domains添加到参数设置组
-        AddFormFields.AddField("Domains");
-        EditFormFields.AddField("Domains");
-        SearchFields.AddField("Domains");
+        // Domains 已通过 [Category("参数设置")] 自动渲染，无需重复 AddField
     }
 
     public NodeController(StarFactory starFactory, DnsService dnsService)

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -50,6 +50,17 @@ public partial class Node : Entity<Node>, IDeviceModel2, ILogProvider
 
         this.TrimExtraLong(__.Uuid, __.MachineGuid, __.MACs, __.DiskID, __.SerialNumber, __.OS, __.DriveInfo);
         this.TrimExtraLong(__.Framework, __.Frameworks, __.CLibVersion, __.IP);
+
+        // 清洗域名列表。拆分去空后重合并，遏制 Cube 表单全逗号脏数据持久化
+        var dv = Domains;
+        if (!dv.IsNullOrEmpty())
+        {
+            var list = dv.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(e => e.Trim())
+                .Where(e => e.Length > 0)
+                .ToArray();
+            Domains = list.Length == 0 ? null : String.Join(",", list);
+        }
 
         // 建议先调用基类方法，基类方法会做一些统一处理
         base.Valid(isNew);
