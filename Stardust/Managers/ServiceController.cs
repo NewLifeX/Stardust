@@ -268,7 +268,7 @@ public class ServiceController : DisposeBase
                 PublishNginxConfig(workDir);
 
                 // 开放防火墙端口
-                OpenFirewallPorts(workDir);
+                OpenFirewallPorts(workDir, args);
 
                 return true;
             }
@@ -308,7 +308,8 @@ public class ServiceController : DisposeBase
 
     /// <summary>开放防火墙端口</summary>
     /// <param name="workDir">工作目录</param>
-    private void OpenFirewallPorts(String workDir)
+    /// <param name="arguments">命令行参数，用于检测 urls 覆盖的端口</param>
+    private void OpenFirewallPorts(String workDir, String? arguments = null)
     {
         try
         {
@@ -323,7 +324,7 @@ public class ServiceController : DisposeBase
             WriteLog("检测到防火墙类型：{0}", firewall.Type);
 
             // 检测需要开放的端口
-            var ports = FirewallManager.DetectPorts(workDir).ToList();
+            var ports = FirewallManager.DetectPorts(workDir, arguments).ToList();
             if (ports.Count == 0)
             {
                 WriteLog("未检测到需要开放的端口");

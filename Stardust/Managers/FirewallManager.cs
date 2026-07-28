@@ -248,24 +248,43 @@ internal class FirewallManager
     #region 端口提取
     /// <summary>从工作目录检测需要开放的端口</summary>
     /// <param name="workDir">工作目录</param>
+    /// <param name="arguments">命令行参数。当包含 urls= 时覆盖配置文件中的 urls 端口</param>
     /// <returns>端口列表</returns>
-    public static IEnumerable<Int32> DetectPorts(String workDir)
+    public static IEnumerable<Int32> DetectPorts(String workDir, String? arguments = null)
     {
         var ports = new HashSet<Int32>();
 
-        if (workDir.IsNullOrEmpty() || !Directory.Exists(workDir)) return ports;
+        var hasWorkDir = !workDir.IsNullOrEmpty() && Directory.Exists(workDir);
 
-        // 1. 从Nginx配置文件提取端口
-        var nginxPorts = ExtractPortsFromNginx(workDir);
-        foreach (var port in nginxPorts) ports.Add(port);
+        if (hasWorkDir)
+        {
+            // 1. 从Nginx配置文件提取端口
+            var nginxPorts = ExtractPortsFromNginx(workDir);
+            foreach (var port in nginxPorts) ports.Add(port);
+        }
 
-        // 2. 从appsettings.json提取端口
-        var jsonPorts = ExtractPortsFromAppSettings(workDir);
-        foreach (var port in jsonPorts) ports.Add(port);
+        // 2. 从命令行参数提取端口（命令行 urls 会覆盖配置文件中的 urls）
+        var hasUrlArg = false;
+        if (!arguments.IsNullOrEmpty())
+        {
+            var argPorts = ExtractPortsFromArguments(arguments);
+            if (argPorts.Any())
+            {
+                hasUrlArg = true;
+                foreach (var port in argPorts) ports.Add(port);
+            }
+        }
 
-        // 3. 从web.config提取端口
-        var webConfigPorts = ExtractPortsFromWebConfig(workDir);
-        foreach (var port in webConfigPorts) ports.Add(port);
+        if (hasWorkDir)
+        {
+            // 3. 从appsettings.json提取端口（仅当命令行参数未指定 urls 时提取 urls 字段）
+            var jsonPorts = ExtractPortsFromAppSettings(workDir, !hasUrlArg);
+            foreach (var port in jsonPorts) ports.Add(port);
+
+            // 4. 从web.config提取端口
+            var webConfigPorts = ExtractPortsFromWebConfig(workDir);
+            foreach (var port in webConfigPorts) ports.Add(port);
+        }
 
         return ports;
     }
@@ -301,7 +320,9 @@ internal class FirewallManager
     }
 
     /// <summary>从appsettings.json提取监听端口</summary>
-    private static IEnumerable<Int32> ExtractPortsFromAppSettings(String workDir)
+    /// <param name="workDir">工作目录</param>
+    /// <param name="extractUrls">是否提取 urls 字段。当命令行参数已包含 urls 时传入 false</param>
+    private static IEnumerable<Int32> ExtractPortsFromAppSettings(String workDir, Boolean extractUrls = true)
     {
         var ports = new HashSet<Int32>();
 
@@ -313,20 +334,23 @@ internal class FirewallManager
             {
                 var content = File.ReadAllText(file);
 
-                // 匹配 "urls": "http://localhost:5000;https://localhost:5001"
-                // 需要提取 urls 字段的值，然后从中提取所有端口
-                var urlsMatch = Regex.Match(content, @"""urls"":\s*""([^""]*)""", RegexOptions.IgnoreCase);
-                if (urlsMatch.Success)
+                if (extractUrls)
                 {
-                    var urlsValue = urlsMatch.Groups[1].Value;
-                    // 从 urls 值中提取所有端口号
-                    var portMatches = Regex.Matches(urlsValue, @":(\d+)");
-                    foreach (Match match in portMatches)
+                    // 匹配 "urls": "http://localhost:5000;https://localhost:5001"
+                    // 需要提取 urls 字段的值，然后从中提取所有端口
+                    var urlsMatch = Regex.Match(content, @"""urls"":\s*""([^""]*)""", RegexOptions.IgnoreCase);
+                    if (urlsMatch.Success)
                     {
-                        if (Int32.TryParse(match.Groups[1].Value, out var port))
+                        var urlsValue = urlsMatch.Groups[1].Value;
+                        // 从 urls 值中提取所有端口号
+                        var portMatches = Regex.Matches(urlsValue, @":(\d+)");
+                        foreach (Match match in portMatches)
                         {
-                            if (port > 0 && port <= 65535)
-                                ports.Add(port);
+                            if (Int32.TryParse(match.Groups[1].Value, out var port))
+                            {
+                                if (port > 0 && port <= 65535)
+                                    ports.Add(port);
+                            }
                         }
                     }
                 }
@@ -336,6 +360,40 @@ internal class FirewallManager
                 foreach (Match match in kestrelMatches)
                 {
                     if (Int32.TryParse(match.Groups[1].Value, out var port))
+                    {
+                        if (port > 0 && port <= 65535)
+                            ports.Add(port);
+                    }
+                }
+            }
+        }
+        catch { }
+
+        return ports;
+    }
+
+    /// <summary>从命令行参数提取监听端口</summary>
+    /// <param name="arguments">启动参数，如 "urls=http://*:3380"</param>
+    private static IEnumerable<Int32> ExtractPortsFromArguments(String arguments)
+    {
+        var ports = new HashSet<Int32>();
+
+        if (arguments.IsNullOrEmpty()) return ports;
+
+        try
+        {
+            // 匹配 urls=http://*:3380 或 --urls "http://*:3380" 或 --urls http://*:3380
+            var match = Regex.Match(arguments, @"urls[= ](?:\""([^\""]*)\""|'([^']*)'|(\S+))", RegexOptions.IgnoreCase);
+            if (match.Success)
+            {
+                var urlsValue = match.Groups[1].Success ? match.Groups[1].Value
+                            : match.Groups[2].Success ? match.Groups[2].Value
+                            : match.Groups[3].Value;
+                // 从 urls 值中提取所有端口号
+                var portMatches = Regex.Matches(urlsValue, @":(\d+)");
+                foreach (Match m in portMatches)
+                {
+                    if (Int32.TryParse(m.Groups[1].Value, out var port))
                     {
                         if (port > 0 && port <= 65535)
                             ports.Add(port);

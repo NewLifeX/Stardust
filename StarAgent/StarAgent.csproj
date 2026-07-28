@@ -36,6 +36,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\Stardust\Managers\FirewallManager.cs" Link="Managers\FirewallManager.cs" />
     <Compile Include="..\Stardust\Managers\ServiceController.cs" Link="Managers\ServiceController.cs" />
     <Compile Include="..\Stardust\Managers\ServiceManager.cs" Link="Managers\ServiceManager.cs" />
   </ItemGroup>
