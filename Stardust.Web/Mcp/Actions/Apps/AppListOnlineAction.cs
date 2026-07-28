@@ -94,7 +94,6 @@ public class AppListOnlineAction : McpActionBase
             category = a.Category,
             node_id = a.NodeId,
             process_id = a.ProcessId,
-            web_socket = a.WebSocket,
             update_time = a.UpdateTime,
         }).ToList();
 

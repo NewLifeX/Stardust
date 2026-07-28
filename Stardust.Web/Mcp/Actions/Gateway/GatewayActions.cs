@@ -50,7 +50,7 @@ public class GatewayListRoutesAction : McpActionBase
         var end = DateTime.Now;
 
         // 使用自动生成的 Search 重载（支持 enable 过滤）
-        var list = GatewayRoute.Search(-1, 0, 0, null, null, enable, start, end, keyword, pageParam);
+        var list = GatewayRoute.Search(-1, 0, 0, null, null, null, null, null, null, enable, start, end, keyword, pageParam);
 
         var records = list.Select(r => new
         {

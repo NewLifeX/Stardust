@@ -45,6 +45,6 @@ public class GatewayRouteController : EntityController<GatewayRoute>
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return GatewayRoute.Search(projectId, priority, clusterId, domain, stripPrefix, enable, start, end, p["Q"], p);
+        return GatewayRoute.Search(projectId, priority, clusterId, domain, stripPrefix, null, null, null, null, enable, start, end, p["Q"], p);
     }
 }
