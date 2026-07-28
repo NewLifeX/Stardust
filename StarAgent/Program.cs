@@ -9,6 +9,7 @@ using NewLife.Model;
 using NewLife.Net;
 using NewLife.Remoting;
 using NewLife.Remoting.Clients;
+using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust;
 using Stardust.Deployment;
@@ -326,28 +327,49 @@ internal class MyService : ServiceBase, IServiceProvider
 
     private void OnServiceChanged(Object? sender, EventArgs eventArgs)
     {
-        // 服务改变时，只更新 Enable 状态到配置文件
-        // 不替换整个 Services 数组，避免用 ServiceManager 内存中的旧值
-        // （如 WorkingDirectory、Arguments）覆盖配置文件中的新值
         var set = AgentSetting;
         var mgrServices = _Manager.Services ?? [];
         var setServices = set.Services ?? [];
 
+        // 按名称索引配置中的服务
         var setSvcMap = setServices
             .GroupBy(e => e.Name, StringComparer.OrdinalIgnoreCase)
             .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
 
         var changed = false;
+
+        // 使用可变列表保存合并结果
+        var newServices = setServices.ToList();
+
         foreach (var mgrSvc in mgrServices)
         {
-            if (setSvcMap.TryGetValue(mgrSvc.Name, out var setSvc) && setSvc.Enable != mgrSvc.Enable)
+            if (setSvcMap.TryGetValue(mgrSvc.Name, out var setSvc))
             {
-                setSvc.Enable = mgrSvc.Enable;
+                // 已有服务：用管理器最新值替换（来自平台部署的值更权威）
+                var idx = newServices.IndexOf(setSvc);
+                if (idx >= 0)
+                {
+                    // 仅当实际有变化时才替换，避免不必要的写入
+                    if (newServices[idx].ToJson() != mgrSvc.ToJson())
+                    {
+                        newServices[idx] = mgrSvc.Clone();
+                        changed = true;
+                    }
+                }
+            }
+            else
+            {
+                // 新增服务：添加到配置，确保持久化
+                newServices.Add(mgrSvc.Clone());
                 changed = true;
             }
         }
 
-        if (changed) set.Save();
+        if (changed)
+        {
+            set.Services = newServices.ToArray();
+            set.Save();
+        }
     }
 
     /// <summary>服务停止</summary>
