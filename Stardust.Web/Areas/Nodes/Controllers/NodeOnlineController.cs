@@ -98,7 +98,7 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
             var online = NodeOnline.FindById(item.ToInt());
             if (online?.Node != null)
             {
-                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/upgrade", null, 0, 600, 10, HttpContext.RequestAborted)));
+                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/upgrade", null, 0, 600, 3, HttpContext.RequestAborted)));
             }
         }
 
