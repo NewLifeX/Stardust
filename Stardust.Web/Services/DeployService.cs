@@ -123,8 +123,7 @@ public class DeployService(StarFactory starFactory, ITracer tracer)
     /// <param name="ip">客户端IP</param>
     /// <param name="startTime">开始时间</param>
     /// <param name="timeout">超时时间</param>
-    /// <param name="resources">资源列表。逗号分隔的资源名称</param>
-    public async Task<Int32> Control(AppDeploy app, AppDeployNode deployNode, String action, String ip, Int32 startTime, Int32 timeout, String[] resources = null, CancellationToken cancellationToken = default, Boolean writeHistory = true)
+    public async Task<Int32> Control(AppDeploy app, AppDeployNode deployNode, String action, String ip, Int32 startTime, Int32 timeout, CancellationToken cancellationToken = default, Boolean writeHistory = true)
     {
         if (deployNode == null) throw new ArgumentNullException(nameof(deployNode));
 
@@ -144,7 +143,7 @@ public class DeployService(StarFactory starFactory, ITracer tracer)
             {
                 case "install":
                     action = "deploy/install";
-                    Install(deployNode, resources);
+                    Install(deployNode);
                     break;
                 case "start":
                     action = "deploy/start";
@@ -200,8 +199,7 @@ public class DeployService(StarFactory starFactory, ITracer tracer)
 
     /// <summary>安装应用</summary>
     /// <param name="deployNode">部署节点</param>
-    /// <param name="resources">资源列表。保留参数兼容，不再使用</param>
-    public void Install(AppDeployNode deployNode, String[] resources = null)
+    public void Install(AppDeployNode deployNode)
     {
         deployNode.Enable = true;
         deployNode.Update();

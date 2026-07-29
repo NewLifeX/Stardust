@@ -79,14 +79,6 @@ public partial class AppDeployNode
     [BindColumn("Version", "版本。当前使用的部署版本，开启MultiVersion时可能不同节点使用不同版本", "")]
     public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
 
-    private String _Resources;
-    /// <summary>资源版本。最后一次发布时携带的资源名称和版本，格式如dm8-driver:1.0;newlifex-cert:2025.01</summary>
-    [DisplayName("资源版本")]
-    [Description("资源版本。最后一次发布时携带的资源名称和版本，格式如dm8-driver:1.0;newlifex-cert:2025.01")]
-    [DataObjectField(false, false, true, 200)]
-    [BindColumn("Resources", "资源版本。最后一次发布时携带的资源名称和版本，格式如dm8-driver:1.0;newlifex-cert:2025.01", "")]
-    public String Resources { get => _Resources; set { if (OnPropertyChanging("Resources", value)) { _Resources = value; OnPropertyChanged("Resources"); } } }
-
     private Int32 _Port;
     /// <summary>应用端口。应用自身监听的端口，如果是dotnet应用会增加urls参数</summary>
     [DisplayName("应用端口")]
@@ -345,7 +337,6 @@ public partial class AppDeployNode
             "IP" => _IP,
             "Enable" => _Enable,
             "Version" => _Version,
-            "Resources" => _Resources,
             "Port" => _Port,
             "FileName" => _FileName,
             "Arguments" => _Arguments,
@@ -386,7 +377,6 @@ public partial class AppDeployNode
                 case "IP": _IP = Convert.ToString(value); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
                 case "Version": _Version = Convert.ToString(value); break;
-                case "Resources": _Resources = Convert.ToString(value); break;
                 case "Port": _Port = value.ToInt(); break;
                 case "FileName": _FileName = Convert.ToString(value); break;
                 case "Arguments": _Arguments = Convert.ToString(value); break;
@@ -482,9 +472,6 @@ public partial class AppDeployNode
 
         /// <summary>版本。当前使用的部署版本，开启MultiVersion时可能不同节点使用不同版本</summary>
         public static readonly Field Version = FindByName("Version");
-
-        /// <summary>资源版本。最后一次发布时携带的资源名称和版本，格式如dm8-driver:1.0;newlifex-cert:2025.01</summary>
-        public static readonly Field Resources = FindByName("Resources");
 
         /// <summary>应用端口。应用自身监听的端口，如果是dotnet应用会增加urls参数</summary>
         public static readonly Field Port = FindByName("Port");
@@ -593,9 +580,6 @@ public partial class AppDeployNode
 
         /// <summary>版本。当前使用的部署版本，开启MultiVersion时可能不同节点使用不同版本</summary>
         public const String Version = "Version";
-
-        /// <summary>资源版本。最后一次发布时携带的资源名称和版本，格式如dm8-driver:1.0;newlifex-cert:2025.01</summary>
-        public const String Resources = "Resources";
 
         /// <summary>应用端口。应用自身监听的端口，如果是dotnet应用会增加urls参数</summary>
         public const String Port = "Port";

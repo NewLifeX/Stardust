@@ -76,7 +76,6 @@
         <Column Name="AllowMultiple" DataType="Boolean" Description="允许多实例。同一应用可在本机运行多份进程，健康检查时将不会按进程名匹配" Category="发布参数" />
         <Column Name="AutoStop" DataType="Boolean" Description="自动停止。随着宿主的退出，同时停止该应用进程" Category="发布参数" />
         <Column Name="ReloadOnChange" DataType="Boolean" Description="检测变动。当文件发生改变时，自动重启应用" Category="发布参数" />
-        <Column Name="Dependencies" DataType="String" Length="500" Description="依赖项。依赖的驱动/插件部署集名称，如dm8-driver;redis-plugin，分号分隔。可来自全局项目或本项目" Category="发布参数" />
         <Column Name="HealthCheck" DataType="String" Length="200" Description="健康检查。探针检测服务是否正常，http/tcp/udp地址，如http://localhost:6600/health" Category="发布参数" />
         <Column Name="CreateUserId" DataType="Int32" Description="创建者" Category="扩展" />
         <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
@@ -100,7 +99,6 @@
         <Column Name="IP" DataType="String" Description="IP地址。节点所在内网IP地址" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
         <Column Name="Version" DataType="String" Description="版本。当前使用的部署版本，开启MultiVersion时可能不同节点使用不同版本" />
-        <Column Name="Resources" DataType="String" Length="200" Description="资源版本。最后一次发布时携带的资源名称和版本，格式如dm8-driver:1.0;newlifex-cert:2025.01" />
         <Column Name="Port" DataType="Int32" Description="应用端口。应用自身监听的端口，如果是dotnet应用会增加urls参数" />
         <Column Name="FileName" DataType="String" Description="文件。应用启动文件，可直接使用zip包，支持差异定制，为空时使用应用集配置" Category="发布参数" />
         <Column Name="Arguments" DataType="String" Length="500" Description="参数。启动应用的参数，为空时使用应用集配置" Category="发布参数" />

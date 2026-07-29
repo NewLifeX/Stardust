@@ -150,7 +150,7 @@ public class DeployInstallAction : McpActionBase
         if (deployNode.DeployId != deployId) throw new McpException(-32603, $"AppDeployNode[{nodeId}] does not belong to deploy[{deployId}]");
 
         // 下发安装命令
-        await _deployService.Control(app, deployNode, "install", context.CallerIp, 0, timeout, null, default);
+        await _deployService.Control(app, deployNode, "install", context.CallerIp, 0, timeout, default);
 
         return new
         {

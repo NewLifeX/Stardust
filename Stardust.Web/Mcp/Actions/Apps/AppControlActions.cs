@@ -92,7 +92,7 @@ public abstract class AppControlActionBase : McpActionBase
                 : $"No enabled AppDeployNode found for app_id={appId}");
 
         // 调用 DeployService.Control 执行生命周期控制
-        await _deployService.Control(deploy, deployNode, ControlAction, context.CallerIp, 0, timeout, null, default);
+        await _deployService.Control(deploy, deployNode, ControlAction, context.CallerIp, 0, timeout, default);
 
         return new
         {

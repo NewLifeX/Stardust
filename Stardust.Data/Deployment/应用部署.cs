@@ -307,15 +307,6 @@ public partial class AppDeploy
     [BindColumn("ReloadOnChange", "检测变动。当文件发生改变时，自动重启应用", "")]
     public Boolean ReloadOnChange { get => _ReloadOnChange; set { if (OnPropertyChanging("ReloadOnChange", value)) { _ReloadOnChange = value; OnPropertyChanged("ReloadOnChange"); } } }
 
-    private String _Dependencies;
-    /// <summary>依赖项。依赖的驱动/插件部署集名称，如dm8-driver;redis-plugin，分号分隔。可来自全局项目或本项目</summary>
-    [Category("发布参数")]
-    [DisplayName("依赖项")]
-    [Description("依赖项。依赖的驱动/插件部署集名称，如dm8-driver;redis-plugin，分号分隔。可来自全局项目或本项目")]
-    [DataObjectField(false, false, true, 500)]
-    [BindColumn("Dependencies", "依赖项。依赖的驱动/插件部署集名称，如dm8-driver;redis-plugin，分号分隔。可来自全局项目或本项目", "")]
-    public String Dependencies { get => _Dependencies; set { if (OnPropertyChanging("Dependencies", value)) { _Dependencies = value; OnPropertyChanged("Dependencies"); } } }
-
     private String _HealthCheck;
     /// <summary>健康检查。探针检测服务是否正常，http/tcp/udp地址，如http://localhost:6600/health</summary>
     [Category("发布参数")]
@@ -430,7 +421,6 @@ public partial class AppDeploy
             "AllowMultiple" => _AllowMultiple,
             "AutoStop" => _AutoStop,
             "ReloadOnChange" => _ReloadOnChange,
-            "Dependencies" => _Dependencies,
             "HealthCheck" => _HealthCheck,
             "CreateUserId" => _CreateUserId,
             "CreateTime" => _CreateTime,
@@ -478,7 +468,6 @@ public partial class AppDeploy
                 case "AllowMultiple": _AllowMultiple = value.ToBoolean(); break;
                 case "AutoStop": _AutoStop = value.ToBoolean(); break;
                 case "ReloadOnChange": _ReloadOnChange = value.ToBoolean(); break;
-                case "Dependencies": _Dependencies = Convert.ToString(value); break;
                 case "HealthCheck": _HealthCheck = Convert.ToString(value); break;
                 case "CreateUserId": _CreateUserId = value.ToInt(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -648,9 +637,6 @@ public partial class AppDeploy
         /// <summary>检测变动。当文件发生改变时，自动重启应用</summary>
         public static readonly Field ReloadOnChange = FindByName("ReloadOnChange");
 
-        /// <summary>依赖项。依赖的驱动/插件部署集名称，如dm8-driver;redis-plugin，分号分隔。可来自全局项目或本项目</summary>
-        public static readonly Field Dependencies = FindByName("Dependencies");
-
         /// <summary>健康检查。探针检测服务是否正常，http/tcp/udp地址，如http://localhost:6600/health</summary>
         public static readonly Field HealthCheck = FindByName("HealthCheck");
 
@@ -779,9 +765,6 @@ public partial class AppDeploy
 
         /// <summary>检测变动。当文件发生改变时，自动重启应用</summary>
         public const String ReloadOnChange = "ReloadOnChange";
-
-        /// <summary>依赖项。依赖的驱动/插件部署集名称，如dm8-driver;redis-plugin，分号分隔。可来自全局项目或本项目</summary>
-        public const String Dependencies = "Dependencies";
 
         /// <summary>健康检查。探针检测服务是否正常，http/tcp/udp地址，如http://localhost:6600/health</summary>
         public const String HealthCheck = "HealthCheck";
