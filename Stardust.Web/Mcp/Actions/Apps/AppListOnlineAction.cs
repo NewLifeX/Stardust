@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using NewLife;
 using NewLife.Data;
 using Stardust.Data;
@@ -94,6 +94,7 @@ public class AppListOnlineAction : McpActionBase
             category = a.Category,
             node_id = a.NodeId,
             process_id = a.ProcessId,
+            web_socket = a.LongLink,
             update_time = a.UpdateTime,
         }).ToList();
 
