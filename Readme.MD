@@ -51,11 +51,15 @@ Stardust  星尘，轻量级分布式服务框架！
 | [SVR-8-远程命令执行安全](Doc/SVR-8-远程命令执行安全.md) | 安全方案 |
 | [PUB-20-部署代理](Doc/PUB-20-部署代理.md) | 部署代理使用说明 |
 | [GW-8-网关使用指南](Doc/GW-8-网关使用指南.md) | 网关使用说明 |
+| [NODE-17-进程管理](Doc/NODE-17-进程管理.md) | 进程启动与守护 |
+| [MCP-MCP架构](Doc/MCP-MCP架构.md) | MCP HTTP 服务架构 |
+| [MCP-1-token管理](Doc/MCP-1-token管理.md) | MCP Token 凭证管理 |
+| [MCP-2-action扩展](Doc/MCP-2-action扩展.md) | MCP Action 扩展指南 |
 
 ## 为什么选择星尘 (Why Stardust)
 - 一体化：节点管理 / 配置中心 / 注册中心 / 服务发现 / 全链路追踪 / APM / 日志中心 / 远程发布 / 资源监控 统一模型与界面
 - 超轻量：核心库零第三方重量级依赖，单进程即可运行，自动建库建表
-- 强兼容：同一生态覆盖 .NET Framework 4.5 起至最新 .NET 9，多平台（Windows/Linux/ARM/IoT）
+- 强兼容：同一生态覆盖 .NET Framework 4.5 起至最新 .NET 10，多平台（Windows/Linux/ARM/IoT）
 - 高性能：基于 NewLife.Core & NewLife.Net 等十余年优化积累，网络吞吐与序列化性能优异
 - 极易接入：几行代码完成接入；ASP.NET Core / Console / Service / IoT 边缘统一方式
 - 自带运维：StarAgent 守护进程 + 远程发布 + 指标 & 日志采集，极大降低分布式运维复杂度
@@ -93,7 +97,7 @@ Stardust  星尘，轻量级分布式服务框架！
 7. [x] 服务发现。各业务应用（服务消费者）从注册中心拉取指定服务的提供者信息，分布式调用（不经网关）  
 8. [x] 远程发布。在星尘控制台上发布应用包到多台安装有星尘代理的应用服务器或物联网边缘节点，StarAgent负责拉起并守护进程  
 9. [x] 日志中心。各应用（服务提供者和服务消费者）向中心上报日志数据，统一在星尘Web查看  
-10. [x] 多供应商DNS DDNS。StarAgent支持动态域名解析(DDNS)，自动将节点公网IP注册到DNS（支持阿里云/AWS Route53等多供应商），适用于动态IP环境 [详细文档](Doc/NODE-16-阿里云DNS动态域名解析.md)  
+10. [x] 多供应商DNS DDNS。StarAgent支持动态域名解析(DDNS)，自动将节点公网IP注册到DNS（支持阿里云/腾讯云(DNSPod)/优刻得(UDNS)/AWS Route53四家供应商），适用于动态IP环境 [详细文档](Doc/NODE-16-阿里云DNS动态域名解析.md)  
 11. [x] .NET运行时管理。StarServer自动同步官方.NET发布信息，StarAgent支持按需安装.NET运行时版本，配合升级命令实现自动升级与冒烟测试回滚  
 
 ### 监控中心
