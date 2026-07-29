@@ -231,12 +231,6 @@ public partial class AppDeploy : Entity<AppDeploy>
 
     public static AppDeploy GetOrAdd(String name) => GetOrAdd(name, k => Find(_.Name == k), k => new AppDeploy { Name = k });
 
-    /// <summary>获取当前部署集关联的可用资源</summary>
-    /// <returns></returns>
-    public IList<AppResource> GetResources()
-    {
-        var list = AppDeployResource.FindAllByDeployId(Id);
-        return list.Where(e => e.Enable).Select(e => e.Resource).Where(e => e != null && e.Enable).ToList();
-    }
+
     #endregion
 }

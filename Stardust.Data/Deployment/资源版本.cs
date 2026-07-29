@@ -238,7 +238,7 @@ public partial class AppResourceVersion
 
     /// <summary>资源</summary>
     [Map(nameof(ResourceId), typeof(AppResource), "Id")]
-    public String ResourceName => Resource?.Name;
+    public String ResourceName => Resource?.ToString();
 
     #endregion
 

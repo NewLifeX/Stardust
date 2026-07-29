@@ -200,36 +200,10 @@ public class DeployService(StarFactory starFactory, ITracer tracer)
 
     /// <summary>安装应用</summary>
     /// <param name="deployNode">部署节点</param>
-    /// <param name="resources">资源列表。逗号分隔的资源名称</param>
+    /// <param name="resources">资源列表。保留参数兼容，不再使用</param>
     public void Install(AppDeployNode deployNode, String[] resources = null)
     {
         deployNode.Enable = true;
-
-        // 记录本次发布携带的资源
-        if (resources != null && resources.Length > 0)
-        {
-            var list = new List<String>();
-            //var resourceNames = resources.Split(',', StringSplitOptions.RemoveEmptyEntries);
-            foreach (var name in resources)
-            {
-                // 查找资源的最新版本
-                var res = AppResource.FindByName(name);
-                if (res != null && res.Enable)
-                {
-                    // 如果资源没有设置当前版本，取最新启用的版本
-                    var resVer = AppResourceVersion.FindAllByResourceId(res.Id)
-                        .Where(e => e.Enable)
-                        .OrderByDescending(e => e.Id)
-                        .FirstOrDefault();
-                    var ver = resVer?.Version;
-
-                    if (!ver.IsNullOrEmpty())
-                        list.Add($"{name}:{ver}");
-                }
-            }
-            deployNode.Resources = list.Join(";");
-        }
-
         deployNode.Update();
     }
 

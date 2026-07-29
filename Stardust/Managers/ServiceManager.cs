@@ -1,5 +1,4 @@
-﻿using System.IO.Compression;
-using System.Net.Http;
+﻿using System.Net.Http;
 using NewLife;
 using NewLife.Http;
 using NewLife.IO;
@@ -481,10 +480,6 @@ public class ServiceManager : DisposeBase
             Fix(svc);
             if (svc.Enable && !item.Url.IsNullOrEmpty()) await Download(item, svc);
 
-            // 下载关联的资源包
-            if (svc.Enable && item.Resources != null && item.Resources.Length > 0)
-                await DownloadResources(item.Resources, svc);
-
             var old = svcs.FirstOrDefault(e => e.Name.EqualIgnoreCase(deployName));
             if (old == null)
             {
@@ -626,102 +621,6 @@ public class ServiceManager : DisposeBase
             //{
             //    ti.MoveTo(tmp + ".del");
             //}
-        }
-    }
-
-    /// <summary>下载关联的资源包</summary>
-    /// <param name="resources">资源列表</param>
-    /// <param name="svc">服务信息</param>
-    async Task DownloadResources(ResourceInfo[] resources, ServiceInfo svc)
-    {
-        foreach (var res in resources)
-        {
-            if (res.Url.IsNullOrEmpty()) continue;
-
-            using var span = Tracer?.NewSpan("ServiceManager-DownloadResource", res.Name);
-
-            // 确定目标目录：相对于应用工作目录
-            var targetPath = res.TargetPath;
-            if (targetPath.IsNullOrEmpty()) targetPath = svc.WorkingDirectory;
-
-            var workDir = svc.WorkingDirectory;
-            if (!Path.IsPathRooted(targetPath))
-                targetPath = Path.Combine(workDir, targetPath);
-
-            var resFile = Path.Combine(targetPath, $"{res.Name}.zip");
-            var dst = resFile.AsFile();
-
-            span?.AppendTag($"Target: {dst.FullName}");
-
-            // 检查是否需要下载
-            var needDownload = true;
-            if (dst.Exists && !res.Hash.IsNullOrEmpty())
-            {
-                var hash = dst.MD5().ToHex();
-                if (hash.EqualIgnoreCase(res.Hash))
-                {
-                    WriteLog("资源[{0}]已存在：{1} MD5: {2}", res.Name, dst, hash);
-                    needDownload = false;
-                }
-                else
-                {
-                    WriteLog("资源[{0}]哈希不匹配：{1}（本地）!={2}（远程）", res.Name, hash, res.Hash);
-                }
-            }
-            else if (!dst.Exists)
-            {
-                WriteLog("资源[{0}]文件不存在：{1}", res.Name, dst);
-            }
-
-            if (needDownload)
-            {
-                var url = res.Url;
-                if (_client != null) url = _client.BuildUrl(url);
-
-                WriteLog("下载资源[{0}]：{1} -> {2}", res.Name, res.Version, url);
-
-                var tmp = Path.GetTempFileName();
-                var http = new HttpClient();
-                await http.DownloadFileAsync(url, tmp);
-
-                WriteLog("资源[{0}]下载完成，准备覆盖：{1}", res.Name, dst.FullName);
-
-                var ti = tmp.AsFile();
-                var hash = ti.MD5().ToHex();
-                if (!res.Hash.IsNullOrEmpty() && !hash.EqualIgnoreCase(res.Hash))
-                    WriteLog("资源[{0}]下载失败，校验错误！{1}（本地）!={2}（远程）", res.Name, hash, res.Hash);
-                else
-                {
-                    if (dst.Exists)
-                    {
-                        try { dst.Delete(); }
-                        catch { dst.MoveTo(dst.FullName + ".del"); }
-                    }
-
-                    dst.FullName.EnsureDirectory(true);
-                    ti.MoveTo(dst.FullName);
-                }
-            }
-
-            // 解压缩
-            if (res.UnZip && dst.Exists)
-            {
-                WriteLog("解压资源[{0}]到：{1}", res.Name, targetPath);
-                try
-                {
-                    targetPath.EnsureDirectory(false);
-#if NETFRAMEWORK
-                    System.IO.Compression.ZipFile.ExtractToDirectory(dst.FullName, targetPath);
-#else
-                    System.IO.Compression.ZipFile.ExtractToDirectory(dst.FullName, targetPath, true);
-#endif
-                    WriteLog("资源[{0}]解压完成", res.Name);
-                }
-                catch (Exception ex)
-                {
-                    WriteLog("资源[{0}]解压失败：{1}", res.Name, ex.Message);
-                }
-            }
         }
     }
 

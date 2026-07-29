@@ -602,95 +602,40 @@ CertRenewJob 定时任务（每天执行）
 
 ---
 
-## 七、资源包管理
+## 七、依赖项管理
 
 ### 7.1 设计理念
 
-资源包（如数据库驱动、SSL 证书文件、配置模板等）是独立于应用主包的共享组件。资源包作为独立"发布集"管理，拥有自己的版本生命周期和平台（OS/Arch/TFM）匹配能力，通过关联表 `AppDeployResource` 绑定到应用部署集。发布时用户在界面上勾选主包和所需资源包，一条 `deploy/install` 指令携带完整 `DeployInfo.Resources[]` 下发到 StarAgent。
+**核心思路**：**驱动/插件作为独立 `AppDeploy` 部署集**
 
-**核心原则**：
-- **独立建模**：资源使用 `AppResource` / `AppResourceVersion` 独立表，不与 `AppDeploy` 主包表混用
-- **平台匹配**：资源版本支持 OS/Arch/TargetFramework 筛选，复用服务端 `DeployService` 的平台匹配逻辑
-- **可选关联**：资源与部署集通过 `AppDeployResource` 多对多关联，启用/禁用控制，支持覆盖目标路径
-- **统一下发**：发布时主包+资源包合并为一条指令，StarAgent 自行逐一下载解压
+**优势**：
+- 复用平台能力：多版本管理、多平台支持、回滚能力
+- 独立生命周期：驱动可独立升级，不影响业务应用
+- 全局共享：一次配置，所有项目共用
 
-### 7.2 数据模型
-
-```
-AppResource（资源定义）
-├── Id, ProjectId, Name（唯一标识，如 dm8-driver）, Category（driver/cert/config/plugin）
-├── Enable, TargetPath（默认目标路径）, UnZip（是否解压）, Overwrite
-└── 关联：AppResourceVersion（1:N）, AppDeployResource（1:N）
-
-AppResourceVersion（资源版本）
-├── Id, ResourceId, Version, Enable
-├── Url（zip 包地址）, Size, Hash（MD5）
-├── OS（操作系统）, Arch（CPU 架构）, TargetFramework（目标框架）
-└── 平台匹配：OS=0 & Arch=0 & TFM 为空 → 通用版本，匹配所有节点
-
-AppDeployResource（部署集↔资源关联）
-├── Id, DeployId, ResourceId, Enable
-├── TargetPath（覆盖资源定义的默认路径）, AutoPublish
-└── 唯一索引：(DeployId, ResourceId)
-```
-
-### 7.3 资源版本平台匹配
-
-复用 `DeployService` 的节点平台检测和版本匹配逻辑：
-
-```csharp
-// 服务端 BuildResources() 核心匹配流程
-var res = AppResource.FindByName(name);                    // 1. 查资源定义
-var deployRes = AppDeployResource.FindAllByDeployId(...)   // 2. 查关联配置（可能覆盖TargetPath）
-    .FirstOrDefault(e => e.ResourceId == res.Id);
-
-var resVer = GetResourceVersion(res.Id, version, nodeOS, nodeArch, fms);  // 3. 平台匹配
-
-// 匹配规则：OS→Arch→TargetFramework 逐层筛选
-//   - OS/Arch=0 表示通用，匹配所有
-//   - TFM 为空表示通用
-//   - TFM "net8.0" 可运行在 net8.0/net9.0/net10.0 节点
-//   - TFM "net4.6.1" 可运行在 net4.7/net4.8 节点（向上兼容）
-```
-
-### 7.4 发布时资源下发流程
+### 7.2 创建全局驱动
 
 ```
-用户在 AppDeployNode 列表页勾选资源
-    │
-    ├── 多选下拉框: <主包>（默认） + dm8-driver + newlifex-cert
-    │
-    ▼
-AppDeployNodeController.Operate/BatchOperate(act="install", resources=["dm8-driver","newlifex-cert"])
-    │
-    ▼
-Web DeployService.Install(deployNode, resources)
-    ├── 遍历 resources，查 AppResource.FindByName() + AppResourceVersion 最新版本
-    ├── 写入 deployNode.Resources = "dm8-driver:1.0;newlifex-cert:2025.01"
-    └── deployNode.Update()
-    │
-    ▼
-SendNodeCommandAsync("deploy/install", args)
-    │
-    ▼
-┌── StarAgent.ServiceManager.OnInstall() ─────────────────┐
-│   PullService() 获取 DeployInfo                          │
-│   ├── Download(主包)                                     │
-│   └── DownloadResources(Resources[])  ← 逐个资源下载解压 │
-│       ├── dm8-driver.zip → ../Plugins/DmProvider（解压） │
-│       └── newlifex-cert.zip → ./certs（解压）            │
-│   然后 StartService() 拉起应用                            │
-└──────────────────────────────────────────────────────────┘
+AppDeploy:
+├── ProjectId: 0（全局资源）
+├── Category: driver
+├── Name: dm8-driver
+├── Mode: Hosted（仅解压，不启动进程）
+├── WorkingDirectory: ../Plugins/DmProvider
+└── 版本：v8.1.2 (OS=Windows, Arch=X64, TFM=net8.0)
 ```
 
-### 7.5 界面说明
+### 7.3 依赖检查逻辑
 
-| 页面 | 路径 | 说明 |
-|------|------|------|
-| 资源定义管理 | `/Deployment/AppResource` | 创建/编辑资源定义，设置默认目标路径和是否解压 |
-| 资源版本管理 | `/Deployment/AppResourceVersion?resourceId={Id}` | 上传资源 zip 包，设置平台匹配条件 |
-| 部署资源关联 | `/Deployment/AppDeployResource?deployId={Id}` | 将资源关联到部署集，可覆盖目标路径 |
-| 发布节点列表 | `/Deployment/AppDeployNode?deployId={Id}` | 资源多选下拉框 + 发布按钮 |
+```
+解析 app.Dependencies = "dm8-driver;redis-plugin"
+    │
+    ├── 查找依赖部署集（优先本项目 → 全局）
+    ├── 检查是否已部署到目标节点
+    │       ├── 已部署 → 跳过
+    │       └── 未部署 → 自动创建 AppDeployNode → 异步触发发布
+    └── 等待依赖就绪后，发布主应用
+```
 
 ---
 
@@ -712,9 +657,7 @@ SendNodeCommandAsync("deploy/install", args)
 │    ├── AppDeploy.Name = "MyApp"                              │
 │    ├── AppDeploy.Urls = "https://sso.newlifex.com"          │
 │    │       └── 自动匹配 → SslCertificate.Domain             │
-│    └── 关联资源包（AppDeployResource 表）                    │
-│        ├── dm8-driver（数据库驱动）                          │
-│        └── newlifex-cert（SSL 证书）                        │
+│    └── AppDeploy.Dependencies = "dm8-driver;redis-plugin"    │
 └─────────────────────────────────────────────────────────────┘
                            ↓
 ┌─────────────────────────────────────────────────────────────┐

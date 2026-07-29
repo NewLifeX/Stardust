@@ -141,25 +141,6 @@ public partial class AppResource : Entity<AppResource>
 
     #region 高级查询
 
-    /// <summary>高级查询</summary>
-    /// <param name="projectId">项目编号</param>
-    /// <param name="category">类别</param>
-    /// <param name="enable">启用</param>
-    /// <param name="key">关键字</param>
-    /// <param name="page">分页参数</param>
-    /// <returns>实体列表</returns>
-    public static IList<AppResource> Search(Int32 projectId, String category, Boolean? enable, String key, PageParameter page)
-    {
-        var exp = new WhereExpression();
-
-        if (projectId >= 0) exp &= _.ProjectId == projectId;
-        if (!category.IsNullOrEmpty()) exp &= _.Category == category;
-        if (enable != null) exp &= _.Enable == enable;
-        if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.Category.Contains(key) | _.Remark.Contains(key);
-
-        return FindAll(exp, page);
-    }
-
     // Select Count(Id) as Id,Category From AppResource Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
     static readonly FieldCache<AppResource> _CategoryCache = new(nameof(Category))
     {
