@@ -10,6 +10,7 @@ using static Stardust.Data.Nodes.NodeStat;
 
 namespace Stardust.Web.Areas.Nodes.Controllers;
 
+/// <summary>节点统计。按时间维度统计节点数量、在线率等指标，支持图表和趋势展示</summary>
 [Menu(60)]
 [NodesArea]
 public class NodeStatController : ReadOnlyEntityController<NodeStat>

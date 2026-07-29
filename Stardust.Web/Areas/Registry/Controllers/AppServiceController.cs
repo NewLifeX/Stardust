@@ -7,6 +7,7 @@ using XCode.Membership;
 
 namespace Stardust.Web.Areas.Registry.Controllers;
 
+/// <summary>应用服务。管理应用实例发布的服务信息，查看服务绑定关系</summary>
 [RegistryArea]
 [Menu(0, false)]
 public class AppServiceController : RegistryEntityController<AppService>

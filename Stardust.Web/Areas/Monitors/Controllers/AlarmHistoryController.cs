@@ -5,6 +5,7 @@ using Stardust.Data.Monitors;
 
 namespace Stardust.Web.Areas.Monitors.Controllers;
 
+/// <summary>告警历史。记录告警触发历史和处理情况，按告警组和时间检索</summary>
 [Menu(0, false)]
 [MonitorsArea]
 public class AlarmHistoryController : ReadOnlyEntityController<AlarmHistory>

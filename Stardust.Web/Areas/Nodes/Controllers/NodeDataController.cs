@@ -11,6 +11,7 @@ using static Stardust.Data.Nodes.NodeData;
 
 namespace Stardust.Web.Areas.Nodes.Controllers;
 
+/// <summary>节点数据。查看节点上报的详细性能数据（CPU/内存/磁盘/网络），支持时序图表展示</summary>
 [Menu(60, false)]
 [NodesArea]
 public class NodeDataController : NodesEntityController<NodeData>

@@ -9,6 +9,7 @@ using XCode;
 
 namespace Stardust.Web.Areas.Nodes.Controllers;
 
+/// <summary>节点历史。记录节点登录/登出/升级等关键操作事件，支持按节点和操作类型检索</summary>
 [Menu(60, false)]
 [NodesArea]
 public class NodeHistoryController : NodesEntityController<NodeHistory>

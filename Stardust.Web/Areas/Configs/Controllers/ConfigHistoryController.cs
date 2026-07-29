@@ -6,6 +6,7 @@ using Stardust.Data.Configs;
 
 namespace Stardust.Web.Areas.Configs.Controllers;
 
+/// <summary>配置历史。记录配置的变更历史，支持版本追溯和回滚检查</summary>
 [Menu(0, false)]
 [ConfigsArea]
 public class ConfigHistoryController : ConfigsEntityController<ConfigHistory>

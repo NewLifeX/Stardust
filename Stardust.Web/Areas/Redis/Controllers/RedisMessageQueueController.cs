@@ -7,6 +7,7 @@ using XCode.Membership;
 
 namespace Stardust.Web.Areas.Redis.Controllers;
 
+/// <summary>Redis消息队列。管理 Redis 消息队列的消费状态和积压情况</summary>
 [Menu(30, false)]
 [RedisArea]
 public class RedisMessageQueueController : EntityController<RedisMessageQueue>

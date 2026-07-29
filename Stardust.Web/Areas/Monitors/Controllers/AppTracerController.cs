@@ -13,6 +13,7 @@ using XCode.Membership;
 
 namespace Stardust.Web.Areas.Monitors.Controllers;
 
+/// <summary>应用跟踪器。管理每个应用实例的采样率、周期、WebHook 等参数配置</summary>
 [Menu(90)]
 [MonitorsArea]
 public class AppTracerController : MonitorsEntityController<AppTracer>

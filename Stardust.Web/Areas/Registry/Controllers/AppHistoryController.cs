@@ -8,6 +8,7 @@ using XCode.Membership;
 
 namespace Stardust.Web.Areas.Registry.Controllers;
 
+/// <summary>应用历史。记录应用的关键操作事件（登录/心跳/命令），支持按应用和操作类型检索</summary>
 [RegistryArea]
 [Menu(0, false)]
 public class AppHistoryController : RegistryEntityController<AppHistory>

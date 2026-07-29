@@ -7,6 +7,7 @@ using XCode.Membership;
 
 namespace Stardust.Web.Areas.Registry.Controllers;
 
+/// <summary>应用消费。记录服务消费者与服务提供者的调用关系，展示服务消费拓扑</summary>
 [RegistryArea]
 [Menu(0, false)]
 public class AppConsumeController : RegistryEntityController<AppConsume>

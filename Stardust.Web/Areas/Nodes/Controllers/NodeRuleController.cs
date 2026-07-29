@@ -5,6 +5,7 @@ using Stardust.Data.Nodes;
 
 namespace Stardust.Web.Areas.Nodes.Controllers;
 
+/// <summary>节点规则。为节点配置自定义规则（告警阈值、部署策略），支持按条件匹配</summary>
 [Menu(10)]
 [NodesArea]
 public class NodeRuleController : EntityController<NodeRule>

@@ -15,6 +15,7 @@ using Node = Stardust.Data.Nodes.Node;
 
 namespace Stardust.Web.Areas.Nodes.Controllers;
 
+/// <summary>节点在线。管理节点 WebSocket 长连接会话，查看各节点实时在线状态和性能指标</summary>
 [Menu(80)]
 [NodesArea]
 public class NodeOnlineController : NodesEntityController<NodeOnline>

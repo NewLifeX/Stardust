@@ -10,6 +10,7 @@ using Attachment = NewLife.Cube.Entity.Attachment;
 
 namespace Stardust.Web.Areas.Nodes.Controllers;
 
+/// <summary>节点版本。追踪各组件在节点上的版本信息，管理组件升级包上传与分发</summary>
 [Menu(40)]
 [NodesArea]
 public class NodeVersionController(IFileStorage fileStorage) : EntityController<NodeVersion>

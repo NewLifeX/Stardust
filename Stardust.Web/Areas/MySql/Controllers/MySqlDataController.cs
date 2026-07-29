@@ -7,6 +7,7 @@ using NewLife.Web;
 
 namespace Stardust.Web.Areas.MySql.Controllers;
 
+/// <summary>MySQL数据浏览。只读浏览 MySQL 数据库中的表结构和数据内容</summary>
 [MySqlArea]
 public class MySqlDataController : ReadOnlyEntityController<MySqlData>
 {

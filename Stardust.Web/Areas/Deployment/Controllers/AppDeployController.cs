@@ -15,6 +15,7 @@ using XCode.Membership;
 
 namespace Stardust.Web.Areas.Deployment.Controllers;
 
+/// <summary>应用部署集。定义应用部署的元信息（部署模式/目标路径/启动参数/环境变量），一个应用可有多个部署集</summary>
 [DeploymentArea]
 [Menu(90)]
 public class AppDeployController : DeploymentEntityController<AppDeploy>

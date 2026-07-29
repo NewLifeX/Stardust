@@ -8,6 +8,7 @@ using XCode.Membership;
 
 namespace Stardust.Web.Areas.Deployment.Controllers;
 
+/// <summary>部署历史。记录每次部署操作的详细信息（版本/节点/结果/耗时），支持追溯和审计</summary>
 [Menu(70, false)]
 [DeploymentArea]
 public class AppDeployHistoryController : DeploymentEntityController<AppDeployHistory>

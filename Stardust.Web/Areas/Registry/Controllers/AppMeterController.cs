@@ -11,6 +11,7 @@ using static Stardust.Data.AppMeter;
 
 namespace Stardust.Web.Areas.Registry.Controllers;
 
+/// <summary>应用性能。按应用客户端维度展示性能指标面板（吞吐量/响应时间/错误率）</summary>
 [RegistryArea]
 [Menu(0, false)]
 public class AppMeterController : RegistryEntityController<AppMeter>

@@ -13,8 +13,8 @@ using XCode.Model;
 
 namespace Stardust.Web.Areas.Nodes.Controllers;
 
+/// <summary>节点框架。管理各节点上的 .NET 运行时版本，支持安装新版框架和卸载旧版框架</summary>
 [DisplayName("节点框架")]
-[Description("管理各个节点的.NET框架，安装新版框架，卸载旧版框架")]
 [Menu(70)]
 [NodesArea]
 public class NodeFrameworkController : EntityController<Node>
