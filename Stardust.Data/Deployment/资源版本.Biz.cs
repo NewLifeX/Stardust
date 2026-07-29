@@ -142,6 +142,23 @@ public partial class AppResourceVersion : Entity<AppResourceVersion>
 
     #region 高级查询
 
+    /// <summary>高级查询</summary>
+    /// <param name="resourceId">资源编号</param>
+    /// <param name="enable">启用</param>
+    /// <param name="key">关键字</param>
+    /// <param name="page">分页参数</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppResourceVersion> Search(Int32 resourceId, Boolean? enable, String key, PageParameter page)
+    {
+        var exp = new WhereExpression();
+
+        if (resourceId > 0) exp &= _.ResourceId == resourceId;
+        if (enable != null) exp &= _.Enable == enable;
+        if (!key.IsNullOrEmpty()) exp &= _.Version.Contains(key) | _.TargetFramework.Contains(key) | _.Hash.Contains(key);
+
+        return FindAll(exp, page);
+    }
+
     // Select Count(Id) as Id,Category From AppResourceVersion Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
     //static readonly FieldCache<AppResourceVersion> _CategoryCache = new(nameof(Category))
     //{

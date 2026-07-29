@@ -167,6 +167,7 @@ public class DeployService
         if (resources.IsNullOrEmpty()) return null;
 
         var (nodeOS, nodeArch) = GetNodePlatform(node);
+        var fms = node.Frameworks?.Split(',', StringSplitOptions.RemoveEmptyEntries) ?? [];
         var list = new List<ResourceInfo>();
 
         var pairs = resources.Split(';', StringSplitOptions.RemoveEmptyEntries);
@@ -179,12 +180,20 @@ public class DeployService
             var version = parts[1];
 
             // 查找资源定义
-            var deploy = AppDeploy.FindByName(name);
-            if (deploy == null || !deploy.Enable) continue;
+            var res = AppResource.FindByName(name);
+            if (res == null || !res.Enable) continue;
+
+            // 查找部署集对该资源的配置（可能覆盖目标路径）
+            var deployRes = AppDeployResource.FindAllByDeployId(item.DeployId)
+                .FirstOrDefault(e => e.ResourceId == res.Id && e.Enable);
 
             // 查找匹配平台的资源版本
-            var resVer = GetResourceVersion(deploy.Id, version, nodeOS, nodeArch);
+            var resVer = GetResourceVersion(res.Id, version, nodeOS, nodeArch, fms);
             if (resVer == null) continue;
+
+            // 目标路径：部署集覆盖 > 资源定义默认值
+            var targetPath = deployRes?.TargetPath;
+            if (targetPath.IsNullOrEmpty()) targetPath = res.TargetPath;
 
             var inf = new ResourceInfo
             {
@@ -192,9 +201,9 @@ public class DeployService
                 Version = resVer.Version,
                 Url = resVer.Url,
                 Hash = resVer.Hash,
-                //TargetPath = deploy.TargetPath,
-                //UnZip = deploy.UnZip,
-                //Overwrite = deploy.Overwrite,
+                TargetPath = targetPath,
+                UnZip = res.UnZip,
+                Overwrite = res.Overwrite,
             };
 
             // 修正Url
@@ -207,17 +216,38 @@ public class DeployService
     }
 
     /// <summary>获取匹配平台的资源版本</summary>
-    private AppDeployVersion GetResourceVersion(Int32 deployId, String version, OSKind nodeOS, CpuArch nodeArch)
+    private AppResourceVersion GetResourceVersion(Int32 resourceId, String version, OSKind nodeOS, CpuArch nodeArch, String[] fms)
     {
         // 先按版本精确查找
-        var vers = AppDeployVersion.FindAllByDeployId(deployId, 100).Where(e => e.Enable).ToList();
+        var vers = AppResourceVersion.FindAllByResourceId(resourceId).Where(e => e.Enable).OrderByDescending(e => e.Id).ToList();
 
-        // 优先匹配精确平台
-        var ver = vers.FirstOrDefault(e => e.Version == version && MatchPlatform(e.OS, e.Arch, nodeOS, nodeArch));
-        if (ver != null) return ver;
+        // 优先匹配精确平台 + 版本
+        foreach (var ver in vers)
+        {
+            if (ver.Version != version) continue;
+            if (!MatchPlatform(ver.OS, ver.Arch, nodeOS, nodeArch)) continue;
+            if (!MatchFramework(ver.TargetFramework, fms)) continue;
+            return ver;
+        }
 
-        // 如果没有指定版本的匹配，取最新版本
-        return vers.FirstOrDefault(e => MatchPlatform(e.OS, e.Arch, nodeOS, nodeArch));
+        // 如果没有指定版本的匹配，取最新匹配平台的版本
+        return vers.FirstOrDefault(e => MatchPlatform(e.OS, e.Arch, nodeOS, nodeArch) && MatchFramework(e.TargetFramework, fms));
+    }
+
+    /// <summary>检查目标框架是否匹配</summary>
+    private static Boolean MatchFramework(String verTfm, String[] nodeFrameworks)
+    {
+        if (verTfm.IsNullOrEmpty() || nodeFrameworks.Length == 0) return true;
+
+        var tfm = verTfm.TrimPrefix("netcoreapp").TrimPrefix("net").TrimPrefix("v");
+
+        if (tfm.StartsWith("4."))
+        {
+            var v = new Version(tfm);
+            return nodeFrameworks.Any(e => e.StartsWith("4.") && new Version(e) >= v);
+        }
+
+        return nodeFrameworks.Any(e => e.StartsWith(tfm));
     }
 
     /// <summary>更新应用部署的节点信息</summary>
