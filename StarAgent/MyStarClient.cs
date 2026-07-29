@@ -154,6 +154,10 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
         // 使用当前进程可执行文件名，支持重命名场景（如 MyAgent.exe）
         var exeName = GetExecutableName();
 
+        // 诊断埋点：记录 exeName 和进程信息，排查更新后重启失败问题
+        var p = Process.GetCurrentProcess();
+        this.WriteInfoEvent("Upgrade", $"Restart: exeName={exeName} ProcessName={p.ProcessName} MainModule={p.MainModule?.FileName}");
+
         // 以服务方式运行时，重启服务，否则采取拉起进程的方式
         if (inService || Service.Host is DefaultHost host && host.InService)
         {
@@ -213,8 +217,12 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
     }
 
     /// <summary>获取当前进程可执行文件名（不含扩展名），支持重命名场景。dotnet/mono 宿主下返回真正目标程序集名</summary>
-    private static String GetExecutableName() =>
-        Process.GetCurrentProcess().GetProcessName() ?? "StarAgent";
+    private static String GetExecutableName()
+    {
+        // 获取进程名（不含扩展名），再防御性清理可能混入的后缀
+        var name = Process.GetCurrentProcess().GetProcessName() ?? "StarAgent";
+        return name.TrimSuffix(".exe", ".dll", ".del");
+    }
 
     /// <summary>使用当前进程可执行文件完整路径启动新进程，避免依赖工作目录中的文件名</summary>
     private static Boolean RunCurrentProcess(String args)
