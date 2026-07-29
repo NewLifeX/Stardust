@@ -1,811 +1,262 @@
-# PUB 远程发布 - 星尘发布系统架构
+# PUB 远程发布 - 架构设计
 
-> **版本**：v3.7+ | **更新时间**：2026-07-15 | **文档状态**：最新稳定版
+> **版本**：v3.8 | **更新时间**：2026-07-29 | **文档状态**：最新
 > 对应模块：PUB 远程发布
-> 相关文档：[PUB-19-应用包规范](PUB-19-应用包规范.md) | [PUB-20-部署代理](PUB-20-部署代理.md) | [PUB-21-分布式文件存储](PUB-21-分布式文件存储.md)
+> 数据模型定义：[`Stardust.Data/Deployment/Model.xml`](../Stardust.Data/Deployment/Model.xml)
 
 ---
 
-## 目录
+## 一、概述
 
-1. [系统概述](#一系统概述)
-2. [核心架构](#二核心架构)
-3. [数据模型](#三数据模型)
-4. [部署模式](#四部署模式)
-5. [多版本管理](#五多版本管理)
-6. [SSL证书管理](#六ssl证书管理)
-7. [依赖项管理](#七依赖项管理)
-8. [部署流程](#八部署流程)
-9. [客户端架构](#九客户端架构)
-10. [最佳实践](#十最佳实践)
-11. [故障排查](#十一故障排查)
+星尘发布系统是分布式应用部署管理平台，采用**集中控制、分布式执行**架构。用户在管理控制台配置部署集、上传版本、关联节点，点击发布后 StarAgent 在目标节点上执行下载、解压、启停和守护。
 
----
-
-## 一、系统概述
-
-### 1.1 核心定位
-
-星尘发布系统是一个**分布式应用部署管理平台**，提供应用的自动化部署、版本管理、多节点发布等功能。系统采用集中控制、分布式执行的架构模式，支持将应用程序包发布到多个目标节点，并提供全生命周期的部署管理能力。
-
-### 1.2 核心特性
+### 核心特性
 
 | 特性 | 说明 |
 |------|------|
-| **多版本管理** | 支持多平台版本自动匹配（OS/Arch/TFM），一键回滚 |
-| **分布式部署** | 一个应用可部署到多个节点，支持滚动发布 |
-| **多种部署模式** | Standard/Shadow/Hosted/Task，适应不同场景 |
-| **进程守护** | 自动重启崩溃的应用，内存超限自动重启 |
-| **SSL证书管理** | 自动匹配证书，支持自动续期和多格式 |
-| **依赖项管理** | 驱动/插件作为独立部署集，自动检查和部署 |
-| **热更新** | 文件变化自动重启，支持影子模式 |
-| **兼容性强** | 新旧版本平滑过渡，支持 .NET Framework 4.5+ 到 .NET 10+ |
+| 多版本管理 | 支持多平台（OS/Arch/TFM）自动匹配，一键回滚 |
+| 分布式部署 | 单应用多节点部署，滚动发布 |
+| 四种部署模式 | Standard / Shadow / Hosted / Task |
+| 进程守护 | 崩溃自动重启，内存超限重启，文件变化重启 |
+| SSL 证书管理 | 按域名自动匹配，支持多格式，自动续期 |
+| CI/CD 流水线 | Webhook 触发 → 编译 → 打包 → 上传 → 部署 |
 
-### 1.3 设计原则
+### 设计原则
 
-```
-1. 简洁性 - 删除不必要的字段和关联，简化操作
-2. 自动化 - 证书自动匹配、依赖自动部署、版本自动选择
-3. 复用性 - 驱动/插件复用平台能力，避免重复造轮子
-4. 灵活性 - 支持全局/项目级资源，节点级配置覆盖
-5. 可靠性 - 进程守护、内存限制、文件监控、回滚机制
-```
+1. **简洁性** — 字段和关联最小化，操作路径最短
+2. **自动化** — 证书自动匹配、版本自动选择、流水线自动触发
+3. **灵活性** — 节点级配置可覆盖部署集配置
+4. **可靠性** — 进程守护、内存限制、文件监控、回滚机制
 
 ---
 
-## 二、核心架构
-
-### 2.1 系统架构图
+## 二、系统拓扑
 
 ```
-┌───────────────────────────────────────────────────────────────────────┐
-│                     Stardust.Web（管理控制台）                          │
-│  ┌────────────────────────────────────────────────────────────────┐   │
-│  │  AppDeployController  │  AppDeployNodeController  │  ...       │   │
-│  │  上传版本 | 配置应用 | 批量发布 | 查看状态 | 回滚版本           │   │
-│  └────────────────────────────────────────────────────────────────┘   │
-└──────────────────────────────┬────────────────────────────────────────┘
-                               │ HTTP API
-┌──────────────────────────────┴────────────────────────────────────────┐
-│                     Stardust.Server（服务端）                           │
-│  ┌─────────────────────────────────────────────────────────────────┐  │
-│  │  数据层                                                          │  │
-│  │  ├── AppDeploy（应用部署集）                                    │  │
-│  │  ├── AppDeployNode（应用节点）                                  │  │
-│  │  ├── AppDeployVersion（部署版本）                               │  │
-│  │  └── SslCertificate（SSL证书）                                  │  │
-│  └─────────────────────────────────────────────────────────────────┘  │
-│  ┌─────────────────────────────────────────────────────────────────┐  │
-│  │  服务层                                                          │  │
-│  │  ├── DeployService（版本匹配、证书匹配、依赖检查）              │  │
-│  │  ├── NodeService（节点管理、心跳监控）                          │  │
-│  │  └── CertRenewJob（证书自动续期）                               │  │
-│  └─────────────────────────────────────────────────────────────────┘  │
-│  ┌─────────────────────────────────────────────────────────────────┐  │
-│  │  接口层                                                          │  │
-│  │  ├── DeployController（/deploy/publish、/deploy/start...）      │  │
-│  │  ├── NodeController（/node/ping、/node/getDeploy...）           │  │
-│  │  └── WebSocket（实时推送发布指令）                              │  │
-│  └─────────────────────────────────────────────────────────────────┘  │
-└──────────────────────────┬────────────────────────────────────────────┘
-                           │ HTTP API / WebSocket 长连接
+┌──────────────────────────────────────────────────────────────┐
+│                Stardust.Web（管理控制台）                      │
+│  AppDeploy │ AppDeployNode │ AppDeployVersion │ Pipeline      │
+└──────────────────────────┬───────────────────────────────────┘
+                           │ HTTP API (6600)
+┌──────────────────────────┴───────────────────────────────────┐
+│                Stardust.Server（服务端）                       │
+│                                                               │
+│  ┌─ 接口层 ──────────────────────────────────────────────┐   │
+│  │  DeployController  │  NodeController  │  WebSocket     │   │
+│  └───────────────────────────────────────────────────────┘   │
+│  ┌─ 服务层 ──────────────────────────────────────────────┐   │
+│  │  DeployService（版本匹配/证书匹配/指令下发）           │   │
+│  │  NodeService（节点管理/心跳监控）                      │   │
+│  │  CertRenewJob（证书自动续期）                          │   │
+│  └───────────────────────────────────────────────────────┘   │
+│  ┌─ 数据层 ──────────────────────────────────────────────┐   │
+│  │  10 张表，全部定义在 Model.xml 中                       │   │
+│  │  核心：AppDeploy / AppDeployNode / AppDeployVersion     │   │
+│  └───────────────────────────────────────────────────────┘   │
+└──────────────────────────┬───────────────────────────────────┘
+                           │ HTTP + WebSocket
         ┌──────────────────┼──────────────────┐
         ▼                  ▼                  ▼
-┌───────────────┐   ┌───────────────┐   ┌───────────────┐
-│  StarAgent    │   │  StarAgent    │   │  StarAgent    │
-│  (Node A)     │   │  (Node B)     │   │  (Node C)     │
-│ x64/net8.0    │   │ ARM/net10.0   │   │ x64/net10.0   │
-│               │   │               │   │               │
-│ ServiceManager│   │ ServiceManager│   │ ServiceManager│
-│ ├─ MyApp      │   │ ├─ MyApp      │   │ ├─ MyApp      │
-│ ├─ dm8-driver │   │ ├─ dm8-driver │   │ ├─ dm8-driver │
-│ └─ redis-plugin│  │ └─ redis-plugin│  │ └─ redis-plugin│
-└───────────────┘   └───────────────┘   └───────────────┘
+   ┌─────────┐       ┌─────────┐       ┌─────────┐
+   │StarAgent│       │StarAgent│       │StarAgent│
+   │ Node A  │       │ Node B  │       │ Node C  │
+   │x64/net8 │       │ARM/net10│       │x64/net10│
+   └────┬────┘       └────┬────┘       └────┬────┘
+        │                  │                  │
+   ┌────┴────┐       ┌────┴────┐       ┌────┴────┐
+   │ MyApp   │       │ MyApp   │       │ MyApp   │
+   │ (SDK)   │       │ (SDK)   │       │ (SDK)   │
+   └─────────┘       └─────────┘       └─────────┘
 ```
 
-### 2.2 核心组件关系
+### 工程映射
 
-```
-AppDeploy (应用部署集)
-    ├── AppDeployNode (应用节点) [1:N]
-    │   └── Node (节点服务器)
-    ├── AppDeployVersion (部署版本) [1:N]
-    ├── AppDeployHistory (部署历史) [1:N]
-    └── AppBuildNode (编译节点) [1:N]
-
-SslCertificate (SSL证书)
-    └── 通过 Domain 字段匹配 AppDeploy.Urls（自动匹配）
-```
-
-### 2.3 数据流转
-
-```
-管理控制台                           服务端                           客户端
-──────────                          ─────────                        ─────────
-上传 ZIP 包                                                              
-    │                                                                    
-    └──> AppDeployVersion.Url                                           
-                                                                         
-配置应用                                                                 
-    │                                                                    
-    ├──> AppDeploy.Name                                                 
-    ├──> AppDeploy.Urls ──> 自动匹配 ──> SslCertificate.Domain          
-    └──> AppDeploy.Dependencies                                         
-                                                                         
-点击发布                                                                 
-    │                                                                    
-    └──> DeployService                                                  
-            ├── 选择版本（MultiVersion匹配）                            
-            ├── 查找证书（Domain匹配）                                   
-            ├── 检查依赖（自动关联）                                     
-            └── 构建 DeployInfo                                         
-                    │                                                    
-                    └──> WebSocket/HTTP ──> StarAgent                   
-                                                ├── ServiceManager       
-                                                ├── Download ZIP         
-                                                ├── Extract              
-                                                ├── Deploy SSL Cert      
-                                                ├── Deploy Dependencies  
-                                                └── Start Process        
-```
+| 工程 | 角色 |
+|------|------|
+| `Stardust.Data` | 数据层，Model.xml 统一定义表结构 |
+| `Stardust.Server` | 服务端 API，版本匹配、证书匹配、指令下发 |
+| `Stardust.Web` | Cube 管理界面，CRUD 控制器 + 视图 |
+| `Stardust`（核心库） | `ServiceManager` + 部署策略 + `DeployInfo` 模型 |
+| `StarAgent` | Windows 服务 / Linux systemd，执行部署 |
+| `DeployAgent` | 编译节点，拉代码 → 编译 → 打包 → 上传 |
 
 ---
 
-## 三、数据模型
+## 三、核心概念
 
-### 3.1 AppDeploy（应用部署集）
-
-应用部署的核心配置，定义一个可部署的应用单元。
-
-**核心字段**：
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| **Id** | Int32 | 编号 |
-| **Name** | String | 应用名称，全局唯一（主键），如 `myapp` |
-| ProjectId | Int32 | 项目。资源归属的团队，0表示全局 |
-| Category | String | 类别。如 `app`/`driver`/`plugin` |
-| Enable | Boolean | 是否启用 |
-| **Version** | String | 当前使用的版本号，如 `1.0.2025.0701` |
-| **MultiVersion** | Boolean | **多版本支持**。开启后根据节点平台自动选择最新匹配版本 |
-| AutoPublish | Boolean | 自动发布。版本创建后自动发布到启用节点 |
-| **Urls** | String | 服务地址。如 `https://sso.newlifex.com`，用于自动匹配SSL证书 |
-| **Dependencies** | String | 依赖项。如 `dm8-driver;redis-plugin`，分号分隔 |
-| FileName | String | 启动文件名，支持 zip 包 |
-| Arguments | String | 启动参数 |
-| WorkingDirectory | String | 工作目录 |
-| Environments | String | 环境变量 |
-| MaxMemory | Int32 | 最大内存（MB），超过自动重启 |
-| Mode | DeployMode | 工作模式：Standard(10)/Shadow(11)/Hosted(12)/Task(13) |
-| AllowMultiple | Boolean | 允许多实例。同一应用可在本机运行多份进程 |
-| ReloadOnChange | Boolean | 文件变化时是否重启 |
-
-**关键特性**：
-
-1. **MultiVersion 模式**：
-   - 开启后，不同节点可运行不同版本（根据 OS/Arch/TargetFramework 自动匹配）
-   - 关闭时，所有节点使用 `Version` 字段指定的版本
-
-2. **AutoPublish 模式**：
-   - 版本创建后自动发布到所有启用节点
-   - 加快发布速度，无需手动操作
-
-3. **差异化配置**：
-   - 节点级配置可覆盖应用集配置
-   - 支持单节点多发布场景（通过 DeployName 区分）
-
-### 3.2 AppDeployNode（应用节点）
-
-应用和节点服务器的关联关系，支持单应用多节点部署。
-
-**核心字段**：
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| **Id** | Int32 | 编号（**发布时使用的 deployId**） |
-| **DeployId** | Int32 | 关联的应用部署集 |
-| **NodeId** | Int32 | 关联的节点服务器 |
-| Enable | Boolean | 是否启用 |
-| **Version** | String | 当前使用的版本。开启MultiVersion时可能不同节点使用不同版本 |
-| Resources | String | 资源版本。最后一次发布时携带的资源，如 `dm8-driver:1.0;cert:2025.01` |
-| FileName/Arguments/... | String | 节点级配置。覆盖应用集配置 |
-| Delay | Int32 | 延迟。批量发布时的延迟时间，用于滚动发布（秒） |
-| **ProcessId** | Int32 | 当前运行的进程ID |
-| **LastActive** | DateTime | 最后活跃。最后一次上报心跳的时间 |
-
-**关键特性**：
-
-- **节点级覆盖**：FileName、Arguments、Environments 等可覆盖应用集配置
-- **运行状态**：记录节点上应用的运行状态（ProcessId、LastActive）
-- **滚动发布**：Delay 字段支持分批次延迟发布
-
-### 3.3 AppDeployVersion（部署版本）
-
-应用的版本管理，支持多版本切换。
-
-**核心字段**：
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| **Id** | Int32 | 编号 |
-| **DeployId** | Int32 | 关联的应用部署集 |
-| **Version** | String | 版本号，如 `1.0.2025.0701`，字符串比较大小 |
-| Enable | Boolean | 是否启用（用于回滚） |
-| **Url** | String | 资源地址（zip 包）。如 `/cube/file?id=123.zip` |
-| **Hash** | String | 文件哈希（MD5）。避免下载的文件有缺失 |
-| **OS** | OSKind | 操作系统。Windows/Linux/..., 0表示通用 |
-| **Arch** | CpuArch | CPU架构。X64/Arm64/..., 0表示通用 |
-| **TargetFramework** | String | 目标框架。TFM目标运行时框架，如 `net8.0` |
-| Overwrite | String | 覆盖文件。需要拷贝覆盖的文件，支持*模糊匹配 |
-| Mode | DeployModes | 发布模式。1部分包，2标准包，3完整包 |
-
-**版本匹配机制**（MultiVersion 核心）：
+### 3.1 实体关系
 
 ```
-1. 过滤 Enable=true 的版本
-2. 按 ID 倒序排列（最新优先）
-3. 匹配节点的 OS、Arch、Frameworks
-4. 返回第一个匹配的版本
-
-匹配规则：
-- OS/Arch/TFM 全部为 0 → 通用版本，匹配所有节点
-- OS 匹配 → CPU架构匹配 → 运行时框架匹配（向上兼容）
-- 优先精确匹配，其次通用版本
+AppDeploy（部署集）           SslCertificate（证书）
+  ├── AppDeployNode（1:N）       └── 通过 Domain 匹配 AppDeploy.Urls
+  │     └── Node（目标机器）
+  ├── AppDeployVersion（1:N）  AppPipeline（流水线）
+  │     └── Attachment（zip包）   ├── AppPipelineRun（1:N）
+  ├── AppDeployHistory（1:N）     │     └── AppPipelineStep（1:N）
+  └── AppBuildNode（1:N）         └── BuildNode → DeployNodes
+        └── Node（编译机器）
 ```
 
-**典型场景**：
+> 表结构定义见 [`Model.xml`](../Stardust.Data/Deployment/Model.xml)，执行 `xcode` 命令生成实体类。
 
-```
-应用：MyApp (MultiVersion=true)
-版本列表：
-├── v1.0.0 (OS=Windows, Arch=X64, TFM=net8.0)   ID=101
-├── v1.0.0 (OS=Linux, Arch=Arm64, TFM=net8.0)   ID=100
-├── v1.0.0 (OS=Windows, Arch=X64, TFM=net10.0)  ID=102
-└── v1.0.0 (OS=Any, Arch=Any, TFM=)             ID=99
+### 3.2 部署集（AppDeploy）
 
-节点A (Windows/X64/net10.0)  → 选择 ID=102
-节点B (Linux/Arm64/net8.0)   → 选择 ID=100
-节点C (Linux/X86/net6.0)     → 选择 ID=99（通用）
-```
+应用的可部署单元。一个应用可有多个部署集（如 arm 版和 x64 版），每个部署集关联一组节点和多个版本。
 
-### 3.4 SslCertificate（SSL证书）
+核心配置：启动文件名、参数、工作目录、环境变量、最大内存、部署模式。
 
-SSL证书专用表，集中管理企业的HTTPS证书。
+### 3.3 部署版本（AppDeployVersion）
 
-**核心字段**：
+每个部署集可上传多个版本（zip 包）。版本标注 OS / Arch / TargetFramework，服务端根据目标节点平台自动选择最佳匹配版本。
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| **Id** | Int32 | 编号 |
-| **Domain** | String | 域名（单数）。支持通配符，如 `*.newlifex.com` |
-| Enable | Boolean | 是否启用 |
-| **PfxFile** | String | PFX文件（Windows/IIS），魔方附件管理，长度50 |
-| PfxPassword | String | PFX密码，加密存储 |
-| **CrtFile** | String | 证书文件（Linux/Nginx），魔方附件管理，长度50 |
-| **KeyFile** | String | 私钥文件（Linux/Nginx），魔方附件管理，长度50 |
-| **PemFile** | String | PEM文件（通用格式），魔方附件管理，长度50 |
-| **NotBefore** | DateTime | 生效时间 |
-| **NotAfter** | DateTime | 过期时间。用于自动告警和续期 |
-| AutoRenew | Boolean | 自动续期。集成Let's Encrypt/阿里云等 |
-| Provider | String | 证书提供商。letsencrypt/aliyun/tencent/manual |
-| RenewDays | Int32 | 续期提前天数。过期前N天自动续期，默认30天 |
+### 3.4 部署节点（AppDeployNode）
 
-**关键特性**：
+部署集与目标机器的关联。节点级可覆盖部署集的启动配置（FileName / Arguments / WorkingDirectory 等）。`Delay` 字段支持滚动发布。
 
-1. **单域名管理**：
-   - 每条记录管理一个域名（字段名改为单数 `Domain`）
-   - 支持通配符（如 `*.newlifex.com`）
-   - 同一域名可有多个时间段的证书（历史版本）
+### 3.5 SSL 证书（SslCertificate）
 
-2. **自动匹配机制**：
-   ```csharp
-   // 通过 AppDeploy.Urls 自动解析域名并匹配证书
-   Urls = "https://sso.newlifex.com"
-        ↓ 提取域名
-   sso.newlifex.com
-        ↓ 查询匹配
-   Domain = "*.newlifex.com"  // 通配符匹配
-        ↓ 选择有效期内最新证书
-   NotBefore ≤ Now < NotAfter
-        ↓ 根据节点OS选择格式
-   Windows → PfxFile  /  Linux → PemFile
-   ```
+按域名管理证书。部署时通过 `AppDeploy.Urls` 自动提取域名，匹配有效期内的证书，根据节点 OS 选择 Pfx（Windows）或 Pem（Linux）格式。
 
-3. **魔方附件管理**：
-   - 文件字段使用魔方附件管理（`ItemType="file"`）
-   - 长度50足够（返回相对路径如 `/cube/file?id=123`）
-   - 统一附件存储，便于管理
+### 3.6 流水线（AppPipeline）
+
+CI/CD 自动化：Webhook 触发 → 编译节点拉代码编译打包 → 上传版本 → 自动发布到目标节点。
 
 ---
 
 ## 四、部署模式
 
-### 4.1 模式定义
-
-系统支持四种部署模式，通过 `DeployMode` 枚举定义（v3.7+）：
-
-| 模式 | 值 | 特点 | 适用场景 |
+| 模式 | 值 | 行为 | 适用场景 |
 |------|-----|------|---------|
-| **Standard** | 10 | 解压到工作目录，直接运行 | **推荐**，大多数应用 |
-| **Shadow** | 11 | 解压到影子目录，配置在工作目录 | 热更新，频繁更新的应用 |
-| **Hosted** | 12 | 仅解压，由外部宿主运行 | IIS/Nginx托管的应用 |
-| **Task** | 13 | 运行一次后完成，不守护 | 脚本、数据库迁移工具 |
+| **Standard** | 10 | 解压到工作目录，直接运行 | 大多数应用（推荐） |
+| **Shadow** | 11 | 解压到影子目录，配置保留在工作目录 | 热更新、频繁发布 |
+| **Hosted** | 12 | 仅解压，不启动进程 | IIS / Nginx 托管 |
+| **Task** | 13 | 运行一次后完成，不守护 | 脚本、数据库迁移 |
 
-### 4.2 Standard 模式（推荐）
+**兼容性**：旧版模式值 0-4 被新版客户端自动映射为 10-13，新旧客户端共存平滑过渡。
 
-```
-工作目录结构：
-apps/myapp/
-├── myapp.zip          # 下载的应用包
-├── myapp.exe          # 解压后的可执行文件
-├── myapp.dll
-├── appsettings.json   # 配置文件
-└── logs/              # 日志目录
-
-执行流程：
-1. Extract: zip 解压到工作目录
-2. Execute: 直接在工作目录运行
-```
-
-### 4.3 Shadow 模式（热更新）
-
-```
-目录结构：
-apps/myapp/              # 工作目录（配置和数据）
-├── myapp.zip
-├── appsettings.json    # 配置文件（不会被覆盖）
-├── data/               # 数据目录
-
-shadow/myapp-a1b2c3d4/   # 影子目录（可执行文件）
-├── myapp.exe
-├── myapp.dll
-└── *.dll
-
-执行流程：
-1. Extract: zip 解压到影子目录
-2. 配置文件拷贝到工作目录（如不存在）
-3. Execute: 在影子目录运行，工作目录设为 apps/myapp
-```
-
-### 4.4 Hosted 模式（外部托管）
-
-```
-工作目录结构：
-wwwroot/mysite/
-├── web.config         # IIS 配置
-├── app_offline.htm    # 维护页面（部署时临时创建）
-├── *.dll
-└── wwwroot/
-
-执行流程：
-1. Extract:
-   - 创建 app_offline.htm（网站离线）
-   - 备份 web.config
-   - 解压 zip 到工作目录
-   - 恢复 web.config
-   - 删除 app_offline.htm（网站上线）
-2. Execute: 不启动进程（由 IIS 托管）
-```
-
-### 4.5 Task 模式（一次性任务）
-
-```
-执行流程：
-1. Extract: zip 解压到工作目录（如有）
-2. Execute: 运行一次
-3. 完成后: 设置 Enable = false，不再守护
-```
-
-### 4.6 兼容性设计
-
-系统支持新旧两套部署模式值：
-
-| 旧版值 | 旧版名称 | 新版值 | 新版名称 |
-|--------|----------|--------|----------|
-| 0 | Default | 11 | Shadow |
-| 1 | Extract | 12 | Hosted |
-| 2 | ExtractAndRun | 10 | Standard |
-| 3 | RunOnce | 13 | Task |
-| 4 | Multiple | 11 | Shadow + AllowMultiple |
-
-客户端通过数值范围自动识别：
-- **0-9**：旧版模式，按映射表转换
-- **10+**：新版模式，直接使用
-
-新版客户端（>=v3.7）接收新版模式值（10+），旧版客户端（<v3.7）接收旧版模式值（0-4），平滑过渡。
+策略实现：
+- `StandardDeployStrategy` / `ShadowDeployStrategy` / `HostedStrategy` / `TaskStrategy`
+- 统一接口 `IDeployStrategy`，`ServiceController` 通过工厂创建
 
 ---
 
-## 五、多版本管理
+## 五、版本匹配机制
 
-### 5.1 MultiVersion 核心机制
-
-**功能开关**：`AppDeploy.MultiVersion = true`
-
-**核心能力**：
-- 不同节点运行不同版本（根据 OS/Arch/TFM 自动匹配）
-- 同一应用支持 Windows/Linux、X64/ARM、net8.0/net10.0 等多个版本
-- 自动选择最新的匹配版本
-
-**版本选择规则**：
-
-```csharp
-// 伪代码
-public AppDeployVersion SelectVersion(AppDeploy app, Node node)
-{
-    // 1. 过滤启用的版本
-    var versions = AppDeployVersion.FindAll(_.DeployId == app.Id & _.Enable == true)
-        .OrderByDescending(e => e.Id);  // 最新优先
-    
-    // 2. 匹配节点平台
-    foreach (var ver in versions)
-    {
-        // 通用版本（OS=0, Arch=0, TFM=""）匹配所有节点
-        if (ver.OS == 0 && ver.Arch == 0 && ver.TargetFramework.IsNullOrEmpty())
-            return ver;
-        
-        // 精确匹配
-        if (ver.OS == node.OSKind && ver.Arch == node.CpuArch)
-        {
-            // 框架匹配（向上兼容）
-            if (ver.TargetFramework.IsNullOrEmpty() || 
-                IsFrameworkCompatible(ver.TargetFramework, node.Frameworks))
-                return ver;
-        }
-    }
-    
-    return null;
-}
-```
-
-### 5.2 版本回滚
-
-#### 方案一：禁用新版本（推荐）
-
-**原理**：利用 `Enable` 字段过滤机制
-
-**操作步骤**：
+`DeployService.GetDeployVersion()` 根据节点平台从版本列表中筛选：
 
 ```
-场景：回滚到 2024-12-20 的版本
-
-版本列表：
-- ID=100, v1.0.0, Arch=Arm64, 2025-01-15, Enable=true  ← 最新（有问题）
-- ID=50,  v1.0.0, Arch=Arm64, 2024-12-20, Enable=true  ← 目标稳定版
-
-操作：
-1. 找到 ID=100，点击"禁用"
-2. 点击"发布"按钮
-3. 系统自动选择 ID=50（最新的可用版本）
+1. 取 Enable=true 的版本，按 ID 倒序（最新优先）
+2. 依次匹配：OS → Arch → TargetFramework
+3. OS/Arch=0 或 TFM 为空表示通用，匹配所有节点
+4. TFM 向上兼容：net8.0 可运行在 net9.0/net10.0 节点
 ```
 
-**优点**：
-- 不需要修改代码
-- 操作简单直观
-- 支持灰度回滚（逐步禁用不同平台的新版本）
-- 可随时恢复（重新启用即可）
-
-#### 方案二：版本命名规范
-
-**建议格式**：`{主版本}.{次版本}.{年}.{月日}`
-
-**示例**：
-- `1.0.2025.0115`
-- `1.0.2024.1220`
-
-### 5.3 回滚场景示例
-
-#### 场景1：单平台回滚
-
-```
-应用：MyApp (MultiVersion=true)
-版本列表：
-- ID=101, v1.0.0, Windows/X64,  2025-01-15, Enable=true
-- ID=100, v1.0.0, Linux/Arm64,  2025-01-15, Enable=true  ← 有问题
-- ID=51,  v1.0.0, Windows/X64,  2024-12-20, Enable=true
-- ID=50,  v1.0.0, Linux/Arm64,  2024-12-20, Enable=true  ← 稳定版
-
-操作：
-1. 禁用 ID=100
-2. 发布
-
-结果：
-- Windows 节点继续使用 ID=101
-- ARM 节点自动回滚到 ID=50
-```
-
-#### 场景2：全平台回滚
-
-```
-需求：所有平台回滚到 2024-12-20
-
-操作：
-1. 禁用所有 2024-12-20 之后的版本（ID=100, 101）
-2. 发布
-
-结果：
-- 所有节点都使用 2024-12-20 的版本
-```
-
-#### 场景3：灰度回滚
-
-```
-需求：先回滚测试环境，验证后再回滚生产
-
-操作：
-1. 在测试节点上禁用新版本，观察运行情况
-2. 确认无问题后，在生产节点上禁用新版本
-```
+**回滚**：禁用问题版本 → 发布 → 系统自动选取次新的匹配版本。
 
 ---
 
-## 六、SSL证书管理
-
-### 6.1 设计理念
-
-**核心原则**：
-- **无需项目归属**：全公司共用，中小企业无需区分项目
-- **单域名管理**：每条记录一个域名，简化逻辑
-- **自动匹配**：通过 `AppDeploy.Urls` 自动解析域名并匹配证书
-- **历史版本**：同一域名可有多个时间段的证书
-
-### 6.2 域名匹配逻辑
-
-```csharp
-public SslCertificate FindByDomain(String domain)
-{
-    var now = DateTime.Now;
-    
-    var certs = SslCertificate.FindAll(
-        _.Enable == true & 
-        _.NotBefore <= now & 
-        _.NotAfter > now
-    ).OrderByDescending(e => e.NotAfter);
-    
-    // 精确匹配优先
-    var exactMatch = certs.FirstOrDefault(e => e.Domain.EqualIgnoreCase(domain));
-    if (exactMatch != null) return exactMatch;
-    
-    // 通配符匹配
-    foreach (var cert in certs)
-    {
-        if (cert.Domain.StartsWith("*."))
-        {
-            var suffix = cert.Domain.Substring(2);
-            if (domain.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
-                return cert;
-        }
-    }
-    
-    return null;
-}
-```
-
-### 6.3 自动续期
-
-**支持的提供商**：Let's Encrypt（letsencrypt）/ 阿里云（aliyun）/ 腾讯云（tencent）/ 手动上传（manual）
-
-**自动续期流程**：
+## 六、发布流程
 
 ```
-CertRenewJob 定时任务（每天执行）
+用户在 AppDeployNode 列表点击"发布"
     │
     ▼
-查找即将过期的证书（NotAfter ≤ 今天 + RenewDays）
+Web DeployService.Control("install")
+    ├── 设置 deployNode.Enable = true
+    └── SendNodeCommandAsync("deploy/install", {Id, DeployName, AppName})
+        │
+        ▼  WebSocket 实时推送，HTTP 轮询兜底
+        │
+StarAgent.ServiceManager.OnInstall()
+    ├── PullService() → GET /node/getDeploy → 获取 DeployInfo
+    │     └── Server DeployService.BuildDeployInfo()
+    │           ├── GetDeployVersion() 平台匹配
+    │           ├── 查找 SSL 证书（Domain 匹配）
+    │           └── 构建 DeployInfo {Url, Hash, Service, ...}
     │
-    ├── AutoRenew=true
-    │       └── 调用续期接口 → 验证域名所有权 → 申请新证书 → 更新文件
+    ├── Download(info, svc) → 下载 zip → MD5 校验 → 覆盖原文件
+    ├── ServiceController.Start()
+    │     └── IDeployStrategy.Extract() → 解压到工作目录/影子目录
+    │     └── IDeployStrategy.Execute() → 启动进程
     │
-    └── AutoRenew=false
-            └── 发送告警（邮件/钉钉/企微）
+    └── 守护：ServiceManager.DoWork() 定时（30s）
+          ├── 进程存活检查
+          ├── 内存超限检查
+          ├── 文件变化检查（ReloadOnChange）
+          └── 上报心跳
 ```
 
 ---
 
-## 七、依赖项管理
+## 七、客户端架构（StarAgent）
 
-### 7.1 设计理念
-
-**核心思路**：**驱动/插件作为独立 `AppDeploy` 部署集**
-
-**优势**：
-- 复用平台能力：多版本管理、多平台支持、回滚能力
-- 独立生命周期：驱动可独立升级，不影响业务应用
-- 全局共享：一次配置，所有项目共用
-
-### 7.2 创建全局驱动
+### 组件关系
 
 ```
-AppDeploy:
-├── ProjectId: 0（全局资源）
-├── Category: driver
-├── Name: dm8-driver
-├── Mode: Hosted（仅解压，不启动进程）
-├── WorkingDirectory: ../Plugins/DmProvider
-└── 版本：v8.1.2 (OS=Windows, Arch=X64, TFM=net8.0)
+ServiceManager（总管）
+  ├── 注册指令："deploy/install" "deploy/start" "deploy/stop" ...
+  ├── 定时器 DoWork()：健康检查 + 配置拉取
+  └── 管理多个 ServiceController（每个应用一个）
+        │
+        └── ServiceController
+              ├── IDeployStrategy（解压 + 启动）
+              ├── 进程监控（存活/内存/文件变化）
+              └── 事件上报（EventProvider）
 ```
 
-### 7.3 依赖检查逻辑
+### 指令处理
 
-```
-解析 app.Dependencies = "dm8-driver;redis-plugin"
-    │
-    ├── 查找依赖部署集（优先本项目 → 全局）
-    ├── 检查是否已部署到目标节点
-    │       ├── 已部署 → 跳过
-    │       └── 未部署 → 自动创建 AppDeployNode → 异步触发发布
-    └── 等待依赖就绪后，发布主应用
-```
+| 指令 | 处理 |
+|------|------|
+| `deploy/install` | PullService → Download → Strategy.Extract → Strategy.Execute |
+| `deploy/start` | 设置 Enable=true → 启动进程 |
+| `deploy/stop` | 终止进程 |
+| `deploy/restart` | Stop + Start |
+| `deploy/uninstall` | 终止进程 → 设置 Enable=false |
+| `deploy/compile` | 仅编译节点：拉代码 → 编译 → 打包 → 上传 |
 
 ---
 
-## 八、部署流程
+## 八、关键设计决策
 
-### 8.1 完整流程图
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│ 1. 上传应用包                                                │
-│    用户 ──[上传 ZIP]──> Stardust.Server                      │
-│           ├── 保存到魔方附件                                 │
-│           ├── 解析元数据（OS/Arch/TFM）                      │
-│           └── 记录 AppDeployVersion                          │
-└─────────────────────────────────────────────────────────────┘
-                           ↓
-┌─────────────────────────────────────────────────────────────┐
-│ 2. 配置应用                                                  │
-│    ├── AppDeploy.Name = "MyApp"                              │
-│    ├── AppDeploy.Urls = "https://sso.newlifex.com"          │
-│    │       └── 自动匹配 → SslCertificate.Domain             │
-│    └── AppDeploy.Dependencies = "dm8-driver;redis-plugin"    │
-└─────────────────────────────────────────────────────────────┘
-                           ↓
-┌─────────────────────────────────────────────────────────────┐
-│ 3. 点击发布                                                  │
-│    DeployService.BuildDeployInfo()                           │
-│    ├── 选择版本（MultiVersion 匹配）                        │
-│    ├── 查找证书（Domain 匹配）                               │
-│    ├── 检查依赖（自动关联节点）                             │
-│    └── 构建 DeployInfo                                       │
-└─────────────────────────────────────────────────────────────┘
-                           ↓
-┌─────────────────────────────────────────────────────────────┐
-│ 4. 下发指令                                                  │
-│    ├── WebSocket 推送（实时）                                │
-│    └── HTTP 轮询（轮询，每分钟）                             │
-└─────────────────────────────────────────────────────────────┘
-                           ↓
-┌─────────────────────────────────────────────────────────────┐
-│ 5. 客户端处理                                                │
-│    StarAgent.ServiceManager                                  │
-│    ├── OnInstall() → PullService → Download → Deploy → Start│
-│    ├── OnStart() / OnStop() / OnRestart() / OnUninstall()   │
-│    └── StartMonitor（文件监控）                              │
-└─────────────────────────────────────────────────────────────┘
-                           ↓
-┌─────────────────────────────────────────────────────────────┐
-│ 6. 守护监控                                                  │
-│    ServiceManager.DoWork() 定时任务（30秒）                  │
-│    ├── 检查进程状态                                          │
-│    ├── 检查内存限制                                          │
-│    ├── 检查文件变化（ReloadOnChange）                       │
-│    └── 上报心跳（LastActive）                                │
-└─────────────────────────────────────────────────────────────┘
-```
+| 决策 | 选择 | 理由 |
+|------|------|------|
+| 版本匹配 | OS → Arch → TFM 逐层筛选 | 一个版本包只为一个平台编译，精确匹配确保兼容 |
+| MultiVersion | 开关控制，开启后自动选最新匹配版本 | 新应用默认开启，老应用保持单版本行为 |
+| 节点级配置覆盖 | AppDeployNode 可覆盖 FileName/Arguments 等 | 同一应用不同节点可能需要不同参数 |
+| 部署模式兼容 | 旧版 0-4 映射为新版 10-13 | 平滑升级，无需同时升级所有 Agent |
+| 证书格式选择 | Windows → Pfx，Linux → Pem | 自动适配，减少人工配置 |
+| 数据清理 | Truncate / Delete 双模式 | 灵活适配不同数据库权限 |
+| 通信双通道 | HTTP 心跳 + WebSocket 指令 | 实时性 + 可靠性 |
+| 流水线状态 | Pending → Building → UploadSucceeded → Deploying → Success/Failed | 细粒度追踪，快速定位失败环节 |
 
 ---
 
-## 九、客户端架构
+## 九、最佳实践
 
-### 9.1 组件关系
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      ServiceManager                          │
-│  - 管理多个 ServiceController                                │
-│  - 处理服务端指令（安装/启动/停止/重启/卸载）                 │
-│  - 定时健康检查（30秒）                                      │
-│  - 上报/拉取应用配置                                         │
-└──────────────────────────┬──────────────────────────────────┘
-                           │ 1:N
-        ┌──────────────────┼──────────────────┐
-        ▼                  ▼                  ▼
-┌───────────────┐  ┌───────────────┐  ┌───────────────┐
-│ServiceController│ │ServiceController│ │ServiceController│
-│   (MyApp)     │  │  (dm8-driver)  │  │(redis-plugin) │
-└───────┬───────┘  └───────┬───────┘  └───────┬───────┘
-        ▼                  ▼                  ▼
-┌───────────────┐  ┌───────────────┐  ┌───────────────┐
-│IDeployStrategy│  │IDeployStrategy│  │IDeployStrategy│
-│  (Standard)   │  │   (Hosted)    │  │   (Hosted)    │
-└───────────────┘  └───────────────┘  └───────────────┘
-```
-
-### 9.2 守护机制
-
-```
-ServiceManager.DoWork() 定时任务（30秒）
-    │
-    ▼
-遍历 Services
-    ├── 服务已禁用 ──> StopService()
-    ├── 配置已改变 ──> Stop + Start（重载）
-    └── 服务已启用 ──> StartService()
-            │
-            ▼
-    ServiceController.Check()
-            ├── 进程存在 → 检查内存限制 / 文件变化
-            ├── 进程不存在但有ProcessId → 尝试接管
-            └── 都找不到 → Start() 启动新进程
-```
-
-### 9.3 部署策略接口
-
-```csharp
-public interface IDeployStrategy
-{
-    DeployMode Mode { get; }              // 部署模式
-    Boolean NeedGuardian { get; }         // 是否需要守护
-    Boolean AllowTakeOver { get; }        // 是否允许接管
-    
-    Boolean Extract(DeployContext ctx);   // 解压部署包
-    Process Execute(DeployContext ctx);   // 执行应用
-}
-
-实现类：
-├── StandardDeployStrategy   (Standard模式)
-├── ShadowDeployStrategy     (Shadow模式)
-├── HostedStrategy           (Hosted模式)
-└── TaskStrategy             (Task模式)
-```
+| 场景 | 建议 |
+|------|------|
+| 版本命名 | `{主}.{次}.{年}.{月日}`，如 `1.0.2025.0701` |
+| 部署模式 | 绝大多数应用用 Standard；频繁更新用 Shadow |
+| 滚动发布 | 给不同节点设置不同的 Delay（0/60/120 秒） |
+| 回滚 | 禁用问题版本 → 重新发布（自动选次新版） |
+| 灰度发布 | 先发布少数节点观察，确认后全量 |
 
 ---
 
-## 十、最佳实践
+## 十、故障排查
 
-### 10.1 版本命名规范
+| 现象 | 可能原因 | 排查 |
+|------|----------|------|
+| 发布后节点未更新 | WebSocket 断开 | 检查 LastActive、StarAgent 日志 |
+| 进程启动失败 | 文件权限 / 依赖缺失 | 检查 StarAgent 日志，手动运行 |
+| 证书未匹配 | Domain 不一致 / 证书过期 | 检查 Urls 和证书有效期 |
+| 版本选错 | OS/Arch/TFM 设置不正确 | 检查版本平台字段 |
 
-**推荐格式**：`{主版本}.{次版本}.{年}.{月日}`
+### 日志位置
 
-**示例**：`1.0.2025.0701`、`1.0.2024.1220`、`2.3.2025.0115`
-
-### 10.2 部署模式选择
-
-| 场景 | 推荐模式 | 理由 |
-|------|---------|------|
-| 大多数应用 | **Standard** | 简单直接，易于理解 |
-| 频繁更新的应用 | **Shadow** | 保持配置文件，热更新 |
-| IIS/Nginx 托管 | **Hosted** | 仅解压，由外部宿主运行 |
-| 数据库迁移工具 | **Task** | 运行一次后完成，不守护 |
-
-### 10.3 滚动发布
-
-**配置节点延迟**：
-
-```
-节点A: Delay=0     （立即发布）
-节点B: Delay=60    （延迟60秒）
-节点C: Delay=120   （延迟120秒）
-```
-
----
-
-## 十一、故障排查
-
-### 11.1 常见问题
-
-| 问题 | 可能原因 | 排查步骤 |
-|------|----------|----------|
-| 发布后节点未更新 | 节点未连接 / WebSocket断开 | 检查LastActive、日志 |
-| 进程启动失败 | 启动文件不对 / 权限不足 | 检查StarAgent日志 |
-| 证书未匹配 | Domain不匹配 / 证书过期 | 检查Urls匹配 |
-| 依赖未部署 | Dependencies拼写错误 | 检查名称和启用状态 |
-
-### 11.2 日志位置
-
-| 组件 | 日志位置 |
-|------|---------|
-| **Stardust.Web** | `Logs/*.log` |
-| **Stardust.Server** | `Logs/*.log` |
-| **StarAgent** | `Logs/staragent.log` |
-| **应用日志** | 工作目录/`logs/*.log` |
+| 组件 | 路径 |
+|------|------|
+| Web / Server | `Logs/*.log` |
+| StarAgent | `Logs/staragent.log` |
+| 应用 | `<工作目录>/logs/*.log` |
