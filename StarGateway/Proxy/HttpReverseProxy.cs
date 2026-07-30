@@ -433,7 +433,8 @@ public class HttpReverseProxy : ProxyServer
             json = new
             {
                 uptime = Environment.TickCount64 / 1000,
-                activeSessions = Sessions,
+                // 只取会话数量，避免序列化整个会话字典（内含 Socket，MulticastLoopback 在非组播 socket 上会抛异常）
+                activeSessions = Sessions?.Count ?? 0,
                 totalRequests = Interlocked.Read(ref _totalRequests),
                 routeCount = routes?.Count ?? 0,
                 port = Port,
@@ -456,6 +457,10 @@ public class HttpReverseProxy : ProxyServer
                     cluster = e.ClusterName,
                 }).ToList();
                 json = list.ToJson();
+            }
+            else
+            {
+                json = "[]";
             }
         }
         else if (path.EqualIgnoreCase("/api/refresh"))
@@ -597,185 +602,198 @@ public class HttpReverseSession : ProxySession
 
         if (Host is not HttpReverseProxy proxy) { base.OnReceive(e); return; }
 
-        // 检测WebSocket升级请求
-        var isUpgrade = request.Headers.TryGetValue("Upgrade", out var upgrade) &&
-                        upgrade.EqualIgnoreCase("websocket") &&
-                        request.Headers.TryGetValue("Connection", out var conn) &&
-                        conn.IndexOf("upgrade", StringComparison.OrdinalIgnoreCase) >= 0;
-
-        // 匹配路由（含Header匹配）
-        var route = proxy.MatchRoute(host, path, method, request.Headers);
-
-        // 如果是WebSocket升级请求，检查路由是否允许
-        if (isUpgrade && route != null && !route.WebSocket)
+        // 统一异常保护：处理请求（含 Admin API、路由匹配、转发）时若抛异常，
+        // 必须返回错误响应并关闭连接，否则客户端会一直挂起等待无返回。
+        try
         {
-            // 路由禁止WebSocket，返回400
-            proxy.AdminLog?.Info("WebSocket被路由 {0} 禁止: {1} {2}", route.Name, method, path);
-            var body = "WebSocket upgrade not allowed for this route"u8.ToArray();
-            Send($"HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: {body.Length}\r\nConnection: close\r\n\r\n");
-            Send(body);
-            Dispose();
-            return;
-        }
+            // 检测WebSocket升级请求
+            var isUpgrade = request.Headers.TryGetValue("Upgrade", out var upgrade) &&
+                            upgrade.EqualIgnoreCase("websocket") &&
+                            request.Headers.TryGetValue("Connection", out var conn) &&
+                            conn.IndexOf("upgrade", StringComparison.OrdinalIgnoreCase) >= 0;
 
-        // 创建APM追踪span（仅首次请求，WebSocket升级后不再创建）
-        var tracer = proxy.Tracer;
-        if (tracer != null && !_upgraded)
-        {
-            var traceId = request.Headers["Trace-Id"] ?? request.Headers["traceparent"];
-            var data = new { host, path, method };
-            _span = tracer.NewSpan($"gateway:{method}:{path}", traceId != null ? new { traceId, data } : data);
-        }
+            // 匹配路由（含Header匹配）
+            var route = proxy.MatchRoute(host, path, method, request.Headers);
 
-        // 检查Admin API
-        if (proxy.HandleAdminRequest(this, path, request)) return;
-
-        // 检查静态文件路由。路由开启了IsStaticRoute才走静态文件托管
-        if (route != null && route.IsStaticRoute)
-        {
-            var staticRoot = route.StaticRoot;
-            if (staticRoot.IsNullOrEmpty())
+            // 如果是WebSocket升级请求，检查路由是否允许
+            if (isUpgrade && route != null && !route.WebSocket)
             {
-                // 开启了静态路由但没设置根目录，直接返回404
-                proxy.AdminLog?.Info("Static {0} {1} -> 404 静态路由未配置根目录", method, path);
+                // 路由禁止WebSocket，返回400
+                proxy.AdminLog?.Info("WebSocket被路由 {0} 禁止: {1} {2}", route.Name, method, path);
+                var body = "WebSocket upgrade not allowed for this route"u8.ToArray();
+                Send($"HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: {body.Length}\r\nConnection: close\r\n\r\n");
+                Send(body);
+                Dispose();
+                return;
+            }
+
+            // 创建APM追踪span（仅首次请求，WebSocket升级后不再创建）
+            var tracer = proxy.Tracer;
+            if (tracer != null && !_upgraded)
+            {
+                var traceId = request.Headers["Trace-Id"] ?? request.Headers["traceparent"];
+                var data = new { host, path, method };
+                _span = tracer.NewSpan($"gateway:{method}:{path}", traceId != null ? new { traceId, data } : data);
+            }
+
+            // 检查Admin API
+            if (proxy.HandleAdminRequest(this, path, request)) return;
+
+            // 检查静态文件路由。路由开启了IsStaticRoute才走静态文件托管
+            if (route != null && route.IsStaticRoute)
+            {
+                var staticRoot = route.StaticRoot;
+                if (staticRoot.IsNullOrEmpty())
+                {
+                    // 开启了静态路由但没设置根目录，直接返回404
+                    proxy.AdminLog?.Info("Static {0} {1} -> 404 静态路由未配置根目录", method, path);
+                    Send("HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"u8.ToArray());
+                    Dispose();
+                    return;
+                }
+
+                if (Path.IsPathRooted(staticRoot))
+                {
+                    staticRoot = Path.GetFullPath(staticRoot);
+                }
+                else
+                {
+                    // 相对路径，基于当前工作目录
+                    staticRoot = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), staticRoot));
+                }
+
+                if (proxy.StaticFiles.TryHandle(method, path, staticRoot, route.IndexFile ?? "index.html", route.DirectoryBrowse, route.SPAFallback, out var response))
+                {
+                    // 记录日志
+                    proxy.AdminLog?.Info("Static {0} {1} [{2}]", method, path, route.Name);
+
+                    // 创建APM追踪span
+                    if (tracer != null)
+                    {
+                        _span?.Dispose();
+                        _span = tracer.NewSpan($"static:{method}:{path}");
+                    }
+
+                    Send(response);
+                    Dispose();
+                    return;
+                }
+
+                // 静态文件处理失败（文件不存在等），不再继续转发
+                proxy.AdminLog?.Info("Static {0} {1} -> 404 文件不存在", method, path);
                 Send("HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"u8.ToArray());
                 Dispose();
                 return;
             }
 
-            if (Path.IsPathRooted(staticRoot))
+            if (route != null)
             {
-                staticRoot = Path.GetFullPath(staticRoot);
-            }
-            else
-            {
-                // 相对路径，基于当前工作目录
-                staticRoot = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), staticRoot));
-            }
-
-            if (proxy.StaticFiles.TryHandle(method, path, staticRoot, route.IndexFile ?? "index.html", route.DirectoryBrowse, route.SPAFallback, out var response))
-            {
-                // 记录日志
-                proxy.AdminLog?.Info("Static {0} {1} [{2}]", method, path, route.Name);
-
-                // 创建APM追踪span
-                if (tracer != null)
+                var target = proxy.SelectNode(route, Remote?.Host);
+                if (target != null)
                 {
-                    _span?.Dispose();
-                    _span = tracer.NewSpan($"static:{method}:{path}");
-                }
+                    RemoteServerUri = target;
+                    _targetAddress = target.ToString();
+                    _routeName = route.Name;
 
-                Send(response);
-                Dispose();
-                return;
-            }
+                    // 追踪连接数
+                    proxy.IncrementConnection(_targetAddress);
+                    proxy._lastActive[_targetAddress] = DateTime.Now;
 
-            // 静态文件处理失败（文件不存在等），不再继续转发
-            proxy.AdminLog?.Info("Static {0} {1} -> 404 文件不存在", method, path);
-            Send("HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"u8.ToArray());
-            Dispose();
-            return;
-        }
-
-        if (route != null)
-        {
-            var target = proxy.SelectNode(route, Remote?.Host);
-            if (target != null)
-            {
-                RemoteServerUri = target;
-                _targetAddress = target.ToString();
-                _routeName = route.Name;
-
-                // 追踪连接数
-                proxy.IncrementConnection(_targetAddress);
-                proxy._lastActive[_targetAddress] = DateTime.Now;
-
-                // 仅非WebSocket或首次升级请求记录日志
-                if (!isUpgrade)
-                {
-                    proxy.AdminLog?.Info("{0} {1} -> {2}:{3} [{4}]", method, path, target.Host, target.Port, _routeName);
+                    // 仅非WebSocket或首次升级请求记录日志
+                    if (!isUpgrade)
+                    {
+                        proxy.AdminLog?.Info("{0} {1} -> {2}:{3} [{4}]", method, path, target.Host, target.Port, _routeName);
+                    }
+                    else
+                    {
+                        _isWebSocketUpgrade = true;
+                        proxy.AdminLog?.Info("WS {0} {1} -> {2}:{3} [{4}]", method, path, target.Host, target.Port, _routeName);
+                    }
                 }
                 else
                 {
-                    _isWebSocketUpgrade = true;
-                    proxy.AdminLog?.Info("WS {0} {1} -> {2}:{3} [{4}]", method, path, target.Host, target.Port, _routeName);
+                    // 没有可用节点，尝试冷启动
+                    proxy.WriteError("路由 {0} 没有可用的后端节点", route.Name);
+                    _ = TryColdStart(proxy, route);
                 }
             }
             else
             {
-                // 没有可用节点，尝试冷启动
-                proxy.WriteError("路由 {0} 没有可用的后端节点", route.Name);
-                _ = TryColdStart(proxy, route);
-            }
-        }
-        else
-        {
-            // 未匹配路由，使用默认远程服务器
-            if (proxy.RemoteServer != null) RemoteServerUri = proxy.RemoteServer;
-        }
-
-        // ---- 头部修改：StripPrefix & AddHeaders ----
-        if (route != null)
-        {
-            var modified = false;
-
-            // StripPrefix: 去除匹配路径前缀
-            if (route.StripPrefix && !route.Path.IsNullOrEmpty())
-            {
-                var prefix = route.Path.TrimEnd('*').TrimEnd('/');
-                if (!prefix.IsNullOrEmpty() && path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-                {
-                    var newPath = path.Substring(prefix.Length);
-                    if (newPath.IsNullOrEmpty()) newPath = "/";
-                    request.RequestUri = new Uri(newPath, UriKind.RelativeOrAbsolute);
-                    modified = true;
-                }
+                // 未匹配路由，使用默认远程服务器
+                if (proxy.RemoteServer != null) RemoteServerUri = proxy.RemoteServer;
             }
 
-            // AddHeaders: 添加额外请求头
-            if (!route.AddHeaders.IsNullOrEmpty())
+            // ---- 头部修改：StripPrefix & AddHeaders ----
+            if (route != null)
             {
-                var headers = route.AddHeaderRules;
-                if (headers != null)
+                var modified = false;
+
+                // StripPrefix: 去除匹配路径前缀
+                if (route.StripPrefix && !route.Path.IsNullOrEmpty())
                 {
-                    foreach (var kv in headers)
+                    var prefix = route.Path.TrimEnd('*').TrimEnd('/');
+                    if (!prefix.IsNullOrEmpty() && path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
                     {
-                        request.Headers[kv.Key] = kv.Value;
+                        var newPath = path.Substring(prefix.Length);
+                        if (newPath.IsNullOrEmpty()) newPath = "/";
+                        request.RequestUri = new Uri(newPath, UriKind.RelativeOrAbsolute);
+                        modified = true;
                     }
-                    modified = true;
+                }
+
+                // AddHeaders: 添加额外请求头
+                if (!route.AddHeaders.IsNullOrEmpty())
+                {
+                    var headers = route.AddHeaderRules;
+                    if (headers != null)
+                    {
+                        foreach (var kv in headers)
+                        {
+                            request.Headers[kv.Key] = kv.Value;
+                        }
+                        modified = true;
+                    }
+                }
+
+                // 如果有修改，重建HTTP请求包
+                if (modified)
+                {
+                    // 重建请求行和头部
+                    var sb = Pool.StringBuilder.Get();
+                    var requestUri = request.RequestUri?.OriginalString ?? path;
+                    sb.Append($"{method} {requestUri} HTTP/1.1\r\n");
+                    foreach (var kv in request.Headers)
+                    {
+                        if (!kv.Key.EqualIgnoreCase("Host"))
+                            sb.Append($"{kv.Key}: {kv.Value}\r\n");
+                    }
+                    sb.Append("\r\n");
+
+                    // 保留原始请求体（如果有）
+                    var headerBytes = Encoding.UTF8.GetBytes(sb.ToString());
+                    var body = e.Packet.Slice(headerBytes.Length);
+                    // 替换包数据
+                    e.Packet = new ArrayPacket(headerBytes.Concat(body.ToArray()).ToArray());
+                    sb.TryDispose();
                 }
             }
 
-            // 如果有修改，重建HTTP请求包
-            if (modified)
-            {
-                // 重建请求行和头部
-                var sb = Pool.StringBuilder.Get();
-                var requestUri = request.RequestUri?.OriginalString ?? path;
-                sb.Append($"{method} {requestUri} HTTP/1.1\r\n");
-                foreach (var kv in request.Headers)
-                {
-                    if (!kv.Key.EqualIgnoreCase("Host"))
-                        sb.Append($"{kv.Key}: {kv.Value}\r\n");
-                }
-                sb.Append("\r\n");
+            // 转发请求到后端
+            base.OnReceive(e);
 
-                // 保留原始请求体（如果有）
-                var headerBytes = Encoding.UTF8.GetBytes(sb.ToString());
-                var body = e.Packet.Slice(headerBytes.Length);
-                // 替换包数据
-                e.Packet = new ArrayPacket(headerBytes.Concat(body.ToArray()).ToArray());
-                sb.TryDispose();
+            // WebSocket升级请求转发后，标记已升级，后续帧走TCP透传
+            if (_isWebSocketUpgrade)
+            {
+                _upgraded = true;
             }
         }
-
-        // 转发请求到后端
-        base.OnReceive(e);
-
-        // WebSocket升级请求转发后，标记已升级，后续帧走TCP透传
-        if (_isWebSocketUpgrade)
+        catch (Exception ex)
         {
-            _upgraded = true;
+            // 兜底：HandleAdminRequest 等任意环节抛异常时，返回 500 并释放连接，避免客户端挂起
+            proxy?.WriteError("处理请求异常 {0} {1}：{2}", method, path, ex.Message);
+            // 标记追踪片段为错误，使 APM 正确反映失败请求（否则 Dispose 会把异常请求记成成功）
+            (_span as ISpan)?.SetError(ex, null);
+            SendErrorResponse(500, "Internal Server Error");
         }
     }
 
@@ -827,6 +845,28 @@ public class HttpReverseSession : ProxySession
                 await proxy.StartBackend(node.Address, node.Name);
                 break;
             }
+        }
+    }
+
+    /// <summary>发送HTTP错误响应并关闭连接。用于异常处理兜底，避免客户端一直等待无返回</summary>
+    /// <param name="code">HTTP状态码</param>
+    /// <param name="reason">原因短语</param>
+    private void SendErrorResponse(Int32 code, String reason)
+    {
+        try
+        {
+            if (Disposed) return;
+            var body = Encoding.UTF8.GetBytes($"<html><body><h1>{code} {reason}</h1></body></html>");
+            Send($"HTTP/1.1 {code} {reason}\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: {body.Length}\r\nConnection: close\r\n\r\n");
+            Send(body);
+        }
+        catch
+        {
+            // 发送失败说明连接已断开，忽略即可
+        }
+        finally
+        {
+            Dispose();
         }
     }
 

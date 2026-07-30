@@ -23,7 +23,6 @@
 
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">
     <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
-    <DebugType>full</DebugType>
     <Optimize>false</Optimize>
   </PropertyGroup>
 
