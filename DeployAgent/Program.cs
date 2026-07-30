@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using DeployAgent;
 using DeployAgent.Commands;
 using NewLife;
@@ -61,6 +61,13 @@ internal class Program
             };
 
             svc.Main(args);
+        }
+
+        // 如果是-run，则阻塞运行，用于调试
+        if (cmd.EqualIgnoreCase("-run"))
+        {
+            // 阻塞运行
+            Console.Read();
         }
     }
 }

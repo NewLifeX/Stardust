@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -143,6 +143,9 @@ public partial class AppService : Entity<AppService>
         if (!client.IsNullOrEmpty()) exp &= _.Client == client;
         if (enable != null) exp &= _.Enable == enable;
         if (!key.IsNullOrEmpty()) exp &= _.ServiceName.Contains(key) | _.Client.Contains(key) | _.Address.Contains(key) | _.Tag.Contains(key);
+
+        // 分页算法要求指定排序列，调用方未指定时兜底按主键排序，避免抛“分页算法要求指定排序列”
+        if (page != null && page.Sort.IsNullOrEmpty()) page.Sort = __.Id;
 
         return FindAll(exp, page);
     }
