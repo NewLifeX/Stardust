@@ -1,6 +1,7 @@
 ﻿#if !NET40
 using System.Diagnostics;
 using System.Net.NetworkInformation;
+using System.Runtime.InteropServices;
 using NewLife;
 using NewLife.Agent;
 using NewLife.Agent.WebPanel;
@@ -398,12 +399,16 @@ public class StarApi : IHttpController
                 processorCount = Environment.ProcessorCount,
                 tickCount = Runtime.TickCount64 / 1000,
                 hostUptime = FormatUptime(Runtime.TickCount64 / 1000),
+                runtime = RuntimeInformation.FrameworkDescription,
+                processArch = RuntimeInformation.ProcessArchitecture.ToString(),
+                systemArch = RuntimeInformation.OSArchitecture.ToString(),
             };
 
             // CPU
             var cpuInfo = new
             {
                 cpuName = mi.Processor ?? "",
+                cpuCount = Environment.ProcessorCount,
                 cpuRate = mi.CpuRate,
                 cpuRatePercent = (mi.CpuRate * 100).ToString("F1") + "%",
             };
@@ -418,6 +423,7 @@ public class StarApi : IHttpController
                 totalMemory = FormatBytes(totalMemory),
                 usedMemory = FormatBytes(usedMemory),
                 availableMemory = FormatBytes(availableMemory),
+                memoryRate = memRate,
                 memoryRatePercent = (memRate * 100).ToString("F1") + "%",
                 totalMB = totalMemory / 1024 / 1024,
                 usedMB = usedMemory / 1024 / 1024,
