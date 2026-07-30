@@ -197,9 +197,13 @@ namespace StarGateway.Proxy
         /// <param name="pk">缓冲区</param>
         public virtual Int32 SendRemote(IPacket pk)
         {
+            // 捕获本地引用，避免 OnReceive 判空后远端连接被其他线程置空导致的空引用
+            var rs = RemoteServer;
+            if (rs == null) return 0;
+
             try
             {
-                return RemoteServer.Send(pk);
+                return rs.Send(pk);
             }
             catch
             {
