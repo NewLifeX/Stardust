@@ -149,7 +149,7 @@ public partial class GatewayRoute : Entity<GatewayRoute>
             // 通配符匹配 *.example.com
             if (d.StartsWith("*."))
             {
-                var suffix = d.TrimStart("*.");
+                var suffix = d.TrimPrefix("*.");
                 if (domain.EndsWith("." + suffix, StringComparison.OrdinalIgnoreCase)) return true;
             }
 
