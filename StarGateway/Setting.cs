@@ -29,6 +29,10 @@ public class StarGatewaySetting : Config<StarGatewaySetting>
     [Description("本地配置文件路径。StarServer不可达时的兜底配置")]
     public String LocalConfigFile { get; set; } = "gateway.json";
 
+    /// <summary>Admin API 令牌。非回环地址访问 /api/* 时需携带匹配令牌（请求头 X-Gateway-Token 或 Authorization: Bearer）。留空则仅允许本机回环访问</summary>
+    [Description("Admin API 令牌。非回环访问 /api/* 需携带匹配令牌；留空仅允许本机回环")]
+    public String AdminToken { get; set; }
+
     /// <summary>健康检查间隔。单位秒，默认10秒</summary>
     [Description("健康检查间隔。单位秒，默认10秒")]
     public Int32 HealthCheckInterval { get; set; } = 10;

@@ -35,6 +35,18 @@ public class HttpReverseProxy : ProxyServer
     /// <summary>路由缓存快照</summary>
     private volatile IList<GatewayRoute> _routes;
 
+    /// <summary>本地兜底直连目标表。键为本地文件生成的负 Id，值为直连后端地址（ClusterId=0 时由 SelectNode 直接转发，不经数据库节点查询）</summary>
+    private readonly ConcurrentDictionary<Int32, String> _directTargets = new();
+
+    /// <summary>标记本次配置是否来自 StarServer（远程优先覆盖）。用于在远程成功时跳过数据库证书加载，实现证书同源覆盖+回退查库。用 Interlocked 原子读写避免读改写竞态</summary>
+    private Int32 _configFromServer;
+
+    /// <summary>当前配置来源（server/database/file/none），用于运维观测</summary>
+    private String _configSource = "none";
+
+    /// <summary>非安全(http) StarServer 已告警标记，避免每次刷新重复刷日志</summary>
+    private static Boolean _warnedInsecureServer;
+
     /// <summary>配置刷新间隔。默认15秒</summary>
     public Int32 ConfigRefreshInterval { get; set; } = 15;
 
@@ -76,10 +88,10 @@ public class HttpReverseProxy : ProxyServer
         if (set.IdleTimeout > 0) IdleTimeout = set.IdleTimeout;
 
         // 先尝试从StarServer加载，失败则从数据库加载，再失败则从本地文件加载
-        LoadConfigWithFallback();
+        LoadConfigWithFallbackAsync().Wait();
 
-        // 加载SSL证书
-        LoadCertificates();
+        // 加载SSL证书（远程已覆盖则跳过，回退查库）
+        if (Interlocked.CompareExchange(ref _configFromServer, 0, 0) == 0) LoadCertificates();
 
         // 初始化静态文件处理器
         {
@@ -101,102 +113,96 @@ public class HttpReverseProxy : ProxyServer
     {
         try
         {
-            // 统一使用 SslCertificate（星尘部署中心证书管理）
-            var certs = SslCertificate.FindAllEnabled();
-            if (certs.Count == 0)
+            // 数据库共享模式：证书来自 SslCertificate 表（StarServer 后台写入的同一库）
+            var certs = SslCertificate.FindAllEnabled().Select(e => new GatewayCertInfo
             {
-                WriteLog("未配置SSL证书，仅支持HTTP");
-                return;
-            }
-
-            // 加载第一个可用的证书（SNI多证书支持在后续版本完善）
-            foreach (var certEntity in certs)
-            {
-                // 优先尝试PEM文件，其次PFX，最后CRT+KEY
-                var file = certEntity.PemFile;
-                if (file.IsNullOrEmpty() || !File.Exists(file))
-                {
-                    // 尝试PFX
-                    if (!certEntity.PfxFile.IsNullOrEmpty() && File.Exists(certEntity.PfxFile))
-                    {
-                        try
-                        {
-                            var pfxPassword = certEntity.PfxPassword;
-                            var cert = pfxPassword.IsNullOrEmpty()
-                                ? new X509Certificate2(certEntity.PfxFile)
-                                : new X509Certificate2(certEntity.PfxFile, pfxPassword);
-                            Certificate = cert;
-                            SslProtocol = SslProtocols.Tls12;
-                            WriteLog("加载SSL证书(PFX): {0} -> {1}", certEntity.Domain, cert.Subject);
-                            break;
-                        }
-                        catch (Exception exPfx)
-                        {
-                            WriteError("加载PFX证书 {0} 失败：{1}", certEntity.PfxFile, exPfx.Message);
-                            continue;
-                        }
-                    }
-                    // 尝试CRT+KEY
-                    if (!certEntity.CrtFile.IsNullOrEmpty() && File.Exists(certEntity.CrtFile))
-                    {
-                        file = certEntity.CrtFile;
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }
-
-                try
-                {
-                    // 加载PEM/CRT格式证书
-#pragma warning disable SYSLIB0057
-                    var cert = new X509Certificate2(file);
-#pragma warning restore SYSLIB0057
-                    Certificate = cert;
-                    SslProtocol = SslProtocols.Tls12;
-                    WriteLog("加载SSL证书: {0} -> {1}", certEntity.Domain, cert.Subject);
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    WriteError("加载证书 {0} 失败：{1}", file, ex.Message);
-                }
-            }
+                Domain = e.Domain,
+                CertFile = e.PemFile ?? e.CrtFile ?? e.PfxFile,
+                KeyFile = e.KeyFile,
+                PfxPassword = e.PfxPassword,
+            }).ToList();
+            ApplyCerts(certs);
         }
         catch (Exception ex)
         {
             WriteError("加载SSL证书配置失败：{0}", ex.Message);
         }
     }
+
+    /// <summary>将证书列表（来自 StarServer 或数据库）应用到当前代理，加载第一个可用证书（SNI多证书支持在后续版本完善）。</summary>
+    protected virtual void ApplyCerts(IList<GatewayCertInfo> certs)
+    {
+        if (certs == null || certs.Count == 0)
+        {
+            WriteLog("未配置SSL证书，仅支持HTTP");
+            return;
+        }
+
+        foreach (var cert in certs)
+        {
+            var file = cert.CertFile;
+            if (file.IsNullOrEmpty() || !File.Exists(file)) continue;
+
+            try
+            {
+#pragma warning disable SYSLIB0057
+                X509Certificate2 x509;
+                if (file.EndsWith(".pfx", StringComparison.OrdinalIgnoreCase))
+                {
+                    // PFX 可能带密码
+                    x509 = !cert.PfxPassword.IsNullOrEmpty()
+                        ? new X509Certificate2(file, cert.PfxPassword)
+                        : new X509Certificate2(file);
+                }
+                else
+                {
+                    // PEM/CRT：支持独立私钥文件（KeyFile）；未提供私钥文件时直接加载（兼容证书+私钥合并的单文件）
+                    var keyFile = cert.KeyFile;
+                    x509 = !keyFile.IsNullOrEmpty() && File.Exists(keyFile)
+                        ? X509Certificate2.CreateFromPemFile(file, keyFile)
+                        : new X509Certificate2(file);
+                }
+#pragma warning restore SYSLIB0057
+                Certificate = x509;
+                SslProtocol = SslProtocols.Tls12;
+                WriteLog("加载SSL证书: {0} -> {1}", cert.Domain, x509.Subject);
+                break;
+            }
+            catch (Exception ex)
+            {
+                WriteError("加载证书 {0} 失败：{1}", file, ex.Message);
+            }
+        }
+    }
     #endregion
 
     #region 配置加载（多级兜底）
-    protected virtual void LoadConfigWithFallback()
+    /// <summary>多级加载网关路由配置，优先级从高到低：远程 StarServer > 本地数据库 > 本地配置文件。
+    /// 采用“首选胜出”覆盖策略（非合并）：远程成功即返回，失败或不可用才回退后续来源。</summary>
+    protected virtual async Task LoadConfigWithFallbackAsync()
     {
-        // 1. 从StarServer拉取配置
+        // 默认按数据库/本地兜底加载证书；仅当远程成功且确实下发证书时，
+        // 由 LoadConfigFromServerAsync 置位 _configFromServer，跳过数据库证书加载
+        Interlocked.Exchange(ref _configFromServer, 0);
+
+        // 1. 从 StarServer 拉取配置（最高优先级，覆盖后续来源）
         try
         {
-            var set = StarGatewaySetting.Current;
-            if (!set.StarServer.IsNullOrEmpty())
-            {
-                LoadConfigFromServer();
-                return;
-            }
+            if (!StarGatewaySetting.Current.StarServer.IsNullOrEmpty()
+                && await LoadConfigFromServerAsync()) return;
         }
         catch (Exception ex)
         {
             WriteError("从StarServer加载配置失败：{0}", ex.Message);
         }
 
-        // 2. 从数据库加载
+        // 2. 从数据库加载（StarServer 后台写入的同一数据库，作为主要兜底源）
         try
         {
-            var routes = GatewayRoute.FindAllEnabled();
-            if (routes.Count > 0)
+            LoadConfig();
+            if (_routes != null && _routes.Count > 0)
             {
-                Interlocked.Exchange(ref _routes, routes);
-                WriteLog("从数据库加载路由配置完成，共 {0} 条路由", routes.Count);
+                WriteLog("从数据库加载路由配置完成，共 {0} 条路由", _routes.Count);
                 return;
             }
         }
@@ -216,21 +222,97 @@ public class HttpReverseProxy : ProxyServer
         }
     }
 
-    protected virtual void LoadConfigFromServer()
+    /// <summary>从 StarServer 拉取网关路由配置。成功返回 true 并已更新 _routes；
+    /// 未配置 StarServer 或拉取失败返回 false，由上层回退数据库。</summary>
+    protected virtual async Task<Boolean> LoadConfigFromServerAsync()
     {
-        var set = StarGatewaySetting.Current;
-        var url = set.StarServer;
-        if (url.IsNullOrEmpty())
+        // 复用 StarFactory 的 StarServer 客户端；未配置 StarServer 时 Client 为 null
+        var client = Program.Star?.Client;
+        if (client == null) return false;
+
+        // P1-4：设置调用超时，避免 StarServer 不可达时无限等待
+        if (client is ApiClient ac) ac.Timeout = 10_000;
+
+        try
         {
-            LoadConfig();
-            return;
+            // P1-3：以网关自身应用身份（StarAppId/StarSecret/ClientId）调用，
+            // 与服务端 [ApiFilter]+Valid 的应用级鉴权对应；token 留空走密钥校验
+            var cfg = await client.InvokeAsync<GatewayConfig>("Gateway/config", new
+            {
+                appId = Program.Star?.AppId,
+                secret = Program.Star?.Secret,
+                clientId = Program.Star?.ClientId,
+                token = "",
+            });
+
+            // 将服务端下发的路由映射为内存路由表：仅取标量字段 + ClusterId，
+            // 节点仍由现有转发/健康检查逻辑按 ClusterId 从数据库查询（符合数据库共享模式设计）
+            var routes = new List<GatewayRoute>();
+            foreach (var r in cfg.Routes)
+            {
+                // 与数据库 FindAllEnabled 行为一致：跳过禁用路由
+                if (!r.Enable) continue;
+
+                routes.Add(new GatewayRoute
+                {
+                    Id = r.Id,
+                    Name = r.Name,
+                    Priority = r.Priority,
+                    Domain = r.Domain,
+                    Path = r.Path,
+                    Methods = r.Methods,
+                    Headers = r.Headers,
+                    StripPrefix = r.StripPrefix,
+                    AddHeaders = r.AddHeaders,
+                    WebSocket = r.WebSocket,
+                    IsStaticRoute = r.IsStaticRoute,
+                    StaticRoot = r.StaticRoot,
+                    IndexFile = r.IndexFile,
+                    DirectoryBrowse = r.DirectoryBrowse,
+                    SPAFallback = r.SPAFallback,
+                    ClusterId = r.Cluster?.Id ?? 0,
+                });
+            }
+
+            // P1-1：远程路由为空时视为未提供有效配置，直接回退数据库（不覆盖、不阻断）
+            if (routes.Count == 0)
+            {
+                WriteLog("从 StarServer 拉取的路由为空，回退数据库");
+                return false;
+            }
+
+            Interlocked.Exchange(ref _routes, routes);
+            _configSource = "server";
+            WriteLog("从 StarServer 拉取路由配置完成，共 {0} 条路由", routes.Count);
+
+            // 证书同源覆盖：仅当远程确实下发证书时才覆盖并跳过数据库证书加载；
+            // 若远程证书列表为空，_configFromServer 保持 0（未覆盖），由上层回退查库
+            if (cfg.Certs != null && cfg.Certs.Count > 0)
+            {
+                // P1：StarServer 为明文 http 时，证书私钥密码会在链路上暴露，
+                // 故拒绝从远程加载证书（回退数据库证书加载），仅放行路由配置，并仅告警一次
+                var server = Program.Star?.Server;
+                if (server.IsNullOrEmpty() || !server.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!_warnedInsecureServer)
+                    {
+                        _warnedInsecureServer = true;
+                        WriteError("StarServer 使用明文 http，出于安全考虑拒绝从远程加载证书（私钥密码会在链路上暴露），证书回退数据库加载；生产环境请改用 https");
+                    }
+                }
+                else
+                {
+                    ApplyCerts(cfg.Certs);
+                    Interlocked.Exchange(ref _configFromServer, 1);
+                }
+            }
+            return true;
         }
-
-        // 尝试通过 StarServer API 获取配置（需将 GatewayConfig DTO 移动到 Stardust.Data）
-        // 当前版本使用数据库共享模式作为主要配置源，API 拉取为预留扩展点
-        // 后续可参考：var config = await StarClient?.Client?.InvokeAsync<GatewayConfig>("Gateway/config");
-
-        LoadConfig();
+        catch (Exception ex)
+        {
+            WriteError("从 StarServer 拉取配置失败，回退数据库：{0}", ex.Message);
+            return false;
+        }
     }
 
     protected virtual void LoadConfigFromLocalFile()
@@ -241,12 +323,48 @@ public class HttpReverseProxy : ProxyServer
         var json = File.ReadAllText(file);
         if (json.IsNullOrEmpty()) return;
 
-        // 简单解析本地配置文件
-        // 格式: [{ "name":"route1", "domain":"*.example.com", "target":"http://localhost:5000" }]
+        // 解析本地兜底配置文件（Server 与 DB 均不可达时的最终兜底）
+        // 格式: [{ "name":"route1", "domain":"*.example.com", "path":"/api/*", "methods":"GET", "target":"http://localhost:5000" }]
+        // 采用直连 target（ClusterId=0），由 SelectNode 直接转发，不经数据库节点查询
         var list = JsonParser.Decode(json) as IList<Object>;
         if (list == null || list.Count == 0) return;
 
-        WriteLog("从本地文件 {0} 加载路由配置，共 {1} 条", file, list.Count);
+        var routes = new List<GatewayRoute>();
+        var targets = new Dictionary<Int32, String>();
+        var idx = 0;
+        foreach (var item in list)
+        {
+            if (item is not IDictionary<String, Object> dic) continue;
+
+            var name = dic["name"] + "";
+            var domain = dic["domain"] + "";
+            var target = dic["target"] + "";
+            if (name.IsNullOrEmpty() || domain.IsNullOrEmpty() || target.IsNullOrEmpty()) continue;
+
+            // 负 Id 避免与数据库路由 Id 冲突
+            var id = -(++idx);
+            routes.Add(new GatewayRoute
+            {
+                Id = id,
+                Name = name,
+                Domain = domain,
+                Path = dic["path"] + "",
+                Methods = dic["methods"] + "",
+                Priority = (dic["priority"] + "").ToInt(),
+                Enable = true,
+                ClusterId = 0,
+            });
+            targets[id] = target;
+        }
+
+        if (routes.Count == 0) return;
+
+        // 原子替换直连目标表与路由快照
+        _directTargets.Clear();
+        foreach (var kv in targets) _directTargets[kv.Key] = kv.Value;
+        Interlocked.Exchange(ref _routes, routes);
+        _configSource = "file";
+        WriteLog("从本地文件 {0} 加载路由配置，共 {1} 条（直连兜底）", file, routes.Count);
     }
 
     protected virtual void LoadConfig()
@@ -255,6 +373,7 @@ public class HttpReverseProxy : ProxyServer
         {
             var routes = GatewayRoute.FindAllEnabled();
             Interlocked.Exchange(ref _routes, routes);
+            _configSource = "database";
         }
         catch (Exception ex)
         {
@@ -264,15 +383,15 @@ public class HttpReverseProxy : ProxyServer
 
     private async Task DoRefreshConfig(Object state)
     {
-        LoadConfigWithFallback();
+        await LoadConfigWithFallbackAsync();
 
-        // 配置刷新时同时刷新证书（证书热更新）
-        LoadCertificates();
+        // 配置刷新时同时刷新证书（证书热更新）；远程已覆盖则跳过，回退查库
+        if (Interlocked.CompareExchange(ref _configFromServer, 0, 0) == 0) LoadCertificates();
 
         await Task.CompletedTask;
     }
 
-    public void RefreshConfig() => LoadConfigWithFallback();
+    public void RefreshConfig() => LoadConfigWithFallbackAsync().GetAwaiter().GetResult();
     #endregion
 
     #region 健康检查
@@ -352,6 +471,14 @@ public class HttpReverseProxy : ProxyServer
 
     public NetUri SelectNode(GatewayRoute route, String clientIp = null)
     {
+        // 本地兜底直连目标：ClusterId=0 且存在直连 target 时直接返回，不经数据库节点查询
+        if (route.ClusterId == 0)
+        {
+            if (_directTargets.TryGetValue(route.Id, out var target) && !target.IsNullOrEmpty())
+                return new NetUri(target);
+            return null;
+        }
+
         var nodes = GatewayNode.FindAllHealthyByCluster(route.ClusterId);
         if (nodes == null || nodes.Count == 0) return null;
 
@@ -424,6 +551,16 @@ public class HttpReverseProxy : ProxyServer
     {
         if (!path.StartsWith("/api/", StringComparison.OrdinalIgnoreCase)) return false;
 
+        // P1-3：Admin API 鉴权。回环地址默认可访问（本机运维工具）；非回环需配置 AdminToken 且请求携带匹配令牌
+        if (!IsAdminAuthorized(session, request))
+        {
+            var body = "Admin API 需要鉴权"u8.ToArray();
+            session.Send($"HTTP/1.1 401 Unauthorized\r\nContent-Type: text/plain\r\nContent-Length: {body.Length}\r\nConnection: close\r\n\r\n");
+            session.Send(body);
+            session.Dispose();
+            return true;
+        }
+
         Interlocked.Increment(ref _totalRequests);
 
         var json = "";
@@ -438,6 +575,8 @@ public class HttpReverseProxy : ProxyServer
                 totalRequests = Interlocked.Read(ref _totalRequests),
                 routeCount = routes?.Count ?? 0,
                 port = Port,
+                // P2：暴露当前配置来源，便于运维判断配置来自何处
+                configSource = _configSource,
             }.ToJson();
         }
         else if (path.EqualIgnoreCase("/api/routes"))
@@ -481,6 +620,28 @@ public class HttpReverseProxy : ProxyServer
         AdminLog?.Info("Admin {0} from {1}", path, session.Remote);
 
         return true;
+    }
+
+    /// <summary>判断 Admin API 调用是否已授权。回环地址（本机运维工具）默认可访问；
+    /// 非回环地址需配置 AdminToken 且请求携带匹配令牌（请求头 X-Gateway-Token 或 Authorization: Bearer）。
+    /// 未配置 AdminToken 时，仅允许回环访问。</summary>
+    private Boolean IsAdminAuthorized(HttpReverseSession session, HttpRequest request)
+    {
+        var token = StarGatewaySetting.Current.AdminToken;
+        var remote = session.Remote + "";
+        var isLoopback = remote.StartsWith("127.0.0.1") || remote.Contains("::1") || remote.StartsWith("[::1]");
+
+        // P2：配置了 AdminToken 时，所有来源（含本机回环）都必须携带匹配令牌，
+        // 杜绝同主机其它进程/SSRF 无令牌调用 /api/refresh 或读取 /api/routes 拓扑；
+        // 未配置 AdminToken 时，保持原行为：仅允许本机回环访问，外部拒绝
+        if (token.IsNullOrEmpty()) return isLoopback;
+
+        var provided = request.Headers.TryGetValue("X-Gateway-Token", out var h) ? h
+            : (request.Headers.TryGetValue("Authorization", out var a) ? a : null);
+        if (!provided.IsNullOrEmpty() && provided.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            provided = provided.Substring(7);
+
+        return !provided.IsNullOrEmpty() && provided.EqualIgnoreCase(token);
     }
     #endregion
 
@@ -662,7 +823,7 @@ public class HttpReverseSession : ProxySession
                     staticRoot = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), staticRoot));
                 }
 
-                if (proxy.StaticFiles.TryHandle(method, path, staticRoot, route.IndexFile ?? "index.html", route.DirectoryBrowse, route.SPAFallback, out var response))
+                if (proxy.StaticFiles.TryHandle(method, path, staticRoot, route.IndexFile ?? "index.html", route.DirectoryBrowse, route.SPAFallback, request.Headers, out var response))
                 {
                     // 记录日志
                     proxy.AdminLog?.Info("Static {0} {1} [{2}]", method, path, route.Name);
