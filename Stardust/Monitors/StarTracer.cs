@@ -102,19 +102,26 @@ public class StarTracer : DefaultTracer
     #endregion
 
     #region 核心业务
-    private Boolean _inited;
+    private Int32 _inited;
+    private readonly Object _initLock = new();
     private void Init()
     {
-        if (_inited) return;
+        if (_inited != 0) return;
 
-        // 自动从本地星尘代理获取地址
-        var client = Client;
-        if (client == null) throw new ArgumentNullException(nameof(Client));
+        // 双检锁，防止并发重复初始化
+        lock (_initLock)
+        {
+            if (_inited != 0) return;
 
-        var server = client is ClientBase cbase ? cbase.Server : (client + "");
-        WriteLog("星尘监控中心 Server={0} AppId={1} ClientId={2}", server, AppId, ClientId);
+            // 自动从本地星尘代理获取地址
+            var client = Client;
+            if (client == null) throw new ArgumentNullException(nameof(Client));
 
-        _inited = true;
+            var server = client is ClientBase cbase ? cbase.Server : (client + "");
+            WriteLog("星尘监控中心 Server={0} AppId={1} ClientId={2}", server, AppId, ClientId);
+
+            _inited = 1;
+        }
     }
 
     /// <summary>处理Span集合。默认输出日志，可重定义输出控制台</summary>

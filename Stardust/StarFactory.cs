@@ -332,7 +332,8 @@ public class StarFactory : DisposeBase
             // 先注销再登录
             try
             {
-                client.Logout(nameof(SetServer)).Wait();
+                // 使用线程池包装，避免在同步上下文下等待异步网络操作造成死锁
+                TaskEx.Run(() => client.Logout(nameof(SetServer))).ConfigureAwait(false).GetAwaiter().GetResult();
             }
             catch (Exception ex)
             {

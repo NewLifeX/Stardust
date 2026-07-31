@@ -448,9 +448,12 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
             var ms = await ResolveAsync(svc).ConfigureAwait(false);
             if (ms != null && ms.Length > 0)
             {
+                // 服务地址无变化时不重复触发事件与写盘，避免每心跳误触发服务变更
+                if (_consumes.TryGetValue(svc.ServiceName, out var old) && old.ToJson() == ms.ToJson()) continue;
+
                 _consumes[svc.ServiceName] = ms;
 
-                // 需要判断，只有服务改变才调用相应事件
+                // 只有服务改变才调用相应事件
                 if (_consumeEvents.TryGetValue(svc.ServiceName, out var list))
                 {
                     foreach (var action in list)

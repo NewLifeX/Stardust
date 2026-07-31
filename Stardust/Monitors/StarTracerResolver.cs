@@ -39,7 +39,14 @@ public class StarTracerResolver : DefaultTracerResolver
     /// 内层 Value 类型为 <c>ConcurrentDictionary&lt;String, Byte&gt;</c>，利用其 Key 做去重集合（Value 仅占位），
     /// 替代非线程安全的 <see cref="HashSet{T}"/>，避免并发 Add 导致 <c>InvalidOperationException</c>。
     /// </remarks>
-    private ConcurrentDictionary<String, ConcurrentDictionary<String, Byte>> _cache = new();
+    /// <summary>单个域名的埋点集合与计数。计数用 Int32 字段避免 ConcurrentDictionary.Count 的 O(n) 线性扫描</summary>
+    private sealed class HostTraces
+    {
+        public Int32 Count;
+        public ConcurrentDictionary<String, Byte> Keys = new();
+    }
+
+    private ConcurrentDictionary<String, HostTraces> _cache = new();
     #endregion
 
     #region 方法
@@ -60,13 +67,14 @@ public class StarTracerResolver : DefaultTracerResolver
     public override String? ResolveName(Uri uri, Object? userState)
     {
         String? name;
-        ConcurrentDictionary<String, Byte>? keys = null;
+        HostTraces? traces = null;
         if (uri.IsAbsoluteUri)
         {
-            // 获取或创建该域名的埋点名称集合（ConcurrentDictionary 作为并发安全集合使用）
-            keys = _cache.GetOrAdd(uri.Host, k => new ConcurrentDictionary<String, Byte>());
-            // 域名下埋点过多时，降级为仅域名级别，不再细分具体路径，防止高基数
-            if (keys.Count >= MaxTracePerHost) return $"{uri.Scheme}://{uri.Authority}";
+            // 获取或创建该域名的埋点名称集合
+            traces = _cache.GetOrAdd(uri.Host, k => new HostTraces());
+            // 域名下埋点过多时，降级为仅域名级别，不再细分具体路径，防止高基数。
+            // 使用独立计数器，避免 ConcurrentDictionary.Count 每次 O(n) 线性扫描
+            if (Volatile.Read(ref traces.Count) >= MaxTracePerHost) return $"{uri.Scheme}://{uri.Authority}";
 
             // 太长的 URI 路径段不适合作为埋点名称，仅取长度 <= 16 的段
             var segments = uri.Segments.Skip(1).TakeWhile(e => e.Length <= 16).ToArray();
@@ -86,8 +94,9 @@ public class StarTracerResolver : DefaultTracerResolver
         name = ResolveName(name, userState);
         if (name.IsNullOrEmpty()) return name;
 
-        // 将解析后的名称加入该域名的去重集合，TryAdd 保证并发安全
-        keys?.TryAdd(name, 0);
+        // 将解析后的名称加入该域名的去重集合，TryAdd 成功才递增计数，保证并发安全
+        if (traces != null && traces.Keys.TryAdd(name, 0))
+            Interlocked.Increment(ref traces.Count);
 
         return name;
     }

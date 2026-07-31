@@ -1,4 +1,5 @@
-﻿using NewLife;
+﻿using System.Collections.Concurrent;
+using NewLife;
 using NewLife.Configuration;
 using NewLife.Data;
 using NewLife.Log;
@@ -86,7 +87,7 @@ internal class StarHttpConfigProvider : HttpConfigProvider
         return null;
     }
 
-    private readonly HashSet<String> _keys = [];
+    private readonly ConcurrentDictionary<String, Byte> _keys = [];
     /// <summary>获取指定配置。拦截对注册中心的请求</summary>
     /// <param name="key"></param>
     /// <param name="createOnMiss"></param>
@@ -102,10 +103,9 @@ internal class StarHttpConfigProvider : HttpConfigProvider
             {
                 var addrs = registry.ResolveAddressAsync(key).ConfigureAwait(false).GetAwaiter().GetResult();
 
-                // 注册服务有改变时，通知配置系统改变
-                if (!_keys.Contains(key))
+                // 注册服务有改变时，通知配置系统改变。TryAdd 原子判断，避免并发重复绑定
+                if (_keys.TryAdd(key, 0))
                 {
-                    _keys.Add(key);
                     registry.Bind(key, (k, ms) => NotifyChange());
                 }
 

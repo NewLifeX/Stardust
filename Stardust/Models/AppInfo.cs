@@ -117,6 +117,7 @@ public class AppInfo : IPingRequest, ICloneable
     private Stopwatch? _stopwatch;
     private Int64 _last;
     private Int32 _lastGC;
+    private Int32 _refreshCount;
 #if NETCOREAPP
     private Int64 _lastCompleted;
 #endif
@@ -167,17 +168,21 @@ public class AppInfo : IPingRequest, ICloneable
                 if (File.Exists(file)) MachineName = File.ReadAllText(file).Trim();
             }
 
-            try
+            // 连接数枚举全系统TCP连接开销较大，降频采集（每5次刷新一次）
+            if (_refreshCount++ % 5 == 0)
             {
-                // 获取进程的连接数
-                var tcps = NetHelper.GetAllTcpConnections(Id);
-                if (tcps != null && tcps.Length > 0)
+                try
                 {
-                    Connections = tcps.Count(e => e.ProcessId == Id);
-                    Listens = tcps.Where(e => e.ProcessId == Id && e.State == TcpState.Listen).Join(",", e => e.LocalEndPoint);
+                    // 获取进程的连接数
+                    var tcps = NetHelper.GetAllTcpConnections(Id);
+                    if (tcps != null && tcps.Length > 0)
+                    {
+                        Connections = tcps.Count(e => e.ProcessId == Id);
+                        Listens = tcps.Where(e => e.ProcessId == Id && e.State == TcpState.Listen).Join(",", e => e.LocalEndPoint);
+                    }
                 }
+                catch { }
             }
-            catch { }
 
             // 本进程才能采集GC数据
             if (Id == _pid)

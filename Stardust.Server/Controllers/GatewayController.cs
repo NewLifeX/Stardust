@@ -2,6 +2,7 @@ using System;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Remoting;
+using Stardust.Data.Gateway;
 using Stardust.Server.Services;
 
 namespace Stardust.Server.Controllers;

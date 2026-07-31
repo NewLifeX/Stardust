@@ -52,6 +52,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestC", "Samples\TestC\Test
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AgentExpansion", "Plugins\AgentExpansion\AgentExpansion.csproj", "{E7CB19B4-B955-4E6D-8488-FBA14C5C999A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stardust.Tests", "Stardust.Tests\Stardust.Tests.csproj", "{CB9C9CE1-3295-4852-B6B5-17A7BD825767}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -266,6 +268,18 @@ Global
 		{E7CB19B4-B955-4E6D-8488-FBA14C5C999A}.Release|x64.Build.0 = Release|Any CPU
 		{E7CB19B4-B955-4E6D-8488-FBA14C5C999A}.Release|x86.ActiveCfg = Release|Any CPU
 		{E7CB19B4-B955-4E6D-8488-FBA14C5C999A}.Release|x86.Build.0 = Release|Any CPU
+		{CB9C9CE1-3295-4852-B6B5-17A7BD825767}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CB9C9CE1-3295-4852-B6B5-17A7BD825767}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CB9C9CE1-3295-4852-B6B5-17A7BD825767}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{CB9C9CE1-3295-4852-B6B5-17A7BD825767}.Debug|x64.Build.0 = Debug|Any CPU
+		{CB9C9CE1-3295-4852-B6B5-17A7BD825767}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{CB9C9CE1-3295-4852-B6B5-17A7BD825767}.Debug|x86.Build.0 = Debug|Any CPU
+		{CB9C9CE1-3295-4852-B6B5-17A7BD825767}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CB9C9CE1-3295-4852-B6B5-17A7BD825767}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CB9C9CE1-3295-4852-B6B5-17A7BD825767}.Release|x64.ActiveCfg = Release|Any CPU
+		{CB9C9CE1-3295-4852-B6B5-17A7BD825767}.Release|x64.Build.0 = Release|Any CPU
+		{CB9C9CE1-3295-4852-B6B5-17A7BD825767}.Release|x86.ActiveCfg = Release|Any CPU
+		{CB9C9CE1-3295-4852-B6B5-17A7BD825767}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

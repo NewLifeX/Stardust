@@ -30,14 +30,14 @@ public class TraceService
         //var h = (Int32)(screen.Bounds.Height * factor);
         var rect = new System.Drawing.Rectangle(0, 0, w, h);
 
-        var bmp = new System.Drawing.Bitmap(rect.Width, rect.Height);
+        using var bmp = new System.Drawing.Bitmap(rect.Width, rect.Height);
         //bmp.SetResolution(sys.DpiX, sys.DpiY);
 
         using var g = System.Drawing.Graphics.FromImage(bmp);
         g.CopyFromScreen(0, 0, 0, 0, rect.Size);
         g.DrawImage(bmp, 0, 0, rect, System.Drawing.GraphicsUnit.Pixel);
 
-        var s = new MemoryStream();
+        using var s = new MemoryStream();
         bmp.Save(s, System.Drawing.Imaging.ImageFormat.Png);
 
         return s.ToArray().ToBase64();

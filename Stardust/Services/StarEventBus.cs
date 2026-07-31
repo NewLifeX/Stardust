@@ -36,6 +36,7 @@ public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEv
     public ITracer? Tracer { get; set; }
 
     private volatile Boolean _subscribed;
+    private Int32 _subscribing;
     private TimerX? _timer;
     #endregion
 
@@ -76,14 +77,24 @@ public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEv
         if (!client.Logined) return false;
         if (_subscribed) return true;
 
-        using var span = Tracer?.NewSpan($"event:{topic}:subscribe", topic);
+        // 防止并发重复订阅：多个线程同时进入时，仅第一个执行网络发送
+        if (Interlocked.CompareExchange(ref _subscribing, 1, 0) != 0) return _subscribed;
 
-        await client.PublishEventAsync(topic, "subscribe").ConfigureAwait(false);
-        _subscribed = true;
+        try
+        {
+            using var span = Tracer?.NewSpan($"event:{topic}:subscribe", topic);
 
-        Log?.Info("事件总线[{0}]远程订阅成功！", topic);
+            await client.PublishEventAsync(topic, "subscribe").ConfigureAwait(false);
+            _subscribed = true;
 
-        return true;
+            Log?.Info("事件总线[{0}]远程订阅成功！", topic);
+
+            return true;
+        }
+        finally
+        {
+            Interlocked.Exchange(ref _subscribing, 0);
+        }
     }
 
     private async Task DoSubscribe(Object state)

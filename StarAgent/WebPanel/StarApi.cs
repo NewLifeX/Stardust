@@ -399,9 +399,15 @@ public class StarApi : IHttpController
                 processorCount = Environment.ProcessorCount,
                 tickCount = Runtime.TickCount64 / 1000,
                 hostUptime = FormatUptime(Runtime.TickCount64 / 1000),
+#if NET45 || NET461
+                runtime = Environment.Version + "",
+                processArch = IntPtr.Size == 8 ? "X64" : "X86",
+                systemArch = IntPtr.Size == 8 ? "X64" : "X86",
+#else
                 runtime = RuntimeInformation.FrameworkDescription,
                 processArch = RuntimeInformation.ProcessArchitecture.ToString(),
                 systemArch = RuntimeInformation.OSArchitecture.ToString(),
+#endif
             };
 
             // CPU

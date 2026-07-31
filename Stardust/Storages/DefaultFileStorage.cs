@@ -10,6 +10,7 @@ using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Serialization;
 using NewLife.Threading;
+using Stardust.Registry;
 using Stardust.Services;
 #if !NET45
 using TaskEx = System.Threading.Tasks.Task;
@@ -107,7 +108,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
             return TaskEx.CompletedTask;
 
         // Redis失败，尝试使用星尘事件总线
-        var registry = ServiceProvider?.GetService<ICacheProvider>();
+        var registry = ServiceProvider?.GetService<IRegistry>();
         if (registry is AppClient client && SetEventBus(client))
             return TaskEx.CompletedTask;
 
