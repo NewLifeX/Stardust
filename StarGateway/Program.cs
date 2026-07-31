@@ -35,13 +35,13 @@ namespace StarGateway
                 XTrace.WriteLine("StarGateway 未配置 StarServer，将以独立模式运行（仅数据库 + 本地配置）");
             }
 
-            // 兜底设置StarServer
-            var set = StarGatewaySetting.Current;
-            if (!set.StarServer.IsNullOrEmpty() && Star.Server.IsNullOrEmpty())
-            {
-                Star.Server = set.StarServer;
-                XTrace.WriteLine("StarGateway 兜底设置 StarServer: {0}", Star.Server);
-            }
+            // // 不需要兜底设置，因为三级配置，不配置StarGatewaySetting.StarServer代表不会从StarServer获取配置，直接使用本地DB或者本地配置文件gateway.json
+            // var set = StarGatewaySetting.Current;
+            // if (!set.StarServer.IsNullOrEmpty() && Star.Server.IsNullOrEmpty())
+            // {
+            //     Star.Server = set.StarServer;
+            //     XTrace.WriteLine("StarGateway 兜底设置 StarServer: {0}", Star.Server);
+            // }
 
             var host = new Host();
             host.Add<InitService>();
