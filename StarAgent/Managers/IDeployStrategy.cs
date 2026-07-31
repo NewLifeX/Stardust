@@ -84,6 +84,9 @@ public class DeployContext
 
     /// <summary>最后错误信息</summary>
     public String? LastError { get; set; }
+
+    /// <summary>启动环境变量。记录主动注入的进程环境变量，用于日志输出</summary>
+    public Dictionary<String, String>? EnvironmentVariables { get; set; }
     #endregion
 
     #region 日志

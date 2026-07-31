@@ -20,7 +20,14 @@ public class ServiceManager : DisposeBase
     public ServiceInfo[]? Services { get; private set; }
 
     /// <summary>正在运行的应用服务信息</summary>
-    public ProcessInfo[] RunningServices => _controllers.Select(e => e.ToModel()).ToArray();
+    public ProcessInfo[] RunningServices
+    {
+        get
+        {
+            lock (this)
+                return _controllers.Select(e => e.ToModel()).ToArray();
+        }
+    }
 
     /// <summary>延迟时间。重启进程或服务的延迟时间，默认3000ms</summary>
     public Int32 Delay { get; set; } = 3000;
@@ -38,7 +45,7 @@ public class ServiceManager : DisposeBase
     //public IEventProvider EventProvider { get; set; }
 
     /// <summary>正在运行的应用服务信息</summary>
-    private readonly List<ServiceController> _controllers = [];
+    internal readonly List<ServiceController> _controllers = [];
     private CsvDb<ProcessInfo>? _db;
     private StarClient? _client;
     #endregion
@@ -131,7 +138,8 @@ public class ServiceManager : DisposeBase
     {
         if (processId <= 0) return null;
 
-        return _controllers.FirstOrDefault(e => e.ProcessId == processId);
+        lock (this)
+            return _controllers.FirstOrDefault(e => e.ProcessId == processId);
     }
 
     /// <summary>开始管理，拉起应用进程</summary>
@@ -222,14 +230,18 @@ public class ServiceManager : DisposeBase
     /// <param name="reason"></param>
     public void StopAll(String reason)
     {
-        var svcs = _controllers;
-        for (var i = svcs.Count - 1; i >= 0; i--)
+        List<ServiceController> svcs;
+        lock (this)
         {
-            var ctrl = svcs[i];
+            svcs = [.. _controllers];
+            _controllers.Clear();
+        }
+
+        foreach (var ctrl in svcs)
+        {
             if (ctrl.Running)
             {
                 ctrl.Stop(reason);
-                svcs.RemoveAt(i);
             }
         }
 
@@ -276,7 +288,11 @@ public class ServiceManager : DisposeBase
         var db = _db;
         if (db == null) return;
 
-        var list = _controllers.Select(e => e.ToModel()).ToList();
+        List<ProcessInfo> list;
+        lock (this)
+        {
+            list = _controllers.Select(e => e.ToModel()).ToList();
+        }
 
         if (list.Count == 0)
             db.Clear();
@@ -357,12 +373,16 @@ public class ServiceManager : DisposeBase
     {
         using var span = Tracer?.NewSpan("ServiceManager-StopService", serviceName);
 
-        var controller = _controllers.FirstOrDefault(e => e.Name.EqualIgnoreCase(serviceName));
+        ServiceController? controller;
+        lock (this)
+        {
+            controller = _controllers.FirstOrDefault(e => e.Name.EqualIgnoreCase(serviceName));
+            if (controller != null)
+                _controllers.Remove(controller);
+        }
+
         if (controller != null)
         {
-            // 先删除再停止，避免并发
-            _controllers.Remove(controller);
-
             controller.Stop(reason);
             controller.TryDispose();
 
@@ -670,28 +690,52 @@ public class ServiceManager : DisposeBase
         var changed = false;
         svcs = Services ?? [];
 
-        // 停止不再使用的服务
-        var controllers = _controllers;
-        for (var i = controllers.Count - 1; i >= 0; i--)
+        // 停止不再使用的服务 - 在锁内获取快照
+        ServiceController[] needStop;
+        lock (this)
         {
-            var controller = controllers[i];
-            var service = svcs.FirstOrDefault(e => e.Name.EqualIgnoreCase(controller.Name));
-            if (service == null || !service.Enable)
+            needStop = _controllers.Where(c =>
             {
-                controller.Stop("配置停止");
-                controllers.RemoveAt(i);
-                changed = true;
-            }
-            else if (controller.Running && controller.Info != null && service.ToJson() != controller.Info.ToJson())
+                var service = svcs.FirstOrDefault(e => e.Name.EqualIgnoreCase(c.Name));
+                return service == null || !service.Enable;
+            }).ToArray();
+        }
+
+        foreach (var controller in needStop)
+        {
+            controller.Stop("配置停止");
+            lock (this)
             {
-                // 启动成功的短时间内，不认可配置改变，因为可能就是这一次发布的配置变化
-                if (controller.StartTime.Year > 2000 && controller.StartTime.AddSeconds(5) < DateTime.Now)
-                {
-                    controller.Stop("配置改变");
-                    controllers.RemoveAt(i);
-                    changed = true;
-                }
+                _controllers.Remove(controller);
             }
+            changed = true;
+        }
+
+        // 停止配置改变的服务
+        ServiceController[] needRestart;
+        lock (this)
+        {
+            needRestart = _controllers.Where(c =>
+            {
+                if (!c.Running || c.Info == null) return false;
+                var service = svcs.FirstOrDefault(e => e.Name.EqualIgnoreCase(c.Name));
+                if (service == null) return false;
+                // 启动成功的短时间内，不认可配置改变
+                if (c.StartTime.Year > 2000 && c.StartTime.AddSeconds(5) < DateTime.Now &&
+                    service.ToJson() != c.Info.ToJson())
+                    return true;
+                return false;
+            }).ToArray();
+        }
+
+        foreach (var controller in needRestart)
+        {
+            controller.Stop("配置改变");
+            lock (this)
+            {
+                _controllers.Remove(controller);
+            }
+            changed = true;
         }
 
         // 检查并启动服务
@@ -743,7 +787,8 @@ public class ServiceManager : DisposeBase
 
         SaveDb();
 
-        return _controllers.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name))?.ToModel();
+        lock (this)
+            return _controllers.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name))?.ToModel();
     }
 
     /// <summary>卸载服务</summary>

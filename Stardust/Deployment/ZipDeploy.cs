@@ -299,6 +299,12 @@ public class ZipDeploy
         };
         si.EnvironmentVariables["BasePath"] = rundir.FullName;
 
+        // 记录主动注入的环境变量，用于日志输出
+        var envVars = new Dictionary<String, String>
+        {
+            ["BasePath"] = rundir.FullName
+        };
+
         // 向未使用星尘的目标.Net应用注入星尘
         if (StartupHook && (UserName.IsNullOrEmpty() || UserName == Environment.UserName || Runtime.Windows))
         {
@@ -310,11 +316,15 @@ public class ZipDeploy
                 var dll = "Stardust.dll".GetFullPath();
                 WriteLog("执行目录：{0}，注入：{1}", dir, dll);
                 si.EnvironmentVariables["DOTNET_STARTUP_HOOKS"] = dll;
+                envVars["DOTNET_STARTUP_HOOKS"] = dll;
             }
         }
 
         if (!AppId.IsNullOrEmpty())
+        {
             si.EnvironmentVariables["StarAppId"] = AppId;
+            envVars["StarAppId"] = AppId;
+        }
 
         if (runfile.Extension.EqualIgnoreCase(".dll"))
         {
@@ -338,7 +348,10 @@ public class ZipDeploy
             foreach (var item in Environments.SplitAsDictionary("=", ";"))
             {
                 if (!item.Key.IsNullOrEmpty())
+                {
                     si.EnvironmentVariables[item.Key] = item.Value;
+                    envVars[item.Key] = item.Value;
+                }
             }
         }
 
@@ -389,6 +402,8 @@ public class ZipDeploy
         WriteLog("工作目录: {0}", si.WorkingDirectory);
         WriteLog("启动文件: {0}", si.FileName);
         WriteLog("启动参数: {0}", si.Arguments);
+        if (envVars.Count > 0)
+            WriteLog("环境变量: {0}", envVars.Select(e => $"{e.Key}={e.Value}").Join("; "));
         if (!si.UserName.IsNullOrEmpty())
             WriteLog("启动用户：{0}", si.UserName);
 

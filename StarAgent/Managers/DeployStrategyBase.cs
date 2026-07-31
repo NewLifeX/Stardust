@@ -299,6 +299,12 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
         };
         si.EnvironmentVariables["BasePath"] = workDir;
 
+        // 初始化环境变量追踪字典
+        context.EnvironmentVariables = new Dictionary<String, String>
+        {
+            ["BasePath"] = workDir
+        };
+
         // 调试模式
         if (context.Debug)
         {
@@ -312,7 +318,10 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
 
         // 设置应用标识。目标应用将使用该标识连接星尘服务端，实现一份应用程序以多个应用身份运行，比如魔方以cube/cube2/cube3等身份运行
         if (!context.AppId.IsNullOrEmpty())
+        {
             si.EnvironmentVariables["StarAppId"] = context.AppId;
+            context.EnvironmentVariables?["StarAppId"] = context.AppId;
+        }
 
         // 处理dll和jar文件
         if (runFile.Extension.EqualIgnoreCase(".dll"))
@@ -337,7 +346,10 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
             foreach (var item in service.Environments.SplitAsDictionary("=", ";"))
             {
                 if (!item.Key.IsNullOrEmpty())
+                {
                     si.EnvironmentVariables[item.Key] = item.Value;
+                    context.EnvironmentVariables?[item.Key] = item.Value;
+                }
             }
         }
 
@@ -351,6 +363,7 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
             {
                 var bytes = (UInt64)service.MaxMemory * 1024 * 1024;
                 si.EnvironmentVariables["DOTNET_GCHeapHardLimit"] = bytes.ToString("x");
+                context.EnvironmentVariables?["DOTNET_GCHeapHardLimit"] = bytes.ToString("x");
             }
         }
 
@@ -371,6 +384,7 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
             var dll = "Stardust.dll".GetFullPath();
             context.WriteLog("执行目录：{0}，注入：{1}", dir, dll);
             si.EnvironmentVariables["DOTNET_STARTUP_HOOKS"] = dll;
+            context.EnvironmentVariables?["DOTNET_STARTUP_HOOKS"] = dll;
         }
     }
 
@@ -386,6 +400,8 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
         context.WriteLog("工作目录: {0}", si.WorkingDirectory);
         context.WriteLog("启动文件: {0}", si.FileName);
         context.WriteLog("启动参数: {0}", si.Arguments);
+        if (context.EnvironmentVariables is { Count: > 0 })
+            context.WriteLog("环境变量: {0}", context.EnvironmentVariables.Select(e => $"{e.Key}={e.Value}").Join("; "));
         if (!user.IsNullOrEmpty())
             context.WriteLog("启动用户：{0}", user);
 
