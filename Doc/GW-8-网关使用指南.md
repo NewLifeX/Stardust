@@ -128,13 +128,92 @@ Application started. Press Ctrl+C to shut down.
 
 ## 路由配置（核心）
 
-网关的路由配置存储在数据库的 `GatewayRoute`（网关路由）、`GatewayCluster`（网关集群）、`GatewayNode`（网关节点）三张表中。均通过 StarServer 后台管理界面配置，配置变更后网关自动热更新，无需重启。
+网关的路由配置支持**三种来源**，按优先级从高到低，**「首选胜出」覆盖（非合并）**：
 
-### 路由配置流程
+| 优先级    | 来源                    | 说明                                                               | 适用场景                          |
+| --------- | ----------------------- | ------------------------------------------------------------------ | --------------------------------- |
+| 1（最高） | **StarServer 远程配置** | 网关作为 AppClient 向 StarServer `/Gateway/config` 拉取路由 + 证书 | 标准部署，集中管理、热更新        |
+| 2         | **本地数据库**          | 直接读 `GatewayRoute`/`GatewayCluster`/`GatewayNode` 表            | Server 与网关共享同一 DB 时的兜底 |
+| 3（最低） | **本地 JSON 文件**      | 读 `LocalConfigFile`（默认 `gateway.json`）                        | Server 与 DB 均不可达时的应急兜底 |
+
+> **兜底链说明**：数据库共享模式下，StarServer 后台写入的就是同一份 DB，因此 Server API 与 DB 读的是同一份数据；**真实有意义的兜底链是：DB → 本地文件**。只要 StarServer 可达，第 1 级即生效；第 1 级失败/超时/返回空路由才回退第 2 级；第 2 级也失败才用第 3 级。
+>
+> 三种来源只决定「配置从哪读」，匹配、转发逻辑完全一致。其中 JSON 文件为**直连兜底**（见来源三），能力较 DB/Server 受限。
+
+### 来源一：StarServer 远程配置（推荐）
+
+- 前提：网关 `appsettings.json` 已配置 `StarServer` 地址与 `StarAppId`/`StarSecret`（网关以此应用身份向服务端鉴权）。
+- 网关每 `ConfigRefreshInterval`（默认 15s）拉取一次；证书在 StarServer 为 **https** 时同源下发并覆盖本地证书，http 时为安全考虑拒绝下发（证书回退数据库加载）。
+- 支持全部路由字段：动态路由、负载均衡、健康检查、静态文件托管、WebSocket。
+- 在 StarServer 后台（或三张表）完成配置，变更后网关自动热更新，无需重启。
+
+### 来源二：本地数据库
+
+网关直接连接数据库，读取 `GatewayRoute`（网关路由）、`GatewayCluster`（网关集群）、`GatewayNode`（网关节点）三张表（仅启用项）。配置变更后网关自动热更新，无需重启。
+
+### 来源三：本地 JSON 文件（应急兜底）
+
+当 StarServer 与数据库**都不可达**时，网关从 `LocalConfigFile`（默认 `gateway.json`，相对网关工作目录）读取路由作为最终兜底。该方式为**直连 `target`** 语义：`ClusterId=0`，请求直接转发到 `target`，**不经数据库节点查询、无负载均衡、无健康检查、无故障转移**。
+
+配置格式为 JSON 数组，每条路由字段（**本地 JSON 用小驼峰 camelCase**；StarServer 后台 / 数据库 `GatewayRoute` 表则使用实体属性名 PascalCase，如 `StaticRoot`，两套命名约定不同但语义一致）：
+
+| 字段              | 必填 | 说明                                                | 示例                     |
+| ----------------- | ---- | --------------------------------------------------- | ------------------------ |
+| `name`            | 是   | 路由名称                                            | `用户服务`               |
+| `domain`          | 是   | 域名匹配（支持 `*` 通配、逗号分隔）                 | `*.example.com`          |
+| `target`          | 否   | 后端直连地址（反向代理用；静态路由无需）            | `http://127.0.0.1:5000`  |
+| `path`            | 否   | 路径匹配（默认空 = 全部）                           | `/api/*`                 |
+| `methods`         | 否   | HTTP 方法（默认空 = 全部）                          | `GET,POST`               |
+| `priority`        | 否   | 优先级（越大越优先，默认 0）                        | `10`                     |
+| `staticRoot`      | 否   | 静态文件根目录；设置后路由为静态托管（无需 target） | `/var/www/html`          |
+| `indexFile`       | 否   | 默认首页（默认 `index.html`）                       | `index.html`             |
+| `directoryBrowse` | 否   | 是否允许目录浏览（默认 false）                      | `false`                  |
+| `spaFallback`     | 否   | SPA 回退（history 路由模式设为 true）               | `true`                   |
+
+**示例 `gateway.json`**（含反向代理与静态文件两种形态）：
+
+```json
+[
+  {
+    "name": "用户服务反向代理",
+    "domain": "api.example.com",
+    "path": "/api/*",
+    "methods": "GET,POST,PUT,DELETE",
+    "target": "http://127.0.0.1:5000",
+    "priority": 10
+  },
+  {
+    "name": "官网静态文件",
+    "domain": "www.example.com",
+    "path": "/*",
+    "staticRoot": "/var/www/html",
+    "indexFile": "index.html",
+    "directoryBrowse": false,
+    "spaFallback": true
+  }
+]
+```
+
+> 静态文件路由只需 `staticRoot`（无需 `target`）；反向代理路由需 `target`。两者不要混写（`staticRoot` 与 `target` 同时出现时以静态优先，反向代理 `target` 被忽略）。
+
+### 配置生效分析（结合代码）
+
+| 路由 | 场景 | 是否生效 | 说明 |
+| --- | --- | --- | --- |
+| 路由1 `用户服务反向代理` | 反向代理 | ✅ 生效 | `name/domain/path/methods/target/priority` 均被 `LoadConfigFromLocalFile` 解析；`ClusterId` 固定为 `0`，`target` 写入直连表；请求命中后 `SelectNode` 直接 `new NetUri(target)` 转发。`api.example.com/api/xxx` → `http://127.0.0.1:5000` |
+| 路由2 `官网静态文件` | 静态文件服务 | ✅ 生效 | `LoadConfigFromLocalFile` 解析到 `staticRoot` 非空即标记 `IsStaticRoute=true`（并读取 `indexFile`/`directoryBrowse`/`spaFallback`），因无 `target` 不写入直连表；请求命中后 `route.IsStaticRoute==true` 触发静态分支，按 `staticRoot` 从磁盘读取文件返回，`www.example.com/` → `/var/www/html/index.html`（spaFallback 开启时 history 路由回退） |
+
+> 本地 JSON 兜底现已支持静态文件服务，与 StarServer / 数据库来源的静态路由行为一致。`ClusterId=0` 的静态路由不查数据库节点、无负载均衡/健康检查（直连磁盘）。
+
+> ⚠️ **JSON 兜底的限制**：支持「反向代理直连」与「静态文件托管」，**不支持** WebSocket（默认关闭）、负载均衡与健康检查。需要 WebSocket 或负载均衡，请用来源一/二在 StarServer 后台或数据库 `GatewayRoute` 表配置。
+
+### 路由配置流程（适用于来源一/二）
 
 ```
 1. 创建集群（Cluster）→ 2. 添加节点（Node）→ 3. 配置路由（Route）
 ```
+
+> 注：来源三（JSON 文件）无需集群/节点，反向代理写 `target`、静态托管写 `staticRoot` 即可。
 
 ### 1. 创建集群（GatewayCluster）
 
@@ -299,11 +378,11 @@ WebSocket: true
 
 网关内置管理 API，方便调试查看状态：
 
-| 接口               | 说明                                               |
-| ------------------ | -------------------------------------------------- |
-| `GET /api/status`  | 运行状态（运行时间、活跃连接数、请求总数、路由数） |
-| `GET /api/routes`  | 列出所有路由配置                                   |
-| `GET /api/refresh` | 手动触发配置刷新                                   |
+| 接口               | 说明                                                             |
+| ------------------ | ---------------------------------------------------------------- |
+| `GET /api/status`  | 运行状态（运行时间、活跃连接数、请求总数、路由数、当前配置来源） |
+| `GET /api/routes`  | 列出所有路由配置                                                 |
+| `GET /api/refresh` | 手动触发配置刷新                                                 |
 
 查看状态：
 ```bash
@@ -317,9 +396,12 @@ curl http://127.0.0.1:8800/api/status
   "activeSessions": 5,
   "totalRequests": 1024,
   "routeCount": 3,
-  "port": 8800
+  "port": 8800,
+  "configSource": "server"
 }
 ```
+
+> `configSource` 字段标识当前生效的配置来源：`server`（来自 StarServer）/ `database`（本地数据库）/ `file`（本地 JSON 兜底）/ `none`（尚未加载）。排查配置未生效时，先看它确认走的是哪一级。
 
 ---
 
@@ -336,15 +418,17 @@ curl http://127.0.0.1:8800/api/status
 
 ## 常见问题
 
-| 问题                           | 原因                           | 解决                                         |
-| ------------------------------ | ------------------------------ | -------------------------------------------- |
-| 启动报错 `StarServer 连接失败` | StarServer 地址配置错误        | 检查 `appsettings.json` 中 `StarServer` 地址 |
-| 访问报 404 匹配不到路由        | 路由表的 Domain/Path 没匹配上  | 检查 `GatewayRoute` 表中的域名和路径         |
-| HTTPS 访问不了                 | SSL 证书没加载成功             | 检查 `SslCertificate` 表数据和证书文件路径   |
-| WebSocket 连接失败             | 路由 `WebSocket` 字段未勾选    | 把路由的 `WebSocket` 设为 `true`             |
-| 后端服务不通                   | 节点地址写错或服务没运行       | 检查 `GatewayNode` 地址和端口                |
-| 静态文件 404                   | 文件路径不对或根目录未正确配置 | 检查 `StaticRoot` 路径和磁盘上实际文件位置   |
-| 静态文件 403                   | 路径穿越攻击被拦截             | 路径不能包含 `..` 跳出 `StaticRoot` 目录     |
+| 问题                           | 原因                           | 解决                                             |
+| ------------------------------ | ------------------------------ | ------------------------------------------------ |
+| 启动报错 `StarServer 连接失败` | StarServer 地址配置错误        | 检查 `appsettings.json` 中 `StarServer` 地址     |
+| 访问报 404 匹配不到路由        | 路由表的 Domain/Path 没匹配上  | 检查 `GatewayRoute` 表中的域名和路径             |
+| HTTPS 访问不了                 | SSL 证书没加载成功             | 检查 `SslCertificate` 表数据和证书文件路径       |
+| WebSocket 连接失败             | 路由 `WebSocket` 字段未勾选    | 把路由的 `WebSocket` 设为 `true`                 |
+| 后端服务不通                   | 节点地址写错或服务没运行       | 检查 `GatewayNode` 地址和端口                    |
+| 静态文件 404                   | 文件路径不对或根目录未正确配置 | 检查 `StaticRoot` 路径和磁盘上实际文件位置       |
+| 静态文件 403                   | 路径穿越攻击被拦截             | 路径不能包含 `..` 跳出 `StaticRoot` 目录         |
+| 不确定配置从哪级加载           | 多级兜底，来源不直观           | `curl /api/status` 看 `configSource` 字段        |
+| 配了 StarServer 但路由没生效   | 远程返回空/鉴权失败，已回退 DB | 看启动日志「从 StarServer 拉取…」/「回退数据库」 |
 
 ---
 
@@ -358,6 +442,7 @@ curl http://127.0.0.1:8800/api/status
 - [ ] 托管静态文件时，路由的 `StaticRoot` 指向正确的目录
 - [ ] 需要 HTTPS 时，`SslCertificate` 表已配置证书
 - [ ] 运行 `./StarGateway` 启动日志无报错
-- [ ] `curl http://127.0.0.1:8800/api/status` 返回正常
+- [ ] `curl http://127.0.0.1:8800/api/status` 返回正常，且 `configSource` 符合预期（server/database）
+- [ ] （应急兜底）在 `gateway.json` 写好直连路由，Server 与 DB 均不可达时仍可转发
 - [ ] 代理路由：`curl http://127.0.0.1:8800/配置的路径` 能正常返回数据
 - [ ] 静态路由：`curl http://127.0.0.1:8800/` 返回前端首页

@@ -326,7 +326,7 @@ public class HttpReverseProxy : ProxyServer
         // 解析本地兜底配置文件（Server 与 DB 均不可达时的最终兜底）
         // 格式: [{ "name":"route1", "domain":"*.example.com", "path":"/api/*", "methods":"GET", "target":"http://localhost:5000" }]
         // 采用直连 target（ClusterId=0），由 SelectNode 直接转发，不经数据库节点查询
-        var list = JsonParser.Decode(json) as IList<Object>;
+        var list = json.ToJsonEntity<IList<IDictionary<String, Object?>>>();
         if (list == null || list.Count == 0) return;
 
         var routes = new List<GatewayRoute>();
@@ -334,12 +334,23 @@ public class HttpReverseProxy : ProxyServer
         var idx = 0;
         foreach (var item in list)
         {
-            if (item is not IDictionary<String, Object> dic) continue;
+#pragma warning disable CS8632 // 只能在 "#nullable" 注释上下文内的代码中使用可为 null 的引用类型的注释。
+            if (item is not IDictionary<String, Object?> raw) continue;
+#pragma warning restore CS8632 // 只能在 "#nullable" 注释上下文内的代码中使用可为 null 的引用类型的注释。
+            // 键名大小写不敏感，允许用户在 JSON 中写 Name 或 name
+#pragma warning disable CS8632 // 只能在 "#nullable" 注释上下文内的代码中使用可为 null 的引用类型的注释。
+            var dic = new NullableDictionary<String, Object?>(raw, StringComparer.OrdinalIgnoreCase);
+#pragma warning restore CS8632 // 只能在 "#nullable" 注释上下文内的代码中使用可为 null 的引用类型的注释。
 
             var name = dic["name"] + "";
             var domain = dic["domain"] + "";
             var target = dic["target"] + "";
-            if (name.IsNullOrEmpty() || domain.IsNullOrEmpty() || target.IsNullOrEmpty()) continue;
+            // 静态文件路由：有 staticRoot 即视为静态路由，此时不要求 target
+            var staticRoot = dic["staticRoot"] + "";
+            var isStatic = !staticRoot.IsNullOrEmpty();
+            // 名称/域名为必填；既非静态又无 target 的路由无意义，跳过
+            if (name.IsNullOrEmpty() || domain.IsNullOrEmpty()) continue;
+            if (target.IsNullOrEmpty() && !isStatic) continue;
 
             // 负 Id 避免与数据库路由 Id 冲突
             var id = -(++idx);
@@ -353,8 +364,14 @@ public class HttpReverseProxy : ProxyServer
                 Priority = (dic["priority"] + "").ToInt(),
                 Enable = true,
                 ClusterId = 0,
+                IsStaticRoute = isStatic,
+                StaticRoot = staticRoot,
+                IndexFile = dic["indexFile"] + "",
+                DirectoryBrowse = (dic["directoryBrowse"] + "").ToBoolean(),
+                SPAFallback = (dic["spaFallback"] + "").ToBoolean(),
             });
-            targets[id] = target;
+            // 仅反向代理路由需要直连目标；静态路由交由静态文件分支处理
+            if (!target.IsNullOrEmpty()) targets[id] = target;
         }
 
         if (routes.Count == 0) return;
@@ -364,7 +381,7 @@ public class HttpReverseProxy : ProxyServer
         foreach (var kv in targets) _directTargets[kv.Key] = kv.Value;
         Interlocked.Exchange(ref _routes, routes);
         _configSource = "file";
-        WriteLog("从本地文件 {0} 加载路由配置，共 {1} 条（直连兜底）", file, routes.Count);
+        WriteLog("从本地文件 {0} 加载路由配置，共 {1} 条（本地兜底）", file, routes.Count);
     }
 
     protected virtual void LoadConfig()
@@ -471,9 +488,11 @@ public class HttpReverseProxy : ProxyServer
 
     public NetUri SelectNode(GatewayRoute route, String clientIp = null)
     {
-        // 本地兜底直连目标：ClusterId=0 且存在直连 target 时直接返回，不经数据库节点查询
+        // 本地兜底：ClusterId=0。静态路由交由静态文件分支处理，不在此选节点；
+        // 反向代理路由按直连 target 返回，不经数据库节点查询
         if (route.ClusterId == 0)
         {
+            if (route.IsStaticRoute) return null;
             if (_directTargets.TryGetValue(route.Id, out var target) && !target.IsNullOrEmpty())
                 return new NetUri(target);
             return null;
