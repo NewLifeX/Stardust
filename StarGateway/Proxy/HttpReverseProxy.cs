@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
@@ -574,7 +575,7 @@ public class HttpReverseProxy : ProxyServer
         if (!IsAdminAuthorized(session, request))
         {
             var body = "Admin API 需要鉴权"u8.ToArray();
-            session.Send($"HTTP/1.1 401 Unauthorized\r\nContent-Type: text/plain\r\nContent-Length: {body.Length}\r\nConnection: close\r\n\r\n");
+            session.Send($"HTTP/1.1 401 Unauthorized\r\nWWW-Authenticate: Basic realm=\"Stardust网关：用户名随意，密码填AdminToken\"\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: {body.Length}\r\nConnection: close\r\n\r\n");
             session.Send(body);
             session.Dispose();
             return true;
@@ -642,25 +643,71 @@ public class HttpReverseProxy : ProxyServer
     }
 
     /// <summary>判断 Admin API 调用是否已授权。回环地址（本机运维工具）默认可访问；
-    /// 非回环地址需配置 AdminToken 且请求携带匹配令牌（请求头 X-Gateway-Token 或 Authorization: Bearer）。
+    /// 非回环地址需配置 AdminToken 且请求携带匹配令牌（请求头 X-Gateway-Token、Authorization: Bearer，或浏览器 Basic 原生弹框）。
     /// 未配置 AdminToken 时，仅允许回环访问。</summary>
     private Boolean IsAdminAuthorized(HttpReverseSession session, HttpRequest request)
     {
         var token = StarGatewaySetting.Current.AdminToken;
         var remote = session.Remote + "";
-        var isLoopback = remote.StartsWith("127.0.0.1") || remote.Contains("::1") || remote.StartsWith("[::1]");
+        var isLoopback = IsLoopbackAddress(remote);
 
         // P2：配置了 AdminToken 时，所有来源（含本机回环）都必须携带匹配令牌，
         // 杜绝同主机其它进程/SSRF 无令牌调用 /api/refresh 或读取 /api/routes 拓扑；
         // 未配置 AdminToken 时，保持原行为：仅允许本机回环访问，外部拒绝
         if (token.IsNullOrEmpty()) return isLoopback;
 
-        var provided = request.Headers.TryGetValue("X-Gateway-Token", out var h) ? h
-            : (request.Headers.TryGetValue("Authorization", out var a) ? a : null);
-        if (!provided.IsNullOrEmpty() && provided.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-            provided = provided.Substring(7);
-
+        var provided = GetProvidedToken(request);
         return !provided.IsNullOrEmpty() && provided.EqualIgnoreCase(token);
+    }
+
+    /// <summary>判断远程地址是否为回环地址（127.0.0.0/8、::1，兼容 ::ffff:127.x 这类 IPv4 映射地址）</summary>
+    private static Boolean IsLoopbackAddress(String remote)
+    {
+        if (remote.IsNullOrEmpty()) return false;
+        // 先尝试整体解析（可能是裸 IP，无端口，如 ::1）
+        if (IPAddress.TryParse(remote, out var addr) && IPAddress.IsLoopback(addr)) return true;
+        // 去掉端口：[::1]:54321 / 127.0.0.1:54321
+        var host = remote!;
+        if (host.StartsWith("["))
+        {
+            var close = host.IndexOf(']');
+            if (close > 0) host = host.Substring(1, close - 1);
+        }
+        else
+        {
+            var idx = host.LastIndexOf(':');
+            if (idx > 0) host = host.Substring(0, idx);
+        }
+        // 处理 IPv4 映射的 IPv6 地址 ::ffff:127.0.0.1
+        if (host.StartsWith("::ffff:", StringComparison.OrdinalIgnoreCase)) host = host.Substring(7);
+        return IPAddress.TryParse(host, out addr) && IPAddress.IsLoopback(addr);
+    }
+
+    /// <summary>从请求头提取 AdminToken：依次支持 X-Gateway-Token、Authorization: Bearer、Authorization: Basic（浏览器原生弹框）。
+    /// Basic 认证为 user:password 格式，取 password 部分作为 token；若不含冒号则整串作为 token。</summary>
+    private static String GetProvidedToken(HttpRequest request)
+    {
+        if (request.Headers.TryGetValue("X-Gateway-Token", out var h) && !h.IsNullOrEmpty()) return h;
+        if (request.Headers.TryGetValue("Authorization", out var a) && !a.IsNullOrEmpty())
+        {
+            var auth = a.Trim();
+            if (auth.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)) return auth.Substring(7);
+            if (auth.StartsWith("Basic ", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    var decoded = Encoding.UTF8.GetString(Convert.FromBase64String(auth.Substring(6)));
+                    var sep = decoded.IndexOf(':');
+                    if (sep < 0) return decoded;                       // 无冒号：整串当 token
+                    var user = decoded.Substring(0, sep);
+                    var pass = decoded.Substring(sep + 1);
+                    // 密码非空优先用密码（用户名可任意）；密码为空则用用户名当 token，兼容“只有 token”的两种填法
+                    return pass.IsNullOrEmpty() ? user : pass;
+                }
+                catch { return ""; }
+            }
+        }
+        return "";
     }
     #endregion
 

@@ -94,17 +94,18 @@ StarGateway 支持多级配置来源（优先级从高到低）：
 }
 ```
 
-| 配置项                  | 说明                       | 默认值                  |
-| ----------------------- | -------------------------- | ----------------------- |
-| `StarServer`            | 星尘服务端地址             | `http://127.0.0.1:6600` |
-| `StarAppId`             | 网关应用标识               | `StarGateway`           |
-| `StarSecret`            | 应用密钥                   | `""`                    |
-| `Debug`                 | 调试日志开关               | `true`                  |
-| `Port`                  | 网关监听端口               | `8800`                  |
-| `LocalConfigFile`       | 本地兜底配置文件路径       | `gateway.json`          |
-| `HealthCheckInterval`   | 健康检查间隔（秒）         | `10`                    |
-| `ConfigRefreshInterval` | 配置刷新间隔（秒）         | `15`                    |
-| `IdleTimeout`           | 空闲回收超时（秒，15分钟） | `900`                   |
+| 配置项                  | 说明                                        | 默认值                  |
+| ----------------------- | ------------------------------------------- | ----------------------- |
+| `StarServer`            | 星尘服务端地址                              | `http://127.0.0.1:6600` |
+| `StarAppId`             | 网关应用标识                                | `StarGateway`           |
+| `StarSecret`            | 应用密钥                                    | `""`                    |
+| `Debug`                 | 调试日志开关                                | `true`                  |
+| `Port`                  | 网关监听端口                                | `8800`                  |
+| `LocalConfigFile`       | 本地兜底配置文件路径                        | `gateway.json`          |
+| `HealthCheckInterval`   | 健康检查间隔（秒）                          | `10`                    |
+| `ConfigRefreshInterval` | 配置刷新间隔（秒）                          | `15`                    |
+| `IdleTimeout`           | 空闲回收超时（秒，15分钟）                  | `900`                   |
+| `AdminToken`            | Admin API 访问令牌（留空=仅本机回环可访问） | `""`                    |
 
 #### 运行网关
 
@@ -157,18 +158,18 @@ Application started. Press Ctrl+C to shut down.
 
 配置格式为 JSON 数组，每条路由字段（**本地 JSON 用小驼峰 camelCase**；StarServer 后台 / 数据库 `GatewayRoute` 表则使用实体属性名 PascalCase，如 `StaticRoot`，两套命名约定不同但语义一致）：
 
-| 字段              | 必填 | 说明                                                | 示例                     |
-| ----------------- | ---- | --------------------------------------------------- | ------------------------ |
-| `name`            | 是   | 路由名称                                            | `用户服务`               |
-| `domain`          | 是   | 域名匹配（支持 `*` 通配、逗号分隔）                 | `*.example.com`          |
-| `target`          | 否   | 后端直连地址（反向代理用；静态路由无需）            | `http://127.0.0.1:5000`  |
-| `path`            | 否   | 路径匹配（默认空 = 全部）                           | `/api/*`                 |
-| `methods`         | 否   | HTTP 方法（默认空 = 全部）                          | `GET,POST`               |
-| `priority`        | 否   | 优先级（越大越优先，默认 0）                        | `10`                     |
-| `staticRoot`      | 否   | 静态文件根目录；设置后路由为静态托管（无需 target） | `/var/www/html`          |
-| `indexFile`       | 否   | 默认首页（默认 `index.html`）                       | `index.html`             |
-| `directoryBrowse` | 否   | 是否允许目录浏览（默认 false）                      | `false`                  |
-| `spaFallback`     | 否   | SPA 回退（history 路由模式设为 true）               | `true`                   |
+| 字段              | 必填 | 说明                                                | 示例                    |
+| ----------------- | ---- | --------------------------------------------------- | ----------------------- |
+| `name`            | 是   | 路由名称                                            | `用户服务`              |
+| `domain`          | 是   | 域名匹配（支持 `*` 通配、逗号分隔）                 | `*.example.com`         |
+| `target`          | 否   | 后端直连地址（反向代理用；静态路由无需）            | `http://127.0.0.1:5000` |
+| `path`            | 否   | 路径匹配（默认空 = 全部）                           | `/api/*`                |
+| `methods`         | 否   | HTTP 方法（默认空 = 全部）                          | `GET,POST`              |
+| `priority`        | 否   | 优先级（越大越优先，默认 0）                        | `10`                    |
+| `staticRoot`      | 否   | 静态文件根目录；设置后路由为静态托管（无需 target） | `/var/www/html`         |
+| `indexFile`       | 否   | 默认首页（默认 `index.html`）                       | `index.html`            |
+| `directoryBrowse` | 否   | 是否允许目录浏览（默认 false）                      | `false`                 |
+| `spaFallback`     | 否   | SPA 回退（history 路由模式设为 true）               | `true`                  |
 
 **示例 `gateway.json`**（含反向代理与静态文件两种形态）：
 
@@ -198,10 +199,10 @@ Application started. Press Ctrl+C to shut down.
 
 ### 配置生效分析（结合代码）
 
-| 路由 | 场景 | 是否生效 | 说明 |
-| --- | --- | --- | --- |
-| 路由1 `用户服务反向代理` | 反向代理 | ✅ 生效 | `name/domain/path/methods/target/priority` 均被 `LoadConfigFromLocalFile` 解析；`ClusterId` 固定为 `0`，`target` 写入直连表；请求命中后 `SelectNode` 直接 `new NetUri(target)` 转发。`api.example.com/api/xxx` → `http://127.0.0.1:5000` |
-| 路由2 `官网静态文件` | 静态文件服务 | ✅ 生效 | `LoadConfigFromLocalFile` 解析到 `staticRoot` 非空即标记 `IsStaticRoute=true`（并读取 `indexFile`/`directoryBrowse`/`spaFallback`），因无 `target` 不写入直连表；请求命中后 `route.IsStaticRoute==true` 触发静态分支，按 `staticRoot` 从磁盘读取文件返回，`www.example.com/` → `/var/www/html/index.html`（spaFallback 开启时 history 路由回退） |
+| 路由                     | 场景         | 是否生效 | 说明                                                                                                                                                                                                                                                                                                                                             |
+| ------------------------ | ------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 路由1 `用户服务反向代理` | 反向代理     | ✅ 生效   | `name/domain/path/methods/target/priority` 均被 `LoadConfigFromLocalFile` 解析；`ClusterId` 固定为 `0`，`target` 写入直连表；请求命中后 `SelectNode` 直接 `new NetUri(target)` 转发。`api.example.com/api/xxx` → `http://127.0.0.1:5000`                                                                                                         |
+| 路由2 `官网静态文件`     | 静态文件服务 | ✅ 生效   | `LoadConfigFromLocalFile` 解析到 `staticRoot` 非空即标记 `IsStaticRoute=true`（并读取 `indexFile`/`directoryBrowse`/`spaFallback`），因无 `target` 不写入直连表；请求命中后 `route.IsStaticRoute==true` 触发静态分支，按 `staticRoot` 从磁盘读取文件返回，`www.example.com/` → `/var/www/html/index.html`（spaFallback 开启时 history 路由回退） |
 
 > 本地 JSON 兜底现已支持静态文件服务，与 StarServer / 数据库来源的静态路由行为一致。`ClusterId=0` 的静态路由不查数据库节点、无负载均衡/健康检查（直连磁盘）。
 
@@ -383,6 +384,39 @@ WebSocket: true
 | `GET /api/status`  | 运行状态（运行时间、活跃连接数、请求总数、路由数、当前配置来源） |
 | `GET /api/routes`  | 列出所有路由配置                                                 |
 | `GET /api/refresh` | 手动触发配置刷新                                                 |
+
+### 访问控制（AdminToken）
+
+Admin API 暴露路由拓扑等敏感信息，必须鉴权：
+
+- **未配置 AdminToken**（默认）：仅本机回环地址（`127.0.0.1`、`::1`）可访问，外部地址一律拒绝。适合单机运维。
+- **已配置 AdminToken**：所有来源（含本机回环）都须携带匹配令牌，防止同机其它进程或 SSRF 无令牌调用 `/api/refresh` 或读取 `/api/routes`。
+
+在 `appsettings.json`或者 `Config/StarGateway.config` 的 `StarGateway` 节配置：
+
+```json
+{
+  "StarGateway": {
+    "AdminToken": "你的强令牌"
+  }
+}
+```
+
+### 如何携带令牌
+
+- **浏览器访问**（最直观）：未携带令牌时网关返回 401 并带 `WWW-Authenticate: Basic`，浏览器自动弹出原生登录框。**用户名随意填写（如 `admin`），密码填 AdminToken**，确定即完成认证。
+- **curl / 命令行**：
+  ```bash
+  # 方式一：自定义头（推荐脚本使用）
+  curl -H "X-Gateway-Token: 你的令牌" http://127.0.0.1:8800/api/status
+  # 方式二：Bearer
+  curl -H "Authorization: Bearer 你的令牌" http://127.0.0.1:8800/api/status
+  # 方式三：Basic（与浏览器弹框一致）
+  curl -u admin:你的令牌 http://127.0.0.1:8800/api/status
+  ```
+- **程序调用**：请求头 `Authorization: Bearer <token>` 或 `X-Gateway-Token: <token>`。
+
+> ⚠️ **生产务必使用 HTTPS**：`X-Gateway-Token` / `Bearer` / `Basic` 均为明文编码（非加密），经 HTTP 传输时 AdminToken 可被中间人截获。请将 Admin API 置于 TLS 之后——给网关配置证书监听 443（见下方 HTTPS 配置），或由前置 Nginx 等做 TLS 终止后转发到网关管理端口。AdminToken **区分大小写**，且网关采用恒定时间比较以防护时序侧信道攻击。
 
 查看状态：
 ```bash
