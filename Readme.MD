@@ -99,6 +99,8 @@ Stardust  星尘，轻量级分布式服务框架！
 9. [x] 日志中心。各应用（服务提供者和服务消费者）向中心上报日志数据，统一在星尘Web查看  
 10. [x] 多供应商DNS DDNS。StarAgent支持动态域名解析(DDNS)，自动将节点公网IP注册到DNS（支持阿里云/腾讯云(DNSPod)/优刻得(UDNS)/AWS Route53四家供应商），适用于动态IP环境 [详细文档](Doc/NODE-16-阿里云DNS动态域名解析.md)  
 11. [x] .NET运行时管理。StarServer自动同步官方.NET发布信息，StarAgent支持按需安装.NET运行时版本，配合升级命令实现自动升级与冒烟测试回滚  
+12. [x] 流水线。支持创建流水线及运行/步骤模型，通过 webhook 自动触发构建发布流程，配合仓库 SSH 密钥与用户名密码认证实现自动化部署  
+13. [x] 网关v2.0。StarGateway 重构升级，支持动态路由引擎、负载均衡、健康检查、TLS 终止、WebSocket 代理与静态文件托管（SPA 回退/大文件保护），并集成 APM 追踪
 
 ### 监控中心
 星尘监控介绍 [https://newlifex.com/blood/stardust_monitor](https://newlifex.com/blood/stardust_monitor)  

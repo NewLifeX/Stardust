@@ -8,7 +8,7 @@
     <Description>星尘构建发布工具。自动下载代码仓库、执行编译构建、打包输出并推送至星尘发布中心，支持资源版本管理与多平台分发，配合StarAgent实现自动化部署流水线。</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2026 NewLife</Copyright>
-    <VersionPrefix>1.0</VersionPrefix>
+    <VersionPrefix>1.1</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
@@ -35,7 +35,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/Stardust</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>升级多个核心依赖包至最新版本；优化 AgentExpansion 配置与 SSH.NET 条件引用；开启可空引用类型检查，优化警告处理</PackageReleaseNotes>
+    <PackageReleaseNotes>新增流水线与webhook触发支持；仓库配置支持SSH密钥与用户名密码；部署日志按真实动作逐条上报；支持安装部署，添加服务与应用程序清单；上传文件大小限制提升至1GB；优化内存超限判断与GC清理频率</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
   </PropertyGroup>
@@ -47,7 +47,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Agent" Version="10.16.2026.716-beta1245" />
+    <PackageReference Include="NewLife.Agent" Version="10.17.2026.801" />
   </ItemGroup>
 
   <ItemGroup>
