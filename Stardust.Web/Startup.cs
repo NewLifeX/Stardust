@@ -171,6 +171,10 @@ public class Startup
         //app.UseStardust();
         if (Environment.GetEnvironmentVariable("__ASPNETCORE_BROWSER_TOOLS") is null)
             app.UseResponseCompression();
+
+        // MCP 协议端点中间件：在 Cube 之前短路 /mcp，避免 Web 中间件影响机器API
+        app.UseMiddleware<McpMiddleware>();
+
         app.UseCube(env);
 
         // 注册退出事件

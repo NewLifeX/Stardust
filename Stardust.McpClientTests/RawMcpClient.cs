@@ -67,12 +67,12 @@ public class RawMcpClient : IDisposable
         }
     }
 
-    /// <summary>initialize握手</summary>
-    public async Task<JsonObject> InitializeAsync()
+    /// <summary>initialize握手（默认使用1.0协议版本2024-11-05）</summary>
+    public async Task<JsonObject> InitializeAsync(String protocolVersion = "2024-11-05")
     {
         return await SendAsync("initialize", new
         {
-            protocolVersion = "2024-11-05",
+            protocolVersion,
             capabilities = new { },
             clientInfo = new { name = "test-client", version = "1.0.0" }
         }, id: 1);
