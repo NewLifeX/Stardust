@@ -88,11 +88,11 @@ public partial class AppPipeline
     public Int32 BuildNodeId { get => _BuildNodeId; set { if (OnPropertyChanging("BuildNodeId", value)) { _BuildNodeId = value; OnPropertyChanged("BuildNodeId"); } } }
 
     private String _DeployNodeIds;
-    /// <summary>部署节点。部署节点 ID 列表，对应AppDeployNode.Id，多个分号分隔</summary>
+    /// <summary>部署节点。部署节点 ID 列表，对应AppDeployNode.Id，多个逗号分隔</summary>
     [DisplayName("部署节点")]
-    [Description("部署节点。部署节点 ID 列表，对应AppDeployNode.Id，多个分号分隔")]
+    [Description("部署节点。部署节点 ID 列表，对应AppDeployNode.Id，多个逗号分隔")]
     [DataObjectField(false, false, true, 500)]
-    [BindColumn("DeployNodeIds", "部署节点。部署节点 ID 列表，对应AppDeployNode.Id，多个分号分隔", "", ItemType = "multipleSelect")]
+    [BindColumn("DeployNodeIds", "部署节点。部署节点 ID 列表，对应AppDeployNode.Id，多个逗号分隔", "", ItemType = "multipleSelect")]
     public String DeployNodeIds { get => _DeployNodeIds; set { if (OnPropertyChanging("DeployNodeIds", value)) { _DeployNodeIds = value; OnPropertyChanged("DeployNodeIds"); } } }
 
     private Boolean _AutoDeploy;
@@ -362,7 +362,7 @@ public partial class AppPipeline
         /// <summary>编译节点。对应Node.Id</summary>
         public static readonly Field BuildNodeId = FindByName("BuildNodeId");
 
-        /// <summary>部署节点。部署节点 ID 列表，对应AppDeployNode.Id，多个分号分隔</summary>
+        /// <summary>部署节点。部署节点 ID 列表，对应AppDeployNode.Id，多个逗号分隔</summary>
         public static readonly Field DeployNodeIds = FindByName("DeployNodeIds");
 
         /// <summary>自动部署。编译成功后是否自动 install 到部署节点</summary>
@@ -425,7 +425,7 @@ public partial class AppPipeline
         /// <summary>编译节点。对应Node.Id</summary>
         public const String BuildNodeId = "BuildNodeId";
 
-        /// <summary>部署节点。部署节点 ID 列表，对应AppDeployNode.Id，多个分号分隔</summary>
+        /// <summary>部署节点。部署节点 ID 列表，对应AppDeployNode.Id，多个逗号分隔</summary>
         public const String DeployNodeIds = "DeployNodeIds";
 
         /// <summary>自动部署。编译成功后是否自动 install 到部署节点</summary>
