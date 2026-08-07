@@ -1,4 +1,6 @@
+using System.ComponentModel;
 using Moq;
+using NewLife;
 using NewLife.Caching;
 using Stardust;
 using Stardust.Registry;
@@ -10,6 +12,10 @@ namespace Stardust.Tests;
 /// <summary>测试用文件存储子类。DefaultFileStorage 无抽象成员，直接继承即可</summary>
 internal class TestFileStorage : DefaultFileStorage
 {
+    /// <summary>暴露受保护的本地文件校验方法，便于测试</summary>
+    /// <param name="path">相对路径</param>
+    /// <param name="hash">哈希</param>
+    public new Boolean CheckLocalFile(String? path, String? hash) => base.CheckLocalFile(path, hash);
 }
 
 /// <summary>简单服务提供者，按类型返回注册的实例</summary>
@@ -77,4 +83,102 @@ public class DefaultFileStorageTests
         Assert.NotNull(storage.NewFileBus);
         Assert.NotNull(storage.FileRequestBus);
     }
+
+    #region CheckLocalFile 本地文件校验
+    private static String NewDir() => Path.Combine(Path.GetTempPath(), "StarStorage_" + Guid.NewGuid().ToString("N"));
+
+    [Fact]
+    [DisplayName("CheckLocalFile_文件不存在_返回False")]
+    public void CheckLocalFile_MissingFile_ReturnsFalse()
+    {
+        using var storage = new TestFileStorage { RootPath = NewDir() };
+
+        Assert.False(storage.CheckLocalFile("App/x.zip", null));
+    }
+
+    [Fact]
+    [DisplayName("CheckLocalFile_哈希为空且文件存在_返回True")]
+    public void CheckLocalFile_NoHash_FileExists_ReturnsTrue()
+    {
+        var dir = NewDir();
+        Directory.CreateDirectory(dir);
+        try
+        {
+            File.WriteAllText(Path.Combine(dir, "a.txt"), "hello");
+            using var storage = new TestFileStorage { RootPath = dir };
+
+            Assert.True(storage.CheckLocalFile("a.txt", null));
+        }
+        finally
+        {
+            Directory.Delete(dir, true);
+        }
+    }
+
+    [Fact]
+    [DisplayName("CheckLocalFile_哈希匹配_返回True")]
+    public void CheckLocalFile_HashMatch_ReturnsTrue()
+    {
+        var dir = NewDir();
+        Directory.CreateDirectory(dir);
+        try
+        {
+            var path = Path.Combine(dir, "a.txt");
+            File.WriteAllText(path, "hello");
+            var hash = path.AsFile().MD5().ToHex();
+            using var storage = new TestFileStorage { RootPath = dir };
+
+            Assert.True(storage.CheckLocalFile("a.txt", hash));
+        }
+        finally
+        {
+            Directory.Delete(dir, true);
+        }
+    }
+
+    [Fact]
+    [DisplayName("CheckLocalFile_哈希不匹配_返回False")]
+    public void CheckLocalFile_HashMismatch_ReturnsFalse()
+    {
+        var dir = NewDir();
+        Directory.CreateDirectory(dir);
+        try
+        {
+            File.WriteAllText(Path.Combine(dir, "a.txt"), "hello");
+            using var storage = new TestFileStorage { RootPath = dir };
+
+            Assert.False(storage.CheckLocalFile("a.txt", "00000000000000000000000000000000"));
+        }
+        finally
+        {
+            Directory.Delete(dir, true);
+        }
+    }
+
+    [Fact]
+    [DisplayName("CheckLocalFile_文件被独占占用_容错返回False")]
+    public void CheckLocalFile_FileLocked_ReturnsFalse()
+    {
+        var dir = NewDir();
+        Directory.CreateDirectory(dir);
+        try
+        {
+            var path = Path.Combine(dir, "a.txt");
+            File.WriteAllText(path, "hello");
+            var hash = path.AsFile().MD5().ToHex();
+
+            // 以排他模式打开文件，模拟文件正被其他进程写入/替换
+            using (var fs = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            {
+                using var storage = new TestFileStorage { RootPath = dir };
+
+                Assert.False(storage.CheckLocalFile("a.txt", hash));
+            }
+        }
+        finally
+        {
+            Directory.Delete(dir, true);
+        }
+    }
+    #endregion
 }

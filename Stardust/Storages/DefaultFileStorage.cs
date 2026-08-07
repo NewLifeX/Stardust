@@ -209,7 +209,12 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
 
         WriteLog("收到新文件通知：{0}", msg);
 
-        // 检查本地是否已有文件且哈希正确
+        // 检查本地是否已有文件且哈希正确。上传方可能还在处理（如向zip包注入配置），延迟重试几次再判定缺失
+        if (!CheckLocalFile(info.Path, info.Hash))
+        {
+            for (var i = 0; i < 3 && !CheckLocalFile(info.Path, info.Hash); i++)
+                await Task.Delay(200 * (i + 1), cancellationToken).ConfigureAwait(false);
+        }
         if (CheckLocalFile(info.Path, info.Hash)) return;
 
         var node = info.SourceNode + "";
@@ -398,7 +403,15 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
 
         if (hash.IsNullOrEmpty()) return true;
 
-        return fi.VerifyHash(hash);
+        try
+        {
+            return fi.VerifyHash(hash);
+        }
+        catch (IOException)
+        {
+            // 文件可能正被写入或替换，按缺失处理，由上层延迟重试
+            return false;
+        }
     }
 
     /// <summary>获取本地文件的元数据</summary>
