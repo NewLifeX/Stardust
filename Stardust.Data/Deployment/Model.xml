@@ -285,7 +285,7 @@
         <Column Name="Token" DataType="String" Description="Token。webhook 鉴权 token，由系统自动生成" />
         <Column Name="Secret" DataType="String" Length="200" Description="Secret。HMAC 签名密钥，可选，用于校验 webhook 来源" />
         <Column Name="BuildNodeId" DataType="Int32" Description="编译节点。对应Node.Id" />
-        <Column Name="DeployNodeIds" DataType="String" ItemType="multipleSelect" Length="500" Description="部署节点。部署节点 ID 列表，对应AppDeployNode.Id，多个分号分隔" />
+        <Column Name="DeployNodeIds" DataType="String" ItemType="multipleSelect" Length="500" Description="部署节点。部署节点 ID 列表，对应AppDeployNode.Id，多个逗号分隔" />
         <Column Name="AutoDeploy" DataType="Boolean" Description="自动部署。编译成功后是否自动 install 到部署节点" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
         <Column Name="TraceId" DataType="String" Description="追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" Category="扩展" />

@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using NewLife;
 using NewLife.Data;
@@ -138,13 +139,14 @@ public class McpService
     /// <summary>获取已注册的所有动作</summary>
     public IDictionary<String, IMcpAction> GetActions() => _actions;
 
-    /// <summary>主入口。解析JSON-RPC请求、校验Token、路由到对应方法</summary>
+    /// <summary>主入口。解析JSON-RPC请求、校验Token、路由到对应方法。
+    /// acceptSse：客户端Accept是否包含text/event-stream，决定是否用SSE格式包装响应体</summary>
     /// <param name="body">JSON-RPC请求体</param>
     /// <param name="ip">调用方IP</param>
     /// <param name="ua">客户端User-Agent</param>
     /// <param name="authorization">Authorization头（Bearer sdmcp_xxx）</param>
-    /// <returns>JSON-RPC响应JSON</returns>
-    public async Task<String> HandleAsync(String body, String ip, String ua, String authorization)
+    /// <param name="acceptSse">客户端是否接受SSE流式响应</param>
+    public async Task<McpHandleResult> HandleAsync(String body, String ip, String ua, String authorization, Boolean acceptSse = false)
     {
         var sw = Stopwatch.StartNew();
         String? traceId = null;
@@ -157,7 +159,7 @@ public class McpService
         try
         {
             // 解析JSON
-            if (body.IsNullOrEmpty()) return BuildError(null, -32700, "Parse error: empty body");
+            if (body.IsNullOrEmpty()) return ErrorResult(null, -32700, "Parse error: empty body", acceptSse);
             JsonElement request;
             try
             {
@@ -165,42 +167,66 @@ public class McpService
             }
             catch (Exception ex)
             {
-                return BuildError(null, -32700, "Parse error: " + ex.Message);
+                return ErrorResult(null, -32700, "Parse error: " + ex.Message, acceptSse);
             }
 
-            if (request.ValueKind != JsonValueKind.Object) return BuildError(null, -32600, "Invalid Request: not an object");
+            if (request.ValueKind != JsonValueKind.Object) return ErrorResult(null, -32600, "Invalid Request: not an object", acceptSse);
 
             // 校验JSON-RPC 2.0
             if (!request.TryGetProperty("jsonrpc", out var v) || v.GetString() != "2.0")
-                return BuildError(id, -32600, "Invalid Request: missing or invalid jsonrpc field");
-            if (request.TryGetProperty("id", out var idEl)) id = idEl.ValueKind == JsonValueKind.Null ? null : idEl.ToString();
+                return ErrorResult(id, -32600, "Invalid Request: missing or invalid jsonrpc field", acceptSse);
+            // 回显客户端请求的 id，必须保持原始类型（数字/字符串），否则严格客户端按 id 匹配会失败
+            if (request.TryGetProperty("id", out var idEl))
+            {
+                id = idEl.ValueKind switch
+                {
+                    JsonValueKind.Number => idEl.GetInt64(),
+                    JsonValueKind.String => idEl.GetString(),
+                    _ => null
+                };
+            }
             if (!request.TryGetProperty("method", out var methodEl) || (methodName = methodEl.GetString()).IsNullOrEmpty())
-                return BuildError(id, -32600, "Invalid Request: missing method");
+                return ErrorResult(id, -32600, "Invalid Request: missing method", acceptSse);
+
+            // 通知类消息（notifications/*）不需要响应，HTTP层回202
+            if (methodName.StartsWith("notifications/", StringComparison.OrdinalIgnoreCase))
+                return new McpHandleResult { StatusCode = 202 };
 
             // initialize 不需要鉴权
             if (methodName == "initialize")
             {
-                var initResult = HandleInitialize();
-                return BuildResult(id, initResult);
+                var initResult = HandleInitialize(request);
+                return Result(id, initResult, acceptSse);
             }
+
+            // ping 心跳
+            if (methodName == "ping")
+                return Result(id, new { }, acceptSse);
 
             // 其他方法都需要Token鉴权
             McpToken? token = null;
             var tokenStr = ExtractToken(authorization);
-            if (tokenStr.IsNullOrEmpty()) return BuildError(id, -32001, "Unauthorized: missing Bearer token");
+            if (tokenStr.IsNullOrEmpty()) return ErrorResult(id, -32001, "Unauthorized: missing Bearer token", acceptSse);
 
             token = McpToken.FindByToken(tokenStr);
             if (token == null || !McpToken.SafeEquals(token.Token, tokenStr))
-                return BuildError(id, -32001, "Unauthorized: token not found");
+                return ErrorResult(id, -32001, "Unauthorized: token not found", acceptSse);
             if (!token.IsValid())
-                return BuildError(id, -32001, "Unauthorized: token disabled or expired");
+                return ErrorResult(id, -32001, "Unauthorized: token disabled or expired", acceptSse);
 
             tokenId = token.Id;
             tokenName = token.Name;
             traceId = DefaultSpan.Current?.TraceId;
 
-            // 更新调用统计
-            token.RecordCall(ip);
+            // 更新调用统计（审计类写入，失败不影响主响应）
+            try
+            {
+                token.RecordCall(ip);
+            }
+            catch (Exception ex)
+            {
+                XTrace.Log.Warn("[McpService] 更新Token调用统计失败（已忽略）：{0}", ex.Message);
+            }
 
             // 构造上下文
             var context = new McpContext
@@ -221,24 +247,24 @@ public class McpService
                     break;
                 case "tools/call":
                     if (!request.TryGetProperty("params", out var paramsEl))
-                        return BuildError(id, -32602, "Invalid params: missing params");
+                        return ErrorResult(id, -32602, "Invalid params: missing params", acceptSse);
                     result = await HandleToolsCall(paramsEl, context, sw, actionName);
                     break;
                 default:
-                    return BuildError(id, -32601, $"Method not found: {methodName}");
+                    return ErrorResult(id, -32601, $"Method not found: {methodName}", acceptSse);
             }
 
-            return BuildResult(id, result);
+            return Result(id, result, acceptSse);
         }
         catch (McpException ex)
         {
             XTrace.Log.Error("[McpService] MCP异常 method={0} action={1} code={2} err={3}", methodName, actionName, ex.Code, ex.Message);
-            return BuildError(id, ex.Code, ex.Message);
+            return ErrorResult(id, ex.Code, ex.Message, acceptSse);
         }
         catch (Exception ex)
         {
             XTrace.Log.Error("[McpService] 异常 method={0} action={1} err={2}", methodName, actionName, ex);
-            return BuildError(id, -32603, "Internal error: " + ex.Message);
+            return ErrorResult(id, -32603, "Internal error: " + ex.Message, acceptSse);
         }
     }
 
@@ -252,12 +278,18 @@ public class McpService
         return authorization.Trim();
     }
 
-    /// <summary>处理 initialize 方法</summary>
-    private Object HandleInitialize()
+    /// <summary>处理 initialize 方法。按客户端请求的protocolVersion协商返回</summary>
+    private Object HandleInitialize(JsonElement request)
     {
+        var requested = request.TryGetProperty("params", out var p) && p.TryGetProperty("protocolVersion", out var pv)
+            ? pv.GetString() : null;
+        var negotiated = NegotiateProtocolVersion(requested);
+        if (negotiated == null)
+            throw new McpException(-32602, $"Unsupported protocol version: {requested}. Supported: {String.Join(", ", SupportedProtocolVersions)}");
+
         return new
         {
-            protocolVersion = "2024-11-05",
+            protocolVersion = negotiated,
             serverInfo = new { name = "Stardust", version = "1.0.0" },
             capabilities = new { tools = new { } },
         };
@@ -394,11 +426,18 @@ public class McpService
         }
         finally
         {
-            // 写审计日志
-            McpAudit.WriteAsync(
-                context.TokenId, context.TokenName, name, actionName,
-                context.CallerIp, context.UserAgent,
-                arguments.ToString(), success, error, (Int32)sw.ElapsedMilliseconds, context.TraceId);
+            // 写审计日志（best-effort：审计失败绝不能影响主响应，否则并发写锁会污染正常结果）
+            try
+            {
+                McpAudit.WriteAsync(
+                    context.TokenId, context.TokenName, name, actionName,
+                    context.CallerIp, context.UserAgent,
+                    arguments.ToString(), success, error, (Int32)sw.ElapsedMilliseconds, context.TraceId);
+            }
+            catch (Exception ex)
+            {
+                XTrace.Log.Warn("[McpService] 写MCP审计日志失败（已忽略）：{0}", ex.Message);
+            }
         }
 
         return new { content = new[] { new { type = "text", text = JsonSerializer.Serialize(content) } } };
@@ -788,5 +827,69 @@ public class McpService
         };
         return JsonSerializer.Serialize(resp);
     }
+
+    /// <summary>将处理结果写入 HTTP 响应。202=通知无响应体；IsSse=text/event-stream；否则 application/json</summary>
+    public static async Task WriteResponseAsync(HttpContext context, McpHandleResult result)
+    {
+        context.Response.StatusCode = result.StatusCode;
+        if (result.StatusCode == 202) return;
+        context.Response.ContentType = result.IsSse ? "text/event-stream" : "application/json";
+        if (!result.Body.IsNullOrEmpty())
+            await context.Response.WriteAsync(result.Body);
+    }
+    #endregion
+
+    #region 协议版本协商 / 通知 / SSE
+
+    /// <summary>服务器支持的MCP协议版本（从新到旧）。initialize时按客户端请求协商</summary>
+    private static readonly String[] SupportedProtocolVersions =
+    {
+        "2026-07-28",
+        "2025-06-18",
+        "2025-03-26",
+        "2024-11-05",
+    };
+
+    /// <summary>协议版本协商：返回≤客户端请求的最高支持版本；请求为空返回最低支持版；比最低还旧返回null</summary>
+    private static String? NegotiateProtocolVersion(String? requested)
+    {
+        if (requested.IsNullOrEmpty()) return SupportedProtocolVersions[^1];
+        foreach (var v in SupportedProtocolVersions)
+        {
+            if (String.CompareOrdinal(v, requested) <= 0) return v;
+        }
+        return null;
+    }
+
+    /// <summary>MCP处理结果的承载对象。StatusCode=202表示通知类无响应体；IsSse表示用SSE格式返回</summary>
+    public sealed class McpHandleResult
+    {
+        public Int32 StatusCode { get; init; } = 200;
+        public String? Body { get; init; }
+        public Boolean IsSse { get; init; }
+    }
+
+    private static McpHandleResult Result(Object? id, Object? result, Boolean acceptSse)
+    {
+        var json = BuildResult(id, result);
+        return Wrap(json, acceptSse);
+    }
+
+    private static McpHandleResult ErrorResult(Object? id, Int32 code, String message, Boolean acceptSse = false)
+    {
+        var json = BuildError(id, code, message);
+        return Wrap(json, acceptSse);
+    }
+
+    private static McpHandleResult Wrap(String json, Boolean acceptSse)
+    {
+        // Streamable HTTP 规范允许服务端以 application/json 或 text/event-stream 返回。
+        // 本服务为无状态请求-响应模型，统一以 application/json 返回（官方 SDK 2.0 的可靠路径）；
+        // SSE 仅用于服务端主动推送流（本服务暂不需要）。acceptSse 参数保留以备将来流场景。
+        return new McpHandleResult { StatusCode = 200, Body = json };
+    }
+
+    /// <summary>将JSON-RPC响应包装为SSE事件（event: message / data:）</summary>
+    private static String ToSse(String json) => $"event: message\ndata: {json}\n\n";
     #endregion
 }

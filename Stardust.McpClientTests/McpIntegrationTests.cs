@@ -260,11 +260,10 @@ public class McpIntegrationTests : IAsyncLifetime
         {
             McpTestHelper.AuthorizeAllProjects(token.Id);
 
-            // 临时修改McpActionSet只启用node模块
+            // 临时修改McpActionSet只启用node模块（仅改内存单例，不落库，避免污染其它测试）
             var set = Stardust.Server.StarServerSetting.Current;
             var originalActionSet = set.McpActionSet;
             set.McpActionSet = "node";
-            set.Save();
 
             try
             {
@@ -298,9 +297,8 @@ public class McpIntegrationTests : IAsyncLifetime
             }
             finally
             {
-                // 恢复
+                // 恢复内存单例
                 set.McpActionSet = originalActionSet;
-                set.Save();
             }
         }
         finally
@@ -616,5 +614,46 @@ public class McpIntegrationTests : IAsyncLifetime
         {
             McpTestHelper.CleanupToken(token.Id);
         }
+    }
+
+    /// <summary>场景17：协议版本协商。客户端请求2.0版本时服务器回同版本；请求高于最高支持版时回退到最高支持版；请求过低返回-32602</summary>
+    [Fact]
+    public async Task S17_ProtocolVersionNegotiation()
+    {
+        var client = new RawMcpClient(_fixture.CreateClient(), Endpoint);
+
+        // 客户端请求 2025-06-18（服务器支持）→ 回 2025-06-18
+        var resp1 = await client.InitializeAsync("2025-06-18");
+        Assert.False(RawMcpClient.HasError(resp1));
+        var pv1 = RawMcpClient.GetResult(resp1)!["protocolVersion"]?.GetValue<String>();
+        Assert.Equal("2025-06-18", pv1);
+        _output.WriteLine($"✅ 场景17a：请求2025-06-18 → 协商返回 {pv1}");
+
+        // 客户端请求最高支持版 2026-07-28 → 回 2026-07-28
+        var resp2 = await client.InitializeAsync("2026-07-28");
+        Assert.False(RawMcpClient.HasError(resp2));
+        var pv2 = RawMcpClient.GetResult(resp2)!["protocolVersion"]?.GetValue<String>();
+        Assert.Equal("2026-07-28", pv2);
+        _output.WriteLine($"✅ 场景17b：请求2026-07-28 → 协商返回 {pv2}");
+
+        // 客户端请求高于所有支持版（未来版本）→ 回退到服务器最高支持版 2026-07-28
+        var resp3 = await client.InitializeAsync("2099-01-01");
+        Assert.False(RawMcpClient.HasError(resp3));
+        var pv3 = RawMcpClient.GetResult(resp3)!["protocolVersion"]?.GetValue<String>();
+        Assert.Equal("2026-07-28", pv3);
+        _output.WriteLine($"✅ 场景17c：请求2099-01-01 → 回退到最高支持版 {pv3}");
+
+        // 1.0 路径仍兼容：请求 2024-11-05 → 回 2024-11-05
+        var resp0 = await client.InitializeAsync("2024-11-05");
+        Assert.False(RawMcpClient.HasError(resp0));
+        var pv0 = RawMcpClient.GetResult(resp0)!["protocolVersion"]?.GetValue<String>();
+        Assert.Equal("2024-11-05", pv0);
+        _output.WriteLine($"✅ 场景17d：1.0路径 请求2024-11-05 → 回 {pv0}");
+
+        // 客户端请求低于最低支持版 → 返回 -32602 错误
+        var resp4 = await client.InitializeAsync("2020-01-01");
+        Assert.True(RawMcpClient.HasError(resp4));
+        Assert.Equal(-32602, RawMcpClient.GetErrorCode(resp4));
+        _output.WriteLine($"✅ 场景17e：请求2020-01-01（过低）→ -32602");
     }
 }

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using NewLife;
@@ -8,8 +9,14 @@ using Xunit.Abstractions;
 
 namespace Stardust.McpClientTests;
 
-/// <summary>使用官方 ModelContextProtocol SDK 的客户端集成测试。
-/// 验证Stardust MCP服务端与标准SDK的兼容性</summary>
+/// <summary>使用官方 ModelContextProtocol SDK 2.0 的客户端集成测试。
+/// 验证 Stardust MCP 服务端（满血版：协议协商 + Streamable HTTP）与标准 SDK 的兼容性。
+/// 全部硬断言：任一环节失败则测试失败，真实反映 MCP 能力可用性。
+///
+/// 说明：官方 SDK 2.0.0 的 StreamableHttpClientSessionTransport 在握手阶段存在瞬时竞争
+/// （偶发 "POST response completed without a reply to request with ID: 1"），与服务器逻辑无关
+/// （原生 RawMcpClient 测试恒过，且本测试重试后必过）。此处对握手瞬时错误做有限重试，
+/// 断言失败与真实错误均立即抛出，不掩盖缺陷。</summary>
 [Collection(nameof(McpTestCollection))]
 public class SdkMcpClientTests : IAsyncLifetime
 {
@@ -26,7 +33,58 @@ public class SdkMcpClientTests : IAsyncLifetime
     public Task InitializeAsync() => Task.CompletedTask;
     public Task DisposeAsync() => Task.CompletedTask;
 
-    /// <summary>SDK initialize 握手。验证Stardust MCP服务端与官方SDK的协议兼容性</summary>
+    /// <summary>构造 SDK 的 Streamable HTTP 传输层（携带 Bearer Token）</summary>
+    private HttpClientTransport CreateTransport(String? tokenStr = null)
+    {
+        var headers = new Dictionary<String, String>();
+        if (!tokenStr.IsNullOrEmpty())
+            headers["Authorization"] = $"Bearer {tokenStr}";
+
+        var transportOptions = new HttpClientTransportOptions
+        {
+            Endpoint = new Uri(Endpoint),
+            TransportMode = HttpTransportMode.StreamableHttp,
+            AdditionalHeaders = headers,
+        };
+
+        return new HttpClientTransport(transportOptions, _fixture.CreateClient());
+    }
+
+    /// <summary>创建 SDK 客户端并执行动作。对官方 SDK 握手/请求阶段的瞬时传输错误做有限重试；
+    /// 断言失败与真实错误（非瞬时）立即抛出，不掩盖缺陷。</summary>
+    private async Task RunSdkAsync(String? tokenStr, Func<McpClient, Task> action)
+    {
+        const Int32 max = 4;
+        Exception? lastEx = null;
+        for (var attempt = 1; attempt <= max; attempt++)
+        {
+            McpClient? client = null;
+            try
+            {
+                client = await McpClient.CreateAsync(CreateTransport(tokenStr));
+                await action(client);
+                return;
+            }
+            catch (Exception ex) when (IsTransient(ex))
+            {
+                lastEx = ex;
+                _output.WriteLine($"⚠ SDK瞬时传输错误（第{attempt}次）：{ex.GetType().Name}: {ex.Message}，重试...");
+                await Task.Delay(300 * attempt);
+            }
+            finally
+            {
+                if (client != null) await client.DisposeAsync();
+            }
+        }
+        if (lastEx != null) throw lastEx;
+    }
+
+    /// <summary>判断是否为瞬时传输错误（可重试）：官方 SDK 握手竞争、连接重置、超时等</summary>
+    private static Boolean IsTransient(Exception ex) =>
+        ex is HttpRequestException or IOException or OperationCanceledException or TimeoutException ||
+        (ex is McpException m && m.Message.Contains("without a reply"));
+
+    /// <summary>SDK initialize 握手。验证 Stardust MCP 服务端与官方 SDK 2.0 的协议协商兼容</summary>
     [Fact]
     public async Task Sdk_Initialize_Handshake()
     {
@@ -35,30 +93,19 @@ public class SdkMcpClientTests : IAsyncLifetime
         {
             McpTestHelper.AuthorizeAllProjects(token.Id);
 
-            var httpClient = _fixture.CreateClient();
-
-            var transportOptions = new HttpClientTransportOptions
+            await RunSdkAsync(tokenStr, client =>
             {
-                Endpoint = new Uri(Endpoint),
-                TransportMode = HttpTransportMode.StreamableHttp,
-                AdditionalHeaders = new Dictionary<String, String>
-                {
-                    ["Authorization"] = $"Bearer {tokenStr}"
-                },
-            };
+                Assert.NotNull(client.ServerInfo);
+                Assert.Equal("Stardust", client.ServerInfo.Name);
 
-            var transport = new HttpClientTransport(transportOptions, httpClient);
-            await using var client = await McpClient.CreateAsync(transport);
+                // 协商出的协议版本必须是服务端支持列表之一
+                var negotiated = client.NegotiatedProtocolVersion;
+                Assert.False(negotiated.IsNullOrEmpty());
+                Assert.Contains(negotiated, new[] { "2026-07-28", "2025-06-18", "2025-03-26", "2024-11-05" });
 
-            // SDK initialize 成功
-            Assert.NotNull(client);
-            _output.WriteLine($"✅ SDK initialize 成功：ServerName={client.ServerInfo?.Name}, ProtocolVersion={client.NegotiatedProtocolVersion}");
-        }
-        catch (Exception ex)
-        {
-            _output.WriteLine($"⚠ SDK initialize 失败（可能是协议版本不兼容）：{ex.GetType().Name}: {ex.Message}");
-            // 协议版本不兼容时跳过，不硬性失败
-            // 我们的 RawMcpClient 测试已覆盖核心功能
+                _output.WriteLine($"✅ SDK initialize 成功：ServerName={client.ServerInfo.Name}, NegotiatedProtocolVersion={negotiated}");
+                return Task.CompletedTask;
+            });
         }
         finally
         {
@@ -66,7 +113,7 @@ public class SdkMcpClientTests : IAsyncLifetime
         }
     }
 
-    /// <summary>SDK tools/list。验证SDK能获取5个MCP工具</summary>
+    /// <summary>SDK tools/list。验证 SDK 能获取 5 个 MCP 工具</summary>
     [Fact]
     public async Task Sdk_ListTools_ReturnsFiveTools()
     {
@@ -75,37 +122,21 @@ public class SdkMcpClientTests : IAsyncLifetime
         {
             McpTestHelper.AuthorizeAllProjects(token.Id);
 
-            var httpClient = _fixture.CreateClient();
-
-            var transportOptions = new HttpClientTransportOptions
+            await RunSdkAsync(tokenStr, async client =>
             {
-                Endpoint = new Uri(Endpoint),
-                TransportMode = HttpTransportMode.StreamableHttp,
-                AdditionalHeaders = new Dictionary<String, String>
-                {
-                    ["Authorization"] = $"Bearer {tokenStr}"
-                },
-            };
+                var tools = await client.ListToolsAsync();
 
-            var transport = new HttpClientTransport(transportOptions, httpClient);
-            await using var client = await McpClient.CreateAsync(transport);
+                Assert.True(tools.Count >= 5, $"Expected at least 5 tools, got {tools.Count}");
 
-            var tools = await client.ListToolsAsync();
+                var toolNames = tools.Select(t => t.Name).ToHashSet();
+                Assert.Contains("list_authorized_resources", toolNames);
+                Assert.Contains("search_resources", toolNames);
+                Assert.Contains("get_resource", toolNames);
+                Assert.Contains("list_actions", toolNames);
+                Assert.Contains("invoke_action", toolNames);
 
-            Assert.True(tools.Count >= 5, $"Expected at least 5 tools, got {tools.Count}");
-
-            var toolNames = tools.Select(t => t.Name).ToHashSet();
-            Assert.Contains("list_authorized_resources", toolNames);
-            Assert.Contains("search_resources", toolNames);
-            Assert.Contains("get_resource", toolNames);
-            Assert.Contains("list_actions", toolNames);
-            Assert.Contains("invoke_action", toolNames);
-
-            _output.WriteLine($"✅ SDK ListTools 成功：返回 {tools.Count} 个工具");
-        }
-        catch (Exception ex)
-        {
-            _output.WriteLine($"⚠ SDK ListTools 失败（可能是协议版本不兼容）：{ex.GetType().Name}: {ex.Message}");
+                _output.WriteLine($"✅ SDK ListTools 成功：返回 {tools.Count} 个工具");
+            });
         }
         finally
         {
@@ -122,37 +153,21 @@ public class SdkMcpClientTests : IAsyncLifetime
         {
             McpTestHelper.AuthorizeAllProjects(token.Id);
 
-            var httpClient = _fixture.CreateClient();
-
-            var transportOptions = new HttpClientTransportOptions
+            await RunSdkAsync(tokenStr, async client =>
             {
-                Endpoint = new Uri(Endpoint),
-                TransportMode = HttpTransportMode.StreamableHttp,
-                AdditionalHeaders = new Dictionary<String, String>
-                {
-                    ["Authorization"] = $"Bearer {tokenStr}"
-                },
-            };
+                var result = await client.CallToolAsync("list_authorized_resources", new Dictionary<String, Object?>());
 
-            var transport = new HttpClientTransport(transportOptions, httpClient);
-            await using var client = await McpClient.CreateAsync(transport);
+                Assert.NotNull(result);
+                Assert.True(result.Content.Count > 0);
 
-            var result = await client.CallToolAsync("list_authorized_resources", new Dictionary<String, Object?>());
+                var textContent = result.Content.OfType<TextContentBlock>().FirstOrDefault();
+                Assert.NotNull(textContent);
 
-            Assert.NotNull(result);
-            Assert.True(result.Content.Count > 0);
+                var content = JsonSerializer.Deserialize<JsonElement>(textContent!.Text);
+                Assert.True(content.TryGetProperty("projects", out _), "响应应包含 projects 字段");
 
-            var textContent = result.Content.OfType<TextContentBlock>().FirstOrDefault();
-            Assert.NotNull(textContent);
-
-            var content = JsonSerializer.Deserialize<JsonElement>(textContent!.Text);
-            Assert.NotNull(content.GetProperty("projects"));
-
-            _output.WriteLine($"✅ SDK CallTool list_authorized_resources 成功");
-        }
-        catch (Exception ex)
-        {
-            _output.WriteLine($"⚠ SDK CallTool 失败（可能是协议版本不兼容）：{ex.GetType().Name}: {ex.Message}");
+                _output.WriteLine($"✅ SDK CallTool list_authorized_resources 成功");
+            });
         }
         finally
         {
@@ -160,38 +175,54 @@ public class SdkMcpClientTests : IAsyncLifetime
         }
     }
 
-    /// <summary>SDK 无Token时 initialize 成功但 tools/list 失败</summary>
+    /// <summary>SDK CallToolAsync — 端到端调用 invoke_action（node_search 只读动作），验证满血能力</summary>
+    [Fact]
+    public async Task Sdk_CallTool_InvokeAction_NodeSearch()
+    {
+        var (token, tokenStr) = McpTestHelper.CreateTestToken("sdk-invoke");
+        try
+        {
+            McpTestHelper.AuthorizeAllProjects(token.Id);
+            McpTestHelper.AuthorizeAllNodes(token.Id);
+
+            await RunSdkAsync(tokenStr, async client =>
+            {
+                var result = await client.CallToolAsync("invoke_action", new Dictionary<String, Object?>
+                {
+                    ["action_name"] = "node_search",
+                    ["params"] = new Dictionary<String, Object?> { ["keyword"] = "zzz-no-such-node-zzz" }
+                });
+
+                Assert.NotNull(result);
+                Assert.True(result.Content.Count > 0);
+
+                var textContent = result.Content.OfType<TextContentBlock>().FirstOrDefault();
+                Assert.NotNull(textContent);
+
+                var content = JsonSerializer.Deserialize<JsonElement>(textContent!.Text);
+                Assert.True(content.ValueKind == JsonValueKind.Object, "invoke_action 应返回 JSON 对象结果");
+
+                _output.WriteLine($"✅ SDK CallTool invoke_action(node_search) 端到端成功");
+            });
+        }
+        finally
+        {
+            McpTestHelper.CleanupToken(token.Id);
+        }
+    }
+
+    /// <summary>SDK 无 Token 时 initialize 成功（不需鉴权），但 tools/list 必须失败（缺 Token 鉴权）</summary>
     [Fact]
     public async Task Sdk_NoToken_ToolsListFails()
     {
-        var httpClient = _fixture.CreateClient();
-
-        var transportOptions = new HttpClientTransportOptions
+        // initialize 不需要 Token，应当成功建立连接
+        await RunSdkAsync(null, async client =>
         {
-            Endpoint = new Uri(Endpoint),
-            TransportMode = HttpTransportMode.StreamableHttp,
-            // 不设 Authorization header
-        };
-
-        try
-        {
-            var transport = new HttpClientTransport(transportOptions, httpClient);
-            await using var client = await McpClient.CreateAsync(transport);
-
-            // initialize 成功（不需要Token）
             Assert.NotNull(client);
 
-            // tools/list 应该失败（需要Token）
-            await Assert.ThrowsAsync<Exception>(async () => await client.ListToolsAsync());
-
-            _output.WriteLine("✅ SDK 无Token时 initialize 成功，tools/list 抛异常");
-        }
-        catch (Exception ex) when (ex.Message.Contains("protocol", StringComparison.OrdinalIgnoreCase) ||
-                                    ex.Message.Contains("version", StringComparison.OrdinalIgnoreCase) ||
-                                    ex.Message.Contains("without a reply", StringComparison.OrdinalIgnoreCase))
-        {
-            // SDK 协议版本不兼容（Stardust实现2024-11-05，SDK默认2025-11-25），跳过
-            _output.WriteLine($"⚠ SDK 协议不兼容跳过：{ex.Message}");
-        }
+            // tools/list 应因缺少 Token 鉴权而抛异常
+            await Assert.ThrowsAnyAsync<Exception>(async () => await client.ListToolsAsync());
+            _output.WriteLine($"✅ SDK 无Token时 initialize 成功，tools/list 抛异常");
+        });
     }
 }

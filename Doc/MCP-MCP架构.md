@@ -44,7 +44,7 @@ flowchart TD
         
         subgraph Core [MCP 核心服务]
             McpService["McpService\nToken 校验 | 资源授权\n动作路由 | 审计日志"]
-            McpController["McpController\n请求路由"]
+            McpMiddleware["McpMiddleware\n请求路由（Cube 前短路）"]
         end
 
         subgraph Tools [5 个 MCP 工具]
@@ -81,8 +81,8 @@ flowchart TD
     end
 
     Clients -->|POST /mcp\nAuthorization: Bearer| MCP
-    MCP --> McpController
-    McpController --> McpService
+    MCP --> McpMiddleware
+    McpMiddleware --> McpService
     McpService --> Tools
     McpService --> Actions
     McpService -->|读 Token| TokenDB
@@ -98,7 +98,7 @@ flowchart TD
 
 | 组件 | 职责 | 所属项目 |
 |---|---|---|
-| `McpController` | 接收 HTTP 请求，解析 JSON-RPC，路由到 `McpService` | `Stardust.Web/Controllers/` |
+| `McpMiddleware` | 接收 HTTP 请求，解析 JSON-RPC，路由到 `McpService`（在 Cube 前短路，避免 device-id cookie 崩溃） | `Stardust.Web/` |
 | `McpService` | Token 校验、资源授权检查、动作注册与路由、审计日志写入 | `Stardust.Web/Services/` |
 | `IMcpAction` / `McpActionBase` | 动作接口定义与基类实现 | `Stardust.Web/Mcp/` |
 | `IResourceProvider` | 资源详情查询接口（6 类资源） | `Stardust.Web/Mcp/Resources/` |
@@ -112,7 +112,7 @@ flowchart TD
 MCP 客户端
   │ POST /mcp  Authorization: Bearer {token}
   ▼
-McpController
+McpMiddleware
   │ 1. 从 Header 取 Token
   │ 2. 查 McpToken 表：Token 是否存在、Enable=true、未过期
   │    ↓ 失败 → 返回 -32001
@@ -328,6 +328,6 @@ Action 实现内部
 ## 9. 影响范围
 
 - 新增 3 张数据表（`McpToken` / `McpTokenResource` / `McpAudit`），不影响已有实体
-- 新增 `McpController`，独立鉴权，不干扰现有 `[ApiFilter]` / JWT 链路
+- 新增 `McpMiddleware`（在 Cube 前短路 `/mcp`），独立鉴权，不干扰现有 `[ApiFilter]` / JWT 链路
 - 新增 27 个 `IMcpAction` 实现，复用已有的 `StarFactory` / `DeployService` / `PipelineService` 等
 - **不改动** 任何已有 Controller、Service、实体表的对外行为
