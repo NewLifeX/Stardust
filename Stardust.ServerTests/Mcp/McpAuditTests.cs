@@ -125,8 +125,42 @@ public class McpAuditTests
     [Fact(DisplayName = "边界-无匹配搜索返回空")]
     public void Search_NoMatch_ReturnsEmpty()
     {
-        var results = McpAudit.Search(-1, null, DateTime.MinValue, DateTime.MinValue, null, null);
+        // 用专属 tokenId 验证 Search 的 tokenId 过滤语义，避免依赖全局空表。
+        // 根因：集成测试用 Task.Run 异步写审计且未在测试库清理，共享 SQLite 库（Bin/*.db）长期累积残余行；
+        // 原测试用 tokenId=-1（因 -1>0 为假不施加过滤）+ Between(MinValue,MinValue) 空操作，导致返回全部残余行。
+        const Int32 sentinel = 91234567;
+        var start = DateTime.Now.AddYears(-10);
+        var end = DateTime.Now.AddYears(10);
 
-        Assert.Empty(results);
+        // 清理可能残留的同号行，保证断言只针对“过滤语义”而非全局空表
+        foreach (var e in McpAudit.FindAll(McpAudit._.TokenId == sentinel)) e.Delete();
+
+        var entity = new McpAudit
+        {
+            TokenId = sentinel,
+            ToolName = "no_match_test",
+            ActionName = "no_match_action",
+            Success = true,
+            Duration = 10,
+            CallerIp = "127.0.0.1",
+            CreateTime = DateTime.Now,
+        };
+
+        try
+        {
+            entity.Insert();
+
+            // 不存在的 tokenId 查询 → 必须为空
+            var results = McpAudit.Search(sentinel + 1, null, start, end, null, null);
+            Assert.Empty(results);
+
+            // 反向验证：存在的 tokenId 能精确命中（证明过滤生效，非空是数据污染而非逻辑错误）
+            var matched = McpAudit.Search(sentinel, null, start, end, null, null);
+            Assert.Single(matched);
+        }
+        finally
+        {
+            entity.Delete();
+        }
     }
 }

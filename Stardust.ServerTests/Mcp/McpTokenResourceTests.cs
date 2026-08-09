@@ -23,7 +23,7 @@ public class McpTokenResourceTests
     private static Int32[] GetAuthorizedProjectIdsInline(IList<McpTokenResource> list)
     {
         var ids = new List<Int32>();
-        foreach (var r in list.Where(r => r.Enable && r.ResourceType == "project"))
+        foreach (var r in list.Where(r => r.Enable && r.ResourceType == McpResourceType.Project.ToStorageName()))
         {
             if (r.IsAll) return null; // null 表示全部
             ids.Add(r.ResourceId);
@@ -36,10 +36,10 @@ public class McpTokenResourceTests
     {
         var list = new List<McpTokenResource>
         {
-            new() { Enable = true, ResourceType = "node", ResourceId = 100, IsAll = false }
+            new() { Enable = true, ResourceType = McpResourceType.Node.ToStorageName(), ResourceId = 100, IsAll = false }
         };
 
-        Assert.True(IsAuthorizedInline(list, "node", 100));
+        Assert.True(IsAuthorizedInline(list, McpResourceType.Node.ToStorageName(), 100));
     }
 
     [Fact]
@@ -47,10 +47,10 @@ public class McpTokenResourceTests
     {
         var list = new List<McpTokenResource>
         {
-            new() { Enable = true, ResourceType = "node", ResourceId = 100, IsAll = false }
+            new() { Enable = true, ResourceType = McpResourceType.Node.ToStorageName(), ResourceId = 100, IsAll = false }
         };
 
-        Assert.False(IsAuthorizedInline(list, "node", 200));
+        Assert.False(IsAuthorizedInline(list, McpResourceType.Node.ToStorageName(), 200));
     }
 
     [Fact]
@@ -58,10 +58,10 @@ public class McpTokenResourceTests
     {
         var list = new List<McpTokenResource>
         {
-            new() { Enable = true, ResourceType = "node", ResourceId = 0, IsAll = true }
+            new() { Enable = true, ResourceType = McpResourceType.Node.ToStorageName(), ResourceId = 0, IsAll = true }
         };
 
-        Assert.True(IsAuthorizedInline(list, "node", 999));
+        Assert.True(IsAuthorizedInline(list, McpResourceType.Node.ToStorageName(), 999));
     }
 
     [Fact]
@@ -69,10 +69,10 @@ public class McpTokenResourceTests
     {
         var list = new List<McpTokenResource>
         {
-            new() { Enable = false, ResourceType = "node", ResourceId = 100, IsAll = false }
+            new() { Enable = false, ResourceType = McpResourceType.Node.ToStorageName(), ResourceId = 100, IsAll = false }
         };
 
-        Assert.False(IsAuthorizedInline(list, "node", 100));
+        Assert.False(IsAuthorizedInline(list, McpResourceType.Node.ToStorageName(), 100));
     }
 
     [Fact]
@@ -80,16 +80,16 @@ public class McpTokenResourceTests
     {
         var list = new List<McpTokenResource>
         {
-            new() { Enable = true, ResourceType = "node", ResourceId = 100, IsAll = true }
+            new() { Enable = true, ResourceType = McpResourceType.Node.ToStorageName(), ResourceId = 100, IsAll = true }
         };
 
-        Assert.False(IsAuthorizedInline(list, "app", 100));
+        Assert.False(IsAuthorizedInline(list, McpResourceType.App.ToStorageName(), 100));
     }
 
     [Fact]
     public void IsAuthorized_EmptyList_ReturnsFalse()
     {
-        Assert.False(IsAuthorizedInline(new List<McpTokenResource>(), "node", 100));
+        Assert.False(IsAuthorizedInline(new List<McpTokenResource>(), McpResourceType.Node.ToStorageName(), 100));
     }
 
     [Fact]
@@ -98,12 +98,12 @@ public class McpTokenResourceTests
         // IsAll 条目优先于 ResourceId 匹配
         var list = new List<McpTokenResource>
         {
-            new() { Enable = true, ResourceType = "node", ResourceId = 0, IsAll = true },
-            new() { Enable = true, ResourceType = "node", ResourceId = 100, IsAll = false }
+            new() { Enable = true, ResourceType = McpResourceType.Node.ToStorageName(), ResourceId = 0, IsAll = true },
+            new() { Enable = true, ResourceType = McpResourceType.Node.ToStorageName(), ResourceId = 100, IsAll = false }
         };
 
         // 任意 node ID 都应通过（因为 IsAll=true）
-        Assert.True(IsAuthorizedInline(list, "node", 999));
+        Assert.True(IsAuthorizedInline(list, McpResourceType.Node.ToStorageName(), 999));
     }
 
     [Fact]
@@ -111,7 +111,7 @@ public class McpTokenResourceTests
     {
         var list = new List<McpTokenResource>
         {
-            new() { Enable = true, ResourceType = "project", IsAll = true }
+            new() { Enable = true, ResourceType = McpResourceType.Project.ToStorageName(), IsAll = true }
         };
 
         Assert.Null(GetAuthorizedProjectIdsInline(list));
@@ -122,9 +122,9 @@ public class McpTokenResourceTests
     {
         var list = new List<McpTokenResource>
         {
-            new() { Enable = true, ResourceType = "project", ResourceId = 1, IsAll = false },
-            new() { Enable = true, ResourceType = "project", ResourceId = 2, IsAll = false },
-            new() { Enable = true, ResourceType = "project", ResourceId = 3, IsAll = false }
+            new() { Enable = true, ResourceType = McpResourceType.Project.ToStorageName(), ResourceId = 1, IsAll = false },
+            new() { Enable = true, ResourceType = McpResourceType.Project.ToStorageName(), ResourceId = 2, IsAll = false },
+            new() { Enable = true, ResourceType = McpResourceType.Project.ToStorageName(), ResourceId = 3, IsAll = false }
         };
 
         var ids = GetAuthorizedProjectIdsInline(list);
@@ -150,8 +150,8 @@ public class McpTokenResourceTests
     {
         var list = new List<McpTokenResource>
         {
-            new() { Enable = true, ResourceType = "node", ResourceId = 100, IsAll = false },
-            new() { Enable = true, ResourceType = "project", ResourceId = 1, IsAll = false }
+            new() { Enable = true, ResourceType = McpResourceType.Node.ToStorageName(), ResourceId = 100, IsAll = false },
+            new() { Enable = true, ResourceType = McpResourceType.Project.ToStorageName(), ResourceId = 1, IsAll = false }
         };
 
         var ids = GetAuthorizedProjectIdsInline(list);
@@ -165,8 +165,8 @@ public class McpTokenResourceTests
     {
         var list = new List<McpTokenResource>
         {
-            new() { Enable = false, ResourceType = "project", ResourceId = 1, IsAll = false },
-            new() { Enable = true, ResourceType = "project", ResourceId = 2, IsAll = false }
+            new() { Enable = false, ResourceType = McpResourceType.Project.ToStorageName(), ResourceId = 1, IsAll = false },
+            new() { Enable = true, ResourceType = McpResourceType.Project.ToStorageName(), ResourceId = 2, IsAll = false }
         };
 
         var ids = GetAuthorizedProjectIdsInline(list);
@@ -180,9 +180,9 @@ public class McpTokenResourceTests
     {
         var list = new List<McpTokenResource>
         {
-            new() { Enable = true, ResourceType = "project", ResourceId = 1, IsAll = false },
-            new() { Enable = true, ResourceType = "project", ResourceId = 1, IsAll = false },
-            new() { Enable = true, ResourceType = "project", ResourceId = 2, IsAll = false }
+            new() { Enable = true, ResourceType = McpResourceType.Project.ToStorageName(), ResourceId = 1, IsAll = false },
+            new() { Enable = true, ResourceType = McpResourceType.Project.ToStorageName(), ResourceId = 1, IsAll = false },
+            new() { Enable = true, ResourceType = McpResourceType.Project.ToStorageName(), ResourceId = 2, IsAll = false }
         };
 
         var ids = GetAuthorizedProjectIdsInline(list);

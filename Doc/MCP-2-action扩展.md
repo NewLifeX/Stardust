@@ -67,6 +67,7 @@ public sealed class ResourceRequirement
 ```csharp
 using System.Text.Json;
 using Stardust.Data.Nodes;
+using Stardust.Data.Platform;
 
 namespace Stardust.Web.Mcp.Actions.Node;
 
@@ -74,7 +75,7 @@ public class NodeStatsAction : McpActionBase
 {
     public override String Name => "node_stats";
     public override String Description => "获取指定节点的统计信息（CPU/内存/磁盘）";
-    public override String Module => "node";
+    public override McpModuleType Module => McpModuleType.Node;
     public override ResourceRequirement? RequiredResource =>
         new() { ResourceType = "node", IdField = "node_id" };
 

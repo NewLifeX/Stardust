@@ -3,6 +3,8 @@ using NewLife;
 using Stardust;
 using Stardust.Data.Nodes;
 
+using Stardust.Data.Platform;
+
 namespace Stardust.Web.Mcp.Actions.Nodes;
 
 /// <summary>向节点下发命令。通过StarFactory.SendNodeCommandAsync异步下发，返回执行结果</summary>
@@ -20,12 +22,12 @@ public class NodeSendCommandAction : McpActionBase
     public override String Description => "向指定节点下发命令（异步执行）。需要Token已授权该节点（直接Node授权或所属Project授权）。";
 
     /// <summary>所属模块</summary>
-    public override String Module => "node";
+    public override McpModuleType Module => McpModuleType.Node;
 
     /// <summary>所需资源授权。框架层校验node_id在授权范围</summary>
     public override ResourceRequirement? RequiredResource => new()
     {
-        Type = "node",
+        Type = McpResourceType.Node.ToWireName(),
         Field = "node_id",
     };
 

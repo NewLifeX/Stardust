@@ -3,6 +3,7 @@ using NewLife;
 using NewLife.Data;
 using Stardust.Data;
 using XCode;
+using Stardust.Data.Platform;
 
 namespace Stardust.Web.Mcp.Actions.Apps;
 
@@ -16,7 +17,7 @@ public class AppListOnlineAction : McpActionBase
     public override String Description => "查询当前在线的应用列表，按Token授权的项目范围过滤。LLM可通过此动作发现可操作的应用。";
 
     /// <summary>所属模块</summary>
-    public override String Module => "app";
+    public override McpModuleType Module => McpModuleType.App;
 
     /// <summary>输入参数JSON Schema</summary>
     public override JsonElement InputSchema

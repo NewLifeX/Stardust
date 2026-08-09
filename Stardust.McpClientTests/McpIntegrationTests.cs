@@ -1,7 +1,10 @@
+using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using NewLife;
 using NewLife.Data;
+using NewLife.Log;
 using Stardust.Data.Platform;
 using XCode;
 using Xunit;
@@ -161,7 +164,7 @@ public class McpIntegrationTests : IAsyncLifetime
                 {
                     var getResp = await client.CallToolAsync("get_resource", new
                     {
-                        resource_type = "project",
+                        resource_type = McpResourceType.Project.ToWireName(),
                         resource_id = projectId
                     });
                     Assert.False(RawMcpClient.HasError(getResp));
@@ -236,7 +239,7 @@ public class McpIntegrationTests : IAsyncLifetime
             // get_resource 未授权的 project → -32003
             var resp = await client.CallToolAsync("get_resource", new
             {
-                resource_type = "project",
+                resource_type = McpResourceType.Project.ToWireName(),
                 resource_id = 99999  // 不存在的项目
             });
 
@@ -409,7 +412,7 @@ public class McpIntegrationTests : IAsyncLifetime
             var resp2 = await client.CallToolAsync("search_resources", new
             {
                 keyword = "默认",
-                resource_type = "project"
+                resource_type = McpResourceType.Project.ToWireName()
             });
             Assert.False(RawMcpClient.HasError(resp2));
 
@@ -601,7 +604,7 @@ public class McpIntegrationTests : IAsyncLifetime
             var deploy = deploys[0];
             var resp = await client.CallToolAsync("get_resource", new
             {
-                resource_type = "deploy",
+                resource_type = McpResourceType.Deploy.ToWireName(),
                 resource_id = deploy.Id
             });
 
@@ -655,5 +658,97 @@ public class McpIntegrationTests : IAsyncLifetime
         Assert.True(RawMcpClient.HasError(resp4));
         Assert.Equal(-32602, RawMcpClient.GetErrorCode(resp4));
         _output.WriteLine($"✅ 场景17e：请求2020-01-01（过低）→ -32602");
+    }
+
+    /// <summary>场景18：服务端日志核对。happy-path 流程（initialize→tools/list→tools/call）不应产生任何 MCP 错误日志；
+    /// 并经由测试专用日志输出打印全部服务端日志，供人工核对「日志输出是否正确」（不仅看断言通过）。</summary>
+    [Fact]
+    public async Task S18_ServerLog_ShouldBeCleanOnHappyPath()
+    {
+        McpTestLog.Instance.Reset();
+
+        var (token, tokenStr) = McpTestHelper.CreateTestToken("s18-log");
+        try
+        {
+            McpTestHelper.AuthorizeAllProjects(token.Id);
+
+            var client = new RawMcpClient(_fixture.CreateClient(), Endpoint, tokenStr);
+            var initResp = await client.InitializeAsync();
+            Assert.False(RawMcpClient.HasError(initResp));
+            var listResp = await client.ListToolsAsync();
+            Assert.False(RawMcpClient.HasError(listResp));
+            var callResp = await client.CallToolAsync("list_actions", new { });
+            Assert.False(RawMcpClient.HasError(callResp));
+
+            // 核对服务端日志：正常流程不应出现 [McpService] 错误（异常/内部错误）
+            Assert.False(McpTestLog.Instance.Contains("[McpService]", LogLevel.Error),
+                "happy-path 不应出现 [McpService] 错误日志（服务端异常会污染正常响应）");
+
+            // 正向验证捕获非真空：故意触发一次服务端异常（未授权的 node 资源），
+            // 断言捕获器确实记录到了 [McpService] 错误日志（证明日志捕获机制真实生效）
+            var errClient = new RawMcpClient(_fixture.CreateClient(), Endpoint, tokenStr);
+            var errResp = await errClient.CallToolAsync("get_resource", new { resource_type = McpResourceType.Node.ToWireName(), resource_id = 99999 });
+            Assert.True(RawMcpClient.HasError(errResp), "异常触发请求应返回错误响应");
+            Assert.True(McpTestLog.Instance.Contains("[McpService]", LogLevel.Error),
+                "日志捕获应记录到服务端异常（[McpService]），否则捕获机制未生效");
+
+            // 打印测试专用日志，供人工核对输出是否正确
+            McpTestLog.Instance.WriteTo(_output);
+
+            _output.WriteLine("✅ 场景18通过：happy-path 服务端日志干净（无 [McpService] 错误），且异常路径日志捕获生效");
+        }
+        finally
+        {
+            McpTestHelper.CleanupToken(token.Id);
+        }
+    }
+
+    /// <summary>场景19：initialize 响应格式（Streamable HTTP 兼容回归测试）。
+    /// 直接验证 HTTP 层：Content-Type 必须为 application/json（非 text/event-stream）；
+    /// 响应 JSON 的 id 必须与请求一致为「数字」（若回显为字符串 "1"，官方/标准客户端会因 id 不匹配一直等待 initialize）。
+    /// 该测试直接防御线上「Waiting for server to respond to initialize request」类问题。</summary>
+    [Fact]
+    public async Task S19_Initialize_ResponseFormat_StreamableHttpCompatible()
+    {
+        var httpClient = _fixture.CreateClient();
+
+        var payload = JsonSerializer.Serialize(new
+        {
+            jsonrpc = "2.0",
+            id = 1,
+            method = "initialize",
+            @params = new
+            {
+                protocolVersion = "2025-06-18",
+                capabilities = new { },
+                clientInfo = new { name = "curl", version = "1.0" }
+            }
+        });
+        var content = new StringContent(payload, Encoding.UTF8, "application/json");
+        var req = new HttpRequestMessage(HttpMethod.Post, Endpoint) { Content = content };
+        // 模拟标准 Streamable HTTP 客户端：Accept 同时声明 application/json 与 text/event-stream
+        req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
+
+        var resp = await httpClient.SendAsync(req);
+        var body = await resp.Content.ReadAsStringAsync();
+
+        // 1. Content-Type 必须是 application/json（不是 text/event-stream），否则客户端按 SSE 解析会失败
+        var contentType = resp.Content.Headers.ContentType?.MediaType ?? "";
+        Assert.Equal("application/json", contentType);
+
+        // 2. 响应必须是合法 JSON-RPC，且 id 必须为「数字」1（与请求一致），绝不能是字符串 "1"
+        var json = JsonSerializer.Deserialize<JsonObject>(body);
+        Assert.NotNull(json);
+        Assert.False(json!.ContainsKey("error"), $"initialize 不应返回错误：{body}");
+        var idNode = json["id"];
+        Assert.NotNull(idNode);
+        Assert.Equal(JsonValueKind.Number, idNode!.GetValueKind());
+        Assert.Equal(1, idNode.GetValue<Int32>());
+
+        // 3. 协议版本协商正确返回
+        Assert.Equal("2025-06-18", json["result"]?["protocolVersion"]?.GetValue<String>());
+
+        _output.WriteLine($"✅ 场景19通过：initialize 响应 Content-Type={contentType}, id类型=数字, protocolVersion=2025-06-18");
     }
 }

@@ -68,7 +68,7 @@ public static class McpTestHelper
         var r = new McpTokenResource
         {
             TokenId = tokenId,
-            ResourceType = "Project",
+            ResourceType = McpResourceType.Project.ToStorageName(),
             IsAll = true,
             Enable = true,
         };
@@ -82,7 +82,7 @@ public static class McpTestHelper
         var r = new McpTokenResource
         {
             TokenId = tokenId,
-            ResourceType = "Node",
+            ResourceType = McpResourceType.Node.ToStorageName(),
             IsAll = true,
             Enable = true,
         };
@@ -96,7 +96,7 @@ public static class McpTestHelper
         var r = new McpTokenResource
         {
             TokenId = tokenId,
-            ResourceType = "App",
+            ResourceType = McpResourceType.App.ToStorageName(),
             IsAll = true,
             Enable = true,
         };
@@ -110,7 +110,7 @@ public static class McpTestHelper
         var r = new McpTokenResource
         {
             TokenId = tokenId,
-            ResourceType = "Project",
+            ResourceType = McpResourceType.Project.ToStorageName(),
             ResourceId = projectId,
             IsAll = false,
             Enable = true,

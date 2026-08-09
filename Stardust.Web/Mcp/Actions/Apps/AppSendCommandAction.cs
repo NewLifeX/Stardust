@@ -2,6 +2,8 @@ using System.Text.Json;
 using NewLife;
 using Stardust;
 
+using Stardust.Data.Platform;
+
 namespace Stardust.Web.Mcp.Actions.Apps;
 
 /// <summary>向应用下发命令。通过StarFactory.SendAppCommandAsync异步下发，返回执行结果</summary>
@@ -19,12 +21,12 @@ public class AppSendCommandAction : McpActionBase
     public override String Description => "向指定应用下发命令（异步执行）。需要Token已授权该应用。支持指定客户端实例（clientId）或广播给应用所有实例。";
 
     /// <summary>所属模块</summary>
-    public override String Module => "app";
+    public override McpModuleType Module => McpModuleType.App;
 
     /// <summary>所需资源授权。框架层校验app_id在授权范围</summary>
     public override ResourceRequirement? RequiredResource => new()
     {
-        Type = "app",
+        Type = McpResourceType.App.ToWireName(),
         Field = "app_id",
     };
 

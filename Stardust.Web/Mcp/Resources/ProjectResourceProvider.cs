@@ -6,7 +6,7 @@ namespace Stardust.Web.Mcp.Resources;
 public class ProjectResourceProvider : IResourceProvider
 {
     /// <summary>资源类型</summary>
-    public String ResourceType => "project";
+    public String ResourceType => McpResourceType.Project.ToWireName();
 
     /// <summary>按ID获取项目详情</summary>
     public Task<Object> GetAsync(Int32 id)

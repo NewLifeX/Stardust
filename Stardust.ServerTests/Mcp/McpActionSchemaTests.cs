@@ -5,6 +5,7 @@ using System.Text.Json;
 using NewLife;
 using web::Stardust.Web.Mcp;
 using Xunit;
+using Stardust.Data.Platform;
 
 namespace ServerTest.Mcp;
 
@@ -70,7 +71,7 @@ public class McpActionSchemaTests
     [Fact]
     public void AllActions_HaveValidModule()
     {
-        var validModules = new HashSet<String> { "node", "app", "config", "deploy", "gateway", "monitor", "system" };
+        var validModules = new HashSet<McpModuleType>(McpModuleTypeExtensions.AllModules);
         var types = GetActionTypes();
         var invalidModules = new List<(String Action, String Module)>();
 
@@ -79,7 +80,7 @@ public class McpActionSchemaTests
             var action = CreateActionInstance(type);
             if (!validModules.Contains(action.Module))
             {
-                invalidModules.Add((action.Name ?? type.Name, action.Module));
+                invalidModules.Add((action.Name ?? type.Name, action.Module.ToWireName()));
             }
         }
 
@@ -167,7 +168,7 @@ public class McpActionSchemaTests
             var action = CreateActionInstance(type);
             if (action.Name == expectedName)
             {
-                Assert.Equal(expectedModule, action.Module);
+                Assert.Equal(expectedModule, action.Module.ToWireName());
                 found = true;
                 break;
             }
@@ -179,7 +180,14 @@ public class McpActionSchemaTests
     [Fact]
     public void RequiredResource_HasValidType_WhenNotNull()
     {
-        var validTypes = new HashSet<String> { "project", "node", "app", "deploy", "pipeline" };
+        var validTypes = new HashSet<String>
+        {
+            McpResourceType.Project.ToWireName(),
+            McpResourceType.Node.ToWireName(),
+            McpResourceType.App.ToWireName(),
+            McpResourceType.Deploy.ToWireName(),
+            McpResourceType.Pipeline.ToWireName(),
+        };
         var types = GetActionTypes();
         var invalid = new List<(String Action, String Type)>();
 
@@ -260,7 +268,7 @@ public class McpActionSchemaTests
                 ? $"type={req.Type}, field={req.Field}, indirect={req.Indirect}, optional={req.Optional}"
                 : "null";
 
-            Console.WriteLine($"[{action.Module}] {action.Name}: {action.Description} | RequiredResource: {reqStr}");
+            Console.WriteLine($"[{action.Module.ToWireName()}] {action.Name}: {action.Description} | RequiredResource: {reqStr}");
         }
 
         Assert.NotEmpty(types);

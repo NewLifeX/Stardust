@@ -4,6 +4,8 @@ using NewLife.Data;
 using Stardust.Data.Deployment;
 using XCode;
 
+using Stardust.Data.Platform;
+
 namespace Stardust.Web.Mcp.Actions.Deploy;
 
 /// <summary>查询部署集列表。按Token授权项目过滤，支持关键字/分类/分页</summary>
@@ -11,7 +13,7 @@ public class DeployListAction : McpActionBase
 {
     public override String Name => "deploy_list";
     public override String Description => "查询应用部署集列表，按Token授权的项目范围过滤。LLM可通过此动作发现可编译/部署的资源。";
-    public override String Module => "deploy";
+    public override McpModuleType Module => McpModuleType.Deploy;
 
     public override JsonElement InputSchema
     {
@@ -110,14 +112,14 @@ public class DeployListVersionsAction : McpActionBase
 {
     public override String Name => "deploy_list_versions";
     public override String Description => "查询指定部署集的版本列表（编译产物）。需要Token已授权该部署集所属项目。";
-    public override String Module => "deploy";
+    public override McpModuleType Module => McpModuleType.Deploy;
 
     public override ResourceRequirement? RequiredResource => new()
     {
-        Type = "project",
+        Type = McpResourceType.Project.ToWireName(),
         Field = "deploy_id",
         Indirect = true,
-        IndirectEntity = "AppDeploy",
+        IndirectEntity = McpResourceType.Deploy.ToIndirectEntityName()!,
     };
 
     public override JsonElement InputSchema
@@ -192,14 +194,14 @@ public class DeployListHistoryAction : McpActionBase
 {
     public override String Name => "deploy_list_history";
     public override String Description => "查询指定部署集的部署历史记录（编译/部署操作日志）。需要Token已授权该部署集所属项目。";
-    public override String Module => "deploy";
+    public override McpModuleType Module => McpModuleType.Deploy;
 
     public override ResourceRequirement? RequiredResource => new()
     {
-        Type = "project",
+        Type = McpResourceType.Project.ToWireName(),
         Field = "deploy_id",
         Indirect = true,
-        IndirectEntity = "AppDeploy",
+        IndirectEntity = McpResourceType.Deploy.ToIndirectEntityName()!,
     };
 
     public override JsonElement InputSchema
@@ -274,14 +276,14 @@ public class DeployListNodesAction : McpActionBase
 {
     public override String Name => "deploy_list_nodes";
     public override String Description => "查询指定部署集的部署节点列表（关联哪些节点可部署）。需要Token已授权该部署集所属项目。";
-    public override String Module => "deploy";
+    public override McpModuleType Module => McpModuleType.Deploy;
 
     public override ResourceRequirement? RequiredResource => new()
     {
-        Type = "project",
+        Type = McpResourceType.Project.ToWireName(),
         Field = "deploy_id",
         Indirect = true,
-        IndirectEntity = "AppDeploy",
+        IndirectEntity = McpResourceType.Deploy.ToIndirectEntityName()!,
     };
 
     public override JsonElement InputSchema

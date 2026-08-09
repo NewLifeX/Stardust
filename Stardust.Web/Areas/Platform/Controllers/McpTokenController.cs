@@ -113,25 +113,27 @@ public class McpTokenController : EntityController<McpToken>
     private List<McpTokenResource> ParseResourcesFromForm()
     {
         var resources = new List<McpTokenResource>();
-        var types = new[] { "project", "node", "app" };
         var form = Request.Form;
 
-        foreach (var type in types)
+        // 表单字段使用小写协议名（res_all_project / res_project），存储统一转换为大驼峰（枚举成员名）
+        foreach (var t in McpResourceTypeExtensions.DirectTypes)
         {
+            var wire = t.ToWireName();
+
             // 检查是否勾选了"全部资源"
-            if (form[$"res_all_{type}"].ToString().ToBoolean())
+            if (form[$"res_all_{wire}"].ToString().ToBoolean())
             {
-                resources.Add(new McpTokenResource { ResourceType = type, IsAll = true });
+                resources.Add(new McpTokenResource { ResourceType = t.ToStorageName(), IsAll = true });
                 continue;
             }
 
             // 否则收集具体资源ID
-            var ids = form[$"res_{type}"];
+            var ids = form[$"res_{wire}"];
             foreach (var idStr in ids)
             {
                 if (Int32.TryParse(idStr, out var rid) && rid > 0)
                 {
-                    resources.Add(new McpTokenResource { ResourceType = type, ResourceId = rid });
+                    resources.Add(new McpTokenResource { ResourceType = t.ToStorageName(), ResourceId = rid });
                 }
             }
         }

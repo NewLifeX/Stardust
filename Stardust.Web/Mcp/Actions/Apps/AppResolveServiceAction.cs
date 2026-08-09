@@ -1,6 +1,7 @@
 using System.Text.Json;
 using NewLife;
 using Stardust.Data;
+using Stardust.Data.Platform;
 
 namespace Stardust.Web.Mcp.Actions.Apps;
 
@@ -14,7 +15,7 @@ public class AppResolveServiceAction : McpActionBase
     public override String Description => "按服务名解析服务地址，返回所有健康的服务提供者（含地址/版本/权重/标签）。公开服务发现，无需资源授权。";
 
     /// <summary>所属模块</summary>
-    public override String Module => "app";
+    public override McpModuleType Module => McpModuleType.App;
 
     /// <summary>所需资源授权。null表示无资源依赖（公开服务发现）</summary>
     public override ResourceRequirement? RequiredResource => null;

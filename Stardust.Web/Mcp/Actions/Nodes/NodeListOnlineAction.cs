@@ -3,6 +3,7 @@ using NewLife;
 using NewLife.Data;
 using Stardust.Data.Nodes;
 using XCode;
+using Stardust.Data.Platform;
 
 namespace Stardust.Web.Mcp.Actions.Nodes;
 
@@ -16,7 +17,7 @@ public class NodeListOnlineAction : McpActionBase
     public override String Description => "查询当前在线的节点列表，按Token授权的项目范围过滤。LLM可通过此动作发现可操作的节点。";
 
     /// <summary>所属模块</summary>
-    public override String Module => "node";
+    public override McpModuleType Module => McpModuleType.Node;
 
     /// <summary>输入参数JSON Schema</summary>
     public override JsonElement InputSchema

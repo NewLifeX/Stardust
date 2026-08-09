@@ -3,6 +3,8 @@ using NewLife;
 using Stardust.Data.Deployment;
 using Stardust.Web.Services;
 
+using Stardust.Data.Platform;
+
 namespace Stardust.Web.Mcp.Actions.Deploy;
 
 /// <summary>触发流水线运行。通过PipelineService.Trigger创建运行记录并异步执行编译→部署</summary>
@@ -15,14 +17,14 @@ public class PipelineTriggerAction : McpActionBase
 
     public override String Name => "pipeline_trigger";
     public override String Description => "触发指定流水线的运行（创建运行记录，异步执行编译→上传→部署编排）。需要Token已授权该流水线所属项目。";
-    public override String Module => "deploy";
+    public override McpModuleType Module => McpModuleType.Deploy;
 
     public override ResourceRequirement? RequiredResource => new()
     {
-        Type = "project",
+        Type = McpResourceType.Project.ToWireName(),
         Field = "pipeline_id",
         Indirect = true,
-        IndirectEntity = "AppPipeline",
+        IndirectEntity = McpResourceType.Pipeline.ToIndirectEntityName()!,
     };
 
     public override JsonElement InputSchema
@@ -67,11 +69,11 @@ public class PipelineGetRunAction : McpActionBase
 {
     public override String Name => "pipeline_get_run";
     public override String Description => "按运行ID查询流水线运行详情（状态、提交信息、阶段时间戳、步骤列表）。需要Token已授权该运行所属流水线的项目。";
-    public override String Module => "deploy";
+    public override McpModuleType Module => McpModuleType.Deploy;
 
     public override ResourceRequirement? RequiredResource => new()
     {
-        Type = "project",
+        Type = McpResourceType.Project.ToWireName(),
         Field = "run_id",
         Indirect = true,
         IndirectEntity = "AppPipelineRun",
@@ -152,11 +154,11 @@ public class PipelineCancelAction : McpActionBase
 
     public override String Name => "pipeline_cancel";
     public override String Description => "取消运行中的流水线（Pending/Building/UploadSucceeded/Deploying 状态可取消，终态不可取消）。需要Token已授权该运行所属流水线的项目。";
-    public override String Module => "deploy";
+    public override McpModuleType Module => McpModuleType.Deploy;
 
     public override ResourceRequirement? RequiredResource => new()
     {
-        Type = "project",
+        Type = McpResourceType.Project.ToWireName(),
         Field = "run_id",
         Indirect = true,
         IndirectEntity = "AppPipelineRun",

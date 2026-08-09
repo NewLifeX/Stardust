@@ -75,14 +75,14 @@ public class McpService
     private void RegisterIndirectResolvers()
     {
         // AppDeploy.deploy_id → AppDeploy.ProjectId
-        _indirectResolvers["AppDeploy"] = id =>
+        _indirectResolvers[McpResourceType.Deploy.ToIndirectEntityName()!] = id =>
         {
             var e = Stardust.Data.Deployment.AppDeploy.FindById(id);
             return e?.ProjectId ?? 0;
         };
 
         // AppPipeline.pipeline_id → AppPipeline.ProjectId
-        _indirectResolvers["AppPipeline"] = id =>
+        _indirectResolvers[McpResourceType.Pipeline.ToIndirectEntityName()!] = id =>
         {
             var e = Stardust.Data.Deployment.AppPipeline.FindById(id);
             return e?.ProjectId ?? 0;
@@ -98,7 +98,7 @@ public class McpService
         };
 
         // AppService.service_id → AppService.AppId → App.ProjectId（二级查找）
-        _indirectResolvers["AppService"] = id =>
+        _indirectResolvers[McpResourceType.Service.ToIndirectEntityName()!] = id =>
         {
             var s = Stardust.Data.AppService.FindById(id);
             if (s == null) return 0;
@@ -309,7 +309,7 @@ public class McpService
                     type = "object",
                     properties = new
                     {
-                        resource_type = new { type = "string", @enum = new[] { "project", "node", "app" }, description = "可选过滤，不传则返回全部三类" }
+                        resource_type = new { type = "string", @enum = McpResourceTypeExtensions.DirectTypes.Select(t => t.ToWireName()).ToArray(), description = "可选过滤，不传则返回全部三类" }
                     }
                 }
             },
@@ -323,7 +323,7 @@ public class McpService
                     properties = new
                     {
                         keyword = new { type = "string", description = "搜索关键字（匹配资源名称/编码/IP等）" },
-                        resource_type = new { type = "string", @enum = new[] { "project", "node", "app", "deploy", "pipeline", "service" }, description = "可选过滤，不传则全搜" }
+                        resource_type = new { type = "string", @enum = McpResourceTypeExtensions.AllTypes.Select(t => t.ToWireName()).ToArray(), description = "可选过滤，不传则全搜" }
                     },
                     required = new[] { "keyword" }
                 }
@@ -337,7 +337,7 @@ public class McpService
                     type = "object",
                     properties = new
                     {
-                        resource_type = new { type = "string", @enum = new[] { "project", "node", "app", "deploy", "pipeline", "service" }, description = "资源类型" },
+                        resource_type = new { type = "string", @enum = McpResourceTypeExtensions.AllTypes.Select(t => t.ToWireName()).ToArray(), description = "资源类型" },
                         resource_id = new { type = "integer", description = "资源ID" }
                     },
                     required = new[] { "resource_type", "resource_id" }
@@ -456,9 +456,11 @@ public class McpService
         foreach (var r in list)
         {
             if (!r.Enable) continue;
-            switch (r.ResourceType)
+            // 归一化存储名（兼容历史可能的小写数据），再按枚举分支
+            if (!McpResourceTypeExtensions.TryParseWire(r.ResourceType, out var parsed)) continue;
+            switch (parsed)
             {
-                case "Project" when resourceType.IsNullOrEmpty() || resourceType == "project":
+                case McpResourceType.Project when resourceType.IsNullOrEmpty() || resourceType.EqualIgnoreCase(McpResourceType.Project.ToWireName()):
                     if (r.IsAll)
                     {
                         projects.Add(new { id = 0, name = "全部项目", description = "IsAll授权，可访问所有项目" });
@@ -469,7 +471,7 @@ public class McpService
                         if (p != null) projects.Add(new { id = p.Id, name = p.Name, description = p.Remark });
                     }
                     break;
-                case "Node" when resourceType.IsNullOrEmpty() || resourceType == "node":
+                case McpResourceType.Node when resourceType.IsNullOrEmpty() || resourceType.EqualIgnoreCase(McpResourceType.Node.ToWireName()):
                     if (r.IsAll)
                     {
                         nodes.Add(new { id = 0, name = "全部节点", description = "IsAll授权，可访问所有节点" });
@@ -480,7 +482,7 @@ public class McpService
                         if (n != null) nodes.Add(new { id = n.ID, name = n.Name, description = n.Remark, ip = n.IP });
                     }
                     break;
-                case "App" when resourceType.IsNullOrEmpty() || resourceType == "app":
+                case McpResourceType.App when resourceType.IsNullOrEmpty() || resourceType.EqualIgnoreCase(McpResourceType.App.ToWireName()):
                     if (r.IsAll)
                     {
                         apps.Add(new { id = 0, name = "全部应用", description = "IsAll授权，可访问所有应用" });
@@ -502,22 +504,34 @@ public class McpService
     {
         var module = arguments.TryGetProperty("module", out var m) ? m.GetString() : null;
         var actionSet = _setting.McpActionSet;
-        var enabledModules = actionSet == "*" ? null : actionSet.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToList();
+        // McpActionSet 解析为枚举模块列表（忽略大小写），避免字符串硬编码与大小写不一致
+        List<McpModuleType> enabledModules = null;
+        if (actionSet != "*")
+        {
+            enabledModules = new List<McpModuleType>();
+            foreach (var s in actionSet.Split(',', StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (McpModuleTypeExtensions.TryParseWire(s.Trim(), out var mt)) enabledModules.Add(mt);
+            }
+        }
+        // 客户端传入的 module 过滤也解析为枚举（忽略大小写）
+        var filterModule = module.IsNullOrEmpty() ? (McpModuleType?)null
+            : (McpModuleTypeExtensions.TryParseWire(module, out var fm) ? fm : (McpModuleType?)null);
 
         var actions = new List<Object>();
         foreach (var kv in _actions.OrderBy(e => e.Key))
         {
             var action = kv.Value;
             // 模块过滤
-            if (!module.IsNullOrEmpty() && !String.Equals(action.Module, module, StringComparison.OrdinalIgnoreCase)) continue;
+            if (filterModule.HasValue && action.Module != filterModule.Value) continue;
             // McpActionSet 过滤
-            if (enabledModules != null && !enabledModules.Contains(action.Module, StringComparer.OrdinalIgnoreCase)) continue;
+            if (enabledModules != null && !enabledModules.Contains(action.Module)) continue;
 
             actions.Add(new
             {
                 name = action.Name,
                 description = action.Description,
-                module = action.Module,
+                module = action.Module.ToWireName(),
                 input_schema = (Object)(action.InputSchema.ValueKind == JsonValueKind.Undefined ? new { type = "object" } : (Object)action.InputSchema),
                 required_resource = action.RequiredResource,
             });
@@ -535,6 +549,10 @@ public class McpService
 
         var resourceType = arguments.TryGetProperty("resource_type", out var rt) ? rt.GetString() : null;
 
+        // 解析协议小写资源类型为枚举（不区分大小写）。hasFilter=false 表示不过滤（全搜）；无效类型则 reqType=null 同样不匹配任何分支
+        var hasFilter = !resourceType.IsNullOrEmpty();
+        var reqType = hasFilter && McpResourceTypeExtensions.TryParseWire(resourceType, out var parsedType) ? parsedType : (McpResourceType?)null;
+
         // 获取Token授权的项目ID列表（null表示全部项目授权）
         var authorizedProjectIds = McpTokenResource.GetAuthorizedProjectIds(context.TokenId);
 
@@ -548,7 +566,7 @@ public class McpService
         var page = new PageParameter { PageIndex = 1, PageSize = 50 };
 
         // 1. 搜索项目（GalaxyProject）
-        if (resourceType.IsNullOrEmpty() || resourceType == "project")
+        if (!hasFilter || reqType == McpResourceType.Project)
         {
             var exp = new WhereExpression();
             exp &= Stardust.Data.Platform.GalaxyProject._.Name.Contains(keyword) |
@@ -562,7 +580,7 @@ public class McpService
         }
 
         // 2. 搜索节点（Node）
-        if (resourceType.IsNullOrEmpty() || resourceType == "node")
+        if (!hasFilter || reqType == McpResourceType.Node)
         {
             var exp = new WhereExpression();
             exp &= Stardust.Data.Nodes.Node._.Code.Contains(keyword) |
@@ -578,7 +596,7 @@ public class McpService
         }
 
         // 3. 搜索应用（App）
-        if (resourceType.IsNullOrEmpty() || resourceType == "app")
+        if (!hasFilter || reqType == McpResourceType.App)
         {
             var exp = new WhereExpression();
             exp &= Stardust.Data.App._.Name.Contains(keyword) |
@@ -592,7 +610,7 @@ public class McpService
         }
 
         // 4. 搜索部署集（AppDeploy）
-        if (resourceType.IsNullOrEmpty() || resourceType == "deploy")
+        if (!hasFilter || reqType == McpResourceType.Deploy)
         {
             var exp = new WhereExpression();
             exp &= Stardust.Data.Deployment.AppDeploy._.Name.Contains(keyword) |
@@ -607,7 +625,7 @@ public class McpService
         }
 
         // 5. 搜索流水线（AppPipeline）
-        if (resourceType.IsNullOrEmpty() || resourceType == "pipeline")
+        if (!hasFilter || reqType == McpResourceType.Pipeline)
         {
             var exp = new WhereExpression();
             exp &= Stardust.Data.Deployment.AppPipeline._.Name.Contains(keyword) |
@@ -622,7 +640,7 @@ public class McpService
         }
 
         // 6. 搜索服务（AppService，无ProjectId字段，通过App关联过滤）
-        if (resourceType.IsNullOrEmpty() || resourceType == "service")
+        if (!hasFilter || reqType == McpResourceType.Service)
         {
             var exp = new WhereExpression();
             exp &= Stardust.Data.AppService._.ServiceName.Contains(keyword) |
@@ -685,30 +703,21 @@ public class McpService
     /// <summary>get_resource 专用的资源授权校验。project/node/app直接校验，deploy/pipeline/service间接校验（通过_indirectResolvers反查ProjectId）</summary>
     private String ValidateResourceAccessForGet(String resourceType, Int32 resourceId, Int32 tokenId)
     {
-        // 直接资源：project/node/app
-        var directType = resourceType switch
+        // 协议小写 → 枚举（不区分大小写）
+        if (!McpResourceTypeExtensions.TryParseWire(resourceType, out var rt))
+            return $"Forbidden: unknown resource_type={resourceType}";
+
+        // 直接资源：project/node/app，存储大驼峰参与授权判定
+        if (rt.IsDirect())
         {
-            "project" => "Project",
-            "node" => "Node",
-            "app" => "App",
-            _ => null,
-        };
-        if (directType != null)
-        {
-            if (!McpTokenResource.IsAuthorized(tokenId, directType, resourceId))
+            if (!McpTokenResource.IsAuthorized(tokenId, rt.ToStorageName(), resourceId))
                 return $"Forbidden: {resourceType}/{resourceId} is not authorized for this token";
             return String.Empty;
         }
 
         // 间接资源：deploy/pipeline/service → 反查ProjectId
-        var indirectEntity = resourceType switch
-        {
-            "deploy" => "AppDeploy",
-            "pipeline" => "AppPipeline",
-            "service" => "AppService",
-            _ => null,
-        };
-        if (indirectEntity == null) return $"Forbidden: unknown resource_type={resourceType}";
+        var indirectEntity = rt.ToIndirectEntityName();
+        if (indirectEntity == null) return $"Forbidden: unsupported indirect resource_type={resourceType}";
 
         if (!_indirectResolvers.TryGetValue(indirectEntity, out var resolver))
             return $"Forbidden: indirect resolver not found for entity {indirectEntity}";
@@ -716,7 +725,7 @@ public class McpService
         var projectId = resolver(resourceId);
         if (projectId <= 0) return $"Forbidden: cannot resolve ProjectId from {indirectEntity}.Id={resourceId}";
 
-        if (!McpTokenResource.IsAuthorized(tokenId, "Project", projectId))
+        if (!McpTokenResource.IsAuthorized(tokenId, McpResourceType.Project.ToStorageName(), projectId))
             return $"Forbidden: project_id={projectId} (resolved from {resourceType}/{resourceId}) is not authorized for this token";
 
         return String.Empty;
@@ -733,12 +742,16 @@ public class McpService
         if (!_actions.TryGetValue(actionName, out var action))
             throw new McpException(-32601, $"Method not found: action {actionName} not registered");
 
-        // McpActionSet 过滤
+        // McpActionSet 过滤（解析为枚举模块，忽略大小写）
         var actionSet = _setting.McpActionSet;
         if (actionSet != "*")
         {
-            var enabledModules = actionSet.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToList();
-            if (!enabledModules.Contains(action.Module, StringComparer.OrdinalIgnoreCase))
+            var enabledModules = new List<McpModuleType>();
+            foreach (var s in actionSet.Split(',', StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (McpModuleTypeExtensions.TryParseWire(s.Trim(), out var mt)) enabledModules.Add(mt);
+            }
+            if (!enabledModules.Contains(action.Module))
                 throw new McpException(-32601, $"Method not found: action {actionName} disabled by McpActionSet");
         }
 
@@ -784,19 +797,13 @@ public class McpService
             if (projectId <= 0) return $"Forbidden: cannot resolve ProjectId from {req.IndirectEntity}.Id={resourceId}";
 
             // 校验项目授权
-            if (!McpTokenResource.IsAuthorized(tokenId, "Project", projectId))
+            if (!McpTokenResource.IsAuthorized(tokenId, McpResourceType.Project.ToStorageName(), projectId))
                 return $"Forbidden: project_id={projectId} (resolved from {req.Field}={resourceId}) is not authorized for this token";
         }
         else
         {
-            // 直接资源校验
-            var resourceType = req.Type switch
-            {
-                "project" => "Project",
-                "node" => "Node",
-                "app" => "App",
-                _ => req.Type,
-            };
+            // 直接资源校验：req.Type 为协议小写（node/app），归一化为存储大驼峰
+            var resourceType = McpResourceTypeExtensions.TryParseWire(req.Type, out var dt) ? dt.ToStorageName() : req.Type;
             if (!McpTokenResource.IsAuthorized(tokenId, resourceType, resourceId))
                 return $"Forbidden: {req.Field}={resourceId} ({resourceType}) is not authorized for this token";
         }

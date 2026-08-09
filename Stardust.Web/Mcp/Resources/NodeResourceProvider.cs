@@ -1,4 +1,5 @@
 using Stardust.Data.Nodes;
+using Stardust.Data.Platform;
 
 namespace Stardust.Web.Mcp.Resources;
 
@@ -6,7 +7,7 @@ namespace Stardust.Web.Mcp.Resources;
 public class NodeResourceProvider : IResourceProvider
 {
     /// <summary>资源类型</summary>
-    public String ResourceType => "node";
+    public String ResourceType => McpResourceType.Node.ToWireName();
 
     /// <summary>按ID获取节点详情</summary>
     public Task<Object> GetAsync(Int32 id)

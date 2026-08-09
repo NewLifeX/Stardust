@@ -3,6 +3,8 @@ using NewLife;
 using Stardust.Data.Deployment;
 using Stardust.Web.Services;
 
+using Stardust.Data.Platform;
+
 namespace Stardust.Web.Mcp.Actions.Deploy;
 
 /// <summary>触发部署集编译。通过DeployService.Compile向编译节点下发deploy/compile命令</summary>
@@ -15,14 +17,14 @@ public class DeployCompileAction : McpActionBase
 
     public override String Name => "deploy_compile";
     public override String Description => "触发指定部署集的编译（拉代码→编译→打包→上传）。需要Token已授权该部署集所属项目，并指定启用的编译节点。";
-    public override String Module => "deploy";
+    public override McpModuleType Module => McpModuleType.Deploy;
 
     public override ResourceRequirement? RequiredResource => new()
     {
-        Type = "project",
+        Type = McpResourceType.Project.ToWireName(),
         Field = "deploy_id",
         Indirect = true,
-        IndirectEntity = "AppDeploy",
+        IndirectEntity = McpResourceType.Deploy.ToIndirectEntityName()!,
     };
 
     public override JsonElement InputSchema
@@ -99,14 +101,14 @@ public class DeployInstallAction : McpActionBase
 
     public override String Name => "deploy_install";
     public override String Description => "向指定部署节点下发安装命令（部署最新版本到节点）。需要Token已授权该部署集所属项目。";
-    public override String Module => "deploy";
+    public override McpModuleType Module => McpModuleType.Deploy;
 
     public override ResourceRequirement? RequiredResource => new()
     {
-        Type = "project",
+        Type = McpResourceType.Project.ToWireName(),
         Field = "deploy_id",
         Indirect = true,
-        IndirectEntity = "AppDeploy",
+        IndirectEntity = McpResourceType.Deploy.ToIndirectEntityName()!,
     };
 
     public override JsonElement InputSchema

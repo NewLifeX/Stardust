@@ -4,6 +4,8 @@ using Stardust.Data;
 using Stardust.Data.Deployment;
 using Stardust.Web.Services;
 
+using Stardust.Data.Platform;
+
 namespace Stardust.Web.Mcp.Actions.Apps;
 
 /// <summary>应用生命周期控制基类。封装App→AppDeploy→AppDeployNode查找 + DeployService.Control调用</summary>
@@ -20,7 +22,7 @@ public abstract class AppControlActionBase : McpActionBase
     /// <summary>所需资源授权。框架层校验app_id在授权范围</summary>
     public override ResourceRequirement? RequiredResource => new()
     {
-        Type = "app",
+        Type = McpResourceType.App.ToWireName(),
         Field = "app_id",
     };
 
@@ -118,7 +120,7 @@ public class AppRestartAction : AppControlActionBase
 
     public override String Name => "app_restart";
     public override String Description => "重启指定应用（通过部署节点下发 deploy/restart 命令）。需要Token已授权该应用。";
-    public override String Module => "app";
+    public override McpModuleType Module => McpModuleType.App;
     protected override String ControlAction => "restart";
 }
 
@@ -130,7 +132,7 @@ public class AppStopAction : AppControlActionBase
 
     public override String Name => "app_stop";
     public override String Description => "停止指定应用（通过部署节点下发 deploy/stop 命令）。需要Token已授权该应用。";
-    public override String Module => "app";
+    public override McpModuleType Module => McpModuleType.App;
     protected override String ControlAction => "stop";
 }
 
@@ -142,6 +144,6 @@ public class AppStartAction : AppControlActionBase
 
     public override String Name => "app_start";
     public override String Description => "启动指定应用（通过部署节点下发 deploy/start 命令）。需要Token已授权该应用。";
-    public override String Module => "app";
+    public override McpModuleType Module => McpModuleType.App;
     protected override String ControlAction => "start";
 }

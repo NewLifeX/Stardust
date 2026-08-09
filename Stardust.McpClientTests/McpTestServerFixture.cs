@@ -2,6 +2,8 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using NewLife;
+using NewLife.Log;
 using Stardust.Server;
 using Xunit;
 
@@ -68,6 +70,10 @@ public class McpTestServerFixture : IAsyncLifetime
 #pragma warning restore CS0618
 
         _server = new TestServer(builder);
+
+        // 安装测试专用日志捕获器：接管 XTrace 输出，缓冲服务端日志供测试核对（转发原日志保留控制台输出）
+        McpTestLog.Install(XTrace.Log);
+
         await Task.CompletedTask;
     }
 

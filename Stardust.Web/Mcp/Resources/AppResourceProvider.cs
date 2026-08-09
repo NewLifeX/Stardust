@@ -1,4 +1,5 @@
 using Stardust.Data;
+using Stardust.Data.Platform;
 
 namespace Stardust.Web.Mcp.Resources;
 
@@ -6,7 +7,7 @@ namespace Stardust.Web.Mcp.Resources;
 public class AppResourceProvider : IResourceProvider
 {
     /// <summary>资源类型</summary>
-    public String ResourceType => "app";
+    public String ResourceType => McpResourceType.App.ToWireName();
 
     /// <summary>按ID获取应用详情</summary>
     public Task<Object> GetAsync(Int32 id)

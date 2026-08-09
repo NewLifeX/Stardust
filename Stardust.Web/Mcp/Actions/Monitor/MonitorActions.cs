@@ -4,6 +4,8 @@ using NewLife.Data;
 using Stardust.Data.Monitors;
 using XCode;
 
+using Stardust.Data.Platform;
+
 namespace Stardust.Web.Mcp.Actions.Monitor;
 
 /// <summary>搜索调用链跟踪数据。按应用/操作名/时间范围查询，支持错误数过滤</summary>
@@ -11,12 +13,12 @@ public class MonitorTraceSearchAction : McpActionBase
 {
     public override String Name => "monitor_trace_search";
     public override String Description => "搜索应用调用链跟踪数据（按应用/操作名/时间范围），支持错误数过滤。可选传app_id（传则需授权）。";
-    public override String Module => "monitor";
+    public override McpModuleType Module => McpModuleType.Monitor;
 
     // app_id 可选：传则需要授权，不传则不强制校验
     public override ResourceRequirement? RequiredResource => new()
     {
-        Type = "app",
+        Type = McpResourceType.App.ToWireName(),
         Field = "app_id",
         Optional = true,
     };
@@ -105,12 +107,12 @@ public class MonitorAlarmListAction : McpActionBase
 {
     public override String Name => "monitor_alarm_list";
     public override String Description => "查询告警记录列表（按类别/状态/时间范围过滤）。可选传app_id（通过Action字段关联应用名，传则需授权）。";
-    public override String Module => "monitor";
+    public override McpModuleType Module => McpModuleType.Monitor;
 
     // app_id 可选：由于 AlarmRecord 无 AppId 字段，这里仅做声明性授权（若传 app_id 需授权）
     public override ResourceRequirement? RequiredResource => new()
     {
-        Type = "app",
+        Type = McpResourceType.App.ToWireName(),
         Field = "app_id",
         Optional = true,
     };

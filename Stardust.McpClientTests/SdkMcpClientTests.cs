@@ -3,6 +3,7 @@ using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using NewLife;
+using NewLife.Log;
 using Stardust.Data.Platform;
 using Xunit;
 using Xunit.Abstractions;
@@ -84,6 +85,14 @@ public class SdkMcpClientTests : IAsyncLifetime
         ex is HttpRequestException or IOException or OperationCanceledException or TimeoutException ||
         (ex is McpException m && m.Message.Contains("without a reply"));
 
+    /// <summary>核对服务端日志：打印到测试输出，并断言 happy-path 不应出现 [McpService] 错误日志</summary>
+    private void AssertAndPrintServerLog()
+    {
+        McpTestLog.Instance.WriteTo(_output);
+        Assert.False(McpTestLog.Instance.Contains("[McpService]", LogLevel.Error),
+            "SDK 流程不应出现 [McpService] 服务端错误日志");
+    }
+
     /// <summary>SDK initialize 握手。验证 Stardust MCP 服务端与官方 SDK 2.0 的协议协商兼容</summary>
     [Fact]
     public async Task Sdk_Initialize_Handshake()
@@ -92,6 +101,7 @@ public class SdkMcpClientTests : IAsyncLifetime
         try
         {
             McpTestHelper.AuthorizeAllProjects(token.Id);
+            McpTestLog.Instance.Reset();
 
             await RunSdkAsync(tokenStr, client =>
             {
@@ -106,6 +116,7 @@ public class SdkMcpClientTests : IAsyncLifetime
                 _output.WriteLine($"✅ SDK initialize 成功：ServerName={client.ServerInfo.Name}, NegotiatedProtocolVersion={negotiated}");
                 return Task.CompletedTask;
             });
+            AssertAndPrintServerLog();
         }
         finally
         {
@@ -121,6 +132,7 @@ public class SdkMcpClientTests : IAsyncLifetime
         try
         {
             McpTestHelper.AuthorizeAllProjects(token.Id);
+            McpTestLog.Instance.Reset();
 
             await RunSdkAsync(tokenStr, async client =>
             {
@@ -137,6 +149,7 @@ public class SdkMcpClientTests : IAsyncLifetime
 
                 _output.WriteLine($"✅ SDK ListTools 成功：返回 {tools.Count} 个工具");
             });
+            AssertAndPrintServerLog();
         }
         finally
         {
@@ -152,6 +165,7 @@ public class SdkMcpClientTests : IAsyncLifetime
         try
         {
             McpTestHelper.AuthorizeAllProjects(token.Id);
+            McpTestLog.Instance.Reset();
 
             await RunSdkAsync(tokenStr, async client =>
             {
@@ -168,6 +182,7 @@ public class SdkMcpClientTests : IAsyncLifetime
 
                 _output.WriteLine($"✅ SDK CallTool list_authorized_resources 成功");
             });
+            AssertAndPrintServerLog();
         }
         finally
         {
@@ -184,6 +199,7 @@ public class SdkMcpClientTests : IAsyncLifetime
         {
             McpTestHelper.AuthorizeAllProjects(token.Id);
             McpTestHelper.AuthorizeAllNodes(token.Id);
+            McpTestLog.Instance.Reset();
 
             await RunSdkAsync(tokenStr, async client =>
             {
@@ -204,6 +220,7 @@ public class SdkMcpClientTests : IAsyncLifetime
 
                 _output.WriteLine($"✅ SDK CallTool invoke_action(node_search) 端到端成功");
             });
+            AssertAndPrintServerLog();
         }
         finally
         {
@@ -216,6 +233,7 @@ public class SdkMcpClientTests : IAsyncLifetime
     public async Task Sdk_NoToken_ToolsListFails()
     {
         // initialize 不需要 Token，应当成功建立连接
+        McpTestLog.Instance.Reset();
         await RunSdkAsync(null, async client =>
         {
             Assert.NotNull(client);
@@ -224,5 +242,6 @@ public class SdkMcpClientTests : IAsyncLifetime
             await Assert.ThrowsAnyAsync<Exception>(async () => await client.ListToolsAsync());
             _output.WriteLine($"✅ SDK 无Token时 initialize 成功，tools/list 抛异常");
         });
+        AssertAndPrintServerLog();
     }
 }

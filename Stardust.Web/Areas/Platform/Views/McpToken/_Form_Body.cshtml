@@ -1,19 +1,21 @@
 @model McpToken
 @using NewLife.Cube.ViewModels
 @using XCode.Configuration
+@using Stardust.Data.Platform
 @{
     var entity = Model;
     var fields = ViewBag.Fields as FieldCollection;
     var isNew = (entity as IEntity).IsNullKey;
 
-    // 获取已有授权（编辑时预选）
+    // 获取已有授权（编辑时预选）。归一化存储名（兼容历史可能的小写数据）
     var auths = isNew ? new List<McpTokenResource>() : McpTokenResource.FindAllByToken(entity.Id).ToList();
     var authSet = new HashSet<String>();
     var allSet = new HashSet<String>();
     foreach (var a in auths.Where(a => a.Enable))
     {
-        if (a.IsAll) allSet.Add(a.ResourceType);
-        else authSet.Add($"{a.ResourceType}:{a.ResourceId}");
+        var rt = McpResourceTypeExtensions.TryParseWire(a.ResourceType, out var et) ? et.ToStorageName() : a.ResourceType;
+        if (a.IsAll) allSet.Add(rt);
+        else authSet.Add($"{rt}:{a.ResourceId}");
     }
 
     var set = CubeSetting.Current;
@@ -56,7 +58,7 @@
     <div class="panel panel-default">
         <div class="panel-heading">
             <label class="checkbox-inline">
-                <input type="checkbox" name="res_all_project" value="true" @(allSet.Contains("project") ? "checked" : "") />
+                <input type="checkbox" name="res_all_project" value="true" @(allSet.Contains(McpResourceType.Project.ToStorageName()) ? "checked" : "") />
                 <strong>授权全部项目</strong>
             </label>
         </div>
@@ -64,7 +66,7 @@
             @foreach (var p in GalaxyProject.FindAllWithCache())
             {
                 <label class="checkbox-inline col-xs-12 col-sm-6 col-md-4">
-                    <input type="checkbox" name="res_project" value="@p.Id" @(authSet.Contains($"project:{p.Id}") ? "checked" : "") />
+                    <input type="checkbox" name="res_project" value="@p.Id" @(authSet.Contains($"{McpResourceType.Project.ToStorageName()}:{p.Id}") ? "checked" : "") />
                     @p.Name
                 </label>
             }
@@ -75,7 +77,7 @@
     <div class="panel panel-default">
         <div class="panel-heading">
             <label class="checkbox-inline">
-                <input type="checkbox" name="res_all_node" value="true" @(allSet.Contains("node") ? "checked" : "") />
+                <input type="checkbox" name="res_all_node" value="true" @(allSet.Contains(McpResourceType.Node.ToStorageName()) ? "checked" : "") />
                 <strong>授权全部节点</strong>
             </label>
         </div>
@@ -83,7 +85,7 @@
             @foreach (var n in Node.FindAllWithCache())
             {
                 <label class="checkbox-inline col-xs-12 col-sm-6 col-md-4">
-                    <input type="checkbox" name="res_node" value="@n.ID" @(authSet.Contains($"node:{n.ID}") ? "checked" : "") />
+                    <input type="checkbox" name="res_node" value="@n.ID" @(authSet.Contains($"{McpResourceType.Node.ToStorageName()}:{n.ID}") ? "checked" : "") />
                     @n.Name <small class="text-muted">(@n.Code)</small>
                 </label>
             }
@@ -94,7 +96,7 @@
     <div class="panel panel-default">
         <div class="panel-heading">
             <label class="checkbox-inline">
-                <input type="checkbox" name="res_all_app" value="true" @(allSet.Contains("app") ? "checked" : "") />
+                <input type="checkbox" name="res_all_app" value="true" @(allSet.Contains(McpResourceType.App.ToStorageName()) ? "checked" : "") />
                 <strong>授权全部应用</strong>
             </label>
         </div>
@@ -102,7 +104,7 @@
             @foreach (var a in App.FindAllWithCache())
             {
                 <label class="checkbox-inline col-xs-12 col-sm-6 col-md-4">
-                    <input type="checkbox" name="res_app" value="@a.Id" @(authSet.Contains($"app:{a.Id}") ? "checked" : "") />
+                    <input type="checkbox" name="res_app" value="@a.Id" @(authSet.Contains($"{McpResourceType.App.ToStorageName()}:{a.Id}") ? "checked" : "") />
                     @a.Name
                 </label>
             }

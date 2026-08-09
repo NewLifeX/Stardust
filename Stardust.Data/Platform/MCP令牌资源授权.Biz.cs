@@ -134,7 +134,8 @@ public partial class McpTokenResource : Entity<McpTokenResource>
         foreach (var r in list)
         {
             if (!r.Enable) continue;
-            if (r.ResourceType != resourceType) continue;
+            // 大小写不敏感匹配，兼容历史可能的小写存储数据
+            if (!r.ResourceType.EqualIgnoreCase(resourceType)) continue;
             if (r.IsAll) return true;
             if (r.ResourceId == resourceId) return true;
         }
@@ -145,7 +146,7 @@ public partial class McpTokenResource : Entity<McpTokenResource>
     public static Boolean IsAllAuthorized(Int32 tokenId, String resourceType)
     {
         var list = FindAllByToken(tokenId);
-        return list.Any(r => r.Enable && r.ResourceType == resourceType && r.IsAll);
+        return list.Any(r => r.Enable && r.ResourceType.EqualIgnoreCase(resourceType) && r.IsAll);
     }
 
     /// <summary>获取Token授权的所有项目ID。返回null表示全部项目（IsAll=true）</summary>
@@ -153,7 +154,7 @@ public partial class McpTokenResource : Entity<McpTokenResource>
     {
         var list = FindAllByToken(tokenId);
         var ids = new List<Int32>();
-        foreach (var r in list.Where(r => r.Enable && r.ResourceType == "Project"))
+        foreach (var r in list.Where(r => r.Enable && r.ResourceType.EqualIgnoreCase(McpResourceType.Project.ToString())))
         {
             if (r.IsAll) return null;
             ids.Add(r.ResourceId);

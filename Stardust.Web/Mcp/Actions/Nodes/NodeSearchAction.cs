@@ -3,6 +3,7 @@ using NewLife;
 using NewLife.Data;
 using Stardust.Data.Nodes;
 using XCode;
+using Stardust.Data.Platform;
 
 namespace Stardust.Web.Mcp.Actions.Nodes;
 
@@ -16,7 +17,7 @@ public class NodeSearchAction : McpActionBase
     public override String Description => "按关键字搜索节点（匹配名称/编码/IP/机器名），返回Token授权项目范围内的匹配节点。";
 
     /// <summary>所属模块</summary>
-    public override String Module => "node";
+    public override McpModuleType Module => McpModuleType.Node;
 
     /// <summary>输入参数JSON Schema</summary>
     public override JsonElement InputSchema

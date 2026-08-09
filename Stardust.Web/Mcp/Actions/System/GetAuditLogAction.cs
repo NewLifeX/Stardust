@@ -16,7 +16,7 @@ public class GetAuditLogAction : McpActionBase
     public override String Description => "查询当前Token最近的MCP调用记录（审计日志），便于LLM在多轮对话中回顾上下文";
 
     /// <summary>所属模块</summary>
-    public override String Module => "system";
+    public override McpModuleType Module => McpModuleType.System;
 
     /// <summary>输入参数JSON Schema</summary>
     public override JsonElement InputSchema

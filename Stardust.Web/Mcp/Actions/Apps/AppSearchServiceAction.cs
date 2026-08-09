@@ -3,6 +3,7 @@ using NewLife;
 using NewLife.Data;
 using Stardust.Data;
 using XCode;
+using Stardust.Data.Platform;
 
 namespace Stardust.Web.Mcp.Actions.Apps;
 
@@ -16,7 +17,7 @@ public class AppSearchServiceAction : McpActionBase
     public override String Description => "搜索应用注册的服务提供者（按服务名/客户端/应用ID过滤），返回服务地址、版本、健康状态等。公开查询，无需资源授权。";
 
     /// <summary>所属模块</summary>
-    public override String Module => "app";
+    public override McpModuleType Module => McpModuleType.App;
 
     /// <summary>所需资源授权。null表示无资源依赖（公开查询）</summary>
     public override ResourceRequirement? RequiredResource => null;

@@ -3,6 +3,7 @@ using NewLife;
 using NewLife.Data;
 using Stardust.Data.Gateway;
 using XCode;
+using Stardust.Data.Platform;
 
 namespace Stardust.Web.Mcp.Actions.Gateway;
 
@@ -11,7 +12,7 @@ public class GatewayListRoutesAction : McpActionBase
 {
     public override String Name => "gateway_list_routes";
     public override String Description => "查询网关路由列表，支持关键字模糊匹配（名称/域名/路径/备注）。公开查询，无需资源授权。";
-    public override String Module => "gateway";
+    public override McpModuleType Module => McpModuleType.Gateway;
 
     public override ResourceRequirement? RequiredResource => null;
 
@@ -82,7 +83,7 @@ public class GatewayListClustersAction : McpActionBase
 {
     public override String Name => "gateway_list_clusters";
     public override String Description => "查询网关集群列表，支持关键字模糊匹配（名称/备注）。公开查询，无需资源授权。";
-    public override String Module => "gateway";
+    public override McpModuleType Module => McpModuleType.Gateway;
 
     public override ResourceRequirement? RequiredResource => null;
 

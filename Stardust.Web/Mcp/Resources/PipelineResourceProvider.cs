@@ -1,5 +1,6 @@
 using NewLife;
 using Stardust.Data.Deployment;
+using Stardust.Data.Platform;
 
 namespace Stardust.Web.Mcp.Resources;
 
@@ -7,7 +8,7 @@ namespace Stardust.Web.Mcp.Resources;
 public class PipelineResourceProvider : IResourceProvider
 {
     /// <summary>资源类型</summary>
-    public String ResourceType => "pipeline";
+    public String ResourceType => McpResourceType.Pipeline.ToWireName();
 
     /// <summary>按ID获取流水线详情</summary>
     public Task<Object> GetAsync(Int32 id)

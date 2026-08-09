@@ -4,6 +4,8 @@ using Stardust.Data;
 using Stardust.Data.Configs;
 using Stardust.Server.Services;
 
+using Stardust.Data.Platform;
+
 namespace Stardust.Web.Mcp.Actions.Config;
 
 /// <summary>获取应用配置。通过ConfigService.GetConfigs合并三层配置（本应用+共享+全局），返回键值字典</summary>
@@ -21,12 +23,12 @@ public class ConfigGetAction : McpActionBase
     public override String Description => "获取指定应用的配置字典（合并本应用+共享应用+全局应用三层配置，解析内嵌引用）。需要Token已授权该应用。";
 
     /// <summary>所属模块</summary>
-    public override String Module => "config";
+    public override McpModuleType Module => McpModuleType.Config;
 
     /// <summary>所需资源授权。框架层校验app_id在授权范围</summary>
     public override ResourceRequirement? RequiredResource => new()
     {
-        Type = "app",
+        Type = McpResourceType.App.ToWireName(),
         Field = "app_id",
     };
 
@@ -100,12 +102,12 @@ public class ConfigSetAction : McpActionBase
     public override String Description => "批量设置应用配置键值对（支持value+可选comment）。注意：不会自动发布，需另行触发发布。需要Token已授权该应用。";
 
     /// <summary>所属模块</summary>
-    public override String Module => "config";
+    public override McpModuleType Module => McpModuleType.Config;
 
     /// <summary>所需资源授权。框架层校验app_id在授权范围</summary>
     public override ResourceRequirement? RequiredResource => new()
     {
-        Type = "app",
+        Type = McpResourceType.App.ToWireName(),
         Field = "app_id",
     };
 

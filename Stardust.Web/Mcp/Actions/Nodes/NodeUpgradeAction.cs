@@ -3,6 +3,8 @@ using NewLife;
 using Stardust;
 using Stardust.Data.Nodes;
 
+using Stardust.Data.Platform;
+
 namespace Stardust.Web.Mcp.Actions.Nodes;
 
 /// <summary>升级指定节点上的StarAgent。通过StarFactory下发node/upgrade命令</summary>
@@ -20,12 +22,12 @@ public class NodeUpgradeAction : McpActionBase
     public override String Description => "升级指定节点上的StarAgent到最新版本（异步执行）。需要Token已授权该节点。";
 
     /// <summary>所属模块</summary>
-    public override String Module => "node";
+    public override McpModuleType Module => McpModuleType.Node;
 
     /// <summary>所需资源授权。框架层校验node_id在授权范围</summary>
     public override ResourceRequirement? RequiredResource => new()
     {
-        Type = "node",
+        Type = McpResourceType.Node.ToWireName(),
         Field = "node_id",
     };
 

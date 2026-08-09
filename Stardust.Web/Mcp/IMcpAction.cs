@@ -1,5 +1,6 @@
 using System.Text.Json;
 using NewLife;
+using Stardust.Data.Platform;
 
 namespace Stardust.Web.Mcp;
 
@@ -13,7 +14,7 @@ public interface IMcpAction
     String Description { get; }
 
     /// <summary>所属模块（node/app/config/deploy/gateway/monitor/system）</summary>
-    String Module { get; }
+    McpModuleType Module { get; }
 
     /// <summary>输入参数JSON Schema</summary>
     JsonElement InputSchema { get; }
@@ -57,7 +58,7 @@ public abstract class McpActionBase : IMcpAction
     public abstract String Description { get; }
 
     /// <summary>所属模块</summary>
-    public abstract String Module { get; }
+    public abstract McpModuleType Module { get; }
 
     /// <summary>输入参数JSON Schema。默认空对象，子类可重写</summary>
     public virtual JsonElement InputSchema => default;
