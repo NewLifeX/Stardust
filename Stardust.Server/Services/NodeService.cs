@@ -1183,7 +1183,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
                 {
                     // 写编译成功历史（粒度日志由 Agent PostEvents 负责）
                     if (pipeline != null)
-                        AppDeployHistory.Create(pipeline.DeployId, cmd.NodeID, "deploy/compile/Build-Upload", true, "编译完成", ip).Insert();
+                        AppDeployHistory.Create(pipeline.DeployId, cmd.NodeID, "deploy/compile/Build-Upload", true, $"编译完成，run={run.Id}", ip).Insert();
 
                     // 取版本 + 使用版本（必须在部署下发前；等价于 Web「使用版本」按钮 app.Version=ver.Version）
                     var version = pipeline != null ? AppDeployVersion.FindAllByDeployId(pipeline.DeployId, 1).FirstOrDefault() : null;
@@ -1195,13 +1195,23 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
                             app.Version = version.Version;
                             app.Update();
                         }
+                        if (pipeline != null)
+                            AppDeployHistory.Create(pipeline.DeployId, 0, "pipeline/version", true, $"使用版本 {version.Version}（Id={version.Id}）", ip).Insert();
+                    }
+                    else
+                    {
+                        if (pipeline != null)
+                            AppDeployHistory.Create(pipeline.DeployId, 0, "pipeline/version", false, "未取到可部署版本", ip).Insert();
                     }
                     run.BuildFinishedTime = DateTime.Now;
 
                     if (pipeline == null || !pipeline.AutoDeploy)
                     {
                         run.Status = PipelineStatus.Success;
+                        run.Remark = pipeline == null ? "流水线配置不存在" : "自动部署未开启，流水线结束";
                         run.Update();
+                        if (pipeline != null)
+                            AppDeployHistory.Create(pipeline.DeployId, 0, "pipeline/autoDeploy", true, "自动部署未开启，流水线结束", ip).Insert();
                     }
                     else
                     {
@@ -1211,11 +1221,13 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
                             run.Status = PipelineStatus.Failed;
                             run.Remark = "编译成功但未产出可部署版本（可能未开启上传），无法自动部署";
                             run.Update();
+                            AppDeployHistory.Create(pipeline.DeployId, 0, "pipeline/autoDeploy", false, run.Remark, ip).Insert();
                             return;
                         }
                         run.Status = PipelineStatus.Deploying;
                         run.DeployStartedTime = DateTime.Now;
                         run.Update();
+                        AppDeployHistory.Create(pipeline.DeployId, 0, "pipeline/autoDeploy", true, $"开始自动部署，run={run.Id}，版本={version.Version}", ip).Insert();
                         await DispatchDeployAsync(run, pipeline, app, ip);
 
                         // 收尾：本次实际下发的部署命令数为 0（节点为空 / 全部 Skipped / 全部下发失败）时直接完成判定，
@@ -1229,13 +1241,19 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
                                 run.Status = PipelineStatus.Failed;
                                 run.Remark = "部署命令下发失败";
                             }
+                            else if (!deploySteps.Any(e => e.Status == "Success") && !deploySteps.Any(e => e.Status == "Skipped"))
+                            {
+                                // 没有任何部署步骤（通常因为未配置部署节点），不能标记为成功
+                                run.Status = PipelineStatus.Failed;
+                                run.Remark = "未找到可部署节点，请检查流水线部署节点配置";
+                            }
                             else
                             {
                                 run.Status = PipelineStatus.Success;
                             }
                             run.Update();
                             if (pipeline != null)
-                                AppDeployHistory.Create(pipeline.DeployId, 0, "deploy/install", run.Status == PipelineStatus.Success, run.Status == PipelineStatus.Success ? "部署完成" : "部署下发失败", ip).Insert();
+                                AppDeployHistory.Create(pipeline.DeployId, 0, "deploy/install", run.Status == PipelineStatus.Success, run.Status == PipelineStatus.Success ? "部署完成" : run.Remark, ip).Insert();
                             return;
                         }
                     }
@@ -1304,10 +1322,19 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
     }
 
     /// <summary>为每个部署节点建立「部署」步骤并下发 deploy/install 命令，记录各自 CommandId。
-    /// 仅在 StarServer 进程内调用（CommandReply 只在此进程触发），直接操作 NodeCommand 与 PipelineStep。</summary>
+    /// 仅在 StarServer 进程内调用（CommandReply 只在此进程触发），直接操作 NodeCommand 与 PipelineStep。
+    /// 克制原则：一条流水线对应一个分支，仅部署流水线「显式勾选」的部署节点；未勾选任何节点时不做任何部署，避免误部署。</summary>
     private async Task DispatchDeployAsync(AppPipelineRun run, AppPipeline pipeline, AppDeploy app, String ip)
     {
         var nodeIds = (pipeline.DeployNodeIds ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries);
+
+        // 未勾选任何部署节点：不回退、不乱部署，仅记录明确日志并结束（上层据此标记 Failed，避免假成功）
+        if (nodeIds.Length == 0)
+        {
+            AppDeployHistory.Create(pipeline.DeployId, 0, "pipeline/autoDeploy", false, "自动部署未触发：流水线未勾选任何部署节点", ip).Insert();
+            return;
+        }
+
         // 部署步骤序号在 Build 步骤（索引 0）基础上递增，保证步骤顺序正确
         var idx = 1;
         foreach (var nid in nodeIds)
@@ -1328,17 +1355,20 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
             if (dn == null)
             {
                 deployStep.Status = "Skipped";
-                deployStep.Message = "节点不存在";
+                deployStep.Message = $"部署节点[{nid}]不存在";
+                AppDeployHistory.Create(pipeline.DeployId, 0, "pipeline/autoDeploy", false, deployStep.Message, ip).Insert();
             }
             else if (!dn.Enable)
             {
                 deployStep.Status = "Skipped";
-                deployStep.Message = "节点未启用";
+                deployStep.Message = $"部署节点[{dn.NodeName}]未启用";
+                AppDeployHistory.Create(pipeline.DeployId, dn.NodeId, "pipeline/autoDeploy", false, deployStep.Message, ip).Insert();
             }
             else if (dn.DeployId != pipeline.DeployId)
             {
                 deployStep.Status = "Skipped";
-                deployStep.Message = "DeployId 不匹配";
+                deployStep.Message = $"部署节点[{dn.NodeName}]DeployId 不匹配";
+                AppDeployHistory.Create(pipeline.DeployId, dn.NodeId, "pipeline/autoDeploy", false, deployStep.Message, ip).Insert();
             }
             else
             {
@@ -1346,7 +1376,8 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
                 if (node == null)
                 {
                     deployStep.Status = "Skipped";
-                    deployStep.Message = "节点不存在";
+                    deployStep.Message = $"节点[{dn.NodeId}]不存在";
+                    AppDeployHistory.Create(pipeline.DeployId, dn.NodeId, "pipeline/autoDeploy", false, deployStep.Message, ip).Insert();
                 }
                 else
                 {
@@ -1367,12 +1398,14 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
                         };
                         var reply = await SendCommand(node, cmdModel, "Pipeline");
                         deployStep.CommandId = (Int32)(reply?.Id ?? 0);
+                        AppDeployHistory.Create(pipeline.DeployId, dn.NodeId, "deploy/install", true, $"已向节点 {dn.NodeName} 下发部署命令（CommandId={deployStep.CommandId}）", ip).Insert();
                     }
                     catch (Exception ex)
                     {
                         deployStep.Status = "Failed";
                         deployStep.FinishedTime = DateTime.Now;
                         deployStep.Message = ex.Message;
+                        AppDeployHistory.Create(pipeline.DeployId, dn.NodeId, "deploy/install", false, $"向节点 {dn.NodeName} 下发部署命令失败：{ex.Message}", ip).Insert();
                     }
                 }
             }
