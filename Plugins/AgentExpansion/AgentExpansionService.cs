@@ -53,8 +53,6 @@ internal sealed class AgentExpansionService
         AgentExpansionSetting.Provider!.Changed -= OnSettingChanged;
     }
 
-    public void RunOnce() => ScanAsync(CancellationToken.None).GetAwaiter().GetResult();
-
     private void OnSettingChanged(Object? sender, EventArgs eventArgs)
     {
         _timer?.SetNext(-1);
