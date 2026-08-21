@@ -43,11 +43,21 @@ public class AppClientLogController : EntityController<AppClientLog>
     /// <returns>实体列表</returns>
     protected override IEnumerable<AppClientLog> Search(Pager p)
     {
+        var appId = p["appId"].ToInt(-1);
+        var threadId = p["threadId"];
         //var deviceId = p["deviceId"].ToInt(-1);
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
+        if (start.Year < 2000 && end.Year < 2000)
+        {
+            var dt = DateTime.Today;
+            start = dt;
+            end = dt;
+            p["dtStart"] = start.ToString("yyyy-MM-dd");
+            p["dtEnd"] = end.ToString("yyyy-MM-dd");
+        }
 
-        return AppClientLog.Search(start, end, p["Q"], p);
+        return AppClientLog.Search(threadId, appId, start, end, p["Q"], p);
     }
 }
