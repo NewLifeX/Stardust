@@ -78,9 +78,13 @@ public class Startup
 
         services.AddCubeFileStorage("Star");
 
+        services.AddHttpClient();
+
         //services.AddResponseCompression();
 
         // 后台服务。数据保留，定时删除过期数据
+        services.AddSingleton<IMySqlService, MySqlService>();
+        services.AddHostedService(s => (MySqlService)s.GetRequiredService<IMySqlService>());
         services.AddHostedService<ApolloService>();
         services.AddHostedService<NodeStatService>();
         services.AddHostedService<FixDataHostedService>();
