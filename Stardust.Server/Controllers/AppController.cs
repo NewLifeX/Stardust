@@ -113,6 +113,9 @@ public class AppController(RegistryService registryService, ITokenService tokenS
     #endregion
 
     #region 心跳保活
+    /// <summary>应用心跳保活。更新在线状态、性能指标与令牌续期</summary>
+    /// <param name="inf">应用信息</param>
+    /// <returns>心跳响应</returns>
     [HttpGet(nameof(Ping))]
     [HttpPost(nameof(Ping))]
     public IPingResponse Ping(AppInfo inf)

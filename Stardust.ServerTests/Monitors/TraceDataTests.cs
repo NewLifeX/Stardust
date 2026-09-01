@@ -1,4 +1,5 @@
 using System;
+using Stardust.Data;
 using Stardust.Data.Monitors;
 using Xunit;
 
@@ -7,6 +8,9 @@ namespace ServerTest.Monitors;
 /// <summary>追踪数据单元测试</summary>
 public class TraceDataTests
 {
+    /// <summary>初始化分表策略。TraceData 按天分表（TraceData_{dd}），SQLite 下需 SplitSqliteTables 配置分库连接，否则分表路由连接名不正确</summary>
+    public TraceDataTests() => StarDataHelper.SplitSqliteTables();
+
     [Fact]
     public void InsertAndFindById()
     {

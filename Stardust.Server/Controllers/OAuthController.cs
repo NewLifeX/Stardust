@@ -14,6 +14,9 @@ namespace Stardust.Server.Controllers;
 [Route("[controller]/[action]")]
 public class OAuthController(ITokenService tokenService, AppTokenService appTokenService, AppOnlineService appOnline, StarServerSetting setting) : ControllerBase
 {
+    /// <summary>颁发访问令牌。支持密码模式与刷新令牌模式</summary>
+    /// <param name="model">令牌请求模型</param>
+    /// <returns>访问令牌</returns>
     [ApiFilter]
     public IToken Token([FromBody] TokenInModel model)
     {
@@ -84,6 +87,9 @@ public class OAuthController(ITokenService tokenService, AppTokenService appToke
         }
     }
 
+    /// <summary>获取当前令牌对应的应用信息</summary>
+    /// <param name="token">访问令牌</param>
+    /// <returns>应用信息</returns>
     [ApiFilter]
     public Object UserInfo(String token)
     {

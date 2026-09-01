@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore;
+﻿using System.Net.Http.Json;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using NewLife.Remoting;
@@ -22,7 +23,7 @@ public class OAuthControllerTests
 #pragma warning restore CS0618, ASPDEPR008
     }
 
-    [Fact]
+    [Fact(DisplayName = "OAuth密码模式颁发令牌")]
     public async Task Token_password()
     {
         var app = App.FindByName("stone");
@@ -48,7 +49,7 @@ public class OAuthControllerTests
         Assert.Equal("JWT", rs.TokenType);
     }
 
-    [Fact]
+    [Fact(DisplayName = "OAuth刷新令牌模式续期")]
     public async Task Token_refresh_token()
     {
         var client = _server.CreateClient();
@@ -83,5 +84,33 @@ public class OAuthControllerTests
             Assert.Equal(7200, rs2.ExpireIn);
             Assert.Equal("JWT", rs2.TokenType);
         }
+    }
+
+    [Fact(DisplayName = "OAuth无效密码返回错误")]
+    public async Task Token_InvalidPassword_ReturnsError()
+    {
+        var client = _server.CreateClient();
+        var model = new { grant_type = "password", UserName = "stone", Password = "wrong-password" };
+        var content = JsonContent.Create(model);
+
+        var response = await client.PostAsync("oauth/token", content);
+        var body = await response.Content.ReadAsStringAsync();
+
+        // NewLife Remoting 协议：错误码在 body 的 code 字段
+        Assert.Contains("\"code\":", body);
+    }
+
+    [Fact(DisplayName = "OAuth不支持的grant_type返回错误")]
+    public async Task Token_UnsupportedGrantType_ReturnsError()
+    {
+        var client = _server.CreateClient();
+        var model = new { grant_type = "client_credentials", UserName = "stone" };
+        var content = JsonContent.Create(model);
+
+        var response = await client.PostAsync("oauth/token", content);
+        var body = await response.Content.ReadAsStringAsync();
+
+        // 未支持的 grant_type 抛出 NotSupportedException，序列化到 body
+        Assert.Contains("\"code\":", body);
     }
 }

@@ -14,6 +14,14 @@ namespace Stardust.Server.Controllers;
 [Route("[controller]/[action]")]
 public class ConfigController(ConfigService configService, ITokenService tokenService, AppTokenService appTokenService, AppOnlineService appOnline, StarServerSetting setting) : ControllerBase
 {
+    /// <summary>应用拉取配置。支持版本号增量更新与作用域匹配</summary>
+    /// <param name="appId">应用标识</param>
+    /// <param name="secret">应用密钥</param>
+    /// <param name="clientId">客户端标识</param>
+    /// <param name="token">访问令牌</param>
+    /// <param name="scope">配置作用域</param>
+    /// <param name="version">当前版本号，未变化时不返回配置数据</param>
+    /// <returns>配置信息</returns>
     [ApiFilter]
     public ConfigInfo GetAll(String appId, String secret, String clientId, String token, String scope, Int32 version)
     {
@@ -51,6 +59,10 @@ public class ConfigController(ConfigService configService, ITokenService tokenSe
         };
     }
 
+    /// <summary>应用拉取配置（POST 版）。上报使用键与缺失键，支持作用域匹配</summary>
+    /// <param name="model">配置请求模型</param>
+    /// <param name="token">访问令牌</param>
+    /// <returns>配置信息</returns>
     [ApiFilter]
     [HttpPost]
     public ConfigInfo GetAll([FromBody] ConfigInModel model, String token)
@@ -177,6 +189,10 @@ public class ConfigController(ConfigService configService, ITokenService tokenSe
         return (config, online);
     }
 
+    /// <summary>批量设置配置项</summary>
+    /// <param name="model">配置设置模型</param>
+    /// <param name="token">访问令牌</param>
+    /// <returns>生效配置项数量</returns>
     [ApiFilter]
     [HttpPost]
     public Int32 SetAll([FromBody] SetConfigModel model, String token)

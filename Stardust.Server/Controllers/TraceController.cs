@@ -20,6 +20,10 @@ namespace Stardust.Server.Controllers;
 [Route("[controller]")]
 public class TraceController(ITraceStatService stat, IAppDayStatService appStat, ITraceItemStatService itemStat, ITokenService tokenService, AppOnlineService appOnline, UplinkService uplink, MonitorService monitorService, StarServerSetting setting, ICacheProvider cacheProvider, ITracer tracer) : ControllerBase
 {
+    /// <summary>接收埋点数据上报。支持 Vip 客户端高频采样与排除项</summary>
+    /// <param name="model">埋点数据模型</param>
+    /// <param name="token">访问令牌</param>
+    /// <returns>追踪响应</returns>
     [ApiFilter]
     [HttpPost(nameof(Report))]
     public TraceResponse Report([FromBody] TraceModel model, String token)
@@ -65,6 +69,9 @@ public class TraceController(ITraceStatService stat, IAppDayStatService appStat,
         return rs;
     }
 
+    /// <summary>接收压缩埋点数据上报。支持 GZip 解压后复用 Report 处理</summary>
+    /// <param name="token">访问令牌</param>
+    /// <returns>追踪响应</returns>
     [ApiFilter]
     [HttpPost(nameof(ReportRaw))]
     public async Task<TraceResponse> ReportRaw(String token)

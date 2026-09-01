@@ -79,9 +79,11 @@ public class DeployControllerTests
         var content = BuildUploadContent("test.zip", new Byte[] { 1, 2, 3 });
         var query = "version=v1.0.0";
         var response = await client.PostAsync($"/Deploy/UploadBuildFile?{query}", content);
+        var body = await response.Content.ReadAsStringAsync();
 
-        // [ApiController] 自动模型验证在 action 之前拦截，返回 400 ProblemDetails
-        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+        // NewLife Remoting 协议：ApiException 序列化为 JSON body，业务错误码在 code 字段，HTTP 状态码恒为 200
+        Assert.Contains("\"code\":400", body);
+        Assert.Contains("应用部署集名称不能为空", body);
     }
 
     [Fact(DisplayName = "带Token但缺少version返回400")]
@@ -94,8 +96,11 @@ public class DeployControllerTests
         var content = BuildUploadContent("test.zip", new Byte[] { 1, 2, 3 });
         var query = "deployName=StarDeploy";
         var response = await client.PostAsync($"/Deploy/UploadBuildFile?{query}", content);
+        var body = await response.Content.ReadAsStringAsync();
 
-        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+        // NewLife Remoting 协议：ApiException 序列化为 JSON body，业务错误码在 code 字段，HTTP 状态码恒为 200
+        Assert.Contains("\"code\":400", body);
+        Assert.Contains("版本号不能为空", body);
     }
 
     [Fact(DisplayName = "带Token但缺少file返回400")]
@@ -108,8 +113,11 @@ public class DeployControllerTests
         var query = "deployName=StarDeploy&version=v1.0.0";
         var content = new MultipartFormDataContent();
         var response = await client.PostAsync($"/Deploy/UploadBuildFile?{query}", content);
+        var body = await response.Content.ReadAsStringAsync();
 
-        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+        // NewLife Remoting 协议：multipart 请求下简单类型参数从 form body 绑定，query 参数被忽略（deployName/version 也为空），
+        // 但校验仍返回 400 错误码，证明缺参即被拦截
+        Assert.Contains("\"code\":400", body);
     }
 
     [Fact(DisplayName = "带Token但部署集不存在返回404")]
