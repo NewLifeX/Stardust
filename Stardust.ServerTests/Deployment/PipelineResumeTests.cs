@@ -365,7 +365,8 @@ public class PipelineResumeTests
     [Fact]
     public async Task Build_Success_AutoDeploy_无部署节点_不卡Deploying()
     {
-        // 覆盖严重问题1：AutoDeploy 但无可用部署节点时，run 应直接置 Success（不卡 Deploying，DeployFinishedTime 有值）。
+        // 覆盖严重问题1：AutoDeploy 但未勾选任何部署节点时，run 不应卡 Deploying（DeployFinishedTime 有值）。
+        // 克制原则（PUB-22 v1.1）：未勾选节点则不下发、不回退，标记 Failed 避免“上传完成即假成功”。
         var data = SetupAutoDeploy("res-no-" + Guid.NewGuid().ToString("N")[..6], "vNO", withNode: false);
         try
         {
@@ -374,8 +375,8 @@ public class PipelineResumeTests
             var run = AppPipelineRun.FindById(data.run.Id);
             var deploySteps = AppPipelineStep.FindAll(AppPipelineStep._.RunId == run.Id & AppPipelineStep._.StepType == "Deploy");
 
-            Assert.Equal(PipelineStatus.Success, run.Status); // 无可用节点也直接完成，不卡 Deploying
-            Assert.NotEqual(default(DateTime), run.DeployFinishedTime);
+            Assert.Equal(PipelineStatus.Failed, run.Status); // 未勾选任何部署节点，标记 Failed 而非假成功
+            Assert.NotEqual(default(DateTime), run.DeployFinishedTime); // 但仍直接完成判定，不卡 Deploying
             Assert.Empty(deploySteps); // 未下发任何部署步骤
         }
         finally

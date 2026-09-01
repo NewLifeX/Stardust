@@ -24,8 +24,6 @@ using Stardust.Server.Services;
 using Stardust.Web.Services;
 using XCode;
 using XCode.DataAccessLayer;
-using Stardust.Dns;
-using Stardust.Services;
 
 namespace Stardust.Web;
 

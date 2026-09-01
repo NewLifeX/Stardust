@@ -47,12 +47,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- 开发期验证：临时指向本地魔方项目（含落位前回调 beforeMove 改动）。魔方 NewLife.Cube.Core 发版后改回 NuGet 引用 -->
-    <!--<PackageReference Include="NewLife.Cube.Core" Version="6.12.2026.726-beta1423" />-->
-    <ProjectReference Include="C:\X\NewLife.Cube\NewLife.CubeNC\NewLife.CubeNC.csproj" />
+    <PackageReference Include="NewLife.Cube.Core" Version="6.14.2026.830-beta1625" />
     <PackageReference Include="NewLife.IP" Version="2.5.2026.804" />
-    <PackageReference Include="NewLife.Redis" Version="6.6.2026.801" />
-    <PackageReference Include="NewLife.Remoting.Extensions" Version="3.9.2026.801" />
+    <PackageReference Include="NewLife.Redis" Version="6.6.2026.901" />
+    <PackageReference Include="NewLife.Remoting.Extensions" Version="3.9.2026.901" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,5 +1,40 @@
 # 星尘（Stardust）版本历史
 
+## v3.10.2026.0901 (2026-09-01)
+
+### MCP 能力增强
+- **MCP 中间件重构**：MCP 端点由控制器改为中间件实现（`McpMiddleware`），在 Cube 前短路 `/mcp` 请求，升级 ModelContextProtocol SDK 至 2.0，实现 Streamable HTTP 兼容
+- **协议版本协商**：新增 MCP 协议版本协商（支持 2024-11-05 至 2026-07-28），支持 notifications 通知与 ping 心跳，处理结果包装为 `McpHandleResult`
+- **资源/模块类型枚举化**：新增 `McpResourceType` / `McpModuleType` 枚举，统一存储（大驼峰）与协议（小写）命名，修复授权因大小写不匹配静默失效的根因
+- **兼容与健壮性**：Token 授权读取侧 `EqualIgnoreCase` 兼容历史小写数据；审计日志与 Token 调用统计异常不影响主响应
+
+### 流水线部署增强
+- **编译后自动部署**：流水线 Build 成功后按 `AutoDeploy` 判定续发部署，补全 `AppDeployHistory` 关键日志（编译完成/使用版本/自动部署判定/部署下发/失败）
+- **克制原则**：仅部署页面勾选的节点，未勾选任何节点则不下发、不回退，标记 run 为 Failed，杜绝"上传完成即假成功"
+- **字段修正**：`DeployNodeIds` 字段描述修正为逗号分隔，移除视图残留调试断点
+
+### 文件存储一致性
+- **哈希广播时序**：AppDeployVersion 识别与注入逻辑迁移至 `OnFileSaved`，确保广播前附件哈希已更新，提升分布式一致性
+- **健壮性增强**：`CheckLocalFile` 增加 IOException 捕获，文件通知流程支持延迟重试，避免文件占用误判
+- **NuGet 审计**：`Directory.Build.props` 统一关闭 NuGet 审计，避免网络慢时 restore 超时
+
+### Web 服务注册与日志
+- **服务注册补全**：`Startup` 注册缺失的 `HttpClientFactory` 与 `MySqlService` 后台服务
+- **分片日志搜索**：AppClientLog 支持按应用/线程过滤，默认查询最近 24 小时，适配节点心跳间隔
+
+### 依赖升级与框架调整
+- **核心依赖升级**：NewLife.Core/Redis/Remoting/Remoting.Extensions 升级至 2026.09.01 正式版，消除包降级编译冲突
+- **魔方引用**：`NewLife.Cube.Core` 切回 NuGet 引用（6.14 beta），移除开发期硬编码本地项目路径
+- **测试依赖升级**：Microsoft.NET.Test.Sdk 18.9、xunit.runner.visualstudio 4.0、TestHost 10.0.11
+- **AgentExpansion 框架调整**：改为插件库（net45;netstandard2.0，输出 `Bin\Agent`），SSH.NET 升级至 2026.0.0，移除命令行入口
+
+### Bug 修复
+- **[fix] 编译失败**：修复 AgentExpansion 引用 `NewLife.Remoting 3.9.2026.801` 与传递依赖 `3.9.2026.901` 冲突导致的 NU1605 包降级错误
+- **[fix] 重复 using**：移除 `Startup.cs` 重复的 `Stardust.Dns` / `Stardust.Services` 引用（CS0105）
+- **[fix] 配置格式**：修正 `appsettings.json` ConnectionStrings 缩进错乱
+
+---
+
 ## v3.10.2026.0802 (2026-08-02)
 
 ### StarGateway 网关 v2.0
