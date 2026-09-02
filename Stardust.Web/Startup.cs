@@ -217,9 +217,10 @@ public class Startup
             set2.Skin = "layui";
             set2.Save();
         }
-        if (set2.StartPage.EqualIgnoreCase("/Admin/User/Info"))
+        // 兼容旧版本默认值，登录后落地到魔方工作台（展示星尘 KPI 指标卡）
+        if (set2.StartPage.EqualIgnoreCase("/Admin/User/Info", "/Platform/GalaxyProject"))
         {
-            set2.StartPage = "/Platform/GalaxyProject";
+            set2.StartPage = "/Admin/Index/Dashboard";
             set2.Save();
         }
     }
