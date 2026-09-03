@@ -1,0 +1,69 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>StarWebApi</AssemblyName>
+    <RootNamespace>Stardust.Web</RootNamespace>
+    <AssemblyTitle>星尘管理平台 API</AssemblyTitle>
+    <Description>星尘分布式服务平台的解耦 WebApi 后端。复用 Stardust.Web 的区域控制器与业务服务，仅暴露 JSON 接口（EntityController 的 GetPage/GetFields/Insert/Update/Delete 及自定义 Action），剥离 Razor 视图、MCP 与静态站点，供 Stardust.Web.Vue 前端直接对接。</Description>
+    <Company>新生命开发团队</Company>
+    <Copyright>©2002-2026 NewLife</Copyright>
+    <VersionPrefix>3.7</VersionPrefix>
+    <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
+    <Version>$(VersionPrefix).$(VersionSuffix)</Version>
+    <FileVersion>$(Version)</FileVersion>
+    <AssemblyVersion>$(VersionPrefix).*</AssemblyVersion>
+    <Deterministic>false</Deterministic>
+    <OutputPath>..\Bin\WebApi</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <NoWarn>1701;1702;NU5104;NETSDK1138;CS7035;CS4014;CS8632;CS9113</NoWarn>
+    <!-- 与 Stardust/StarAgent 等主工程一致，用仓库统一的 newlife.snk 强名称签名 -->
+    <SignAssembly>True</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\Doc\newlife.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+
+  <!-- 与 Web 一致：通过 Compile Include 引用 Stardust.Server 的服务源码，不复制文件 -->
+  <ItemGroup>
+    <Compile Include="..\Stardust.Server\Services\ApolloService.cs" Link="Services\ApolloService.cs" />
+    <Compile Include="..\Stardust.Server\Services\AppDayStatService.cs" Link="Services\AppDayStatService.cs" />
+    <Compile Include="..\Stardust.Server\Services\AppOnlineService.cs" Link="AppOnlineService.cs" />
+    <Compile Include="..\Stardust.Server\Services\AppTokenService.cs" Link="Services\AppTokenService.cs" />
+    <Compile Include="..\Stardust.Server\Services\ConfigService.cs" Link="Services\ConfigService.cs" />
+    <Compile Include="..\Stardust.Server\Services\FileStorageService.cs" Link="Services\FileStorageService.cs" />
+    <Compile Include="..\Stardust.Server\Services\MySqlService.cs" Link="Services\MySqlService.cs" />
+    <Compile Include="..\Stardust.Server\Services\NodeStatService.cs" Link="Services\NodeStatService.cs" />
+    <Compile Include="..\Stardust.Server\Services\RedisService.cs" Link="Services\RedisService.cs" />
+    <Compile Include="..\Stardust.Server\Services\TraceItemStatService.cs" Link="Services\TraceItemStatService.cs" />
+    <Compile Include="..\Stardust.Server\Services\TraceStatService.cs" Link="Services\TraceStatService.cs" />
+    <Compile Include="..\Stardust.Server\Services\DnsProviderFactory.cs" Link="Services\DnsProviderFactory.cs" />
+    <Compile Include="..\Stardust.Server\Services\DnsService.cs" Link="Services\DnsService.cs" />
+    <Compile Include="..\Stardust.Server\Setting.cs" Link="Setting.cs" />
+  </ItemGroup>
+
+  <!-- 纯 API 后端：通过 ProjectReference 引用本地 NewLife.Cube(API版)，不再链接 Stardust.Web 源码 -->
+  <ItemGroup>
+    <PackageReference Include="NewLife.IP" Version="2.5.2026.804" />
+    <PackageReference Include="NewLife.Redis" Version="6.6.2026.801" />
+    <PackageReference Include="NewLife.Remoting.Extensions" Version="3.9.2026.801" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 本地 NewLife.Cube(API版)，复用其 EntityController/ApiResponse/AuthController 等纯 API 能力 -->
+    <ProjectReference Include="..\Cube\NewLife.Cube\NewLife.Cube.csproj" />
+    <!-- 魔方 Swagger/Scalar 依赖的 OpenAPI 文档生成（AddCubeSwagger） -->
+    <ProjectReference Include="..\Cube\NewLife.Cube.Swagger\NewLife.Cube.Swagger.csproj" />
+    <ProjectReference Include="..\Stardust.Data\Stardust.Data.csproj" />
+    <ProjectReference Include="..\Stardust.Extensions\Stardust.Extensions.csproj" />
+    <ProjectReference Include="..\Stardust\Stardust.csproj" />
+  </ItemGroup>
+
+  <!-- Program.cs 为顶级语句，隐式 Program 类是 internal 的，集成测试工程需可见才能用 WebApplicationFactory<Program>。
+       本工程现已与仓库统一用 newlife.snk 强名称签名，故 InternalsVisibleTo 必须带 Key=（friend 程序集 Stardust.WebApiTests 亦签名）。
+       公钥 blob 与 Cube/NewLife.Cube/NewLife.Cube.csproj 的 InternalsVisibleTo 一致。 -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="Stardust.WebApiTests" Key="00240000048000001401000006020000002400005253413100080000010001000d41eb3bdab5c2150958b46c95632b7e4dcb0af77ed8637bd8543875bc2443d01273143bb46655a48a92efa76251adc63ccca6d0e9cef2e0ce93e32b5043bea179a6c710981be4a71703a03e10960643f7df091f499cf60183ef0e4e4e2eebf26e25cea0eebf87c8a6d7f8130c283fc3f747cb90623f0aaa619825e3fcd82f267a0f4bfd26c9f2a6b5a62a6b180b4f6d1d091fce6bd60a9aa9aa5b815b833b44e0f2e58b28a354cb20f52f31bb3b3a7c54f515426537e41f9c20c07e51f9cab8abc311daac19a41bd473a51c7386f014edf1863901a5c29addc89da2f2659c9c1e95affd6997396b9680e317c493e974a813186da277ff9c1d1b30e33cb5a2f6" />
+  </ItemGroup>
+
+</Project>

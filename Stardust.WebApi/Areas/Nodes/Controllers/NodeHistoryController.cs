@@ -1,0 +1,56 @@
+using Microsoft.AspNetCore.Mvc.Filters;
+using NewLife;
+using NewLife.Cube;
+using NewLife.Cube.Extensions;
+using NewLife.Cube.ViewModels;
+using NewLife.Web;
+using Stardust.Data.Nodes;
+using XCode;
+
+namespace Stardust.Web.Areas.Nodes.Controllers;
+
+/// <summary>节点历史。记录节点登录/登出/升级等关键操作事件，支持按节点和操作类型检索</summary>
+[Menu(60, false)]
+[NodesArea]
+public class NodeHistoryController : NodesEntityController<NodeHistory>
+{
+    static NodeHistoryController()
+    {
+        ListFields.RemoveField("ID", "ProvinceName", "Version", "CompileTime");
+        ListFields.AddListField("Remark", null, "TraceId");
+
+        ListFields.TraceUrl();
+
+        {
+            var df = ListFields.GetField("NodeName") as ListField;
+            df.Url = "/Nodes/Node?Id={NodeID}";
+            df.Title = "节点: {NodeName}";
+            df.Target = "_frame";
+        }
+        {
+            var df = ListFields.GetField("Action") as ListField;
+            df.Url = "/Nodes/NodeHistory?nodeId={NodeID}&action={Action}";
+        }
+    }
+
+    /// <summary>高级搜索。按条件分页查询</summary>
+    /// <param name="p">分页参数</param>
+    /// <returns>实体列表</returns>
+    protected override IEnumerable<NodeHistory> Search(Pager p)
+    {
+        var rids = p["areaId"].SplitAsInt("/");
+        var provinceId = rids.Length > 0 ? rids[0] : -1;
+        var cityId = rids.Length > 1 ? rids[1] : -1;
+
+        var nodeId = p["nodeId"].ToInt(-1);
+        var action = p["action"];
+        var success = p["success"]?.ToBoolean();
+
+        var start = p["dtStart"].ToDateTime();
+        var end = p["dtEnd"].ToDateTime();
+
+        if (p.Sort.IsNullOrEmpty()) p.OrderBy = NodeHistory._.Id.Desc();
+
+        return NodeHistory.Search(nodeId, provinceId, cityId, action, success, start, end, p["Q"], p);
+    }
+}

@@ -1,0 +1,52 @@
+using NewLife;
+using NewLife.Cube;
+using NewLife.Web;
+using Stardust.Data.Nodes;
+using XCode.Membership;
+
+namespace Stardust.Web.Areas.Redis.Controllers;
+
+/// <summary>Redis消息队列。管理 Redis 消息队列的消费状态和积压情况</summary>
+[Menu(30, false)]
+[RedisArea]
+public class RedisMessageQueueController : WebEntityController<RedisMessageQueue>
+{
+    static RedisMessageQueueController()
+    {
+        LogOnChange = true;
+
+        ListFields.RemoveCreateField();
+        ListFields.RemoveUpdateField();
+        ListFields.AddField("UpdateTime");
+        ListFields.RemoveField("WebHook");
+
+        //{
+        //    var df = ListFields.GetField("TraceId") as ListField;
+        //    df.DisplayName = "跟踪";
+        //    df.Url = StarHelper.BuildUrl("{TraceId}");
+        //    df.DataVisible = e => e is RedisMessageQueue entity && !entity.TraceId.IsNullOrEmpty();
+        //}
+        ListFields.TraceUrl();
+        {
+            var df = ListFields.AddListField("Log", "UpdateTime");
+            df.DisplayName = "审计日志";
+            df.Header = "审计日志";
+            df.Url = "/Admin/Log?category=Redis消息队列&linkId={Id}";
+            df.Target = "_frame";
+        }
+    }
+
+    /// <summary>高级搜索。按条件分页查询</summary>
+    /// <param name="p">分页参数</param>
+    /// <returns>实体列表</returns>
+    protected override IEnumerable<RedisMessageQueue> Search(Pager p)
+    {
+        var redisId = p["redisId"].ToInt(-1);
+
+        var category = p["category"];
+        var start = p["dtStart"].ToDateTime();
+        var end = p["dtEnd"].ToDateTime();
+
+        return RedisMessageQueue.Search(redisId, category, start, end, p["Q"], p);
+    }
+}

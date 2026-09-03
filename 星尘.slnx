@@ -1,0 +1,44 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/Cube/">
+    <Project Path="Cube/NewLife.Cube.Swagger/NewLife.Cube.Swagger.csproj" />
+    <Project Path="Cube/NewLife.Cube/NewLife.Cube.csproj" />
+  </Folder>
+  <Folder Name="/Plugins/">
+    <Project Path="Plugins/AgentExpansion/AgentExpansion.csproj" />
+    <Project Path="Plugins/MySqlAgent/MySqlAgent.csproj" />
+    <Project Path="Plugins/NetworkDetect/NetworkDetect.csproj" />
+  </Folder>
+  <Folder Name="/Samples/">
+    <Project Path="Samples/TestA/TestA.csproj" />
+    <Project Path="Samples/TestB/TestB.csproj" />
+    <Project Path="Samples/TestC/TestC.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".github/workflows/publish-beta.yml" />
+    <File Path=".github/workflows/publish.yml" />
+    <File Path=".github/workflows/test.yml" />
+    <File Path="Readme.MD" />
+  </Folder>
+  <Folder Name="/UnitTest/">
+    <Project Path="ClientTest/ClientTest.csproj" />
+    <Project Path="Stardust.ServerTests/ServerTest.csproj" />
+  </Folder>
+  <Project Path="DeployAgent/DeployAgent.csproj" />
+  <Project Path="StarAgent/StarAgent.csproj" />
+  <Project Path="Stardust.Data/Stardust.Data.csproj" />
+  <Project Path="Stardust.Extensions/Stardust.Extensions.csproj" />
+  <Project Path="Stardust.Server/Stardust.Server.csproj" />
+  <Project Path="Stardust.Tests/Stardust.Tests.csproj" />
+  <Project Path="Stardust.Web/Stardust.Web.csproj" />
+  <Project Path="Stardust.WebApi/Stardust.WebApi.csproj" />
+  <Project Path="Stardust.WebApiTests/Stardust.WebApiTests.csproj" />
+  <Project Path="Stardust/Stardust.csproj" />
+  <Project Path="StarGateway/StarGateway.csproj" />
+  <Project Path="Test/Test.csproj" />
+</Solution>

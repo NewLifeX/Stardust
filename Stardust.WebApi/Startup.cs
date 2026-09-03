@@ -1,0 +1,430 @@
+﻿using System.Reflection;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Extensions.FileProviders;
+using NewLife;
+using NewLife.Caching;
+using NewLife.Caching.Services;
+using NewLife.Cube;
+using NewLife.Cube.Extensions;
+using NewLife.Cube.Swagger;
+using NewLife.Log;
+using NewLife.Threading;
+using Stardust.Data;
+using Stardust.Data.Configs;
+using Stardust.Data.Deployment;
+using Stardust.Data.Monitors;
+using Stardust.Data.Nodes;
+using Stardust.Data.Platform;
+using Stardust.Dns;
+using Stardust.Extensions.Caches;
+using Stardust.Models;
+using Stardust.Server;
+using Stardust.Services;
+using Stardust.Server.Services;
+using Stardust.Web.Services;
+using XCode;
+using XCode.DataAccessLayer;
+using Stardust.Web.Mcp;
+
+namespace Stardust.Web;
+
+public class Startup
+{
+    public Startup(IConfiguration configuration) => Configuration = configuration;
+
+    public IConfiguration Configuration { get; }
+
+    public void ConfigureServices(IServiceCollection services)
+    {
+        // 初始化配置文件
+        InitConfig();
+
+        var star = services.AddStardust("StarWeb");
+        using var span = star.Tracer?.NewSpan(nameof(ConfigureServices));
+
+        // 启用配置中心，务必在数据库操作和生成雪花Id之前
+        //_ = star.Config;
+        var config = star.GetConfig();
+
+        // 分布式服务，使用配置中心RedisCache配置
+        services.AddSingleton<ICacheProvider, RedisCacheProvider>();
+
+        var set = StarServerSetting.Current;
+        services.AddSingleton(set);
+
+        // 统计
+        services.AddSingleton<IAppDayStatService, AppDayStatService>();
+        services.AddSingleton<ITraceItemStatService, TraceItemStatService>();
+        services.AddSingleton<ITraceStatService, TraceStatService>();
+
+        services.AddSingleton<IRedisService, RedisService>();
+        services.AddSingleton<IMySqlService, MySqlService>();
+
+        services.AddSingleton<AppTokenService>();
+        services.AddSingleton<ConfigService>();
+        services.AddSingleton<AppOnlineService>();
+        services.AddSingleton<DeployService>();
+        services.AddSingleton<PipelineService>();
+        services.AddSingleton<HotAppService>();
+        services.AddSingleton<NewLife.Cube.Services.TokenService>();
+        services.AddSingleton<McpService>();
+
+        // DDNS服务
+        services.AddSingleton<IDnsProvider, AliyunDnsProvider>();
+        services.AddSingleton<IDnsProvider, TencentCloudDnsProvider>();
+        services.AddSingleton<IDnsProvider, UCloudDnsProvider>();
+        services.AddSingleton<DnsProviderFactory>();
+        services.AddSingleton<DnsService>();
+
+        services.AddCubeFileStorage("Star");
+
+        //services.AddResponseCompression();
+
+        // 后台服务。数据保留，定时删除过期数据
+        services.AddHostedService<ApolloService>();
+        services.AddHostedService<NodeStatService>();
+        services.AddHostedService<FixDataHostedService>();
+
+        // 启用接口响应压缩
+        services.AddResponseCompression();
+
+        // 取消上传包大小限制
+        services.Configure<KestrelServerOptions>(options =>
+        {
+            options.Limits.MaxRequestBodySize = Int32.MaxValue;
+        });
+        // 取消表单上传包大小限制
+        services.Configure<FormOptions>(options =>
+        {
+            options.MultipartBodyLengthLimit = Int64.MaxValue;
+        });
+        services.Configure<IISServerOptions>(options =>
+        {
+            options.MaxRequestBodySize = Int32.MaxValue;
+        });
+
+        services.AddControllersWithViews();
+
+        // 魔方 Swagger/Scalar 接口文档服务（OpenAPI 生成 + Basic Auth 保护）。
+        // 参考 CubeDemo/Program.cs：AddCubeSwagger 在 AddCube 之前注册；
+        // Swagger:UserName / Swagger:Password 配置 Basic 认证凭据。
+        services.AddCubeSwagger();
+        services.AddCube();
+    }
+
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        var tracer = app.ApplicationServices.GetRequiredService<ITracer>();
+        using var span = tracer?.NewSpan(nameof(Configure));
+
+        // 文档中间件放最前面，请求开始即优先处理 /scalar /swagger
+        // UseCubeSwagger 提供 OpenAPI JSON 与 Swagger UI；UseCubeScalar 提供 /scalar 接口文档（自带 Basic Auth，Swagger:UserName/Password）。
+        app.UseCubeSwagger("swagger");
+        // UseCubeScalar 扩展方法接收器是 WebApplication（builder.Build() 返回类型），Startup.Configure 入参 IApplicationBuilder 运行时即 WebApplication
+        if (app is WebApplication webApp)
+            webApp.UseCubeScalar("星尘管理平台 API");
+
+        // 调整应用表名
+        FixTable();
+
+        // 初始化数据库连接
+        var conns = DAL.ConnStrs;
+        if (!conns.ContainsKey("StardustData"))
+        {
+            var target = "";
+            if (conns.ContainsKey("MonitorLog"))
+                target = "MonitorLog";
+            else if (conns.ContainsKey("NodeLog"))
+                target = "NodeLog";
+
+            if (!target.IsNullOrEmpty())
+            {
+                XTrace.WriteLine("兼容旧配置，[StardustData]使用[{0}]的连接配置，建议直接设置[StardustData]的连接字符串", target);
+                var dal = DAL.Create(target);
+                DAL.AddConnStr("StardustData", dal.ConnStr, null, dal.DbType + "");
+            }
+        }
+
+        // 在Sqlite中拆分TraceData和SampleData到多个Sqlite数据库
+        StarDataHelper.SplitSqliteTables();
+
+        EntityFactory.InitConnection("Stardust");
+        EntityFactory.InitConnection("StardustData");
+
+        TrimOldAppConfig();
+        ThreadPoolX.QueueUserWorkItem(InitProject);
+        ThreadPoolX.QueueUserWorkItem(FixAppDeployNode);
+
+        if (env.IsDevelopment())
+            app.UseDeveloperExceptionPage();
+        else
+            app.UseExceptionHandler("/CubeHome/Error");
+
+        Usewwwroot(app, env);
+
+        app.UseStardust();
+
+        // 缓存运行时安装文件
+        var set = StarServerSetting.Current;
+        if (!set.FileCache.IsNullOrEmpty())
+            app.UseFileCache("/files", set.FileCache, () => StarServerSetting.Current.FileCacheWhiteIP);
+
+        if (Environment.GetEnvironmentVariable("__ASPNETCORE_BROWSER_TOOLS") is null)
+            app.UseResponseCompression();
+
+        // MCP 协议端点中间件：在 Cube 之前短路 /mcp，避免 Web 中间件影响机器API
+        app.UseMiddleware<McpMiddleware>();
+
+        app.UseCube(env);
+
+        // 注册退出事件
+        if (app is IHost host)
+            NewLife.Model.Host.RegisterExit(() => host.StopAsync().Wait());
+
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapControllerRoute(
+                name: "default",
+                pattern: "{controller=CubeHome}/{action=Index}/{id?}");
+        });
+
+        // 发布服务到星尘注册中心，需要指定服务名
+        app.RegisterService("StarWeb", null, env.EnvironmentName, "/cube/info");
+    }
+
+    private static void InitConfig()
+    {
+        // 配置
+        var set = NewLife.Setting.Current;
+        if (set.IsNew)
+        {
+            set.LogPath = "../LogWebApi";
+            set.DataPath = "../Data";
+            set.BackupPath = "../Backup";
+            set.Save();
+        }
+        var set2 = CubeSetting.Current;
+        if (set2.IsNew || set2.UploadPath == "Uploads")
+        {
+            XTrace.WriteLine("修正上传目录");
+            set2.UploadPath = "../Uploads";
+            set2.AvatarPath = "../Avatars";
+            set2.Skin = "layui";
+            set2.Save();
+        }
+        if (set2.StartPage.EqualIgnoreCase("/Admin/User/Info"))
+        {
+            set2.StartPage = "/Platform/GalaxyProject";
+            set2.Save();
+        }
+
+        // 开启跨域：NewLife.Cube 的 CORS 仅在 CubeSetting.CorsOrigins 非空时才注册
+        // （见 NewLife.Cube CubeService.AddCube / UseCube）。前端 VITE_APP_BASE_API 指向完整跨域地址
+        // http://localhost:6681，浏览器会发 OPTIONS 预检；若不开启，预检命中路由但无 OPTIONS 处理器，
+        // 返回 405。允许所有来源并支持凭据（cookie 登录态）。
+        if (set2.CorsOrigins.IsNullOrEmpty())
+        {
+            XTrace.WriteLine("WebApi 开启跨域支持（CorsOrigins=*），供前端开发服务器跨域调用");
+            set2.CorsOrigins = "*";
+            set2.Save();
+        }
+    }
+
+    private static void FixTable()
+    {
+        var dal = DAL.Create("Stardust");
+        var tables = dal.Tables;
+        if (tables != null && !tables.Any(e => e.TableName.EqualIgnoreCase("StarApp")))
+        {
+            XTrace.WriteLine("未发现Star应用新表 StarApp");
+
+            var dt = tables.FirstOrDefault(e => e.TableName.EqualIgnoreCase("App"));
+            if (dt != null && dt.Columns.Any(e => e.ColumnName.EqualIgnoreCase("AutoActive")))
+            {
+                XTrace.WriteLine("发现Star应用旧表 App ，准备重命名");
+
+                var rs = dal.Execute($"Alter Table App Rename To StarApp");
+                XTrace.WriteLine("重命名结果：{0}", rs);
+            }
+        }
+
+        // 强行设置反向工程，修改字段长度
+        var ts = new[] {
+            AppDeployNode.Meta.Table.DataTable,
+            AppOnline.Meta.Table.DataTable,
+            AppMeter.Meta.Table.DataTable,
+            Node.Meta.Table.DataTable,
+        };
+        dal.Db.CreateMetaData().SetTables(Migration.Full, ts);
+    }
+
+    private static void TrimOldAppConfig() => AppConfig.TrimAll();
+
+    private static void InitProject()
+    {
+        // 初始一个默认项目
+        var projects = GalaxyProject.FindAll();
+        var def = projects.FirstOrDefault(e => e.Name == "默认");
+        if (def == null)
+        {
+            def = new GalaxyProject { Name = "默认", Enable = true };
+            def.Insert();
+
+            projects.Add(def);
+        }
+
+        // 根据分类新建项目
+        foreach (var item in App.FindAll(null, null, null, 0, 10000))
+        {
+            if (item.ProjectId != 0) continue;
+
+            FixProject(item, projects, def);
+        }
+
+        foreach (var item in AppTracer.FindAll(null, null, null, 0, 10000))
+        {
+            if (item.ProjectId != 0) continue;
+
+            FixProject(item, projects, def);
+        }
+
+        foreach (var item in AppConfig.FindAll(null, null, null, 0, 10000))
+        {
+            if (item.ProjectId != 0) continue;
+
+            FixProject(item, projects, def);
+        }
+
+        foreach (var item in AppDeploy.FindAll(null, null, null, 0, 10000))
+        {
+            if (item.ProjectId != 0) continue;
+
+            FixProject(item, projects, def);
+        }
+
+        var deployNodes = AppDeployNode.FindAll(null, null, null, 0, 10000);
+        foreach (var item in Node.FindAll(null, null, null, 0, 10000))
+        {
+            if (item.ProjectId != 0) continue;
+
+            // 根据发布节点找一下应用
+            var deployNode = deployNodes.FirstOrDefault(e => e.NodeId == item.ID && e.Enable);
+            deployNode ??= deployNodes.FirstOrDefault(e => e.NodeId == item.ID);
+            if (deployNode != null)
+            {
+                var app = deployNode.Deploy;
+                if (app != null)
+                {
+                    item.ProjectId = app.ProjectId;
+                    item.Update();
+                }
+            }
+
+            FixProject(item, projects, def);
+        }
+
+        foreach (var item in RedisNode.FindAll(null, null, null, 0, 10000))
+        {
+            if (item.ProjectId != 0) continue;
+
+            FixProject(item, projects, def);
+        }
+    }
+
+    static void FixProject(IEntity entity, IList<GalaxyProject> projects, GalaxyProject def)
+    {
+        var category = entity["Category"] as String;
+        if (category.IsNullOrEmpty())
+        {
+            if (entity["Name"] is String name && name.EqualIgnoreCase("StarServer", "StarWeb", "StarAgent", "AntServer", "AntWeb", "AntAgent"))
+                category = "基础平台";
+        }
+
+        if (!category.IsNullOrEmpty())
+        {
+            var prj = projects.FirstOrDefault(e => e.Name.EqualIgnoreCase(category));
+            if (prj == null)
+            {
+                prj = new GalaxyProject { Name = category, Enable = true };
+                prj.Insert();
+
+                projects.Add(prj);
+            }
+
+            //entity.ProjectId = prj.Id;
+            entity.SetItem("ProjectId", prj.Id);
+        }
+        else if (def != null)
+        {
+            //entity.ProjectId = def.Id;
+            entity.SetItem("ProjectId", def.Id);
+        }
+
+        entity.Update();
+    }
+
+    private static void FixAppDeployNode()
+    {
+        // 从应用发布节点表中找到删除所有无效的test/test2
+        var app = AppDeploy.FindByName("Test");
+        if (app != null)
+        {
+            var list = AppDeployNode.FindAllByAppId(app.Id);
+            list.Where(e => !e.Enable).Delete();
+        }
+
+        app = AppDeploy.FindByName("Test2");
+        if (app != null)
+        {
+            var list = AppDeployNode.FindAllByAppId(app.Id);
+            list.Where(e => !e.Enable).Delete();
+        }
+
+        // 把旧版本的 ServiceModes 一次性转换为 DeployMode
+        var dps = AppDeploy.FindAll(AppDeploy._.Mode < 10);
+        if (dps.Count > 0)
+        {
+            XTrace.WriteLine("把旧版本的 ServiceModes 一次性转换为 DeployMode");
+
+            foreach (var dp in dps)
+            {
+                if (dp.Mode.IsNewVersion()) continue;
+
+                var mode = (ServiceModes)dp.Mode;
+                if (mode == ServiceModes.Multiple) dp.AllowMultiple = true;
+                dp.Mode = DeployModesExtensions.Convert(mode);
+                dp.Update();
+            }
+
+            var dns = AppDeployNode.FindAll(AppDeployNode._.Mode < 10);
+            foreach (var dn in dns)
+            {
+                if (dn.Mode.IsNewVersion()) continue;
+
+                var mode = (ServiceModes)dn.Mode;
+                if (mode > ServiceModes.Default)
+                {
+                    dn.Mode = DeployModesExtensions.Convert(mode);
+                    dn.Update();
+                }
+            }
+        }
+    }
+
+    private static IApplicationBuilder Usewwwroot(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        // 独立静态文件设置，魔方自己的静态资源内嵌在程序集里面
+        var options = new StaticFileOptions();
+        {
+            var embeddedProvider = new CubeEmbeddedFileProvider(Assembly.GetExecutingAssembly(), "Stardust.Web.wwwroot");
+            if (!env.WebRootPath.IsNullOrEmpty() && Directory.Exists(env.WebRootPath))
+                options.FileProvider = new CompositeFileProvider(new PhysicalFileProvider(env.WebRootPath), embeddedProvider);
+            else
+                options.FileProvider = embeddedProvider;
+        }
+        app.UseStaticFiles(options);
+
+        return app;
+    }
+}
