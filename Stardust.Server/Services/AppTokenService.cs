@@ -35,7 +35,10 @@ public class AppTokenService
 
         // 检查应用有效性
         if (!app.Enable) throw new ApiException(ApiCode.Forbidden, $"应用[{username}]已禁用！");
-        if (!app.Secret.IsNullOrEmpty() && password != app.Secret) throw new ApiException(ApiCode.Forbidden, $"非法访问应用[{username}]！");
+        // 安全纵深（V-1/V-2）：空密钥应用禁止通过凭据校验，防止残留空密钥应用绕过登录限制
+        if (app.Secret.IsNullOrEmpty())
+            throw new ApiException(ApiCode.Forbidden, $"应用[{username}]未配置密钥，禁止访问！请先为该应用设置Secret");
+        if (password != app.Secret) throw new ApiException(ApiCode.Forbidden, $"非法访问应用[{username}]！");
 
         return app;
     }
