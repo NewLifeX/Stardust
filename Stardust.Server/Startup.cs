@@ -233,6 +233,9 @@ public class Startup
 
         app.UseCors("star_cors");
 
+        // 安全V-8：登录/令牌等认证接口按IP限流，防暴力破解与滥用
+        app.UseMiddleware<RateLimitMiddleware>(set.RateLimitPaths, set.RateLimitTimes);
+
         app.UseWebSockets(new WebSocketOptions()
         {
             KeepAliveInterval = TimeSpan.FromSeconds(60),

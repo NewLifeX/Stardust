@@ -169,6 +169,14 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     /// <summary>MCP动作集。逗号分隔的模块名（node/app/config/deploy/gateway/monitor/system），*表示全部启用</summary>
     [Description("MCP动作集。逗号分隔的模块名（node/app/config/deploy/gateway/monitor/system），*表示全部启用")]
     public String McpActionSet { get; set; } = "*";
+
+    /// <summary>限流路径前缀。逗号分隔，命中则按IP限流，默认登录/令牌等认证接口</summary>
+    [Description("限流路径前缀。逗号分隔，命中则按IP限流，默认登录/令牌等认证接口")]
+    public String RateLimitPaths { get; set; } = "/App/Login,/Node/Login,/OAuth/Token,/App/Register";
+
+    /// <summary>限流次数。每IP每分钟允许访问次数，默认60</summary>
+    [Description("限流次数。每IP每分钟允许访问次数，默认60")]
+    public Int32 RateLimitTimes { get; set; } = 60;
     #endregion
 
     #region 方法
