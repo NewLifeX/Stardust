@@ -17,7 +17,7 @@ namespace Stardust.Server.Controllers;
 [ApiController]
 [ApiFilter]
 [Route("{controller}/{action}")]
-public class CubeController(IFileStorage fileStorage, StarServerSetting setting) : ControllerBase
+public class CubeController(IFileStorage fileStorage, StarServerSetting setting, DownloadTokenService downloadTokenService) : ControllerBase
 {
     #region 附件
     /// <summary>校验附件访问。ValidateAttachment开启时，公开分类可匿名，其余需携带短时下载令牌（安全V-11）</summary>
@@ -34,7 +34,7 @@ public class CubeController(IFileStorage fileStorage, StarServerSetting setting)
         }
 
         var token = HttpContext.Request.Query["token"] + "";
-        if (!DownloadTokenHelper.Valid(att.Id, token))
+        if (!downloadTokenService.Valid(att.Id, token))
             throw new ApiException(ApiCode.Unauthorized, "未授权下载附件，或下载令牌无效/已过期！");
     }
 

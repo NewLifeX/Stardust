@@ -21,7 +21,7 @@ namespace Stardust.Server.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class NodeController(NodeService nodeService, ITokenService tokenService, NodeSessionManager sessionManager, IServiceProvider serviceProvider, ITracer tracer) : BaseController(nodeService, tokenService, serviceProvider)
+public class NodeController(NodeService nodeService, ITokenService tokenService, NodeSessionManager sessionManager, IServiceProvider serviceProvider, ITracer tracer, DownloadTokenService downloadTokenService) : BaseController(nodeService, tokenService, serviceProvider)
 {
     private static DateTime _oldVersion = new(2025, 8, 26);
 
@@ -246,7 +246,7 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
 
         // 安全V-11：升级包下载URL附带短时令牌
         if (info != null && !info.Source.IsNullOrEmpty())
-            info.Source = DownloadTokenHelper.AppendToken(info.Source, StarServerSetting.Current.AttachmentTokenExpire);
+            info.Source = downloadTokenService.AppendToken(info.Source, StarServerSetting.Current.AttachmentTokenExpire);
 
         return info!;
     }

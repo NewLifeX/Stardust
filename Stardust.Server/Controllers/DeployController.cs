@@ -17,7 +17,7 @@ namespace Stardust.Server.Controllers;
 /// <summary>发布中心服务</summary>
 [ApiFilter]
 [Route("[controller]/[action]")]
-public class DeployController(NodeService nodeService, DeployService deployService, IServiceProvider serviceProvider) : BaseController(nodeService, null, serviceProvider)
+public class DeployController(NodeService nodeService, DeployService deployService, IServiceProvider serviceProvider, DownloadTokenService downloadTokenService) : BaseController(nodeService, null, serviceProvider)
 {
     private readonly Version _newDeploy = new(3, 7);
 
@@ -61,7 +61,7 @@ public class DeployController(NodeService nodeService, DeployService deployServi
 
             // 安全V-11：下发的部署包下载URL附带短时令牌
             if (!inf.Url.IsNullOrEmpty())
-                inf.Url = DownloadTokenHelper.AppendToken(inf.Url, StarServerSetting.Current.AttachmentTokenExpire);
+                inf.Url = downloadTokenService.AppendToken(inf.Url, StarServerSetting.Current.AttachmentTokenExpire);
 
             rs.Add(inf);
             WriteHistory(app.Id, nameof(GetAll), true, inf.ToJson());

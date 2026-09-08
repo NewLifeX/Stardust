@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
 using NewLife;
 using Stardust.Data.Deployment;
 using Stardust.Server;
@@ -80,7 +81,7 @@ public class CubeAttachmentSecurityTests
             Assert.Contains("未授权", body);
 
             // 有效令牌：通过校验（文件缺失后续走404）
-            var token = DownloadTokenHelper.Issue(att.Id);
+            var token = _server.Services.GetRequiredService<DownloadTokenService>().Issue(att.Id);
             var body2 = await DownloadAsync(att.Id, token);
             Assert.DoesNotContain("未授权", body2);
 

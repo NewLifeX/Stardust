@@ -96,6 +96,7 @@ public class Startup
         services.AddSingleton<MonitorService>();
         services.AddSingleton<AgentDeployService>();
         services.AddSingleton<GatewayService>();
+        services.AddSingleton<DownloadTokenService>();
 
         services.AddSingleton<NodeSessionManager>();
         services.AddSingleton<AppSessionManager>();
