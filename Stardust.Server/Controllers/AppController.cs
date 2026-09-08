@@ -242,6 +242,10 @@ public class AppController(RegistryService registryService, ITokenService tokenS
         var app = Context.Device as App;
         if (app == null) throw new ApiException(ApiCode.Unauthorized, "无权操作！");
 
+        // 安全V-2：未配置密钥的应用可被匿名冒用，禁止其向其它应用下发控制命令
+        if (app.Secret.IsNullOrEmpty())
+            throw new ApiException(ApiCode.Forbidden, $"[{app}]未配置密钥，禁止下发控制命令！请在注册中心为该应用设置Secret");
+
         if (!app.AllowControlNodes.IsNullOrEmpty())
         {
             if (app.AllowControlNodes != "*" && !target.Name.EqualIgnoreCase(app.AllowControlNodes.Split(",")))

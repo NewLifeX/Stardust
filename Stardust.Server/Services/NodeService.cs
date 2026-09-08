@@ -1066,6 +1066,10 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         var app = App.FindByName(jwt?.Subject);
         if (app == null) throw new ApiException(ApiCode.Unauthorized, "无权操作！");
 
+        // 安全V-2：未配置密钥的应用（如种子StarWeb）可被匿名冒用登录，禁止其向节点下发命令，防止全节点RCE
+        if (app.Secret.IsNullOrEmpty())
+            throw new ApiException(ApiCode.Forbidden, $"[{app}]未配置密钥，禁止下发节点命令！请在注册中心为该应用设置Secret");
+
         if (!app.AllowControlNodes.IsNullOrEmpty())
         {
             if (app.AllowControlNodes != "*" && !node.Code.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
