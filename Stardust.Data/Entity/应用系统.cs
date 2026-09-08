@@ -180,6 +180,15 @@ public partial class App
     [BindColumn("AllowControlNodes", "节点控制。安全性设计，允许该应用发指令控制的目标节点编码或目标应用名称，多节点逗号分隔，*表示全部节点", "")]
     public String AllowControlNodes { get => _AllowControlNodes; set { if (OnPropertyChanging("AllowControlNodes", value)) { _AllowControlNodes = value; OnPropertyChanged("AllowControlNodes"); } } }
 
+    private Boolean _AllowReRegister;
+    /// <summary>允许重新注册。密钥校验失败时，允许已注册应用按旧逻辑自动重新注册并下发密钥，用于新增实例临时自动接入，默认false（安全）。接入完成后请立即关闭，谨防身份冒用</summary>
+    [Category("安全告警")]
+    [DisplayName("允许重新注册")]
+    [Description("允许重新注册。密钥校验失败时，允许已注册应用按旧逻辑自动重新注册并下发密钥，用于新增实例临时自动接入，默认false（安全）。接入完成后请立即关闭，谨防身份冒用")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("AllowReRegister", "允许重新注册。密钥校验失败时，允许已注册应用按旧逻辑自动重新注册并下发密钥，用于新增实例临时自动接入，默认false（安全）。接入完成后请立即关闭，谨防身份冒用", "")]
+    public Boolean AllowReRegister { get => _AllowReRegister; set { if (OnPropertyChanging("AllowReRegister", value)) { _AllowReRegister = value; OnPropertyChanged("AllowReRegister"); } } }
+
     private String _Remark;
     /// <summary>内容</summary>
     [Category("扩展")]
@@ -289,6 +298,7 @@ public partial class App
             "LastLogin" => _LastLogin,
             "LastIP" => _LastIP,
             "AllowControlNodes" => _AllowControlNodes,
+            "AllowReRegister" => _AllowReRegister,
             "Remark" => _Remark,
             "CreateUser" => _CreateUser,
             "CreateUserID" => _CreateUserID,
@@ -323,6 +333,7 @@ public partial class App
                 case "LastLogin": _LastLogin = value.ToDateTime(); break;
                 case "LastIP": _LastIP = Convert.ToString(value); break;
                 case "AllowControlNodes": _AllowControlNodes = Convert.ToString(value); break;
+                case "AllowReRegister": _AllowReRegister = value.ToBoolean(); break;
                 case "Remark": _Remark = Convert.ToString(value); break;
                 case "CreateUser": _CreateUser = Convert.ToString(value); break;
                 case "CreateUserID": _CreateUserID = value.ToInt(); break;
@@ -358,13 +369,14 @@ public partial class App
     /// <param name="autoActive">自动激活。自动激活启用该应用在注册中心提供的服务，供其它消费者使用</param>
     /// <param name="singleton">单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于管理实例</param>
     /// <param name="alarmOnOffline">下线告警。节点下线时，发送告警</param>
+    /// <param name="allowReRegister">允许重新注册。密钥校验失败时，允许已注册应用按旧逻辑自动重新注册并下发密钥，用于新增实例临时自动接入，默认false（安全）。接入完成后请立即关闭，谨防身份冒用</param>
     /// <param name="enable">启用</param>
     /// <param name="start">更新时间开始</param>
     /// <param name="end">更新时间结束</param>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<App> Search(Int32 projectId, Boolean? autoActive, Boolean? singleton, Boolean? alarmOnOffline, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<App> Search(Int32 projectId, Boolean? autoActive, Boolean? singleton, Boolean? alarmOnOffline, Boolean? allowReRegister, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
@@ -372,6 +384,7 @@ public partial class App
         if (autoActive != null) exp &= _.AutoActive == autoActive;
         if (singleton != null) exp &= _.Singleton == singleton;
         if (alarmOnOffline != null) exp &= _.AlarmOnOffline == alarmOnOffline;
+        if (allowReRegister != null) exp &= _.AllowReRegister == allowReRegister;
         if (enable != null) exp &= _.Enable == enable;
         exp &= _.UpdateTime.Between(start, end);
         if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
@@ -440,6 +453,9 @@ public partial class App
 
         /// <summary>节点控制。安全性设计，允许该应用发指令控制的目标节点编码或目标应用名称，多节点逗号分隔，*表示全部节点</summary>
         public static readonly Field AllowControlNodes = FindByName("AllowControlNodes");
+
+        /// <summary>允许重新注册。密钥校验失败时，允许已注册应用按旧逻辑自动重新注册并下发密钥，用于新增实例临时自动接入，默认false（安全）。接入完成后请立即关闭，谨防身份冒用</summary>
+        public static readonly Field AllowReRegister = FindByName("AllowReRegister");
 
         /// <summary>内容</summary>
         public static readonly Field Remark = FindByName("Remark");
@@ -530,6 +546,9 @@ public partial class App
 
         /// <summary>节点控制。安全性设计，允许该应用发指令控制的目标节点编码或目标应用名称，多节点逗号分隔，*表示全部节点</summary>
         public const String AllowControlNodes = "AllowControlNodes";
+
+        /// <summary>允许重新注册。密钥校验失败时，允许已注册应用按旧逻辑自动重新注册并下发密钥，用于新增实例临时自动接入，默认false（安全）。接入完成后请立即关闭，谨防身份冒用</summary>
+        public const String AllowReRegister = "AllowReRegister";
 
         /// <summary>内容</summary>
         public const String Remark = "Remark";

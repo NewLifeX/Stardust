@@ -118,11 +118,21 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
         App app = null;
         try
         {
-            // 查找应用。若已存在，说明客户端密钥校验失败（错误或为空）后被框架转入动态注册流程，
-            // 禁止复用旧身份自动放行，防止身份冒用与真实密钥泄露（安全扫描 V-1）
+            // 查找应用。若已存在，说明客户端密钥校验失败（错误或为空）后被框架转入动态注册流程。
+            // 默认禁止复用旧身份自动放行，防止身份冒用与真实密钥泄露（安全扫描 V-1）
             app = App.FindByName(name);
             if (app != null)
-                throw new ApiException(ApiCode.Forbidden, $"应用[{name}]已存在，禁止动态注册复用旧身份！请检查密钥或联系管理员");
+            {
+                // 仅当该应用显式开启"允许重新注册"开关（默认关）时，才兼容旧逻辑：
+                // 复用已存在身份并下发密钥，用于新增实例临时自动接入，接入完成后应立即关闭
+                if (!app.AllowReRegister)
+                    throw new ApiException(ApiCode.Forbidden, $"应用[{name}]已存在，禁止动态注册复用旧身份！请检查密钥或联系管理员；如需新增实例自动接入，请在应用上临时开启“允许重新注册”");
+
+                app.WriteHistory("应用重注册", true, $"[{app.Name}]按旧逻辑重新注册，密钥已下发", null, context.UserHost, context.ClientId);
+                context.Device = app;
+
+                return app;
+            }
 
             // 新应用，查找或创建应用，避免多线程创建冲突
             app = App.GetOrAdd(name, App.FindByName, k => new App

@@ -113,4 +113,65 @@ public class AppLoginSecurityTests
             App.FindByName(name)?.Delete();
         }
     }
+
+    [Fact(DisplayName = "已存在应用开启允许重新注册后，空密钥登录恢复旧行为并下发密钥")]
+    public async Task Login_ExistingApp_AllowReRegister_EmptySecret_Recover()
+    {
+        var name = "sec_" + Rand.NextString(8);
+        var app = new App { Name = name, Secret = "secret-rec-001", Enable = true, AllowReRegister = true };
+        app.Insert();
+        try
+        {
+            var body = await Login(name, "");
+
+            // 临时开关开启时按旧逻辑放行：签发令牌并回传真实密钥，供新实例自动接入
+            Assert.Contains("\"token\"", body, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("secret-rec-001", body, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            app.Delete();
+        }
+    }
+
+    [Fact(DisplayName = "已存在应用开启允许重新注册后，错误密钥登录恢复旧行为并下发密钥")]
+    public async Task Login_ExistingApp_AllowReRegister_WrongSecret_Recover()
+    {
+        var name = "sec_" + Rand.NextString(8);
+        var app = new App { Name = name, Secret = "secret-rec-002", Enable = true, AllowReRegister = true };
+        app.Insert();
+        try
+        {
+            var body = await Login(name, "wrong-secret");
+
+            // 临时开关开启时按旧逻辑放行：签发令牌并回传真实密钥
+            Assert.Contains("\"token\"", body, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("secret-rec-002", body, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            app.Delete();
+        }
+    }
+
+    [Fact(DisplayName = "已存在应用默认关闭允许重新注册，错误密钥登录仍被拒绝（回归保护）")]
+    public async Task Login_ExistingApp_AllowReRegisterDefaultOff_Rejected()
+    {
+        var name = "sec_" + Rand.NextString(8);
+        var app = new App { Name = name, Secret = "secret-rec-003", Enable = true };
+        app.Insert();
+        try
+        {
+            var body = await Login(name, "wrong-secret");
+
+            // 默认（AllowReRegister=false）维持安全收紧：不得泄露真实密钥，不得签发令牌
+            Assert.DoesNotContain("secret-rec-003", body, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("\"code\"", body, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("\"token\"", body, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            app.Delete();
+        }
+    }
 }
