@@ -1,0 +1,131 @@
+/* =============================================================================
+ * 星尘 Stardust 控制台 · 设计令牌 (Design Tokens)  ·  单一事实来源 (Single Source)
+ * -----------------------------------------------------------------------------
+ * 全部视觉取值集中在此文件。任何页面 / 组件 / 主题都只能引用这些 --sd-* 变量，
+ * 严禁在业务代码里硬编码十六进制色值（反模式，不被允许）。
+ *
+ * 配套文件:
+ *   - element-theme-override.css : 把下列 --sd-* 映射到 Element Plus 的 --el-* 变量
+ *   - tailwind.config.js         : 把下列 --sd-* 注入 Tailwind 主题（布局用 Tailwind）
+ *   - design-spec.md             : 设计规范的文字说明
+ * ============================================================================= */
+
+:root {
+  /* -------------------------------------------------------------------------
+   * 1. 品牌与语义色 (Brand & Semantic)
+   *    设计身份 = 星尘蓝(brand)。状态色遵循「在线绿 / 告警黄 / 离线红」三态。
+   *    cyan 作为星尘强调色（accent），用于高亮、焦点环、光带中段。
+   * ------------------------------------------------------------------------- */
+  --sd-color-brand:        #6673FF;   /* 星尘蓝 · 主操作 / 活动态 / 品牌 */
+  --sd-color-brand-2:      #8C5CF5;   /* 渐变末端（紫） */
+  --sd-gradient-brand:     linear-gradient(135deg, #6673FF 0%, #8C5CF5 100%);
+  --sd-color-accent:       #6FE3EC;   /* 星尘青 · 强调 / 焦点 / 顶带中段 */
+
+  --sd-color-online:       #43E8A3;   /* 在线 / 成功 */
+  --sd-color-alert:        #FFC208;   /* 告警 / 警告 */
+  --sd-color-offline:      #FF4545;   /* 离线 / 危险 */
+
+  /* 语义色浅阶（Element 浅底药丸 / Tag 背景用，按 Element 混合比预计算）
+   * 公式: light-N = 白占比 {3:.2,5:.5,7:.7,8:.8,9:.9}; dark-2 = 黑占比 .2 */
+  --sd-color-brand-light-3:   #858FFF; --sd-color-brand-light-5:   #B2B9FF;
+  --sd-color-brand-light-7:   #D1D5FF; --sd-color-brand-light-8:   #E0E3FF;
+  --sd-color-brand-light-9:   #F0F1FF; --sd-color-brand-dark-2:   #525CCC;
+
+  --sd-color-online-light-3:  #69EDB5; --sd-color-online-light-5:  #A1F4D1;
+  --sd-color-online-light-7:  #C7F8E3; --sd-color-online-light-8:  #D9FAED;
+  --sd-color-online-light-9:  #ECFDF6; --sd-color-online-dark-2:  #36BA82;
+
+  --sd-color-alert-light-3:   #FFCE39; --sd-color-alert-light-5:   #FFE084;
+  --sd-color-alert-light-7:   #FFEDB5; --sd-color-alert-light-8:   #FFF3CE;
+  --sd-color-alert-light-9:   #FFF9E6; --sd-color-alert-dark-2:   #CC9B06;
+
+  --sd-color-offline-light-3: #FF6A6A; --sd-color-offline-light-5: #FFA2A2;
+  --sd-color-offline-light-7: #FFC7C7; --sd-color-offline-light-8: #FFDADA;
+  --sd-color-offline-light-9: #FFECEC; --sd-color-offline-dark-2: #CC3737;
+
+  --sd-color-accent-light-3:  #8CE9F0; --sd-color-accent-light-5:  #B7F1F6;
+  --sd-color-accent-light-7:  #D4F7F9; --sd-color-accent-light-8:  #E2F9FB;
+  --sd-color-accent-light-9:  #F1FCFD; --sd-color-accent-dark-2:  #59B6BD;
+
+  /* -------------------------------------------------------------------------
+   * 2. 表面层级 (Surfaces) — 暗色主题
+   *    page(最底) < surface(卡片) < elevated(悬浮/抽屉/弹层)
+   * ------------------------------------------------------------------------- */
+  --sd-bg-page:        #16202A;   /* 页面底色 */
+  --sd-bg-surface:     #1F2A33;   /* 卡片 / 侧栏 / 顶栏表面 */
+  --sd-bg-elevated:    #26333F;   /* 悬浮层 / 抽屉 / Popover */
+  --sd-bg-input:       #18222C;   /* 输入框内底（比 surface 略深） */
+  --sd-fill-light:     #232C36;   /* Element fill-color-light（控件浅填充） */
+
+  /* -------------------------------------------------------------------------
+   * 3. 文本 (Text)
+   * ------------------------------------------------------------------------- */
+  --sd-text-primary:       #E6EDF3;  /* 主文 */
+  --sd-text-regular:       #C7D0DA;  /* 常规文 */
+  --sd-text-secondary:     #8A97A6;  /* 次要文 */
+  --sd-text-placeholder:   #6B7785;  /* 占位符 */
+  --sd-text-disabled:      #5A6675;  /* 禁用 */
+
+  /* -------------------------------------------------------------------------
+   * 4. 边框 (Borders)
+   * ------------------------------------------------------------------------- */
+  --sd-border:            #3A4450;
+  --sd-border-light:      #33414E;
+  --sd-border-lighter:    #2D3943;
+  --sd-border-extra-light:#27323B;
+  --sd-border-dark:       #47535F;
+
+  /* -------------------------------------------------------------------------
+   * 5. 字体 (Typography)
+   * ------------------------------------------------------------------------- */
+  --sd-font-family: "Inter", "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+  --sd-font-mono:   "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --sd-font-xs:   12px;  --sd-font-sm:   13px;  --sd-font-base: 14px;
+  --sd-font-md:   16px;  --sd-font-lg:   20px;  --sd-font-xl:   24px;
+  --sd-font-2xl:  32px;  --sd-font-3xl:  40px;
+
+  --sd-weight-regular:  400;
+  --sd-weight-medium:   500;
+  --sd-weight-semibold: 600;
+  --sd-weight-bold:     700;
+
+  /* -------------------------------------------------------------------------
+   * 6. 间距 (Spacing) — 4px 基准
+   * ------------------------------------------------------------------------- */
+  --sd-space-1:  4px;   --sd-space-2:  8px;   --sd-space-3: 12px;
+  --sd-space-4: 16px;   --sd-space-6: 24px;   --sd-space-8: 32px;
+  --sd-space-12: 48px;
+
+  /* -------------------------------------------------------------------------
+   * 7. 圆角 (Radius)
+   * ------------------------------------------------------------------------- */
+  --sd-radius-sm:    4px;
+  --sd-radius-base:  6px;
+  --sd-radius-md:   12px;
+  --sd-radius-lg:   16px;
+  --sd-radius-round: 20px;
+  --sd-radius-full: 50%;
+
+  /* -------------------------------------------------------------------------
+   * 8. 阴影 (Shadows) — 蓝调，三级
+   * ------------------------------------------------------------------------- */
+  --sd-shadow-1: 0 1px 2px rgba(102,115,255,.08), 0 1px 3px rgba(22,32,42,.40);
+  --sd-shadow-2: 0 4px 12px rgba(102,115,255,.10), 0 2px 4px rgba(22,32,42,.45);
+  --sd-shadow-3: 0 12px 32px rgba(102,115,255,.14), 0 6px 12px rgba(22,32,42,.50);
+
+  /* -------------------------------------------------------------------------
+   * 9. 辉光 / 焦点环 (Glow & Focus)
+   * ------------------------------------------------------------------------- */
+  --sd-glow-accent: 0 0 6px rgba(111,227,236,.6), 0 0 12px rgba(111,227,236,.3);
+  --sd-glow-brand:  0 0 0 3px rgba(102,115,255,.35), 0 0 10px rgba(102,115,255,.4);
+  --sd-focus-ring:  0 0 0 2px rgba(111,227,236,.25);
+
+  /* -------------------------------------------------------------------------
+   * 10. 顶栏光带 (Top Band) & 布局尺寸
+   * ------------------------------------------------------------------------- */
+  --sd-band: linear-gradient(90deg, #6673FF 0%, #6FE3EC 50%, #6673FF 100%);
+  --sd-topbar-h: 64px;
+  --sd-sidebar-w: 88px;
+  --sd-content-max: 1440px;
+}

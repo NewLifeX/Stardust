@@ -1,0 +1,238 @@
+/* =============================================================================
+ * 星尘 Stardust 控制台 · Element Plus 主题覆盖 (Theme Override)
+ * -----------------------------------------------------------------------------
+ * 目标: 用设计令牌 (tokens.css 的 --sd-*) 覆盖 Element Plus 的 --el-* 变量。
+ * 这样 Vue 业务代码只需:
+ *    1) 引入本文件（见下方 import 顺序），
+ *    2) 全程使用 <el-button>/<el-table>/... 与 Tailwind 布局类，
+ *   而无需在任何页面硬编码颜色。颜色改动只在 tokens.css 一处生效。
+ *
+ * ⚠️ 引入顺序（关键，决定优先级，后者覆盖前者）:
+ *    import 'element-plus/dist/index.css'        // ① Element 默认 + 暗色变量
+ *    import './design-system/tokens.css'          // ② 我们的 --sd-* 令牌
+ *    import './design-system/element-theme-override.css'  // ③ 本覆盖（必须最后）
+ *
+ * ⚠️ 暗色类: Element Plus 的暗色 --el-* 定义在 `html.dark` 选择器下。
+ *    本文件用 `:root, html.dark` 同组声明：在 `.dark` 分支与 Element 同特异性，
+ *    因本文件最后加载而胜出；非暗色环境也由 :root 兜底。
+ *    请确保在根节点挂载 `class="dark"`（main.ts: app.classList.add('dark') 或
+ *    <html class="dark">）。
+ * ============================================================================= */
+
+:root,
+html.dark {
+
+  /* ---- 1. 主色 / 语义色（映射设计令牌 §1）---- */
+  --el-color-primary:       var(--sd-color-brand);
+  --el-color-primary-light-3: var(--sd-color-brand-light-3);
+  --el-color-primary-light-5: var(--sd-color-brand-light-5);
+  --el-color-primary-light-7: var(--sd-color-brand-light-7);
+  --el-color-primary-light-8: var(--sd-color-brand-light-8);
+  --el-color-primary-light-9: var(--sd-color-brand-light-9);
+  --el-color-primary-dark-2:  var(--sd-color-brand-dark-2);
+
+  --el-color-success:       var(--sd-color-online);
+  --el-color-success-light-3: var(--sd-color-online-light-3);
+  --el-color-success-light-5: var(--sd-color-online-light-5);
+  --el-color-success-light-7: var(--sd-color-online-light-7);
+  --el-color-success-light-8: var(--sd-color-online-light-8);
+  --el-color-success-light-9: var(--sd-color-online-light-9);
+  --el-color-success-dark-2:  var(--sd-color-online-dark-2);
+
+  --el-color-warning:       var(--sd-color-alert);
+  --el-color-warning-light-3: var(--sd-color-alert-light-3);
+  --el-color-warning-light-5: var(--sd-color-alert-light-5);
+  --el-color-warning-light-7: var(--sd-color-alert-light-7);
+  --el-color-warning-light-8: var(--sd-color-alert-light-8);
+  --el-color-warning-light-9: var(--sd-color-alert-light-9);
+  --el-color-warning-dark-2:  var(--sd-color-alert-dark-2);
+
+  --el-color-danger:        var(--sd-color-offline);
+  --el-color-danger-light-3:  var(--sd-color-offline-light-3);
+  --el-color-danger-light-5:  var(--sd-color-offline-light-5);
+  --el-color-danger-light-7:  var(--sd-color-offline-light-7);
+  --el-color-danger-light-8:  var(--sd-color-offline-light-8);
+  --el-color-danger-light-9:  var(--sd-color-offline-light-9);
+  --el-color-danger-dark-2:   var(--sd-color-offline-dark-2);
+
+  --el-color-error:         var(--sd-color-offline);  /* 与 danger 同义复用 */
+  --el-color-info:          var(--sd-color-accent);   /* 星尘强调青作 info */
+  --el-color-info-light-3:  var(--sd-color-accent-light-3);
+  --el-color-info-light-5:  var(--sd-color-accent-light-5);
+  --el-color-info-light-7:  var(--sd-color-accent-light-7);
+  --el-color-info-light-8:  var(--sd-color-accent-light-8);
+  --el-color-info-light-9:  var(--sd-color-accent-light-9);
+  --el-color-info-dark-2:   var(--sd-color-accent-dark-2);
+
+  /* ---- 2. 文本（映射 §3）---- */
+  --el-text-color-primary:    var(--sd-text-primary);
+  --el-text-color-regular:    var(--sd-text-regular);
+  --el-text-color-secondary:  var(--sd-text-secondary);
+  --el-text-color-placeholder:var(--sd-text-placeholder);
+  --el-text-color-disabled:   var(--sd-text-disabled);
+
+  /* ---- 3. 边框（映射 §4）---- */
+  --el-border-color:           var(--sd-border);
+  --el-border-color-light:     var(--sd-border-light);
+  --el-border-color-lighter:   var(--sd-border-lighter);
+  --el-border-color-extra-light: var(--sd-border-extra-light);
+  --el-border-color-dark:      var(--sd-border-dark);
+
+  /* ---- 4. 背景（映射 §2）---- */
+  --el-bg-color:        var(--sd-bg-surface);   /* 卡片 / 控件表面 */
+  --el-bg-color-page:   var(--sd-bg-page);      /* 页面底 */
+  --el-bg-color-overlay:var(--sd-bg-elevated);  /* 抽屉 / 弹层 / Popover */
+
+  /* ---- 5. 填充（按钮 hover、输入底等；映射 §2）---- */
+  --el-fill-color:          var(--sd-bg-elevated);
+  --el-fill-color-light:    var(--sd-fill-light);
+  --el-fill-color-lighter:  var(--sd-bg-surface);
+  --el-fill-color-blank:    var(--sd-bg-input);  /* 输入框内底 */
+
+  /* ---- 6. 圆角（映射 §7）---- */
+  --el-border-radius-base:   var(--sd-radius-base);   /* 6px */
+  --el-border-radius-small:  var(--sd-radius-sm);     /* 4px */
+  --el-border-radius-round:  var(--sd-radius-round);  /* 20px */
+  --el-border-radius-circle: var(--sd-radius-full);
+
+  /* ---- 7. 字体（映射 §5）---- */
+  --el-font-family: var(--sd-font-family);
+  --el-font-size-extra-small: var(--sd-font-xs);  /* 12 */
+  --el-font-size-small:       var(--sd-font-sm);  /* 13 */
+  --el-font-size-base:        var(--sd-font-base);/* 14 */
+  --el-font-size-medium:      var(--sd-font-md);  /* 16 */
+  --el-font-size-large:       var(--sd-font-lg);  /* 20 */
+  --el-font-size-extra-large: var(--sd-font-xl);  /* 24 */
+
+  /* ---- 8. 阴影（映射 §8）---- */
+  --el-box-shadow:        var(--sd-shadow-2);
+  --el-box-shadow-light:  var(--sd-shadow-1);
+  --el-box-shadow-lighter:var(--sd-shadow-1);
+}
+
+/* -----------------------------------------------------------------------------
+ * 组件级微调（少数无法仅靠变量覆盖的观感，仍引用令牌，不硬编码）
+ * --------------------------------------------------------------------------- */
+html.dark {
+  /* 抽屉 / 对话框 表面统一为 elevated，并带蓝调阴影 */
+  .el-drawer { background-color: var(--sd-bg-elevated); box-shadow: var(--sd-shadow-3); }
+  .el-dialog { background-color: var(--sd-bg-elevated); box-shadow: var(--sd-shadow-3); }
+
+  /* 输入框聚焦边框 = 品牌蓝 */
+  .el-input__wrapper.is-focus,
+  .el-textarea__inner:focus,
+  .el-select__wrapper.is-focused {
+    box-shadow: 0 0 0 1px var(--sd-color-brand) inset;
+  }
+
+  /* 主按钮 hover 用 brand-light，保持蓝调而非 Element 默认蓝 */
+  .el-button--primary:not(.is-disabled):hover {
+    background-color: var(--sd-color-brand-light-3);
+    border-color: var(--sd-color-brand-light-3);
+  }
+
+  /* 表格行 hover 用 surface 提亮 */
+  .el-table tr:hover > td.el-table__cell {
+    background-color: var(--sd-bg-elevated);
+  }
+
+  /* ---- 星尘控制台：抽屉 / 标签页 / 描述列表 / 表单 微调 ---- */
+  .stardust-drawer .el-drawer__header {
+    color: var(--sd-text-primary);
+    font-weight: 600;
+    margin-bottom: 0;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--sd-border);
+  }
+  .stardust-drawer .el-drawer__body { padding: 0; background-color: var(--sd-bg-elevated); }
+
+  .sd-tabs .el-tabs__header { margin-bottom: 16px; }
+  .sd-tabs .el-tabs__item { color: var(--sd-text-secondary); }
+  .sd-tabs .el-tabs__item.is-active { color: var(--sd-color-brand); }
+  .sd-tabs .el-tabs__active-bar { background-color: var(--sd-color-brand); }
+  .sd-tabs .el-tabs__nav-wrap::after { background-color: var(--sd-border); }
+
+  .sd-descriptions .el-descriptions__label {
+    color: var(--sd-text-tertiary);
+    background-color: var(--sd-bg-surface);
+    width: 110px;
+  }
+  .sd-descriptions .el-descriptions__content { color: var(--sd-text-primary); }
+  .sd-descriptions .el-descriptions__cell { border-color: var(--sd-border); }
+
+  .sd-table { --el-table-border-color: var(--sd-border); /* 表头跟随玻璃态：派生自令牌的半透明，露出星空 */ --el-table-header-bg-color: color-mix(in srgb, var(--sd-bg-surface) 72%, transparent); }
+  .sd-table .el-table__row { background-color: transparent; }
+
+  .sd-input .el-input__wrapper,
+  .sd-input .el-select__wrapper {
+    background-color: var(--sd-bg-input);
+    box-shadow: 0 0 0 1px var(--sd-border) inset;
+  }
+  .sd-input .el-input__inner { color: var(--sd-text-primary); }
+  .sd-input .el-select__placeholder { color: var(--sd-text-placeholder); }
+
+  .sd-switch.is-checked { --el-switch-on-color: var(--sd-color-brand); }
+  /* 设置页红标（design-spec 05/07）：toggle 42×24、knob 18（off left3 → on left21） */
+  .sd-switch .el-switch__core { width: 42px; height: 24px; border-radius: 12px; }
+  .sd-switch .el-switch__core .el-switch__action { width: 18px; height: 18px; top: 3px; left: 3px; }
+  .sd-switch.is-checked .el-switch__core .el-switch__action { left: 21px; }
+  /* 输入/选择内边距与圆角（padding 10×12 视觉含 wrapper 行高，半径 8） */
+  .sd-input .el-input__wrapper,
+  .sd-input .el-select__wrapper { padding: 4px 12px; border-radius: 8px; }
+  .sd-slider .el-slider__bar { background-color: var(--sd-color-brand); }
+  .sd-slider .el-slider__button { border-color: var(--sd-color-brand); }
+
+  /* 描述列表标签色修正：令牌中无 --sd-text-tertiary，回落到 secondary */
+  .sd-descriptions .el-descriptions__label { color: var(--sd-text-secondary); }
+}
+
+/* -----------------------------------------------------------------------------
+ * 交互规范（design-spec §8：无界星图交互语言）——全局一致
+ * 全部引用令牌，不硬编码。聚焦/悬浮/过渡在控制台内统一，向原型对齐。
+ * --------------------------------------------------------------------------- */
+html.dark {
+  /* §8.1 焦点态：键盘可达元素统一青色焦点环 + 辉光，保证可见性与品牌一致 */
+  a:focus-visible,
+  button:focus-visible,
+  .el-button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  [tabindex]:focus-visible,
+  .sd-card[role="button"]:focus-visible,
+  .el-card.is-clickable:focus-visible {
+    outline: none;
+    box-shadow: var(--sd-focus-ring), var(--sd-glow-accent);
+    border-radius: var(--sd-radius-md);
+  }
+
+  /* §8.2 悬浮态：可点击卡片抬升 + 边框提亮 + 蓝调辉光（液态玻璃呼吸感） */
+  .sd-card,
+  .el-card.is-clickable,
+  .app-card {
+    transition: transform 200ms cubic-bezier(.22,.61,.36,1),
+                box-shadow 200ms cubic-bezier(.22,.61,.36,1),
+                border-color 200ms cubic-bezier(.22,.61,.36,1);
+  }
+  .sd-card:hover,
+  .el-card.is-clickable:hover,
+  .app-card:hover {
+    transform: translateY(-4px);
+    border-color: color-mix(in srgb, var(--sd-color-accent) 55%, var(--sd-border));
+    box-shadow: var(--sd-shadow-3), var(--sd-glow-accent);
+  }
+
+  /* §8.9 统一动效曲线：交互控件过渡一致（按钮/链接/输入） */
+  .el-button,
+  .el-link,
+  .el-input__wrapper,
+  .el-tag {
+    transition: background-color 200ms cubic-bezier(.22,.61,.36,1),
+                border-color 200ms cubic-bezier(.22,.61,.36,1),
+                box-shadow 200ms cubic-bezier(.22,.61,.36,1),
+                color 160ms cubic-bezier(.22,.61,.36,1);
+  }
+
+  /* §8.5 选中文本用星尘青淡染，呼应主题 */
+  ::selection { background: color-mix(in srgb, var(--sd-color-accent) 30%, transparent); color: var(--sd-text-primary); }
+}

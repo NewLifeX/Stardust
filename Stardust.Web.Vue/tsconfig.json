@@ -1,37 +1,35 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
+    "target": "ES2020",
     "useDefineForClassFields": true,
     "module": "ESNext",
-    "moduleResolution": "Node",
-    "strict": true,
-    "allowJs": true,
-    "jsx": "preserve",
-    "sourceMap": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "preserve",
+    "strict": true,
+    // Cube 框架源码经 paths 别名（指向真实源码）被 import 进 program，
+    // TS 会对依赖文件同样执行 unused 检查且无法按目录关闭（exclude 无效）。
+    // 这些属于框架自身的遗留告警（含 apps 经真实类型复用），关闭 unused 后由 eslint 兜底。
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
-    "lib": [
-      "ESNext",
-      "DOM"
-    ],
-    "skipLibCheck": true,
-    "types": [
-      "vite/client"
-    ],
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+      "@/*": ["./src/*"],
+      // 指向 Cube web 框架真实源码：类型检查解析到同一份源码，业务可获真实类型。
+      // 运行时 Vite alias 见 vite.config.ts。
+      "@newlifex/cube-vue": ["../Cube/NewLife.Cube.Vue/web/core/plugin/index.ts"],
+      "@newlifex/cube-vue/*": ["../Cube/NewLife.Cube.Vue/web/*"],
+      // Cube 内部封装 vue-json-editor（其 node_modules 含 .d.vue.ts 但未随 package.json
+      // "exports" 暴露，TS bundler 解析会 TS7016），单独接管到本地声明。
+      "vue-json-editor": ["./src/types/vue-json-editor.d.ts"]
     }
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.d.ts",
-    "src/**/*.tsx",
-    "src/**/*.vue"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"],
+  "references": [{ "path": "./tsconfig.node.json" }]
 }

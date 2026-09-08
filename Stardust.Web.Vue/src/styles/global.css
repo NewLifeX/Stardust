@@ -1,0 +1,7 @@
+/* 全局样式：仅包含 Tailwind 指令。
+ * 设计令牌与 Element 覆盖样式改用 main.ts 中独立的 import 语句引入
+ * （PostCSS @import 在 Vite 下相对路径解析异常，故改为 JS import 方式）。
+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

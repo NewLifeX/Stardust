@@ -1,0 +1,14 @@
+packages:
+  # 魔方前端公共模块（Cube monorepo 内的工作区包）
+  - "Cube/packages/*"
+  # 魔方 Vue 核心包，其 package.json 的 name 即 @newlifex/cube-vue
+  - "Cube/NewLife.Cube.Vue/web"
+  # 星尘前端应用
+  - "Stardust.Web.Vue"
+
+# 允许这些包执行安装后构建脚本（对齐 Cube 的 web/pnpm-workspace.yaml）
+allowBuilds:
+  "@parcel/watcher": true
+  esbuild: true
+  unrs-resolver: true
+  vue-demi: true

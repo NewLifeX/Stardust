@@ -1,0 +1,17 @@
+{
+  "private": true,
+  "name": "stardust-workspace",
+  "version": "0.0.0",
+  "description": "星尘前端工作区，聚合魔方 Cube 前端公共模块与星尘 Web 应用",
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "build:packages": "pnpm -r --filter @cube/api-core --filter @cube/page-utils --filter @cube/field-mapping --filter @cube/auth-logic --filter @cube/page-logic build",
+    "dev": "pnpm --filter stardust-web-vue dev",
+    "dev:api": "dotnet run --project Stardust.WebApi/Stardust.WebApi.csproj --urls http://localhost:6681",
+    "build": "pnpm --filter stardust-web-vue build",
+    "preview": "pnpm --filter stardust-web-vue preview",
+    "check": "pnpm --filter stardust-web-vue run check",
+    "e2e": "pnpm --filter stardust-web-vue run test:e2e"
+  },
+  "license": "MIT"
+}
