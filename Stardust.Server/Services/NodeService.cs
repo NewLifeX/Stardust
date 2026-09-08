@@ -1126,8 +1126,13 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
     #region 事件上报
     public override Int32 CommandReply(DeviceContext context, CommandReplyModel model)
     {
+        var node = context.Device as Node;
         var cmd = NodeCommand.FindById((Int32)model.Id);
         if (cmd == null) return 0;
+
+        // 安全V-17：防止水平越权，只允许命令所属节点回包（禁止伪造其它节点的命令状态）
+        if (node == null || cmd.NodeID != node.ID)
+            throw new ApiException(ApiCode.Forbidden, $"[{node?.Name}]越权回包命令[{cmd.Id}]，命令属于节点[{cmd.NodeID}]");
 
         cmd.Status = model.Status;
         cmd.Result = model.Data;
