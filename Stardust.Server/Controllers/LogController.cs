@@ -29,17 +29,8 @@ public class LogController(StarServerSetting setting) : ControllerBase
             var clientId = Request.Headers["X-ClientId"] + "";
             var ip = HttpContext.GetUserHost();
 
-            // 验证应用
+            // 验证应用。安全V-9：不再按X-AppId自动创建应用，未知来源直接忽略，防止匿名灌数据与自动建表注入
             var app = App.FindByName(appId);
-            if (app == null && !appId.IsNullOrEmpty())
-            {
-                app = new App
-                {
-                    Name = appId,
-                    Enable = setting.AppAutoRegister,
-                };
-                app.Insert();
-            }
             if (app != null && app.Enable)
             {
                 // 00:00:04.205  7 Y 1 NewLife.Core v8.10.2020.1020

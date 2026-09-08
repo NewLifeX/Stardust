@@ -4,6 +4,7 @@ using NewLife;
 using NewLife.Caching;
 using NewLife.Collections;
 using NewLife.Log;
+using NewLife.Remoting;
 using NewLife.Remoting.Extensions;
 using NewLife.Remoting.Services;
 using NewLife.Serialization;
@@ -101,17 +102,27 @@ public class TraceController(ITraceStatService stat, IAppDayStatService appStat,
     {
         // 新版验证方式，访问令牌
         App ap = null;
-        if (!token.IsNullOrEmpty() && token.Split(".").Length == 3)
+        var validToken = !token.IsNullOrEmpty() && token.Split(".").Length == 3;
+        if (validToken)
         {
             var (jwt, ex) = tokenService.DecodeToken(token);
             if (ex != null) throw ex;
 
             var ap1 = App.FindByName(jwt?.Subject);
-            if (appId.IsNullOrEmpty()) appId = ap1?.Name;
+            if (ap1 == null || !ap1.Enable) throw new ApiException(ApiCode.Unauthorized, "无效应用令牌");
+
+            // 安全V-9：令牌主体必须与上报应用一致，防止冒名向其它应用灌数据
+            if (!appId.IsNullOrEmpty() && !appId.EqualIgnoreCase(ap1.Name))
+                throw new ApiException(ApiCode.Forbidden, $"令牌主体[{ap1.Name}]与上报应用[{appId}]不一致！");
+
+            if (appId.IsNullOrEmpty()) appId = ap1.Name;
             if (clientId.IsNullOrEmpty()) clientId = jwt.Id;
 
             ap = ap1;
         }
+        // 匿名上报仅用于多级级联（下级StarServer转发）或未配置密钥的极简SDK，默认关闭（安全V-9）
+        else if (!setting.AnonymousReport)
+            throw new ApiException(ApiCode.Unauthorized, "未提供有效令牌，禁止匿名上报！可在StarServer设置AnonymousReport开启多级级联");
 
         //ap = _tokenService.Authorize(appId, null, set.AutoRegister);
         ap ??= App.FindByName(model.AppId);

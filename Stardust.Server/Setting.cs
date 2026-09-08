@@ -177,6 +177,10 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     /// <summary>限流次数。每IP每分钟允许访问次数，默认60</summary>
     [Description("限流次数。每IP每分钟允许访问次数，默认60")]
     public Int32 RateLimitTimes { get; set; } = 60;
+
+    /// <summary>允许匿名埋点上报。多级级联（下级StarServer转发）或未配置密钥的极简SDK需要，默认false（安全）</summary>
+    [Description("允许匿名埋点上报。多级级联或极简SDK需要，默认false（安全）")]
+    public Boolean AnonymousReport { get; set; }
     #endregion
 
     #region 方法
