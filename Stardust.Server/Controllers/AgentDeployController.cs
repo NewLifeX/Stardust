@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Log;
+using NewLife.Remoting;
 using NewLife.Remoting.Extensions;
+using NewLife.Remoting.Services;
+using Stardust.Data;
 using Stardust.Models;
 using Stardust.Server.Services;
 
@@ -10,14 +13,40 @@ namespace Stardust.Server.Controllers;
 /// <summary>StarAgent远程部署服务</summary>
 [ApiFilter]
 [Route("[controller]/[action]")]
-public class AgentDeployController(AgentDeployService deployService, ITracer tracer) : ControllerBase
+public class AgentDeployController(AgentDeployService deployService, ITokenService tokenService, ITracer tracer) : ControllerBase
 {
+    /// <summary>验证调用方。远程部署把服务器当作SSH跳板，仅允许已配置密钥且具控制权的管理应用（如StarWeb）调用</summary>
+    /// <returns>通过校验的应用</returns>
+    private App Valid()
+    {
+        var token = ApiFilterAttribute.GetToken(HttpContext);
+        if (token.IsNullOrEmpty()) throw new ApiException(ApiCode.Unauthorized, "未提供令牌");
+
+        var (jwt, ex) = tokenService.DecodeToken(token);
+        if (ex != null) throw ex;
+
+        var app = App.FindByName(jwt?.Subject);
+        if (app == null || !app.Enable) throw new ApiException(ApiCode.Unauthorized, "无效应用令牌");
+
+        // 空密钥应用可被匿名冒用（如种子StarWeb），禁止使用远程部署等高危能力
+        if (app.Secret.IsNullOrEmpty())
+            throw new ApiException(ApiCode.Forbidden, $"[{app}]未配置密钥，禁止远程部署！请在注册中心为该应用设置Secret");
+
+        // 仅具控制权的管理应用（配置了AllowControlNodes）可远程部署
+        if (app.AllowControlNodes.IsNullOrEmpty())
+            throw new ApiException(ApiCode.Forbidden, $"[{app}]无控制权限，禁止远程部署！");
+
+        return app;
+    }
+
     /// <summary>执行远程部署</summary>
     /// <param name="model">部署参数</param>
     /// <returns>部署结果</returns>
     [HttpPost]
     public List<AgentDeployResult> Deploy([FromBody] AgentDeployModel model)
     {
+        Valid();
+
         using var span = tracer?.NewSpan("AgentDeploy-Deploy", model);
 
         try
@@ -50,6 +79,8 @@ public class AgentDeployController(AgentDeployService deployService, ITracer tra
     [HttpPost]
     public Object TestConnection(String host, Int32 port, String userName, String password)
     {
+        Valid();
+
         if (host.IsNullOrEmpty()) throw new ArgumentNullException(nameof(host));
         if (userName.IsNullOrEmpty()) throw new ArgumentNullException(nameof(userName));
         if (password.IsNullOrEmpty()) throw new ArgumentNullException(nameof(password));
