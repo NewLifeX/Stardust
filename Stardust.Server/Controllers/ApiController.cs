@@ -1,9 +1,13 @@
 ﻿using System.ComponentModel;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using NewLife;
 using NewLife.Reflection;
+using NewLife.Remoting;
 using NewLife.Remoting.Extensions;
 
 namespace Stardust.Server.Controllers;
@@ -47,7 +51,10 @@ public class ApiController : ControllerBase
             State = state,
         };
 
-        return rs;
+        // 安全V-13：公网来源仅返回健康信息，版本/编译/OS/端口等指纹仅内网可见
+        if (IsIntranet(HttpContext)) return rs;
+
+        return new { Name = asmx?.Name, asmx?.Title, Time = DateTime.Now, State = state };
     }
 
     /// <summary>获取所有接口信息</summary>
@@ -56,6 +63,9 @@ public class ApiController : ControllerBase
     [HttpGet]
     public IList<String> All()
     {
+        // 安全V-13：接口枚举仅内网可见，防止公网侦察接口面
+        if (!IsIntranet(HttpContext)) throw new ApiException(ApiCode.Forbidden, "仅内网可访问接口列表");
+
         var set = new List<EndpointDataSource>();
         var eps = new List<String>();
         foreach (var item in _sources)
@@ -95,4 +105,45 @@ public class ApiController : ControllerBase
 
         return eps;
     }
+
+    #region 辅助
+    /// <summary>是否内网来源。优先代理头，否则按私网网段判断</summary>
+    /// <param name="context">HTTP上下文</param>
+    private static Boolean IsIntranet(HttpContext context)
+    {
+        var ip = GetClientIP(context);
+        return ip.IsNullOrEmpty() || IsPrivate(ip);
+    }
+
+    /// <summary>获取客户端IP。优先取 X-Forwarded-For / X-Real-IP（反代场景），否则直连地址</summary>
+    private static String GetClientIP(HttpContext context)
+    {
+        var fwd = context.Request.Headers["X-Forwarded-For"].ToString();
+        if (!fwd.IsNullOrEmpty())
+        {
+            var p = fwd.IndexOf(',');
+            if (p > 0) fwd = fwd[..p];
+            return fwd.Trim();
+        }
+
+        var real = context.Request.Headers["X-Real-IP"].ToString();
+        if (!real.IsNullOrEmpty()) return real.Trim();
+
+        return context.Connection.RemoteIpAddress + "";
+    }
+
+    /// <summary>判断是否为内网/回环地址</summary>
+    private static Boolean IsPrivate(String ip)
+    {
+        if (!IPAddress.TryParse(ip, out var addr)) return false;
+        if (IPAddress.IsLoopback(addr)) return true;
+        if (addr.AddressFamily == AddressFamily.InterNetworkV6) return addr.IsIPv6LinkLocal || addr.IsIPv6SiteLocal || addr.IsIPv6Multicast;
+
+        var b = addr.GetAddressBytes();
+        return b[0] == 10
+            || (b[0] == 172 && b[1] >= 16 && b[1] <= 31)
+            || (b[0] == 192 && b[1] == 168)
+            || (b[0] == 169 && b[1] == 254);
+    }
+    #endregion
 }
