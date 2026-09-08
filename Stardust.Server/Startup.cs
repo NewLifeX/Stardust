@@ -120,9 +120,14 @@ public class Startup
             //options.JsonSerializerOptions.Encoder = JavaScriptEncoder.Create(UnicodeRanges.All);
         });
 
+        // CORS。默认允许任意来源（兼容浏览器端直接接入）；配置 CorsOrigins 后仅允许白名单来源（安全V-15）
         services.AddCors(options => options.AddPolicy("star_cors", builder =>
         {
-            builder.AllowAnyOrigin().AllowAnyHeader();
+            var corsOrigins = set.CorsOrigins;
+            if (corsOrigins.IsNullOrEmpty())
+                builder.AllowAnyOrigin().AllowAnyHeader();
+            else
+                builder.WithOrigins(corsOrigins.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)).AllowAnyHeader();
         }));
 
         // 后台服务。数据保留，定时删除过期数据

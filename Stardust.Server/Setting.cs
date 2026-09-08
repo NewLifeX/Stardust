@@ -181,6 +181,10 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     /// <summary>允许匿名埋点上报。多级级联（下级StarServer转发）或未配置密钥的极简SDK需要，默认false（安全）</summary>
     [Description("允许匿名埋点上报。多级级联或极简SDK需要，默认false（安全）")]
     public Boolean AnonymousReport { get; set; }
+
+    /// <summary>CORS允许的来源。逗号分隔，为空时允许任意来源（默认兼容），指定后仅允许白名单来源跨域访问（安全V-15）</summary>
+    [Description("CORS允许的来源。逗号分隔，为空时允许任意来源，指定后仅白名单跨域")]
+    public String CorsOrigins { get; set; }
     #endregion
 
     #region 方法
