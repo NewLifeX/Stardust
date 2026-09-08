@@ -34,6 +34,14 @@ public class AgentDeploySecurityTests
         return await client.PostAsync<LoginResponse>("app/login", new { AppId = appId, Secret = secret });
     }
 
+    private async Task<String> LoginAsync(String appId, String secret)
+    {
+        var client = _server.CreateClient();
+        var content = JsonContent.Create(new { AppId = appId, Secret = secret });
+        var response = await client.PostAsync("app/login", content);
+        return await response.Content.ReadAsStringAsync();
+    }
+
     private async Task<String> TestConnectionAsync(String token)
     {
         var client = _server.CreateClient();
@@ -63,19 +71,19 @@ public class AgentDeploySecurityTests
         Assert.Contains("令牌", body);
     }
 
-    [Fact(DisplayName = "空密钥应用令牌调用远程部署被拒绝")]
+    [Fact(DisplayName = "空密钥应用无法取得令牌调用远程部署（安全治理）")]
     public async Task EmptySecretApp_Rejected()
     {
+        // 安全治理：新建应用强制自动生成密钥，不再存在空密钥应用
         var app = CreateApp("v3e_" + Rand.NextString(8), "", "*");
         try
         {
-            var rs = await AppLoginAsync(app.Name, "");
-            Assert.NotNull(rs?.Token);
+            Assert.False(app.Secret.IsNullOrEmpty());
 
-            var body = await TestConnectionAsync(rs.Token);
-
+            // 不知道密钥，用空密钥登录拿不到令牌，无法调用远程部署（V-3门控前的第一道防线）
+            var body = await LoginAsync(app.Name, "");
             Assert.Contains("\"code\"", body);
-            Assert.Contains("密钥", body);
+            Assert.DoesNotContain("\"token\"", body);
         }
         finally
         {

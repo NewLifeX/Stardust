@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
@@ -168,6 +169,28 @@ public class AppLoginSecurityTests
             Assert.DoesNotContain("secret-rec-003", body, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("\"code\"", body, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain("\"token\"", body, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            app.Delete();
+        }
+    }
+
+    [Fact(DisplayName = "已存在应用开启允许重新注册后，正确密钥登录成功自动关闭开关")]
+    public async Task Login_ExistingApp_AllowReRegister_CorrectSecret_AutoClose()
+    {
+        var name = "sec_" + Rand.NextString(8);
+        var app = new App { Name = name, Secret = "secret-ok-acc", Enable = true, AllowReRegister = true };
+        app.Insert();
+        try
+        {
+            var body = await Login(name, "secret-ok-acc");
+
+            // 正确密钥登录成功并下发令牌
+            Assert.Contains("\"token\"", body, StringComparison.OrdinalIgnoreCase);
+
+            // 密钥配对成功，重注册窗口自动关闭（不再出现在允许重注册集合）
+            Assert.DoesNotContain(name, App.FindAllAllowReRegister().Select(e => e.Name));
         }
         finally
         {

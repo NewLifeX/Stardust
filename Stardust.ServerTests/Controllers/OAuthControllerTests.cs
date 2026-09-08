@@ -3,6 +3,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using NewLife.Remoting;
+using NewLife.Security;
 using NewLife.Web;
 using Stardust.Data;
 using Stardust.Server;
@@ -26,63 +27,79 @@ public class OAuthControllerTests
     [Fact(DisplayName = "OAuth密码模式颁发令牌")]
     public async Task Token_password()
     {
-        var app = App.FindByName("stone");
-        if (app != null)
+        // 安全治理：应用必须配置密钥，密码模式须携带与 Secret 匹配的密码
+        var name = "oau_" + Rand.NextString(8);
+        var app = new App { Name = name, Secret = "oau-secret", Enable = true };
+        app.Insert();
+        try
         {
-            app.Enable = true;
-            app.Update();
+            var model = new TokenInModel
+            {
+                grant_type = "password",
+                UserName = name,
+                Password = "oau-secret",
+            };
+
+            var client = _server.CreateClient();
+
+            var rs = await client.PostAsync<TokenModel>("oauth/token", model);
+            Assert.NotNull(rs);
+            Assert.NotEmpty(rs.AccessToken);
+            Assert.NotEmpty(rs.RefreshToken);
+            Assert.Equal(7200, rs.ExpireIn);
+            Assert.Equal("JWT", rs.TokenType);
         }
-
-        var model = new TokenInModel
+        finally
         {
-            grant_type = "password",
-            UserName = "stone",
-        };
-
-        var client = _server.CreateClient();
-
-        var rs = await client.PostAsync<TokenModel>("oauth/token", model);
-        Assert.NotNull(rs);
-        Assert.NotEmpty(rs.AccessToken);
-        Assert.NotEmpty(rs.RefreshToken);
-        Assert.Equal(7200, rs.ExpireIn);
-        Assert.Equal("JWT", rs.TokenType);
+            app.Delete();
+        }
     }
 
     [Fact(DisplayName = "OAuth刷新令牌模式续期")]
     public async Task Token_refresh_token()
     {
-        var client = _server.CreateClient();
-
-        var refresh_token = "";
+        var name = "oau_" + Rand.NextString(8);
+        var app = new App { Name = name, Secret = "oau-secret", Enable = true };
+        app.Insert();
+        try
         {
-            var model = new TokenInModel
+            var client = _server.CreateClient();
+
+            var refresh_token = "";
             {
-                grant_type = "password",
-                UserName = "stone",
-            };
+                var model = new TokenInModel
+                {
+                    grant_type = "password",
+                    UserName = name,
+                    Password = "oau-secret",
+                };
 
-            var rs = await client.PostAsync<TokenModel>("oauth/token", model);
-            Assert.NotNull(rs);
-            Assert.NotEmpty(rs.RefreshToken);
+                var rs = await client.PostAsync<TokenModel>("oauth/token", model);
+                Assert.NotNull(rs);
+                Assert.NotEmpty(rs.RefreshToken);
 
-            refresh_token = rs.RefreshToken;
+                refresh_token = rs.RefreshToken;
+            }
+
+            // 刷新令牌
+            {
+                var model2 = new TokenInModel
+                {
+                    grant_type = "refresh_token",
+                    refresh_token = refresh_token,
+                };
+
+                var rs2 = await client.PostAsync<TokenModel>("oauth/token", model2);
+                Assert.NotNull(rs2);
+                Assert.NotEmpty(rs2.AccessToken);
+                Assert.NotEmpty(rs2.RefreshToken);
+                Assert.Equal(7200, rs2.ExpireIn);
+                Assert.Equal("JWT", rs2.TokenType);
+            }
         }
-
-        // 刷新令牌
+        finally
         {
-            var model2 = new TokenInModel
-            {
-                grant_type = "refresh_token",
-                refresh_token = refresh_token,
-            };
-
-            var rs2 = await client.PostAsync<TokenModel>("oauth/token", model2);
-            Assert.NotNull(rs2);
-            Assert.NotEmpty(rs2.AccessToken);
-            Assert.NotEmpty(rs2.RefreshToken);
-            Assert.Equal(7200, rs2.ExpireIn);
-            Assert.Equal("JWT", rs2.TokenType);
+            app.Delete();
         }
     }
 

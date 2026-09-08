@@ -86,8 +86,12 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
         // 检查应用有效性
         if (!app.Enable) throw new ApiException(ApiCode.Forbidden, $"应用[{app.Name}]已禁用！");
 
-        // 未设置密钥，直接通过
-        if (app.Secret.IsNullOrEmpty()) return true;
+        // 安全治理：禁止空密钥应用匿名登录（认证绕过）。空密钥应用需在注册中心设置密钥，或临时开启"允许重新注册"自动收敛
+        if (app.Secret.IsNullOrEmpty())
+        {
+            app.WriteHistory("应用鉴权", false, "空密钥应用禁止登录！请在注册中心为该应用设置Secret或开启允许重新注册", null, ip, context.ClientId);
+            return false;
+        }
         if (app.Secret.EqualIgnoreCase(request.Secret)) return true;
 
         if (_setting.SaltTime > 0 && _passwordProvider is SaltPasswordProvider saltProvider)
@@ -191,6 +195,10 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
         app.LastLogin = DateTime.Now;
         app.LastIP = ip;
         app.UpdateIP = ip;
+
+        // 密钥配对成功，自动关闭重注册窗口，防止长期开启被冒用
+        if (app.AllowReRegister && !app.Secret.IsNullOrEmpty()) app.AllowReRegister = false;
+
         app.Update();
 
         context.Online = GetOnline(context) ?? CreateOnline(context);

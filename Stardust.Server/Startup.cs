@@ -141,6 +141,7 @@ public class Startup
         services.AddHostedService<AlarmService>();
         services.AddHostedService<DotNetSyncService>();
         services.AddHostedService<NodeStatService>();
+        services.AddHostedService<AppSecurityService>();
 
         // 注入Remoting服务
         services.AddRemoting(set);

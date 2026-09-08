@@ -9,6 +9,7 @@ using NewLife.Data;
 using NewLife.Log;
 using NewLife.Reflection;
 using NewLife.Remoting.Models;
+using NewLife.Security;
 using Stardust.Data.Deployment;
 using Stardust.Monitors;
 using XCode;
@@ -47,6 +48,9 @@ public partial class App : Entity<App>, IDeviceModel2, ILogProvider
 
         // 这里验证参数范围，建议抛出参数异常，指定参数名，前端用户界面可以捕获参数异常并聚焦到对应的参数输入框
         if (Name.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Name), "名称不能为空！");
+
+        // 安全治理：强制应用密钥非空，空密钥=匿名接入=认证绕过。新建或补录自动生成
+        if (Secret.IsNullOrEmpty()) Secret = Rand.NextString(16);
 
         if (isNew && !Dirtys[__.AutoActive]) AutoActive = true;
         if (Period == 0) Period = 60;
@@ -224,6 +228,14 @@ public partial class App : Entity<App>, IDeviceModel2, ILogProvider
 
         return FindAll(_.ProjectId == projectId);
     }
+
+    /// <summary>查找未配置密钥的应用。空密钥=匿名接入弱状态，由应用密钥安全服务自动补密钥（自愈）</summary>
+    /// <returns>实体列表</returns>
+    public static IList<App> FindAllEmptySecret() => FindAll(_.Secret.IsNullOrEmpty());
+
+    /// <summary>查找开启允许重新注册的应用。用于兜底关闭长期开启的重注册窗口，防止身份冒用</summary>
+    /// <returns>实体列表</returns>
+    public static IList<App> FindAllAllowReRegister() => FindAll(_.AllowReRegister == true);
     #endregion
 
     #region 高级查询

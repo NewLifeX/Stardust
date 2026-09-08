@@ -35,6 +35,14 @@ public class NodeCommandSecurityTests
         return await client.PostAsync<LoginResponse>("app/login", new { AppId = appId, Secret = secret });
     }
 
+    private async Task<String> LoginAsync(String appId, String secret)
+    {
+        var client = _server.CreateClient();
+        var content = JsonContent.Create(new { AppId = appId, Secret = secret });
+        var response = await client.PostAsync("app/login", content);
+        return await response.Content.ReadAsStringAsync();
+    }
+
     private async Task<String> SendNodeCommandAsync(String token, String nodeCode)
     {
         var client = _server.CreateClient();
@@ -46,31 +54,26 @@ public class NodeCommandSecurityTests
         return await response.Content.ReadAsStringAsync();
     }
 
-    [Fact(DisplayName = "空密钥应用即使配置*控制权也不能下发节点命令")]
-    public async Task EmptySecretApp_CannotSendNodeCommand()
+    [Fact(DisplayName = "空密钥应用禁止登录，无法取得令牌下发节点命令（安全治理）")]
+    public async Task EmptySecretApp_CannotLogin()
     {
         var appName = "v2e_" + Rand.NextString(8);
+
+        // 安全治理：新建应用强制自动生成密钥，不再存在空密钥应用
         var app = new App { Name = appName, Enable = true, AllowControlNodes = "*" };
         app.Insert();
-
-        var node = new Node { Code = "n_" + Rand.NextString(8), Name = "v2node", Enable = true };
-        node.Insert();
         try
         {
-            // 空密钥应用可直接登录拿到令牌（模拟种子 StarWeb 被匿名冒用）
-            var rs = await AppLoginAsync(appName, "");
-            Assert.NotNull(rs?.Token);
+            Assert.False(app.Secret.IsNullOrEmpty());
 
-            var body = await SendNodeCommandAsync(rs.Token, node.Code);
-
-            // 应被拒绝：返回业务错误且提示未配置密钥
+            // 不知道密钥，用空密钥登录拿不到令牌，更无法下发节点命令（V-2门控前的第一道防线）
+            var body = await LoginAsync(appName, "");
             Assert.Contains("\"code\"", body);
-            Assert.Contains("密钥", body);
+            Assert.DoesNotContain("\"token\"", body);
         }
         finally
         {
             app.Delete();
-            node.Delete();
         }
     }
 
