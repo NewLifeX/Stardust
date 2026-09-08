@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NewLife;
+using NewLife.Remoting;
 using NewLife.Remoting.Extensions;
 using NewLife.Remoting.Services;
 using Stardust.Data;
@@ -127,7 +128,13 @@ public class ConfigController(ConfigService configService, ITokenService tokenSe
             if (ex != null) throw ex;
 
             var ap1 = App.FindByName(jwt?.Subject);
-            if (appId.IsNullOrEmpty()) appId = ap1?.Name;
+            if (ap1 == null) throw new ApiException(ApiCode.Unauthorized, "无效应用令牌");
+
+            // 安全V-5：令牌主体必须与目标应用一致，禁止跨应用读写配置
+            if (!appId.IsNullOrEmpty() && !appId.EqualIgnoreCase(ap1.Name))
+                throw new ApiException(ApiCode.Forbidden, $"令牌主体[{ap1.Name}]与目标应用[{appId}]不一致，禁止越权访问配置！");
+
+            if (appId.IsNullOrEmpty()) appId = ap1.Name;
             if (clientId.IsNullOrEmpty()) clientId = jwt.Id;
 
             app = ap1;
