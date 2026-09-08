@@ -40,17 +40,18 @@ public class ApiSecurityTests
         Assert.Contains("\"code\"", body);
     }
 
-    [Fact(DisplayName = "公网来源访问/api仅返回健康信息，不含版本/OS指纹")]
+    [Fact(DisplayName = "公网来源访问/api仅返回探针标识，不含OS/编译/端口/主机指纹")]
     public async Task PublicIP_Api_NoFingerprint()
     {
         var body = await GetAsync("/api", "8.8.8.8");
         var lower = body.ToLower();
 
-        // 公网来源仅返回健康信息，不得含版本/编译/OS/端口等指纹键
-        Assert.False(lower.Contains("\"fileversion\""), "不应含版本信息: " + body);
+        // 探针保留应用标识（name/title/version）便于多域名/反代识别，隐藏环境指纹
+        Assert.True(lower.Contains("\"name\"") && lower.Contains("\"version\""), "应含探针标识: " + body);
         Assert.False(lower.Contains("\"compile\""), "不应含编译时间: " + body);
         Assert.False(lower.Contains("\"os\""), "不应含OS: " + body);
         Assert.False(lower.Contains("\"port\""), "不应含端口: " + body);
+        Assert.False(lower.Contains("\"remote\""), "不应含远端地址: " + body);
         Assert.True(lower.Contains("\"time\""), "应含健康时间: " + body);
     }
 

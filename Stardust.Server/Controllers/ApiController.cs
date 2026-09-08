@@ -51,10 +51,10 @@ public class ApiController : ControllerBase
             State = state,
         };
 
-        // 安全V-13：公网来源仅返回健康信息，版本/编译/OS/端口等指纹仅内网可见
+        // 公网健康探针：保留应用标识(name/title/version)便于域名/反代识别应用，隐藏OS/编译/端口/主机等环境指纹
         if (IsIntranet(HttpContext)) return rs;
 
-        return new { Name = asmx?.Name, asmx?.Title, Time = DateTime.Now, State = state };
+        return new { Name = asmx?.Name, asmx?.Title, Version = asmx?.FileVersion, Time = DateTime.Now, State = state };
     }
 
     /// <summary>获取所有接口信息</summary>
