@@ -80,10 +80,13 @@ public partial class App : Entity<App>, IDeviceModel2, ILogProvider
     {
         if (Meta.Count > 0) return;
 
+        // 种子应用开启"允许重新注册"：全新库首次登录时本地实例（StarServer/StarWeb）密钥未知，
+        // 需借窗口自动收敛拿到密钥；首登成功后 OnLogin 自动关窗，未收敛的窗口由 AppSecurityService 兜底清理
         var entity = new App
         {
             Name = "StarServer",
             Enable = true,
+            AllowReRegister = true,
         };
         entity.Insert();
 
@@ -91,6 +94,7 @@ public partial class App : Entity<App>, IDeviceModel2, ILogProvider
         {
             Name = "StarWeb",
             Enable = true,
+            AllowReRegister = true,
             AllowControlNodes = "*",
         };
         entity.Insert();
