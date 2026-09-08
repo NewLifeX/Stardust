@@ -59,6 +59,10 @@ public class DeployController(NodeService nodeService, DeployService deployServi
                 inf.Service.Mode = (DeployMode)DeployModesExtensions.Convert(inf.Service.Mode);
             }
 
+            // 安全V-11：下发的部署包下载URL附带短时令牌
+            if (!inf.Url.IsNullOrEmpty())
+                inf.Url = DownloadTokenHelper.AppendToken(inf.Url, StarServerSetting.Current.AttachmentTokenExpire);
+
             rs.Add(inf);
             WriteHistory(app.Id, nameof(GetAll), true, inf.ToJson());
         }

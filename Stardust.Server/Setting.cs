@@ -185,6 +185,18 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     /// <summary>CORS允许的来源。逗号分隔，为空时允许任意来源（默认兼容），指定后仅允许白名单来源跨域访问（安全V-15）</summary>
     [Description("CORS允许的来源。逗号分隔，为空时允许任意来源，指定后仅白名单跨域")]
     public String CorsOrigins { get; set; }
+
+    /// <summary>附件下载鉴权。是否校验 /cube/file 附件下载身份/令牌（安全V-11），默认false兼容存量，开启后需配合下载令牌签发链路</summary>
+    [Description("附件下载鉴权。是否校验/cube/file附件下载令牌，默认false")]
+    public Boolean ValidateAttachment { get; set; }
+
+    /// <summary>免登录公开附件分类。逗号分隔，ValidateAttachment=true时生效，命中分类的附件可匿名下载</summary>
+    [Description("免登录公开附件分类。逗号分隔，命中可匿名下载")]
+    public String PublicAttachmentCategories { get; set; }
+
+    /// <summary>附件下载令牌有效期。秒，默认600</summary>
+    [Description("附件下载令牌有效期。秒，默认600")]
+    public Int32 AttachmentTokenExpire { get; set; } = 600;
     #endregion
 
     #region 方法

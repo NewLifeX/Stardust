@@ -1,10 +1,13 @@
 ﻿using System.ComponentModel;
+using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Remoting;
+using NewLife.Remoting.Extensions;
 using Stardust.Data.Deployment;
 using Stardust.Extensions;
+using Stardust.Server.Services;
 using Stardust.Storages;
 
 namespace Stardust.Server.Controllers;
@@ -12,10 +15,29 @@ namespace Stardust.Server.Controllers;
 /// <summary>魔方前端数据接口</summary>
 [DisplayName("数据接口")]
 [ApiController]
+[ApiFilter]
 [Route("{controller}/{action}")]
 public class CubeController(IFileStorage fileStorage, StarServerSetting setting) : ControllerBase
 {
     #region 附件
+    /// <summary>校验附件访问。ValidateAttachment开启时，公开分类可匿名，其余需携带短时下载令牌（安全V-11）</summary>
+    /// <param name="att">附件</param>
+    private void CheckAttachment(Attachment att)
+    {
+        if (!setting.ValidateAttachment) return;
+
+        var cat = att.Category;
+        if (!cat.IsNullOrEmpty())
+        {
+            var cats = (setting.PublicAttachmentCategories + "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (cats.Any(e => e.EqualIgnoreCase(cat))) return;
+        }
+
+        var token = HttpContext.Request.Query["token"] + "";
+        if (!DownloadTokenHelper.Valid(att.Id, token))
+            throw new ApiException(ApiCode.Unauthorized, "未授权下载附件，或下载令牌无效/已过期！");
+    }
+
     private async Task<(Attachment att, String filePath)> GetFile(String id)
     {
         if (id.IsNullOrEmpty()) throw new ApiException(ApiCode.NotFound, "非法附件编号");
@@ -26,6 +48,9 @@ public class CubeController(IFileStorage fileStorage, StarServerSetting setting)
 
         var att = Attachment.FindById(id.ToLong());
         if (att == null) throw new ApiException(ApiCode.NotFound, "找不到附件信息");
+
+        // 安全V-11：附件下载鉴权（公开分类 / 短时下载令牌）
+        CheckAttachment(att);
 
         //var set = StarServerSetting.Current;
 

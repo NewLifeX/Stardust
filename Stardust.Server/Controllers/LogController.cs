@@ -9,7 +9,7 @@ namespace Stardust.Server.Controllers;
 [ApiController]
 [Route("[controller]")]
 /// <summary>控制器名</summary>
-public class LogController(StarServerSetting setting) : ControllerBase
+public class LogController() : ControllerBase
 {
     /// <summary>健康检查</summary>
     /// <returns>控制器标识</returns>

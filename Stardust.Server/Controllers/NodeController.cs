@@ -244,6 +244,10 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
             info.Source = new Uri(new Uri(uri), info.Source) + "";
         }
 
+        // 安全V-11：升级包下载URL附带短时令牌
+        if (info != null && !info.Source.IsNullOrEmpty())
+            info.Source = DownloadTokenHelper.AppendToken(info.Source, StarServerSetting.Current.AttachmentTokenExpire);
+
         return info!;
     }
     #endregion
