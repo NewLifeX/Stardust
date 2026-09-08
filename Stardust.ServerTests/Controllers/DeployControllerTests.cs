@@ -7,6 +7,7 @@ using NewLife.Remoting;
 using NewLife.Remoting.Models;
 using NewLife.Serialization;
 using Stardust.Data.Deployment;
+using Stardust.Data.Nodes;
 using Stardust.Server;
 using Xunit;
 
@@ -38,7 +39,7 @@ public class DeployControllerTests
         return content;
     }
 
-    private async Task<String> LoginAndGetTokenAsync()
+    private async Task<(String token, Node node)> LoginAndGetNodeAsync()
     {
         var client = _server.CreateClient();
         var rs = await client.PostAsync<LoginResponse>("node/login", new
@@ -51,8 +52,15 @@ public class DeployControllerTests
             },
         });
         Assert.NotNull(rs?.Token);
-        return rs.Token;
+        var node = Node.FindByCode(rs?.Code);
+        Assert.NotNull(node);
+        return (rs.Token, node);
     }
+
+    private async Task<String> LoginAndGetTokenAsync() => (await LoginAndGetNodeAsync()).token;
+
+    /// <summary>把节点登记为该部署集的编译节点，使上传构建产物通过授权（安全V-4）</summary>
+    private static void AddBuildNode(AppDeploy app, Node node) => new AppBuildNode { DeployId = app.Id, NodeId = node.ID, Enable = true }.Insert();
 
     [Fact(DisplayName = "无Token返回401认证失败")]
     public async Task UploadBuildFile_NoToken_Returns401()
@@ -186,7 +194,9 @@ public class DeployControllerTests
 
         try
         {
-            var token = await LoginAndGetTokenAsync();
+            // 登录节点并登记为该部署集的编译节点，否则上传会被拒绝（安全V-4）
+            var (token, node) = await LoginAndGetNodeAsync();
+            AddBuildNode(app, node);
             var client = _server.CreateClient();
             client.DefaultRequestHeaders.Add("X-Token", token);
 
@@ -245,8 +255,10 @@ public class DeployControllerTests
                 $"预期 401 认证失败，实际：{response.StatusCode} - {body}");
 
             // Step 2: 模拟客户端重新登录获取新 token
-            var newToken = await LoginAndGetTokenAsync();
+            var (newToken, node2) = await LoginAndGetNodeAsync();
             Assert.NotEqual("invalid_expired_token_xxx", newToken);
+            // 新节点也需登记为该部署集的编译节点才能上传（安全V-4）
+            AddBuildNode(app, node2);
 
             // Step 3: 用新 token 重试上传，应成功
             var client2 = _server.CreateClient();

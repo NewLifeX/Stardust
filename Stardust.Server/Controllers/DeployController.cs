@@ -1,4 +1,5 @@
-﻿using System.Runtime.Intrinsics.Arm;
+﻿using System.Linq;
+using System.Runtime.Intrinsics.Arm;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Log;
@@ -205,6 +206,14 @@ public class DeployController(NodeService nodeService, DeployService deployServi
         // 查找应用部署集
         var app = AppDeploy.FindByName(deployName);
         if (app == null) throw new ApiException(404, $"应用部署集[{deployName}]不存在");
+
+        // 安全V-4：仅允许该发布集的编译/部署关联节点上传构建产物，防止任意已注册节点覆盖升级包（供应链投毒）
+        var nodeId = node?.ID ?? 0;
+        if (nodeId <= 0) throw new ApiException(ApiCode.Forbidden, "无法识别上传节点");
+        var buildNodes = AppBuildNode.FindAll(AppBuildNode._.DeployId == app.Id);
+        var deployNodes = AppDeployNode.FindAllByDeployId(app.Id);
+        if (!buildNodes.Any(e => e.Enable && e.NodeId == nodeId) && !deployNodes.Any(e => e.Enable && e.NodeId == nodeId))
+            throw new ApiException(ApiCode.Forbidden, $"节点[{node?.Name}]不属于部署集[{app.Name}]的编译/部署节点，禁止上传构建产物！请在部署集中配置该节点");
 
         var set = StarServerSetting.Current;
 
