@@ -55,6 +55,8 @@ public class LocalStarClient
         {
             Name = "StarAgent",
             Timeout = 3_000,
+            // 本地短促RPC无需进入全局追踪。避免本机未运行代理时，探测失败产生大量无意义错误span
+            Tracer = null,
             Log = Log,
         };
 
@@ -83,14 +85,10 @@ public class LocalStarClient
         //if (!IPAddress.Any.CheckPort(NetType.Udp, 5500) &&
         //    !IPAddress.Loopback.CheckPort(NetType.Udp, 5500) &&
         //    !IPAddress.IPv6Loopback.CheckPort(NetType.Udp, 5500)) return null;
-        try
-        {
-            // 某些情况下检查端口占用会抛出异常，原因未知
-            var gp = IPGlobalProperties.GetIPGlobalProperties();
-            var eps = gp.GetActiveUdpListeners();
-            if (eps.Length > 0 && !eps.Any(ep => ep.Port == Port)) return null;
-        }
-        catch { }
+
+        // 本机没有任何进程监听星尘代理端口时，说明代理未运行，直接返回，避免盲目UDP探测等待3秒超时
+        // 旧版曾致客户机每日十余万 rpc:Info 超时错误span上报，污染全局监控指标（见 Doc/生产环境分析 P1）
+        if (!HasListener(Port)) return null;
 
         var task = TaskEx.Run(GetInfoAsync);
         return task.Wait(1000) ? task.Result : null;
@@ -100,6 +98,9 @@ public class LocalStarClient
     /// <returns></returns>
     public async Task<AgentInfo?> GetInfoAsync()
     {
+        // 本机没有监听星尘代理端口时直接返回，避免UDP探测等待3秒超时
+        if (!HasListener(Port)) return null;
+
         Init();
 
         try
@@ -110,9 +111,29 @@ public class LocalStarClient
         {
             return null;
         }
+        catch (Exception ex)
+        {
+            // 本地探测失败视为本机未安装或未启动星尘代理，属正常状态，静默返回null
+            Log?.Debug("本地探测失败：{0}", ex.Message);
+            return null;
+        }
+    }
+
+    /// <summary>本机是否有进程监听指定UDP端口</summary>
+    /// <param name="port">端口</param>
+    /// <remarks>探测本地星尘代理前先判断端口是否监听，未监听则直接放弃，避免等待3秒超时</remarks>
+    /// <returns>存在监听返回true；无法判断时保守返回true</returns>
+    private static Boolean HasListener(Int32 port)
+    {
+        try
+        {
+            var eps = IPGlobalProperties.GetIPGlobalProperties().GetActiveUdpListeners();
+            return eps.Any(ep => ep.Port == port);
+        }
         catch
         {
-            throw;
+            // 某些情况下检查端口占用会抛出异常，原因未知，此时保守放行探测
+            return true;
         }
     }
 
