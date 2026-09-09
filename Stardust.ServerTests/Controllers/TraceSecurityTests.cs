@@ -149,4 +149,43 @@ public class TraceSecurityTests
             app.Delete();
         }
     }
+
+    [Fact(DisplayName = "SetHotApp 匿名调用被拒绝")]
+    public async Task SetHotApp_Anonymous_Rejected()
+    {
+        var body = await SetHotAppAsync("");
+
+        Assert.Contains("\"code\"", body);
+        Assert.Contains("无权", body);
+    }
+
+    [Fact(DisplayName = "SetHotApp 非平台管理端应用被拒绝")]
+    public async Task SetHotApp_NonManager_Rejected()
+    {
+        var app = CreateApp("sht_" + Rand.NextString(8), "sht-secret");
+        try
+        {
+            var token = await AppLoginTokenAsync(app.Name, "sht-secret");
+
+            var body = await SetHotAppAsync(token);
+
+            Assert.Contains("\"code\"", body);
+            Assert.Contains("无权", body);
+        }
+        finally
+        {
+            AppTracer.FindByName(app.Name)?.Delete();
+            app.Delete();
+        }
+    }
+
+    private async Task<String> SetHotAppAsync(String token)
+    {
+        var client = _server.CreateClient();
+        if (!token.IsNullOrEmpty())
+            client.DefaultRequestHeaders.Add("X-Token", token);
+
+        var response = await client.PostAsync("/Trace/SetHotApp", JsonContent.Create(1));
+        return await response.Content.ReadAsStringAsync();
+    }
 }
