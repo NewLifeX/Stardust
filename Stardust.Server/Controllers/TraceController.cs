@@ -175,7 +175,9 @@ public class TraceController(ITraceStatService stat, IAppDayStatService appStat,
             }
 
             if (app.AppId == 0) app.AppId = ap.Id;
-            if (app.DisplayName.IsNullOrEmpty() || app.DisplayName == app.Name) app.DisplayName = ap.DisplayName;
+            // 显示名跟随注册应用：应用改名/升级后监控身份同步，避免历史名残留造成监控身份碎片化
+            if (!ap.DisplayName.IsNullOrEmpty() && app.DisplayName != ap.DisplayName)
+                app.DisplayName = ap.DisplayName;
             app.Update();
         }
 

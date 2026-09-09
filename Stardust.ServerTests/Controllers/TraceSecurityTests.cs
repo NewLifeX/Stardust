@@ -119,4 +119,34 @@ public class TraceSecurityTests
             app.Delete();
         }
     }
+
+    [Fact(DisplayName = "注册应用改名后，监控身份显示名跟随同步")]
+    public async Task AppRename_TracerDisplayNameFollows()
+    {
+        var name = "trf_" + Rand.NextString(8);
+        var app = CreateApp(name, "trf-secret");
+        try
+        {
+            var token = await AppLoginTokenAsync(name, "trf-secret");
+
+            // 注册应用设置显示名
+            app.DisplayName = "旧名字";
+            app.Update();
+
+            await ReportAsync(name, token);
+            Assert.Equal("旧名字", AppTracer.FindByName(name)?.DisplayName);
+
+            // 注册应用改名后再次上报，监控身份应跟随新名字
+            app.DisplayName = "新名字";
+            app.Update();
+
+            await ReportAsync(name, token);
+            Assert.Equal("新名字", AppTracer.FindByName(name)?.DisplayName);
+        }
+        finally
+        {
+            AppTracer.FindByName(name)?.Delete();
+            app.Delete();
+        }
+    }
 }
