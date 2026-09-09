@@ -363,6 +363,14 @@ public class TraceStatService : ITraceStatService
         // 每 DayStatPeriod 节流一次
         _nextDayStat = now.AddSeconds(DayStatPeriod);
 
+        // 清理过期的热门应用窗口，防止字典无限增长
+        // IsHotApp 仅在该应用仍有数据上报时才被调用，停报应用需在此统一回收
+        foreach (var item in _hotApps)
+        {
+            if (now - item.Value > TimeSpan.FromSeconds(HotWindow))
+                _hotApps.TryRemove(item.Key, out _);
+        }
+
         var today = now.Date;
         foreach (var item in _dayActive)
         {
@@ -378,7 +386,7 @@ public class TraceStatService : ITraceStatService
 
             if (date < today)
             {
-                // 历史日：补算最终值后收敛
+                // 历史日：由小时级统计全量聚合补算最终值后收敛移除
                 ProcessDay(appId, date);
                 _dayActive.TryRemove(item.Key, out _);
             }
@@ -387,11 +395,7 @@ public class TraceStatService : ITraceStatService
                 // 当天且近期活跃：重算一次，保证当日统计缓慢跟上
                 ProcessDay(appId, date);
             }
-            else
-            {
-                // 长期不活跃：移除登记，等下次上报再登记
-                _dayActive.TryRemove(item.Key, out _);
-            }
+            // 当天已不活跃：不再重算空转，但保留登记等待跨天后补算最终值，避免当日尾部数据缺失
         }
     }
 
