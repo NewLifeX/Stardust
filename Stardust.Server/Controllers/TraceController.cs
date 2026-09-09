@@ -165,39 +165,22 @@ public class TraceController(ITraceStatService stat, IAppDayStatService appStat,
         {
             if (ap.DisplayName.IsNullOrEmpty() || ap.DisplayName == ap.Name) ap.DisplayName = model.AppName;
 
-            var needSave = false;
-
             // 双向同步应用分类
             if (!ap.Category.IsNullOrEmpty())
-            {
-                if (app.Category != ap.Category)
-                {
-                    app.Category = ap.Category;
-                    needSave = true;
-                }
-            }
-            else if (!app.Category.IsNullOrEmpty() && ap.Category != app.Category)
+                app.Category = ap.Category;
+            else if (!app.Category.IsNullOrEmpty())
             {
                 ap.Category = app.Category;
                 ap.Update();
             }
 
-            if (app.AppId == 0)
-            {
-                app.AppId = ap.Id;
-                needSave = true;
-            }
+            if (app.AppId == 0) app.AppId = ap.Id;
             // 显示名跟随注册应用：应用改名/升级后监控身份同步，避免历史名残留造成监控身份碎片化
             if (!ap.DisplayName.IsNullOrEmpty() && app.DisplayName != ap.DisplayName)
-            {
                 app.DisplayName = ap.DisplayName;
-                needSave = true;
-            }
 
-            // 字段真实变化立即保存；否则按心跳节奏（每5分钟）刷新一次 UpdateTime
-            // 旧代码每次上报都Update，AppTracer表被高频写放大（每活跃应用1440次/天）
-            if (needSave || app.UpdateTime.AddMinutes(5) < DateTime.Now)
-                app.Update();
+            // XCode自带脏数据机制：无字段变化时Update自动短路且不改写UpdateTime，不产生SQL，无需手工节流
+            app.Update();
         }
 
         //var ip = HttpContext.GetUserHost();
