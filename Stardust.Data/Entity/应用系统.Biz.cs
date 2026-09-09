@@ -11,6 +11,7 @@ using NewLife.Reflection;
 using NewLife.Remoting.Models;
 using NewLife.Security;
 using Stardust.Data.Deployment;
+using Stardust.Models;
 using Stardust.Monitors;
 using XCode;
 using XCode.Cache;
@@ -80,13 +81,13 @@ public partial class App : Entity<App>, IDeviceModel2, ILogProvider
     {
         if (Meta.Count > 0) return;
 
-        // 种子应用开启"允许重新注册"：全新库首次登录时本地实例（StarServer/StarWeb）密钥未知，
+        // 种子应用开启"收敛窗口"重注册模式：全新库首次登录时本地实例（StarServer/StarWeb）密钥未知，
         // 需借窗口自动收敛拿到密钥；首登成功后 OnLogin 自动关窗，未收敛的窗口由 AppSecurityService 兜底清理
         var entity = new App
         {
             Name = "StarServer",
             Enable = true,
-            AllowReRegister = true,
+            ReRegister = ReRegisterModes.Auto,
         };
         entity.Insert();
 
@@ -94,7 +95,7 @@ public partial class App : Entity<App>, IDeviceModel2, ILogProvider
         {
             Name = "StarWeb",
             Enable = true,
-            AllowReRegister = true,
+            ReRegister = ReRegisterModes.Auto,
             AllowControlNodes = "*",
         };
         entity.Insert();
@@ -237,9 +238,9 @@ public partial class App : Entity<App>, IDeviceModel2, ILogProvider
     /// <returns>实体列表</returns>
     public static IList<App> FindAllEmptySecret() => FindAll(_.Secret.IsNullOrEmpty());
 
-    /// <summary>查找开启允许重新注册的应用。用于兜底关闭长期开启的重注册窗口，防止身份冒用</summary>
+    /// <summary>查找处于收敛窗口模式（Auto）的应用。用于兜底关闭超时未收敛的窗口，防止身份冒用</summary>
     /// <returns>实体列表</returns>
-    public static IList<App> FindAllAllowReRegister() => FindAll(_.AllowReRegister == true);
+    public static IList<App> FindAllReRegisterWindow() => FindAll(_.ReRegister == ReRegisterModes.Auto);
     #endregion
 
     #region 高级查询

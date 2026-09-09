@@ -127,12 +127,15 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
             app = App.FindByName(name);
             if (app != null)
             {
-                // 仅当该应用显式开启"允许重新注册"开关（默认关）时，才兼容旧逻辑：
-                // 复用已存在身份并下发密钥，用于新增实例临时自动接入，接入完成后应立即关闭
-                if (!app.AllowReRegister)
-                    throw new ApiException(ApiCode.Forbidden, $"应用[{name}]已存在，禁止动态注册复用旧身份！请检查密钥或联系管理员；如需新增实例自动接入，请在应用上临时开启“允许重新注册”");
+                // 按重注册模式放行：Off=拒绝；Auto=收敛窗口；Trusted=可信接入（同项目节点/近期指纹）；Open=开放
+                var mode = app.ReRegister;
+                if (mode == ReRegisterModes.Off || (mode == ReRegisterModes.Trusted && !IsTrustedClient(app, request)))
+                    throw new ApiException(ApiCode.Forbidden, $"应用[{name}]已存在，禁止动态注册复用旧身份！请检查密钥或联系管理员；如需新增实例自动接入，请调整该应用重注册模式（收敛窗口/可信接入/开放）");
 
-                app.WriteHistory("应用重注册", true, $"[{app.Name}]按旧逻辑重新注册，密钥已下发", null, context.UserHost, context.ClientId);
+                var model = request as AppModel;
+                var remark = $"[{app.Name}]按[{app.ReRegister}]模式重新注册，密钥已下发";
+                if (model != null && !model.UUID.IsNullOrEmpty()) remark += $"，UUID={model.UUID}";
+                app.WriteHistory("应用重注册", true, remark, null, context.UserHost, context.ClientId);
                 context.Device = app;
 
                 return app;
@@ -159,6 +162,38 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
         }
 
         return app;
+    }
+
+    /// <summary>可信接入判定。应用实例声明运行于同项目受管节点（NodeCode），或UUID/Macs命中该应用在线指纹时视为可信</summary>
+    /// <param name="app">已存在应用</param>
+    /// <param name="request">登录请求</param>
+    /// <returns>是否可信</returns>
+    private Boolean IsTrustedClient(App app, ILoginRequest request)
+    {
+        if (request is not AppModel inf) return false;
+
+        // 节点门：节点存在、启用且与应用同项目（应用未归属项目时不限制），视为平台认识的受管机器
+        if (!inf.NodeCode.IsNullOrEmpty())
+        {
+            var node = Node.FindByCode(inf.NodeCode);
+            if (node != null && node.Enable && (app.ProjectId <= 0 || node.ProjectId == app.ProjectId))
+            {
+                XTrace.WriteLine("应用[{0}]可信接入：命中同项目节点[{1}]，IP={2}", app, node, inf.IP);
+                return true;
+            }
+        }
+
+        // 指纹门：UUID/Macs 命中该应用在线会话（同机器或 Macs 交集），覆盖重装/密钥丢失后回归
+        if (!inf.UUID.IsNullOrEmpty() || !inf.Macs.IsNullOrEmpty())
+        {
+            if (AppOnline.IsRecentFingerprint(app.Id, inf.UUID, inf.Macs))
+            {
+                XTrace.WriteLine("应用[{0}]可信接入：命中在线指纹 UUID={1}，IP={2}", app, inf.UUID, inf.IP);
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>鉴权后的登录处理。修改设备信息、创建在线记录和写日志</summary>
@@ -196,8 +231,8 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
         app.LastIP = ip;
         app.UpdateIP = ip;
 
-        // 密钥配对成功，自动关闭重注册窗口，防止长期开启被冒用
-        if (app.AllowReRegister && !app.Secret.IsNullOrEmpty()) app.AllowReRegister = false;
+        // 密钥配对成功，仅收敛窗口模式（Auto）自动关闭重注册窗口，防止长期开启被冒用；可信接入/开放模式保持长期有效
+        if (app.ReRegister == ReRegisterModes.Auto && !app.Secret.IsNullOrEmpty()) app.ReRegister = ReRegisterModes.Off;
 
         app.Update();
 
@@ -213,6 +248,10 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
             if (!inf.Version.IsNullOrEmpty()) online.Version = inf.Version;
             //var compile = inf.Compile.ToDateTime().ToLocalTime();
             if (compile.Year > 2000) online.Compile = compile;
+
+            // 记录机器指纹，供可信接入（Trusted）判定近期见过该机器
+            if (!inf.UUID.IsNullOrEmpty()) online.Uuid = inf.UUID;
+            if (!inf.Macs.IsNullOrEmpty()) online.Macs = inf.Macs;
 
             online.Update();
         }

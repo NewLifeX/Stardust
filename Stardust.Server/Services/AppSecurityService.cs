@@ -3,6 +3,7 @@ using NewLife.Log;
 using NewLife.Security;
 using NewLife.Threading;
 using Stardust.Data;
+using Stardust.Models;
 
 namespace Stardust.Server.Services;
 
@@ -59,10 +60,13 @@ public class AppSecurityService(ITracer tracer) : IHostedService
         foreach (var app in list)
         {
             app.Secret = Rand.NextString(16);
-            app.AllowReRegister = true;
+
+            // 补密钥后若处于关闭态则开启收敛窗口等待客户端自动收敛；可信接入/开放模式的应用保持原模式（无需窗口）
+            if (app.ReRegister == ReRegisterModes.Off) app.ReRegister = ReRegisterModes.Auto;
+
             app.Update();
 
-            XTrace.WriteLine("已为[{0}]生成密钥并开启重注册窗口，等待客户端自动收敛", app);
+            XTrace.WriteLine("已为[{0}]生成密钥，重注册模式={1}", app, app.ReRegister);
         }
     }
 
@@ -70,7 +74,7 @@ public class AppSecurityService(ITracer tracer) : IHostedService
     /// <param name="graceMinutes">宽限时长（分钟）。开窗未满该时长的窗口保留不关，默认10分钟，等待客户端（如晚启动的StarWeb）自动收敛</param>
     public void CloseReRegisterWindows(Int32 graceMinutes = 10)
     {
-        var list = App.FindAllAllowReRegister();
+        var list = App.FindAllReRegisterWindow();
         if (list == null || list.Count == 0) return;
 
         var end = DateTime.Now.AddMinutes(-graceMinutes);
@@ -82,7 +86,7 @@ public class AppSecurityService(ITracer tracer) : IHostedService
             // 开窗未满宽限时长，保留窗口等待客户端重试收敛（登录成功即自动关窗），避免同轮秒关导致客户端错过
             if (app.UpdateTime >= end) continue;
 
-            app.AllowReRegister = false;
+            app.ReRegister = ReRegisterModes.Off;
             app.Update();
 
             XTrace.WriteLine("已关闭[{0}]重注册窗口", app);

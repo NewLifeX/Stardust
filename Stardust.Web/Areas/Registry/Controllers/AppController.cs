@@ -18,7 +18,7 @@ public class AppController : RegistryEntityController<App>
     {
         LogOnChange = true;
 
-        ListFields.RemoveField("ProjectId", "Secret", "WebHook", "AllowControlNodes", "AllowReRegister", "Remark");
+        ListFields.RemoveField("ProjectId", "Secret", "WebHook", "AllowControlNodes", "Remark");
         ListFields.RemoveCreateField();
         ListFields.RemoveUpdateField();
 

@@ -62,7 +62,7 @@
         <Column Name="LastLogin" DataType="DateTime" Description="最后登录" />
         <Column Name="LastIP" DataType="String" Description="最后IP" />
         <Column Name="AllowControlNodes" DataType="String" Description="节点控制。安全性设计，允许该应用发指令控制的目标节点编码或目标应用名称，多节点逗号分隔，*表示全部节点" Category="安全告警" />
-        <Column Name="AllowReRegister" DataType="Boolean" Description="允许重新注册。密钥校验失败时，允许已注册应用按旧逻辑自动重新注册并下发密钥，用于新增实例临时自动接入，默认false（安全）。接入完成后请立即关闭，谨防身份冒用" Category="安全告警" />
+        <Column Name="ReRegister" DataType="Int32" Description="重注册模式。已存在应用的空/错密钥登录策略：关闭=一律拒绝（默认安全）；收敛窗口=临时放行，首个成功登录后自动关闭（引导新实例）；可信接入=同项目受管节点或近期UUID/Macs指纹机器可自助接入；开放=仅凭应用代码即可接入（低门槛）" Type="Stardust.Models.ReRegisterModes" Category="安全告警" />
         <Column Name="Remark" DataType="String" Length="500" Description="内容" Category="扩展" />
         <Column Name="CreateUser" DataType="String" Description="创建者" Category="扩展" />
         <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
@@ -98,6 +98,8 @@
         <Column Name="CommandLine" DataType="String" Length="500" Description="命令行" />
         <Column Name="UserName" DataType="String" Description="用户名。启动该进程的用户名" />
         <Column Name="MachineName" DataType="String" Description="机器名" />
+        <Column Name="Uuid" DataType="String" Length="64" Description="机器标识。客户端上报的机器UUID，用于可信接入指纹判定与在线识别" />
+        <Column Name="Macs" DataType="String" Length="200" Description="网卡地址。客户端上报的MAC地址列表，用于可信接入指纹判定与在线识别" />
         <Column Name="StartTime" DataType="DateTime" Description="进程时间" />
         <Column Name="IP" DataType="String" Length="200" Description="本地IP。节点本地IP地址" />
         <Column Name="Listens" DataType="String" Length="200" Description="监听端口。网络端口监听信息" />
@@ -113,6 +115,7 @@
         <Index Columns="Client" Unique="True" />
         <Index Columns="ProjectId" />
         <Index Columns="AppId,IP" />
+        <Index Columns="AppId,UUID" />
         <Index Columns="Token" />
         <Index Columns="IP" />
         <Index Columns="UpdateTime" />

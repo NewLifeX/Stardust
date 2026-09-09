@@ -259,14 +259,14 @@
         </tr>
 
         <tr>
-            <td>AllowReRegister</td>
-            <td>允许重新注册</td>
-            <td>Boolean</td>
+            <td>ReRegister</td>
+            <td>重注册模式</td>
+            <td>Int32</td>
             <td></td>
             <td></td>
             <td></td>
             <td>N</td>
-            <td>密钥校验失败时，允许已注册应用按旧逻辑自动重新注册并下发密钥，用于新增实例临时自动接入，默认false（安全）。接入完成后请立即关闭，谨防身份冒用</td>
+            <td>已存在应用的空/错密钥登录策略：关闭=一律拒绝（默认安全）；收敛窗口=临时放行，首个成功登录后自动关闭（引导新实例）；可信接入=同项目受管节点或近期UUID/Macs指纹机器可自助接入；开放=仅凭应用代码即可接入（低门槛）</td>
         </tr>
 
         <tr>
@@ -581,6 +581,28 @@
             <td></td>
             <td></td>
             <td></td>
+        </tr>
+
+        <tr>
+            <td>UUID</td>
+            <td>机器标识</td>
+            <td>String</td>
+            <td>64</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>客户端上报的机器UUID，用于可信接入指纹判定与在线识别</td>
+        </tr>
+
+        <tr>
+            <td>Macs</td>
+            <td>网卡地址</td>
+            <td>String</td>
+            <td>200</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>客户端上报的MAC地址列表，用于可信接入指纹判定与在线识别</td>
         </tr>
 
         <tr>

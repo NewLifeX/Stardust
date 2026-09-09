@@ -20,6 +20,7 @@ namespace Stardust.Data;
 [BindIndex("IU_AppOnline_Client", true, "Client")]
 [BindIndex("IX_AppOnline_ProjectId", false, "ProjectId")]
 [BindIndex("IX_AppOnline_AppId_IP", false, "AppId,IP")]
+[BindIndex("IX_AppOnline_AppId_UUID", false, "AppId,UUID")]
 [BindIndex("IX_AppOnline_Token", false, "Token")]
 [BindIndex("IX_AppOnline_IP", false, "IP")]
 [BindIndex("IX_AppOnline_UpdateTime", false, "UpdateTime")]
@@ -171,6 +172,22 @@ public partial class AppOnline
     [BindColumn("MachineName", "机器名", "")]
     public String MachineName { get => _MachineName; set { if (OnPropertyChanging("MachineName", value)) { _MachineName = value; OnPropertyChanged("MachineName"); } } }
 
+    private String _Uuid;
+    /// <summary>机器标识。客户端上报的机器UUID，用于可信接入指纹判定与在线识别</summary>
+    [DisplayName("机器标识")]
+    [Description("机器标识。客户端上报的机器UUID，用于可信接入指纹判定与在线识别")]
+    [DataObjectField(false, false, true, 64)]
+    [BindColumn("UUID", "机器标识。客户端上报的机器UUID，用于可信接入指纹判定与在线识别", "")]
+    public String Uuid { get => _Uuid; set { if (OnPropertyChanging("Uuid", value)) { _Uuid = value; OnPropertyChanged("Uuid"); } } }
+
+    private String _Macs;
+    /// <summary>网卡地址。客户端上报的MAC地址列表，用于可信接入指纹判定与在线识别</summary>
+    [DisplayName("网卡地址")]
+    [Description("网卡地址。客户端上报的MAC地址列表，用于可信接入指纹判定与在线识别")]
+    [DataObjectField(false, false, true, 200)]
+    [BindColumn("Macs", "网卡地址。客户端上报的MAC地址列表，用于可信接入指纹判定与在线识别", "")]
+    public String Macs { get => _Macs; set { if (OnPropertyChanging("Macs", value)) { _Macs = value; OnPropertyChanged("Macs"); } } }
+
     private DateTime _StartTime;
     /// <summary>进程时间</summary>
     [DisplayName("进程时间")]
@@ -284,6 +301,8 @@ public partial class AppOnline
             "CommandLine" => _CommandLine,
             "UserName" => _UserName,
             "MachineName" => _MachineName,
+            "Uuid" => _Uuid,
+            "Macs" => _Macs,
             "StartTime" => _StartTime,
             "IP" => _IP,
             "Listens" => _Listens,
@@ -318,6 +337,8 @@ public partial class AppOnline
                 case "CommandLine": _CommandLine = Convert.ToString(value); break;
                 case "UserName": _UserName = Convert.ToString(value); break;
                 case "MachineName": _MachineName = Convert.ToString(value); break;
+                case "Uuid": _Uuid = Convert.ToString(value); break;
+                case "Macs": _Macs = Convert.ToString(value); break;
                 case "StartTime": _StartTime = value.ToDateTime(); break;
                 case "IP": _IP = Convert.ToString(value); break;
                 case "Listens": _Listens = Convert.ToString(value); break;
@@ -374,6 +395,34 @@ public partial class AppOnline
 
         return Find(_.Client == client);
     }
+
+    /// <summary>根据应用、机器标识查找</summary>
+    /// <param name="appId">应用</param>
+    /// <param name="uuid">机器标识</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppOnline> FindAllByAppIdAndUuid(Int32 appId, String uuid)
+    {
+        if (appId < 0) return [];
+        if (uuid.IsNullOrEmpty()) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId && e.Uuid.EqualIgnoreCase(uuid));
+
+        return FindAll(_.AppId == appId & _.Uuid == uuid);
+    }
+
+    /// <summary>根据应用查找</summary>
+    /// <param name="appId">应用</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppOnline> FindAllByAppId(Int32 appId)
+    {
+        if (appId < 0) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId);
+
+        return FindAll(_.AppId == appId);
+    }
     #endregion
 
     #region 高级查询
@@ -381,6 +430,7 @@ public partial class AppOnline
     /// <param name="projectId">项目。资源归属的团队</param>
     /// <param name="appId">应用</param>
     /// <param name="client">客户端。IP加进程，不同应用的Client可能相同，但几率很低，暂不考虑</param>
+    /// <param name="uuid">机器标识。客户端上报的机器UUID，用于可信接入指纹判定与在线识别</param>
     /// <param name="ip">本地IP。节点本地IP地址</param>
     /// <param name="token">令牌</param>
     /// <param name="nodeId">节点。节点服务器</param>
@@ -390,13 +440,14 @@ public partial class AppOnline
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<AppOnline> Search(Int32 projectId, Int32 appId, String client, String ip, String token, Int32 nodeId, Boolean? longLink, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<AppOnline> Search(Int32 projectId, Int32 appId, String client, String uuid, String ip, String token, Int32 nodeId, Boolean? longLink, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
         if (projectId >= 0) exp &= _.ProjectId == projectId;
         if (appId >= 0) exp &= _.AppId == appId;
         if (!client.IsNullOrEmpty()) exp &= _.Client == client;
+        if (!uuid.IsNullOrEmpty()) exp &= _.Uuid == uuid;
         if (!ip.IsNullOrEmpty()) exp &= _.IP == ip;
         if (!token.IsNullOrEmpty()) exp &= _.Token == token;
         if (nodeId >= 0) exp &= _.NodeId == nodeId;
@@ -465,6 +516,12 @@ public partial class AppOnline
 
         /// <summary>机器名</summary>
         public static readonly Field MachineName = FindByName("MachineName");
+
+        /// <summary>机器标识。客户端上报的机器UUID，用于可信接入指纹判定与在线识别</summary>
+        public static readonly Field Uuid = FindByName("Uuid");
+
+        /// <summary>网卡地址。客户端上报的MAC地址列表，用于可信接入指纹判定与在线识别</summary>
+        public static readonly Field Macs = FindByName("Macs");
 
         /// <summary>进程时间</summary>
         public static readonly Field StartTime = FindByName("StartTime");
@@ -555,6 +612,12 @@ public partial class AppOnline
 
         /// <summary>机器名</summary>
         public const String MachineName = "MachineName";
+
+        /// <summary>机器标识。客户端上报的机器UUID，用于可信接入指纹判定与在线识别</summary>
+        public const String Uuid = "Uuid";
+
+        /// <summary>网卡地址。客户端上报的MAC地址列表，用于可信接入指纹判定与在线识别</summary>
+        public const String Macs = "Macs";
 
         /// <summary>进程时间</summary>
         public const String StartTime = "StartTime";

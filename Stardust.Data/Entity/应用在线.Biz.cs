@@ -102,6 +102,36 @@ public partial class AppOnline : Entity<AppOnline>, IOnlineModel2
         //return Find(_.ID == id);
     }
 
+    /// <summary>是否存在匹配指纹的在线会话。用于可信接入判定：该应用任意在线记录的UUID相同，或Macs与上报Macs存在交集，即视为同一台机器</summary>
+    /// <param name="appId">应用编号</param>
+    /// <param name="uuid">机器标识。客户端上报的机器UUID</param>
+    /// <param name="macs">网卡地址列表。客户端上报的MAC地址，逗号分隔</param>
+    /// <returns>是否存在匹配的在线会话</returns>
+    public static Boolean IsRecentFingerprint(Int32 appId, String uuid, String macs)
+    {
+        if (appId <= 0) return false;
+        if (uuid.IsNullOrEmpty() && macs.IsNullOrEmpty()) return false;
+
+        var list = FindAll(_.AppId == appId);
+        if (list == null || list.Count == 0) return false;
+
+        foreach (var item in list)
+        {
+            if (!uuid.IsNullOrEmpty() && item.Uuid.EqualIgnoreCase(uuid)) return true;
+
+            if (!macs.IsNullOrEmpty() && !item.Macs.IsNullOrEmpty())
+            {
+                foreach (var m in macs.Split(","))
+                {
+                    if (m.IsNullOrEmpty()) continue;
+                    if (item.Macs.Split(",").Any(e => e.EqualIgnoreCase(m))) return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     /// <summary>根据会话查找</summary>
     /// <param name="client">会话</param>
     /// <param name="cache">是否走缓存</param>
