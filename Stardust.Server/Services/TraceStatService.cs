@@ -59,12 +59,28 @@ public class TraceStatService : ITraceStatService
     /// </remarks>
     public Int32 SavePeriod { get; set; } = 60;
 
+    /// <summary>热门应用有效窗口（秒）。默认600秒，窗口内该应用日统计保持流式实时</summary>
+    public Int32 HotWindow { get; set; } = 600;
+
+    /// <summary>非热门应用日统计兜底补算周期（秒）。默认600秒</summary>
+    /// <remarks>热门应用由流式计算实时维护日统计；非热门应用由批计算按本周期从小时统计重算当天，降低写放大</remarks>
+    public Int32 DayStatPeriod { get; set; } = 600;
+
+    /// <summary>日统计兜底补算的下次执行时间</summary>
+    private DateTime _nextDayStat = DateTime.MinValue;
+
     private TimerX _timerFlow;
     private TimerX _timerBatch;
     private readonly ConcurrentBag<String> _bagDay = [];
     private readonly ConcurrentBag<String> _bagHour = [];
     private readonly ConcurrentDictionary<String, ConcurrentBag<DateTime>> _bagMinute = new();
     private readonly ConcurrentQueue<TraceData> _queue = new();
+
+    /// <summary>当日活跃应用。Key=应用Id_日期，Value=最近活跃时间，用于非热门应用日统计兜底补算与跨天收敛</summary>
+    private readonly ConcurrentDictionary<String, DateTime> _dayActive = [];
+
+    /// <summary>热门应用（监控中心正在查看）。Key=应用Id，Value=最近查看时间，窗口内该应用日统计保持流式实时</summary>
+    private readonly ConcurrentDictionary<Int32, DateTime> _hotApps = [];
 
     /* 延迟队列技术，周期越长则批量越大，UPDATE次数越少 */
     private DayQueue _dayQueue;
@@ -91,6 +107,7 @@ public class TraceStatService : ITraceStatService
             {
                 var key = $"{item.AppId}_{item.StatDate.ToFullString()}";
                 if (!_bagDay.Contains(key)) _bagDay.Add(key);
+                _dayActive[key] = DateTime.Now;
             }
             {
                 var key = $"{item.AppId}_{item.StatHour.ToFullString()}";
@@ -127,6 +144,7 @@ public class TraceStatService : ITraceStatService
         {
             var key = $"{appId}_{time.Date.ToFullString()}";
             if (!_bagDay.Contains(key)) _bagDay.Add(key);
+            _dayActive[key] = DateTime.Now;
         }
         {
             var hour = time.Date.AddHours(time.Hour);
@@ -170,6 +188,9 @@ public class TraceStatService : ITraceStatService
 
         Init();
 
+        // 记录热门应用与最近查看时间，作为日统计流式实时的热窗口
+        _hotApps[appId] = DateTime.Now;
+
         // 缩短批计算周期，让统计数据更快刷新
         _timerBatch?.SetNext(3_000);
 
@@ -178,6 +199,21 @@ public class TraceStatService : ITraceStatService
         _hourQueue?.Trigger();
         _dayQueue?.Trigger();
         _appMinuteQueue?.Trigger();
+    }
+
+    /// <summary>是否热门应用。仅在有效窗口内返回true，窗口内保持流式实时日统计</summary>
+    /// <param name="appId">应用编号</param>
+    /// <returns>是否热门</returns>
+    private Boolean IsHotApp(Int32 appId)
+    {
+        if (_hotApps.TryGetValue(appId, out var time))
+        {
+            if (DateTime.Now - time <= TimeSpan.FromSeconds(HotWindow)) return true;
+
+            // 窗口过期，移出热集合
+            _hotApps.TryRemove(appId, out _);
+        }
+        return false;
     }
 
     /// <summary>流式计算，增量累加</summary>
@@ -202,7 +238,9 @@ public class TraceStatService : ITraceStatService
             // 过滤异常数据
             if (td.AppId <= 0 || td.Name.IsNullOrEmpty()) continue;
 
-            // 每日
+            // 每日。仅热门应用（监控中心正在查看）保留流式实时日统计，
+            // 其余应用日统计由批计算按 DayStatPeriod 兜底重算当天，显著降低日统计写放大
+            if (IsHotApp(td.AppId))
             {
                 var queue = _dayQueue ??= new();
                 queue.Period = SavePeriod * 1000;
@@ -309,8 +347,52 @@ public class TraceStatService : ITraceStatService
             ProcessDay(ss[0].ToInt(), ss[1].ToDateTime());
         }
 
+        // 兜底补算：非热门应用按周期重算当天，历史日跨天后补算最终值
+        EnsureDayStat();
+
         // 更新周期
         if (BatchPeriod > 0 && _timerBatch != null) _timerBatch.Period = BatchPeriod * 1000;
+    }
+
+    /// <summary>日统计兜底补算。非热门应用按周期重算当天；历史日（跨天）补算最终值后收敛移除登记</summary>
+    private void EnsureDayStat()
+    {
+        var now = DateTime.Now;
+        if (now < _nextDayStat) return;
+
+        // 每 DayStatPeriod 节流一次
+        _nextDayStat = now.AddSeconds(DayStatPeriod);
+
+        var today = now.Date;
+        foreach (var item in _dayActive)
+        {
+            var ss = item.Key.Split("_");
+            if (ss.Length < 2) continue;
+
+            var appId = ss[0].ToInt();
+            var date = ss[1].ToDateTime();
+            if (appId <= 0 || date.Year < 2000) continue;
+
+            // 热门应用由流式实时维护，跳过兜底
+            if (IsHotApp(appId)) continue;
+
+            if (date < today)
+            {
+                // 历史日：补算最终值后收敛
+                ProcessDay(appId, date);
+                _dayActive.TryRemove(item.Key, out _);
+            }
+            else if (now - item.Value <= TimeSpan.FromSeconds(DayStatPeriod * 2))
+            {
+                // 当天且近期活跃：重算一次，保证当日统计缓慢跟上
+                ProcessDay(appId, date);
+            }
+            else
+            {
+                // 长期不活跃：移除登记，等下次上报再登记
+                _dayActive.TryRemove(item.Key, out _);
+            }
+        }
     }
 
     private void ProcessDay(Int32 appId, DateTime time)
