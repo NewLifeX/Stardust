@@ -374,8 +374,9 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     private DateTime _last;
     private async Task OnScan(Object state)
     {
-        //if (_last.Year < 2000) _last = DateTime.Today.AddDays(-30);
-        if (EnableFetch) return;
+        // 仅当本节点会拉取文件(Fetch=true)时才扫描缺失附件。
+        // Fetch=false 的节点永不下载，扫描只会无限请求而无法被满足，造成消息队列暴涨。
+        if (!EnableFetch) return;
 
         // 执行扫描，如果成功更新下一次执行时间，如果失败则快速重试
         var rs = await ScanFilesAsync(_last, default).ConfigureAwait(false);
