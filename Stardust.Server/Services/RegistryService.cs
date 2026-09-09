@@ -653,6 +653,10 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
             var code = $"{app.Name}@{item.Client}";
             ts.Add(_sessionManager.PublishAsync(code, cmdModel, null, model.Timeout, cancellationToken));
         }
+
+        // 目标应用没有任何在线实例（离线），无法下发命令，直接返回空，避免 await null 抛空引用异常
+        if (ts.Count == 0) return null;
+
         await Task.WhenAll(ts);
 
         // SessionManager.PublishAsync 内置timeout等待，取首个非空响应
