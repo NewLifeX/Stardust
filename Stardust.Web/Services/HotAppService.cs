@@ -19,7 +19,18 @@ public class HotAppService(IServiceResolver resolver, ITracer tracer)
         {
             _client ??= await resolver.GetClientAsync("StarServer");
 
-            await _client.InvokeAsync<Int32>("Trace/SetHotApp", appId);
+            // 服务端SetHotApp是[HttpPost]+[FromBody]，只接受POST，因此这里不能用IApiClient的默认重载：
+            // 它把Int32这类基础类型参数判为GET，拼到Url尾部（Trace/SetHotApp/1）而不带Body，必然打不中
+            if (_client is not ApiHttpClient http)
+            {
+                XTrace.Log.Debug("设置热门应用失败：客户端[{0}]不是Http客户端，无法以POST调用Trace/SetHotApp", _client?.GetType().Name);
+                return;
+            }
+
+            // 没有可用服务节点时，InvokeAsync会抛出无消息的InvalidOperationException，这里直接跳过，避免污染埋点错误数
+            if (http.Services.Count == 0) return;
+
+            await http.PostAsync<Int32>("Trace/SetHotApp", appId);
         }
         catch (Exception ex)
         {
