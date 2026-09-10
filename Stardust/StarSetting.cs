@@ -54,6 +54,10 @@ public class StarSetting : Config<StarSetting>, IClientSetting
     [Description("最大异常采样数。采样周期内，最多只记录指定数量的异常事件，默认10")]
     public Int32 MaxErrors { get; set; } = 10;
 
+    /// <summary>埋点名称截断前缀。自动识别URL路径中的可变参数后提取，多个前缀分号隔开，可手工调整</summary>
+    [Description("埋点名称截断前缀。自动识别URL路径中的可变参数后提取，多个前缀分号隔开，可手工调整")]
+    public String TraceNamePrefixes { get; set; } = "";
+
     String IClientSetting.Code { get => AppKey!; set => AppKey = value; }
     #endregion
 }

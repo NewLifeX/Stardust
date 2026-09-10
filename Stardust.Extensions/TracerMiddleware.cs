@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using NewLife;
@@ -27,6 +28,15 @@ public class TracerMiddleware(RequestDelegate next)
     /// <summary>区域名集合。专用于魔方路由</summary>
     public static String[] AreaNames { get; set; } = [];
 
+    /// <summary>启用埋点名称自动截断。默认true，以完整URL为基准，自动识别路径中的可变参数并截取前缀；关闭后采用传统两段或三段规则</summary>
+    public static Boolean EnableAutoName { get; set; } = true;
+
+    /// <summary>自动截断阈值。某前缀下不同子值数量达到该值即判定其后为可变参数区，默认16</summary>
+    public static Int32 MinDistinct { get; set; } = 16;
+
+    /// <summary>放行的请求路径规则。支持*模糊匹配，命中的路径保留完整URL作埋点名称，且不参与自动学习，如 /Admin/*、/v1/user/*。可直接追加</summary>
+    public static IList<String> AllowPaths { get; set; } = [];
+
     /// <summary>调用</summary>
     /// <param name="ctx"></param>
     /// <returns></returns>
@@ -39,6 +49,14 @@ public class TracerMiddleware(RequestDelegate next)
         if (Tracer != null && !ctx.WebSockets.IsWebSocketRequest)
         {
             action = GetAction(ctx);
+
+            // 采集请求路径，学习可变参数。仅本地统计，不上报
+            if (EnableAutoName)
+            {
+                CollectPath(ctx.Request.Path + "");
+                Consolidate();
+            }
+
             if (!action.IsNullOrEmpty())
             {
                 // 请求主体作为强制采样的数据标签，便于分析链路
@@ -213,30 +231,224 @@ public class TracerMiddleware(RequestDelegate next)
     ];
     private static readonly String[] CubeActions = ["index", "detail", "add", "edit", "delete", "deleteSelect", "deleteAll", "ExportCsv", "ExportExcel", "ExportZip", "Info", "SetEnable", "EnableSelect", "DisableSelect", "DeleteSelect"];
 
-    private static String? GetAction(HttpContext ctx)
+    /// <summary>从请求路径解析埋点名称</summary>
+    /// <param name="ctx">HttpContext</param>
+    /// <returns>埋点名称；静态资源等无需埋点的请求返回空</returns>
+    /// <remarks>
+    /// <para>默认采用自动截断：以完整URL为基准，识别路径中的可变参数段并截取前缀，学习结果写入配置文件跨进程复用。</para>
+    /// <para>可通过 <see cref="EnableAutoName"/> 关闭自动截断，回退到传统规则：魔方保留三段，其它WebApi接口保留两段。</para>
+    /// <para>最终名称交给 <see cref="ITracer.Resolver"/> 定制，解析器返回空时跳过该埋点。</para>
+    /// </remarks>
+    public static String? GetAction(HttpContext ctx)
     {
         var p = ctx.Request.Path + "";
         if (p.EndsWithIgnoreCase(ExcludeSuffixes)) return null;
 
+        var name = EnableAutoName ? GetAutoName(p) : GetLegacyName(p);
+
+        // 交由追踪解析器定制WebApi接口的埋点名称
+        var resolver = Tracer?.Resolver;
+        if (resolver != null)
+        {
+            var rs = resolver.ResolveName(name, ctx);
+            if (rs.IsNullOrEmpty()) return null;
+            name = rs!;
+        }
+
+        // 名称与跟踪数据Name字段保持一致，超长截断
+        return name.Length > MaxNameLength ? name[..MaxNameLength] : name;
+    }
+
+    // 传统埋点名称规则：魔方区域或魔方动作保留三段，其它WebApi接口保留两段
+    private static String GetLegacyName(String p)
+    {
         var ss = p.Split('/', StringSplitOptions.RemoveEmptyEntries);
         if (ss.Length == 0) return p;
 
         // 如果是魔方格式，保留3段，其它webapi接口只留2段
         var rs = AreaNames;
-        if (rs != null && ss[0].EqualIgnoreCase(rs))
+        var n = rs != null && ss[0].EqualIgnoreCase(rs) || ss.Length >= 3 && ss[2].EqualIgnoreCase(CubeActions) ? 3 : 2;
+
+        return ss.Length > n ? "/" + ss.Take(n).Join("/") : p;
+    }
+
+    // 自动埋点名称：以完整URL为基准，逐段下行，识别到可变节点后截断为前缀
+    private static String GetAutoName(String p)
+    {
+        // 放行路径保留完整URL
+        if (IsAllow(p)) return p;
+
+        var ss = p.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (ss.Length == 0) return p;
+
+        var prefixes = GetNamePrefixes();
+
+        var parent = "";
+        foreach (var item in ss)
         {
-            if (ss.Length >= 3)
-                p = $"/{ss[0]}/{ss[1]}/{ss[2]}";
-        }
-        else
-        {
-            if (ss.Length >= 3 && ss[2].EqualIgnoreCase(CubeActions))
-                p = $"/{ss[0]}/{ss[1]}/{ss[2]}";
-            else if (ss.Length >= 2)
-                p = $"/{ss[0]}/{ss[1]}";
+            // 父前缀已是可变节点，则截断为前缀。根节点不参与判定
+            if (IsVariableNode(parent, prefixes)) return parent;
+
+            parent = parent.Length == 0 ? "/" + item : parent + "/" + item;
         }
 
-        return p;
+        return parent;
+    }
+
+    // 判断路径是否放行：魔方区域或自定义放行规则命中后，保留完整路径且不参与学习
+    private static Boolean IsAllow(String path)
+    {
+        if (path.IsNullOrEmpty()) return false;
+
+        // 魔方区域，首段命中即整体放行
+        var rs = AreaNames;
+        if (rs != null && rs.Length > 0)
+        {
+            var idx = path.IndexOf('/', 1);
+            var first = idx < 0 ? path[1..] : path[1..idx];
+            if (first.EqualIgnoreCase(rs)) return true;
+        }
+
+        // 自定义放行规则，支持*模糊匹配
+        var ps = AllowPaths;
+        if (ps != null && ps.Count > 0)
+        {
+            foreach (var item in ps)
+            {
+                if (!item.IsNullOrEmpty() && item.IsMatch(path, StringComparison.OrdinalIgnoreCase)) return true;
+            }
+        }
+
+        return false;
+    }
+
+    // 判断前缀是否为可变节点：持久化前缀命中，或者内存统计达到阈值
+    private static Boolean IsVariableNode(String parent, HashSet<String> prefixes)
+    {
+        // 根节点不参与截断，避免扫描类请求的随机首段把所有名称归并到根
+        if (parent.Length == 0) return false;
+
+        if (prefixes.Contains(parent)) return true;
+
+        return _pathStats.TryGetValue(parent, out var node) && Volatile.Read(ref node.Distinct) >= MinDistinct;
+    }
+
+    // 埋点名称学习：路径前缀 -> 节点统计。仅统计本进程观察到的请求路径，用于识别可变参数
+    private static readonly ConcurrentDictionary<String, PathNode> _pathStats = new();
+
+    // 路径节点。按前缀记录访问次数与不同子值数量
+    private sealed class PathNode
+    {
+        // 访问次数
+        public Int32 Visits;
+
+        // 不同子值数量。固定动作集合增长有限，参数值集合持续增长，达到阈值即判定该前缀之后为可变参数区
+        public Int32 Distinct;
+    }
+
+    // 学习结果持久化间隔（秒）
+    private const Int32 LearnInterval = 60;
+
+    // 最多记录的路径节点数量，超限后不再学习，防止内存膨胀
+    private const Int32 MaxNodes = 8192;
+
+    // 埋点名称最大长度，与跟踪数据Name字段保持一致
+    private const Int32 MaxNameLength = 200;
+
+    private static DateTime _nextLearn;
+    private static Int32 _nodeCount;
+
+    // 采集请求路径，学习可变参数。仅本地统计，不上报；放行路径不参与学习
+    private static void CollectPath(String path)
+    {
+        // 放行路径不计入统计，避免非参数的动作集合影响阈值
+        if (IsAllow(path)) return;
+
+        var ss = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (ss.Length == 0) return;
+
+        // 超过节点上限，不再学习
+        if (Volatile.Read(ref _nodeCount) >= MaxNodes) return;
+
+        PathNode? parent = null;
+        var key = "";
+        foreach (var item in ss)
+        {
+            key = key.Length == 0 ? "/" + item : key + "/" + item;
+
+            var node = _pathStats.GetOrAdd(key, static _ =>
+            {
+                Interlocked.Increment(ref _nodeCount);
+                return new PathNode();
+            });
+
+            var visits = Interlocked.Increment(ref node.Visits);
+            // 首次出现的子值：父节点不同子值数量加一。固定动作集合增长有限，参数值集合持续增长
+            if (visits == 1 && parent != null) Interlocked.Increment(ref parent.Distinct);
+
+            parent = node;
+        }
+    }
+
+    // 巩固学习结果：把可变节点前缀追加到配置，供跨进程复用
+    private static void Consolidate()
+    {
+        if (_nextLearn > DateTime.Now) return;
+        _nextLearn = DateTime.Now.AddSeconds(LearnInterval);
+
+        // 收集达到阈值的可变节点前缀
+        var news = new List<String>();
+        foreach (var item in _pathStats)
+        {
+            if (Volatile.Read(ref item.Value.Distinct) >= MinDistinct) news.Add(item.Key);
+        }
+        if (news.Count == 0) return;
+
+        // 追加到配置
+        var set = StarSetting.Current;
+        var prefixes = GetNamePrefixes();
+        var add = news.Where(e => !prefixes.Contains(e)).ToList();
+        if (add.Count == 0) return;
+
+        var value = set.TraceNamePrefixes;
+        value = value.IsNullOrEmpty() ? add.Join(";") : value + ";" + add.Join(";");
+
+        set.TraceNamePrefixes = value;
+        try
+        {
+            set.Save();
+        }
+        catch (Exception ex)
+        {
+            XTrace.Log.Error("保存埋点名称截断前缀失败：{0}", ex.Message);
+        }
+
+        _lastPrefixesConfig = null;
+        XTrace.WriteLine("埋点名称截断前缀：{0}", value);
+    }
+
+    private static volatile HashSet<String>? _namePrefixes;
+    private static String? _lastPrefixesConfig;
+
+    // 读取配置中的埋点名称截断前缀。带缓存，配置变更后自动刷新
+    private static HashSet<String> GetNamePrefixes()
+    {
+        var value = StarSetting.Current.TraceNamePrefixes;
+        if (_lastPrefixesConfig == value && _namePrefixes != null) return _namePrefixes;
+
+        var set = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
+        if (!value.IsNullOrEmpty())
+        {
+            foreach (var item in value.Split([';', ','], StringSplitOptions.RemoveEmptyEntries))
+            {
+                set.Add(item.Trim());
+            }
+        }
+
+        _lastPrefixesConfig = value;
+        _namePrefixes = set;
+
+        return set;
     }
 
     private static DateTime _nextSave;
@@ -342,11 +554,11 @@ public class TracerMiddleware(RequestDelegate next)
         // IP地址请求直接放行
         if (IPAddress.TryParse(host, out _)) return true;
 
-        // 验证Host是否在允许列表中
+        // 验证Host是否在允许列表中。IsMatch的接收者是模式串，配置项作为模式，请求Host作为输入
         var allowedList = allowedHosts.Split([','], StringSplitOptions.RemoveEmptyEntries);
         foreach (var allowed in allowedList)
         {
-            if (host.IsMatch(allowed, StringComparison.OrdinalIgnoreCase)) return true;
+            if (allowed.IsMatch(host, StringComparison.OrdinalIgnoreCase)) return true;
             //if (host.EqualIgnoreCase(allowed.Trim())) return true;
         }
 

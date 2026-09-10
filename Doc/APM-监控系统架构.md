@@ -129,6 +129,30 @@
 
 **关键理解**：客户端在本地已完成统计汇总，一个埋点在一个周期内无论调用1000次还是10000次，都只上报一条 SpanBuilder。
 
+### 3.3 埋点名称与自动截断
+
+WebApi 请求的埋点名称由 `TracerMiddleware`（`Stardust.Extensions\TracerMiddleware.cs`）生成。名称是客户端本地聚合的键：**同名埋点在采样周期内只上报一条 SpanBuilder**，因此命名必须在客户端完成参数归并。否则"参数进路径"的系统会产生大量唯一点名，上报体积随参数基数膨胀。
+
+自动截断规则（默认启用，可通过 `TracerMiddleware.EnableAutoName` 关闭并回退到传统规则——WebApi保留两段、魔方保留三段）：
+
+| 规则 | 说明 |
+|------|------|
+| 完整URL为基准 | 路径各段稳定时使用完整URL作名称，如 `/v1/chat/completions`（查询串不参与命名） |
+| 统计学习 | 某前缀下"不同子值"数量达到16个（`TracerMiddleware.MinDistinct` 可调），即判定其后为可变参数区；数字ID、GUID、随机字符串等一切可变值统一由此识别 |
+| 放行路径 | 魔方区域（`AreaNames` 首段命中）与自定义规则（`TracerMiddleware.AllowPaths`，`IList`、支持*模糊匹配、可运行时追加）命中的路径保留完整URL，且不参与学习统计 |
+| 学习持久化 | 判定结果自动写入 `Config\Star.config` 的 `TraceNamePrefixes`（分号隔开），跨进程复用，支持手工调整与热更新 |
+| 名称上限 | 200字符，与跟踪数据 Name 字段保持一致 |
+
+学习只使用本地观察到的原始路径，不增加上报数据量。冷启动时每个参数前缀最多产生16个瞬态名称（之后归并；已持久化配置的前缀不产生瞬态名称）。典型效果：
+
+| 请求 | 埋点名称 |
+|------|----------|
+| `/v1/chat/completions` 调用1000次（查询串不同） | `/v1/chat/completions`，单条 SpanBuilder 上报 |
+| `/api/order/{id}`（1000个不同ID） | `/api/order` |
+| `/Admin/User/Edit` | `/Admin/User/Edit` |
+
+**下游定制**：最终名称经 `ITracer.Resolver.ResolveName(name, HttpContext)` 产出，应用可继承 `StarTracerResolver` 重写该方法自定义 WebApi 埋点名称，返回空时跳过该埋点。
+
 ---
 
 ## 4. 服务端架构
