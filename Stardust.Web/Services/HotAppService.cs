@@ -1,4 +1,4 @@
-﻿using NewLife.Log;
+using NewLife.Log;
 using NewLife.Messaging;
 using Stardust;
 
