@@ -11,11 +11,13 @@ using NewLife;
 using NewLife.Caching;
 using NewLife.Configuration;
 using NewLife.Log;
+using NewLife.Messaging;
 using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Remoting.Clients;
 using Stardust;
 using Stardust.Extensions;
+using Stardust.Services;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -63,6 +65,9 @@ public static class StarFactoryExtensions
         // 分布式缓存
         //services.Replace(new ServiceDescriptor(typeof(CacheService), p => new RedisCacheService(p), ServiceLifetime.Singleton));
         services.TryAddSingleton<ICacheProvider, CacheProvider>();
+
+        // 事件总线工厂。统一创建事件总线，Redis队列优先、星尘通道兜底，作为将来的默认实现
+        services.TryAddSingleton<IEventBusFactory, StarEventBusFactory>();
 
         //services.AddHostedService<StarService>();
         services.TryAddSingleton(XTrace.Log);

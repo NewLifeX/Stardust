@@ -6,11 +6,9 @@ using NewLife.Http;
 using NewLife.Log;
 using NewLife.Messaging;
 using NewLife.Model;
-using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Serialization;
 using NewLife.Threading;
-using Stardust.Registry;
 using Stardust.Services;
 #if !NET45
 using TaskEx = System.Threading.Tasks.Task;
@@ -95,68 +93,12 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     /// <summary>事件总线订阅完成后调用，覆写以执行额外初始化。</summary>
     protected virtual Task OnInitializedAsync(CancellationToken cancellationToken)
     {
-        var cacheProvider = ServiceProvider?.GetService<ICacheProvider>();
-        if (cacheProvider == null) return TaskEx.CompletedTask;
-
-        // 优先Redis队列作为事件总线，其次使用星尘事件总线，最后使用MemoryCache
-        var queue = cacheProvider.GetValue("RedisQueue", false) as ICache ?? cacheProvider.Cache;
-
-        // 尝试使用Redis（版本 >= 5.0）
-        var type = queue.GetType();
-        var rtype = Type.GetType("NewLife.Caching.FullRedis, NewLife.Redis");
-        if (rtype != null && rtype.IsAssignableFrom(type) && queue.GetValue("Version") is Version ver && ver >= new Version(5, 0) && SetEventBus(cacheProvider))
-            return TaskEx.CompletedTask;
-
-        // Redis失败，尝试使用星尘事件总线
-        var registry = ServiceProvider?.GetService<IRegistry>();
-        if (registry is AppClient client && SetEventBus(client))
-            return TaskEx.CompletedTask;
-
-        // 星尘事件总线失败，尝试使用MemoryCache
-        if (cacheProvider.Cache.GetType() == typeof(MemoryCache) && SetEventBus(cacheProvider))
-            return TaskEx.CompletedTask;
+        // 统一事件总线工厂，自动选择通道（优先Redis队列、其次星尘通道），无需关心底层实现
+        var factory = ServiceProvider?.GetService<IEventBusFactory>() ?? new StarEventBusFactory(ServiceProvider);
+        NewFileBus = factory.CreateEventBus<NewFileInfo>(Name + "-NewFile");
+        FileRequestBus = factory.CreateEventBus<FileRequest>(Name + "-FileRequest");
 
         return TaskEx.CompletedTask;
-    }
-
-    /// <summary>设置事件总线</summary>
-    /// <param name="cacheProvider"></param>
-    /// <returns></returns>
-    public Boolean SetEventBus(ICacheProvider cacheProvider)
-    {
-        //if (cacheProvider.Cache is not Cache cache) return false;
-        var queue = cacheProvider.GetValue("RedisQueue", false) as ICache ?? cacheProvider.Cache;
-        if (queue is not Cache cache) return false;
-
-        // 优先Redis队列作为事件总线，其次使用星尘事件总线
-        var rtype = Type.GetType("NewLife.Caching.FullRedis, NewLife.Redis");
-        var type = queue.GetType();
-        if (rtype != null && rtype.IsAssignableFrom(type) && queue.GetValue("Version") is Version ver)
-        {
-            // 旧版本的Redis不支持Stream，无法用作事件总线
-            if (ver < new Version(5, 0)) return false;
-        }
-
-        WriteLog("使用[{0}]事件总线，订阅[{1}]的应用通过消息队列分发事件。", cache.GetType().Name, Name);
-
-        var clientId = Runtime.ClientId;
-        NewFileBus = cache.CreateEventBus<NewFileInfo>(Name + "-NewFile", clientId);
-        FileRequestBus = cache.CreateEventBus<FileRequest>(Name + "-FileRequest", clientId);
-
-        return NewFileBus != null || FileRequestBus != null;
-    }
-
-    /// <summary>设置事件总线</summary>
-    /// <param name="client"></param>
-    /// <returns></returns>
-    public Boolean SetEventBus(AppClient client)
-    {
-        if (client == null) return false;
-
-        NewFileBus = client.CreateEventBus<NewFileInfo>(Name + "-NewFile");
-        FileRequestBus = client.CreateEventBus<FileRequest>(Name + "-FileRequest");
-
-        return NewFileBus != null || FileRequestBus != null;
     }
     #endregion
 

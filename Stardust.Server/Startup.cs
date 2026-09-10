@@ -143,6 +143,7 @@ public class Startup
         services.AddHostedService<DotNetSyncService>();
         services.AddHostedService<NodeStatService>();
         services.AddHostedService<AppSecurityService>();
+        services.AddHostedService<HotAppEventService>();
 
         // 注入Remoting服务
         services.AddRemoting(set);
