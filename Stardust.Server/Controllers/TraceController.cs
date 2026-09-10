@@ -325,42 +325,4 @@ public class TraceController(ITraceStatService stat, IAppDayStatService appStat,
             XTrace.WriteException(ex);
         }
     }
-
-    /// <summary>设置热门应用。由StarWeb调用，通知StarServer缩短该应用的统计计算周期</summary>
-    /// <param name="token">访问令牌</param>
-    /// <param name="appId">应用编号</param>
-    /// <remarks>仅平台管理端应用（StarServer/StarWeb/StarWebApi）可调用，防止匿名把任意应用刷成常驻热窗口放大写量</remarks>
-    /// <returns></returns>
-    [ApiFilter]
-    [HttpPost(nameof(SetHotApp))]
-    public Int32 SetHotApp(String token, [FromBody] Int32 appId)
-    {
-        // 安全加固：热窗口可使应用日统计恢复高频流式写，必须限制为平台管理端
-        if (!IsManagerToken(token)) throw new ApiException(ApiCode.Unauthorized, "无权调用SetHotApp，仅平台管理端可操作！");
-
-        stat.SetHotApp(appId);
-
-        return 1;
-    }
-
-    /// <summary>是否平台管理端令牌。仅StarServer/StarWeb/StarWebApi可操作监控热窗口</summary>
-    /// <param name="token">访问令牌</param>
-    /// <returns>是否管理端</returns>
-    private Boolean IsManagerToken(String token)
-    {
-        if (token.IsNullOrEmpty()) return false;
-
-        try
-        {
-            var (jwt, ex) = tokenService.DecodeToken(token);
-            if (ex != null) return false;
-            if (jwt == null) return false;
-
-            return jwt.Subject.EqualIgnoreCase("StarServer", "StarWeb", "StarWebApi");
-        }
-        catch
-        {
-            return false;
-        }
-    }
 }

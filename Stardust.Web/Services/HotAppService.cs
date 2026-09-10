@@ -1,5 +1,5 @@
 ﻿using NewLife.Log;
-using NewLife.Remoting;
+using NewLife.Messaging;
 using Stardust;
 
 namespace Stardust.Web.Services;
@@ -7,7 +7,10 @@ namespace Stardust.Web.Services;
 /// <summary>热门应用服务。通知StarServer缩短热门应用的统计计算周期</summary>
 public class HotAppService(StarFactory starFactory, ITracer tracer)
 {
-    /// <summary>设置热门应用。复用自身到StarServer的已登录客户端（自动携带应用令牌），避免匿名调用被滥用</summary>
+    private readonly Object _lock = new();
+    private IEventBus<Int32>? _bus;
+
+    /// <summary>设置热门应用。通过应用间事件总线广播（星尘平台内部，直接使用AppClient工厂），避免暴露公开接口</summary>
     /// <param name="appId">应用编号</param>
     public async Task SetHotAppAsync(Int32 appId)
     {
@@ -16,10 +19,15 @@ public class HotAppService(StarFactory starFactory, ITracer tracer)
         using var span = tracer?.NewSpan("SetHotApp", appId);
         try
         {
-            var client = starFactory.Client;
-            if (client == null) return;
+            var bus = _bus;
+            if (bus == null)
+            {
+                lock (_lock) _bus ??= (starFactory.Service as AppClient)?.CreateEventBus<Int32>("Star-HotApp");
+                bus = _bus;
+            }
+            if (bus == null) return;
 
-            await client.InvokeAsync<Int32>("Trace/SetHotApp", appId);
+            await bus.PublishAsync(appId);
         }
         catch (Exception ex)
         {

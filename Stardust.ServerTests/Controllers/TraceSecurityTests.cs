@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
@@ -150,42 +151,14 @@ public class TraceSecurityTests
         }
     }
 
-    [Fact(DisplayName = "SetHotApp 匿名调用被拒绝")]
-    public async Task SetHotApp_Anonymous_Rejected()
+    [Fact(DisplayName = "SetHotApp 公开接口已下线")]
+    public async Task SetHotApp_EndpointRemoved()
     {
-        var body = await SetHotAppAsync("");
-
-        Assert.Contains("\"code\"", body);
-        Assert.Contains("无权", body);
-    }
-
-    [Fact(DisplayName = "SetHotApp 非平台管理端应用被拒绝")]
-    public async Task SetHotApp_NonManager_Rejected()
-    {
-        var app = CreateApp("sht_" + Rand.NextString(8), "sht-secret");
-        try
-        {
-            var token = await AppLoginTokenAsync(app.Name, "sht-secret");
-
-            var body = await SetHotAppAsync(token);
-
-            Assert.Contains("\"code\"", body);
-            Assert.Contains("无权", body);
-        }
-        finally
-        {
-            AppTracer.FindByName(app.Name)?.Delete();
-            app.Delete();
-        }
-    }
-
-    private async Task<String> SetHotAppAsync(String token)
-    {
+        // 热门应用通知已改为跨应用事件总线，原公开接口删除后不应再可访问
         var client = _server.CreateClient();
-        if (!token.IsNullOrEmpty())
-            client.DefaultRequestHeaders.Add("X-Token", token);
 
         var response = await client.PostAsync("/Trace/SetHotApp", JsonContent.Create(1));
-        return await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 }
