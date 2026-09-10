@@ -27,6 +27,13 @@ internal class Program
 {
     private static void Main(String[] args)
     {
+#if NETFRAMEWORK
+        // .NET Framework 默认给 POST 附加 Expect: 100-continue 头，请求体要等服务端 100 响应后才发送。
+        // 弱网、代理或休眠唤醒场景下容易造成请求体迟到，被服务端按最低速率限制断开（MinRequestBodyDataRate），
+        // 导致登录/心跳偶发失败。这里统一关闭，只需设置一次，影响整个进程
+        ServicePointManager.Expect100Continue = false;
+#endif
+
 #if !NET40
         // 用不到的配置不要输出
         Runtime.CreateConfigOnMissing = false;
