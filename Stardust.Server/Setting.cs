@@ -78,8 +78,8 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     [Description("监控批统计周期。默认30秒。从数据库聚合修正数据，调小提高修正速度但增加IO压力，调大降低压力但延迟修正")]
     public Int32 MonitorBatchPeriod { get; set; } = 30;
 
-    /// <summary>监控分钟落盘周期。默认300秒。分钟级统计延迟队列批量提交周期，告警读取内存实时值不受影响，调大显著降低数据库UPDATE压力</summary>
-    [Description("监控分钟落盘周期。默认300秒。分钟级统计延迟队列批量提交周期，告警读取内存实时值不受影响，调大显著降低数据库UPDATE压力")]
+    /// <summary>监控落盘周期。默认300秒。统计延迟队列批量提交周期，告警读取内存实时值不受影响，调大显著降低数据库UPDATE压力</summary>
+    [Description("监控落盘周期。默认300秒。统计延迟队列批量提交周期，告警读取内存实时值不受影响，调大显著降低数据库UPDATE压力")]
     public Int32 MonitorSavePeriod { get; set; } = 300;
 
     /// <summary>监控巡检周期。默认600秒。非热门应用按周期重算小时/日统计，替代每个批周期的全量重算，降低写放大</summary>

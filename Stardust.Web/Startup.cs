@@ -51,10 +51,10 @@ public class Startup
         var set = StarServerSetting.Current;
         services.AddSingleton(set);
 
-        // 统计
+        // 统计。查看端不接收数据上报，关闭启动恢复补算，避免与数据进程重复重算
         services.AddSingleton<IAppDayStatService, AppDayStatService>();
         services.AddSingleton<ITraceItemStatService, TraceItemStatService>();
-        services.AddSingleton<ITraceStatService, TraceStatService>();
+        services.AddSingleton<ITraceStatService>(sp => new TraceStatService(sp.GetService<ITracer>()) { EnableRecovery = false });
 
         services.AddSingleton<IRedisService, RedisService>();
 

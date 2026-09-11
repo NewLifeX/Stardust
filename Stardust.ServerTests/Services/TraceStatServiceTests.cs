@@ -120,6 +120,59 @@ public class TraceStatServiceTests
         Assert.Equal(600, svc.PatrolPeriod);
     }
 
+    /// <summary>启动恢复补算默认开启；查看端进程可关闭，避免与数据上报进程重复重算</summary>
+    [Fact]
+    [Trait("Category", "Monitor")]
+    public void EnableRecovery_Default_True()
+    {
+        var svc = new TraceStatService(null);
+
+        Assert.True(svc.EnableRecovery);
+
+        svc.EnableRecovery = false;
+        Assert.False(svc.EnableRecovery);
+    }
+
+    /// <summary>巡检周期误配为非正数时回退默认周期，避免每个批周期都巡检造成写放大</summary>
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    [Trait("Category", "Monitor")]
+    public void Patrol_NonPositivePeriod_FallsBackToDefault(Int32 period)
+    {
+        var svc = new TraceStatService(null) { PatrolPeriod = period };
+
+        var before = DateTime.Now;
+        var method = typeof(TraceStatService).GetMethod("DoPatrol", BindingFlags.NonPublic | BindingFlags.Instance);
+        Assert.NotNull(method);
+        method.Invoke(svc, null);
+
+        // 下次巡检时间按默认600秒推进，允许执行耗时的小幅误差
+        var next = (DateTime)GetField(svc, "_nextPatrol");
+        Assert.True(next >= before.AddSeconds(595), $"next={next:HH:mm:ss.fff} before={before:HH:mm:ss.fff}");
+        Assert.True(next <= DateTime.Now.AddSeconds(605));
+    }
+
+    /// <summary>巡检按周期节流：未到下次时间时重复调用不推进</summary>
+    [Fact]
+    [Trait("Category", "Monitor")]
+    public void Patrol_NormalPeriod_Throttles()
+    {
+        var svc = new TraceStatService(null) { PatrolPeriod = 60 };
+
+        var method = typeof(TraceStatService).GetMethod("DoPatrol", BindingFlags.NonPublic | BindingFlags.Instance);
+        Assert.NotNull(method);
+        method.Invoke(svc, null);
+
+        var next1 = (DateTime)GetField(svc, "_nextPatrol");
+        Assert.True(next1 > DateTime.Now.AddSeconds(50));
+
+        // 未到下次时间，重复调用不再推进
+        method.Invoke(svc, null);
+        var next2 = (DateTime)GetField(svc, "_nextPatrol");
+        Assert.Equal(next1, next2);
+    }
+
     /// <summary>告警辅助函数：错误率现场计算；内存值优先于数据库值，数据库值更新时取数据库值</summary>
     [Fact]
     [Trait("Category", "Monitor")]

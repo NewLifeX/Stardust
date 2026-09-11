@@ -83,11 +83,11 @@ public class TraceStatService : ITraceStatService
     /// <remarks>非热门应用由巡检按本周期重算当前小时与当天统计，替代每个批周期的全量重算，显著降低写放大</remarks>
     public Int32 PatrolPeriod { get; set; } = 600;
 
+    /// <summary>启用启动恢复补算。默认true。仅接收数据上报的进程需要，用于补上重启丢失的内存增量；纯查看端进程设为false，避免与数据进程重复重算</summary>
+    public Boolean EnableRecovery { get; set; } = true;
+
     /// <summary>热门应用有效窗口（秒）。查看页面后该窗口内保持流式实时统计</summary>
     private const Int32 HotWindow = 600;
-
-    /// <summary>巡检活跃窗口（秒）。取巡检周期3倍，同时保证首次巡检的启动补算覆盖足够窗口</summary>
-    private Int32 PatrolWindow => PatrolPeriod * 3;
 
     /// <summary>统计巡检的下次执行时间</summary>
     private DateTime _nextPatrol = DateTime.MinValue;
@@ -246,8 +246,8 @@ public class TraceStatService : ITraceStatService
 
     /// <summary>流式计算，增量累加</summary>
     /// <remarks>
-    /// 性能优化：只计算分钟级统计（告警数据源），小时/天级统计由批量计算处理。
-    /// 批量计算能完全修正流式计算的偏差，因此可以放心精简流式计算。
+    /// 分钟级与应用分钟级全量增量累加（告警数据源），小时级全量，日级仅热门应用；
+    /// 其余小时/日统计由批算与巡检覆盖重算。
     /// </remarks>
     /// <param name="state">定时器状态参数</param>
     private void DoFlowStat(Object state)
@@ -383,17 +383,23 @@ public class TraceStatService : ITraceStatService
     }
 
     /// <summary>统计巡检。非热门应用按周期重算当前小时与当天统计；历史日（跨天）补算最终值后收敛移除登记。
-    /// 进程首次巡检兼作启动补算，额外重算最近窗口的分钟统计，覆盖重启丢失的内存增量</summary>
+    /// 数据上报进程首次巡检兼作启动补算，额外重算最近窗口的分钟统计，覆盖重启丢失的内存增量</summary>
     private void DoPatrol()
     {
         var now = DateTime.Now;
         if (now < _nextPatrol) return;
 
-        // 进程首次巡检（_nextPatrol 仍为初始值）兼作启动补算
-        var recovery = _nextPatrol == DateTime.MinValue;
+        // 防护：巡检周期误配为非正数时回退默认周期，避免每个批周期都巡检造成写放大
+        var period = PatrolPeriod > 0 ? PatrolPeriod : 600;
 
-        // 每 PatrolPeriod 节流一次
-        _nextPatrol = now.AddSeconds(PatrolPeriod);
+        // 巡检活跃窗口，取巡检周期3倍，同时保证首次巡检的启动补算覆盖足够窗口
+        var window = TimeSpan.FromSeconds(period * 3);
+
+        // 进程首次巡检（_nextPatrol 仍为初始值）兼作启动补算。仅数据上报进程需要，补上重启丢失的内存增量
+        var recovery = EnableRecovery && _nextPatrol == DateTime.MinValue;
+
+        // 每巡检周期节流一次
+        _nextPatrol = now.AddSeconds(period);
 
         // 清理过期的热门应用窗口，防止字典无限增长
         // IsHotApp 仅在该应用仍有数据上报时才被调用，停报应用需在此统一回收
@@ -407,32 +413,40 @@ public class TraceStatService : ITraceStatService
         var hour = today.AddHours(now.Hour);
         foreach (var item in _dayActive)
         {
-            var ss = item.Key.Split("_");
-            if (ss.Length < 2) continue;
-
-            var appId = ss[0].ToInt();
-            var date = ss[1].ToDateTime();
-            if (appId <= 0 || date.Year < 2000) continue;
-
-            // 热门应用由流式实时维护，跳过巡检
-            if (IsHotApp(appId)) continue;
-
-            if (date < today)
+            // 单个应用异常不影响其余应用的巡检
+            try
             {
-                // 历史日：由小时级统计全量聚合补算最终值后收敛移除
-                ProcessDay(appId, date);
-                _dayActive.TryRemove(item.Key, out _);
-            }
-            else if (recovery || now - item.Value <= TimeSpan.FromSeconds(PatrolWindow))
-            {
-                // 首次巡检：从原始数据补算最近窗口的分钟统计，覆盖重启丢失的内存增量
-                if (recovery) ProcessMinute(appId, now.AddSeconds(-PatrolWindow), now);
+                var ss = item.Key.Split("_");
+                if (ss.Length < 2) continue;
 
-                // 当天且近期活跃：重算当前小时与当天统计，保证缓慢跟上
-                ProcessHour(appId, hour);
-                ProcessDay(appId, today);
+                var appId = ss[0].ToInt();
+                var date = ss[1].ToDateTime();
+                if (appId <= 0 || date.Year < 2000) continue;
+
+                // 热门应用由流式实时维护，跳过巡检
+                if (IsHotApp(appId)) continue;
+
+                if (date < today)
+                {
+                    // 历史日：由小时级统计全量聚合补算最终值后收敛移除
+                    ProcessDay(appId, date);
+                    _dayActive.TryRemove(item.Key, out _);
+                }
+                else if (recovery || now - item.Value <= window)
+                {
+                    // 首次巡检：从原始数据补算最近窗口的分钟统计，覆盖重启丢失的内存增量
+                    if (recovery) ProcessMinute(appId, now - window, now);
+
+                    // 当天且近期活跃：重算当前小时与当天统计，保证缓慢跟上
+                    ProcessHour(appId, hour);
+                    ProcessDay(appId, today);
+                }
+                // 当天已不活跃：不再重算空转，但保留登记等待跨天后补算最终值，避免当日尾部数据缺失
             }
-            // 当天已不活跃：不再重算空转，但保留登记等待跨天后补算最终值，避免当日尾部数据缺失
+            catch (Exception ex)
+            {
+                XTrace.WriteException(ex);
+            }
         }
 
         // 补算结果立即落盘，缩短重启后的数据盲区
