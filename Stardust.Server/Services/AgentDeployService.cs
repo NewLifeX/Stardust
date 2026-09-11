@@ -13,9 +13,22 @@ namespace Stardust.Server.Services;
 public class AgentDeployService
 {
     private readonly ITracer _tracer;
+    private readonly StarServerSetting _setting;
 
     /// <summary>实例化</summary>
-    public AgentDeployService(ITracer tracer) => _tracer = tracer;
+    public AgentDeployService(ITracer tracer, StarServerSetting setting)
+    {
+        _tracer = tracer;
+        _setting = setting;
+    }
+
+    /// <summary>资源下载基础地址。未传 model.DownloadUrl 时回退到全局配置</summary>
+    private String ResolveDownloadUrl(AgentDeployModel model)
+    {
+        var url = model.DownloadUrl ?? _setting.AgentDownloadBaseUrl;
+        if (url.IsNullOrEmpty()) url = "https://x.newlifex.com/star/";
+        return url.EnsureEnd("/");
+    }
 
     /// <summary>执行远程部署</summary>
     /// <param name="model">部署参数</param>
@@ -122,8 +135,7 @@ public class AgentDeployService
     private String GenerateLinuxScript(AgentDeployModel model)
     {
         var serverUrl = model.ServerUrl ?? "http://localhost:6600";
-        var downloadUrl = model.DownloadUrl ?? "http://x.newlifex.com/star/";
-        downloadUrl = downloadUrl.EnsureEnd("/");
+        var downloadUrl = ResolveDownloadUrl(model);
 
         var dotnetScript = model.DotnetVersion switch
         {
@@ -192,8 +204,7 @@ echo ""StarAgent安装成功""
     private String GenerateWindowsScript(AgentDeployModel model)
     {
         var serverUrl = model.ServerUrl ?? "http://localhost:6600";
-        var downloadUrl = model.DownloadUrl ?? "http://x.newlifex.com/star/";
-        downloadUrl = downloadUrl.EnsureEnd("/");
+        var downloadUrl = ResolveDownloadUrl(model);
 
         var agentFile = model.DotnetVersion switch
         {

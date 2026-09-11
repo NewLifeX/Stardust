@@ -1,10 +1,15 @@
-﻿@{
+@{
     var theme = NewLife.Cube.CubeSetting.Current.Theme;
     if (String.IsNullOrEmpty(theme)) theme = "ACE";
 
     Layout = "~/Views/" + theme + "/_Layout.cshtml";
 
     var serverUrl = $"{Context.Request.Scheme}://{Context.Request.Host}";
+
+    var dlBase = ViewBag.AgentBase as String;
+    if (String.IsNullOrEmpty(dlBase)) dlBase = "https://x.newlifex.com/star/";
+    var dnBase = ViewBag.DotnetBase as String;
+    if (String.IsNullOrEmpty(dnBase)) dnBase = "https://x.newlifex.com/dotnet/";
 }
 <div class="clearfix" id="agentApp" data-server-url="@serverUrl">
     <div class="tableTools-container">
@@ -44,37 +49,37 @@
                             <td>staragent10.zip</td>
                             <td><span class="label label-success">net10.0</span></td>
                             <td>Windows / Linux</td>
-                            <td><a href="https://x.newlifex.com/star/staragent10.zip" class="btn btn-xs btn-primary"><i class="ace-icon fa fa-download"></i> 下载</a></td>
+                            <td><a href="@(dlBase)staragent10.zip" class="btn btn-xs btn-primary"><i class="ace-icon fa fa-download"></i> 下载</a></td>
                         </tr>
                         <tr>
                             <td>staragent90.zip</td>
                             <td><span class="label label-success">net9.0</span></td>
                             <td>Windows / Linux</td>
-                            <td><a href="https://x.newlifex.com/star/staragent90.zip" class="btn btn-xs btn-primary"><i class="ace-icon fa fa-download"></i> 下载</a></td>
+                            <td><a href="@(dlBase)staragent90.zip" class="btn btn-xs btn-primary"><i class="ace-icon fa fa-download"></i> 下载</a></td>
                         </tr>
                         <tr>
                             <td>staragent80.zip</td>
                             <td><span class="label label-info">net8.0</span></td>
                             <td>Windows / Linux</td>
-                            <td><a href="https://x.newlifex.com/star/staragent80.zip" class="btn btn-xs btn-primary"><i class="ace-icon fa fa-download"></i> 下载</a></td>
+                            <td><a href="@(dlBase)staragent80.zip" class="btn btn-xs btn-primary"><i class="ace-icon fa fa-download"></i> 下载</a></td>
                         </tr>
                         <tr>
                             <td>staragent60.zip</td>
                             <td><span class="label label-default">net6.0</span></td>
                             <td>Windows / Linux</td>
-                            <td><a href="https://x.newlifex.com/star/staragent60.zip" class="btn btn-xs btn-primary"><i class="ace-icon fa fa-download"></i> 下载</a></td>
+                            <td><a href="@(dlBase)staragent60.zip" class="btn btn-xs btn-primary"><i class="ace-icon fa fa-download"></i> 下载</a></td>
                         </tr>
                         <tr>
                             <td>staragent45.zip</td>
                             <td><span class="label label-warning">net4.5</span></td>
                             <td>Windows</td>
-                            <td><a href="https://x.newlifex.com/star/staragent45.zip" class="btn btn-xs btn-primary"><i class="ace-icon fa fa-download"></i> 下载</a></td>
+                            <td><a href="@(dlBase)staragent45.zip" class="btn btn-xs btn-primary"><i class="ace-icon fa fa-download"></i> 下载</a></td>
                         </tr>
                         <tr>
                             <td>staragent31.zip</td>
                             <td><span class="label label-danger">netcoreapp3.1</span></td>
                             <td>旧龙芯 Mips64</td>
-                            <td><a href="https://x.newlifex.com/star/staragent31.zip" class="btn btn-xs btn-primary"><i class="ace-icon fa fa-download"></i> 下载</a></td>
+                            <td><a href="@(dlBase)staragent31.zip" class="btn btn-xs btn-primary"><i class="ace-icon fa fa-download"></i> 下载</a></td>
                         </tr>
                     </tbody>
                 </table>
@@ -96,31 +101,31 @@
                             <td>staragent10.tar.gz</td>
                             <td><span class="label label-success">net10.0</span></td>
                             <td>Linux</td>
-                            <td><a href="https://x.newlifex.com/star/staragent10.tar.gz" class="btn btn-xs btn-info"><i class="ace-icon fa fa-download"></i> 下载</a></td>
+                            <td><a href="@(dlBase)staragent10.tar.gz" class="btn btn-xs btn-info"><i class="ace-icon fa fa-download"></i> 下载</a></td>
                         </tr>
                         <tr>
                             <td>staragent90.tar.gz</td>
                             <td><span class="label label-success">net9.0</span></td>
                             <td>Linux</td>
-                            <td><a href="https://x.newlifex.com/star/staragent90.tar.gz" class="btn btn-xs btn-info"><i class="ace-icon fa fa-download"></i> 下载</a></td>
+                            <td><a href="@(dlBase)staragent90.tar.gz" class="btn btn-xs btn-info"><i class="ace-icon fa fa-download"></i> 下载</a></td>
                         </tr>
                         <tr>
                             <td>staragent80.tar.gz</td>
                             <td><span class="label label-info">net8.0</span></td>
                             <td>Linux / 新龙芯 LA64</td>
-                            <td><a href="https://x.newlifex.com/star/staragent80.tar.gz" class="btn btn-xs btn-info"><i class="ace-icon fa fa-download"></i> 下载</a></td>
+                            <td><a href="@(dlBase)staragent80.tar.gz" class="btn btn-xs btn-info"><i class="ace-icon fa fa-download"></i> 下载</a></td>
                         </tr>
                         <tr>
                             <td>staragent60.tar.gz</td>
                             <td><span class="label label-default">net6.0</span></td>
                             <td>Linux</td>
-                            <td><a href="https://x.newlifex.com/star/staragent60.tar.gz" class="btn btn-xs btn-info"><i class="ace-icon fa fa-download"></i> 下载</a></td>
+                            <td><a href="@(dlBase)staragent60.tar.gz" class="btn btn-xs btn-info"><i class="ace-icon fa fa-download"></i> 下载</a></td>
                         </tr>
                         <tr>
                             <td>staragent31.tar.gz</td>
                             <td><span class="label label-danger">netcoreapp3.1</span></td>
                             <td>Linux / 旧龙芯 Mips64</td>
-                            <td><a href="https://x.newlifex.com/star/staragent31.tar.gz" class="btn btn-xs btn-info"><i class="ace-icon fa fa-download"></i> 下载</a></td>
+                            <td><a href="@(dlBase)staragent31.tar.gz" class="btn btn-xs btn-info"><i class="ace-icon fa fa-download"></i> 下载</a></td>
                         </tr>
                     </tbody>
                 </table>
@@ -140,12 +145,12 @@
                         <tr>
                             <td>star.sh</td>
                             <td>自动安装 net9.0 版 StarAgent</td>
-                            <td><code>curl -sSL https://x.newlifex.com/star/star.sh | bash</code></td>
+                            <td><code>curl -sSL @(dlBase)star.sh | bash</code></td>
                         </tr>
                         <tr>
                             <td>star8.sh</td>
                             <td>自动安装 net8.0 版 StarAgent</td>
-                            <td><code>curl -sSL https://x.newlifex.com/star/star8.sh | bash</code></td>
+                            <td><code>curl -sSL @(dlBase)star8.sh | bash</code></td>
                         </tr>
                     </tbody>
                 </table>
@@ -170,17 +175,17 @@
                         <tr>
                             <td>star.zip</td>
                             <td>星尘整体安装包（含Agent/Server/Web）</td>
-                            <td><a href="https://x.newlifex.com/star/star.zip" class="btn btn-xs btn-success"><i class="ace-icon fa fa-download"></i> 下载</a></td>
+                            <td><a href="@(dlBase)star.zip" class="btn btn-xs btn-success"><i class="ace-icon fa fa-download"></i> 下载</a></td>
                         </tr>
                         <tr>
                             <td>StarServer.zip</td>
                             <td>星尘服务端</td>
-                            <td><a href="https://x.newlifex.com/star/StarServer.zip" class="btn btn-xs btn-success"><i class="ace-icon fa fa-download"></i> 下载</a></td>
+                            <td><a href="@(dlBase)StarServer.zip" class="btn btn-xs btn-success"><i class="ace-icon fa fa-download"></i> 下载</a></td>
                         </tr>
                         <tr>
                             <td>StarWeb.zip</td>
                             <td>星尘管理平台</td>
-                            <td><a href="https://x.newlifex.com/star/StarWeb.zip" class="btn btn-xs btn-success"><i class="ace-icon fa fa-download"></i> 下载</a></td>
+                            <td><a href="@(dlBase)StarWeb.zip" class="btn btn-xs btn-success"><i class="ace-icon fa fa-download"></i> 下载</a></td>
                         </tr>
                     </tbody>
                 </table>
@@ -206,27 +211,27 @@
                         <tr>
                             <td>net.sh</td>
                             <td>.NET 最新版运行时</td>
-                            <td><code>curl -sSL https://x.newlifex.com/dotnet/net.sh | bash</code></td>
+                            <td><code>curl -sSL @(dnBase)net.sh | bash</code></td>
                         </tr>
                         <tr>
                             <td>net10.sh</td>
                             <td>.NET 10.0 运行时</td>
-                            <td><code>curl -sSL https://x.newlifex.com/dotnet/net10.sh | bash</code></td>
+                            <td><code>curl -sSL @(dnBase)net10.sh | bash</code></td>
                         </tr>
                         <tr>
                             <td>net9.sh</td>
                             <td>.NET 9.0 运行时</td>
-                            <td><code>curl -sSL https://x.newlifex.com/dotnet/net9.sh | bash</code></td>
+                            <td><code>curl -sSL @(dnBase)net9.sh | bash</code></td>
                         </tr>
                         <tr>
                             <td>net8.sh</td>
                             <td>.NET 8.0 运行时</td>
-                            <td><code>curl -sSL https://x.newlifex.com/dotnet/net8.sh | bash</code></td>
+                            <td><code>curl -sSL @(dnBase)net8.sh | bash</code></td>
                         </tr>
                         <tr>
                             <td>net6.sh</td>
                             <td>.NET 6.0 运行时</td>
-                            <td><code>curl -sSL https://x.newlifex.com/dotnet/net6.sh | bash</code></td>
+                            <td><code>curl -sSL @(dnBase)net6.sh | bash</code></td>
                         </tr>
                     </tbody>
                 </table>

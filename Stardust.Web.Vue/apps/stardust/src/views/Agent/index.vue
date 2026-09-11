@@ -12,6 +12,7 @@
  * 确保页面始终真实渲染、不 404、无错误。
  */
 import { ref, onMounted } from 'vue';
+import request from '@newlifex/cube-vue/core/utils/request';
 
 interface AgentItem {
   name: string;
@@ -71,6 +72,26 @@ const FALLBACK: AgentData = {
 
 const data = ref<AgentData>(FALLBACK);
 
+// 资源下载基础地址。由后端接口返回的实际 URL 推导，避免前端硬编码
+const baseUrl = ref<string>('https://x.newlifex.com/star/');
+
+// 应用下载数据，并据首个脚本 URL 推导基础地址（移除文件名），供快速安装命令使用
+function applyData(d: AgentData) {
+  data.value = d;
+  const u = d?.agent?.scripts?.[0]?.url;
+  if (u) baseUrl.value = u.slice(0, u.lastIndexOf('/') + 1);
+}
+
+// 拉取后端真实下载数据（URL 由服务端配置 AgentDownloadBaseUrl 生成），失败回退内置数据
+async function loadAgentData() {
+  try {
+    const res: any = await request({ url: '/Agent', params: { format: 'json' } });
+    if (res && (res.agent || res.packages)) applyData(res);
+  } catch (e) {
+    console.error('[Agent/Index] 拉取下载数据失败，使用内置兜底数据', e);
+  }
+}
+
 // 本机探测状态：通过 navigator 探测前端能否探测到本机 Agent 信号
 const probeState = ref<'unknown' | 'online' | 'offline'>('unknown');
 const probeInfo = ref('');
@@ -85,6 +106,7 @@ function detectLocalAgent() {
 
 onMounted(() => {
   console.log('[Agent/Index] custom view mounted');
+  loadAgentData();
   detectLocalAgent();
 });
 </script>
@@ -144,10 +166,10 @@ onMounted(() => {
         />
       </el-steps>
       <pre class="aip-code"># 一键安装（net9.0 版）
-curl -s https://x.newlifex.com/star/star.sh | bash
+curl -s {{ baseUrl }}star.sh | bash
 
 # 或手动安装
-wget https://x.newlifex.com/star/staragent90.tar.gz
+wget {{ baseUrl }}staragent90.tar.gz
 tar -xzf staragent90.tar.gz
 cd staragent90
 ./staragent &amp;</pre>

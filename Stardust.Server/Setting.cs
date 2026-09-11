@@ -158,6 +158,10 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     [Description("dotNet同步地址。抓取.NET运行时版本的官方API地址，支持{major}占位符")]
     public String DotNetSyncUrl { get; set; } = "https://dotnetcli.blob.core.windows.net/dotnet/release-metadata/{major}.0/releases.json";
 
+    /// <summary>星尘资源下载基础地址。StarAgent安装包/一键脚本等资源的基础URL，.NET运行时脚本位于其同级dotnet/目录，默认官方地址</summary>
+    [Description("星尘资源下载基础地址。StarAgent安装包/脚本的基础URL，默认官方地址")]
+    public String AgentDownloadBaseUrl { get; set; } = "https://x.newlifex.com/star/";
+
     ///// <summary>新服务器。节点自动迁移到新的服务器地址</summary>
     //[Description("新服务器。节点自动迁移到新的服务器地址")]
     //public String NewServer { get; set; }
