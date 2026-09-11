@@ -76,9 +76,11 @@ public class Startup
 
         IpResolver.Register();
 
-        // 当文件提供或文件拉取任一功能开启时，启用文件存储
-        if (set.FileStorageProvide || set.FileStorageFetch)
-            services.AddCubeFileStorage("Star");
+        // 文件存储：IFileStorage 必须始终注册，因为 CubeController 的构造函数始终依赖它。
+        // 若仅在“提供/拉取”开启时才注册，一旦两个开关都关闭（如运行配置将 FileStorageProvide 设为 false），
+        // CubeController 将无法激活并抛出 InvalidOperationException。
+        // 后台文件存储服务（事件总线订阅/扫描）仍仅在任一功能开启时启动，避免无谓开销。
+        services.AddCubeFileStorage("Star");
 
         // DDNS服务 - 必须在 NodeService 之前注册，因为 NodeService 依赖 DnsService
         services.AddSingleton<IDnsProvider, AliyunDnsProvider>();
