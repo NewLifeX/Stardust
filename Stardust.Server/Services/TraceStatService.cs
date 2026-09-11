@@ -23,15 +23,34 @@ public interface ITraceStatService
     /// <summary>设置热门应用。监控中心正在查看的应用，缩短计算周期以提供更实时的统计数据</summary>
     /// <param name="appId">应用编号</param>
     void SetHotApp(Int32 appId);
+
+    /// <summary>获取内存中的分钟统计。告警实时判定使用，避免等待延迟队列落盘；未命中返回null，由数据库兜底</summary>
+    /// <param name="appId">应用编号</param>
+    /// <param name="itemId">跟踪项编号</param>
+    /// <param name="time">统计时间（5分钟桶）</param>
+    /// <returns>内存中的统计对象</returns>
+    TraceMinuteStat GetLiveMinute(Int32 appId, Int32 itemId, DateTime time);
+
+    /// <summary>获取内存中的应用分钟统计。告警实时判定使用，避免等待延迟队列落盘；未命中返回null，由数据库兜底</summary>
+    /// <param name="appId">应用编号</param>
+    /// <param name="time">统计时间（5分钟桶）</param>
+    /// <returns>内存中的统计对象</returns>
+    AppMinuteStat GetLiveAppMinute(Int32 appId, DateTime time);
+
+    /// <summary>紧急落盘。触发分钟级统计队列立即写入数据库，保证告警依据及时入库</summary>
+    void TriggerFlush();
+
+    /// <summary>清空并处理全部缓存，用于优雅停机，缩小重启数据缺口</summary>
+    void Flush();
 }
 
 /// <summary>追踪统计服务</summary>
 /// <remarks>
-/// 性能优化说明：
-/// 1. 流式计算（FlowPeriod）：处理内存队列中的追踪数据，计算分钟级统计
-/// 2. 批量计算（BatchPeriod）：从数据库重新聚合，修正流式计算偏差，计算小时/天级统计
-/// 3. 落盘保存（SavePeriod）：延迟队列批量提交到数据库的周期
-/// 4. 三个周期可通过配置文件调整，根据实际负载平衡实时性与性能
+/// 统计分三段，通过热门窗口与巡检在“实时性”和“写压力”之间平衡：
+/// 1. 告警链：分钟级统计全量流式，告警直接读内存实时值，落盘可以稀疏（SavePeriod）；
+/// 2. 实时链：热门应用（正被查看）的小时/日统计由数据上报驱动实时重算，打开页面即时刷新；
+/// 3. 巡检链：非热门应用的小时/日统计由巡检按 PatrolPeriod 兜底重算；
+/// 进程首次巡检兼作启动补算，优雅停机时 Flush 落盘，保证重启不丢统计。
 /// </remarks>
 public class TraceStatService : ITraceStatService
 {
@@ -51,23 +70,27 @@ public class TraceStatService : ITraceStatService
     /// </remarks>
     public Int32 BatchPeriod { get; set; } = 30;
 
-    /// <summary>落盘保存周期。默认60秒</summary>
+    /// <summary>落盘保存周期。默认300秒</summary>
     /// <remarks>
-    /// 延迟队列批量提交统计数据到数据库的周期，是主要性能瓶颈。
+    /// 延迟队列批量提交统计数据到数据库的周期，是数据库写压力的主要来源。
+    /// 告警读取内存实时值，查看页面会触发即时落盘，因此可以放宽落盘而几乎不影响体验。
     /// 调小：数据持久化更快，系统重启时数据丢失少，但数据库UPDATE压力大。
-    /// 调大：大幅减少数据库UPDATE次数，降低IO压力，但重启时可能丢失更多内存数据（可适当调大到120-180秒）。
+    /// 调大：大幅减少数据库UPDATE次数，降低IO压力，但重启时可能丢失更多内存数据。
     /// </remarks>
-    public Int32 SavePeriod { get; set; } = 60;
+    public Int32 SavePeriod { get; set; } = 300;
 
-    /// <summary>热门应用有效窗口（秒）。默认600秒，窗口内该应用日统计保持流式实时</summary>
-    public Int32 HotWindow { get; set; } = 600;
+    /// <summary>统计巡检周期（秒）。默认600秒</summary>
+    /// <remarks>非热门应用由巡检按本周期重算当前小时与当天统计，替代每个批周期的全量重算，显著降低写放大</remarks>
+    public Int32 PatrolPeriod { get; set; } = 600;
 
-    /// <summary>非热门应用日统计兜底补算周期（秒）。默认600秒</summary>
-    /// <remarks>热门应用由流式计算实时维护日统计；非热门应用由批计算按本周期从小时统计重算当天，降低写放大</remarks>
-    public Int32 DayStatPeriod { get; set; } = 600;
+    /// <summary>热门应用有效窗口（秒）。查看页面后该窗口内保持流式实时统计</summary>
+    private const Int32 HotWindow = 600;
 
-    /// <summary>日统计兜底补算的下次执行时间</summary>
-    private DateTime _nextDayStat = DateTime.MinValue;
+    /// <summary>巡检活跃窗口（秒）。取巡检周期3倍，同时保证首次巡检的启动补算覆盖足够窗口</summary>
+    private Int32 PatrolWindow => PatrolPeriod * 3;
+
+    /// <summary>统计巡检的下次执行时间</summary>
+    private DateTime _nextPatrol = DateTime.MinValue;
 
     private TimerX _timerFlow;
     private TimerX _timerBatch;
@@ -76,7 +99,7 @@ public class TraceStatService : ITraceStatService
     private readonly ConcurrentDictionary<String, ConcurrentBag<DateTime>> _bagMinute = new();
     private readonly ConcurrentQueue<TraceData> _queue = new();
 
-    /// <summary>当日活跃应用。Key=应用Id_日期，Value=最近活跃时间，用于非热门应用日统计兜底补算与跨天收敛</summary>
+    /// <summary>当日活跃应用。Key=应用Id_日期，Value=最近活跃时间，用于非热门应用巡检重算与跨天收敛</summary>
     private readonly ConcurrentDictionary<String, DateTime> _dayActive = [];
 
     /// <summary>热门应用（监控中心正在查看）。Key=应用Id，Value=最近查看时间，窗口内该应用日统计保持流式实时</summary>
@@ -104,18 +127,23 @@ public class TraceStatService : ITraceStatService
         // 放入队列包，凑批处理
         foreach (var item in traces)
         {
+            // 当天活跃登记。非热门应用由巡检按周期统一重算，这里是巡检的活跃应用来源
+            var key = $"{item.AppId}_{item.StatDate.ToFullString()}";
+            _dayActive[key] = DateTime.Now;
+
+            // 热门应用（监控中心正在查看）保持事件驱动的实时重算；
+            // 非热门应用不登记小时/日包，交由巡检按 PatrolPeriod 兜底重算，消除每个批周期全量重算的写放大
+            if (IsHotApp(item.AppId))
             {
-                var key = $"{item.AppId}_{item.StatDate.ToFullString()}";
                 if (!_bagDay.Contains(key)) _bagDay.Add(key);
-                _dayActive[key] = DateTime.Now;
+
+                var hkey = $"{item.AppId}_{item.StatHour.ToFullString()}";
+                if (!_bagHour.Contains(hkey)) _bagHour.Add(hkey);
             }
+
             {
-                var key = $"{item.AppId}_{item.StatHour.ToFullString()}";
-                if (!_bagHour.Contains(key)) _bagHour.Add(key);
-            }
-            {
-                var key = $"{item.AppId}_{item.StatMinute:yyyyMMddHH}";
-                var bag = _bagMinute.GetOrAdd(key, []);
+                var mkey = $"{item.AppId}_{item.StatMinute:yyyyMMddHH}";
+                var bag = _bagMinute.GetOrAdd(mkey, []);
                 if (!bag.Contains(item.StatMinute)) bag.Add(item.StatMinute);
             }
         }
@@ -188,11 +216,11 @@ public class TraceStatService : ITraceStatService
 
         Init();
 
-        // 记录热门应用与最近查看时间，作为日统计流式实时的热窗口
+        // 记录热门应用与最近查看时间，作为统计实时化的热窗口
         _hotApps[appId] = DateTime.Now;
 
-        // 缩短批计算周期，让统计数据更快刷新
-        _timerBatch?.SetNext(3_000);
+        // 打开页面时立即登记重算（分钟槽+当前小时+当天），并缩短批计算周期尽快处理
+        Add(appId, DateTime.Now);
 
         // 触发各延迟队列立即落盘
         _minuteQueue?.Trigger();
@@ -239,7 +267,7 @@ public class TraceStatService : ITraceStatService
             if (td.AppId <= 0 || td.Name.IsNullOrEmpty()) continue;
 
             // 每日。仅热门应用（监控中心正在查看）保留流式实时日统计，
-            // 其余应用日统计由批计算按 DayStatPeriod 兜底重算当天，显著降低日统计写放大
+            // 其余应用日统计由巡检按 PatrolPeriod 兜底重算当天，显著降低日统计写放大
             if (IsHotApp(td.AppId))
             {
                 var queue = _dayQueue ??= new();
@@ -347,21 +375,25 @@ public class TraceStatService : ITraceStatService
             ProcessDay(ss[0].ToInt(), ss[1].ToDateTime());
         }
 
-        // 兜底补算：非热门应用按周期重算当天，历史日跨天后补算最终值
-        EnsureDayStat();
+        // 巡检：非热门应用按周期重算当前小时与当天统计，历史日跨天后补算最终值
+        DoPatrol();
 
         // 更新周期
         if (BatchPeriod > 0 && _timerBatch != null) _timerBatch.Period = BatchPeriod * 1000;
     }
 
-    /// <summary>日统计兜底补算。非热门应用按周期重算当天；历史日（跨天）补算最终值后收敛移除登记</summary>
-    private void EnsureDayStat()
+    /// <summary>统计巡检。非热门应用按周期重算当前小时与当天统计；历史日（跨天）补算最终值后收敛移除登记。
+    /// 进程首次巡检兼作启动补算，额外重算最近窗口的分钟统计，覆盖重启丢失的内存增量</summary>
+    private void DoPatrol()
     {
         var now = DateTime.Now;
-        if (now < _nextDayStat) return;
+        if (now < _nextPatrol) return;
 
-        // 每 DayStatPeriod 节流一次
-        _nextDayStat = now.AddSeconds(DayStatPeriod);
+        // 进程首次巡检（_nextPatrol 仍为初始值）兼作启动补算
+        var recovery = _nextPatrol == DateTime.MinValue;
+
+        // 每 PatrolPeriod 节流一次
+        _nextPatrol = now.AddSeconds(PatrolPeriod);
 
         // 清理过期的热门应用窗口，防止字典无限增长
         // IsHotApp 仅在该应用仍有数据上报时才被调用，停报应用需在此统一回收
@@ -372,6 +404,7 @@ public class TraceStatService : ITraceStatService
         }
 
         var today = now.Date;
+        var hour = today.AddHours(now.Hour);
         foreach (var item in _dayActive)
         {
             var ss = item.Key.Split("_");
@@ -381,7 +414,7 @@ public class TraceStatService : ITraceStatService
             var date = ss[1].ToDateTime();
             if (appId <= 0 || date.Year < 2000) continue;
 
-            // 热门应用由流式实时维护，跳过兜底
+            // 热门应用由流式实时维护，跳过巡检
             if (IsHotApp(appId)) continue;
 
             if (date < today)
@@ -390,13 +423,20 @@ public class TraceStatService : ITraceStatService
                 ProcessDay(appId, date);
                 _dayActive.TryRemove(item.Key, out _);
             }
-            else if (now - item.Value <= TimeSpan.FromSeconds(DayStatPeriod * 2))
+            else if (recovery || now - item.Value <= TimeSpan.FromSeconds(PatrolWindow))
             {
-                // 当天且近期活跃：重算一次，保证当日统计缓慢跟上
-                ProcessDay(appId, date);
+                // 首次巡检：从原始数据补算最近窗口的分钟统计，覆盖重启丢失的内存增量
+                if (recovery) ProcessMinute(appId, now.AddSeconds(-PatrolWindow), now);
+
+                // 当天且近期活跃：重算当前小时与当天统计，保证缓慢跟上
+                ProcessHour(appId, hour);
+                ProcessDay(appId, today);
             }
             // 当天已不活跃：不再重算空转，但保留登记等待跨天后补算最终值，避免当日尾部数据缺失
         }
+
+        // 补算结果立即落盘，缩短重启后的数据盲区
+        if (recovery) TriggerFlush();
     }
 
     private void ProcessDay(Int32 appId, DateTime time)
@@ -627,6 +667,49 @@ public class TraceStatService : ITraceStatService
 
             if (span != null) span.Value++;
         }
+    }
+
+    /// <summary>获取内存中的分钟统计。告警实时判定使用，避免等待延迟队列落盘；未命中返回null，由数据库兜底</summary>
+    /// <param name="appId">应用编号</param>
+    /// <param name="itemId">跟踪项编号</param>
+    /// <param name="time">统计时间（5分钟桶）</param>
+    /// <returns>内存中的统计对象</returns>
+    public TraceMinuteStat GetLiveMinute(Int32 appId, Int32 itemId, DateTime time)
+    {
+        var queue = _minuteQueue;
+        if (queue == null) return null;
+
+        var model = new TraceStatModel { Time = time, AppId = appId, ItemId = itemId };
+        return queue.Entities.TryGetValue(model.Key, out var value) ? value as TraceMinuteStat : null;
+    }
+
+    /// <summary>获取内存中的应用分钟统计。告警实时判定使用，避免等待延迟队列落盘；未命中返回null，由数据库兜底</summary>
+    /// <param name="appId">应用编号</param>
+    /// <param name="time">统计时间（5分钟桶）</param>
+    /// <returns>内存中的统计对象</returns>
+    public AppMinuteStat GetLiveAppMinute(Int32 appId, DateTime time)
+    {
+        var queue = _appMinuteQueue;
+        if (queue == null) return null;
+
+        var model = new TraceStatModel { Time = time, AppId = appId };
+        return queue.Entities.TryGetValue(model.Key, out var value) ? value as AppMinuteStat : null;
+    }
+
+    /// <summary>紧急落盘。触发分钟级统计队列立即写入数据库，保证告警依据及时入库</summary>
+    public void TriggerFlush()
+    {
+        _minuteQueue?.Trigger();
+        _appMinuteQueue?.Trigger();
+    }
+
+    /// <summary>清空并处理全部缓存，用于优雅停机，缩小重启数据缺口</summary>
+    public void Flush()
+    {
+        _minuteQueue?.Flush();
+        _appMinuteQueue?.Flush();
+        _hourQueue?.Flush();
+        _dayQueue?.Flush();
     }
 }
 

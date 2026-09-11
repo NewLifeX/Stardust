@@ -57,6 +57,7 @@ public class Startup
             FlowPeriod = set.MonitorFlowPeriod,
             BatchPeriod = set.MonitorBatchPeriod,
             SavePeriod = set.MonitorSavePeriod,
+            PatrolPeriod = set.MonitorPatrolPeriod,
         };
         services.AddSingleton<ITraceStatService>(traceService);
         var appStatService = new AppDayStatService(tracer) { BatchPeriod = set.MonitorBatchPeriod };
@@ -69,6 +70,7 @@ public class Startup
             traceService.FlowPeriod = set.MonitorFlowPeriod;
             traceService.BatchPeriod = set.MonitorBatchPeriod;
             traceService.SavePeriod = set.MonitorSavePeriod;
+            traceService.PatrolPeriod = set.MonitorPatrolPeriod;
             appStatService.BatchPeriod = set.MonitorBatchPeriod;
         };
 
@@ -260,6 +262,20 @@ public class Startup
         // 注册退出事件
         if (app is IHost host)
             NewLife.Model.Host.RegisterExit(() => host.StopAsync().Wait());
+
+        // 优雅停机：把统计服务的延迟队列缓冲落盘，缩小重启数据缺口
+        var lifetime = app.ApplicationServices.GetService<IHostApplicationLifetime>();
+        lifetime?.ApplicationStopping.Register(() =>
+        {
+            try
+            {
+                app.ApplicationServices.GetService<ITraceStatService>()?.Flush();
+            }
+            catch (Exception ex)
+            {
+                XTrace.WriteException(ex);
+            }
+        });
 
         app.UseEndpoints(endpoints =>
         {

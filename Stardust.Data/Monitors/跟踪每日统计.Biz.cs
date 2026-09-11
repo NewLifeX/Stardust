@@ -259,11 +259,11 @@ public static IList<TraceDayStat> FindAllByAppIdAndTypeAndStatDate(Int32 appId, 
         return FindAll(where.GroupBy(_.AppId, _.ItemId), null, selects);
     }
 
-    /// <summary>根据应用分组统计</summary>
+    /// <summary>根据跟踪项分组统计</summary>
     /// <param name="appId"></param>
     /// <param name="startTime"></param>
     /// <returns></returns>
-    public static IList<TraceDayStat> SearchGroupItemByApp(Int32 appId, DateTime startTime)
+    public static IList<TraceDayStat> SearchGroupByItem(Int32 appId, DateTime startTime)
     {
         var selects = _.ID.Count() & _.Total.Sum() & _.Errors.Sum() & _.Cost.Avg() & _.ItemId;
         var where = new WhereExpression();

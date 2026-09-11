@@ -19,18 +19,15 @@ public interface ITraceItemStatService
 }
 
 /// <summary>跟踪项统计服务</summary>
-public class TraceItemStatService : ITraceItemStatService
+/// <remarks>实例化跟踪项统计服务</remarks>
+/// <param name="tracer">跟踪器</param>
+public class TraceItemStatService(ITracer tracer) : ITraceItemStatService
 {
-    /// <summary>批计算周期。默认600秒</summary>
-    public Int32 BatchPeriod { get; set; } = 600;
+    /// <summary>批计算周期。默认1800秒</summary>
+    public Int32 BatchPeriod { get; set; } = 1800;
 
     private TimerX _timer;
     private readonly ConcurrentBag<Int32> _bag = [];
-    private readonly ITracer _tracer;
-
-    /// <summary>实例化跟踪项统计服务</summary>
-    /// <param name="tracer">跟踪器</param>
-    public TraceItemStatService(ITracer tracer) => _tracer = tracer;
 
     /// <summary>添加需要统计的应用，去重</summary>
     /// <param name="appId">应用编号</param>
@@ -56,7 +53,7 @@ public class TraceItemStatService : ITraceItemStatService
     {
         while (_bag.TryTake(out var appId))
         {
-            using var span = _tracer?.NewSpan("TraceItemStat-Process", appId);
+            using var span = tracer?.NewSpan("TraceItemStat-Process", appId);
             try
             {
                 Process(appId, 7);
@@ -73,9 +70,9 @@ public class TraceItemStatService : ITraceItemStatService
     {
         var startTime = DateTime.Today.AddDays(-days);
 
-        var app = AppTracer.FindByID(appId);
+        //var app = AppTracer.FindByID(appId);
         var list = TraceItem.GetValids(appId, startTime);
-        var sts = TraceDayStat.SearchGroupItemByApp(appId, startTime);
+        var sts = TraceDayStat.SearchGroupByItem(appId, startTime);
         foreach (var st in sts)
         {
             var ti = list.FirstOrDefault(e => e.Id == st.ItemId);

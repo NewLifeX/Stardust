@@ -18,6 +18,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
 
     private TimerX _timer;
     private ICache _cache;
+    private ITraceStatService _statService;
 
     /// <summary>启动服务，初始化定时器</summary>
     /// <param name="cancellationToken">取消令牌</param>
@@ -45,6 +46,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
     private void DoAlarm(Object state)
     {
         _cache ??= serviceProvider.GetService<ICacheProvider>()?.Cache;
+        _statService ??= serviceProvider.GetService<ITraceStatService>();
 
         // 应用告警
         var list = AppTracer.FindAllWithCache();
@@ -90,28 +92,41 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
 
         using var span = tracer?.NewSpan($"alarm:{nameof(AppTracer)}");
 
-        // 最近一段时间的5分钟级数据
+        // 最近一段时间的5分钟级数据。内存实时值优先（不等待落盘），数据库兜底
         var time = DateTime.Now;
         var minute = time.Date.AddHours(time.Hour).AddMinutes(time.Minute / 5 * 5);
         span?.AppendTag(new { time, minute });
 
-        var st = AppMinuteStat.FindByAppIdAndTime(appId, minute);
-        if (st != null)
+        // 依次检查当前桶与上一桶，回溯上一桶用于兜底重启或恢复期间晚到落库的数据
+        for (var i = 0; i <= 1; i++)
         {
+            var bucket = minute.AddMinutes(-5 * i);
+            var st = _statService?.GetLiveAppMinute(appId, bucket) ?? AppMinuteStat.FindByAppIdAndTime(appId, bucket);
+            if (st == null) continue;
+
+            // 内存实体尚未经过保存校验，错误率需要现场计算
+            var errorRate = CalcErrorRate(st.Total, st.Errors);
+
             // 判断告警
             if (app.AlarmThreshold > 0 && st.Errors >= app.AlarmThreshold ||
-                app.AlarmErrorRate > 0 && st.ErrorRate >= app.AlarmErrorRate)
+                app.AlarmErrorRate > 0 && errorRate >= app.AlarmErrorRate)
             {
-                span?.AppendTag(new { st.Errors, st.ErrorRate });
+                span?.AppendTag(new { bucket, st.Errors, errorRate });
 
                 // 一定时间内不要重复报错，除非错误翻倍
                 var error2 = _cache.Get<Int32>("alarm:AppTracer:" + appId);
                 if (error2 == 0 || st.Errors > error2 * 2)
                 {
                     _cache.Set("alarm:AppTracer:" + appId, st.Errors, 5 * 60);
+                    st.ErrorRate = errorRate;
 
                     var msg = GetMarkdown(app, st, true);
                     RobotHelper.SendAlarmWithRecord(app.Category ?? app.ProjectName, webhook, "应用告警", msg, "应用告警", app.Name);
+
+                    // 触发紧急落盘，保证告警依据及时入库
+                    _statService?.TriggerFlush();
+
+                    break;
                 }
             }
         }
@@ -219,12 +234,24 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
 
             using var span = tracer?.NewSpan($"alarm:{nameof(TraceItem)}", new { appId = app.ID, time, minute });
 
-            var list = TraceMinuteStat.Search(app.ID, minute, tis.Select(e => e.Id).ToArray());
-            foreach (var st in list)
+            var itemIds = tis.Select(e => e.Id).ToArray();
+            var fired = new List<Int32>();
+
+            // 依次检查当前桶与上一桶，回溯上一桶用于兜底重启或恢复期间晚到落库的数据
+            for (var i = 0; i <= 1; i++)
             {
-                var ti = tis.FirstOrDefault(e => e.Id == st.ItemId);
-                if (ti != null)
+                var bucket = minute.AddMinutes(-5 * i);
+
+                // 数据库行兜底，内存实时值优先覆盖（不再等待落盘）
+                var list = TraceMinuteStat.Search(app.ID, bucket, itemIds);
+                var dict = new Dictionary<Int32, TraceMinuteStat>();
+                foreach (var st in list) dict[st.ItemId] = st;
+
+                foreach (var ti in tis)
                 {
+                    // 同一个跟踪项只报一次，不跨桶重复
+                    if (fired.Contains(ti.Id)) continue;
+
                     var max = ti.AlarmThreshold;
                     var rate = ti.AlarmErrorRate;
                     if (max <= 0 && rate <= 0)
@@ -232,12 +259,21 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
                         max = app.ItemAlarmThreshold;
                         rate = app.ItemAlarmErrorRate;
                     }
+                    if (max <= 0 && rate <= 0) continue;
+
+                    // 内存优先：未落盘时数据库可能还没有该行
+                    var live = _statService?.GetLiveMinute(app.ID, ti.Id, bucket);
+                    var st = SelectLatest(live, dict.TryGetValue(ti.Id, out var db) ? db : null);
+                    if (st == null) continue;
+
+                    // 内存实体尚未经过保存校验，错误率需要现场计算
+                    var errorRate = CalcErrorRate(st.Total, st.Errors);
 
                     // 必须两个条件同时满足，才能告警
                     if (max > 0 && st.Errors >= max &&
-                        rate > 0 && st.ErrorRate >= rate)
+                        rate > 0 && errorRate >= rate)
                     {
-                        span?.AppendTag(new { st.Errors, st.ErrorRate, rate });
+                        span?.AppendTag(new { bucket, st.Errors, errorRate, rate });
 
                         // 一定时间内不要重复报错，除非错误翻倍
                         var error2 = _cache.Get<Int32>("alarm:TraceMinuteStat:" + ti.Id);
@@ -252,13 +288,38 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
                             var group = ti.AlarmGroup;
                             if (group.IsNullOrEmpty()) group = app.Category;
 
+                            st.ErrorRate = errorRate;
+
                             var msg = GetMarkdown(app, st, true);
                             RobotHelper.SendAlarmWithRecord(group, webhook, "埋点告警", msg, "埋点告警", $"{app.Name}/{ti.Name}");
+
+                            // 触发紧急落盘，保证告警依据及时入库
+                            _statService?.TriggerFlush();
+
+                            fired.Add(ti.Id);
                         }
                     }
                 }
             }
         }
+    }
+
+    /// <summary>计算错误率。内存实体尚未经过保存校验，ErrorRate 列可能滞后，需要现场计算</summary>
+    /// <param name="total">总次数</param>
+    /// <param name="errors">错误数</param>
+    /// <returns>错误率，保留4位小数</returns>
+    private static Double CalcErrorRate(Int64 total, Int64 errors) => total == 0 ? 0 : Math.Round((Double)errors / total, 4);
+
+    /// <summary>选择较新的统计值。内存实时值优先于数据库值，避免等待落盘</summary>
+    /// <param name="live">内存实时统计，可能为空</param>
+    /// <param name="db">数据库统计，可能为空</param>
+    /// <returns>较新的统计对象</returns>
+    private static TraceMinuteStat SelectLatest(TraceMinuteStat live, TraceMinuteStat db)
+    {
+        if (live == null) return db;
+        if (db == null || live.Errors >= db.Errors) return live;
+
+        return db;
     }
 
     private String GetMarkdown(AppTracer app, TraceMinuteStat st, Boolean includeTitle)

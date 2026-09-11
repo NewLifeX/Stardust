@@ -1,6 +1,6 @@
 # APM 监控中心 - 星尘监控系统架构
 
-> **版本**：v2.0 | **更新时间**：2026-07-15 | **文档状态**：最新稳定版
+> **版本**：v2.1 | **更新时间**：2026-09-11 | **文档状态**：最新稳定版
 > 对应模块：APM 监控中心 / APM
 > 相关文档：[APM-3-链路追踪统计](APM-3-链路追踪统计.md) | [APM-17-监控接入API](APM-17-监控接入API.md)
 
@@ -82,6 +82,8 @@
     → 统计队列 → TraceStatService（流式+批量）
     → TraceMinuteStat → TraceHourStat → TraceDayStat → AppDayStat
 ```
+
+> 注：2026-09 起统计计算分为**告警链 / 汇总链**两层：分钟级为告警链（全量）；小时/日级为汇总链（热门应用实时、非热门由巡检按周期重算）。详见 §4.3。
 
 ---
 
@@ -186,8 +188,10 @@ WebApi 请求的埋点名称由 `TracerMiddleware`（`Stardust.Extensions\Tracer
 
 | 模式 | 周期 | 方法 | 说明 |
 |------|------|------|------|
-| 流式计算 | **30秒** | `DoFlowStat()` | 增量累加，仅计算分钟级统计 |
-| 批量计算 | **60秒** | `DoBatchStat()` | 覆盖计算，处理小时/天级统计 |
+| 流式计算 | **5秒** | `DoFlowStat()` | 增量累加：分钟/应用分钟/小时级统计；日级统计仅热门应用 |
+| 批量计算 | **30秒** | `DoBatchStat()` | 覆盖重算：按登记包修正分钟统计；小时/日登记包仅热门应用 |
+
+> 周期均可通过 `MonitorFlowPeriod` / `MonitorBatchPeriod` 配置热更新。
 
 #### 多级统计汇总
 
@@ -197,14 +201,98 @@ TraceData → TraceMinuteStat（5分钟粒度）→ TraceHourStat → TraceDaySt
 
 #### 延迟队列机制
 
-使用 `EntityDeferredQueue` 实现批量数据库更新：
+使用 `EntityDeferredQueue` 实现批量数据库更新，四个队列共享一个落盘周期，查看页面会触发即时落盘：
 
-| 队列 | 周期 | 说明 |
-|------|------|------|
-| MinuteQueue | 120秒 | 分钟统计，告警数据源 |
-| AppMinuteQueue | 120秒 | 应用分钟统计 |
-| HourQueue | 180秒 | 小时统计 |
-| DayQueue | 180秒 | 天统计 |
+| 队列 | 落盘周期 | 说明 |
+|------|---------|------|
+| MinuteQueue | `MonitorSavePeriod`（默认300秒） | 分钟统计，告警数据源（告警读取内存实时值，不受落盘周期影响） |
+| AppMinuteQueue | `MonitorSavePeriod`（默认300秒） | 应用分钟统计 |
+| HourQueue | `MonitorSavePeriod`（默认300秒） | 小时统计 |
+| DayQueue | `MonitorSavePeriod`（默认300秒） | 天统计 |
+
+---
+
+### 4.3 统计计算机制与降载设计
+
+> 2026-09 引入“分层降载”：把统计链路分为**告警链**与**汇总链**，用“内存实时值 + 稀疏落盘 + 巡检重算”替代高频全量重算，目标是降低监控统计自身对数据库的写压力。
+
+#### 总体数据流
+
+```mermaid
+flowchart TD
+    TC["TraceController\n埋点上报"] -->|"批量INSERT"| RAW[("TraceData 原始表\n保留3天")]
+    TC -->|"stat.Add"| TS["TraceStatService\n流式5s + 批算30s"]
+
+    TS -->|"分钟/应用分钟\n全量流式+批算"| MIN[("TraceMinuteStat\nAppMinuteStat")]
+    TS -->|"热门应用流式\n非热门巡检600s"| HOUR[("TraceHourStat\nTraceDayStat")]
+
+    MIN -->|"落盘 300s"| DBM[("数据库")]
+    HOUR -->|"落盘 300s"| DBM
+    DBM -.->|"汇总重算"| FULL[("AppDayStat\nTraceItem")]
+    DBM -->|"每分钟扫描\n当前+上一桶"| ALM["AlarmService\n告警扫描"]
+    DBM --> WEB["监控页面"]
+    classDef db fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20
+    classDef svc fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
+    class RAW,MIN,HOUR,DBM,FULL db
+    class TC,TS,ALM,WEB svc
+```
+
+#### 热门应用与巡检分层
+
+```mermaid
+flowchart TD
+    A["埋点数据到达"] --> Q{"应用是否热门？\n（600秒内被查看）"}
+    Q -->|"是"| HOT["实时链\n分钟/小时/日全部流式更新\n查看页面即时刷新"]
+    Q -->|"否"| COLD["巡检链\n仅保留分钟级流式\n小时/日由巡检每600秒重算"]
+    COLD -->|"打开页面"| HOT
+```
+
+- **热门窗口**：查看监控页面时，`HotAppService` 通过事件总线 `Star-HotApp` 通知服务端 `SetHotApp`，窗口（600秒）内保持流式实时，并立即登记重算（分钟槽+当前小时+当天）、触发队列落盘；
+- **巡检**：非热门应用不登记小时/日重算包，由巡检按 `MonitorPatrolPeriod`（默认600秒）对活跃窗口（巡检周期×3，默认30分钟）内的应用重算当前小时与当天统计；跨天后由首个巡检补算昨日最终值；
+- **幂等重算**：所有聚合均为“从下层全量覆盖”：分钟←原始数据、小时←分钟、日←小时、应用日←日统计，任意时刻可重建。
+
+### 4.4 重启与数据一致性
+
+统计数据在落盘前驻留内存，进程重启会丢失未落盘的聚合增量。系统通过“原始数据 + 幂等重算 + 三件套防护”保证不丢数：
+
+```mermaid
+sequenceDiagram
+    participant P as StarServer 进程
+    participant DB as 数据库
+    participant R as 原始 TraceData
+    P->>DB: 运行中：延迟队列按周期落盘（默认300秒）
+    Note over P: 进程重启，未落盘的内存增量丢失
+    P->>R: 首次巡检兼作启动补算（启动后首个批周期）
+    R-->>P: 重算最近窗口分钟槽 → 当前小时 → 当天/昨日统计
+    P->>DB: 补算结果触发紧急落盘
+    Note over P,DB: 缺口闭合；此后巡检每600秒覆盖活跃应用
+```
+
+| 内存状态 | 丢失后果 | 恢复路径 |
+|---------|---------|---------|
+| `_queue` 未消费原始数据 | 分钟增量少计 | 启动补算/巡检按原始数据重算 |
+| 延迟队列缓冲（≤落盘周期） | 分钟/小时/日少计 | 同上（分钟由原始数据重建） |
+| 活跃登记与热窗口 | 巡检/实时性下降 | 随新数据与页面访问自动重建 |
+
+优雅停机时通过 `IHostApplicationLifetime.ApplicationStopping` 触发 `Flush()`，把四个延迟队列的缓冲同步落盘，进一步缩小重启缺口。
+
+### 4.5 告警链路与延迟预算
+
+告警服务 `AlarmService` 每 `AlarmPeriod`（默认30秒）扫描一次：应用告警读 `AppMinuteStat`、埋点告警读 `TraceMinuteStat`。
+
+- **内存实时值优先**：告警通过 `ITraceStatService.GetLiveMinute/GetLiveAppMinute` 直接读取延迟队列中的内存实体，未命中时回落数据库。落盘周期（默认300秒）不再约束告警时效；
+- **错误率现场计算**：`ErrorRate` 列在保存校验时计算，内存实体需按`错误数/总次数`现场计算；
+- **回溯桶**：固定检查当前与上一个5分钟桶，兜底进程重启或数据晚到落库的场景；
+- **紧急落盘**：告警触发后调用 `TriggerFlush()` 立即提交分钟级队列，保证告警依据及时入库。
+
+延迟预算（默认配置）：
+
+| 环节 | 耗时 |
+|------|------|
+| 上报 → 流式增量入内存 | ≤5秒（FlowPeriod） |
+| 告警扫描周期 | ≤30秒（AlarmPeriod） |
+| **端到端（内存判定）** | **≈35秒** |
+| 数据库落盘（不影响告警） | ≤300秒（MonitorSavePeriod） |
 
 ---
 
@@ -256,19 +344,26 @@ TraceData → TraceMinuteStat（5分钟粒度）→ TraceHourStat → TraceDaySt
 
 ### 6.2 已实施的优化
 
-1. **参数调优**：恢复默认配置（5秒/30秒/60秒），支持动态调整
-2. **流式计算精简**：仅计算分钟级统计，小时/天级交给批量计算
-3. **延迟队列周期延长**：60秒 → 120~180秒
+1. **参数调优**：默认配置 5秒/30秒（流式/批算），支持运行时热更新
+2. **流式计算精简**：日统计仅热门应用流式更新，其余交给巡检重算
+3. **分层落盘**：分钟级 300 秒、汇总级 120 秒；告警读取内存实时值，不再等待落盘
+4. **巡检替代事件重算**：非热门应用的小时/日统计由 600 秒巡检重算（原先每个批周期全量重算，造成写放大）
+5. **内存告警 + 紧急落盘**：告警触发后立即提交分钟级队列，回溯桶兜底晚到数据
+6. **重启防护**：启动补算 + 巡检自愈 + 优雅停机 Flush，重启不丢统计
 
 ### 6.3 配置参数
 
 | 参数 | 默认值 | 说明 |
 |------|--------|------|
-| MonitorFlowPeriod | 5秒 | 流式计算周期（推荐生产30秒） |
-| MonitorBatchPeriod | 30秒 | 批量计算周期（推荐生产60秒） |
-| MonitorSavePeriod | 60秒 | 落盘保存周期（**主要瓶颈**，推荐生产180秒） |
+| MonitorFlowPeriod | 5秒 | 流式计算周期 |
+| MonitorBatchPeriod | 30秒 | 批量计算周期（分钟级纠偏） |
+| MonitorSavePeriod | 300秒 | 落盘周期（告警读内存实时值、查看页面即触发落盘） |
+| MonitorPatrolPeriod | 600秒 | 非热门应用巡检重算周期（活跃窗口=周期×3） |
+| AlarmPeriod | 30秒 | 告警扫描周期 |
 
-通过配置文件热更新：`appsettings.json` → `StarServer` 配置项。
+全部参数存储在数据库 `StarServer` 配置分类（`StarServerSetting`），修改后热更新生效（统计服务参数通过 `Provider.Changed` 回写，部分参数下一周期生效）。
+
+> 其余细节为代码内常量：热门窗口600秒、内存队列上限10万条、跟踪项统计1800秒；告警固定检查“当前桶+上一桶”。
 
 ---
 
@@ -288,7 +383,7 @@ TraceData → TraceMinuteStat（5分钟粒度）→ TraceHourStat → TraceDaySt
 
 | 项目 | 优先级 | 说明 |
 |------|--------|------|
-| 按需计算 | 高 | 用户查看时加速计算 |
+| 按需计算 | 已完成 | 查看页面自动标记热门，即时登记重算并加速落盘（§4.3） |
 | GetOrAddItem优化 | 中 | 延长缓存、批量预热 |
 | 智能调度 | 中 | 根据负载动态调整频率 |
 | 时序数据库支持 | 低 | 考虑 InfluxDB/TimescaleDB |

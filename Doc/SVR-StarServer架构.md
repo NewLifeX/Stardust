@@ -116,7 +116,8 @@ StarServer（`Stardust.Server`）是星尘平台的服务端核心，提供所�
 | WhiteIP | — | 准入白名单 |
 | MonitorFlowPeriod | 5 | 监控流统计周期（秒） |
 | MonitorBatchPeriod | 30 | 监控批统计周期（秒） |
-| MonitorSavePeriod | 60 | 监控落盘周期（秒） |
+| MonitorSavePeriod | 300 | 监控落盘周期（秒） |
+| MonitorPatrolPeriod | 600 | 非热门应用巡检重算周期（秒） |
 | DataRetention | 3 | 数据保留天数 |
 
 ---
