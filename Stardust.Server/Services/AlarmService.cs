@@ -148,10 +148,13 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         var url = setting.WebUrl;
         var appUrl = "";
         var traceUrl = "";
+        var sampleUrl = "";
         if (!url.IsNullOrEmpty())
         {
             appUrl = url.EnsureEnd("/") + "Monitors/appMinuteStat?appId=" + st.AppId + "&minError=1";
             traceUrl = url.EnsureEnd("/") + "Monitors/traceMinuteStat?appId=" + st.AppId + "&minError=1";
+            // 采样详情页面，用于按追踪标识查看单次调用的错误与标签
+            sampleUrl = url.EnsureEnd("/") + "Monitors/sampleData";
         }
 
         // 找找具体接口错误
@@ -180,22 +183,22 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
                                 if (node != null) nodes[traceData.ClientId] = node;
                             }
                         }
-                        if (nodes.Count > 0) sb.AppendLine($">**节点：**<font color=\"greed\">{nodes.Join(",", e => e.Value.Name)}</font>");
+                        if (nodes.Count > 0) sb.AppendLine($">**节点：**<font color=\"greed\">{nodes.Select(e => e.Value.Name).Distinct().Join(",")}</font>");
 
                         var sms = SampleData.FindAllByDataIds(ds.Select(e => e.Id).ToArray(), item.StatTime).Where(e => !e.Error.IsNullOrEmpty()).ToList();
                         if (sms.Count > 0)
                         {
-                            var msg = sms[0].Error?.Trim();
-                            if (!msg.IsNullOrEmpty())
-                            {
-                                // 错误内容取第一行，详情看更多
-                                var p = msg.IndexOfAny(new[] { '\r', '\n' });
-                                if (p > 0) msg = msg[..p];
+                            // 输出错误采样摘要，带上位置、标签、实例与追踪链接
+                            AppendErrorSamples(sb, sms, sampleUrl, 1);
 
-                                sb.AppendLine($">内容：{msg}");
+                            names.Add(item.Name);
+                        }
+                        else
+                        {
+                            // 没有采样数据时，说明原因，避免告警只有一句错误而看不出为何没有详情
+                            sb.AppendLine($">内容：无错误采样数据，请检查应用采样周期与最大错误采样数设置");
 
-                                names.Add(item.Name);
-                            }
+                            names.Add(item.Name);
                         }
                     }
                 }
@@ -332,9 +335,12 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
 
         var url = setting.WebUrl;
         var traceUrl = "";
+        var sampleUrl = "";
         if (!url.IsNullOrEmpty())
         {
             traceUrl = url.EnsureEnd("/") + $"Monitors/traceData?appId={st.AppId}&kind=minute&time={HttpUtility.UrlEncode(st.StatTime.ToFullString())}&itemId={st.ItemId}&minError=1";
+            // 采样详情页面，用于按追踪标识查看单次调用的错误与标签
+            sampleUrl = url.EnsureEnd("/") + "Monitors/sampleData";
         }
 
         // 找找具体接口错误
@@ -364,15 +370,13 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
             var sms = SampleData.FindAllByDataIds(ds.Select(e => e.Id).ToArray(), item.StatTime).Where(e => !e.Error.IsNullOrEmpty()).ToList();
             if (sms.Count > 0)
             {
-                var msg = sms[0].Error?.Trim();
-                if (!msg.IsNullOrEmpty())
-                {
-                    // 错误内容取第一行，详情看更多
-                    var p = msg.IndexOfAny(new[] { '\r', '\n' });
-                    if (p > 0) msg = msg[..p];
-
-                    sb.AppendLine($">内容：{msg}");
-                }
+                // 输出错误采样摘要，带上位置、标签、实例与追踪链接
+                AppendErrorSamples(sb, sms, sampleUrl, 3);
+            }
+            else
+            {
+                // 没有采样数据时，说明原因，避免告警只有一句错误而看不出为何没有详情
+                sb.AppendLine($">内容：无错误采样数据，请检查应用采样周期与最大错误采样数设置");
             }
         }
 
@@ -386,6 +390,104 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         }
 
         return str;
+    }
+
+    /// <summary>输出错误采样摘要。除异常首行外，附带抛出位置、附加标签、实例与追踪链接，便于定位问题</summary>
+    /// <param name="sb">消息构造器</param>
+    /// <param name="samples">错误采样数据</param>
+    /// <param name="sampleUrl">采样详情页面地址，为空时不输出追踪链接</param>
+    /// <param name="maxCount">最多输出的采样条数</param>
+    private void AppendErrorSamples(StringBuilder sb, IList<SampleData> samples, String sampleUrl, Int32 maxCount)
+    {
+        if (samples == null || samples.Count == 0) return;
+
+        var count = 0;
+        var keys = new List<String>();
+        foreach (var sm in samples)
+        {
+            if (count >= maxCount) break;
+
+            var error = sm.Error?.Trim();
+            if (error.IsNullOrEmpty()) continue;
+
+            // 异常首行，即异常类型加消息
+            var msg = GetFirstLine(error);
+            if (msg.IsNullOrEmpty()) continue;
+
+            // 同一异常的多次采样只报一次，避免刷屏
+            if (keys.Contains(msg)) continue;
+            keys.Add(msg);
+
+            sb.AppendLine($">内容：{msg}");
+
+            // 堆栈中第一个非框架帧，用于定位抛出位置
+            var frame = GetStackFrame(error);
+            if (!frame.IsNullOrEmpty()) sb.AppendLine($">位置：`{frame}`");
+
+            // 发生时间与耗时。耗时接近阻塞时长时，多为等待被取消，而非真正的执行失败
+            sb.AppendLine($">时间：{sm.Start:HH:mm:ss}，耗时：{sm.Cost:n0}ms");
+
+            // 业务侧通过 AppendTag 携带的附加数据，如Redis地址、主题、消费者等
+            var tag = sm.Tag?.Trim();
+            if (!tag.IsNullOrEmpty()) sb.AppendLine($">标签：{Cut(tag, 200)}");
+
+            // 实例即ip@进程号，同名节点的多个实例可据此区分
+            if (!sm.ClientId.IsNullOrEmpty())
+            {
+                if (!sampleUrl.IsNullOrEmpty() && !sm.TraceId.IsNullOrEmpty())
+                    sb.AppendLine($">实例：{sm.ClientId}，[追踪]({sampleUrl}?traceId={HttpUtility.UrlEncode(sm.TraceId)})");
+                else
+                    sb.AppendLine($">实例：{sm.ClientId}");
+            }
+
+            count++;
+        }
+    }
+
+    /// <summary>取得多行文本的第一行，超长时截断</summary>
+    /// <param name="value">多行文本</param>
+    private static String GetFirstLine(String value)
+    {
+        if (value.IsNullOrEmpty()) return null;
+
+        var p = value.IndexOfAny(['\r', '\n']);
+        var line = p > 0 ? value[..p] : value;
+
+        return Cut(line.Trim(), 160);
+    }
+
+    /// <summary>取得堆栈中第一个非框架调用帧，用于定位业务代码位置</summary>
+    /// <param name="value">异常信息，含堆栈</param>
+    private static String GetStackFrame(String value)
+    {
+        if (value.IsNullOrEmpty()) return null;
+
+        var lines = value.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
+        for (var i = 1; i < lines.Length && i < 16; i++)
+        {
+            var line = lines[i].Trim();
+            if (!line.StartsWith("at ")) continue;
+
+            var frame = line[3..].Trim();
+            if (frame.IsNullOrEmpty()) continue;
+
+            // 跳过框架内部帧，尽量定位到业务代码
+            if (frame.StartsWith("System.") || frame.StartsWith("Microsoft.") || frame.StartsWith("NewLife.")) continue;
+
+            return Cut(frame, 160);
+        }
+
+        return null;
+    }
+
+    /// <summary>截断字符串，避免单条内容过长挤占整个告警消息</summary>
+    /// <param name="value">原字符串</param>
+    /// <param name="maxLength">最大长度</param>
+    private static String Cut(String value, Int32 maxLength)
+    {
+        if (value.IsNullOrEmpty() || value.Length <= maxLength) return value;
+
+        return value[..maxLength] + "...";
     }
 
     /// <summary>处理环比告警。对比今日与昨日相同时段的错误率变化趋势</summary>

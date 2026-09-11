@@ -163,6 +163,8 @@ public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEv
     public Task HandleAsync(String message, IEventContext? context, CancellationToken cancellationToken)
     {
         using var span = Tracer?.NewSpan($"event:{topic}", message);
+        // 附加消费上下文，便于排查问题（仅追加标签，不影响原消费逻辑）
+        span?.AppendTag(new { topic, clientId = Runtime.ClientId, messageLength = message?.Length ?? 0, eventType = typeof(TEvent).Name });
         try
         {
             context ??= new StringEventContext(this, message);
@@ -177,6 +179,8 @@ public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEv
         }
         catch (Exception ex)
         {
+            // 保留原始消息片段，便于定位反序列化失败或消费异常
+            span?.AppendTag(new { exceptionType = ex.GetType().Name, rawMessage = message?.Cut(200) });
             span?.SetError(ex);
         }
 
