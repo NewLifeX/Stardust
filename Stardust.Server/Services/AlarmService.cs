@@ -145,16 +145,15 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         sb.AppendLine($">**总数：**<font color=\"red\">{st.Errors}</font>");
         sb.AppendLine($">**错误率：**<font color=\"red\">{st.ErrorRate:p2}</font>");
 
-        var url = setting.WebUrl;
-        var appUrl = "";
+        // 多地址配置（英文分号分隔）时，只取第一个（主）地址统一构造跳转链接
+        var primary = GetWebUrl();
         var traceUrl = "";
         var sampleUrl = "";
-        if (!url.IsNullOrEmpty())
+        if (!primary.IsNullOrEmpty())
         {
-            appUrl = url.EnsureEnd("/") + "Monitors/appMinuteStat?appId=" + st.AppId + "&minError=1";
-            traceUrl = url.EnsureEnd("/") + "Monitors/traceMinuteStat?appId=" + st.AppId + "&minError=1";
+            traceUrl = primary + "Monitors/traceMinuteStat?appId=" + st.AppId + "&minError=1";
             // 采样详情页面，用于按追踪标识查看单次调用的错误与标签
-            sampleUrl = url.EnsureEnd("/") + "Monitors/sampleData";
+            sampleUrl = primary + "Monitors/sampleData";
         }
 
         // 找找具体接口错误
@@ -209,10 +208,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         if (str.Length > 1600) str = str[..1600];
 
         // 构造网址
-        if (!appUrl.IsNullOrEmpty())
-        {
-            str += Environment.NewLine + $"[更多信息]({appUrl})";
-        }
+        str += BuildMoreInfo($"Monitors/appMinuteStat?appId={st.AppId}&minError=1");
 
         return str;
     }
@@ -333,14 +329,13 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         sb.AppendLine($">**总数：**<font color=\"red\">{st.Errors}</font>");
         sb.AppendLine($">**错误率：**<font color=\"red\">{st.ErrorRate:p2}</font>");
 
-        var url = setting.WebUrl;
-        var traceUrl = "";
+        // 多地址配置（英文分号分隔）时，只取第一个（主）地址统一构造跳转链接
+        var primary = GetWebUrl();
         var sampleUrl = "";
-        if (!url.IsNullOrEmpty())
+        if (!primary.IsNullOrEmpty())
         {
-            traceUrl = url.EnsureEnd("/") + $"Monitors/traceData?appId={st.AppId}&kind=minute&time={HttpUtility.UrlEncode(st.StatTime.ToFullString())}&itemId={st.ItemId}&minError=1";
             // 采样详情页面，用于按追踪标识查看单次调用的错误与标签
-            sampleUrl = url.EnsureEnd("/") + "Monitors/sampleData";
+            sampleUrl = primary + "Monitors/sampleData";
         }
 
         // 找找具体接口错误
@@ -384,10 +379,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         if (str.Length > 1600) str = str[..1600];
 
         // 构造网址
-        if (!traceUrl.IsNullOrEmpty())
-        {
-            str += Environment.NewLine + $"[更多信息]({traceUrl})";
-        }
+        str += BuildMoreInfo($"Monitors/traceData?appId={st.AppId}&kind=minute&time={HttpUtility.UrlEncode(st.StatTime.ToFullString())}&itemId={st.ItemId}&minError=1");
 
         return str;
     }
@@ -490,6 +482,29 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         return value[..maxLength] + "...";
     }
 
+    /// <summary>取得星尘管理平台基础地址。配置支持英文分号分隔多个地址（多实例部署），统一在此解析与规范化，并只取第一个（主）地址</summary>
+    /// <returns>规范化后的主地址，以/结尾；未配置时返回空字符串</returns>
+    private String GetWebUrl()
+    {
+        var webUrl = setting.WebUrl;
+        if (webUrl.IsNullOrEmpty()) return "";
+
+        // 按英文分号拆分多个地址，去除首尾空白，并统一补全结尾的/
+        var first = webUrl.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).FirstOrDefault();
+        return first.IsNullOrEmpty() ? "" : first.EnsureEnd("/");
+    }
+
+    /// <summary>构造“更多信息”跳转链接文本。多地址配置时只使用第一个（主）地址</summary>
+    /// <param name="relativeUrl">相对路径（不含基础地址，且不带前导/）</param>
+    /// <returns>链接文本；无配置时返回空字符串</returns>
+    private String BuildMoreInfo(String relativeUrl)
+    {
+        var baseUrl = GetWebUrl();
+        if (baseUrl.IsNullOrEmpty()) return "";
+
+        return Environment.NewLine + $"[更多信息]({baseUrl}{relativeUrl})";
+    }
+
     /// <summary>处理环比告警。对比今日与昨日相同时段的错误率变化趋势</summary>
     /// <param name="app">应用跟踪器</param>
     private void ProcessRingRate(AppTracer app)
@@ -564,21 +579,11 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         sb.AppendLine($">**环比：**<font color=\"red\">{st.RingRate:p2}</font>");
         sb.AppendLine($">**折算环比：**<font color=\"red\">{rate:p2}</font>");
 
-        var url = setting.WebUrl;
-        var traceUrl = "";
-        if (!url.IsNullOrEmpty())
-        {
-            traceUrl = url.EnsureEnd("/") + $"Monitors/traceHourStat?appId={st.AppId}&itemId={st.ItemId}";
-        }
-
         var str = sb.ToString();
         if (str.Length > 1600) str = str[..1600];
 
         // 构造网址
-        if (!traceUrl.IsNullOrEmpty())
-        {
-            str += Environment.NewLine + $"[更多信息]({traceUrl})";
-        }
+        str += BuildMoreInfo($"Monitors/traceHourStat?appId={st.AppId}&itemId={st.ItemId}");
 
         return str;
     }
@@ -750,12 +755,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         if (str.Length > 2000) str = str[..2000];
 
         // 构造网址
-        var url = setting.WebUrl;
-        if (!url.IsNullOrEmpty())
-        {
-            url = url.EnsureEnd("/") + "Nodes/NodeData?nodeId=" + node.ID;
-            str += Environment.NewLine + $"[更多信息]({url})";
-        }
+        str += BuildMoreInfo($"Nodes/NodeData?nodeId={node.ID}");
 
         return str;
     }
@@ -896,12 +896,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         if (str.Length > 2000) str = str[..2000];
 
         // 构造网址
-        var url = setting.WebUrl;
-        if (!url.IsNullOrEmpty())
-        {
-            url = url.EnsureEnd("/") + "Nodes/RedisNode?id=" + node.Id;
-            str += Environment.NewLine + $"[更多信息]({url})";
-        }
+        str += BuildMoreInfo($"Nodes/RedisNode?id=" + node.Id);
 
         return str;
     }
@@ -953,12 +948,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         if (str.Length > 2000) str = str[..2000];
 
         // 构造网址
-        var url = setting.WebUrl;
-        if (!url.IsNullOrEmpty())
-        {
-            url = url.EnsureEnd("/") + "Nodes/RedisMessageQueue?redisId=" + queue.RedisId + "&q=" + queue.Name;
-            str += Environment.NewLine + $"[更多信息]({url})";
-        }
+        str += BuildMoreInfo($"Nodes/RedisMessageQueue?redisId=" + queue.RedisId + "&q=" + queue.Name);
 
         return str;
     }
