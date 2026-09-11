@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -43,8 +46,20 @@ class CacheFileProvider : IFileProvider
     /// <summary>索引信息文件。列出扩展显示的文件内容</summary>
     public String? IndexInfoFile { get; set; }
 
-    /// <summary>超时时间</summary>
+    /// <summary>超时时间。文件下载用，默认5秒</summary>
     public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(5);
+
+    /// <summary>目录索引下载超时。目录列表是小数据，且同步阻塞请求线程，默认3秒</summary>
+    public TimeSpan DirectoryTimeout { get; set; } = TimeSpan.FromSeconds(3);
+
+    /// <summary>请求虚拟路径。如/files。拼接上游地址时必须补回，否则会请求到站点根目录</summary>
+    public String? RequestPath { get; set; }
+
+    /// <summary>失败负缓存时长。下载失败后在该时段内不再重复拉取，避免每次请求都空等超时，默认10分钟</summary>
+    public TimeSpan NegativeCacheDuration { get; set; } = TimeSpan.FromMinutes(10);
+
+    /// <summary>本进程监听端口。用于识别上游地址是否指向自身。为空时退化为按主机判断</summary>
+    public static HashSet<Int32> LocalPorts { get; } = new();
 
     /// <summary>APM追踪</summary>
     public ITracer? Tracer { get; set; }
@@ -54,6 +69,16 @@ class CacheFileProvider : IFileProvider
 
     /// <summary>并发下载信号量。限制过期文件同时下载数量，避免线程爆炸</summary>
     private readonly SemaphoreSlim _downloadSemaphore = new(4, 4);
+
+    /// <summary>同步下载信号量。请求线程上的下载必须有上限，否则慢上游会打满线程池拖垮全站</summary>
+    private readonly SemaphoreSlim _syncSemaphore = new(2, 2);
+
+    /// <summary>失败负缓存。key为子路径，value为失败时间</summary>
+    private readonly ConcurrentDictionary<String, DateTime> _failed = new();
+
+    /// <summary>共享HttpClient。复用连接池，避免每次请求新建TCP连接导致TIME_WAIT堆积</summary>
+    private static HttpClient? _client;
+    private static readonly Object _clientLock = new();
     #endregion
 
     /// <summary>
@@ -115,14 +140,35 @@ class CacheFileProvider : IFileProvider
         var fi = fullPath.AsFile();
         if (Path.GetFileName(fullPath).Contains('.'))
         {
+            var svrs = GetServers?.Invoke() ?? Servers;
             if (!fi.Exists)
-                fi = DownloadFile(subpath, fullPath).ConfigureAwait(false).GetAwaiter().GetResult()?.AsFile();
+            {
+                // 自环或负缓存命中时不发起网络请求，直接当作不存在，快速返回404
+                if (!CanDownload("file:" + subpath, svrs, span))
+                {
+                    fi = null;
+                }
+                // 同步下载必须限流，拿不到名额就快速失败，绝不让请求线程排队等待
+                else if (!_syncSemaphore.Wait(0))
+                {
+                    span?.AppendTag("下载并发已满，跳过本次下载");
+                    fi = null;
+                }
+                else
+                {
+                    try
+                    {
+                        fi = DownloadFile(subpath, fullPath, svrs).ConfigureAwait(false).GetAwaiter().GetResult()?.AsFile();
+                    }
+                    finally { _syncSemaphore.Release(); }
+                }
+            }
             else if (fi.LastWriteTime.AddMonths(1) < DateTime.Now && _downloadSemaphore.Wait(0))
             {
                 // 后台异步下载。信号量限流（最多4个并发），避免大量过期文件同时下载造成线程爆炸
                 _ = Task.Run(async () =>
                 {
-                    try { await DownloadFile(subpath, fullPath).ConfigureAwait(false); }
+                    try { await DownloadFile(subpath, fullPath, svrs).ConfigureAwait(false); }
                     finally { _downloadSemaphore.Release(); }
                 });
             }
@@ -133,18 +179,24 @@ class CacheFileProvider : IFileProvider
         return IsExcluded(fileInfo, _filters) ? new NotFoundFileInfo(subpath) : new PhysicalFileInfo(fileInfo);
     }
 
-    async Task<String?> DownloadFile(String subpath, String fullPath)
+    async Task<String?> DownloadFile(String subpath, String fullPath, String[]? svrs = null)
     {
         var span = DefaultSpan.Current;
-        var svrs = GetServers?.Invoke() ?? Servers;
+        svrs ??= GetServers?.Invoke() ?? Servers;
         if (svrs != null && svrs.Length != 0)
         {
             foreach (var item in svrs)
             {
+                // 上游指向自身时不做请求，否则会自己请求自己形成死循环
+                if (IsSelf(item))
+                {
+                    span?.AppendTag($"跳过自环上游：{item}");
+                    continue;
+                }
+
                 try
                 {
-                    var url = subpath.Replace("\\", "/");
-                    url = item.Contains("{0}") ? item.Replace("{0}", url) : item.TrimSuffix("/") + url.EnsureStart("/");
+                    var url = BuildUrl(item, subpath);
 
                     span?.AppendTag(url);
                     XTrace.WriteLine("下载文件：{0}", url);
@@ -153,9 +205,17 @@ class CacheFileProvider : IFileProvider
                     var tmp = Path.GetTempFileName();
                     {
                         using var fs = new FileStream(tmp, FileMode.OpenOrCreate);
-                        using var client = new HttpClient { Timeout = Timeout };
-                        using var rs = await client.GetStreamAsync(url).ConfigureAwait(false);
-                        rs.CopyTo(fs);
+                        using var cts = new CancellationTokenSource(Timeout);
+                        using var rs = await GetClient()
+                            .GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cts.Token)
+                            .ConfigureAwait(false);
+
+                        // 非成功状态不得写入缓存，否则会把404页面当成文件缓存下来
+                        if (!rs.IsSuccessStatusCode)
+                            throw new HttpRequestException($"下载失败，状态码[{(Int32)rs.StatusCode}]，地址[{url}]");
+
+                        using var stream = await rs.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                        stream.CopyTo(fs);
                         fs.Flush();
                         fs.SetLength(fs.Position);
                     }
@@ -189,6 +249,9 @@ class CacheFileProvider : IFileProvider
                 }
             }
         }
+
+        // 全部上游都不可用，写入负缓存，短期内不再重复拉取，避免每次请求都空等超时
+        SetNegative("file:" + subpath);
 
         return null;
     }
@@ -236,7 +299,26 @@ class CacheFileProvider : IFileProvider
             {
                 var fi = fullPath.CombinePath(IndexInfoFile).GetBasePath().AsFile();
                 if (!fi.Exists)
-                    fi = DownloadDirectory(subpath, fi.FullName, svrs).ConfigureAwait(false).GetAwaiter().GetResult()?.AsFile();
+                {
+                    // 自环或负缓存命中时不发起网络请求，直接返回空目录
+                    if (!CanDownload("dir:" + subpath, svrs, span))
+                    {
+                        // 跳过下载
+                    }
+                    // 同步下载必须限流，拿不到名额就快速失败，绝不让请求线程排队等待
+                    else if (!_syncSemaphore.Wait(0))
+                    {
+                        span?.AppendTag("下载并发已满，跳过本次下载");
+                    }
+                    else
+                    {
+                        try
+                        {
+                            fi = DownloadDirectory(subpath, fi.FullName, svrs).ConfigureAwait(false).GetAwaiter().GetResult()?.AsFile();
+                        }
+                        finally { _syncSemaphore.Release(); }
+                    }
+                }
                 else if (fi.LastWriteTime.AddDays(1) < DateTime.Now && _downloadSemaphore.Wait(0))
                 {
                     // 后台异步下载，信号量限流
@@ -264,16 +346,30 @@ class CacheFileProvider : IFileProvider
         var span = DefaultSpan.Current;
         foreach (var item in svrs)
         {
+            // 上游指向自身时不做请求，否则会自己请求自己形成死循环
+            if (IsSelf(item))
+            {
+                span?.AppendTag($"跳过自环上游：{item}");
+                continue;
+            }
+
             try
             {
-                var url = subpath.Replace("\\", "/");
-                url = item.Contains("{0}") ? item.Replace("{0}", url) : item.TrimSuffix("/") + url.EnsureStart("/");
+                var url = BuildUrl(item, subpath);
 
                 span?.AppendTag(url);
                 XTrace.WriteLine("下载目录：{0}", url);
 
-                using var client = new HttpClient { Timeout = Timeout };
-                var html = await client.GetStringAsync(url).ConfigureAwait(false);
+                using var cts = new CancellationTokenSource(DirectoryTimeout);
+                using var rs = await GetClient()
+                    .GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cts.Token)
+                    .ConfigureAwait(false);
+
+                // 非成功状态视为失败，避免把404页面当成目录索引解析
+                if (!rs.IsSuccessStatusCode)
+                    throw new HttpRequestException($"下载目录失败，状态码[{(Int32)rs.StatusCode}]，地址[{url}]");
+
+                var html = await rs.Content.ReadAsStringAsync().ConfigureAwait(false);
 
                 var links = Link.Parse(html, url);
                 var list = links.Select(e => new FileInfoModel
@@ -297,8 +393,169 @@ class CacheFileProvider : IFileProvider
             }
         }
 
+        // 全部上游都不可用，写入负缓存，短期内不再重复拉取，避免每次请求都空等超时
+        SetNegative("dir:" + subpath);
+
         return null;
     }
+
+    #region 下载治理
+    /// <summary>拼接上游下载地址。必须补回请求虚拟路径（如/files），否则会请求到站点根目录</summary>
+    /// <param name="server">上游地址，支持包含{0}占位符</param>
+    /// <param name="subpath">相对于请求路径的子路径</param>
+    /// <returns></returns>
+    String BuildUrl(String server, String subpath)
+    {
+        var url = subpath.Replace("\\", "/").TrimStart('/');
+        if (server.Contains("{0}")) return server.Replace("{0}", url);
+
+        var baseUrl = server.TrimSuffix("/");
+
+        // 上游地址未带请求路径时补上，兼容已配置的完整地址，避免重复拼接成 /files/files
+        var rp = RequestPath?.Trim('/');
+        if (!rp.IsNullOrEmpty() && !baseUrl.EndsWithIgnoreCase("/" + rp)) baseUrl += "/" + rp;
+
+        return baseUrl + "/" + url;
+    }
+
+    /// <summary>判断上游地址是否指向自身。指向自身时拉取文件会形成自己请求自己的死循环</summary>
+    /// <param name="server"></param>
+    /// <returns></returns>
+    internal static Boolean IsSelf(String server)
+    {
+        if (server.IsNullOrEmpty()) return false;
+        if (!Uri.TryCreate(server, UriKind.Absolute, out var uri)) return false;
+
+        // 与自身部署访问地址（NewLife.Setting.Current.ServiceAddress）比对，scheme+主机+端口一致即为自身。
+        // 覆盖域名、公网IP等无法通过本机网卡识别的场景；每次实时读取，配置热更新也能生效
+        var origin = uri.GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped);
+        var addrs = NewLife.Setting.Current.ServiceAddress?.Split(",") ?? [];
+        foreach (var item in addrs)
+        {
+            if (Uri.TryCreate(item.Trim(), UriKind.Absolute, out var svc) &&
+                svc.GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped).EqualIgnoreCase(origin))
+                return true;
+        }
+
+        var host = uri.Host;
+        var isLocal = host.EqualIgnoreCase("localhost", "127.0.0.1", "::1") || LocalHosts.Contains(host);
+        if (!isLocal) return false;
+
+        // 已知本进程监听端口时比对端口，避免误伤同机不同端口的其它服务
+        if (LocalPorts.Count > 0) return LocalPorts.Contains(uri.Port);
+
+        return true;
+    }
+
+    /// <summary>本机主机名与IP地址集合，用于识别自环上游。延迟初始化，避免每次请求都做DNS解析</summary>
+    private static readonly Lazy<HashSet<String>> _localHosts = new(() =>
+    {
+        var set = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
+        try
+        {
+            set.Add(System.Net.Dns.GetHostName());
+            foreach (var item in System.Net.Dns.GetHostAddresses(System.Net.Dns.GetHostName()))
+                set.Add(item.ToString());
+        }
+        catch { }
+
+        return set;
+    });
+    private static HashSet<String> LocalHosts => _localHosts.Value;
+
+    /// <summary>共享HttpClient。复用连接池，避免每次下载都新建TCP连接造成TIME_WAIT堆积</summary>
+    /// <returns></returns>
+    static HttpClient GetClient()
+    {
+        if (_client != null) return _client;
+
+        lock (_clientLock)
+        {
+            if (_client != null) return _client;
+
+            var handler = new SocketsHttpHandler
+            {
+                // 连接池复用，定期重连以应对DNS变化
+                PooledConnectionLifetime = TimeSpan.FromMinutes(2),
+                MaxConnectionsPerServer = 8,
+                UseProxy = false,
+            };
+#if NET5_0_OR_GREATER
+            handler.ConnectTimeout = TimeSpan.FromSeconds(3);
+#endif
+            // 单次超时由调用方通过CancellationToken控制，这里不设全局超时
+            _client = new HttpClient(handler) { Timeout = System.Threading.Timeout.InfiniteTimeSpan };
+        }
+
+        return _client;
+    }
+
+    /// <summary>是否可以发起下载。自环上游与负缓存命中时直接拒绝，避免无意义的等待</summary>
+    /// <param name="subpath"></param>
+    /// <param name="svrs"></param>
+    /// <param name="span"></param>
+    /// <returns></returns>
+    Boolean CanDownload(String subpath, String[]? svrs, ISpan? span)
+    {
+        if (svrs == null || svrs.Length == 0) return false;
+
+        if (IsNegative(subpath))
+        {
+            span?.AppendTag("负缓存命中，跳过下载");
+            return false;
+        }
+
+        // 所有上游都指向自身，拉取必然是死循环，直接按文件不存在处理
+        if (svrs.All(IsSelf))
+        {
+            span?.AppendTag("上游指向自身，跳过下载");
+            XTrace.WriteLine("文件缓存上游[{0}]指向自身，跳过下载：{1}", svrs.Join(), subpath);
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>是否处于失败负缓存期内</summary>
+    /// <param name="subpath"></param>
+    /// <returns></returns>
+    Boolean IsNegative(String subpath)
+    {
+        if (NegativeCacheDuration <= TimeSpan.Zero) return false;
+        if (!_failed.TryGetValue(subpath, out var time)) return false;
+
+        // 已过期则移除，让下一次请求重新尝试
+        if (time.Add(NegativeCacheDuration) < DateTime.Now)
+        {
+            _failed.TryRemove(subpath, out _);
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>记录下载失败，进入负缓存</summary>
+    /// <param name="subpath"></param>
+    void SetNegative(String subpath)
+    {
+        if (NegativeCacheDuration <= TimeSpan.Zero) return;
+
+        // 防止恶意请求大量不存在的路径撑爆内存
+        if (_failed.Count > 10_000) CleanNegative();
+
+        _failed[subpath] = DateTime.Now;
+    }
+
+    /// <summary>清理已过期的负缓存</summary>
+    void CleanNegative()
+    {
+        var now = DateTime.Now;
+        foreach (var item in _failed)
+        {
+            if (item.Value.Add(NegativeCacheDuration) < now) _failed.TryRemove(item.Key, out _);
+        }
+    }
+    #endregion
 
     /// <summary>
     /// 监控文件改变
