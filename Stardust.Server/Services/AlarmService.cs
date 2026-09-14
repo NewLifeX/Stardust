@@ -152,7 +152,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         if (!primary.IsNullOrEmpty())
         {
             traceUrl = primary + "Monitors/traceMinuteStat?appId=" + st.AppId + "&minError=1";
-            // 采样详情页面，用于按追踪标识查看单次调用的错误与标签
+            // 采样详情页面，用于按追踪标识查看单次调用的错误详情
             sampleUrl = primary + "Monitors/sampleData";
         }
 
@@ -187,7 +187,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
                         var sms = SampleData.FindAllByDataIds(ds.Select(e => e.Id).ToArray(), item.StatTime).Where(e => !e.Error.IsNullOrEmpty()).ToList();
                         if (sms.Count > 0)
                         {
-                            // 输出错误采样摘要，带上位置、标签、实例与追踪链接
+                            // 输出错误采样摘要，带上位置、实例与追踪链接
                             AppendErrorSamples(sb, sms, sampleUrl, 1);
 
                             names.Add(item.Name);
@@ -334,7 +334,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         var sampleUrl = "";
         if (!primary.IsNullOrEmpty())
         {
-            // 采样详情页面，用于按追踪标识查看单次调用的错误与标签
+            // 采样详情页面，用于按追踪标识查看单次调用的错误详情
             sampleUrl = primary + "Monitors/sampleData";
         }
 
@@ -365,7 +365,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
             var sms = SampleData.FindAllByDataIds(ds.Select(e => e.Id).ToArray(), item.StatTime).Where(e => !e.Error.IsNullOrEmpty()).ToList();
             if (sms.Count > 0)
             {
-                // 输出错误采样摘要，带上位置、标签、实例与追踪链接
+                // 输出错误采样摘要，带上位置、实例与追踪链接
                 AppendErrorSamples(sb, sms, sampleUrl, 3);
             }
             else
@@ -384,7 +384,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         return str;
     }
 
-    /// <summary>输出错误采样摘要。除异常首行外，附带抛出位置、附加标签、实例与追踪链接，便于定位问题</summary>
+    /// <summary>输出错误采样摘要。除异常首行外，附带抛出位置、实例与追踪链接，便于定位问题</summary>
     /// <param name="sb">消息构造器</param>
     /// <param name="samples">错误采样数据</param>
     /// <param name="sampleUrl">采样详情页面地址，为空时不输出追踪链接</param>
@@ -418,10 +418,6 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
 
             // 发生时间与耗时。耗时接近阻塞时长时，多为等待被取消，而非真正的执行失败
             sb.AppendLine($">时间：{sm.Start:HH:mm:ss}，耗时：{sm.Cost:n0}ms");
-
-            // 业务侧通过 AppendTag 携带的附加数据，如Redis地址、主题、消费者等
-            var tag = sm.Tag?.Trim();
-            if (!tag.IsNullOrEmpty()) sb.AppendLine($">标签：{Cut(tag, 200)}");
 
             // 实例即ip@进程号，同名节点的多个实例可据此区分
             if (!sm.ClientId.IsNullOrEmpty())
