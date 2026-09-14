@@ -1,13 +1,10 @@
-using NewLife.Cube.Swagger;
+﻿using NewLife.Cube.Swagger;
 using NewLife.Log;
 using Stardust.Web;
 
 XTrace.UseConsole();
 
 var builder = WebApplication.CreateBuilder(args);
-
-// 解耦 WebApi 监听独立端口，避免与 Stardust.Web(Razor 管理界面, 6680) 冲突
-builder.WebHost.UseUrls("http://*:6681");
 
 // 桥接现有 Startup（ConfigureServices / Configure）
 var startup = new Startup(builder.Configuration);
