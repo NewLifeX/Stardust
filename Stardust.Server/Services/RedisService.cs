@@ -263,6 +263,10 @@ public class RedisService : IHostedService, IRedisService
 
         var rds = GetOrAdd(queue.Redis, queue.Db);
 
+        // 流键可能尚不存在（懒创建/TTL过期/手动清理）。EXISTS 为 false 时直接跳过本轮，
+        // 不报错、也不禁用监控，待流建好后的下一周期自动恢复采集
+        if (!rds.ContainsKey(queue.Topic)) return;
+
         switch (queue.Type?.ToLower())
         {
             case "queue":
@@ -563,7 +567,7 @@ public class RedisService : IHostedService, IRedisService
     private static IDictionary<String, String> ParseRedisArray(Object[] array)
     {
         var dict = new Dictionary<String, String>();
-        
+
         // Redis 返回的数组应该是偶数长度（key-value对）
         if (array.Length % 2 != 0)
         {
