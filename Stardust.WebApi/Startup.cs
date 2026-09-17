@@ -40,7 +40,7 @@ public class Startup
         // 初始化配置文件
         InitConfig();
 
-        var star = services.AddStardust("StarWeb");
+        var star = services.AddStardust("StarWebApi");
         using var span = star.Tracer?.NewSpan(nameof(ConfigureServices));
 
         // 启用配置中心，务必在数据库操作和生成雪花Id之前
@@ -190,7 +190,7 @@ public class Startup
         });
 
         // 发布服务到星尘注册中心，需要指定服务名
-        app.RegisterService("StarWeb", null, env.EnvironmentName, "/cube/info");
+        app.RegisterService("StarWebApi", null, env.EnvironmentName, "/cube/info");
     }
 
     private static void InitConfig()
@@ -337,7 +337,7 @@ public class Startup
         var category = entity["Category"] as String;
         if (category.IsNullOrEmpty())
         {
-            if (entity["Name"] is String name && name.EqualIgnoreCase("StarServer", "StarWeb", "StarAgent", "AntServer", "AntWeb", "AntAgent"))
+            if (entity["Name"] is String name && name.EqualIgnoreCase("StarServer", "StarWeb", "StarWebApi", "StarAgent", "AntServer", "AntWeb", "AntAgent"))
                 category = "基础平台";
         }
 
