@@ -294,6 +294,7 @@ public class StarApi : IHttpController
         items.Add(new { group = "StarAgent 本地配置", items = new Object[]
         {
             new { name = "LocalPort", displayName = "本地端口(UDP)", value = (Object)agentSet.LocalPort, type = "Int32", description = "本地API通信端口（UDP），默认5500。与 Web 面板端口共用，UDP 用于本地 RPC，TCP 用于 Web 面板" },
+            new { name = "WebBind", displayName = "面板绑定地址", value = (Object)(agentSet.WebBind ?? ""), type = "String", description = "Web 面板监听地址，默认127.0.0.1仅本机；设为*开放所有网卡，或指定具体IP。修改后需重启 StarAgent 生效" },
             new { name = "Code", displayName = "节点编码", value = (Object)(agentSet.Code ?? ""), type = "String", description = "当前节点的唯一编码" },
             new { name = "Secret_Agent", displayName = "节点密钥", value = (Object)(agentSet.Secret ?? ""), type = "Password", description = "节点通信密钥" },
             new { name = "Project", displayName = "项目名", value = (Object)(agentSet.Project ?? ""), type = "String", description = "新节点默认所要加入的项目" },
@@ -326,7 +327,7 @@ public class StarApi : IHttpController
 
             // 安全白名单：只允许更新以下字段
             var starFields = new[] { "Server", "AppKey", "Secret" };
-            var agentFields = new[] { "LocalPort", "Code", "Secret", "Project", "Channel", "Delay", "SyncTime", "StartupHook", "UseAutorun" };
+            var agentFields = new[] { "LocalPort", "WebBind", "Code", "Secret", "Project", "Channel", "Delay", "SyncTime", "StartupHook", "UseAutorun" };
 
             foreach (var kv in updates)
             {
@@ -348,6 +349,7 @@ public class StarApi : IHttpController
                     switch (name)
                     {
                         case "LocalPort": agentSet.LocalPort = Convert.ToInt32(value ?? 5500); break;
+                        case "WebBind": agentSet.WebBind = value?.ToString() ?? "127.0.0.1"; break;
                         case "Code": agentSet.Code = value?.ToString() ?? ""; break;
                         case "Secret": agentSet.Secret = value?.ToString(); break;
                         case "Project": agentSet.Project = value?.ToString(); break;

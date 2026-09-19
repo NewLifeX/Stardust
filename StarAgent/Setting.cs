@@ -34,6 +34,10 @@ public class StarAgentSetting : Config<StarAgentSetting>, IClientSetting
     [Description("本地端口。默认5500")]
     public Int32 LocalPort { get; set; } = 5500;
 
+    /// <summary>Web面板绑定地址。默认127.0.0.1仅本机访问，设为*监听所有网卡，也可指定具体IP</summary>
+    [Description("Web面板绑定地址。默认127.0.0.1仅本机访问，设为*监听所有网卡，也可指定具体IP")]
+    public String WebBind { get; set; } = "127.0.0.1";
+
     /// <summary>更新通道。默认Release</summary>
     [Description("更新通道。默认Release")]
     public String Channel { get; set; } = "Release";

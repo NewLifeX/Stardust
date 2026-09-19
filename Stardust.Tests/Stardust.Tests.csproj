@@ -36,4 +36,9 @@
     <ProjectReference Include="..\Stardust.Extensions\Stardust.Extensions.csproj" />
   </ItemGroup>
 
+  <!-- StarAgent 为可执行工程，链接 Web 面板绑定解析源码直接测试 -->
+  <ItemGroup>
+    <Compile Include="..\StarAgent\WebPanel\WebBindHelper.cs" Link="WebPanel\WebBindHelper.cs" />
+  </ItemGroup>
+
 </Project>

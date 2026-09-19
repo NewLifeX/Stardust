@@ -126,7 +126,7 @@ StarAgent 基于 NewLife.Agent 内置的 `AgentWebPanel` 框架，提供了轻�
 - **实现**：`StarAgent.WebPanel.StarPanel`（继承定制）
 - **API**：`StarAgent.WebPanel.StarApi`
 - **前端**：嵌入式 `index.html` SPA（单页应用）
-- **监听端口**：默认 5580（由 `agent.config` 中 `WebPort` 配置）
+- **监听端口**：默认 5500（`staragent.config` 中 `LocalPort`，启动时覆盖 `agent.config` 的 `WebPort`）
 
 ### 6.2 面板功能
 
@@ -180,7 +180,17 @@ StarAgent 基于 NewLife.Agent 内置的 `AgentWebPanel` 框架，提供了轻�
 | `LocalOnly`（默认） | 本地地址（127.0.0.1）免鉴权，远程访问需登录 |
 | `Full` | 全部请求需登录 |
 
-凭据在 `agent.config` 中通过 `WebUserName` / `WebPassword` 配置。登录后签发 Bearer Token，有效期 24 小时。
+凭据在 `agent.config` 中通过 `WebUserName` / `WebPassword` 配置。登录后签发 Bearer Token，有效期 24 小时。当前版本所有 API 请求统一要求登录凭证，`WebAuthLevel` 仅保留配置、未参与鉴权判定。
+
+### 6.6 安全默认与远程访问
+
+面板默认仅本机监听（`WebBind` 默认 `127.0.0.1`），局域网内其他机器无法访问；设备上请使用 `http://127.0.0.1:5500` 打开面板。
+
+需要远程管理时，在 `staragent.config` 配置 `WebBind` 为 `*`（所有网卡）或指定 IP，重启 StarAgent 后生效（也可在面板“星尘设置”中修改）：
+
+- 框架默认值：`NewLife.Agent` 的 `Agent.config` 中 `WebBind` 默认 `127.0.0.1`；StarAgent 启动时按 `staragent.config` 的同名配置覆盖
+- 非法绑定地址回退本机回环，避免配置笔误把面板误开放到局域网
+- 默认凭据：`WebUserName` / `WebPassword` 默认 `admin` / `admin`；开放远程前务必修改密码，面板启动日志会在“监听所有网卡且仍使用默认密码”时输出安全提醒
 
 ---
 

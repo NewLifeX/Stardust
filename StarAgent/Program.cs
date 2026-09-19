@@ -163,7 +163,13 @@ internal class MyService : ServiceBase, IServiceProvider
         set.WebPort = AgentSetting.LocalPort;
         set.Save();
 
-        return new StarPanel(service);
+        var panel = new StarPanel(service);
+
+        // 安全默认：面板仅本机监听，需要局域网访问时在 staragent.config 配置 WebBind=* 或指定IP
+        var address = WebBindHelper.Parse(AgentSetting.WebBind);
+        if (address != null) panel.Server.Local.Address = address;
+
+        return panel;
     }
     #endregion
 
