@@ -46,7 +46,7 @@ public partial class AppOnline : Entity<AppOnline>, IOnlineModel2
 
         if (TraceId.IsNullOrEmpty()) TraceId = DefaultSpan.Current?.TraceId;
 
-        this.TrimExtraLong(_.IP, _.ProcessName, _.CommandLine, _.Listens);
+        this.TrimExtraLong(_.IP, _.ProcessName, _.CommandLine, _.Listens, _.Macs);
 
         //var len = _.IP.Length;
         //if (len > 0 && !IP.IsNullOrEmpty() && IP.Length > len) IP = IP[..len];
