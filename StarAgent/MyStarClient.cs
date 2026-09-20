@@ -96,6 +96,9 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
     {
         await base.OnPing(state);
 
+        // 上报设备侧自愈记录（救援脚本恢复代理后留下的标记；见 SmartIPC 固件 staragent-rescue 机制）
+        CheckRescueFlag();
+
         var syncTime = AgentSetting.SyncTime;
         if (syncTime > 0 && Span.TotalMilliseconds != 0)
         {
@@ -134,6 +137,37 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
         }
 
         return rs;
+    }
+
+    /// <summary>上报设备侧自愈记录</summary>
+    /// <remarks>
+    /// SmartIPC 固件的巡检服务（newlife-starcare.timer）发现代理异常时，会用内置救援副本恢复代理，
+    /// 并写入 /var/lib/newlife/starrescue.flag 记录救援原因与结果；代理恢复上线后读取该标记，
+    /// 作为节点事件上报到星尘平台，随后删除标记（只上报一次）。
+    /// </remarks>
+    private void CheckRescueFlag()
+    {
+        // 仅 Linux 设备（救援机制随固件部署），Windows 服务跳过
+        if (!Runtime.Linux) return;
+
+        try
+        {
+            var flag = "/var/lib/newlife/starrescue.flag";
+            if (!File.Exists(flag)) return;
+
+            var content = File.ReadAllText(flag);
+
+            // 先上报再删除：入队失败时保留标记，下次心跳重试
+            this.WriteInfoEvent("Rescue", "星尘代理自愈恢复：" + content);
+            WriteLog("已上报设备侧自愈记录：{0}", content);
+
+            File.Delete(flag);
+        }
+        catch (Exception ex)
+        {
+            // 上报失败不影响心跳主流程
+            XTrace.WriteException(ex);
+        }
     }
     #endregion
 
