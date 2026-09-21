@@ -62,7 +62,6 @@ public class NodeFrameworkController : EntityController<Node>
     public async Task<ActionResult> InstallFramework(String ver, String kind)
     {
         if (GetRequest("keys") == null) throw new ArgumentNullException(nameof(SelectKeys));
-        if (ver.IsNullOrEmpty()) throw new ArgumentNullException(nameof(ver));
 
         ver = ver?.Trim();
         kind = kind?.Trim();
@@ -71,14 +70,20 @@ public class NodeFrameworkController : EntityController<Node>
         bf.Add(SelectKeys.Select(e => e.ToInt()));
 
         var ts = new List<(String name, Task<CommandReplyModel?> task)>();
+        var skips = new List<String>();
         foreach (var item in SelectKeys)
         {
             var node = bf.FindByKey(item.ToInt());
             if (node == null || node.Code.IsNullOrEmpty()) continue;
 
-            // 为每个节点按 OS/Arch 解析匹配的安装包
-            var pkg = DotNetPackage.ResolveForNode(ver, kind, node);
-            if (pkg == null) continue;
+            // 为每个节点按 OS/Arch 解析匹配的安装包，并检查操作系统与GLIBC兼容性。
+            // 版本留空或auto时，自动匹配最新的启用安装包
+            var pkg = DotNetPackage.ResolveForPush(node, ver, kind, out var reason);
+            if (pkg == null)
+            {
+                skips.Add($"{node.Name}：{reason}");
+                continue;
+            }
 
             var source = pkg.Source;
             if (!source.IsNullOrEmpty() && !pkg.FileName.IsNullOrEmpty() && source.EndsWith(pkg.FileName))
@@ -94,7 +99,11 @@ public class NodeFrameworkController : EntityController<Node>
             ts.Add((node.Name, _starFactory.SendNodeCommandAsync(node.Code, "framework/install", fmodel.ToJson(), 0, 30 * 24 * 3600, 0, HttpContext.RequestAborted)));
         }
 
-        if (ts.Count == 0) return JsonRefresh("没有找到匹配的安装包，请检查版本和安装类型");
+        if (ts.Count == 0)
+        {
+            if (skips.Count > 0) return JsonRefresh("没有可推送的节点！\n" + String.Join("\n", skips));
+            return JsonRefresh("没有找到匹配的安装包，请检查版本和安装类型");
+        }
 
         await Task.WhenAll(ts.Select(t => t.task));
         var success = ts.Count(t => t.task.Result != null);
@@ -106,6 +115,7 @@ public class NodeFrameworkController : EntityController<Node>
             if (reply != null)
                 msg += $"\n{name}: {reply.Data ?? "(无返回数据)"}";
         }
+        if (skips.Count > 0) msg += $"\n跳过{skips.Count}个：\n" + String.Join("\n", skips);
         return JsonRefresh(msg);
     }
 

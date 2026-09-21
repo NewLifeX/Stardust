@@ -10,7 +10,7 @@
 {
     <div class="form-group">
         <label for="ver" class="control-label">版本：</label>
-        @Html.ForDropDownList("ver", DotNetPackage.GetVersionList(), page["ver"], "全部", true)
+        @Html.ForDropDownList("ver", DotNetPackage.GetVersionList(), page["ver"], "自动（最新）", true)
         <label for="kind" class="control-label">类型：</label>
         @Html.ForDropDownList("kind", DotNetPackage.GetKindList(), page["kind"], "全部", true)
     </div>
