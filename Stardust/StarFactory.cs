@@ -51,8 +51,10 @@ public class StarFactory : DisposeBase
     /// <summary>应用密钥</summary>
     public String? Secret { get; set; }
 
+    private String? _clientId;
     /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
-    public String? ClientId { get; set; }
+    /// <remarks>首次联网之前IP可能为空，此时为“@进程号”；获得IP后自动补全为完整标识</remarks>
+    public String? ClientId { get => _clientId ?? Runtime.ClientId; set => _clientId = value; }
 
     /// <summary>客户端</summary>
     public IApiClient? Client => _client?.Client;
@@ -229,7 +231,6 @@ public class StarFactory : DisposeBase
         set.Secret = Secret;
         set.Save();
 
-        // 生成ClientId，用于唯一标识当前实例，默认IP@pid
         try
         {
             // 从SysConfig读取系统名称，其受到命令行参数-Name和环境变量Name影响，方便单应用多部署（参数区分应用名）
@@ -244,12 +245,10 @@ public class StarFactory : DisposeBase
                 if (AppId.IsNullOrEmpty()) AppId = asm.Name;
                 if (AppName.IsNullOrEmpty()) AppName = asm.Title;
             }
-
-            ClientId = $"{NetHelper.MyIP()}@{Process.GetCurrentProcess().Id}";
         }
         catch
         {
-            ClientId = Rand.NextString(8);
+            // 忽略推导失败的异常，ClientId 由属性惰性生成
         }
 
         XTrace.WriteLine("接入星尘平台：Server={0} AppId={1} ClientId={2}", Server, AppId, ClientId);
@@ -289,7 +288,6 @@ public class StarFactory : DisposeBase
                 AppId = AppId,
                 AppName = AppName,
                 Secret = Secret,
-                ClientId = ClientId,
                 NodeCode = Local?.Info?.Code,
                 Setting = set,
 
@@ -378,7 +376,6 @@ public class StarFactory : DisposeBase
             Factory = this,
             AppId = AppId,
             AppName = AppName,
-            ClientId = ClientId,
             Client = _client,
 
             Log = Log

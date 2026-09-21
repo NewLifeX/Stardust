@@ -25,8 +25,10 @@ public class StarTracer : DefaultTracer
     /// <summary>应用名</summary>
     public String? AppName { get; set; }
 
+    private String? _clientId;
     /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
-    public String? ClientId { get; set; }
+    /// <remarks>首次联网之前IP可能为空，此时为“@进程号”；获得IP后自动补全为完整标识</remarks>
+    public String? ClientId { get => _clientId ?? Runtime.ClientId; set => _clientId = value; }
 
     /// <summary>最大失败数。超过该数时，新的数据将被抛弃，默认2 * 24 * 60</summary>
     public Int32 MaxFails { get; set; } = 2 * 24 * 60;
@@ -77,8 +79,6 @@ public class StarTracer : DefaultTracer
                 AppName = asm.Title;
                 _version = asm.FileVersion;
             }
-
-            ClientId = $"{NetHelper.MyIP()}@{Process.GetCurrentProcess().Id}";
         }
         catch { }
     }

@@ -115,7 +115,7 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
             UserName = Environment.UserName,
             IP = AgentInfo.GetIps(),
             Gateway = AgentInfo.GetGateway(),
-            Dns = AgentInfo.GetDns(),
+            Dns = AgentInfo.GetDnsList(),
 
             ProcessorCount = Environment.ProcessorCount,
             Memory = mi.Memory,
@@ -315,7 +315,7 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
 
         request.IP = AgentInfo.GetIps();
         request.Gateway = AgentInfo.GetGateway();
-        request.Dns = AgentInfo.GetDns();
+        request.Dns = AgentInfo.GetDnsList();
         request.DriveInfo = drives.Join(",", e => $"{e.Name}[{e.DriveFormat}]={e.AvailableFreeSpace.ToGMK()}/{e.TotalSize.ToGMK()}");
         request.Macs = (String?)NetHelper.GetMacs().Select(e => e.ToHex("-")).OrderBy(e => e).Join(",");
         request.ProcessCount = ps.Length;

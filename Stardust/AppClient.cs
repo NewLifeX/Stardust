@@ -33,6 +33,9 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
     /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
     public String? ClientId { get; set; }
 
+    /// <summary>实际实例标识。优先显式设置，其次实时读取星尘工厂或全局运行时；联网后自动补全IP</summary>
+    private String? ActualClientId => ClientId ?? Factory?.ClientId ?? Runtime.ClientId;
+
     /// <summary>节点编码</summary>
     public String? NodeCode { get; set; }
 
@@ -88,8 +91,6 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
                 AppName = asm.Title;
                 _version = asm.FileVersion;
             }
-
-            ClientId = Runtime.ClientId;
         }
         catch { }
 
@@ -145,7 +146,7 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
         FillLoginRequest(request);
 
         request.AppName = AppName;
-        request.ClientId = ClientId;
+        request.ClientId = ActualClientId;
         request.NodeCode = NodeCode;
         request.Project = Project;
 
@@ -273,7 +274,7 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
         {
             ServiceName = serviceName,
 
-            ClientId = ClientId,
+            ClientId = ActualClientId,
             IP = ip,
             Version = asmx?.FileVersion,
         };
@@ -361,7 +362,7 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
             MinVersion = minVersion,
             Tag = tag,
 
-            ClientId = ClientId,
+            ClientId = ActualClientId,
         };
 
         // 已缓存数据的Tag可能不一致，需要重新消费
@@ -585,7 +586,7 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
         if (topic.IsNullOrEmpty()) throw new ArgumentNullException(nameof(topic));
         if (message.IsNullOrEmpty()) throw new ArgumentNullException(nameof(message));
 
-        var msg = $"event#{topic}#{ClientId}#{message}";
+        var msg = $"event#{topic}#{ActualClientId}#{message}";
 
         return SendAsync((ArrayPacket)msg.GetBytes(), cancellationToken);
     }

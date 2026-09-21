@@ -46,18 +46,7 @@ public class MachineInfoProvider : IMachineInfo
             }
             if (TryRead(devTree + "compatible", out str))
             {
-                var ss = str.Split(',');
-                if (ss.Length >= 3)
-                {
-                    if (mi.Vendor.IsNullOrEmpty()) mi.Vendor = ss[0];
-                    if (mi.Board.IsNullOrEmpty()) mi.Board = ss[1];
-                    if (mi.Processor.IsNullOrEmpty()) mi.Processor = ss[2];
-                }
-                else if (ss.Length >= 2)
-                {
-                    if (mi.Vendor.IsNullOrEmpty()) mi.Vendor = ss[0];
-                    if (mi.Processor.IsNullOrEmpty()) mi.Processor = ss[1];
-                }
+                ParseCompatible(str, mi);
             }
             if (TryRead(devTree + "serial-number", out str))
             {
@@ -127,6 +116,13 @@ public class MachineInfoProvider : IMachineInfo
             MatchAllwinner(mi, txt);
         }
 
+        // 磁盘标识：优先硬件标识（by-id），不随系统重装或重新烧写变化；与新版Core行为对齐
+        if (Runtime.Linux)
+        {
+            var diskId = GetDiskId();
+            if (!diskId.IsNullOrEmpty()) info.DiskID = diskId;
+        }
+
         // 统一赋值
         if (!mi.UUID.IsNullOrEmpty()) info.UUID = mi.UUID;
         if (!mi.Serial.IsNullOrEmpty()) info.Serial = mi.Serial;
@@ -134,6 +130,71 @@ public class MachineInfoProvider : IMachineInfo
         if (!mi.Board.IsNullOrEmpty()) info.Board = mi.Board;
         if (!mi.Vendor.IsNullOrEmpty()) info.Vendor = mi.Vendor;
         if (!mi.Processor.IsNullOrEmpty()) info.Processor = mi.Processor;
+    }
+
+    /// <summary>解析设备树 compatible 内容，提取厂商/主板/处理器</summary>
+    /// <remarks>
+    /// compatible 是 NUL 分隔、从具体到通用的一组标识串，例如 GT68XX 的“htnice,gt685x”+“rockchip,rk3568”两条；
+    /// 不拆分 NUL 而直接按逗号切分，会把相邻两条拼成错误的主板名。个别平台为单条“厂商,芯片”。
+    /// </remarks>
+    /// <param name="compatible">compatible 原始内容</param>
+    /// <param name="info">目标机器信息，仅填充空字段</param>
+    public static void ParseCompatible(String compatible, MachineInfo info)
+    {
+        if (compatible.IsNullOrEmpty() || info == null) return;
+
+        var items = compatible.Split(new[] { '\0' }).Select(e => e.Trim()).Where(e => e.Length > 0).ToList();
+        if (items.Count == 0) return;
+
+        if (items.Count >= 2)
+        {
+            // 多条：第一条“厂商,主板”，最后一条“厂商,芯片”
+            var s0 = items[0].Split(',');
+            if (s0.Length >= 2)
+            {
+                if (info.Vendor.IsNullOrEmpty()) info.Vendor = s0[0];
+                if (info.Board.IsNullOrEmpty()) info.Board = s0[1];
+            }
+            var sn = items[items.Count - 1].Split(',');
+            if (sn.Length >= 2 && info.Processor.IsNullOrEmpty()) info.Processor = sn[sn.Length - 1];
+        }
+        else
+        {
+            // 单条：厂商,芯片（个别平台写成 厂商,主板,芯片）
+            var ss = items[0].Split(',');
+            if (ss.Length >= 2)
+            {
+                if (info.Vendor.IsNullOrEmpty()) info.Vendor = ss[0];
+                if (info.Processor.IsNullOrEmpty()) info.Processor = ss[ss.Length - 1];
+                if (ss.Length >= 3 && info.Board.IsNullOrEmpty()) info.Board = ss[1];
+            }
+        }
+    }
+
+    /// <summary>获取磁盘标识。优先硬件标识（by-id，如 mmc-8GTF4R_0x4c4f4bb2），文件系统UUID重新格式化后改变，仅作回退</summary>
+    /// <returns></returns>
+    public static String? GetDiskId()
+    {
+        var disks = MachineInfo.GetFiles("/dev/disk/by-id", true);
+        if (disks.Count > 0)
+        {
+            // id中需要剔除QEMU，去掉virtio-前缀，例如 virtio-uf6ag3b49w6v4e9ldgcj
+            disks = disks.Where(e => !e.IsNullOrEmpty() && !e.Contains("QEMU_")).Select(e => e.TrimPrefix("virtio-")).ToList();
+        }
+
+        if (disks.Count == 0)
+        {
+            // 去掉时间id例如 2025-08-14-18-36-42-00，因为它随着时间在改变
+            disks = MachineInfo.GetFiles("/dev/disk/by-uuid", false);
+            if (disks.Count > 0)
+                disks = disks.Where(e => !e.IsNullOrEmpty() && (e.Length < 10 || e[4] != '-' || e[..10].ToDateTime().Year < 2000)).ToList();
+        }
+
+        if (disks.Count == 0) disks = MachineInfo.GetFiles("/dev/disk/by-partuuid", true);
+        if (disks.Count == 0) return null;
+
+        // 排序输出，保证多次启动时顺序一致，便于设备比对
+        return disks.Where(e => !e.IsNullOrEmpty()).OrderBy(e => e, StringComparer.Ordinal).Join(",");
     }
 
     private static void MatchAllwinner(MachineInfo info, String? txt)
@@ -276,7 +337,8 @@ public class MachineInfoProvider : IMachineInfo
 
         try
         {
-            value = File.ReadAllText(fileName)?.Trim();
+            // 设备树属性文件以 NUL 结尾，需要一并去除
+            value = File.ReadAllText(fileName)?.Trim().Trim('\0').Trim();
             if (value.IsNullOrEmpty()) return false;
         }
         catch { return false; }
