@@ -12,6 +12,7 @@ namespace Stardust.Models;
 /// - Open：开放，仅凭应用代码即可自助接入（低门槛，身份门槛=应用代码）
 /// 
 /// 重注册始终复用既有身份、不轮换密钥，避免把真实实例踢下线。
+/// 应用登录（App/Login）与令牌接口（OAuth令牌、配置中心、网关路由）均遵循该策略，其中可信接入暂不适用于令牌接口。
 /// </remarks>
 public enum ReRegisterModes
 {
