@@ -768,23 +768,21 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         return null;
     }
 
-    /// <summary>检查节点是否符合规则，并推送dotNet运行时安装指令。新版优先匹配 DotNetPackage，回退到旧 NodeVersion 逻辑</summary>
-    /// <param name="node"></param>
-    /// <param name="ip"></param>
-    /// <returns></returns>
-    public DotNetPackage CheckDotNet(Node node, Uri baseUri, String ip)
+    /// <summary>检查节点是否符合规则，并推送dotNet运行时安装指令</summary>
+    /// <remarks>只按 NodeVersion 的 dotNet 升级策略推送；DotNetPackage 安装包表仅用于手工推送</remarks>
+    /// <param name="node">节点</param>
+    /// <param name="baseUri">服务端基础地址，用于拼接默认下载源</param>
+    /// <param name="ip">操作IP，用于写节点历史</param>
+    /// <returns>推送的版本策略，未推送时返回null</returns>
+    public NodeVersion CheckDotNet(Node node, Uri baseUri, String ip)
     {
-        // ---- 检查 NodeVersion 中是否有启用的 dotNet 策略 ----
-        // 如果旧表存在 dotNet 记录但全部被禁用，说明管理员已明确关闭 dotNet 推送，跳过全部路径
+        // 检查 NodeVersion 中是否有启用的 dotNet 策略
+        // 如果旧表存在 dotNet 记录但全部被禁用，说明管理员已明确关闭 dotNet 推送，直接跳过
         var allNv = NodeVersion.Meta.Cache.FindAll(e => e.ProductCode.EqualIgnoreCase("dotNet")).ToList();
         if (allNv.Count > 0 && allNv.All(e => !e.Enable))
             return null;
 
-        // ---- 新路径：DotNetPackage 匹配 ----
-        var pkg = TryDotNetFromPackage(node, baseUri, ip);
-        if (pkg != null) return pkg;
-
-        // ---- 回退路径：旧 NodeVersion(ProductCode=dotNet) 逻辑 ----
+        // 找到所有产品版本
         var list = NodeVersion.GetValids(0).Where(e => e.ProductCode.EqualIgnoreCase("dotNet")).ToList();
         if (list.Count == 0) return null;
 
@@ -821,229 +819,10 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
 
             node.WriteHistory("推送dotNet", true, $"version={node.Framework} => [{pv.ID}] {pv.Version} {fmodel.BaseUrl}", ip);
 
-            return null; // 兼容返回值，旧机制无 DotNetPackage 对象可返回
+            return pv;
         }
 
         return null;
-    }
-
-    /// <summary>尝试从新的 DotNetPackage 表中匹配 dotNet 安装包并推送</summary>
-    private DotNetPackage TryDotNetFromPackage(Node node, Uri baseUri, String ip)
-    {
-        var pkg = DotNetPackage.Match(node);
-        if (pkg == null) return null;
-
-        // 检查节点是否已经安装了该版本
-        if (!node.Framework.IsNullOrEmpty())
-        {
-            System.Version.TryParse(pkg.Version, out var targetVer);
-            System.Version.TryParse(node.Framework, out var currentVer);
-            if (currentVer != null && targetVer != null && currentVer >= targetVer && !pkg.Force)
-                return null;
-        }
-
-        // 检查 NodeVersion 中是否存在相同版本被禁用（管理员按版本控制开关）
-        var nvVer = $"v{pkg.Version}-{pkg.Kind}";
-        var disabledNv = NodeVersion.Meta.Cache.FindAll(e =>
-            e.ProductCode.EqualIgnoreCase("dotNet") &&
-            !e.Enable &&
-            e.Version.EqualIgnoreCase(nvVer)).ToList();
-        if (disabledNv.Count > 0)
-        {
-            node.WriteHistory("跳过dotNet", true, $"NodeVersion[{nvVer}] 已禁用，跳过推送", ip);
-            return null;
-        }
-
-        // 检查节点操作系统是否兼容目标.NET版本（如Ubuntu18无法安装.NET10）
-        if (!IsOSCompatible(node, pkg.Version))
-        {
-            node.WriteHistory("跳过dotNet", true, $"OS[{node.OS}] 不兼容 .NET {pkg.Version}，已跳过", ip);
-            return null;
-        }
-
-        // 检查节点的GLIBC版本是否满足要求（Linux节点上报了CLibVersion时启用）
-        var minGLibc = GetDotNetMinGLibcVersion(pkg.Version);
-        if (minGLibc != null && !CheckGLibc(node, minGLibc))
-        {
-            node.WriteHistory("跳过dotNet", true, $"GLIBC[{node.CLibVersion}] 不满足 {GetNetMajorVersion(pkg.Version)} 最低要求 {minGLibc}，.NET {pkg.Version} 已跳过", ip);
-            return null;
-        }
-
-        // 准备安装框架所需要的参数
-        // 将 Kind 嵌入 Version，Agent 端 DoInstall 可从中提取安装类型（aspnet/runtime/desktop/host）
-        var source = pkg.Source;
-        if (!source.IsNullOrEmpty() && !pkg.FileName.IsNullOrEmpty() && source.EndsWith(pkg.FileName))
-            source = source.Substring(0, source.Length - pkg.FileName.Length);
-        var fmodel = new FrameworkModel
-        {
-            Version = $"{pkg.Version}-{pkg.Kind}",
-            BaseUrl = source,
-            Force = pkg.Force,
-        };
-        // 如果没有指定源，则使用默认源
-        if (fmodel.BaseUrl.IsNullOrEmpty()) fmodel.BaseUrl = new Uri(baseUri, "/files/dotnet/").ToString();
-
-        // 检查是否已经推送过这个版本（避免重复推送）
-        var key = $"nodeNet:{node.Code}-{pkg.Version}-{pkg.Kind}";
-        if (_cacheProvider.Cache.Get<String>(key) == pkg.Version) return null;
-        _cacheProvider.Cache.Set(key, pkg.Version, 600);
-
-        var model = new CommandInModel
-        {
-            Code = node.Code,
-            Command = "framework/install",
-            Argument = fmodel.ToJson(),
-            Expire = 60,
-        };
-        _ = SendCommand(node, model, $"DotNetPackage:{pkg.Version}");
-
-        node.WriteHistory("推送dotNet", true, $"version={node.Framework} => Package[{pkg.Id}] {pkg.Version}-{pkg.Kind} {pkg.Source}", ip);
-
-        return pkg;
-    }
-
-    /// <summary>检查节点操作系统是否兼容目标.NET版本。防止向过旧的操作系统推送不支持的.NET运行时</summary>
-    /// <param name="node">节点</param>
-    /// <param name="version">目标.NET版本号，如 10.0.9</param>
-    /// <returns>兼容返回true，不兼容返回false</returns>
-    private static Boolean IsOSCompatible(Node node, String version)
-    {
-        if (node.OS.IsNullOrEmpty() || version.IsNullOrEmpty()) return true;
-        if (!System.Version.TryParse(version.TrimStart('v', 'V'), out var ver)) return true;
-
-        var os = node.OS;
-        var major = ver.Major;
-
-        // 提取操作系统名称和版本号
-        Double osVer = 0;
-        var dist = "";
-
-        // 匹配常见 Linux 发行版
-        if (os.StartsWithIgnoreCase("Ubuntu"))
-        {
-            dist = "Ubuntu";
-            // "Ubuntu 18.04.5 LTS" → 18.04
-            var part = os.Split(' ').Skip(1).FirstOrDefault();
-            Double.TryParse(part, out osVer);
-        }
-        else if (os.StartsWithIgnoreCase("Debian"))
-        {
-            dist = "Debian";
-            // "Debian GNU/Linux 11 (bullseye)" → 11
-            foreach (var s in os.Split(' '))
-            {
-                if (Double.TryParse(s, out var v)) { osVer = v; break; }
-            }
-        }
-        else if (os.StartsWithIgnoreCase("CentOS") || os.StartsWithIgnoreCase("RHEL") || os.StartsWithIgnoreCase("Red Hat"))
-        {
-            dist = "RHEL";
-            // "CentOS Linux 7 (Core)" → 7
-            foreach (var s in os.Split(' '))
-            {
-                if (Double.TryParse(s, out var v)) { osVer = v; break; }
-            }
-        }
-
-        // 检查兼容性
-        if (osVer > 0)
-        {
-            if (major >= 10)
-            {
-                if (dist == "Ubuntu") return osVer >= 22.04;
-                if (dist == "Debian") return osVer >= 12;
-                if (dist == "RHEL") return osVer >= 9;
-            }
-            else if (major >= 8)
-            {
-                if (dist == "Ubuntu") return osVer >= 20.04;
-                if (dist == "Debian") return osVer >= 11;
-                if (dist == "RHEL") return osVer >= 8;
-            }
-            else if (major >= 6)
-            {
-                if (dist == "Ubuntu") return osVer >= 16.04;
-                if (dist == "Debian") return osVer >= 10;
-                if (dist == "RHEL") return osVer >= 7;
-            }
-        }
-
-        // 未知操作系统或无法识别版本时，默认兼容（不阻塞推送）
-        return true;
-    }
-
-    /// <summary>获取指定.NET版本要求的最低GLIBC版本（硬编码，每年随.NET大版本更新一次）</summary>
-    /// <param name="version">.NET版本号，如 10.0.9</param>
-    /// <returns>最低GLIBC版本号，如 2.17；未知时返回 null</returns>
-    /// <remarks>
-    /// .NET 版本与 glibc 兼容性历史：
-    /// .NET 6/7/8 → glibc 2.17+（CentOS 7 及更新）
-    /// .NET 9/10  → glibc 2.27+（CentOS 8/Ubuntu 18.04 及更新）
-    /// 首次发行年份：.NET 6=2021, .NET 7=2022, .NET 8=2023, .NET 9=2024, .NET 10=2025
-    /// </remarks>
-    private static String? GetDotNetMinGLibcVersion(String version)
-    {
-        if (version.IsNullOrEmpty()) return null;
-        if (!System.Version.TryParse(version.TrimStart('v', 'V'), out var ver)) return null;
-
-        var major = ver.Major;
-
-        // .NET 9+ 要求 glibc 2.27+
-        if (major >= 9) return "2.27";
-        // .NET 6/7/8 支持 glibc 2.17+
-        if (major >= 6) return "2.17";
-
-        return null;
-    }
-
-    /// <summary>获取.NET版本的主要代号字符串，用于日志显示</summary>
-    private static String GetNetMajorVersion(String version)
-    {
-        if (version.IsNullOrEmpty()) return "";
-        if (!System.Version.TryParse(version.TrimStart('v', 'V'), out var ver)) return "";
-        return $".NET {ver.Major}";
-    }
-
-    /// <summary>检查节点的GLIBC版本是否满足最低要求</summary>
-    /// <param name="node">节点</param>
-    /// <param name="minVersion">最低GLIBC版本号，如 2.17</param>
-    /// <returns>满足返回true，不满足返回false</returns>
-    /// <remarks>
-    /// 仅当节点为Linux且上报了CLibVersion时启用精确检查。
-    /// CLibVersion 格式示例：glibc 2.17、glibc 2.27、musl 1.2.2；可能形如 glibc 2.17;glibcxx 3.4.30
-    /// 使用 System.Version 逐段比较 major.minor，忽略后缀 patch 版本。
-    /// </remarks>
-    private static Boolean CheckGLibc(Node node, String minVersion)
-    {
-        // 非 Linux 或未上报 CLibVersion 时跳过检查
-        if (node.CLibVersion.IsNullOrEmpty()) return true;
-        if (!node.OS.StartsWithIgnoreCase("Linux") && !node.OS.StartsWithIgnoreCase("CentOS") &&
-            !node.OS.StartsWithIgnoreCase("Ubuntu") && !node.OS.StartsWithIgnoreCase("Debian") &&
-            !node.OS.StartsWithIgnoreCase("RHEL") && !node.OS.StartsWithIgnoreCase("Red Hat"))
-            return true;
-
-        if (!System.Version.TryParse(minVersion, out var min)) return true;
-
-        // 从 CLibVersion 中提取 glibc 版本号
-        // 格式：glibc 2.17 或 glibc 2.17;glibcxx 3.4.30
-        var clib = node.CLibVersion;
-        var p = clib.IndexOf(';');
-        if (p > 0) clib = clib.Substring(0, p);
-        clib = clib.Trim();
-
-        // 提取 glibc x.y 或 musl x.y.z
-        if (!clib.StartsWithIgnoreCase("glibc ") && !clib.StartsWithIgnoreCase("musl ")) return true;
-
-        var verStr = clib.Substring(clib.IndexOf(' ') + 1).Trim();
-        if (verStr.IsNullOrEmpty()) return true;
-
-        if (!System.Version.TryParse(verStr, out var current)) return true;
-
-        // 只比较 major.minor，patch 版本不影响兼容性
-        var currentMajorMinor = current.Major * 10000 + current.Minor;
-        var minMajorMinor = min.Major * 10000 + min.Minor;
-
-        return currentMajorMinor >= minMajorMinor;
     }
     #endregion
 
