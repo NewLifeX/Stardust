@@ -49,7 +49,7 @@ public interface ITraceStatService
 /// 统计分三段，通过热门窗口与巡检在“实时性”和“写压力”之间平衡：
 /// 1. 告警链：分钟级统计全量流式，告警直接读内存实时值，落盘可以稀疏（SavePeriod）；
 /// 2. 实时链：热门应用（正被查看）的小时/日统计由数据上报驱动实时重算，打开页面即时刷新；
-/// 3. 巡检链：非热门应用的小时/日统计由巡检按 PatrolPeriod 兜底重算；
+/// 3. 巡检链：非热门应用的小时/日统计由巡检按 PatrolPeriod 兜底重算，小时切换后延迟一轮收尾上一小时，补齐巡检间隙数据；
 /// 进程首次巡检兼作启动补算，优雅停机时 Flush 落盘，保证重启不丢统计。
 /// </remarks>
 public class TraceStatService : ITraceStatService
@@ -80,7 +80,7 @@ public class TraceStatService : ITraceStatService
     public Int32 SavePeriod { get; set; } = 300;
 
     /// <summary>统计巡检周期（秒）。默认600秒</summary>
-    /// <remarks>非热门应用由巡检按本周期重算当前小时与当天统计，替代每个批周期的全量重算，显著降低写放大</remarks>
+    /// <remarks>非热门应用由巡检按本周期重算当前小时与当天统计，替代每个批周期的全量重算，显著降低写放大；小时切换后由下一轮巡检收尾上一小时</remarks>
     public Int32 PatrolPeriod { get; set; } = 600;
 
     /// <summary>启用启动恢复补算。默认true。仅接收数据上报的进程需要，用于补上重启丢失的内存增量；纯查看端进程设为false，避免与数据进程重复重算</summary>
@@ -91,6 +91,12 @@ public class TraceStatService : ITraceStatService
 
     /// <summary>统计巡检的下次执行时间</summary>
     private DateTime _nextPatrol = DateTime.MinValue;
+
+    /// <summary>上次巡检所在的小时桶。用于检测小时切换</summary>
+    private DateTime _lastPatrolHour = DateTime.MinValue;
+
+    /// <summary>待收尾的小时统计。小时切换后登记，下一轮巡检执行，等待分钟统计先按周期落盘</summary>
+    private DateTime _pendingHour = DateTime.MinValue;
 
     private TimerX _timerFlow;
     private TimerX _timerBatch;
@@ -246,8 +252,8 @@ public class TraceStatService : ITraceStatService
 
     /// <summary>流式计算，增量累加</summary>
     /// <remarks>
-    /// 分钟级与应用分钟级全量增量累加（告警数据源），小时级全量，日级仅热门应用；
-    /// 其余小时/日统计由批算与巡检覆盖重算。
+    /// 分钟级与应用分钟级全量增量累加（告警数据源），小时/日级仅热门应用；
+    /// 其余小时/日统计由批算与巡检覆盖重算，小时切换后由巡检收尾上一小时。
     /// </remarks>
     /// <param name="state">定时器状态参数</param>
     private void DoFlowStat(Object state)
@@ -266,9 +272,12 @@ public class TraceStatService : ITraceStatService
             // 过滤异常数据
             if (td.AppId <= 0 || td.Name.IsNullOrEmpty()) continue;
 
-            // 每日。仅热门应用（监控中心正在查看）保留流式实时日统计，
-            // 其余应用日统计由巡检按 PatrolPeriod 兜底重算当天，显著降低日统计写放大
-            if (IsHotApp(td.AppId))
+            // 热门门控：仅热门应用（监控中心正在查看）保留小时/日统计的流式实时累加，
+            // 非热门应用由巡检按 PatrolPeriod 兜底重算，显著降低统计写放大
+            var hot = IsHotApp(td.AppId);
+
+            // 每日。仅热门应用保留流式实时日统计
+            if (hot)
             {
                 var queue = _dayQueue ??= new();
                 queue.Period = SavePeriod * 1000;
@@ -284,7 +293,8 @@ public class TraceStatService : ITraceStatService
                 queue.Commit(key);
             }
 
-            // 小时
+            // 小时。仅热门应用保留流式实时小时统计，非热门应用由巡检在小时切换后收尾重算
+            if (hot)
             {
                 var queue = _hourQueue ??= new();
                 queue.Period = SavePeriod * 1000;
@@ -382,7 +392,7 @@ public class TraceStatService : ITraceStatService
         if (BatchPeriod > 0 && _timerBatch != null) _timerBatch.Period = BatchPeriod * 1000;
     }
 
-    /// <summary>统计巡检。非热门应用按周期重算当前小时与当天统计；历史日（跨天）补算最终值后收敛移除登记。
+    /// <summary>统计巡检。非热门应用按周期重算当前小时与当天统计；小时切换后延迟一轮收尾上一小时；历史日（跨天）补算最终值后收敛移除登记。
     /// 数据上报进程首次巡检兼作启动补算，额外重算最近窗口的分钟统计，覆盖重启丢失的内存增量</summary>
     private void DoPatrol()
     {
@@ -401,6 +411,10 @@ public class TraceStatService : ITraceStatService
         // 每巡检周期节流一次
         _nextPatrol = now.AddSeconds(period);
 
+        // 取出上一轮登记的收尾小时。延迟一轮执行，确保分钟统计已按落盘周期写入数据库
+        var pending = _pendingHour;
+        _pendingHour = DateTime.MinValue;
+
         // 清理过期的热门应用窗口，防止字典无限增长
         // IsHotApp 仅在该应用仍有数据上报时才被调用，停报应用需在此统一回收
         foreach (var item in _hotApps)
@@ -411,6 +425,46 @@ public class TraceStatService : ITraceStatService
 
         var today = now.Date;
         var hour = today.AddHours(now.Hour);
+
+        // 检测小时切换，登记到下一轮巡检收尾。非热门应用的小时统计不参与流式累加，
+        // 由收尾从分钟统计全量重算，覆盖巡检间隙的最后一段数据
+        if (_lastPatrolHour.Year > 2000 && hour != _lastPatrolHour)
+            _pendingHour = _lastPatrolHour;
+        else if (recovery && _lastPatrolHour.Year <= 2000)
+            _pendingHour = hour.AddHours(-1);
+        _lastPatrolHour = hour;
+
+        // 执行小时收尾。逐应用从分钟统计重算上一小时，随后立即落盘，
+        // 保证紧接着的跨天日终聚合能够读到最终的小时统计
+        if (pending.Year > 2000)
+        {
+            foreach (var item in _dayActive)
+            {
+                // 单个应用异常不影响其余应用
+                try
+                {
+                    var ss = item.Key.Split("_");
+                    if (ss.Length < 2) continue;
+
+                    var appId = ss[0].ToInt();
+                    var date = ss[1].ToDateTime();
+                    if (appId <= 0 || date.Year < 2000) continue;
+
+                    // 仅处理该小时所在日期，且该小时内仍有活跃的应用
+                    if (date.Date != pending.Date) continue;
+                    if (item.Value < pending) continue;
+
+                    ProcessHour(appId, pending);
+                }
+                catch (Exception ex)
+                {
+                    XTrace.WriteException(ex);
+                }
+            }
+
+            _hourQueue?.Flush();
+        }
+
         foreach (var item in _dayActive)
         {
             // 单个应用异常不影响其余应用的巡检
@@ -428,6 +482,10 @@ public class TraceStatService : ITraceStatService
 
                 if (date < today)
                 {
+                    // 小时收尾尚未执行（跨天首个巡检）时推迟日终补算，
+                    // 等待下一轮收尾落盘后再聚合，避免读到未收尾的小时行
+                    if (_pendingHour.Year > 2000 && _pendingHour.Date == date) continue;
+
                     // 历史日：由小时级统计全量聚合补算最终值后收敛移除
                     ProcessDay(appId, date);
                     _dayActive.TryRemove(item.Key, out _);

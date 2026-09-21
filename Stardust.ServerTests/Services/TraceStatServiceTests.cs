@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Reflection;
+using NewLife.Model;
 using Stardust.Data.Monitors;
 using Stardust.Server.Services;
 using Xunit;
@@ -35,6 +36,14 @@ public class TraceStatServiceTests
         Assert.NotNull(field);
 
         return field.GetValue(target);
+    }
+
+    private static void SetField(Object target, String name, Object value)
+    {
+        var field = typeof(TraceStatService).GetField(name, BindingFlags.NonPublic | BindingFlags.Instance);
+        Assert.NotNull(field);
+
+        field.SetValue(target, value);
     }
 
     /// <summary>非热门应用不登记小时/日包，只保留分钟包与当天活跃登记，交由巡检按周期重算</summary>
@@ -197,5 +206,172 @@ public class TraceStatServiceTests
         // 数据库值更新（错误数更大）时取数据库值
         var db2 = new TraceMinuteStat { Total = 200, Errors = 20 };
         Assert.Same(db2, select.Invoke(null, [live, db2]));
+    }
+
+    /// <summary>流式计算仅热门应用累加小时/日统计；非热门应用跳过小时/日，只保留分钟队列</summary>
+    [Fact]
+    [Trait("Category", "Monitor")]
+    public void Flow_NonHotApp_SkipsHourAndDayQueues()
+    {
+        var svc = CreateService();
+        svc.Add([CreateTrace(105, "api/test")]);
+
+        var flow = typeof(TraceStatService).GetMethod("DoFlowStat", BindingFlags.NonPublic | BindingFlags.Instance);
+        Assert.NotNull(flow);
+        flow.Invoke(svc, [null]);
+
+        // 非热门应用不产生小时/日队列
+        Assert.Null(GetField(svc, "_hourQueue"));
+        Assert.Null(GetField(svc, "_dayQueue"));
+
+        // 分钟与应用分钟队列保持全量流式（告警数据源）
+        var minute = (DeferredQueue)GetField(svc, "_minuteQueue");
+        var appMinute = (DeferredQueue)GetField(svc, "_appMinuteQueue");
+        Assert.NotNull(minute);
+        Assert.NotNull(appMinute);
+        Assert.Single(minute.Entities);
+        Assert.Single(appMinute.Entities);
+
+        CleanupStats(105);
+    }
+
+    /// <summary>热门应用的小时/日统计保持流式实时累加</summary>
+    [Fact]
+    [Trait("Category", "Monitor")]
+    public void Flow_HotApp_UpdatesHourAndDayQueues()
+    {
+        var svc = CreateService();
+
+        // 直接注入热窗口标记，避免 SetHotApp 内部的手动登记影响
+        ((IDictionary)GetField(svc, "_hotApps"))[106] = DateTime.Now;
+
+        svc.Add([CreateTrace(106, "api/test")]);
+
+        var flow = typeof(TraceStatService).GetMethod("DoFlowStat", BindingFlags.NonPublic | BindingFlags.Instance);
+        Assert.NotNull(flow);
+        flow.Invoke(svc, [null]);
+
+        var hour = (DeferredQueue)GetField(svc, "_hourQueue");
+        var day = (DeferredQueue)GetField(svc, "_dayQueue");
+        Assert.NotNull(hour);
+        Assert.NotNull(day);
+        Assert.Single(hour.Entities);
+        Assert.Single(day.Entities);
+
+        CleanupStats(106);
+    }
+
+    /// <summary>进程首次巡检登记上一小时收尾，留到下一轮巡检消费，等待分钟统计先按周期落盘</summary>
+    [Fact]
+    [Trait("Category", "Monitor")]
+    public void Patrol_FirstRun_SchedulesPreviousHourFinalize()
+    {
+        var svc = new TraceStatService(null) { PatrolPeriod = 1 };
+        var hour = DateTime.Now.Date.AddHours(DateTime.Now.Hour);
+
+        var patrol = typeof(TraceStatService).GetMethod("DoPatrol", BindingFlags.NonPublic | BindingFlags.Instance);
+        Assert.NotNull(patrol);
+        patrol.Invoke(svc, null);
+
+        // 首个巡检登记上一小时，留到下一轮执行；允许测试恰好跨越小时边界的少量偏差
+        var pending = (DateTime)GetField(svc, "_pendingHour");
+        Assert.True(pending == hour.AddHours(-1) || pending == hour, $"pending={pending:yyyy-MM-dd HH:mm:ss} hour={hour:yyyy-MM-dd HH:mm:ss}");
+
+        // 下一轮消费待收尾登记
+        SetField(svc, "_nextPatrol", DateTime.Now.AddSeconds(-1));
+        patrol.Invoke(svc, null);
+        Assert.Equal(DateTime.MinValue, (DateTime)GetField(svc, "_pendingHour"));
+    }
+
+    /// <summary>跨天首个巡检推迟日终补算：小时收尾未落盘前保留历史日登记，收尾后的下一轮再移除</summary>
+    [Fact]
+    [Trait("Category", "Monitor")]
+    public void Patrol_CrossDay_DefersDayFinalizeUntilHourFinalized()
+    {
+        var svc = new TraceStatService(null) { PatrolPeriod = 1 };
+
+        const Int32 appId = 991601;
+        var date = DateTime.Today.AddDays(-1);
+        var lastHour = date.AddHours(23);
+        ((IDictionary)GetField(svc, "_dayActive"))[$"{appId}_{date:yyyy-MM-dd HH:mm:ss}"] = DateTime.Now;
+        SetField(svc, "_lastPatrolHour", lastHour);
+        SetField(svc, "_nextPatrol", DateTime.Now.AddSeconds(-1));
+
+        var patrol = typeof(TraceStatService).GetMethod("DoPatrol", BindingFlags.NonPublic | BindingFlags.Instance);
+        Assert.NotNull(patrol);
+        patrol.Invoke(svc, null);
+
+        // 跨天且上一小时待收尾：登记保留，等待下一轮收尾后再日终
+        Assert.Single((IDictionary)GetField(svc, "_dayActive"));
+        Assert.Equal(lastHour, (DateTime)GetField(svc, "_pendingHour"));
+
+        // 下一轮：先收尾上一小时（该应用无分钟数据为空转），随后完成日终并移除登记
+        SetField(svc, "_nextPatrol", DateTime.Now.AddSeconds(-1));
+        patrol.Invoke(svc, null);
+
+        Assert.Empty((IDictionary)GetField(svc, "_dayActive"));
+        Assert.Equal(DateTime.MinValue, (DateTime)GetField(svc, "_pendingHour"));
+    }
+
+    /// <summary>小时收尾从分钟统计全量重算并立即落盘，随后跨天日终聚合到最终值</summary>
+    [Fact]
+    [Trait("Category", "Monitor")]
+    public void Patrol_HourFinalize_RebuildsHourFromMinutes()
+    {
+        var svc = new TraceStatService(null) { PatrolPeriod = 1 };
+
+        const Int32 appId = 991602;
+        const Int32 itemId = 881002;
+        var statTime = new DateTime(2026, 7, 16, 10, 0, 0);
+
+        var minute = new TraceMinuteStat
+        {
+            AppId = appId,
+            ItemId = itemId,
+            Name = "test-finalize-" + Guid.NewGuid().ToString("n")[..8],
+            StatTime = statTime,
+            Total = 100,
+            Errors = 2,
+            TotalCost = 500,
+            MaxCost = 50,
+            MinCost = 1,
+        };
+        minute.Insert();
+
+        try
+        {
+            ((IDictionary)GetField(svc, "_dayActive"))[$"{appId}_{statTime:yyyy-MM-dd HH:mm:ss}"] = DateTime.Now;
+            SetField(svc, "_pendingHour", statTime);
+            SetField(svc, "_nextPatrol", DateTime.Now.AddSeconds(-1));
+
+            var patrol = typeof(TraceStatService).GetMethod("DoPatrol", BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.NotNull(patrol);
+            patrol.Invoke(svc, null);
+
+            // 收尾小时已由分钟统计重建并落盘
+            var hour = TraceHourStat.FindAll(TraceHourStat._.AppId == appId).FirstOrDefault();
+            Assert.NotNull(hour);
+            Assert.Equal(statTime, hour.StatTime);
+            Assert.Equal(100L, hour.Total);
+            Assert.Equal(2L, hour.Errors);
+
+            // 小时收尾落盘后执行日终补算，历史日登记收敛移除
+            Assert.Empty((IDictionary)GetField(svc, "_dayActive"));
+        }
+        finally
+        {
+            // 落盘残留队列，保证测试数据可完整清理
+            svc.Flush();
+            CleanupStats(appId);
+        }
+    }
+
+    /// <summary>清理指定应用的统计测试数据，避免污染共享测试库</summary>
+    private static void CleanupStats(Int32 appId)
+    {
+        foreach (var e in TraceHourStat.FindAll(TraceHourStat._.AppId == appId)) e.Delete();
+        foreach (var e in TraceDayStat.FindAll(TraceDayStat._.AppId == appId)) e.Delete();
+        foreach (var e in TraceMinuteStat.FindAll(TraceMinuteStat._.AppId == appId)) e.Delete();
+        foreach (var e in AppMinuteStat.FindAll(AppMinuteStat._.AppId == appId)) e.Delete();
     }
 }
