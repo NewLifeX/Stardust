@@ -16,8 +16,12 @@ public class AgentExpansionSetting : Config<AgentExpansionSetting>
     [Description("扫描周期。单位秒，默认3600")]
     public Int32 Period { get; set; } = 3600;
 
-    /// <summary>目标网段。支持192.168.1.0/24或192.168.1.*，为空表示本地网段</summary>
-    [Description("目标网段。支持192.168.1.0/24或192.168.1.*，为空表示本地网段")]
+    /// <summary>目标网段。支持192.168.1.0/24或192.168.1.*，为空表示本地网段。仅支持局域网网段</summary>
+    /// <remarks>
+    /// 只接受 RFC1918 私有网段（10.0.0.0/8、172.16.0.0/12、192.168.0.0/16），
+    /// 链路本地 169.254.0.0/16、回环、多播、保留以及公网地址会被忽略，避免误配导致全网段扫描。
+    /// </remarks>
+    [Description("目标网段。支持192.168.1.0/24或192.168.1.*，为空表示本地网段。仅支持局域网网段")]
     public String? Networks { get; set; }
 
     /// <summary>账号。可使用env:NAME引用环境变量</summary>

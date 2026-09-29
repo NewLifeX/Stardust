@@ -41,4 +41,9 @@
     <Compile Include="..\StarAgent\WebPanel\WebBindHelper.cs" Link="WebPanel\WebBindHelper.cs" />
   </ItemGroup>
 
+  <!-- AgentExpansion 为插件工程，链接其局域网地址解析源码直接测试 -->
+  <ItemGroup>
+    <Compile Include="..\Plugins\AgentExpansion\LanScan.cs" Link="AgentExpansion\LanScan.cs" />
+  </ItemGroup>
+
 </Project>
