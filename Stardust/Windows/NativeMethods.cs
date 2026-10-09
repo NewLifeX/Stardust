@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 
 namespace Stardust;
 
@@ -103,10 +104,16 @@ internal class NativeMethods
     /// <param name="riid">IDXGIFactory 的 GUID</param>
     /// <param name="ppFactory">返回的 Factory 对象</param>
     /// <returns>HRESULT</returns>
+    /// <remarks>
+    /// 该 P/Invoke 声明了 COM 接口封送（MarshalAs(UnmanagedType.Interface)），裁剪/AOT 下无法保证互操作正确性，
+    /// 故显式声明裁剪语义；调用方在获取失败时按空值降级（GPU 信息缺失）。
+    /// </remarks>
+    [UnconditionalSuppressMessage("Trimming", "IL2050", Justification = "COM 接口封送在裁剪/AOT 下不保证正确性，调用方按空值降级；原生 AOT 形态不采集 GPU 信息")]
     [DllImport("dxgi.dll", ExactSpelling = true, PreserveSig = true)]
     internal static extern Int32 CreateDXGIFactory([In] ref Guid riid, [Out, MarshalAs(UnmanagedType.Interface)] out IDXGIFactory ppFactory);
 
     /// <summary>创建 DXGI Factory（便捷重载）</summary>
+    [UnconditionalSuppressMessage("Trimming", "IL2050", Justification = "COM 接口封送在裁剪/AOT 下不保证正确性，调用方按空值降级；原生 AOT 形态不采集 GPU 信息")]
     internal static Int32 CreateDXGIFactory(Guid riid, out IDXGIFactory? ppFactory)
     {
         return CreateDXGIFactory(ref riid, out ppFactory);

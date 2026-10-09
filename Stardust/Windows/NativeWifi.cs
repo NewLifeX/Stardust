@@ -77,9 +77,9 @@ public class NativeWifi
             {
                 var interfaceInfo = new IntPtr(ppInterfaceList.ToInt64()
                     + 8 /* Offset for dwNumberOfItems and dwIndex */
-                    + (Marshal.SizeOf(typeof(WLAN_INTERFACE_INFO)) * i) /* Offset for preceding items */);
+                    + (MarshalHelper.SizeOf<WLAN_INTERFACE_INFO>() * i) /* Offset for preceding items */);
 
-                InterfaceInfo[i] = (WLAN_INTERFACE_INFO)Marshal.PtrToStructure(interfaceInfo, typeof(WLAN_INTERFACE_INFO))!;
+                InterfaceInfo[i] = MarshalHelper.PtrToStructure<WLAN_INTERFACE_INFO>(interfaceInfo);
             }
         }
     }
@@ -126,9 +126,9 @@ public class NativeWifi
             {
                 var availableNetwork = new IntPtr(ppAvailableNetworkList.ToInt64()
                     + 8 /* Offset for dwNumberOfItems and dwIndex */
-                    + (Marshal.SizeOf(typeof(WLAN_AVAILABLE_NETWORK)) * i) /* Offset for preceding items */);
+                    + (MarshalHelper.SizeOf<WLAN_AVAILABLE_NETWORK>() * i) /* Offset for preceding items */);
 
-                Network[i] = (WLAN_AVAILABLE_NETWORK)Marshal.PtrToStructure(availableNetwork, typeof(WLAN_AVAILABLE_NETWORK))!;
+                Network[i] = MarshalHelper.PtrToStructure<WLAN_AVAILABLE_NETWORK>(availableNetwork);
             }
         }
     }
@@ -448,7 +448,7 @@ public class NativeWifi
                     IntPtr.Zero) != ERROR_SUCCESS) // If not connected to a network, ERROR_INVALID_STATE will be returned.
                     continue;
 
-                var connection = (WLAN_CONNECTION_ATTRIBUTES)Marshal.PtrToStructure(queryData, typeof(WLAN_CONNECTION_ATTRIBUTES))!;
+                var connection = MarshalHelper.PtrToStructure<WLAN_CONNECTION_ATTRIBUTES>(queryData);
                 if (connection.isState != WLAN_INTERFACE_STATE.Connected)
                     continue;
 

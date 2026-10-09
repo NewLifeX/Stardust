@@ -1,5 +1,7 @@
 ﻿#if NETCOREAPP
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Loader;
 using NewLife;
@@ -11,8 +13,16 @@ using Stardust;
 internal class StartupHook
 {
     /// <summary>被 DOTNET_STARTUP_HOOKS 调用的初始化方法</summary>
+    /// <remarks>
+    /// 启动钩子依赖程序集动态装载（AssemblyLoadContext.LoadFromAssemblyPath），NativeAOT/裁剪下不受支持，
+    /// 因此显式声明裁剪语义，并在运行时不支持动态代码生成时直接跳过。
+    /// </remarks>
+    [RequiresUnreferencedCode("启动钩子按路径动态装载程序集，AOT/裁剪下不保留被装载程序集的元数据")]
     public static void Initialize()
     {
+        // AOT/单文件下不支持启动钩子与动态装载，直接跳过
+        if (!RuntimeFeature.IsDynamicCodeSupported) return;
+
         var env = Environment.GetEnvironmentVariable("DOTNET_STARTUP_HOOKS");
         var hooks = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? env?.Split(';') : env?.Split(':');
         if (hooks == null || hooks.Length == 0) return;
@@ -55,6 +65,7 @@ internal class StartupHook
         type.InvokeMember(nameof(Init), BindingFlags.InvokeMethod | BindingFlags.Static | BindingFlags.NonPublic, null, null, [dir]);
     }
 
+    [RequiresUnreferencedCode("按路径动态装载 Stardust.Extensions 程序集并设置宿主启动程序集，AOT/裁剪下不保留其元数据")]
     private static void Init(String dir)
     {
         var hasNewLife = Directory.GetFiles(Environment.CurrentDirectory, "*.dll", SearchOption.TopDirectoryOnly)

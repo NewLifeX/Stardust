@@ -255,13 +255,13 @@ public class AgentInfo
             {
                 if (GetIpNetTable(buffer, ref size, false) == 0)
                 {
-                    var entrySize = Marshal.SizeOf(typeof(MibIpNetRow));
+                    var entrySize = MarshalHelper.SizeOf<MibIpNetRow>();
                     var count = Marshal.ReadInt32(buffer);
                     var currentBuffer = IntPtr.Add(buffer, 4);
 
                     for (var i = 0; i < count; i++)
                     {
-                        var row = (MibIpNetRow)Marshal.PtrToStructure(currentBuffer, typeof(MibIpNetRow))!;
+                        var row = MarshalHelper.PtrToStructure<MibIpNetRow>(currentBuffer);
                         var ip = new IPAddress(row.Addr).ToString();
                         var mac = String.Join("-", row.PhysAddr.Take(row.PhysAddrLen).Select(b => b.ToString("X2")));
 

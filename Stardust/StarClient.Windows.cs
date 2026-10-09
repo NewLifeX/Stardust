@@ -1,4 +1,6 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using NewLife;
 using NewLife.Caching;
@@ -65,8 +67,9 @@ public partial class StarClient
             var h = NativeMethods.GetSystemMetrics(1);
             if (w > 0 && h > 0) di.Resolution = $"{w}*{h}";
 
-            // 若运行环境存在 WinForms/Graphics（例如 .NET Framework / WindowsDesktop），仅在缺失时用反射补全
-            if (di.Dpi.IsNullOrEmpty() || di.Resolution.IsNullOrEmpty()) TryFillByReflection(di);
+            // 若运行环境存在 WinForms/Graphics（例如 .NET Framework / WindowsDesktop），仅在缺失时用反射补全。
+            // AOT/裁剪下无法保留运行时发现的类型成员，直接跳过该兜底（原生 API 路径已在上方尝试）
+            if ((di.Dpi.IsNullOrEmpty() || di.Resolution.IsNullOrEmpty()) && CanReflect) TryFillByReflection(di);
 
             // 兜底：GDI+ 获取 DPI（某些环境 Win32/反射 获取失败时）
             if (di.Dpi.IsNullOrEmpty()) TryFillByGdiPlus(di);
@@ -539,6 +542,21 @@ public partial class StarClient
         catch { }
     }
 
+    /// <summary>当前运行时是否支持运行时代码生成。AOT/裁剪下为 false，反射探测类能力需跳过</summary>
+    private static Boolean CanReflect =>
+#if NETCOREAPP3_0_OR_GREATER
+        RuntimeFeature.IsDynamicCodeSupported;
+#else
+        true;
+#endif
+
+    /// <summary>用反射从 WinForms/Graphics 补全分辨率与DPI。仅当运行环境存在对应程序集时有效</summary>
+    /// <param name="di">节点信息</param>
+    /// <remarks>
+    /// 按类型名探测可选程序集（System.Windows.Forms/System.Drawing），类型与成员无法静态保留，
+    /// 故显式声明裁剪语义；AOT/裁剪下由调用方经 <see cref="CanReflect"/> 守卫跳过。
+    /// </remarks>
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "按类型名探测可选程序集（WinForms/System.Drawing），类型与成员无法静态保留；AOT/裁剪下由调用方守卫跳过")]
     private static void TryFillByReflection(NodeInfo di)
     {
         try

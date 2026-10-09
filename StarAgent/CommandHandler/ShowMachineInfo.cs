@@ -59,7 +59,7 @@ public class ShowMachineInfo : BaseCommandHandler
 
         var client = service._Client ?? new StarClient();
         var ni = client.GetNodeInfo();
-        var pis2 = ni.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+        var pis2 = typeof(NodeInfo).GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
         foreach (var pi in pis2)
         {
@@ -75,7 +75,7 @@ public class ShowMachineInfo : BaseCommandHandler
         }
 
         var pinfo = client.BuildPingRequest() as PingInfo;
-        var pis3 = ni.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+        var pis3 = typeof(NodeInfo).GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
         foreach (var pi in pis3)
         {

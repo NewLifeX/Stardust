@@ -629,7 +629,13 @@ internal class MyService : ServiceBase, IServiceProvider
         if (File.Exists(mf))
         {
             var old = File.ReadAllText(mf);
-            var md5 = Assembly.GetExecutingAssembly().Location.AsFile().MD5().ToHex();
+            // 单文件与 NativeAOT 下 Assembly.Location 恒为空串，改用进程可执行文件路径
+#if NET6_0_OR_GREATER
+            var binFile = Environment.ProcessPath;
+#else
+            var binFile = Assembly.GetExecutingAssembly().Location;
+#endif
+            var md5 = binFile.AsFile().MD5().ToHex();
             if (old == md5) return;
 
             File.WriteAllText(mf, md5);
