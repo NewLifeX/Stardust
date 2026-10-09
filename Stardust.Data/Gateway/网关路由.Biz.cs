@@ -173,7 +173,7 @@ public partial class GatewayRoute : Entity<GatewayRoute>
             // 前缀匹配 /api/*
             if (p.EndsWith("/*"))
             {
-                var prefix = p.TrimEnd("/*");
+                var prefix = p.TrimSuffix("/*");
                 if (path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) return true;
                 continue;
             }
@@ -253,7 +253,7 @@ public partial class GatewayRoute : Entity<GatewayRoute>
 
             if (p.EndsWith("/*"))
             {
-                var prefix = p.TrimEnd("/*");
+                var prefix = p.TrimSuffix("/*");
                 if (path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
                     return "/" + path.Substring(prefix.Length).TrimStart('/');
             }

@@ -62,7 +62,7 @@ public class AgentInfo
         var p = Process.GetCurrentProcess();
         var asmx = AssemblyX.Entry;
         var fileName = p.MainModule?.FileName;
-        var args = fileName.IsNullOrEmpty() ? null : Environment.CommandLine.TrimStart(Path.ChangeExtension(fileName, ".dll")).Trim();
+        var args = fileName.IsNullOrEmpty() ? null : Environment.CommandLine.TrimPrefix(Path.ChangeExtension(fileName, ".dll")).Trim();
         //var ip = GetIps();
 
         var inf = new AgentInfo

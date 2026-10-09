@@ -4,10 +4,6 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Folder Name="/Cube/">
-    <Project Path="Cube/NewLife.Cube.Swagger/NewLife.Cube.Swagger.csproj" />
-    <Project Path="Cube/NewLife.Cube/NewLife.Cube.csproj" />
-  </Folder>
   <Folder Name="/Plugins/">
     <Project Path="Plugins/AgentExpansion/AgentExpansion.csproj" />
     <Project Path="Plugins/MySqlAgent/MySqlAgent.csproj" />

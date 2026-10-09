@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System.Buffers;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
@@ -170,7 +171,7 @@ public class LocalStarClient
         if (!fileName.IsNullOrEmpty())
         {
             var ext = Path.ChangeExtension(fileName, ".dll");
-            args = Environment.CommandLine.TrimStart(ext).Trim();
+            args = Environment.CommandLine.TrimPrefix(ext).Trim();
         }
 
         // 发起命令
@@ -513,10 +514,17 @@ public class LocalStarClient
         //};
         //var buf = msg.ToPacket().ToArray();
 
-        var pk = encoder.CreateRequest("Info", null).ToPacket();
-        if (pk == null) yield break;
+        var codec = new SrmpCodec();
 
-        var buf = pk.ToArray();
+        var req = encoder.CreateRequest("Info", null);
+        var frame = codec.Build(req);
+        if (frame == null) yield break;
+
+        var buf = frame.ToArray();
+
+        // 帧字节已复制，归还帧与请求消息持有的池化缓冲
+        frame.Dispose();
+        req.Dispose();
 
         // 在局域网中广播消息
         var udp = new UdpClient();
@@ -525,11 +533,13 @@ public class LocalStarClient
         var end = DateTime.Now.AddSeconds(timeout);
         while (DateTime.Now < end)
         {
-            var rs = new DefaultMessage();
             IPEndPoint? ep = null;
             buf = udp.Receive(ref ep);
-            if (buf != null && rs.Read((ArrayPacket)buf))
+            if (buf != null && codec.TryParse(new ReadOnlySequence<Byte>(buf)) is { } pr && pr.Message is DefaultMessage rs)
             {
+                // v12 帧解析只产出头部，消息体由帧层绑定；裸 UdpClient 收到的单个数据报即完整帧
+                rs.SetBody(new ArrayPacket(buf, pr.HeaderSize, (Int32)pr.BodyLength));
+
                 var msg = encoder.Decode(rs);
                 if (msg != null && msg.Data != null)
                 {

@@ -65,14 +65,14 @@ class Program
 
         //    Thread.Sleep(1000);
         //}
-        await io.Put("aa.txt", (ArrayPacket)"学无先后达者为师！".GetBytes());
-        var rs = await io.Get("aa.txt");
+        await io.PutAsync("aa.txt", (ArrayPacket)"学无先后达者为师！".GetBytes());
+        var rs = await io.GetAsync("aa.txt");
         XTrace.WriteLine(rs.Data.ToStr());
 
-        var ss = await io.Search();
+        var ss = await io.SearchAsync();
         XTrace.WriteLine(ss.ToJson(true));
 
-        var rs2 = await io.Delete("aa.txt");
+        var rs2 = await io.DeleteAsync("aa.txt");
     }
 
     static void Test2()
@@ -146,8 +146,9 @@ class Program
         writer.Write(0);
 
         var msg = new DefaultMessage();
-        msg.Payload = (ArrayPacket)ms.ToArray();
-        var buf = msg.ToPacket().ToArray();
+        msg.SetBody((ArrayPacket)ms.ToArray());
+        using var frame = new SrmpCodec().Build(msg);
+        var buf = frame!.ToArray();
         XTrace.WriteLine(buf.ToHex());
 
         var udp = new UdpClient();
