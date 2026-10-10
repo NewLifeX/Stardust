@@ -8,6 +8,7 @@ using XCode.Membership;
 
 namespace Stardust.Web.Areas.Monitors.Controllers;
 
+/// <summary>告警组。多个告警项组合成群，统一设置告警动作与接收对象</summary>
 [Menu(20)]
 [MonitorsArea]
 public class AlarmGroupController : EntityController<AlarmGroup>
@@ -59,8 +60,8 @@ public class AlarmGroupController : EntityController<AlarmGroup>
     }
 
     /// <summary>马上执行</summary>
-    /// <param name="id"></param>
-    /// <returns></returns>
+    /// <param name="id">告警组编号，逗号分隔可传多个</param>
+    /// <returns>操作结果</returns>
     [EntityAuthorize(PermissionFlags.Update)]
     public ActionResult ExecuteNow(String id)
     {

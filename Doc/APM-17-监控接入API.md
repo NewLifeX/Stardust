@@ -88,15 +88,15 @@ Token 传递方式（按优先级）：URL 参数 `?Token=xxx` > `Authorization:
     "Builders": [
         {
             "Name": "http://example.com/api/users",
-            "StartTime": "2026-07-15T10:00:00",
+            "StartTime": 1784092800000,
             "Total": 100,
             "Errors": 2,
             "Cost": 5000,
             "Samples": [
                 {
                     "Id": "span-001",
-                    "StartTime": "2026-07-15T10:00:01",
-                    "EndTime": "2026-07-15T10:00:02",
+                    "StartTime": 1784092801000,
+                    "EndTime": 1784092802000,
                     "Tag": "GET /api/users",
                     "Error": ""
                 }
@@ -118,6 +118,19 @@ Token 传递方式（按优先级）：URL 参数 `?Token=xxx` > `Authorization:
 ### 4. 上报压缩数据 - POST /Trace/ReportRaw
 
 与 Report 接口相同，但请求体为 GZip 压缩的 JSON 数据，`Content-Type: application/x-gzip`。
+
+---
+
+## 字段约定
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `StartTime` / `EndTime` | 数值 | **Unix 毫秒**时间戳（如 `1784092800000`），不是日期字符串。SDK/Go(`time.Now().UnixMilli()`)、SDK/JavaScript(`Date.now()`)、SDK/PHP/ASP 均按此格式上报 |
+| `Total` / `Errors` | 数值 | 采样周期内该埋点名的总次数与错误次数 |
+| `Cost` / `MaxCost` / `MinCost` | 数值 | 总耗时、最大耗时、最小耗时，单位毫秒 |
+| `Samples` / `ErrorSamples` | 数组 | 正常采样与异常采样的 Span 列表，字段同上 |
+
+> ⚠️ 时间字段写成日期字符串等非法取值时，服务端整个报文解析失败并直接丢弃（HTTP 200 且 `data` 为 `null`），不会落库。接入调试时请检查该字段格式。
 
 ---
 

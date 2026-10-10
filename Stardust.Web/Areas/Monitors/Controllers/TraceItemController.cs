@@ -10,6 +10,7 @@ using XCode.Membership;
 
 namespace Stardust.Web.Areas.Monitors.Controllers;
 
+/// <summary>埋点项。每个应用各自的埋点名清单，用于配置采样率、超时与告警</summary>
 [Menu(65, false)]
 [MonitorsArea]
 public class TraceItemController : EntityController<TraceItem>

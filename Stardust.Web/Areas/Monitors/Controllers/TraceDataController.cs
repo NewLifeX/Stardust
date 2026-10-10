@@ -12,6 +12,7 @@ using static Stardust.Data.Monitors.TraceData;
 
 namespace Stardust.Web.Areas.Monitors.Controllers;
 
+/// <summary>追踪数据。按应用与埋点项聚合的调用统计，支撑调用链可视化与性能分析</summary>
 [Menu(0, false)]
 [MonitorsArea]
 public class TraceDataController : ReadOnlyEntityController<TraceData>
