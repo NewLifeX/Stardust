@@ -62,9 +62,10 @@ public class TracerMiddleware(RequestDelegate next)
                 // 请求主体作为强制采样的数据标签，便于分析链路
                 var req = ctx.Request;
 
-                span = Tracer.NewSpan(action);
-                span.Tag = $"{ctx.GetUserHost()} {req.Method} {req.GetRawUrl()}";
-                span.Detach(req.Headers);
+                // 服务端片段需要继承上游链路。OpenTelemetry 的活动一旦启动就无法再指定父级，
+                // 必须由 NewServerSpan 在创建时传入上游上下文，不能沿用"先建后 Detach"的写法
+                span = Tracer.NewServerSpan(action, req.Headers);
+                span!.Tag = $"{ctx.GetUserHost()} {req.Method} {req.GetRawUrl()}";
                 span.Value = req.ContentLength ?? 0;
                 if (span is DefaultSpan ds && ds.TraceFlag > 0)
                 {
