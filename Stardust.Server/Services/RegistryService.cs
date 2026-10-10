@@ -430,6 +430,8 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
         return (svc, changed);
     }
 
+    /// <summary>服务健康检查。按服务的健康检测地址探测一次，并更新服务的健康状态</summary>
+    /// <param name="svc">应用服务实例</param>
     public async Task HealthCheck(AppService svc)
     {
         var url = svc.Service?.HealthAddress;

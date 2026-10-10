@@ -110,10 +110,10 @@ namespace Stardust.Data.Configs
 
         #region 业务操作
         /// <summary>计算作用域</summary>
-        /// <param name="appid"></param>
+        /// <param name="appid">应用编号</param>
         /// <param name="ip">远程IP地址</param>
         /// <param name="localIp">本地IP地址</param>
-        /// <returns></returns>
+        /// <returns>匹配到的作用域，未匹配时返回 null</returns>
         public static String CheckScope(Int32 appid, String ip, String localIp)
         {
             if (ip.IsNullOrEmpty() && localIp.IsNullOrEmpty()) return null;
@@ -138,7 +138,7 @@ namespace Stardust.Data.Configs
         /// <summary>匹配规则</summary>
         /// <param name="ip">远程IP地址</param>
         /// <param name="localIp">本地IP地址</param>
-        /// <returns></returns>
+        /// <returns>是否匹配成功</returns>
         public Boolean Match(String ip, String localIp)
         {
             var dic = Rule.SplitAsDictionary("=", ";");

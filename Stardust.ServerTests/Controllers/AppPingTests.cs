@@ -27,7 +27,7 @@ public class AppPingTests
 #pragma warning restore CS0618, ASPDEPR008
     }
 
-    private static String? ExtractToken(String body)
+    private static String ExtractToken(String body)
     {
         var m = Regex.Match(body, "\"token\"\\s*:\\s*\"([^\"]+)\"");
         return m.Success ? m.Groups[1].Value : null;

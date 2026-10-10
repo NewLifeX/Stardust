@@ -26,7 +26,7 @@ public partial class AppConsume : Entity<AppConsume>
     }
 
     /// <summary>验证数据</summary>
-    /// <param name="isNew"></param>
+    /// <param name="isNew">是否新增</param>
     public override void Valid(Boolean isNew)
     {
         this.TrimExtraLong(_.Address);
@@ -123,12 +123,13 @@ public partial class AppConsume : Entity<AppConsume>
 
     #region 高级查询
     /// <summary>高级搜索</summary>
-    /// <param name="appId"></param>
-    /// <param name="serviceId"></param>
-    /// <param name="enable"></param>
-    /// <param name="key"></param>
-    /// <param name="page"></param>
-    /// <returns></returns>
+    /// <param name="appId">应用编号，-1 表示不限</param>
+    /// <param name="serviceId">服务编号，0 表示不限</param>
+    /// <param name="client">客户端标识，为空时不过滤</param>
+    /// <param name="enable">是否启用，null 表示不限</param>
+    /// <param name="key">关键字，匹配服务名/客户端/标签</param>
+    /// <param name="page">分页参数</param>
+    /// <returns>应用消费列表，不存在时返回空列表</returns>
     public static IList<AppConsume> Search(Int32 appId, Int32 serviceId, String client, Boolean? enable, String key, PageParameter page)
     {
         var exp = new WhereExpression();
