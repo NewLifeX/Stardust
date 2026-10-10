@@ -6,9 +6,9 @@ using Stardust.Data;
 
 namespace Stardust.Server.Controllers;
 
+/// <summary>应用日志接收控制器。接收客户端上报的标准日志行并写入应用客户端日志表</summary>
 [ApiController]
 [Route("[controller]")]
-/// <summary>控制器名</summary>
 public class LogController() : ControllerBase
 {
     /// <summary>健康检查</summary>

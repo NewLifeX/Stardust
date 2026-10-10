@@ -118,7 +118,7 @@ public partial class McpTokenResource : Entity<McpTokenResource>
     };
 
     /// <summary>获取资源类型列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
-    /// <returns></returns>
+    /// <returns>资源类型字典，键为字段值，值为显示名</returns>
     public static IDictionary<String, String> GetResourceTypeList() => _ResourceTypeCache.FindAllName();
     #endregion
 

@@ -155,12 +155,12 @@ namespace Stardust.Data
 
         #region 业务操作
         /// <summary>创建日志</summary>
-        /// <param name="appId"></param>
-        /// <param name="clientId"></param>
-        /// <param name="ss"></param>
-        /// <param name="message"></param>
-        /// <param name="ip"></param>
-        /// <returns></returns>
+        /// <param name="appId">应用编号</param>
+        /// <param name="clientId">客户端标识</param>
+        /// <param name="ss">日志行头部的四段，依次为时间、线程、类型、名称</param>
+        /// <param name="message">日志消息，含后续续行</param>
+        /// <param name="ip">来源地址</param>
+        /// <returns>日志对象</returns>
         public static AppClientLog Create(Int32 appId, String clientId, String[] ss, String message, String ip)
         {
             var log = new AppClientLog

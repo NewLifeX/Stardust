@@ -117,7 +117,7 @@ public partial class McpAudit : Entity<McpAudit>
     };
 
     /// <summary>获取工具名列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
-    /// <returns></returns>
+    /// <returns>工具名字典，键为字段值，值为显示名</returns>
     public static IDictionary<String, String> GetToolNameList() => _ToolNameCache.FindAllName();
 
     // Select Count(Id) as Id,ActionName From McpAudit Where CreateTime>'2020-01-24 00:00:00' Group By ActionName Order By Id Desc limit 20
@@ -127,7 +127,7 @@ public partial class McpAudit : Entity<McpAudit>
     };
 
     /// <summary>获取动作名列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
-    /// <returns></returns>
+    /// <returns>动作名字典，键为字段值，值为显示名</returns>
     public static IDictionary<String, String> GetActionNameList() => _ActionNameCache.FindAllName();
     #endregion
 

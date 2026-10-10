@@ -31,6 +31,39 @@ public class TraceReportContractTests
 #pragma warning restore CS0618, ASPDEPR008
     }
 
+    [Fact(DisplayName = "非法时间字段的报文返回错误而非静默丢弃")]
+    public async Task Report_InvalidTimeField_ReturnsError()
+    {
+        var name = "trb_" + Rand.NextString(8);
+        var app = new App { Name = name, Secret = "trb-secret", Enable = true };
+        app.Insert();
+        new AppTracer { Name = name, AppId = app.Id, Enable = true }.Insert();
+
+        try
+        {
+            var loginClient = _server.CreateClient();
+            var login = await loginClient.PostAsync<LoginResponse>("app/login", new { AppId = name, Secret = "trb-secret" });
+            Assert.NotNull(login?.Token);
+
+            // 时间字段误用日期字符串，服务端无法绑定整个模型
+            var json = $@"{{""AppId"":""{name}"",""Builders"":[{{""Name"":""probe/op"",""StartTime"":""2026-07-15T10:00:00""}}]}}";
+
+            var client = _server.CreateClient();
+            client.DefaultRequestHeaders.Add("X-Token", login!.Token);
+
+            var resp = await client.PostAsync("/Trace/Report", new StringContent(json, Encoding.UTF8, "application/json"));
+            var body = await resp.Content.ReadAsStringAsync();
+
+            Assert.Contains("解析失败", body);
+            Assert.DoesNotContain("period", body, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            AppTracer.FindByName(name)?.Delete();
+            app.Delete();
+        }
+    }
+
     [Fact(DisplayName = "非.NET 客户端上报埋点并生成追踪项与追踪数据")]
     public async Task Report_JsonPayload_CreatesTraceItemAndData()
     {

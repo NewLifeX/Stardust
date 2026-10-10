@@ -29,8 +29,11 @@ public class TraceController(ITraceStatService stat, IAppDayStatService appStat,
     [HttpPost(nameof(Report))]
     public TraceResponse Report([FromBody] TraceModel model, String token)
     {
-        var builders = model?.Builders;
-        if (model == null || model.AppId.IsNullOrEmpty()) return null;
+        // 报文解析失败时明确报错，避免整份埋点数据被静默丢弃（时间字段必须为 Unix 毫秒数值）
+        if (model == null) throw new ApiException(ApiCode.BadRequest, "埋点报文解析失败，请检查字段类型：时间字段(StartTime/EndTime)须为 Unix 毫秒数值");
+
+        var builders = model.Builders;
+        if (model.AppId.IsNullOrEmpty()) return null;
 
         var ip = HttpContext.GetUserHost();
         if (ip.IsNullOrEmpty()) ip = ManageProvider.UserHost;

@@ -112,11 +112,11 @@ public class StarTracer : DefaultTracer
     #endregion
 
     #region OpenTelemetry
+#if NET6_0_OR_GREATER
     /// <summary>挂载 OpenTelemetry 采集器。把进程内第三方组件的活动转成埋点，与自研埋点统一上报</summary>
-    /// <returns>采集器实例，未启用或当前目标框架不支持时返回空</returns>
+    /// <returns>采集器实例，未启用时返回空。低版本目标框架不支持 OpenTelemetry，方法不提供</returns>
     public OpenTelemetryCollector? AttachOpenTelemetry()
     {
-#if NET6_0_OR_GREATER
         if (!EnableOpenTelemetry) return null;
 
         var collector = OpenTelemetry;
@@ -128,10 +128,8 @@ public class StarTracer : DefaultTracer
         collector.Attach();
 
         return collector;
-#else
-        return null;
-#endif
     }
+#endif
     #endregion
 
     #region 销毁
