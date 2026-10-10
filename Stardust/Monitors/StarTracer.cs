@@ -48,6 +48,15 @@ public class StarTracer : DefaultTracer
     /// <summary>性能收集。收集应用性能信息，数量较大的客户端可以不必收集应用性能信息</summary>
     public Boolean EnableMeter { get; set; } = true;
 
+    /// <summary>采集 OpenTelemetry 埋点。把进程内第三方组件的活动转成埋点上报，默认true</summary>
+    public Boolean EnableOpenTelemetry { get; set; } = true;
+
+#if NET6_0_OR_GREATER
+    /// <summary>OpenTelemetry 采集器。为空时按 <see cref="EnableOpenTelemetry"/> 自动创建</summary>
+    /// <remarks>可预先配置源名白名单或黑名单，例如只采集 Redis 与 Npgsql</remarks>
+    public OpenTelemetryCollector? OpenTelemetry { get; set; }
+#endif
+
     private readonly String? _version;
     private readonly Process _process = Process.GetCurrentProcess();
     private readonly ConcurrentQueue<TraceModel> _fails = new();
@@ -64,6 +73,7 @@ public class StarTracer : DefaultTracer
         Period = set.TracerPeriod;
         MaxSamples = set.MaxSamples;
         MaxErrors = set.MaxErrors;
+        EnableOpenTelemetry = set.EnableOpenTelemetry;
 
         if (set.Debug) Log = XTrace.Log;
 
@@ -98,6 +108,46 @@ public class StarTracer : DefaultTracer
         var set = StarSetting.Current;
         if (!AppId.IsNullOrEmpty() && !set.Secret.IsNullOrEmpty())
             http.Filter = new TokenHttpFilter { UserName = AppId, Password = set.Secret };
+    }
+    #endregion
+
+    #region OpenTelemetry
+    /// <summary>挂载 OpenTelemetry 采集器。把进程内第三方组件的活动转成埋点，与自研埋点统一上报</summary>
+    /// <returns>采集器实例，未启用或当前目标框架不支持时返回空</returns>
+    public OpenTelemetryCollector? AttachOpenTelemetry()
+    {
+#if NET6_0_OR_GREATER
+        if (!EnableOpenTelemetry) return null;
+
+        var collector = OpenTelemetry;
+        if (collector == null)
+        {
+            collector = new OpenTelemetryCollector { Tracer = this };
+            OpenTelemetry = collector;
+        }
+        collector.Attach();
+
+        return collector;
+#else
+        return null;
+#endif
+    }
+    #endregion
+
+    #region 销毁
+    /// <summary>销毁</summary>
+    /// <param name="disposing"></param>
+    protected override void Dispose(Boolean disposing)
+    {
+        base.Dispose(disposing);
+
+        if (disposing)
+        {
+#if NET6_0_OR_GREATER
+            OpenTelemetry?.Dispose();
+            OpenTelemetry = null;
+#endif
+        }
     }
     #endregion
 
@@ -290,6 +340,11 @@ public class StarTracer : DefaultTracer
     {
         Instance = this;
         ApiHelper.Tracer = this;
+
+#if NET6_0_OR_GREATER
+        // 采集第三方组件的 OpenTelemetry 埋点，与自研埋点统一上报星尘
+        AttachOpenTelemetry();
+#endif
 
 #if NET5_0_OR_GREATER
         // 订阅Http事件
