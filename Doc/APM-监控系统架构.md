@@ -155,6 +155,28 @@ WebApi 请求的埋点名称由 `TracerMiddleware`（`Stardust.Extensions\Tracer
 
 **下游定制**：最终名称经 `ITracer.Resolver.ResolveName(name, HttpContext)` 产出，应用可继承 `StarTracerResolver` 重写该方法自定义 WebApi 埋点名称，返回空时跳过该埋点。
 
+### 3.4 无效请求的埋点丢弃
+
+扫描探测（`/wp-login.php`、`/.env`、随机路径等）的路径各不相同，即使有自动截断，仍会在星尘平台堆积大量没有意义的 TraceItem。`TracerMiddleware` 对这类请求调用 `ISpan.Abandon()` 丢弃埋点，埋点不计入统计也不上报。
+
+**判定条件是「状态码404 且 未命中路由终结点」**（`ctx.GetEndpoint() == null`），而不是单纯看状态码：
+
+| 请求 | 命中终结点 | 状态码 | 处置 |
+|------|-----------|--------|------|
+| `/wp-login.php`、`/.env` | 否 | 404 | 丢弃，路径不存在，属扫描探测 |
+| `/api/user/1`（资源不存在） | 是 | 404 | **保留**，业务主动返回的404是正常业务行为，其埋点有观测价值 |
+| `/api/user/1` | 是 | 200 | 保留 |
+
+`TracerMiddleware.ShouldAbandon` 可完全接管该规则（`Func<HttpContext, Boolean>`），用于把 405 等其它探测流量一并纳入，或反向保留404埋点；设置后默认规则不再生效，需要保留时请在委托内自行包含。
+
+应用若未启用终结点路由（如传统 `UseMvc` 路由），终结点恒为空，判定退化为只按状态码404，即与调整前一致。
+
+三点边界：
+
+- **只丢弃当前片段**：同一条链路里由 `DiagnosticListener`、`OpenTelemetryCollector`、XCode 产生的片段不受影响，需要整链过滤时应在采集端按 TraceId 处理。
+- **只省上报不省创建**：埋点对象与请求头标签已经产生，扫描洪峰下的创建开销依然存在；要在创建前拦截，可让 `ITracer.Resolver.ResolveName` 对探测路径返回空以跳过埋点。
+- **星尘档是落地能力**：`DefaultSpan.Abandon` 会归还片段上下文；OpenTelemetry 档的活动归 SDK 管理，不作为承诺。
+
 ---
 
 ## 4. 服务端架构

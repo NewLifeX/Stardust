@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -18,6 +19,8 @@ public class TracerMiddlewareTests : IDisposable
     private readonly Boolean _oldEnable;
     private readonly String[] _oldArea;
     private readonly IList<String> _oldAllow;
+    private readonly Func<HttpContext, Boolean>? _oldAbandon;
+    private readonly ITracer? _oldTracer;
 
     /// <summary>实例化。临时重置全局配置，避免外部状态影响测试</summary>
     public TracerMiddlewareTests()
@@ -26,11 +29,14 @@ public class TracerMiddlewareTests : IDisposable
         _oldEnable = TracerMiddleware.EnableAutoName;
         _oldArea = TracerMiddleware.AreaNames;
         _oldAllow = TracerMiddleware.AllowPaths;
+        _oldAbandon = TracerMiddleware.ShouldAbandon;
+        _oldTracer = TracerMiddleware.Tracer;
 
         StarSetting.Current.TraceNamePrefixes = "";
         TracerMiddleware.EnableAutoName = true;
         TracerMiddleware.AreaNames = [];
         TracerMiddleware.AllowPaths = [];
+        TracerMiddleware.ShouldAbandon = null;
     }
 
     /// <summary>恢复全局配置</summary>
@@ -40,9 +46,24 @@ public class TracerMiddlewareTests : IDisposable
         TracerMiddleware.EnableAutoName = _oldEnable;
         TracerMiddleware.AreaNames = _oldArea;
         TracerMiddleware.AllowPaths = _oldAllow;
+        TracerMiddleware.ShouldAbandon = _oldAbandon;
+        TracerMiddleware.Tracer = _oldTracer;
     }
 
     private static TracerMiddleware Create() => new(static ctx => Task.CompletedTask);
+
+    /// <summary>创建中间件与可验证的埋点，用于验证埋点是否被抛弃</summary>
+    private static (TracerMiddleware, Mock<ISpan>) CreateWithSpan()
+    {
+        var span = new Mock<ISpan>();
+        span.SetupAllProperties();
+
+        var tracer = new Mock<ITracer>();
+        tracer.Setup(t => t.NewSpan(It.IsAny<String>())).Returns(span.Object);
+        TracerMiddleware.Tracer = tracer.Object;
+
+        return (Create(), span);
+    }
 
     private static DefaultHttpContext CreateContext(String path)
     {
@@ -284,5 +305,68 @@ public class TracerMiddlewareTests : IDisposable
         {
             StarSetting.Current.TraceNamePrefixes = old;
         }
+    }
+
+    [Fact]
+    [DisplayName("404扫描探测_未命中路由终结点时抛弃埋点")]
+    public async Task Abandon_UnmatchedRoute_DiscardsSpan()
+    {
+        var (mw, span) = CreateWithSpan();
+        var ctx = CreateContext("/wp-login.php");
+
+        // 路径不存在：没有命中任何终结点，状态码404
+        ctx.Response.StatusCode = 404;
+        await mw.Invoke(ctx);
+
+        span.Verify(s => s.Abandon(), Times.Once);
+        // 垃圾埋点不标记异常，避免额外产生异常埋点
+        span.Verify(s => s.SetError(It.IsAny<Exception>(), It.IsAny<Object>()), Times.Never);
+    }
+
+    [Fact]
+    [DisplayName("404业务响应_命中路由终结点时保留埋点")]
+    public async Task Abandon_MatchedRoute_KeepsSpan()
+    {
+        var (mw, span) = CreateWithSpan();
+        var ctx = CreateContext("/api/user/1");
+
+        // 资源不存在：路由已命中，属于正常业务行为
+        ctx.SetEndpoint(new Endpoint(static _ => Task.CompletedTask, EndpointMetadataCollection.Empty, "UserApi"));
+        ctx.Response.StatusCode = 404;
+        await mw.Invoke(ctx);
+
+        span.Verify(s => s.Abandon(), Times.Never);
+    }
+
+    [Fact]
+    [DisplayName("自定义抛弃规则_接管默认判定")]
+    public async Task Abandon_CustomRule_TakesOver()
+    {
+        var (mw, span) = CreateWithSpan();
+        var ctx = CreateContext("/api/user/1");
+
+        // 命中终结点的405，默认规则不抛弃；自定义规则接管后抛弃
+        ctx.SetEndpoint(new Endpoint(static _ => Task.CompletedTask, EndpointMetadataCollection.Empty, "UserApi"));
+        ctx.Response.StatusCode = 405;
+        TracerMiddleware.ShouldAbandon = static ctx => ctx.Response.StatusCode == 405;
+
+        await mw.Invoke(ctx);
+
+        span.Verify(s => s.Abandon(), Times.Once);
+    }
+
+    [Fact]
+    [DisplayName("自定义抛弃规则_返回false时保留默认不抛弃的埋点")]
+    public async Task Abandon_CustomRuleCanKeep()
+    {
+        var (mw, span) = CreateWithSpan();
+        var ctx = CreateContext("/wp-login.php");
+
+        ctx.Response.StatusCode = 404;
+        TracerMiddleware.ShouldAbandon = static ctx => false;
+
+        await mw.Invoke(ctx);
+
+        span.Verify(s => s.Abandon(), Times.Never);
     }
 }
