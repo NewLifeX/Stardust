@@ -159,15 +159,20 @@ public class DeployService
     {
         if (online == null || online.AppId == 0 || online.NodeId == 0) return;
 
+        // 应用名可能因应用被删除或脏在线会话而为空，此时无法定位部署集；
+        // XCode 的 GetOrAdd 内部直接调用空键的 ToString，必须提前拦截，避免登录接口 500
+        var appName = online.AppName;
+        if (appName.IsNullOrEmpty()) return;
+
         // 剔除StarAgent
-        if (online.AppName == "StarAgent") return;
+        if (appName == "StarAgent") return;
 
         // 找应用部署。此时只有应用标识和节点标识，可能对应多个部署集
         var list = AppDeploy.FindAllByAppId(online.AppId);
         if (list.Count == 0)
         {
             // 根据应用名查找
-            var deploy = AppDeploy.FindByName(online.AppName);
+            var deploy = AppDeploy.FindByName(appName);
             if (deploy != null)
             {
                 // 部署名绑定到别的应用，退出
@@ -188,7 +193,7 @@ public class DeployService
                 //};
                 //deploy.Insert();
 
-                deploy = AppDeploy.GetOrAdd(online.AppName);
+                deploy = AppDeploy.GetOrAdd(appName);
                 deploy.AppId = online.AppId;
                 deploy.Category = online.App?.Category;
                 deploy.Save();
