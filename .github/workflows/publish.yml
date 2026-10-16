@@ -22,7 +22,7 @@ jobs:
           10.x
     - name: Build
       run: |
-        dotnet build -c Release
+        dotnet build 星尘.slnx -c Release
     - name: Pack
       run: |
         dotnet pack --no-build -o out Stardust\Stardust.csproj

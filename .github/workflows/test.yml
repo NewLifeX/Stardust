@@ -22,11 +22,10 @@ jobs:
             8.x
             9.x
             10.x
-      # Build 显式指定 星尘.sln：仓库根目录同时并存 星尘.sln 与 星尘.slnx（XML 方案格式），
-      # 若不带方案名，dotnet 会因目录下有多个解决方案文件而报 MSB1011（多个项目或解决方案文件）失败。
+      # 仓库仅保留 星尘.slnx（XML 方案格式）一个解决方案文件，显式指定以保证解析目标明确
       - name: Build
         run: |
-          dotnet build 星尘.sln -c Release
+          dotnet build 星尘.slnx -c Release
       - name: Test
         run: |
-          dotnet test 星尘.sln -c Release --no-build --logger "trx;LogFileName=test_results.trx"
+          dotnet test 星尘.slnx -c Release --no-build --logger "trx;LogFileName=test_results.trx"
