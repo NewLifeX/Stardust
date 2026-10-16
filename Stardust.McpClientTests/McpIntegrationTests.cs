@@ -244,7 +244,8 @@ public class McpIntegrationTests : IAsyncLifetime
             });
 
             Assert.True(RawMcpClient.HasError(resp));
-            Assert.Equal(-32003, RawMcpClient.GetErrorCode(resp));
+            var code6 = RawMcpClient.GetErrorCode(resp);
+            Assert.True(code6 == -32003, $"期望 -32003，实际 {code6}，message={RawMcpClient.GetErrorMessage(resp)}，token={tokenStr}");
 
             _output.WriteLine($"✅ 场景6通过：未授权资源访问返回 -32003 ({RawMcpClient.GetErrorMessage(resp)})");
         }
