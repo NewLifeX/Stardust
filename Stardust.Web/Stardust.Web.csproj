@@ -47,10 +47,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Cube.Core" Version="6.15.2026.904-beta0617" />
-    <PackageReference Include="NewLife.IP" Version="2.5.2026.804" />
-    <PackageReference Include="NewLife.Redis" Version="6.6.2026.901" />
-    <PackageReference Include="NewLife.Remoting.Extensions" Version="3.9.2026.1009-beta1312" />
+    <PackageReference Include="NewLife.Cube.Core" Version="6.15.2026.1002-beta1649" />
+    <PackageReference Include="NewLife.IP" Version="2.5.2026.1016-beta1422" />
+    <PackageReference Include="NewLife.Redis" Version="6.6.2026.1016-beta0908" />
+    <PackageReference Include="NewLife.Remoting.Extensions" Version="3.9.2026.1016-beta0206" />
   </ItemGroup>
 
   <ItemGroup>

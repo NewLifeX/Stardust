@@ -39,6 +39,28 @@
     <Compile Include="..\StarAgent\Program.cs" Link="Program.cs" />
     <Compile Include="..\StarAgent\Setting.cs" Link="Setting.cs" />
     <Compile Include="..\StarAgent\StarService.cs" Link="StarService.cs" />
+    <Compile Include="..\StarAgent\MyStarClient.cs" Link="MyStarClient.cs" />
+    <Compile Include="..\StarAgent\AliyunDnsClient.cs" Link="AliyunDnsClient.cs" />
+    <Compile Include="..\StarAgent\AliyunDnsSetting.cs" Link="AliyunDnsSetting.cs" />
+    <Compile Include="..\StarAgent\WebPanel\StarApi.cs" Link="WebPanel\StarApi.cs" />
+    <Compile Include="..\StarAgent\WebPanel\StarPanel.cs" Link="WebPanel\StarPanel.cs" />
+    <Compile Include="..\StarAgent\WebPanel\WebBindHelper.cs" Link="WebPanel\WebBindHelper.cs" />
+    <Compile Include="..\Stardust\Managers\FirewallManager.cs" Link="Managers\FirewallManager.cs" />
+    <Compile Include="..\Stardust\Managers\ServiceController.cs" Link="Managers\ServiceController.cs" />
+    <Compile Include="..\Stardust\Managers\ServiceManager.cs" Link="Managers\ServiceManager.cs" />
+    <Compile Include="..\StarAgent\Managers\DeployStrategyBase.cs" Link="StarManagers\DeployStrategyBase.cs" />
+    <Compile Include="..\StarAgent\Managers\DeployStrategyFactory.cs" Link="StarManagers\DeployStrategyFactory.cs" />
+    <Compile Include="..\StarAgent\Managers\HostedStrategy.cs" Link="StarManagers\HostedStrategy.cs" />
+    <Compile Include="..\StarAgent\Managers\IDeployStrategy.cs" Link="StarManagers\IDeployStrategy.cs" />
+    <Compile Include="..\StarAgent\Managers\NginxDeploy.cs" Link="StarManagers\NginxDeploy.cs" />
+    <Compile Include="..\StarAgent\Managers\ShadowDeployStrategy.cs" Link="StarManagers\ShadowDeployStrategy.cs" />
+    <Compile Include="..\StarAgent\Managers\StandardDeployStrategy.cs" Link="StarManagers\StandardDeployStrategy.cs" />
+    <Compile Include="..\StarAgent\Managers\TaskStrategy.cs" Link="StarManagers\TaskStrategy.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 嵌入 Web 面板静态文件，资源名与 StarAgent 主工程保持一致（StarPanel.EmbeddedResourcePrefix） -->
+    <EmbeddedResource Include="..\StarAgent\WebPanel\wwwroot\**" LogicalName="StarAgent.WebPanel.wwwroot.%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -46,7 +68,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Agent" Version="10.1.2022.1201" />
+    <PackageReference Include="NewLife.Agent" Version="10.18.2026.1013-beta0145" />
   </ItemGroup>
 
   <ItemGroup>
