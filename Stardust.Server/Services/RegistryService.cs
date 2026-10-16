@@ -122,6 +122,9 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
         App app = null;
         try
         {
+            // 空应用标识直接拒绝：GetOrAdd 内部对空键直接解引用，会以 NRE 形式返回 500
+            if (name.IsNullOrEmpty()) throw new ApiException(ApiCode.BadRequest, "应用标识不能为空！");
+
             // 查找应用。若已存在，说明客户端密钥校验失败（错误或为空）后被框架转入动态注册流程。
             // 默认禁止复用旧身份自动放行，防止身份冒用与真实密钥泄露（安全扫描 V-1）
             app = App.FindByName(name);
