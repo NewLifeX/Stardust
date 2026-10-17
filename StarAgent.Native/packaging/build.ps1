@@ -27,7 +27,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $nativeRoot = Split-Path -Parent $PSScriptRoot
 $repoRoot = Split-Path -Parent $nativeRoot
-if (-not $OutDir) { $OutDir = Join-Path $repoRoot 'Bin\Agent\native' }
+if (-not $OutDir) { $OutDir = Join-Path $repoRoot 'Bin/Agent/native' }
 $OutDir = [System.IO.Path]::GetFullPath($OutDir)
 New-Item -ItemType Directory -Path $OutDir -Force | Out-Null
 
@@ -45,18 +45,20 @@ function Find-Go {
 }
 
 function Find-Cargo {
+    $homeCargo = if ($env:USERPROFILE) { Join-Path $env:USERPROFILE '.cargo\bin\cargo.exe' } else { $null }
     $candidates = @(
         (Get-Command cargo -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source),
-        (Join-Path $env:USERPROFILE '.cargo\bin\cargo.exe')
+        $homeCargo
     ) | Where-Object { $_ -and (Test-Path $_) }
     if ($candidates.Count -eq 0) { return $null }
     return @($candidates)[0]
 }
 
 function Find-Rustup {
+    $homeRustup = if ($env:USERPROFILE) { Join-Path $env:USERPROFILE '.cargo\bin\rustup.exe' } else { $null }
     $candidates = @(
         (Get-Command rustup -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source),
-        (Join-Path $env:USERPROFILE '.cargo\bin\rustup.exe')
+        $homeRustup
     ) | Where-Object { $_ -and (Test-Path $_) }
     if ($candidates.Count -eq 0) { return $null }
     return @($candidates)[0]
@@ -205,7 +207,7 @@ if (-not $SkipRust -and (Test-Path (Join-Path $nativeRoot 'rust\Cargo.toml'))) {
                     Add-Skipped 'rust' $triple 'cargo build 失败'
                     continue
                 }
-                $exe = Join-Path (Join-Path (Join-Path $rust 'target') $triple) ('release\staragent' + $target.Ext)
+                $exe = Join-Path (Join-Path (Join-Path (Join-Path $rust 'target') $triple) 'release') ('staragent' + $target.Ext)
                 if (Test-Path $exe) {
                     Publish-Artifact 'rust' ("$($target.OS)-$($target.Arch)") $exe ('staragent' + $target.Ext)
                 }
