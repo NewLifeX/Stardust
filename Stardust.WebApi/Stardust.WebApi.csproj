@@ -48,9 +48,9 @@
     <PackageReference Include="NewLife.Redis" Version="6.6.2026.1016-beta0908" />
     <PackageReference Include="NewLife.Remoting.Extensions" Version="3.9.2026.1016-beta0206" />
     <!-- 魔方 WebAPI 核心库，复用其 EntityController/ApiResponse/AuthController 等纯 API 能力 -->
-    <PackageReference Include="NewLife.Cube" Version="6.15.2026.1002-beta1649" />
+    <PackageReference Include="NewLife.Cube" Version="6.15.2026.1017-beta1316" />
     <!-- 魔方 Swagger/Scalar 依赖的 OpenAPI 文档生成（AddCubeSwagger） -->
-    <PackageReference Include="NewLife.Cube.Swagger" Version="6.15.2026.1002-beta1649" />
+    <PackageReference Include="NewLife.Cube.Swagger" Version="6.15.2026.1017-beta1316" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Stardust.WebApi": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:65510;http://localhost:65511"
+    }
+  }
+}
