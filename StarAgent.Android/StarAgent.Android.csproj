@@ -20,9 +20,9 @@
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
-    <!-- 首版关闭裁剪与AOT：NewLife 序列化/反射较多，先保证功能可用，后续再逐步适配 -->
-    <PublishTrimmed>false</PublishTrimmed>
-    <RunAOTCompilation>false</RunAOTCompilation>
+    <!-- AOT 要求开启裁剪；使用 partial 模式，仅裁剪标记为可裁剪的框架程序集，业务程序集保持完整 -->
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>partial</TrimMode>
     <NoWarn>1701;1702;NU5104;NETSDK1138;CS7035;CS8600;CS8602;CS8603;CS8604;CS8618;CS8619;CS8625</NoWarn>
   </PropertyGroup>
 

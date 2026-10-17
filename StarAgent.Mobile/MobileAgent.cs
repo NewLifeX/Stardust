@@ -71,7 +71,8 @@ public class MobileAgent : DisposeBase
     #region 构造
     /// <summary>实例化</summary>
     /// <param name="platform">平台适配</param>
-    public MobileAgent(IMobilePlatform platform)
+    /// <param name="server">服务端地址。非空时覆盖本地配置，便于宿主或自动化指定</param>
+    public MobileAgent(IMobilePlatform platform, String? server = null)
     {
         Platform = platform ?? throw new ArgumentNullException(nameof(platform));
 
@@ -79,6 +80,13 @@ public class MobileAgent : DisposeBase
 
         Setting = MobileAgentSetting.Current;
         if (Setting.IsNew) Setting.Save();
+
+        // 服务端必须在创建客户端前覆盖，客户端构造时即已解析地址列表
+        if (!server.IsNullOrEmpty() && server != Setting.Server)
+        {
+            Setting.Server = server;
+            Setting.Save();
+        }
 
         Client = new MobileStarClient(Setting, platform)
         {

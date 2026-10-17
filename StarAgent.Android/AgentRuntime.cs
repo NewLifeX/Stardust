@@ -38,8 +38,9 @@ public static class AgentRuntime
 
     /// <summary>初始化代理。重复调用返回同一实例</summary>
     /// <param name="context">应用上下文</param>
+    /// <param name="server">服务端地址。非空时覆盖本地配置</param>
     /// <returns>代理实例</returns>
-    public static MobileAgent? Init(Context context)
+    public static MobileAgent? Init(Context context, String? server = null)
     {
         lock (_lock)
         {
@@ -56,7 +57,7 @@ public static class AgentRuntime
                 // 让 MachineInfo 也能拿到 Android 内存与电量
                 MachineInfo.Provider ??= new AndroidMachineInfoProvider(Platform.Context);
 
-                _agent = new MobileAgent(Platform);
+                _agent = new MobileAgent(Platform, server);
             }
             catch (Exception ex)
             {

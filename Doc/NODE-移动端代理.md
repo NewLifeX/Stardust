@@ -43,14 +43,22 @@ StarAgent.iOS/        net10.0-ios，场景式 App + BGTask + 控制台界面
 pwsh StarAgent.Android/pack-android.ps1 -Mode Aot
 pwsh StarAgent.Android/pack-android.ps1 -Mode Jit
 
-# Android：安装到设备并冒烟
-pwsh StarAgent.Android/run-android.ps1 -Smoke
+# Android：安装到设备并冒烟（可指定服务端，真机联调常用）
+pwsh StarAgent.Android/run-android.ps1 -Smoke -Server http://star.newlifex.com:6600
 ```
+
+Android 必须在 **AOT + 裁剪** 下构建（`PublishTrimmed=true`、`TrimMode=partial`、`RunAOTCompilation=true`，已写入 csproj 与 `-Mode Aot`）。
+纯 JIT 包在 Android 10 等旧系统上会出现 `UnsatisfiedLinkError: n_onCreate`（运行时尚未完成初始化，Activity 已被创建），仅作开发排查用途。
+
+另需 `NewLife.Core` 含移动端修复的版本（`Host` 退出钩子注册失败修复，2026-10-17 之后发布）。
+旧版会在 Android 上抛出 `TypeInitializerException: NewLife.Model.Host -> PlatformNotSupportedException`，导致代理无法初始化。
 
 ```bash
 # iOS：macOS 上构建模拟器包并冒烟
 bash StarAgent.iOS/run-ios.sh
 ```
+
+自动化启动时可用 adb 传入意图参数：`--es server <地址>` 指定服务端，`--ez smoke true` 跑冒烟，`--ez start true` 仅启动代理。
 
 产物统一输出：
 
@@ -83,3 +91,20 @@ Bin/Agent/mobile/ios/
 2. Android 保活受厂商策略影响，需要引导用户加入电池白名单。
 3. iOS 系统级可用内存不可读，使用"物理内存 - 当前进程工作集"近似。
 4. iOS 真机安装需要 Apple 开发者证书与描述文件；Windows 只能完成托管编译。
+5. 必须使用 AOT 包；JIT 包在 Android 10 上冷启动会偶发 `n_onCreate` 未注册崩溃。
+6. 服务端需为移动端映射 `OSKind=Android/iOS`；旧版服务端会把移动端识别成 Linux。
+
+## 7. 真机验证
+
+2026-10-17，华为 YAL-AL10（Android 10 / API 29 / arm64-v8a）实测 AOT 包：
+
+| 项 | 结果 |
+|----|------|
+| 安装与冷启动 | ✅ `StarAgent-Jit.apk` 冷启动崩溃；`StarAgent-Aot.apk` 正常 |
+| 登录注册 | ✅ 自动注册节点 `4FD3FA8D`，产品 `StarAgent-Mobile` |
+| 心跳 | ✅ 60 秒周期，平台"节点在线"心跳计数持续增长 |
+| 设备指标 | ✅ 内存 7.6G、磁盘、CPU、IP `10.0.0.227` 正常上报 |
+| 前台服务 | ✅ `isForeground=true`，息屏/切后台后心跳继续 |
+| 服务端展示 | ✅ 节点出现在 star.newlifex.com，系统 Android、架构 Arm64、运行时 .NET 10.0.13 |
+
+待继续观察：24 小时长稳保活、厂商电池白名单、远端指令下发实测。

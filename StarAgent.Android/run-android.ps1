@@ -7,7 +7,9 @@ param(
     [string]$Device = "",
     [int]$TimeoutSec = 180,
     [switch]$SkipBuild,
-    [switch]$Smoke
+    [switch]$Smoke,
+    [switch]$Start,
+    [string]$Server = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -74,13 +76,22 @@ if ($LASTEXITCODE -ne 0) { throw "adb install failed." }
 & $adb -s $Device logcat -c
 & $adb -s $Device shell am force-stop $package
 
-if ($Smoke) {
-    & $adb -s $Device shell am start -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -p $package --ez smoke true | Out-Null
-} else {
+# 通过解析启动组件启动，部分设备（如华为）不认 am start -p 的包名过滤
+$resolve = (& $adb -s $Device shell cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.LAUNCHER $package) | Select-Object -Last 1
+$component = "$resolve".Trim()
+if ($component -match "/") {
+    $startArgs = @("shell", "am", "start", "-n", $component)
+    if ($Server) { $startArgs += @("--es", "server", $Server) }
+    if ($Smoke) { $startArgs += @("--ez", "smoke", "true") }
+    elseif ($Start) { $startArgs += @("--ez", "start", "true") }
+    & $adb -s $Device @startArgs | Out-Null
+}
+else {
+    Write-Host "无法解析启动组件，改用 monkey 启动：$component"
     & $adb -s $Device shell monkey -p $package -c android.intent.category.LAUNCHER 1 | Out-Null
 }
 
-$pattern = if ($Smoke) { "=== Agent (ready|fail) ===" } else { "=== StarAgent 启动 ===" }
+$pattern = if ($Smoke) { "=== Agent (ready|fail) ===" } elseif ($Start) { "=== Agent start ===" } else { "=== StarAgent 启动 ===" }
 $deadline = (Get-Date).AddSeconds($TimeoutSec)
 $match = $null
 while ((Get-Date) -lt $deadline) {

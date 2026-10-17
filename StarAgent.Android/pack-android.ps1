@@ -18,7 +18,9 @@ if (-not $OutputDir) { $OutputDir = Join-Path $binDir "apk" }
 New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
 
 $buildArgs = @("build", $project, "-c", $Configuration, "-f", "net10.0-android", "-p:RuntimeIdentifier=$RuntimeIdentifier", "--nologo")
-if ($Mode -eq "Jit") {
+if ($Mode -eq "Aot") {
+    $buildArgs += "-p:RunAOTCompilation=true"
+} else {
     $buildArgs += "-p:RunAOTCompilation=false"
     $buildArgs += "-p:AndroidEnableProfiledAot=false"
 }

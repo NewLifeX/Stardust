@@ -22,6 +22,7 @@ public class MainActivity : Activity
     private TextView? _status;
     private EditText? _server;
     private Boolean _autoSmoke;
+    private Boolean _autoStart;
     private Boolean _busy;
 
     /// <summary>创建界面</summary>
@@ -31,11 +32,16 @@ public class MainActivity : Activity
         base.OnCreate(savedInstanceState);
 
         _autoSmoke = Intent?.GetBooleanExtra("smoke", false) == true;
+        _autoStart = Intent?.GetBooleanExtra("start", false) == true;
 
         BuildUi();
 
         AgentRuntime.SetLogSink(Append);
-        AgentRuntime.Init(this);
+
+        // 支持通过 adb 指定服务端，便于真机/自动化冒烟
+        var extraServer = Intent?.GetStringExtra("server");
+        AgentRuntime.Init(this, extraServer);
+        if (!extraServer.IsNullOrEmpty() && _server != null) _server.Text = extraServer;
 
         AgentRuntime.Log("=== StarAgent 启动 ===");
         Append($"平台：{AgentRuntime.Platform?.Name}  设备：{AgentRuntime.Platform?.DeviceName}");
@@ -44,6 +50,7 @@ public class MainActivity : Activity
         RequestNotificationPermission();
 
         if (_autoSmoke) RunSmoke();
+        else if (_autoStart) StartAgent();
     }
 
     /// <summary>回到前台时刷新状态</summary>
