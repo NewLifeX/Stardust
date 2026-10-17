@@ -17,6 +17,7 @@ StarAgent 的非 .NET 原生实现集合，目标是以轻量二进制接入 Sta
 - C++：Windows 本机 `cmake` 构建通过，`staragent_tests` 50/50 项检查通过
 - 一致性测试：Go / Rust / C++ 三种实现均对假 StarServer 运行 `--scenario all`，各自 `6 passed, 0 failed`
 - 真实服务端：Go / Rust / C++ Agent 均在真实 Kestrel StarServer 上完成登录、自动注册、Code/Secret 持久化与在线状态验证
+- 公网 StarServer：三种实现均以 `once` 模式连接 `http://star.newlifex.com:6600`，完成登录与心跳
 - 服务端：`ProductRelease` 按 `ProductCode` 过滤、`ProductPackage` 按 `OSKind/Architecture` 匹配、原生 Agent 跳过 `framework/install`；新增 23 项服务端测试通过
 
 ## 构建产物

@@ -16,6 +16,22 @@ StarAgent 是部署在每台应用服务器上的节点代理程序，以系统�
 - **命令执行**：接收并执行远程命令（启动服务、停止服务、脚本执行等）
 - **自身升级**：自动检测 StarAgent 新版本并升级
 
+### 1.1 平台支持
+
+| 平台 | 宿主工程 | 运行方式 | 能力 |
+|------|----------|----------|------|
+| Windows | `StarAgent` | Windows 服务 | 完整 |
+| Linux | `StarAgent` | systemd / SysVinit / Procd / RcInit | 完整 |
+| macOS | `StarAgent` | LaunchAgents（`OSXLaunch`） | 完整（防火墙/部分部署能力按平台降级） |
+| Android | `StarAgent.Android` | 前台服务 + 开机自启 | 简化：注册/心跳/设备指标/日志/命令子集 |
+| iOS | `StarAgent.iOS` | App + BGTask | 极简：前台与后台唤醒时上报，间歇在线 |
+
+移动端共用 `StarAgent.Mobile` 核心，仅承载登录、心跳、命令分发与平台信息填充；不包含进程守护、远程发布与 Web 面板。
+命令随心跳响应下发（`PingResponse.Commands`），因此移动端不需要建立长连接。
+
+移动端使用独立 `ProductCode=StarAgent-Mobile`，平台差异由 `OSKind` 表达；能力标签通过 `NodeInfo.Plugins` 上报（`agent:dotnet-mobile`、`cap:exec=false`、`cap:upgrade=false`、`cap:deploy=false`、`os:android`/`os:ios`）。
+构建产物统一输出到 `Bin/Agent/mobile/{android,ios}`，打包与冒烟脚本为 `StarAgent.Android/pack-android.ps1`、`StarAgent.Android/run-android.ps1`、`StarAgent.iOS/run-ios.sh`。
+
 ---
 
 ## 2. 核心功能
@@ -66,6 +82,19 @@ StarAgent 是部署在每台应用服务器上的节点代理程序，以系统�
 | `UninstallService` | 卸载系统服务 |
 | `ExecuteCommand` | 执行 Shell 命令 |
 | `Upgrade` | 升级 StarAgent 自身 |
+
+### 2.5 产品编码与升级匹配
+
+StarServer 通过 `Node.ProductCode` 区分产品：标准 .NET Agent 为 `StarAgent`，原生实现为 `StarAgent-Go`、`StarAgent-Rust`、`StarAgent-Cpp`。
+
+自动升级按以下顺序匹配：
+
+1. `ProductRelease.ProductCode` 必须为空（通用版本）或与节点产品编码一致；
+2. `ProductPackage` 先按 `OSKind` / `Architecture` 过滤，0 表示通用；
+3. 再按运行时匹配：.NET 使用主版本号（如 `8.0.6` → `8`），原生 Agent 使用 `node.Runtime` 前缀（`go` / `rust` / `cpp`）精确匹配 `TargetRuntime`；
+4. 未命中时回退 `TargetRuntime="*"` 的万能包。
+
+原生 Agent 没有 .NET 运行时，服务端不会向其推送 `framework/install` 指令。首版原生 Agent 收到非空升级响应时只记录日志并上报 `Upgrade` 事件，不执行自升级。
 
 ---
 
@@ -191,6 +220,50 @@ StarAgent 基于 NewLife.Agent 内置的 `AgentWebPanel` 框架，提供了轻�
 - 框架默认值：`NewLife.Agent` 的 `Agent.config` 中 `WebBind` 默认 `127.0.0.1`；StarAgent 启动时按 `staragent.config` 的同名配置覆盖
 - 非法绑定地址回退本机回环，避免配置笔误把面板误开放到局域网
 - 默认凭据：`WebUserName` / `WebPassword` 默认 `admin` / `admin`；开放远程前务必修改密码，面板启动日志会在“监听所有网卡且仍使用默认密码”时输出安全提醒
+
+---
+
+## 7. 多语言原生 Agent
+
+标准 StarAgent 依赖 .NET 运行时。为覆盖无 .NET 环境、嵌入式/OpenWrt、极小镜像和跨语言运维场景，仓库新增 `StarAgent.Native/`，以 Go / Rust / C++ 实现轻量 Agent，直接对接 StarServer 的 `Node/*` 协议。
+
+### 7.1 目录与文档
+
+| 路径 | 说明 |
+|------|------|
+| `StarAgent.Native/spec/protocol.md` | 节点侧协议规范（唯一事实源） |
+| `StarAgent.Native/spec/schemas/` | JSON Schema |
+| `StarAgent.Native/spec/vectors/` | 请求/响应样例 |
+| `StarAgent.Native/conformance/` | 假 StarServer + 语言无关一致性测试 |
+| `StarAgent.Native/go/` | Go 参考实现 |
+| `StarAgent.Native/rust/` | Rust 实现 |
+| `StarAgent.Native/cpp/` | C++ 实现（覆盖 Linux/Windows/macOS/OpenWrt） |
+
+### 7.2 首版能力与裁剪
+
+当前状态：Go / Rust / C++ 三种实现均通过统一一致性测试（各 6/6），且均通过真实 StarServer 登录、自动注册与在线状态验证。
+
+首版原生 Agent 覆盖：
+
+- 登录/注销/心跳/令牌续期/服务器迁移/指数退避重连
+- WebSocket 命令通道 + HTTP 心跳命令降级
+- 事件上报、命令回复
+- CPU/内存/磁盘/网络/进程/运行时长/负载等基础指标
+- `bash`/`cmd`/`node/synctime`/`node/setchannel`/`node/restart`
+- systemd / launchd / Windows Service / OpenWrt procd
+
+首版**不包含**：进程守护、远程发布（`deploy/*`）、自身升级、Web 管理面板、插件、防火墙、DNS、截屏。`deploy/*`、`framework/install`、`node/reboot` 统一回复“不支持”。
+
+### 7.3 安全默认
+
+- `AllowExec=false`：`bash`/`cmd` 一律拒绝。
+- 显式开启后仍受 `AllowedCommands` 白名单、命令超时（默认 30s、上限 300s）、输出截断（64KB）约束。
+- 生产环境必须校验 TLS 证书；日志不输出 Secret/Token。
+- 遵循 [SVR-8-远程命令执行安全](SVR-8-远程命令执行安全.md)。
+
+### 7.4 与移动端的关系
+
+Android/iOS 的 .NET 移动代理（`StarAgent.Mobile` + `StarAgent.Android` + `StarAgent.iOS`）继续作为移动端首选实现：Android 使用前台服务，iOS 受系统限制为间歇在线。原生 Go/Rust/C++ Agent 首版聚焦服务器、桌面与嵌入式 Linux，不替代移动端 .NET 代理。
 
 ---
 

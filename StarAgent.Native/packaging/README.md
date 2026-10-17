@@ -118,3 +118,23 @@ pwsh ./StarAgent.Native/packaging/build.ps1 -OutDir D:\StarAgent\dist
 4. 原生 Agent 首版不执行自更新，收到升级响应只记录日志并上报事件，由运维手动替换二进制。
 
 发布原生 Agent 时，请确保 `ProductRelease` 与 `ProductPackage` 的产品编码、OSKind、Architecture、TargetRuntime 与上表一致。
+
+## 6. 本次实测产物
+
+2026-10-17 在 Windows 10 x64 构建机上运行 `build.ps1` 的结果：
+
+| 实现 | 目标平台 | 文件大小 |
+|------|----------|---------:|
+| Go | linux-amd64 | 7.55 MB |
+| Go | linux-arm64 | 6.94 MB |
+| Go | linux-armv7 | 7.44 MB |
+| Go | windows-amd64 | 7.49 MB |
+| Go | windows-arm64 | 6.79 MB |
+| Go | darwin-amd64 | 7.67 MB |
+| Go | darwin-arm64 | 7.13 MB |
+| Rust | windows-amd64 | 5.12 MB |
+| C++ | windows-amd64 | 0.81 MB |
+
+> 以上为单文件原始大小，实际发布包的大小与 SHA256 以 `Bin/Agent/native/BUILD-INFO.md` 为准。当前 C++ 本机构建未找到 OpenSSL，仅支持 `http/ws`；生产环境需安装 OpenSSL 后重新构建以启用 `https/wss`。
+
+三种实现的 `once` 模式均已在公网 StarServer `http://star.newlifex.com:6600` 完成登录与心跳验证。
