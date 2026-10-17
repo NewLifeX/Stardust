@@ -55,16 +55,18 @@ public class MobileAgentCommunicationTests(StarServerFixture fixture)
     // ClientBase 首次登录只给 1 秒超时，CI 冷启动时服务端可能来不及响应，重试时超时递增
     private static async Task<ILoginResponse?> LoginWithRetry(MobileStarClient client)
     {
-        for (var i = 0; i < 3; i++)
+        for (var i = 0; i < 5; i++)
         {
             try
             {
-                return await client.Login();
+                var rs = await client.Login();
+                if (rs != null) return rs;
             }
-            catch (XException) when (i < 2)
+            catch (XException) when (i < 4)
             {
-                await Task.Delay(1_000);
             }
+
+            await Task.Delay(1_000);
         }
 
         return null;
@@ -85,10 +87,11 @@ public class MobileAgentCommunicationTests(StarServerFixture fixture)
         using var client = new MobileStarClient(setting, platform) { Log = XTrace.Log };
 
         var rs = await LoginWithRetry(client);
-        Assert.NotNull(rs);
         Assert.True(client.Logined, "移动代理登录失败");
 
-        var node = Node.FindByCode(rs!.Code ?? client.Code);
+        var code = rs?.Code ?? client.Code;
+        Assert.False(code.IsNullOrEmpty());
+        var node = Node.FindByCode(code);
         Assert.NotNull(node);
 
         try

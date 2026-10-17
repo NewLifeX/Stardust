@@ -11,7 +11,9 @@ ARTIFACTS="$ROOT/Bin/Agent/mobile/ios/artifacts"
 
 mkdir -p "$ARTIFACTS"
 
-dotnet build "$PROJECT" -c "$CONFIGURATION" -f net10.0-ios -p:RuntimeIdentifier="$RUNTIME" --nologo
+if [ "${SKIP_BUILD:-0}" != "1" ]; then
+  dotnet build "$PROJECT" -c "$CONFIGURATION" -f net10.0-ios -p:RuntimeIdentifier="$RUNTIME" --nologo
+fi
 
 APP="$(find "$ROOT/Bin/Agent/mobile/ios" -maxdepth 5 -name "*.app" -print -quit)"
 if [ -z "$APP" ]; then

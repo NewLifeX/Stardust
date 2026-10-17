@@ -48,6 +48,8 @@ public class ConfigTests
         if (!TestEnvironment.CanGet("http://star.newlifex.com:6600")) return;
 
         using var star = new StarFactory("http://star.newlifex.com:6600", "Test", null);
+        // 外部服务端未配置 redis6 时跳过，避免依赖测试环境数据
+        if (String.IsNullOrEmpty(star.Config["redis6"])) return;
 
         var services = ObjectContainer.Current;
         services.AddSingleton(star.Config);
