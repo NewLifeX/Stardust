@@ -13,7 +13,7 @@ param(
 $ErrorActionPreference = "Stop"
 $root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $project = Join-Path $PSScriptRoot "StarAgent.Android.csproj"
-$binDir = Join-Path $root "Bin\Agent\mobile\android"
+$binDir = Join-Path $root "Bin/Agent/mobile/android"
 if (-not $OutputDir) { $OutputDir = Join-Path $binDir "apk" }
 New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
 
@@ -51,11 +51,16 @@ Write-Host "SHA256=$hash"
 
 if ($Install) {
     $adb = $null
-    $sdk = if ($env:ANDROID_HOME) { $env:ANDROID_HOME } else { $env:ANDROID_SDK_ROOT }
+    $sdk = if ($env:ANDROID_HOME) { $env:ANDROID_HOME } elseif ($env:ANDROID_SDK_ROOT) { $env:ANDROID_SDK_ROOT } else { "" }
     $candidates = @()
-    if ($sdk) { $candidates += (Join-Path $sdk "platform-tools\adb.exe") }
-    $candidates += (Join-Path $env:LOCALAPPDATA "Android\Sdk\platform-tools\adb.exe")
-    $candidates += "C:\Android\Sdk\platform-tools\adb.exe"
+    if ($sdk) {
+        $adbName = if ($IsWindows) { "adb.exe" } else { "adb" }
+        $candidates += (Join-Path (Join-Path $sdk "platform-tools") $adbName)
+    }
+    if ($IsWindows) {
+        if ($env:LOCALAPPDATA) { $candidates += (Join-Path $env:LOCALAPPDATA "Android\Sdk\platform-tools\adb.exe") }
+        $candidates += "C:\Android\Sdk\platform-tools\adb.exe"
+    }
     foreach ($path in $candidates) { if (Test-Path $path) { $adb = $path; break } }
     if (-not $adb) { $adb = (Get-Command adb -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source) }
     if (-not $adb) { throw "adb not found." }

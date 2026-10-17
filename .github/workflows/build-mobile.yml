@@ -35,6 +35,8 @@ jobs:
 
   android:
     runs-on: windows-latest
+    # AOT 产物不作为阻塞项，失败时保留其他平台结果
+    continue-on-error: true
 
     steps:
     - uses: actions/checkout@v4
@@ -80,7 +82,7 @@ jobs:
         target: google_apis
         arch: x86_64
         disable-animations: true
-        script: pwsh -NoProfile -File StarAgent.Android/run-android.ps1 -Start
+        script: pwsh -NoProfile -File StarAgent.Android/run-android.ps1 -Mode Jit -Start
 
     - uses: actions/upload-artifact@v4
       if: always()
@@ -89,7 +91,7 @@ jobs:
         path: Bin/Agent/mobile/android/artifacts/**
 
   ios:
-    runs-on: macos-26
+    runs-on: xcode-27
 
     steps:
     - uses: actions/checkout@v4

@@ -1,4 +1,4 @@
-conformance
-conformance.exe
+/conformance
+/conformance.exe
 *.test
 *.out

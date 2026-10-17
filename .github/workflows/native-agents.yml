@@ -95,7 +95,7 @@ jobs:
       - name: Configure
         if: steps.check.outputs.exists == 'true'
         shell: pwsh
-        run: cmake -S StarAgent.Native/cpp -B StarAgent.Native/cpp/build -G "Visual Studio 17 2022" -A x64
+        run: cmake -S StarAgent.Native/cpp -B StarAgent.Native/cpp/build -DCMAKE_BUILD_TYPE=Release
       - name: Build
         if: steps.check.outputs.exists == 'true'
         shell: pwsh

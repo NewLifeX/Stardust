@@ -59,23 +59,23 @@ pub fn gather() -> Info {
 
     #[cfg(target_os = "linux")]
     {
-        info.uuid = clean_id(read_trim("/sys/class/dmi/id/product_uuid"));
+        info.uuid = clean_id(&read_trim("/sys/class/dmi/id/product_uuid"));
         info.machine_guid = {
-            let value = clean_id(read_trim("/etc/machine-id"));
+            let value = clean_id(&read_trim("/etc/machine-id"));
             if value.is_empty() {
-                clean_id(read_trim("/var/lib/dbus/machine-id"))
+                clean_id(&read_trim("/var/lib/dbus/machine-id"))
             } else {
                 value
             }
         };
-        info.serial_number = clean_id(read_trim("/sys/class/dmi/id/product_serial"));
-        let board = clean_id(read_trim("/sys/class/dmi/id/board_serial"));
+        info.serial_number = clean_id(&read_trim("/sys/class/dmi/id/product_serial"));
+        let board = clean_id(&read_trim("/sys/class/dmi/id/board_serial"));
         info.board = if board.is_empty() {
-            clean_id(read_trim("/sys/class/dmi/id/board_name"))
+            clean_id(&read_trim("/sys/class/dmi/id/board_name"))
         } else {
             board
         };
-        info.disk_id = clean_id(linux_disk_serial());
+        info.disk_id = clean_id(&linux_disk_serial());
     }
 
     #[cfg(target_os = "windows")]
