@@ -42,6 +42,7 @@ Stardust  星尘，轻量级分布式服务框架！
 | 文档 | 说明 |
 |------|------|
 | [NODE-9-指令下发](Doc/NODE-9-指令下发.md) | NODE-9 命令下发流程（WebSocket 双通道） |
+| [StarAgent.Native 协议规范](StarAgent.Native/spec/protocol.md) | Go/Rust/C++ 原生 Agent 协议、Schema 与一致性测试 |
 | [APM-3-链路追踪统计](Doc/APM-3-链路追踪统计.md) | APM-3 追踪统计性能瓶颈与优化 |
 | [NODE-15-StarAgent远程部署](Doc/NODE-15-StarAgent远程部署.md) | NODE-15 远程部署方案 |
 | [NODE-16-阿里云DNS动态域名解析](Doc/NODE-16-阿里云DNS动态域名解析.md) | NODE-16 动态域名解析 |
@@ -53,6 +54,7 @@ Stardust  星尘，轻量级分布式服务框架！
 | [PUB-20-部署代理](Doc/PUB-20-部署代理.md) | 部署代理使用说明 |
 | [GW-8-网关使用指南](Doc/GW-8-网关使用指南.md) | 网关使用说明 |
 | [NODE-17-进程管理](Doc/NODE-17-进程管理.md) | 进程启动与守护 |
+| [NODE-移动端代理](Doc/NODE-移动端代理.md) | Android/iOS 简化代理、构建与冒烟 |
 | [MCP-MCP架构](Doc/MCP-MCP架构.md) | MCP HTTP 服务架构 |
 | [MCP-1-token管理](Doc/MCP-1-token管理.md) | MCP Token 凭证管理 |
 | [MCP-2-action扩展](Doc/MCP-2-action扩展.md) | MCP Action 扩展指南 |
@@ -61,7 +63,8 @@ Stardust  星尘，轻量级分布式服务框架！
 ## 为什么选择星尘 (Why Stardust)
 - 一体化：节点管理 / 配置中心 / 注册中心 / 服务发现 / 全链路追踪 / APM / 日志中心 / 远程发布 / 资源监控 统一模型与界面
 - 超轻量：核心库零第三方重量级依赖，单进程即可运行，自动建库建表
-- 强兼容：同一生态覆盖 .NET Framework 4.5 起至最新 .NET 10，多平台（Windows/Linux/ARM/IoT）
+- 强兼容：同一生态覆盖 .NET Framework 4.5 起至最新 .NET 10，多平台（Windows/Linux/macOS/Android/iOS/ARM/IoT）
+- 多语言 Agent：Go/Rust/C++ 轻量原生 Agent 可直接对接 StarServer，覆盖无 .NET 运行时、嵌入式与 OpenWrt 场景
 - 高性能：基于 NewLife.Core & NewLife.Net 等十余年优化积累，网络吞吐与序列化性能优异
 - 极易接入：几行代码完成接入；ASP.NET Core / Console / Service / IoT 边缘统一方式
 - 自带运维：StarAgent 守护进程 + 远程发布 + 指标 & 日志采集，极大降低分布式运维复杂度
@@ -90,7 +93,7 @@ Stardust  星尘，轻量级分布式服务框架！
 
 ---
 ## 核心功能
-1. [x] 星尘代理。StarAgent部署在每台应用服务器，作为系统服务负责守护本地应用及监控节点性能，支持Windows/Linux/IoT  
+1. [x] 星尘代理。StarAgent部署在每台应用服务器，作为系统服务负责守护本地应用及监控节点性能，支持Windows/Linux/macOS，并提供Android/iOS简化版（注册心跳/指标/日志/命令子集）
 2. [x] 节点管理。中心化管理多机器上的海量StarAgent，支持机房内服务器节点、远端桌面工控机以及物联网边缘计算节点  
 3. [x] 应用管理。为每个应用系统分配接入密钥，用于配置中心、应用监控、服务注册、服务发现等  
 4. [x] 配置中心。各应用从配置中心读取自己的配置信息，有利于应用的多实例部署以及集中管理  
@@ -155,6 +158,24 @@ dotnet publish -c Release -o publish
 # Linux:   chmod +x StarAgent && ./StarAgent install
 ```
 配置 StarServer 地址后，节点会在平台显示。
+
+#### 其它平台
+
+```
+# macOS 自包含包（osx-x64 / osx-arm64）
+cd Tools && build-agent-osx.bat
+
+# Android 简化代理（需 Android workload）
+dotnet build StarAgent.Android/StarAgent.Android.csproj -c Release
+# 产物：Bin/Agent/mobile/android/com.newlife.staragent-Signed.apk
+pwsh StarAgent.Android/pack-android.ps1 -Mode Aot
+pwsh StarAgent.Android/run-android.ps1 -Smoke
+
+# iOS 极简代理（需 macOS + Xcode）
+bash StarAgent.iOS/run-ios.sh
+```
+
+> 移动端受系统限制：Android 需要前台服务与电池白名单；iOS 只能间歇在线（前台与 BGTask 唤醒时上报），不支持进程守护与远程发布。详见 [NODE-StarAgent架构](Doc/NODE-StarAgent架构.md)。
 
 ### 4. 创建应用 (StarWeb)
 - 在“应用管理”中新建应用，生成 AppId / Secret
