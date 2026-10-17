@@ -17,17 +17,10 @@ using Xunit;
 namespace ServerTest.Controllers;
 
 /// <summary>节点命令下发安全测试。验证空密钥应用即使被冒用也无权向节点/应用下发命令（安全扫描 V-2）</summary>
-public class NodeCommandSecurityTests
+[Collection(StarTestServerCollection.Name)]
+public class NodeCommandSecurityTests : StarTestBase
 {
-    private readonly TestServer _server;
-
-    public NodeCommandSecurityTests()
-    {
-#pragma warning disable CS0618, ASPDEPR008
-        _server = new TestServer(WebHost.CreateDefaultBuilder()
-            .UseStartup<Startup>());
-#pragma warning restore CS0618, ASPDEPR008
-    }
+    public NodeCommandSecurityTests(StarTestServer fixture) : base(fixture) { }
 
     private async Task<LoginResponse> AppLoginAsync(String appId, String secret)
     {

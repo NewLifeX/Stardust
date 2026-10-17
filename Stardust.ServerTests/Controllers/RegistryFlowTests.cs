@@ -15,17 +15,10 @@ using Xunit;
 namespace ServerTest.Controllers;
 
 /// <summary>注册中心流程测试。覆盖 App/RegisterService 发布服务与 App/ResolveService 发现服务</summary>
-public class RegistryFlowTests
+[Collection(StarTestServerCollection.Name)]
+public class RegistryFlowTests : StarTestBase
 {
-    private readonly TestServer _server;
-
-    public RegistryFlowTests()
-    {
-#pragma warning disable CS0618, ASPDEPR008
-        _server = new TestServer(WebHost.CreateDefaultBuilder()
-            .UseStartup<Startup>());
-#pragma warning restore CS0618, ASPDEPR008
-    }
+    public RegistryFlowTests(StarTestServer fixture) : base(fixture) { }
 
     private async Task<String> LoginAsync(String name, String secret)
     {

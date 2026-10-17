@@ -18,17 +18,10 @@ using Xunit;
 namespace ServerTest.Controllers;
 
 /// <summary>埋点上报鉴权安全测试。验证匿名上报默认被拒、令牌不能冒名其它应用灌数据（安全扫描 V-9）</summary>
-public class TraceSecurityTests
+[Collection(StarTestServerCollection.Name)]
+public class TraceSecurityTests : StarTestBase
 {
-    private readonly TestServer _server;
-
-    public TraceSecurityTests()
-    {
-#pragma warning disable CS0618, ASPDEPR008
-        _server = new TestServer(WebHost.CreateDefaultBuilder()
-            .UseStartup<Startup>());
-#pragma warning restore CS0618, ASPDEPR008
-    }
+    public TraceSecurityTests(StarTestServer fixture) : base(fixture) { }
 
     private async Task<String> AppLoginTokenAsync(String appId, String secret)
     {

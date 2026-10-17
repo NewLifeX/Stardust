@@ -14,7 +14,7 @@ public class HealthCheckHelperTests
     public void TestHttpHealthCheckFail()
     {
         // 测试不存在的地址
-        var result = HealthCheckHelper.Check("http://localhost:19999/notexist", 1000);
+        var result = HealthCheckHelper.Check("http://localhost:19999/notexist", 200);
         Assert.False(result);
     }
 
@@ -23,7 +23,7 @@ public class HealthCheckHelperTests
     public void TestTcpHealthCheckFail()
     {
         // 测试不存在的端口
-        var result = HealthCheckHelper.Check("tcp://localhost:19999", 1000);
+        var result = HealthCheckHelper.Check("tcp://localhost:19999", 200);
         Assert.False(result);
     }
 
@@ -32,7 +32,7 @@ public class HealthCheckHelperTests
     public void TestUdpHealthCheckFail()
     {
         // 测试不存在的端口（UDP会超时）
-        var result = HealthCheckHelper.Check("udp://localhost:19999", 1000);
+        var result = HealthCheckHelper.Check("udp://localhost:19999", 200);
         Assert.False(result);
     }
 
@@ -40,7 +40,7 @@ public class HealthCheckHelperTests
     [Fact]
     public void TestUnsupportedProtocol()
     {
-        var result = HealthCheckHelper.Check("ftp://localhost:21", 1000);
+        var result = HealthCheckHelper.Check("ftp://localhost:21", 200);
         Assert.False(result);
     }
 
@@ -48,10 +48,10 @@ public class HealthCheckHelperTests
     [Fact]
     public void TestEmptyAddress()
     {
-        var result = HealthCheckHelper.Check("", 1000);
+        var result = HealthCheckHelper.Check("", 200);
         Assert.True(result);
         
-        result = HealthCheckHelper.Check(null, 1000);
+        result = HealthCheckHelper.Check(null, 200);
         Assert.True(result);
     }
 
@@ -59,7 +59,7 @@ public class HealthCheckHelperTests
     [Fact]
     public async Task TestHttpHealthCheckAsyncFail()
     {
-        var result = await HealthCheckHelper.CheckAsync("http://localhost:19999/notexist", 1000);
+        var result = await HealthCheckHelper.CheckAsync("http://localhost:19999/notexist", 200);
         Assert.False(result);
     }
 
@@ -67,7 +67,7 @@ public class HealthCheckHelperTests
     [Fact]
     public async Task TestTcpHealthCheckAsyncFail()
     {
-        var result = await HealthCheckHelper.CheckAsync("tcp://localhost:19999", 1000);
+        var result = await HealthCheckHelper.CheckAsync("tcp://localhost:19999", 200);
         Assert.False(result);
     }
 }

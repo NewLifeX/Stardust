@@ -17,17 +17,10 @@ using Xunit;
 namespace ServerTest.Controllers;
 
 /// <summary>应用登录安全测试。验证已存在应用无法通过错误/空密钥触发动态注册冒用身份（安全扫描 V-1）</summary>
-public class AppLoginSecurityTests
+[Collection(StarTestServerCollection.Name)]
+public class AppLoginSecurityTests : StarTestBase
 {
-    private readonly TestServer _server;
-
-    public AppLoginSecurityTests()
-    {
-#pragma warning disable CS0618, ASPDEPR008
-        _server = new TestServer(WebHost.CreateDefaultBuilder()
-            .UseStartup<Startup>());
-#pragma warning restore CS0618, ASPDEPR008
-    }
+    public AppLoginSecurityTests(StarTestServer fixture) : base(fixture) { }
 
     private Task<String> Login(String appId, String secret) => LoginWith(appId, secret, null, null, null);
 

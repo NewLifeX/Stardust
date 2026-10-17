@@ -14,17 +14,10 @@ using Xunit;
 namespace ServerTest.Controllers;
 
 /// <summary>OAuth令牌接口重注册模式测试。验证收敛窗口/开放模式放行存量错密钥应用，并在客户端携带正确密钥后收敛关窗</summary>
-public class OAuthReRegisterTests
+[Collection(StarTestServerCollection.Name)]
+public class OAuthReRegisterTests : StarTestBase
 {
-    private readonly TestServer _server;
-
-    public OAuthReRegisterTests()
-    {
-#pragma warning disable CS0618, ASPDEPR008
-        _server = new TestServer(WebHost.CreateDefaultBuilder()
-            .UseStartup<Startup>());
-#pragma warning restore CS0618, ASPDEPR008
-    }
+    public OAuthReRegisterTests(StarTestServer fixture) : base(fixture) { }
 
     private static TokenInModel BuildModel(String name, String password) => new()
     {

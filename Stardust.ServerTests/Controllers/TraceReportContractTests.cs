@@ -16,20 +16,10 @@ using Xunit;
 namespace ServerTest.Controllers;
 
 /// <summary>非 .NET 客户端接入契约测试。按 Doc/APM-17-监控接入API.md 的 JSON 报文上报埋点，验证追踪项与追踪数据落库</summary>
-public class TraceReportContractTests
+[Collection(StarTestServerCollection.Name)]
+public class TraceReportContractTests : StarTestBase
 {
-    private readonly TestServer _server;
-
-    public TraceReportContractTests()
-    {
-        // 追踪数据按天分表，SQLite 下需配置分库连接
-        StarDataHelper.SplitSqliteTables();
-
-#pragma warning disable CS0618, ASPDEPR008
-        _server = new TestServer(WebHost.CreateDefaultBuilder()
-            .UseStartup<Startup>());
-#pragma warning restore CS0618, ASPDEPR008
-    }
+    public TraceReportContractTests(StarTestServer fixture) : base(fixture) { }
 
     [Fact(DisplayName = "非法时间字段的报文返回错误而非静默丢弃")]
     public async Task Report_InvalidTimeField_ReturnsError()

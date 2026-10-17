@@ -16,17 +16,10 @@ using Xunit;
 namespace ServerTest.Controllers;
 
 /// <summary>应用日志接收测试。覆盖 Log/Post 的日志行解析落库与未启用应用拒收</summary>
-public class LogPostTests
+[Collection(StarTestServerCollection.Name)]
+public class LogPostTests : StarTestBase
 {
-    private readonly TestServer _server;
-
-    public LogPostTests()
-    {
-#pragma warning disable CS0618, ASPDEPR008
-        _server = new TestServer(WebHost.CreateDefaultBuilder()
-            .UseStartup<Startup>());
-#pragma warning restore CS0618, ASPDEPR008
-    }
+    public LogPostTests(StarTestServer fixture) : base(fixture) { }
 
     /// <summary>按应用查询当日日志。AppClientLog 按编号时间分表，需走分表感知查询</summary>
     private static IList<AppClientLog> SearchToday(Int32 appId)

@@ -25,12 +25,24 @@ public sealed class StarServerFixture : IDisposable
 
     public StarServerFixture()
     {
+        // 关闭 SQL 与调试日志，并停用 .NET 运行时信息同步，避免测试期间写大量日志与访问外网
+        StarTestServer.DisableDebugLog();
+        XCode.XCodeSetting.Current.ShowSQL = false;
+        XCode.XCodeSetting.Current.Debug = false;
+
 #pragma warning disable CS0618, ASPDEPR008
         _host = WebHost.CreateDefaultBuilder()
             .UseStartup<Startup>()
             .UseUrls("http://127.0.0.1:0")
             .Build();
 #pragma warning restore CS0618, ASPDEPR008
+
+        if (_host.Services.GetService(typeof(StarServerSetting)) is StarServerSetting set)
+        {
+            set.DotNetSyncPeriod = 0;
+            set.DotNetSyncUrl = "";
+        }
+
         _host.Start();
 
         var address = _host.ServerFeatures.Get<IServerAddressesFeature>()?.Addresses?.FirstOrDefault();

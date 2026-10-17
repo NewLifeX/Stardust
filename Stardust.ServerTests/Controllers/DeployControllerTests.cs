@@ -18,17 +18,10 @@ namespace ServerTest.Controllers;
 /// 重点验证：multipart/form-data 请求下，简单类型参数从 query string 绑定、IFormFile 从 form body 绑定，
 /// 以及附件落盘、版本记录创建等业务逻辑。
 /// </summary>
-public class DeployControllerTests
+[Collection(StarTestServerCollection.Name)]
+public class DeployControllerTests : StarTestBase
 {
-    private readonly TestServer _server;
-
-    public DeployControllerTests()
-    {
-#pragma warning disable CS0618, ASPDEPR008
-        _server = new TestServer(WebHost.CreateDefaultBuilder()
-            .UseStartup<Startup>());
-#pragma warning restore CS0618, ASPDEPR008
-    }
+    public DeployControllerTests(StarTestServer fixture) : base(fixture) { }
 
     private static MultipartFormDataContent BuildUploadContent(String fileName, Byte[] bytes)
     {

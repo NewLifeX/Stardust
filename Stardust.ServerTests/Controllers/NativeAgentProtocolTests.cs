@@ -16,16 +16,10 @@ using Xunit;
 namespace ServerTest.Controllers;
 
 /// <summary>原生 Agent 协议契约测试。使用与 StarAgent.Native/spec/protocol.md 一致的 PascalCase 报文验证 node/login、node/ping 与命令回复。</summary>
-public class NativeAgentProtocolTests
+[Collection(StarTestServerCollection.Name)]
+public class NativeAgentProtocolTests : StarTestBase
 {
-    private readonly TestServer _server;
-
-    public NativeAgentProtocolTests()
-    {
-#pragma warning disable CS0618, ASPDEPR008
-        _server = new TestServer(WebHost.CreateDefaultBuilder().UseStartup<Startup>());
-#pragma warning restore CS0618, ASPDEPR008
-    }
+    public NativeAgentProtocolTests(StarTestServer fixture) : base(fixture) { }
 
     private async Task<(String token, Node node)> LoginNativeAsync(String productCode)
     {

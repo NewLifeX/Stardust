@@ -16,17 +16,10 @@ using Xunit;
 namespace ServerTest.Controllers;
 
 /// <summary>AgentDeploy 远程部署鉴权安全测试（安全扫描 V-3）</summary>
-public class AgentDeploySecurityTests
+[Collection(StarTestServerCollection.Name)]
+public class AgentDeploySecurityTests : StarTestBase
 {
-    private readonly TestServer _server;
-
-    public AgentDeploySecurityTests()
-    {
-#pragma warning disable CS0618, ASPDEPR008
-        _server = new TestServer(WebHost.CreateDefaultBuilder()
-            .UseStartup<Startup>());
-#pragma warning restore CS0618, ASPDEPR008
-    }
+    public AgentDeploySecurityTests(StarTestServer fixture) : base(fixture) { }
 
     private async Task<LoginResponse> AppLoginAsync(String appId, String secret)
     {

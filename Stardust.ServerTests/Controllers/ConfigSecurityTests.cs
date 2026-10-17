@@ -17,17 +17,10 @@ using Xunit;
 namespace ServerTest.Controllers;
 
 /// <summary>配置中心跨应用越权安全测试。验证应用令牌只能读写自身配置（安全扫描 V-5）</summary>
-public class ConfigSecurityTests
+[Collection(StarTestServerCollection.Name)]
+public class ConfigSecurityTests : StarTestBase
 {
-    private readonly TestServer _server;
-
-    public ConfigSecurityTests()
-    {
-#pragma warning disable CS0618, ASPDEPR008
-        _server = new TestServer(WebHost.CreateDefaultBuilder()
-            .UseStartup<Startup>());
-#pragma warning restore CS0618, ASPDEPR008
-    }
+    public ConfigSecurityTests(StarTestServer fixture) : base(fixture) { }
 
     private async Task<String> AppLoginTokenAsync(String appId, String secret)
     {

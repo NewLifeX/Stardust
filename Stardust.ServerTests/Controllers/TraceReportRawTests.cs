@@ -19,17 +19,10 @@ using Xunit;
 namespace ServerTest.Controllers;
 
 /// <summary>压缩埋点上报测试。覆盖 Trace/ReportRaw 的 JSON 与 GZip 两条读体路径，以及鉴权要求</summary>
-public class TraceReportRawTests
+[Collection(StarTestServerCollection.Name)]
+public class TraceReportRawTests : StarTestBase
 {
-    private readonly TestServer _server;
-
-    public TraceReportRawTests()
-    {
-#pragma warning disable CS0618, ASPDEPR008
-        _server = new TestServer(WebHost.CreateDefaultBuilder()
-            .UseStartup<Startup>());
-#pragma warning restore CS0618, ASPDEPR008
-    }
+    public TraceReportRawTests(StarTestServer fixture) : base(fixture) { }
 
     private async Task<String> AppLoginTokenAsync(String appId, String secret)
     {

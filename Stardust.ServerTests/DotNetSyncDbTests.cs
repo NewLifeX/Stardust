@@ -80,6 +80,12 @@ public class DotNetSyncDbTests
         var osKinds = new HashSet<OSKind>();
         var archs = new HashSet<CpuArch>();
 
+        // 预取已有记录并在内存去重，最后批量落库，避免逐条查库与插入带来的大量往返
+        var keys = DotNetPackage.FindAll(DotNetPackage._.Version.StartsWith("10."))
+            .Select(e => (e.Version, e.Kind, e.OSKind, e.Architecture))
+            .ToHashSet();
+        var pending = new List<DotNetPackage>();
+
         foreach (var item in releases)
         {
             var rel = item as IDictionary<String, Object>;
@@ -93,24 +99,26 @@ public class DotNetSyncDbTests
             _output.WriteLine("Release {0}", ver);
 
             // 处理 aspnetcore-runtime（含嵌套的 dotnet-hosting）
-            SyncRuntimeFiles(rel, "aspnetcore-runtime", "aspnet", ver, ref totalParsed, kinds, osKinds, archs);
+            SyncRuntimeFiles(rel, "aspnetcore-runtime", "aspnet", ver, ref totalParsed, kinds, osKinds, archs, keys, pending);
             // 处理 runtime（dotnet-runtime）
-            SyncRuntimeFiles(rel, "runtime", "runtime", ver, ref totalParsed, kinds, osKinds, archs);
+            SyncRuntimeFiles(rel, "runtime", "runtime", ver, ref totalParsed, kinds, osKinds, archs, keys, pending);
             // 处理 windowsdesktop
-            SyncRuntimeFiles(rel, "windowsdesktop", "desktop", ver, ref totalParsed, kinds, osKinds, archs);
+            SyncRuntimeFiles(rel, "windowsdesktop", "desktop", ver, ref totalParsed, kinds, osKinds, archs, keys, pending);
 
             // 处理 sdk + sdks
             var sdk = rel["sdk"] as IDictionary<String, Object>;
             if (sdk != null)
-                SyncSdkFiles(sdk, ver, ref totalParsed, kinds, osKinds, archs);
+                SyncSdkFiles(sdk, ver, ref totalParsed, kinds, osKinds, archs, keys, pending);
 
             var sdks = rel["sdks"] as IList<Object>;
             if (sdks != null)
             {
                 foreach (var s in sdks)
-                    SyncSdkFiles(s as IDictionary<String, Object>, ver, ref totalParsed, kinds, osKinds, archs);
+                    SyncSdkFiles(s as IDictionary<String, Object>, ver, ref totalParsed, kinds, osKinds, archs, keys, pending);
             }
         }
+
+        if (pending.Count > 0) pending.Insert();
 
         _output.WriteLine("");
         _output.WriteLine("=== 总计入库: {0} 条 ===", totalParsed);
@@ -149,7 +157,8 @@ public class DotNetSyncDbTests
     }
 
     private void SyncRuntimeFiles(IDictionary<String, Object> rel, String key, String kind, String version,
-        ref Int32 totalParsed, HashSet<String> kinds, HashSet<OSKind> osKinds, HashSet<CpuArch> archs)
+        ref Int32 totalParsed, HashSet<String> kinds, HashSet<OSKind> osKinds, HashSet<CpuArch> archs,
+        HashSet<(String, String, OSKind, CpuArch)> keys, List<DotNetPackage> pending)
     {
         if (!rel.TryGetValue(key, out var v) || v == null) return;
 
@@ -205,14 +214,10 @@ public class DotNetSyncDbTests
             osKinds.Add((OSKind)os);
             archs.Add((CpuArch)arch);
 
-            // 查重后落库
-            var pkg = DotNetPackage.Find(DotNetPackage._.Version == version &
-                DotNetPackage._.Kind == actualKind &
-                DotNetPackage._.OSKind == (OSKind)os &
-                DotNetPackage._.Architecture == (CpuArch)arch);
-            if (pkg != null) continue;
+            // 内存去重后延迟落库
+            if (!keys.Add((version, actualKind, (OSKind)os, (CpuArch)arch))) continue;
 
-            pkg = new DotNetPackage
+            pending.Add(new DotNetPackage
             {
                 Version = version,
                 Kind = actualKind,
@@ -223,13 +228,13 @@ public class DotNetSyncDbTests
                 FileHash = hash,
                 Enable = true,
                 Channel = NodeChannels.Release,
-            };
-            pkg.Insert();
+            });
         }
     }
 
     private void SyncSdkFiles(IDictionary<String, Object> sdkObj, String version,
-        ref Int32 totalParsed, HashSet<String> kinds, HashSet<OSKind> osKinds, HashSet<CpuArch> archs)
+        ref Int32 totalParsed, HashSet<String> kinds, HashSet<OSKind> osKinds, HashSet<CpuArch> archs,
+        HashSet<(String, String, OSKind, CpuArch)> keys, List<DotNetPackage> pending)
     {
         if (sdkObj == null) return;
 
@@ -272,13 +277,10 @@ public class DotNetSyncDbTests
             osKinds.Add((OSKind)os);
             archs.Add((CpuArch)arch);
 
-            var pkg = DotNetPackage.Find(DotNetPackage._.Version == version &
-                DotNetPackage._.Kind == "sdk" &
-                DotNetPackage._.OSKind == (OSKind)os &
-                DotNetPackage._.Architecture == (CpuArch)arch);
-            if (pkg != null) continue;
+            // 内存去重后延迟落库
+            if (!keys.Add((version, "sdk", (OSKind)os, (CpuArch)arch))) continue;
 
-            pkg = new DotNetPackage
+            pending.Add(new DotNetPackage
             {
                 Version = version,
                 Kind = "sdk",
@@ -289,8 +291,7 @@ public class DotNetSyncDbTests
                 FileHash = hash,
                 Enable = true,
                 Channel = NodeChannels.Release,
-            };
-            pkg.Insert();
+            });
         }
     }
 }

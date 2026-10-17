@@ -16,17 +16,10 @@ using Xunit;
 namespace ServerTest.Controllers;
 
 /// <summary>网关配置接口鉴权安全测试（安全V-10）。验证 /Gateway/* 需应用身份，防公网拓扑泄露</summary>
-public class GatewaySecurityTests
+[Collection(StarTestServerCollection.Name)]
+public class GatewaySecurityTests : StarTestBase
 {
-    private readonly TestServer _server;
-
-    public GatewaySecurityTests()
-    {
-#pragma warning disable CS0618, ASPDEPR008
-        _server = new TestServer(WebHost.CreateDefaultBuilder()
-            .UseStartup<Startup>());
-#pragma warning restore CS0618, ASPDEPR008
-    }
+    public GatewaySecurityTests(StarTestServer fixture) : base(fixture) { }
 
     private async Task<HttpResponseMessage> GetConfigAsync(String query)
     {

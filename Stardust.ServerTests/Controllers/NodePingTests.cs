@@ -15,17 +15,10 @@ using Xunit;
 namespace ServerTest.Controllers;
 
 /// <summary>节点心跳保活测试。覆盖 node/ping 的令牌鉴权与心跳响应字段（与应用心跳同型）</summary>
-public class NodePingTests
+[Collection(StarTestServerCollection.Name)]
+public class NodePingTests : StarTestBase
 {
-    private readonly TestServer _server;
-
-    public NodePingTests()
-    {
-#pragma warning disable CS0618, ASPDEPR008
-        _server = new TestServer(WebHost.CreateDefaultBuilder()
-            .UseStartup<Startup>());
-#pragma warning restore CS0618, ASPDEPR008
-    }
+    public NodePingTests(StarTestServer fixture) : base(fixture) { }
 
     private async Task<(String token, Node node)> LoginNodeAsync(String machine)
     {

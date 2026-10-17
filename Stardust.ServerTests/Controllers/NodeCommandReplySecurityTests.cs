@@ -15,17 +15,10 @@ using Xunit;
 namespace ServerTest.Controllers;
 
 /// <summary>节点命令回包归属安全测试。验证节点只能回包属于自己的命令（安全扫描 V-17）</summary>
-public class NodeCommandReplySecurityTests
+[Collection(StarTestServerCollection.Name)]
+public class NodeCommandReplySecurityTests : StarTestBase
 {
-    private readonly TestServer _server;
-
-    public NodeCommandReplySecurityTests()
-    {
-#pragma warning disable CS0618, ASPDEPR008
-        _server = new TestServer(WebHost.CreateDefaultBuilder()
-            .UseStartup<Startup>());
-#pragma warning restore CS0618, ASPDEPR008
-    }
+    public NodeCommandReplySecurityTests(StarTestServer fixture) : base(fixture) { }
 
     private async Task<(String token, Node node)> LoginNodeAsync()
     {

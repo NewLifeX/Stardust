@@ -15,17 +15,10 @@ using Xunit;
 namespace ServerTest.Controllers;
 
 /// <summary>应用心跳保活测试。覆盖 App/Ping 的令牌鉴权与心跳响应字段</summary>
-public class AppPingTests
+[Collection(StarTestServerCollection.Name)]
+public class AppPingTests : StarTestBase
 {
-    private readonly TestServer _server;
-
-    public AppPingTests()
-    {
-#pragma warning disable CS0618, ASPDEPR008
-        _server = new TestServer(WebHost.CreateDefaultBuilder()
-            .UseStartup<Startup>());
-#pragma warning restore CS0618, ASPDEPR008
-    }
+    public AppPingTests(StarTestServer fixture) : base(fixture) { }
 
     private static String ExtractToken(String body)
     {

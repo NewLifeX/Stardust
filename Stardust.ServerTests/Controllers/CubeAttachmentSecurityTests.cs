@@ -14,17 +14,10 @@ using Xunit;
 namespace ServerTest.Controllers;
 
 /// <summary>附件下载鉴权集成测试（安全V-11）。验证 ValidateAttachment 开关与短时下载令牌</summary>
-public class CubeAttachmentSecurityTests
+[Collection(StarTestServerCollection.Name)]
+public class CubeAttachmentSecurityTests : StarTestBase
 {
-    private readonly TestServer _server;
-
-    public CubeAttachmentSecurityTests()
-    {
-#pragma warning disable CS0618, ASPDEPR008
-        _server = new TestServer(WebHost.CreateDefaultBuilder()
-            .UseStartup<Startup>());
-#pragma warning restore CS0618, ASPDEPR008
-    }
+    public CubeAttachmentSecurityTests(StarTestServer fixture) : base(fixture) { }
 
     private async Task<String> DownloadAsync(Int64 id, String token)
     {

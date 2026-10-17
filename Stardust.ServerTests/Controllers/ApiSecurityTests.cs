@@ -11,17 +11,10 @@ using Xunit;
 namespace ServerTest.Controllers;
 
 /// <summary>接口指纹/枚举收敛安全测试（安全扫描 V-13）</summary>
-public class ApiSecurityTests
+[Collection(StarTestServerCollection.Name)]
+public class ApiSecurityTests : StarTestBase
 {
-    private readonly TestServer _server;
-
-    public ApiSecurityTests()
-    {
-#pragma warning disable CS0618, ASPDEPR008
-        _server = new TestServer(WebHost.CreateDefaultBuilder()
-            .UseStartup<Startup>());
-#pragma warning restore CS0618, ASPDEPR008
-    }
+    public ApiSecurityTests(StarTestServer fixture) : base(fixture) { }
 
     private async Task<String> GetAsync(String path, String xff)
     {

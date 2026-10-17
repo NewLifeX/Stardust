@@ -35,12 +35,11 @@
     <ProjectReference Include="..\Stardust\Stardust.csproj" />
     <ProjectReference Include="..\Stardust.Extensions\Stardust.Extensions.csproj" />
     <ProjectReference Include="..\StarAgent.Mobile\StarAgent.Mobile.csproj" />
+    <!-- ServiceManager/ServiceController 由 StarAgent 工程编译，引用后可直接测试应用服务管理 -->
+    <ProjectReference Include="..\StarAgent\StarAgent.csproj" />
   </ItemGroup>
 
-  <!-- StarAgent 为可执行工程，链接 Web 面板绑定解析源码直接测试 -->
-  <ItemGroup>
-    <Compile Include="..\StarAgent\WebPanel\WebBindHelper.cs" Link="WebPanel\WebBindHelper.cs" />
-  </ItemGroup>
+  <!-- StarAgent 已作为工程引用，WebBindHelper 直接使用编译后的类型，无需再链接源码 -->
 
   <!-- AgentExpansion 为插件工程，链接其局域网地址解析源码直接测试 -->
   <ItemGroup>

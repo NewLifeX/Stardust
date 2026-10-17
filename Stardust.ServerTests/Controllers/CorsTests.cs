@@ -11,17 +11,10 @@ using Xunit;
 namespace ServerTest.Controllers;
 
 /// <summary>CORS 默认行为回归测试。默认未配置 CorsOrigins 时保持允许任意来源，不破坏浏览器端接入（安全 V-15）</summary>
-public class CorsTests
+[Collection(StarTestServerCollection.Name)]
+public class CorsTests : StarTestBase
 {
-    private readonly TestServer _server;
-
-    public CorsTests()
-    {
-#pragma warning disable CS0618, ASPDEPR008
-        _server = new TestServer(WebHost.CreateDefaultBuilder()
-            .UseStartup<Startup>());
-#pragma warning restore CS0618, ASPDEPR008
-    }
+    public CorsTests(StarTestServer fixture) : base(fixture) { }
 
     [Fact(DisplayName = "默认未配置CorsOrigins时允许任意来源跨域")]
     public async Task Default_AllowAnyOrigin()

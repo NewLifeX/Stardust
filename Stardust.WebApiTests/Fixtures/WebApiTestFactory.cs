@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using XCode;
 using XCode.DataAccessLayer;
 using Xunit;
 
@@ -31,6 +32,11 @@ public class WebApiTestFactory : WebApplicationFactory<Program>
 
     public WebApiTestFactory()
     {
+        // 关闭 XCode 的 SQL 与调试日志：测试会大量建表与查询，SQL 日志是日志体积和耗时的主要来源
+        DisableDebugLog();
+        XCodeSetting.Current.ShowSQL = false;
+        XCodeSetting.Current.Debug = false;
+
         _dbDir = Path.Combine(Path.GetTempPath(), "stardust_webapi_test_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(_dbDir);
 
@@ -44,6 +50,42 @@ public class WebApiTestFactory : WebApplicationFactory<Program>
         SetEnvironment("StarServer", "http://127.0.0.1:1");
 
         _token = new Lazy<Task<String>>(LoginAsync);
+    }
+
+    /// <summary>把 XCode 配置文件改成关闭调试与 SQL 日志。适用工程启动时会重新读取该文件，仅靠内存赋值不可靠</summary>
+    private static void DisableDebugLog()
+    {
+        try
+        {
+            var dir = Path.Combine(AppContext.BaseDirectory, "Config");
+            Directory.CreateDirectory(dir);
+
+            var file = Path.Combine(dir, "XCode.config");
+            if (File.Exists(file))
+            {
+                var xml = File.ReadAllText(file);
+                var changed = false;
+                if (xml.Contains("<ShowSQL>true</ShowSQL>"))
+                {
+                    xml = xml.Replace("<ShowSQL>true</ShowSQL>", "<ShowSQL>false</ShowSQL>");
+                    changed = true;
+                }
+                if (xml.Contains("<Debug>true</Debug>"))
+                {
+                    xml = xml.Replace("<Debug>true</Debug>", "<Debug>false</Debug>");
+                    changed = true;
+                }
+                if (changed) File.WriteAllText(file, xml);
+            }
+            else
+            {
+                File.WriteAllText(file, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<XCode>\r\n  <Debug>false</Debug>\r\n  <ShowSQL>false</ShowSQL>\r\n</XCode>\r\n");
+            }
+        }
+        catch
+        {
+            // 配置文件不可写时退回到内存赋值
+        }
     }
 
     /// <summary>连接串。构造函数之外，主机配置阶段还要再用一次。</summary>

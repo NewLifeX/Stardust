@@ -16,17 +16,10 @@ using Xunit;
 namespace ServerTest.Controllers;
 
 /// <summary>Deploy/UploadBuildFile 上传授权安全测试。验证任意已注册节点不能向无关部署集投递构建产物（安全扫描 V-4）</summary>
-public class DeployUploadSecurityTests
+[Collection(StarTestServerCollection.Name)]
+public class DeployUploadSecurityTests : StarTestBase
 {
-    private readonly TestServer _server;
-
-    public DeployUploadSecurityTests()
-    {
-#pragma warning disable CS0618, ASPDEPR008
-        _server = new TestServer(WebHost.CreateDefaultBuilder()
-            .UseStartup<Startup>());
-#pragma warning restore CS0618, ASPDEPR008
-    }
+    public DeployUploadSecurityTests(StarTestServer fixture) : base(fixture) { }
 
     private async Task<(String token, Node node)> LoginNodeAsync()
     {

@@ -17,17 +17,10 @@ using Xunit;
 namespace ServerTest.Controllers;
 
 /// <summary>配置中心写入测试。覆盖 Config/SetAll 落库与读取回环，以及只读应用拒绝写入</summary>
-public class ConfigSetAllTests
+[Collection(StarTestServerCollection.Name)]
+public class ConfigSetAllTests : StarTestBase
 {
-    private readonly TestServer _server;
-
-    public ConfigSetAllTests()
-    {
-#pragma warning disable CS0618, ASPDEPR008
-        _server = new TestServer(WebHost.CreateDefaultBuilder()
-            .UseStartup<Startup>());
-#pragma warning restore CS0618, ASPDEPR008
-    }
+    public ConfigSetAllTests(StarTestServer fixture) : base(fixture) { }
 
     /// <summary>创建测试应用，返回应用名与密钥</summary>
     private static (String name, String secret) CreateApp()

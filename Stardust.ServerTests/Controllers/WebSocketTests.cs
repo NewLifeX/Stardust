@@ -21,17 +21,10 @@ using Xunit;
 
 namespace ServerTest.Controllers
 {
-    public class WebSocketTests
+    [Collection(StarTestServerCollection.Name)]
+    public class WebSocketTests : StarTestBase
     {
-        private readonly TestServer _server;
-
-        public WebSocketTests()
-        {
-#pragma warning disable CS0618, ASPDEPR008
-            _server = new TestServer(WebHost.CreateDefaultBuilder()
-                .UseStartup<Startup>());
-#pragma warning restore CS0618, ASPDEPR008
-        }
+        public WebSocketTests(StarTestServer fixture) : base(fixture) { }
 
         [Fact(Skip = "跳过")]
         public async Task WebSocketClient()

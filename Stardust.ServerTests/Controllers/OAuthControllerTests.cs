@@ -12,17 +12,10 @@ using Xunit;
 
 namespace ServerTest.Controllers;
 
-public class OAuthControllerTests
+[Collection(StarTestServerCollection.Name)]
+public class OAuthControllerTests : StarTestBase
 {
-    private readonly TestServer _server;
-
-    public OAuthControllerTests()
-    {
-#pragma warning disable CS0618, ASPDEPR008
-        _server = new TestServer(WebHost.CreateDefaultBuilder()
-            .UseStartup<Startup>());
-#pragma warning restore CS0618, ASPDEPR008
-    }
+    public OAuthControllerTests(StarTestServer fixture) : base(fixture) { }
 
     [Fact(DisplayName = "OAuth密码模式颁发令牌")]
     public async Task Token_password()
