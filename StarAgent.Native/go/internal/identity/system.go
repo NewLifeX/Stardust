@@ -24,11 +24,18 @@ func System(ctx context.Context) SystemInfo {
 
 	if stat, err := host.InfoWithContext(ctx); err == nil {
 		if stat.Platform != "" {
-			info.OSName = stat.Platform
+			info.OSName = strings.TrimSpace(strings.TrimPrefix(stat.Platform, "Microsoft "))
 		}
 		info.OSVersion = stat.PlatformVersion
 		if info.Hostname == "" {
 			info.Hostname = stat.Hostname
+		}
+	}
+
+	if runtime.GOOS == "windows" {
+		// Windows 服务端按 OSName 前缀和 OSVersion 数值识别系统类型，22H2 这类显示版本会导致误判。
+		if version, err := host.KernelVersionWithContext(ctx); err == nil && version != "" {
+			info.OSVersion = normalizeWindowsVersion(version)
 		}
 	}
 
@@ -39,6 +46,19 @@ func System(ctx context.Context) SystemInfo {
 	}
 
 	return info
+}
+
+func normalizeWindowsVersion(value string) string {
+	value = strings.TrimSpace(value)
+	if index := strings.IndexByte(value, ' '); index > 0 {
+		value = value[:index]
+	}
+	parts := strings.Split(value, ".")
+	if len(parts) > 3 {
+		parts = parts[:3]
+	}
+
+	return strings.Join(parts, ".")
 }
 
 func linuxOSName() string {

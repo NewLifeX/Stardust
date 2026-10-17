@@ -26,6 +26,20 @@ pub struct Info {
     pub disk_id: String,
     /// Uppercase MAC list separated by commas.
     pub macs: String,
+    /// Product/model name.
+    pub product: String,
+    /// Manufacturer.
+    pub vendor: String,
+    /// CPU model.
+    pub processor: String,
+    /// GPU list.
+    pub gpu: String,
+    /// Screen DPI.
+    pub dpi: String,
+    /// Screen resolution.
+    pub resolution: String,
+    /// Installed C runtime versions.
+    pub c_lib_version: String,
 }
 
 /// Operating system information.
@@ -72,6 +86,13 @@ pub fn gather() -> Info {
                 "SERIAL" => info.serial_number = clean_id(&value),
                 "BOARD" => info.board = clean_id(&value),
                 "DISK" => info.disk_id = clean_id(&value),
+                "PRODUCT" => info.product = clean_id(&value),
+                "VENDOR" => info.vendor = clean_id(&value),
+                "PROCESSOR" => info.processor = clean_id(&value),
+                "GPU" => info.gpu = clean_id(&value),
+                "DPI" => info.dpi = clean_id(&value),
+                "RESOLUTION" => info.resolution = clean_id(&value),
+                "CRUNTIME" => info.c_lib_version = clean_id(&value),
                 _ => {}
             }
         }
@@ -110,7 +131,51 @@ pub fn system_info() -> SystemInfo {
         info.os_name = name;
     }
 
+    #[cfg(target_os = "windows")]
+    {
+        let (name, version) = windows_os_info();
+        if !name.is_empty() {
+            info.os_name = name;
+        }
+        if !version.is_empty() {
+            info.os_version = version;
+        }
+    }
+
     info
+}
+
+#[cfg(target_os = "windows")]
+fn windows_os_info() -> (String, String) {
+    let script = r#"$ErrorActionPreference='SilentlyContinue'
+$os = Get-CimInstance -ClassName Win32_OperatingSystem
+"OSNAME=" + $os.Caption
+"OSVERSION=" + $os.Version"#;
+    let output = run_output(
+        "powershell",
+        &["-NoProfile", "-NonInteractive", "-Command", script],
+        Duration::from_secs(8),
+    );
+    let values = parse_key_values(&output);
+    let name = values
+        .get("OSNAME")
+        .map(|value| value.trim().trim_start_matches("Microsoft ").to_string())
+        .unwrap_or_default();
+    let version = values
+        .get("OSVERSION")
+        .map(|value| value.trim().to_string())
+        .unwrap_or_default();
+    (name, version)
+}
+
+/// Returns the timezone in the format expected by StarServer.
+pub fn time_zone_name() -> String {
+    let offset = chrono::Local::now().offset().to_string();
+    if offset.starts_with('+') || offset.starts_with('-') {
+        format!("GMT{offset}")
+    } else {
+        offset
+    }
 }
 
 #[allow(dead_code)]
@@ -240,14 +305,30 @@ fn windows_machine_guid() -> String {
 #[cfg(target_os = "windows")]
 fn windows_hardware() -> std::collections::HashMap<String, String> {
     let script = r#"$ErrorActionPreference='SilentlyContinue'
+$cs = Get-CimInstance -ClassName Win32_ComputerSystem
+$bb = Get-CimInstance -ClassName Win32_BaseBoard
 "UUID=" + (Get-CimInstance -ClassName Win32_ComputerSystemProduct).UUID
 "SERIAL=" + (Get-CimInstance -ClassName Win32_BIOS).SerialNumber
-"BOARD=" + (Get-CimInstance -ClassName Win32_BaseBoard).SerialNumber
-"DISK=" + (Get-CimInstance -ClassName Win32_DiskDrive | Select-Object -First 1).SerialNumber"#;
+"BOARD=" + $bb.SerialNumber
+"PRODUCT=" + $bb.Product
+"VENDOR=" + $cs.Manufacturer
+"PROCESSOR=" + ((Get-CimInstance -ClassName Win32_Processor | Select-Object -First 1).Name)
+"GPU=" + (((Get-CimInstance -ClassName Win32_VideoController | Where-Object { $_.Name -notmatch 'Microsoft Basic' } | ForEach-Object { $n=$_.Name.Trim(); $bytes=0; Get-ChildItem -LiteralPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}' -ErrorAction SilentlyContinue | ForEach-Object { $p=Get-ItemProperty -LiteralPath $_.PSPath -ErrorAction SilentlyContinue; if ($p.DriverDesc -eq $n -and $p.'HardwareInformation.qwMemorySize' -gt $bytes) { $bytes=$p.'HardwareInformation.qwMemorySize' } }; if ($bytes -le 0) { $bytes=$_.AdapterRAM }; $m=[math]::Round($bytes/1GB); if ($m -gt 0) { "$n($($m)G)" } else { $n } }) -join ','))
+"DISK=" + ((Get-CimInstance -ClassName Win32_DiskDrive | Where-Object { $_.MediaType -notmatch 'Removable' } | ForEach-Object { $_.SerialNumber.Trim() } | Where-Object { $_ } | Sort-Object -Unique) -join ',')
+Add-Type -TypeDefinition 'using System.Runtime.InteropServices; public static class DpiHelper { [DllImport("user32.dll")] public static extern uint GetDpiForSystem(); } public static class MetricsHelper { [DllImport("user32.dll")] public static extern int GetSystemMetrics(int nIndex); }' -ErrorAction SilentlyContinue
+$dpi = [DpiHelper]::GetDpiForSystem(); if ($dpi -le 0) { $dpi = 96 }
+"DPI=$dpi*$dpi"
+"RESOLUTION=" + [MetricsHelper]::GetSystemMetrics(0) + '*' + [MetricsHelper]::GetSystemMetrics(1)
+$versions=@()
+foreach($base in @('HKLM:\SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes','HKLM:\SOFTWARE\WOW6432Node\Microsoft\VisualStudio\14.0\VC\Runtimes')){
+  if(Test-Path $base){ Get-ChildItem $base | ForEach-Object { $p=Get-ItemProperty $_.PSPath; if($p.Major){ $y=if([int]$p.Major -ge 14){'VC2015-2022'}elseif([int]$p.Major -eq 12){'VC2013'}elseif([int]$p.Major -eq 11){'VC2012'}elseif([int]$p.Major -eq 10){'VC2010'}elseif([int]$p.Major -eq 9){'VC2008'}else{"VC$($p.Major)"}; $v="$($p.Major)"; if($p.Minor){$v+=".$($p.Minor)"}; $s="$y $v"; if($versions -notcontains $s){$versions+=$s} } } }
+}
+foreach($path in @('HKLM:\SOFTWARE\Microsoft\VisualStudio\10.0\VC\VCRedist\x64','HKLM:\SOFTWARE\WOW6432Node\Microsoft\VisualStudio\10.0\VC\VCRedist\x64')){ if(Test-Path $path){ $s='VC2010 10.0'; if($versions -notcontains $s){$versions+=$s} } }
+"CRUNTIME=" + (($versions | Sort-Object -Descending) -join ';')"#;
     let output = run_output(
         "powershell",
         &["-NoProfile", "-NonInteractive", "-Command", script],
-        Duration::from_secs(12),
+        Duration::from_secs(15),
     );
     parse_key_values(&output)
 }
@@ -304,12 +385,21 @@ fn darwin_hardware() -> std::collections::HashMap<String, String> {
     values
 }
 
+fn is_tunnel_interface(name: &str) -> bool {
+    let name = name.to_ascii_lowercase();
+    ["tun", "tap", "utun", "awdl", "llw"]
+        .iter()
+        .any(|prefix| name.starts_with(prefix))
+}
+
 fn is_virtual_interface(name: &str) -> bool {
     let name = name.to_ascii_lowercase();
     [
         "lo",
         "docker",
         "veth",
+        "vethernet",
+        "wsl",
         "br-",
         "virbr",
         "vmnet",
@@ -328,10 +418,21 @@ fn is_virtual_interface(name: &str) -> bool {
 }
 
 fn collect_macs() -> String {
+    let active: std::collections::HashSet<String> = get_if_addrs::get_if_addrs()
+        .unwrap_or_default()
+        .into_iter()
+        .filter_map(|interface| match interface.addr {
+            IfAddr::V4(address) if !address.ip.is_loopback() && !address.ip.is_link_local() => {
+                Some(interface.name)
+            }
+            _ => None,
+        })
+        .collect();
+
     let networks = sysinfo::Networks::new_with_refreshed_list();
     let mut macs = Vec::new();
     for (name, data) in networks.list() {
-        if is_virtual_interface(name) {
+        if is_virtual_interface(name) || !active.contains(name) {
             continue;
         }
         let mac = data.mac_address().to_string();
@@ -347,6 +448,47 @@ fn collect_macs() -> String {
         .map(|mac| mac.replace(':', "-").to_ascii_uppercase())
         .collect::<Vec<_>>()
         .join(",")
+}
+
+/// Returns all non-loopback IPv4 addresses, primary address first.
+pub fn local_ips() -> String {
+    let primary = local_ip();
+    let mut addresses: Vec<String> = if cfg!(target_os = "windows") {
+        // get_if_addrs 不暴露网卡状态，会包含已断开局域网口的静态 IP。
+        let script = r#"$ErrorActionPreference='SilentlyContinue'
+$up = @(Get-NetAdapter | Where-Object { $_.Status -eq 'Up' } | ForEach-Object { $_.ifIndex })
+Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.254.*' -and $up -contains $_.InterfaceIndex } | ForEach-Object { $_.IPAddress }"#;
+        run_output(
+            "powershell",
+            &["-NoProfile", "-NonInteractive", "-Command", script],
+            Duration::from_secs(8),
+        )
+        .lines()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(str::to_string)
+        .collect()
+    } else {
+        get_if_addrs::get_if_addrs()
+            .unwrap_or_default()
+            .into_iter()
+            .filter(|interface| !is_tunnel_interface(&interface.name))
+            .filter_map(|interface| match interface.addr {
+                IfAddr::V4(address) if !address.ip.is_loopback() && !address.ip.is_link_local() => {
+                    Some(address.ip.to_string())
+                }
+                _ => None,
+            })
+            .collect()
+    };
+    addresses.sort();
+    addresses.dedup();
+    if !primary.is_empty() {
+        addresses.retain(|address| address != &primary);
+        addresses.insert(0, primary);
+    }
+
+    addresses.join(",")
 }
 
 /// Returns the outbound IPv4 address.
@@ -399,6 +541,22 @@ pub fn gateway() -> String {
 
     #[cfg(target_os = "windows")]
     {
+        let script = r#"$ErrorActionPreference='SilentlyContinue'
+$route = Get-NetRoute -DestinationPrefix '0.0.0.0/0' | Sort-Object RouteMetric | Select-Object -First 1
+if ($route) {
+    $adapter = Get-NetAdapter -InterfaceIndex $route.InterfaceIndex
+    if ($adapter -and $adapter.MacAddress) { "$($route.NextHop)/$($adapter.MacAddress)" } else { $route.NextHop }
+}"#;
+        let output = run_output(
+            "powershell",
+            &["-NoProfile", "-NonInteractive", "-Command", script],
+            Duration::from_secs(8),
+        );
+        let gateway = output.trim();
+        if !gateway.is_empty() {
+            return gateway.to_string();
+        }
+
         let output = run_output("route", &["print", "0.0.0.0"], Duration::from_secs(8));
         for line in output.lines() {
             let fields: Vec<&str> = line.split_whitespace().collect();
@@ -441,7 +599,7 @@ pub fn dns() -> String {
                 "-NoProfile",
                 "-NonInteractive",
                 "-Command",
-                "(Get-DnsClientServerAddress -AddressFamily IPv4 | ForEach-Object { $_.ServerAddresses }) -join ','",
+                "(Get-DnsClientServerAddress -AddressFamily IPv4 | ForEach-Object { $_.ServerAddresses } | Sort-Object -Unique) -join ','",
             ],
             Duration::from_secs(8),
         );
@@ -454,7 +612,7 @@ pub fn dns() -> String {
         let mut servers = Vec::new();
         for line in data.lines() {
             let fields: Vec<&str> = line.split_whitespace().collect();
-            if fields.len() >= 2 && fields[0] == "nameserver" {
+            if fields.len() >= 2 && fields[0] == "nameserver" && !servers.contains(&fields[1]) {
                 servers.push(fields[1]);
             }
         }
@@ -569,9 +727,17 @@ mod tests {
     }
 
     #[test]
+    fn time_zone_is_not_empty() {
+        let zone = time_zone_name();
+        assert!(!zone.is_empty());
+        assert_ne!(zone, "Local");
+    }
+
+    #[test]
     fn gathers_without_panicking() {
         let info = gather();
         let _ = info.macs;
+        assert!(!local_ips().is_empty());
         let system = system_info();
         assert!(!system.os_name.is_empty());
     }

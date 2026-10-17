@@ -21,6 +21,13 @@ type Info struct {
 	Board        string
 	DiskID       string
 	Macs         string
+	Product      string
+	Vendor       string
+	Processor    string
+	GPU          string
+	Dpi          string
+	Resolution   string
+	CLibVersion  string
 }
 
 // Gather 采集稳定硬件标识。所有采集失败都被容忍。
@@ -51,6 +58,20 @@ func Gather(ctx context.Context) Info {
 				info.Board = cleanID(value)
 			case "DISK":
 				info.DiskID = cleanID(value)
+			case "PRODUCT":
+				info.Product = cleanID(value)
+			case "VENDOR":
+				info.Vendor = cleanID(value)
+			case "PROCESSOR":
+				info.Processor = cleanID(value)
+			case "GPU":
+				info.GPU = cleanID(value)
+			case "DPI":
+				info.Dpi = cleanID(value)
+			case "RESOLUTION":
+				info.Resolution = cleanID(value)
+			case "CRUNTIME":
+				info.CLibVersion = cleanID(value)
 			}
 		}
 		info.MachineGuid = cleanID(windowsMachineGuid(ctx))
@@ -110,10 +131,13 @@ func collectMACs() []string {
 	seen := make(map[string]bool)
 	var macs []string
 	for _, iface := range interfaces {
-		if iface.Flags&net.FlagLoopback != 0 || len(iface.HardwareAddr) == 0 {
+		if iface.Flags&net.FlagLoopback != 0 || iface.Flags&net.FlagUp == 0 || len(iface.HardwareAddr) == 0 {
 			continue
 		}
 		if isVirtualInterface(iface.Name) {
+			continue
+		}
+		if !hasIPv4(iface) {
 			continue
 		}
 		text := iface.HardwareAddr.String()
@@ -126,6 +150,20 @@ func collectMACs() []string {
 	sort.Strings(macs)
 
 	return macs
+}
+
+func hasIPv4(iface net.Interface) bool {
+	addrs, err := iface.Addrs()
+	if err != nil {
+		return false
+	}
+	for _, addr := range addrs {
+		if ipNet, ok := addr.(*net.IPNet); ok && ipNet.IP.To4() != nil && !ipNet.IP.IsLoopback() && !ipNet.IP.IsLinkLocalUnicast() {
+			return true
+		}
+	}
+
+	return false
 }
 
 func isVirtualInterface(name string) bool {
@@ -196,10 +234,26 @@ func windowsMachineGuid(ctx context.Context) string {
 
 func windowsHardware(ctx context.Context) map[string]string {
 	script := `$ErrorActionPreference='SilentlyContinue'
+$cs = Get-CimInstance -ClassName Win32_ComputerSystem
+$bios = Get-CimInstance -ClassName Win32_BIOS
 "UUID=" + (Get-CimInstance -ClassName Win32_ComputerSystemProduct).UUID
-"SERIAL=" + (Get-CimInstance -ClassName Win32_BIOS).SerialNumber
+"SERIAL=" + $bios.SerialNumber
 "BOARD=" + (Get-CimInstance -ClassName Win32_BaseBoard).SerialNumber
-"DISK=" + (Get-CimInstance -ClassName Win32_DiskDrive | Select-Object -First 1).SerialNumber`
+"PRODUCT=" + ((Get-CimInstance -ClassName Win32_BaseBoard).Product)
+"VENDOR=" + $cs.Manufacturer
+"PROCESSOR=" + ((Get-CimInstance -ClassName Win32_Processor | Select-Object -First 1).Name)
+"GPU=" + (((Get-CimInstance -ClassName Win32_VideoController | Where-Object { $_.Name -notmatch 'Microsoft Basic' } | ForEach-Object { $n=$_.Name.Trim(); $bytes=0; Get-ChildItem -LiteralPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}' -ErrorAction SilentlyContinue | ForEach-Object { $p=Get-ItemProperty -LiteralPath $_.PSPath -ErrorAction SilentlyContinue; if ($p.DriverDesc -eq $n -and $p.'HardwareInformation.qwMemorySize' -gt $bytes) { $bytes=$p.'HardwareInformation.qwMemorySize' } }; if ($bytes -le 0) { $bytes=$_.AdapterRAM }; $m=[math]::Round($bytes/1GB); if ($m -gt 0) { "$n($($m)G)" } else { $n } }) -join ','))
+"DISK=" + ((Get-CimInstance -ClassName Win32_DiskDrive | Where-Object { $_.MediaType -notmatch 'Removable' } | ForEach-Object { $_.SerialNumber.Trim() } | Where-Object { $_ } | Sort-Object -Unique) -join ',')
+Add-Type -TypeDefinition 'using System.Runtime.InteropServices; public static class DpiHelper { [DllImport("user32.dll")] public static extern uint GetDpiForSystem(); } public static class MetricsHelper { [DllImport("user32.dll")] public static extern int GetSystemMetrics(int nIndex); }' -ErrorAction SilentlyContinue
+$dpi = [DpiHelper]::GetDpiForSystem(); if ($dpi -le 0) { $dpi = 96 }
+"DPI=$dpi*$dpi"
+"RESOLUTION=" + [MetricsHelper]::GetSystemMetrics(0) + '*' + [MetricsHelper]::GetSystemMetrics(1)
+$versions=@()
+foreach($base in @('HKLM:\SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes','HKLM:\SOFTWARE\WOW6432Node\Microsoft\VisualStudio\14.0\VC\Runtimes')){
+  if(Test-Path $base){ Get-ChildItem $base | ForEach-Object { $p=Get-ItemProperty $_.PSPath; if($p.Major){ $y=if([int]$p.Major -ge 14){'VC2015-2022'}elseif([int]$p.Major -eq 12){'VC2013'}elseif([int]$p.Major -eq 11){'VC2012'}elseif([int]$p.Major -eq 10){'VC2010'}elseif([int]$p.Major -eq 9){'VC2008'}else{"VC$($p.Major)"}; $v="$($p.Major)"; if($p.Minor){$v+=".$($p.Minor)"}; $s="$y $v"; if($versions -notcontains $s){$versions+=$s} } } }
+}
+foreach($path in @('HKLM:\SOFTWARE\Microsoft\VisualStudio\10.0\VC\VCRedist\x64','HKLM:\SOFTWARE\WOW6432Node\Microsoft\VisualStudio\10.0\VC\VCRedist\x64')){ if(Test-Path $path){ $s='VC2010 10.0'; if($versions -notcontains $s){$versions+=$s} } }
+"CRUNTIME=" + (($versions | Sort-Object -Descending) -join ';')`
 	output := runCommand(ctx, "powershell", "-NoProfile", "-NonInteractive", "-Command", script)
 
 	return parseKeyValues(output)
@@ -274,10 +328,39 @@ func LocalIP() string {
 		}
 	}
 
+	for _, ip := range localIPv4s() {
+		return ip
+	}
+
+	return ""
+}
+
+// LocalIPs 返回全部非回环 IPv4 地址，主地址排在第一位。
+func LocalIPs() string {
+	primary := LocalIP()
+	ips := localIPv4s()
+	sort.Strings(ips)
+	if primary != "" {
+		ordered := []string{primary}
+		for _, ip := range ips {
+			if ip != primary {
+				ordered = append(ordered, ip)
+			}
+		}
+		ips = ordered
+	}
+
+	return strings.Join(ips, ",")
+}
+
+func localIPv4s() []string {
 	interfaces, err := net.Interfaces()
 	if err != nil {
-		return ""
+		return nil
 	}
+
+	seen := make(map[string]bool)
+	var ips []string
 	for _, iface := range interfaces {
 		if iface.Flags&net.FlagLoopback != 0 || iface.Flags&net.FlagUp == 0 {
 			continue
@@ -288,13 +371,18 @@ func LocalIP() string {
 		}
 		for _, addr := range addrs {
 			ipNet, ok := addr.(*net.IPNet)
-			if ok && ipNet.IP.To4() != nil {
-				return ipNet.IP.String()
+			if !ok || ipNet.IP.To4() == nil || ipNet.IP.IsLoopback() || ipNet.IP.IsLinkLocalUnicast() {
+				continue
+			}
+			ip := ipNet.IP.String()
+			if !seen[ip] {
+				seen[ip] = true
+				ips = append(ips, ip)
 			}
 		}
 	}
 
-	return ""
+	return ips
 }
 
 // Gateway 返回默认网关。
@@ -350,7 +438,18 @@ func parseHex32(text string) (uint32, error) {
 }
 
 func windowsGateway(ctx context.Context) string {
-	output := runCommand(ctx, "route", "print", "0.0.0.0")
+	script := `$ErrorActionPreference='SilentlyContinue'
+$route = Get-NetRoute -DestinationPrefix '0.0.0.0/0' | Sort-Object RouteMetric | Select-Object -First 1
+if ($route) {
+    $adapter = Get-NetAdapter -InterfaceIndex $route.InterfaceIndex
+    if ($adapter -and $adapter.MacAddress) { "$($route.NextHop)/$($adapter.MacAddress)" } else { $route.NextHop }
+}`
+	output := strings.TrimSpace(runCommand(ctx, "powershell", "-NoProfile", "-NonInteractive", "-Command", script))
+	if output != "" {
+		return output
+	}
+
+	output = runCommand(ctx, "route", "print", "0.0.0.0")
 	for _, line := range strings.Split(output, "\n") {
 		fields := strings.Fields(line)
 		if len(fields) >= 3 && fields[0] == "0.0.0.0" && fields[1] == "0.0.0.0" && net.ParseIP(fields[2]) != nil {
@@ -366,14 +465,16 @@ func DNS(ctx context.Context) string {
 	switch runtime.GOOS {
 	case "windows":
 		output := runCommand(ctx, "powershell", "-NoProfile", "-NonInteractive", "-Command",
-			`(Get-DnsClientServerAddress -AddressFamily IPv4 | ForEach-Object { $_.ServerAddresses }) -join ','`)
+			`(Get-DnsClientServerAddress -AddressFamily IPv4 | ForEach-Object { $_.ServerAddresses } | Sort-Object -Unique) -join ','`)
 		return truncateDNS(strings.TrimSpace(output))
 	default:
 		data := readTrim("/etc/resolv.conf")
 		var servers []string
+		seen := make(map[string]bool)
 		for _, line := range strings.Split(data, "\n") {
 			fields := strings.Fields(line)
-			if len(fields) >= 2 && fields[0] == "nameserver" {
+			if len(fields) >= 2 && fields[0] == "nameserver" && !seen[fields[1]] {
+				seen[fields[1]] = true
 				servers = append(servers, fields[1])
 			}
 		}
@@ -387,6 +488,21 @@ func truncateDNS(value string) string {
 		return value
 	}
 	return value[:maxLength]
+}
+
+// TimeZoneName 返回协议使用的时区名。Windows 时区 ID 含空格时改用 GMT 偏移，避免服务端显示异常。
+func TimeZoneName() string {
+	name, offset := time.Now().Zone()
+	if runtime.GOOS == "windows" || name == "" || name == "Local" || strings.Contains(name, " ") {
+		sign := "+"
+		if offset < 0 {
+			sign = "-"
+			offset = -offset
+		}
+		return fmt.Sprintf("GMT%s%02d:%02d", sign, offset/3600, offset%3600/60)
+	}
+
+	return name
 }
 
 // Architecture 返回协议使用的处理器架构名。

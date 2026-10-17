@@ -48,6 +48,25 @@ func TestTruncateDNS(t *testing.T) {
 	}
 }
 
+func TestNormalizeWindowsVersion(t *testing.T) {
+	cases := map[string]string{
+		"10.0.19045":                       "10.0.19045",
+		"10.0.19045.6456":                  "10.0.19045",
+		"10.0.19045.6456 Build 19045.6456": "10.0.19045",
+	}
+	for input, want := range cases {
+		if got := normalizeWindowsVersion(input); got != want {
+			t.Fatalf("normalizeWindowsVersion(%q) = %q, want %q", input, got, want)
+		}
+	}
+}
+
+func TestTimeZoneName(t *testing.T) {
+	if got := TimeZoneName(); got == "" || got == "Local" {
+		t.Fatalf("unexpected timezone: %q", got)
+	}
+}
+
 func TestParseKeyValues(t *testing.T) {
 	values := parseKeyValues("UUID=abc\nSERIAL=123\nNOPE\n")
 	if values["UUID"] != "abc" || values["SERIAL"] != "123" || len(values) != 2 {

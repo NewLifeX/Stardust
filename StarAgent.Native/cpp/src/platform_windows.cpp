@@ -103,6 +103,34 @@ std::string ReadRegistryString(HKEY root, const wchar_t* subkey, const wchar_t* 
     return Utf8FromWide(buffer);
 }
 
+DWORD ReadRegistryDword(HKEY root, const wchar_t* subkey, const wchar_t* name)
+{
+    HKEY key = nullptr;
+    if (::RegOpenKeyExW(root, subkey, 0, KEY_READ | KEY_WOW64_64KEY, &key) != ERROR_SUCCESS) return 0;
+
+    DWORD type = 0;
+    DWORD value = 0;
+    DWORD size = sizeof(value);
+    const auto status = ::RegQueryValueExW(key, name, nullptr, &type, reinterpret_cast<LPBYTE>(&value), &size);
+    ::RegCloseKey(key);
+
+    return status == ERROR_SUCCESS && type == REG_DWORD ? value : 0;
+}
+
+ULONGLONG ReadRegistryQword(HKEY root, const wchar_t* subkey, const wchar_t* name)
+{
+    HKEY key = nullptr;
+    if (::RegOpenKeyExW(root, subkey, 0, KEY_READ | KEY_WOW64_64KEY, &key) != ERROR_SUCCESS) return 0;
+
+    DWORD type = 0;
+    ULONGLONG value = 0;
+    DWORD size = sizeof(value);
+    const auto status = ::RegQueryValueExW(key, name, nullptr, &type, reinterpret_cast<LPBYTE>(&value), &size);
+    ::RegCloseKey(key);
+
+    return status == ERROR_SUCCESS && type == REG_QWORD ? value : 0;
+}
+
 std::string ReadSmbiosUuid()
 {
     const DWORD size = ::GetSystemFirmwareTable('RSMB', 0, nullptr, 0);
@@ -158,13 +186,15 @@ std::string ReadSmbiosUuid()
     return {};
 }
 
-std::string ReadDiskSerial()
+std::string ReadDiskSerial(int index)
 {
-    HANDLE handle = ::CreateFileW(L"\\\\.\\PhysicalDrive0", 0, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+    wchar_t path[64] = {};
+    std::swprintf(path, std::size(path), L"\\\\.\\PhysicalDrive%d", index);
+    HANDLE handle = ::CreateFileW(path, 0, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
                                   OPEN_EXISTING, 0, nullptr);
     if (handle == INVALID_HANDLE_VALUE)
     {
-        handle = ::CreateFileW(L"\\\\.\\PhysicalDrive0", GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
+        handle = ::CreateFileW(path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
                                nullptr, OPEN_EXISTING, 0, nullptr);
     }
     if (handle == INVALID_HANDLE_VALUE) return {};
@@ -192,9 +222,22 @@ std::string ReadDiskSerial()
     ::CloseHandle(handle);
 
     const auto* descriptor = reinterpret_cast<const STORAGE_DEVICE_DESCRIPTOR*>(buffer.data());
+    if (descriptor->RemovableMedia) return {};
     if (descriptor->SerialNumberOffset == 0 || descriptor->SerialNumberOffset >= buffer.size()) return {};
     const char* text = reinterpret_cast<const char*>(buffer.data() + descriptor->SerialNumberOffset);
     return Trim(text);
+}
+
+std::string ReadDiskSerials()
+{
+    std::set<std::string> serials;
+    for (int index = 0; index < 32; index++)
+    {
+        const auto serial = ReadDiskSerial(index);
+        if (!serial.empty()) serials.insert(serial);
+    }
+
+    return Join(std::vector<std::string>(serials.begin(), serials.end()), ",");
 }
 
 template <typename Callback>
@@ -205,7 +248,7 @@ void ForEachAdapter(Callback&& callback)
     for (int attempt = 0; attempt < 4; attempt++)
     {
         buffer.resize(size);
-        const ULONG flags = GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST;
+        const ULONG flags = GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_INCLUDE_GATEWAYS;
         const ULONG result = ::GetAdaptersAddresses(AF_UNSPEC, flags, nullptr,
                                                     reinterpret_cast<IP_ADAPTER_ADDRESSES*>(buffer.data()), &size);
         if (result == ERROR_SUCCESS)
@@ -223,6 +266,20 @@ void ForEachAdapter(Callback&& callback)
         if (result != ERROR_BUFFER_OVERFLOW) break;
         size += 4096;
     }
+}
+
+bool HasIPv4(const IP_ADAPTER_ADDRESSES& adapter)
+{
+    for (auto* unicast = adapter.FirstUnicastAddress; unicast != nullptr; unicast = unicast->Next)
+    {
+        if (unicast->Address.lpSockaddr == nullptr || unicast->Address.lpSockaddr->sa_family != AF_INET) continue;
+        const auto* ipv4 = reinterpret_cast<const sockaddr_in*>(unicast->Address.lpSockaddr);
+        const auto host = ::ntohl(ipv4->sin_addr.s_addr);
+        if ((host >> 24) == 127 || (host >> 16) == 0xA9FE) continue;
+        return true;
+    }
+
+    return false;
 }
 
 bool IsVirtualAdapter(const IP_ADAPTER_ADDRESSES& adapter)
@@ -269,6 +326,133 @@ std::string FormatMac(const BYTE* data, ULONG length)
         result += item;
     }
     return result;
+}
+
+std::string ReadWmicValue(const std::string& arguments)
+{
+    std::atomic<bool> cancelled{false};
+    const auto result = RunShell("wmic " + arguments, 8000, cancelled);
+    for (const auto& line : Split(result.Output, '\n'))
+    {
+        const auto index = line.find('=');
+        if (index != std::string::npos)
+        {
+            const auto value = Trim(line.substr(index + 1));
+            if (!value.empty()) return value;
+        }
+    }
+
+    return {};
+}
+
+std::string ReadDpi()
+{
+    using GetDpiForSystemFn = UINT(WINAPI*)();
+    auto user32 = ::GetModuleHandleW(L"user32.dll");
+    if (user32 == nullptr) user32 = ::LoadLibraryW(L"user32.dll");
+    const auto get_dpi = user32 == nullptr
+                             ? nullptr
+                             : reinterpret_cast<GetDpiForSystemFn>(::GetProcAddress(user32, "GetDpiForSystem"));
+    const auto dpi = get_dpi == nullptr ? 96u : get_dpi();
+    return std::to_string(dpi) + "*" + std::to_string(dpi);
+}
+
+std::string ReadResolution()
+{
+    const auto width = ::GetSystemMetrics(SM_CXSCREEN);
+    const auto height = ::GetSystemMetrics(SM_CYSCREEN);
+    if (width <= 0 || height <= 0) return {};
+    return std::to_string(width) + "*" + std::to_string(height);
+}
+
+std::string ReadVCRuntimeVersions()
+{
+    std::set<std::string> versions;
+    const wchar_t* bases[] = {
+        L"SOFTWARE\\Microsoft\\VisualStudio\\14.0\\VC\\Runtimes",
+        L"SOFTWARE\\WOW6432Node\\Microsoft\\VisualStudio\\14.0\\VC\\Runtimes",
+    };
+    for (const auto* base : bases)
+    {
+        HKEY base_key = nullptr;
+        if (::RegOpenKeyExW(HKEY_LOCAL_MACHINE, base, 0, KEY_READ | KEY_WOW64_64KEY, &base_key) != ERROR_SUCCESS)
+        {
+            continue;
+        }
+        for (DWORD index = 0;; index++)
+        {
+            wchar_t name[128] = {};
+            DWORD name_size = static_cast<DWORD>(std::size(name));
+            if (::RegEnumKeyExW(base_key, index, name, &name_size, nullptr, nullptr, nullptr, nullptr) !=
+                ERROR_SUCCESS)
+            {
+                break;
+            }
+            std::wstring subkey = base;
+            subkey += L"\\";
+            subkey += name;
+            const auto major = ReadRegistryDword(HKEY_LOCAL_MACHINE, subkey.c_str(), L"Major");
+            if (major == 0) continue;
+            const auto minor = ReadRegistryDword(HKEY_LOCAL_MACHINE, subkey.c_str(), L"Minor");
+            const auto year = major >= 14 ? std::string("VC2015-2022")
+                              : major == 12 ? std::string("VC2013")
+                              : major == 11 ? std::string("VC2012")
+                              : major == 10 ? std::string("VC2010")
+                              : major == 9  ? std::string("VC2008")
+                                            : "VC" + std::to_string(major);
+            auto text = year + " " + std::to_string(major);
+            if (minor > 0) text += "." + std::to_string(minor);
+            versions.insert(text);
+        }
+        ::RegCloseKey(base_key);
+    }
+
+    for (const auto* path : {L"SOFTWARE\\Microsoft\\VisualStudio\\10.0\\VC\\VCRedist\\x64",
+                             L"SOFTWARE\\WOW6432Node\\Microsoft\\VisualStudio\\10.0\\VC\\VCRedist\\x64"})
+    {
+        HKEY key = nullptr;
+        if (::RegOpenKeyExW(HKEY_LOCAL_MACHINE, path, 0, KEY_READ | KEY_WOW64_64KEY, &key) == ERROR_SUCCESS)
+        {
+            versions.insert("VC2010 10.0");
+            ::RegCloseKey(key);
+        }
+    }
+
+    return Join(std::vector<std::string>(versions.rbegin(), versions.rend()), ";");
+}
+
+std::string ReadGpuInfo()
+{
+    constexpr auto class_key = L"SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}";
+    HKEY key = nullptr;
+    if (::RegOpenKeyExW(HKEY_LOCAL_MACHINE, class_key, 0, KEY_READ | KEY_WOW64_64KEY, &key) != ERROR_SUCCESS) return {};
+
+    std::vector<std::string> gpus;
+    for (DWORD index = 0;; index++)
+    {
+        wchar_t name[256] = {};
+        DWORD name_size = static_cast<DWORD>(std::size(name));
+        if (::RegEnumKeyExW(key, index, name, &name_size, nullptr, nullptr, nullptr, nullptr) != ERROR_SUCCESS) break;
+
+        std::wstring subkey = class_key;
+        subkey += L"\\";
+        subkey += name;
+        const auto description = ReadRegistryString(HKEY_LOCAL_MACHINE, subkey.c_str(), L"DriverDesc");
+        if (description.empty() || description.find("Microsoft Basic") != std::string::npos) continue;
+
+        const auto memory = ReadRegistryQword(HKEY_LOCAL_MACHINE, subkey.c_str(),
+                                              L"HardwareInformation.qwMemorySize");
+        if (memory < 1024ull * 1024 * 1024) continue;
+
+        auto text = description;
+        text += "(";
+        text += std::to_string((memory + 512ull * 1024 * 1024) / (1024ull * 1024 * 1024));
+        text += "G)";
+        if (std::find(gpus.begin(), gpus.end(), text) == gpus.end()) gpus.push_back(text);
+    }
+    ::RegCloseKey(key);
+
+    return Join(gpus, ",");
 }
 
 } // namespace
@@ -346,7 +530,7 @@ std::vector<DriveEntry> Drives()
         offset += root.size() + 1;
 
         const UINT type = ::GetDriveTypeW(root.c_str());
-        if (type == DRIVE_NO_ROOT_DIR || type == DRIVE_UNKNOWN) continue;
+        if (type == DRIVE_NO_ROOT_DIR || type == DRIVE_UNKNOWN || type == DRIVE_CDROM) continue;
 
         ULARGE_INTEGER free_bytes{}, total_bytes{}, total_free{};
         if (!::GetDiskFreeSpaceExW(root.c_str(), &free_bytes, &total_bytes, &total_free)) continue;
@@ -355,12 +539,8 @@ std::vector<DriveEntry> Drives()
         wchar_t file_system[MAX_PATH + 1] = {};
         ::GetVolumeInformationW(root.c_str(), nullptr, 0, nullptr, nullptr, nullptr, file_system, MAX_PATH);
 
-        auto path = Utf8FromWide(root);
-        while (!path.empty() && path.back() == '\\') path.pop_back();
-        if (path.empty()) path = Utf8FromWide(root);
-
         DriveEntry entry;
-        entry.Path = path;
+        entry.Path = Utf8FromWide(root);
         entry.FileSystem = Utf8FromWide(file_system);
         entry.Total = total_bytes.QuadPart;
         entry.Free = free_bytes.QuadPart;
@@ -465,11 +645,24 @@ HardwareInfo Hardware()
                                              L"SystemSerialNumber");
     result.Board = ReadRegistryString(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\BIOS",
                                       L"BaseBoardSerialNumber");
-    result.DiskID = ReadDiskSerial();
+    result.Product = ReadRegistryString(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\BIOS",
+                                       L"BaseBoardProduct");
+    result.Vendor = ReadRegistryString(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\BIOS",
+                                      L"SystemManufacturer");
+    result.Processor = ReadRegistryString(HKEY_LOCAL_MACHINE,
+                                         L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
+                                         L"ProcessorNameString");
+    if (result.Board.empty()) result.Board = ReadWmicValue("baseboard get serialnumber /value");
+    result.GPU = ReadGpuInfo();
+    result.DiskID = ReadDiskSerials();
+    result.Dpi = ReadDpi();
+    result.Resolution = ReadResolution();
+    result.CLibVersion = ReadVCRuntimeVersions();
 
     std::set<std::string> macs;
     ForEachAdapter([&](const IP_ADAPTER_ADDRESSES& adapter) {
         if (adapter.IfType == IF_TYPE_SOFTWARE_LOOPBACK || adapter.PhysicalAddressLength == 0) return;
+        if (adapter.OperStatus != IfOperStatusUp || !HasIPv4(adapter)) return;
         if (IsVirtualAdapter(adapter)) return;
         const auto mac = FormatMac(adapter.PhysicalAddress, adapter.PhysicalAddressLength);
         if (!mac.empty() && mac != "00-00-00-00-00-00") macs.insert(mac);
@@ -490,6 +683,13 @@ HardwareInfo Hardware()
     result.SerialNumber = clean(result.SerialNumber);
     result.Board = clean(result.Board);
     result.DiskID = clean(result.DiskID);
+    result.Product = clean(result.Product);
+    result.Vendor = clean(result.Vendor);
+    result.Processor = clean(result.Processor);
+    result.GPU = clean(result.GPU);
+    result.Dpi = clean(result.Dpi);
+    result.Resolution = clean(result.Resolution);
+    result.CLibVersion = clean(result.CLibVersion);
     return result;
 }
 
@@ -498,22 +698,27 @@ SystemInfo System()
     SystemInfo result;
     result.OSName = ReadRegistryString(HKEY_LOCAL_MACHINE,
                                        L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", L"ProductName");
-    const auto display = ReadRegistryString(HKEY_LOCAL_MACHINE,
-                                            L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", L"DisplayVersion");
+    if (StartsWith(result.OSName, "Microsoft ")) result.OSName = result.OSName.substr(10);
+
+    const auto major = ReadRegistryDword(HKEY_LOCAL_MACHINE,
+                                         L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+                                         L"CurrentMajorVersionNumber");
+    const auto minor = ReadRegistryDword(HKEY_LOCAL_MACHINE,
+                                         L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+                                         L"CurrentMinorVersionNumber");
     const auto build = ReadRegistryString(HKEY_LOCAL_MACHINE,
-                                          L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", L"CurrentBuildNumber");
-    const auto ubr = ReadRegistryString(HKEY_LOCAL_MACHINE,
-                                        L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", L"UBR");
-    if (!display.empty())
+                                          L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+                                          L"CurrentBuildNumber");
+    if (major > 0 && !build.empty())
     {
-        result.OSVersion = display;
+        result.OSVersion = std::to_string(major) + "." + std::to_string(minor) + "." + build;
     }
-    if (!build.empty())
+    else
     {
-        if (!result.OSVersion.empty()) result.OSVersion += " ";
-        result.OSVersion += "(build " + build;
-        if (!ubr.empty()) result.OSVersion += "." + ubr;
-        result.OSVersion += ")";
+        const auto current = ReadRegistryString(HKEY_LOCAL_MACHINE,
+                                                L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+                                                L"CurrentVersion");
+        if (!current.empty() && !build.empty()) result.OSVersion = current + "." + build;
     }
     if (result.OSName.empty()) result.OSName = "Windows";
 
@@ -523,11 +728,17 @@ SystemInfo System()
     size = static_cast<DWORD>(std::size(buffer));
     if (::GetUserNameW(buffer, &size)) result.UserName = Utf8FromWide(buffer);
 
-    DYNAMIC_TIME_ZONE_INFORMATION zone{};
-    if (::GetDynamicTimeZoneInformation(&zone) != TIME_ZONE_ID_INVALID)
-    {
-        result.TimeZone = Utf8FromWide(zone.TimeZoneKeyName);
-    }
+    TIME_ZONE_INFORMATION zone{};
+    const auto state = ::GetTimeZoneInformation(&zone);
+    auto bias = zone.Bias;
+    if (state == TIME_ZONE_ID_DAYLIGHT) bias += zone.DaylightBias;
+    else if (state == TIME_ZONE_ID_STANDARD) bias += zone.StandardBias;
+    const auto offset = -bias;
+    const auto sign = offset >= 0 ? '+' : '-';
+    const auto minutes = offset >= 0 ? offset : -offset;
+    char text[16] = {};
+    std::snprintf(text, sizeof(text), "GMT%c%02d:%02d", sign, minutes / 60, minutes % 60);
+    result.TimeZone = text;
     return result;
 }
 
@@ -535,10 +746,12 @@ NetworkInfo Network()
 {
     NetworkInfo result;
     std::set<std::string> dns;
+    std::set<std::string> seen_ips;
+    std::vector<std::string> ips;
     ForEachAdapter([&](const IP_ADAPTER_ADDRESSES& adapter) {
         if (adapter.IfType == IF_TYPE_SOFTWARE_LOOPBACK) return;
 
-        if (result.IP.empty() && adapter.OperStatus == IfOperStatusUp)
+        if (adapter.OperStatus == IfOperStatusUp)
         {
             for (auto* unicast = adapter.FirstUnicastAddress; unicast != nullptr; unicast = unicast->Next)
             {
@@ -548,15 +761,18 @@ NetworkInfo Network()
                 }
                 const auto address = SockaddrToString(unicast->Address.lpSockaddr);
                 if (address.empty() || StartsWith(address, "127.") || StartsWith(address, "169.254.")) continue;
-                result.IP = address;
-                break;
+                if (seen_ips.insert(address).second) ips.push_back(address);
             }
         }
 
         if (result.Gateway.empty() && adapter.FirstGatewayAddress != nullptr)
         {
             const auto gateway = SockaddrToString(adapter.FirstGatewayAddress->Address.lpSockaddr);
-            if (!gateway.empty() && gateway != "0.0.0.0") result.Gateway = gateway;
+            if (!gateway.empty() && gateway != "0.0.0.0")
+            {
+                const auto mac = FormatMac(adapter.PhysicalAddress, adapter.PhysicalAddressLength);
+                result.Gateway = mac.empty() ? gateway : gateway + "/" + mac;
+            }
         }
 
         for (auto* server = adapter.FirstDnsServerAddress; server != nullptr; server = server->Next)
@@ -566,6 +782,7 @@ NetworkInfo Network()
             if (!address.empty()) dns.insert(address);
         }
     });
+    result.IP = Join(ips, ",");
     result.Dns = Join(std::vector<std::string>(dns.begin(), dns.end()), ",");
     // StarServer 的 Node.Dns 字段长度限制为 50，超长会导致节点校验失败
     if (result.Dns.size() > 50) result.Dns.resize(50);

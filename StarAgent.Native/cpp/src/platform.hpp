@@ -47,6 +47,13 @@ struct HardwareInfo
     std::string Board;
     std::string DiskID;
     std::string Macs;
+    std::string Product;
+    std::string Vendor;
+    std::string Processor;
+    std::string GPU;
+    std::string Dpi;
+    std::string Resolution;
+    std::string CLibVersion;
 };
 
 struct SystemInfo

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/NewLifeX/Stardust/StarAgent.Native/go/internal/config"
@@ -27,6 +28,13 @@ func (a *Agent) buildNodeInfo(ctx context.Context, cfg config.Config) protocol.N
 		Gateway:            gateway,
 		Dns:                dns,
 		ProcessorCount:     runtime.NumCPU(),
+		Product:            a.hardware.Product,
+		Vendor:             a.hardware.Vendor,
+		Processor:          a.hardware.Processor,
+		GPU:                a.hardware.GPU,
+		Dpi:                a.hardware.Dpi,
+		Resolution:         a.hardware.Resolution,
+		CLibVersion:        a.hardware.CLibVersion,
 		Memory:             snap.Memory,
 		AvailableMemory:    snap.AvailableMemory,
 		FreeMemory:         snap.FreeMemory,
@@ -43,7 +51,7 @@ func (a *Agent) buildNodeInfo(ctx context.Context, cfg config.Config) protocol.N
 		InstallPath:        identity.ExecutableDir(),
 		Runtime:            runtime.Version(),
 		Framework:          runtime.Version(),
-		TimeZone:           time.Local.String(),
+		TimeZone:           identity.TimeZoneName(),
 		Time:               protocol.NewTime(time.Now()),
 		Plugins:            a.plugins(cfg),
 	}
@@ -100,7 +108,7 @@ func (a *Agent) networkSnapshot(ctx context.Context, force bool) (string, string
 		return a.ip, a.gateway, a.dns
 	}
 
-	a.ip = identity.LocalIP()
+	a.ip = identity.LocalIPs()
 	a.gateway = identity.Gateway(ctx)
 	a.dns = identity.DNS(ctx)
 	a.networkAt = time.Now()
@@ -111,6 +119,10 @@ func (a *Agent) networkSnapshot(ctx context.Context, force bool) (string, string
 func (a *Agent) localIP() string {
 	a.networkMu.Lock()
 	defer a.networkMu.Unlock()
+
+	if index := strings.IndexByte(a.ip, ','); index >= 0 {
+		return a.ip[:index]
+	}
 
 	return a.ip
 }

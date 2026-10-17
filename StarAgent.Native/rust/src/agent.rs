@@ -47,7 +47,7 @@ struct NetworkSnapshot {
 impl NetworkSnapshot {
     fn gather() -> Self {
         Self {
-            ip: identity::local_ip(),
+            ip: identity::local_ips(),
             gateway: identity::gateway(),
             dns: identity::dns(),
             at: Some(Instant::now()),
@@ -674,13 +674,13 @@ impl Agent {
             drive_size: snapshot.drive_size,
             drive_info: snapshot.drive_info,
             max_open_files: None,
-            c_lib_version: String::new(),
-            dpi: String::new(),
-            resolution: String::new(),
-            product: String::new(),
-            vendor: String::new(),
-            processor: String::new(),
-            gpu: String::new(),
+            c_lib_version: self.hardware.c_lib_version.clone(),
+            dpi: self.hardware.dpi.clone(),
+            resolution: self.hardware.resolution.clone(),
+            product: self.hardware.product.clone(),
+            vendor: self.hardware.vendor.clone(),
+            processor: self.hardware.processor.clone(),
+            gpu: self.hardware.gpu.clone(),
             uuid: self.hardware.uuid.clone(),
             machine_guid: self.hardware.machine_guid.clone(),
             serial_number: self.hardware.serial_number.clone(),
@@ -690,7 +690,7 @@ impl Agent {
             install_path: identity::executable_dir(),
             runtime: format!("rustc {}", env!("CARGO_PKG_RUST_VERSION")),
             framework: format!("rustc {}", env!("CARGO_PKG_RUST_VERSION")),
-            time_zone: chrono::Local::now().offset().to_string(),
+            time_zone: identity::time_zone_name(),
             time: ProtoTime::now(),
             plugins: self.plugins(),
         }
@@ -767,7 +767,7 @@ impl Agent {
             .map(|at| at.elapsed() < NETWORK_TTL)
             .unwrap_or(false);
         if force || !fresh {
-            cache.ip = identity::local_ip();
+            cache.ip = identity::local_ips();
             cache.gateway = identity::gateway();
             cache.dns = identity::dns();
             cache.at = Some(Instant::now());
@@ -776,7 +776,12 @@ impl Agent {
     }
 
     fn local_ip(&self) -> String {
-        self.network_snapshot(false).0
+        self.network_snapshot(false)
+            .0
+            .split(',')
+            .next()
+            .unwrap_or_default()
+            .to_string()
     }
 
     fn enqueue(&self, event_type: &str, name: &str, remark: &str) {

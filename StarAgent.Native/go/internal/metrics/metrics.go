@@ -163,11 +163,15 @@ func describeDrives(drives []Drive) (string, uint64) {
 	items := make([]string, 0, len(drives))
 	var total uint64
 	for _, drive := range drives {
-		if drive.Total == 0 {
+		if drive.Total == 0 || strings.EqualFold(drive.Fs, "cdfs") || strings.EqualFold(drive.Fs, "iso9660") || strings.EqualFold(drive.Fs, "udf") {
 			continue
 		}
 		total += drive.Total
-		items = append(items, fmt.Sprintf("%s[%s]=%s/%s", drive.Path, drive.Fs, FormatSize(drive.Free), FormatSize(drive.Total)))
+		path := drive.Path
+		if runtime.GOOS == "windows" && len(path) == 2 && path[1] == ':' {
+			path += `\`
+		}
+		items = append(items, fmt.Sprintf("%s[%s]=%s/%s", path, drive.Fs, FormatSize(drive.Free), FormatSize(drive.Total)))
 	}
 	sort.Strings(items)
 

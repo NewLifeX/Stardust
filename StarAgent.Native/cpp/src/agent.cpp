@@ -563,6 +563,13 @@ NodeInfo Agent::BuildNodeInfo()
     node.AvailableFreeSpace = metrics.AvailableFreeSpace;
     node.DriveSize = metrics.DriveSize;
     node.DriveInfo = metrics.DriveInfo;
+    node.Product = hardware_.Product;
+    node.Vendor = hardware_.Vendor;
+    node.Processor = hardware_.Processor;
+    node.GPU = hardware_.GPU;
+    node.Dpi = hardware_.Dpi;
+    node.Resolution = hardware_.Resolution;
+    node.CLibVersion = hardware_.CLibVersion;
     node.UUID = hardware_.UUID;
     node.MachineGuid = hardware_.MachineGuid;
     node.SerialNumber = hardware_.SerialNumber;
@@ -629,7 +636,8 @@ platform::NetworkInfo Agent::NetworkSnapshot(bool force)
 std::string Agent::LocalIP()
 {
     std::lock_guard<std::mutex> lock(network_mutex_);
-    return network_.IP;
+    const auto index = network_.IP.find(',');
+    return index == std::string::npos ? network_.IP : network_.IP.substr(0, index);
 }
 
 TimePoint Agent::ServerNow() const

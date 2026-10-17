@@ -187,13 +187,21 @@ fn describe_drives(drives: &[DriveEntry]) -> (String, u64) {
     let mut items = Vec::new();
     let mut total = 0u64;
     for drive in drives {
-        if drive.total == 0 {
+        if drive.total == 0
+            || drive.fs.eq_ignore_ascii_case("cdfs")
+            || drive.fs.eq_ignore_ascii_case("iso9660")
+            || drive.fs.eq_ignore_ascii_case("udf")
+        {
             continue;
         }
         total = total.saturating_add(drive.total);
+        let mut path = drive.path.clone();
+        if std::env::consts::OS == "windows" && path.len() == 2 && path.ends_with(':') {
+            path.push('\\');
+        }
         items.push(format!(
             "{}[{}]={}/{}",
-            drive.path,
+            path,
             drive.fs,
             format_size(drive.free),
             format_size(drive.total)
