@@ -182,4 +182,7 @@ public enum OSKinds
 
     /// <summary>Android。全球第一大移动操作系统</summary>
     Android = 500,
+
+    /// <summary>iOS。苹果移动操作系统</summary>
+    iOS = 501,
 }

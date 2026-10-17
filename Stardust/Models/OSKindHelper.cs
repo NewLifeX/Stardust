@@ -22,6 +22,9 @@ public static class OSKindHelper
         if (kind > 0) return kind;
 
         if (osName.IndexOf("Android", StringComparison.OrdinalIgnoreCase) >= 0) return OSKinds.Android;
+        if (osName.IndexOf("iOS", StringComparison.OrdinalIgnoreCase) >= 0 ||
+            osName.IndexOf("iPhone", StringComparison.OrdinalIgnoreCase) >= 0 ||
+            osName.IndexOf("iPad", StringComparison.OrdinalIgnoreCase) >= 0) return OSKinds.iOS;
         if (osName.IndexOf("Mac", StringComparison.InvariantCultureIgnoreCase) >= 0) return OSKinds.MacOSX;
 
         return 0;
@@ -144,6 +147,9 @@ public static class OSKindHelper
     /// <returns></returns>
     public static RuntimeIdentifier[] GetRID(OSKinds kind, String arch)
     {
+        // 移动平台不使用RID部署
+        if (kind is OSKinds.Android or OSKinds.iOS) return [RuntimeIdentifier.Any];
+
         var rid = RuntimeIdentifier.Any;
         if (kind >= OSKinds.MacOSX)
         {

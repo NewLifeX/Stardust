@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-ios</TargetFramework>
+    <SupportedOSPlatformVersion>13.0</SupportedOSPlatformVersion>
+    <OutputType>Exe</OutputType>
+    <AssemblyTitle>星尘代理（iOS）</AssemblyTitle>
+    <Description>星尘代理 iOS 极简版。前台与后台任务唤醒时上报心跳、指标与日志，并执行唤醒时刻可用的指令。</Description>
+    <Company>新生命开发团队</Company>
+    <Copyright>©2002-2026 NewLife</Copyright>
+    <RootNamespace>StarAgent.Ios</RootNamespace>
+    <AssemblyName>StarAgent.iOS</AssemblyName>
+    <OutputPath>..\Bin\Agent\mobile\ios</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <ApplicationId>com.newlife.staragent</ApplicationId>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+    <!-- iOS 强制裁剪，partial 只裁剪 BCL，保留 NewLife 反射所需类型 -->
+    <TrimMode Condition="'$(Configuration)' == 'Release'">partial</TrimMode>
+    <NoWarn>1701;1702;NU5104;NETSDK1138;CS7035;CS8600;CS8602;CS8603;CS8604;CS8618;CS8619;CS8625</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\StarAgent.Mobile\StarAgent.Mobile.csproj" />
+  </ItemGroup>
+
+</Project>
