@@ -252,7 +252,7 @@ StarAgent 基于 NewLife.Agent 内置的 `AgentWebPanel` 框架，提供了轻�
 - CPU/内存/磁盘/网络/进程/运行时长/负载等基础指标
 - `bash`/`cmd`/`node/synctime`/`node/setchannel`/`node/restart`
 - systemd / launchd / Windows Service / OpenWrt procd
-- 系统/硬件信息：OS 名称版本与种类、全部 IPv4、网关+MAC、DNS、时区、DPI、分辨率、C 运行时、CPU/内存/磁盘、产品名/制造商/处理器/GPU、UUID/MachineGuid/序列号/主板/磁盘序列号/物理网卡 MAC
+- 系统/硬件信息（Windows 已对齐）：OS 名称版本与种类、全部 IPv4、网关+MAC、DNS、时区、DPI、分辨率、C 运行时、CPU/内存/磁盘、产品名/制造商/处理器/GPU、UUID/MachineGuid/序列号/主板/磁盘序列号/物理网卡 MAC；Linux/macOS 先覆盖基础字段，产品名/GPU 等按平台能力逐步补齐
 
 原生 Agent 的 `Runtime` / `Framework` 上报自身语言运行时，不枚举本机 .NET Framework 集合；这是与标准 .NET Agent 的有意差异。
 

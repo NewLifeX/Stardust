@@ -55,9 +55,9 @@ pwsh ./StarAgent.Native/packaging/build.ps1
 
 已对齐标准 StarAgent 在节点页展示的主要字段：
 
-- 系统：操作系统名称/版本/种类、架构、机器名、用户名、全部 IPv4、网关+MAC、DNS、时区、DPI、分辨率、C 运行时
-- 硬件：CPU、内存、磁盘、产品名、制造商、处理器、GPU、UUID、MachineGuid、序列号、主板、磁盘序列号、物理网卡 MAC
-- 指标：CPU 使用率、内存、磁盘容量、网络速率、进程数、运行时长、负载
+- **Windows（已对齐）**：操作系统名称/版本/种类、架构、机器名、用户名、全部 IPv4、网关+MAC、DNS、时区、DPI、分辨率、C 运行时；CPU、内存、磁盘、产品名、制造商、处理器、GPU、UUID、MachineGuid、序列号、主板、磁盘序列号、物理网卡 MAC
+- **Linux/macOS（基础字段）**：OS、CPU、内存、磁盘、网络、UUID、MachineGuid、序列号、主板、磁盘序列号、MAC；产品名、GPU、DPI、C 运行时等按平台能力逐步补齐
+- **指标**：CPU 使用率、内存、磁盘容量、网络速率、进程数、运行时长、负载
 
 原生 Agent 的 `Runtime` / `Framework` 上报自身语言运行时（Go/Rust/C++），不枚举本机 .NET Framework 集合。
 
