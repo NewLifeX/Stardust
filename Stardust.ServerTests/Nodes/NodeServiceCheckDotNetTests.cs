@@ -266,4 +266,52 @@ public class NodeServiceCheckDotNetTests
             if (pkgCreated) pkg.Delete();
         }
     }
+
+    /// <summary>原生 Agent（Go/Rust/C++）没有 .NET 运行时，即使存在匹配的 dotNet 策略也不得推送 framework/install。</summary>
+    [Theory]
+    [InlineData("StarAgent-Go")]
+    [InlineData("StarAgent-Rust")]
+    [InlineData("StarAgent-Cpp")]
+    [Trait("Category", "Nodes")]
+    public void NativeAgent_NoPush(String productCode)
+    {
+        var code = "test-net-" + Guid.NewGuid().ToString("n")[..10];
+        const String ver = "v9.9.97-aspnet";
+        NodeVersion record = null;
+        Node node = null;
+        using var isolation = new DotNetPolicyIsolation();
+
+        try
+        {
+            foreach (var item in NodeVersion.FindAll(NodeVersion._.Version == ver)) item.Delete();
+
+            record = new NodeVersion
+            {
+                Version = ver,
+                ProductCode = "dotNet",
+                Enable = true,
+                Force = false,
+                Channel = NodeChannels.Release,
+                Strategy = $"node={code}",
+                Source = "http://127.0.0.1/files/dotnet/",
+            };
+            record.Insert();
+
+            node = NewNode(code);
+            node.ProductCode = productCode;
+            node.Insert();
+
+            var svc = CreateService();
+            var rs = svc.CheckDotNet(node, new Uri("http://127.0.0.1:6600"), "127.0.0.1");
+
+            Assert.Null(rs);
+            Assert.Empty(FindInstallCommands(node.ID));
+            Assert.Empty(FindPushHistories(node.ID));
+        }
+        finally
+        {
+            if (node != null) CleanupNode(node.ID);
+            record?.Delete();
+        }
+    }
 }

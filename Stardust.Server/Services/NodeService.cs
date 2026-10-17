@@ -732,6 +732,13 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         var releases = ProductRelease.GetValids(channel);
         if (releases.Count == 0) return null;
 
+        // 只使用通用版本或与节点产品编码一致的版本，避免把 .NET 包发给原生 Agent
+        if (!node.ProductCode.IsNullOrEmpty())
+            releases = releases.Where(e => e.ProductCode.IsNullOrEmpty() || e.ProductCode.EqualIgnoreCase(node.ProductCode)).ToList();
+        else
+            releases = releases.Where(e => e.ProductCode.IsNullOrEmpty()).ToList();
+        if (releases.Count == 0) return null;
+
         var ip = node.UpdateIP;
 
         foreach (var release in releases)
@@ -776,6 +783,9 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
     /// <returns>推送的版本策略，未推送时返回null</returns>
     public NodeVersion CheckDotNet(Node node, Uri baseUri, String ip)
     {
+        // 原生 Agent（Go/Rust/C++）没有 .NET 运行时，禁止推送 framework/install
+        if (node.ProductCode.EqualIgnoreCase("StarAgent-Go", "StarAgent-Rust", "StarAgent-Cpp")) return null;
+
         // 检查 NodeVersion 中是否有启用的 dotNet 策略
         // 如果旧表存在 dotNet 记录但全部被禁用，说明管理员已明确关闭 dotNet 推送，直接跳过
         var allNv = NodeVersion.Meta.Cache.FindAll(e => e.ProductCode.EqualIgnoreCase("dotNet")).ToList();

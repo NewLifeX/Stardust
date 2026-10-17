@@ -17,6 +17,7 @@ using NewLife.Model;
 using NewLife.Reflection;
 using NewLife.Threading;
 using NewLife.Web;
+using Stardust.Models;
 using XCode;
 using XCode.Cache;
 using XCode.Configuration;
@@ -152,37 +153,91 @@ public partial class ProductRelease : Entity<ProductRelease>
     /// <returns>匹配的Package，若无匹配返回null</returns>
     public ProductPackage MatchPackage(Node node)
     {
-        if (!Enable) return null;
+        if (!Enable || node == null) return null;
+
+        // 产品编码不匹配时不得使用该版本的安装包，避免把 .NET 包发给原生 Agent
+        if (!ProductCode.IsNullOrEmpty() && !ProductCode.EqualIgnoreCase(node.ProductCode)) return null;
 
         var packages = ProductPackage.FindAllByReleaseId(Id);
         if (packages == null || packages.Count == 0) return null;
 
-        // 提取节点运行时主版本号
-        var runtimeVer = node.Runtime;
-        var runtimeMajor = "";
-        if (!runtimeVer.IsNullOrEmpty())
-        {
-            var p = runtimeVer.IndexOf('.');
-            runtimeMajor = p > 0 ? runtimeVer[..p] : runtimeVer;
-        }
+        // 第一步：按操作系统与CPU架构过滤，0表示通用
+        var osKind = GetOSKind(node.OSKind);
+        if (!Enum.TryParse<CpuArch>(node.Architecture, true, out var arch)) arch = CpuArch.Any;
 
-        // 第一步：精确匹配 TargetRuntime
-        if (!runtimeMajor.IsNullOrEmpty())
+        var list = packages
+            .Where(e => e.OSKind == OSKind.Any || e.OSKind == osKind)
+            .Where(e => e.Architecture == CpuArch.Any || e.Architecture == arch)
+            // 精确匹配优先于通用包，同优先级保持原有顺序
+            .OrderByDescending(e => osKind != OSKind.Any && e.OSKind == osKind)
+            .ThenByDescending(e => arch != CpuArch.Any && e.Architecture == arch)
+            .ToList();
+        if (list.Count == 0) return null;
+
+        // 第二步：匹配目标运行时。原生Agent使用 go/rust/cpp，.NET使用主版本号
+        var nativeRuntime = GetNativeRuntime(node.Runtime);
+        if (nativeRuntime != null)
         {
-            var pkg = packages.FirstOrDefault(e => e.TargetRuntime == runtimeMajor);
+            var pkg = list.FirstOrDefault(e => e.TargetRuntime.EqualIgnoreCase(nativeRuntime));
             if (pkg != null) return pkg;
         }
-
-        // 第二步：net45 特殊处理（Runtime为空时尝试匹配"4"）
-        if (runtimeMajor.IsNullOrEmpty() || runtimeMajor == "4")
+        else
         {
-            var pkg = packages.FirstOrDefault(e => e.TargetRuntime == "4");
-            if (pkg != null) return pkg;
+            // 提取节点运行时主版本号
+            var runtimeVer = node.Runtime;
+            var runtimeMajor = "";
+            if (!runtimeVer.IsNullOrEmpty())
+            {
+                var p = runtimeVer.IndexOf('.');
+                runtimeMajor = p > 0 ? runtimeVer[..p] : runtimeVer;
+            }
+
+            // 精确匹配 TargetRuntime
+            if (!runtimeMajor.IsNullOrEmpty())
+            {
+                var pkg = list.FirstOrDefault(e => e.TargetRuntime == runtimeMajor);
+                if (pkg != null) return pkg;
+            }
+
+            // net45 特殊处理（Runtime为空时尝试匹配"4"）
+            if (runtimeMajor.IsNullOrEmpty() || runtimeMajor == "4")
+            {
+                var pkg = list.FirstOrDefault(e => e.TargetRuntime == "4");
+                if (pkg != null) return pkg;
+            }
         }
 
         // 第三步：匹配万能包（TargetRuntime="*"的跨版本升级包）
-        var fallback = packages.FirstOrDefault(e => e.TargetRuntime == "*");
-        if (fallback != null) return fallback;
+        return list.FirstOrDefault(e => e.TargetRuntime == "*");
+    }
+
+    /// <summary>将节点的系统种类映射为通用操作系统类型</summary>
+    /// <param name="os">节点系统种类</param>
+    /// <returns>通用操作系统类型</returns>
+    private static OSKind GetOSKind(OSKinds os)
+    {
+        var v = (Int32)os;
+        if (v is (Int32)OSKinds.Alpine or (Int32)OSKinds.OpenWrt or (Int32)OSKinds.Buildroot) return OSKind.LinuxMusl;
+        if (v == (Int32)OSKinds.SmartOS) return OSKind.Any;
+        if (v >= 10 && v < 100) return OSKind.Windows;
+        if (v >= 100 && v < 200) return OSKind.Linux;
+        if (v == (Int32)OSKinds.MacOSX) return OSKind.OSX;
+        if (v == (Int32)OSKinds.Android) return OSKind.Android;
+
+        // iOS 等未知/新增系统只匹配通用包
+        return OSKind.Any;
+    }
+
+    /// <summary>识别原生Agent运行时，返回 go/rust/cpp，非原生返回null</summary>
+    /// <param name="runtime">节点运行时</param>
+    /// <returns>原生运行时标识</returns>
+    private static String GetNativeRuntime(String runtime)
+    {
+        if (runtime.IsNullOrEmpty()) return null;
+
+        if (runtime.StartsWith("go", StringComparison.OrdinalIgnoreCase)) return "go";
+        if (runtime.StartsWith("rust", StringComparison.OrdinalIgnoreCase)) return "rust";
+        if (runtime.StartsWith("cpp", StringComparison.OrdinalIgnoreCase)) return "cpp";
 
         return null;
     }

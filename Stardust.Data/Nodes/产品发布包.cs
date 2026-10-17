@@ -38,12 +38,28 @@ public partial class ProductPackage
     [BindColumn("ReleaseId", "发布版本。所属发布版本", "")]
     public Int32 ReleaseId { get => _ReleaseId; set { if (OnPropertyChanging("ReleaseId", value)) { _ReleaseId = value; OnPropertyChanged("ReleaseId"); } } }
 
+    private Stardust.Models.OSKind _OSKind;
+    /// <summary>操作系统。目标操作系统，0表示通用</summary>
+    [DisplayName("操作系统")]
+    [Description("操作系统。目标操作系统，0表示通用")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("OSKind", "操作系统。目标操作系统，0表示通用", "")]
+    public Stardust.Models.OSKind OSKind { get => _OSKind; set { if (OnPropertyChanging("OSKind", value)) { _OSKind = value; OnPropertyChanged("OSKind"); } } }
+
+    private Stardust.Models.CpuArch _Architecture;
+    /// <summary>CPU架构。目标指令集架构，0表示通用</summary>
+    [DisplayName("CPU架构")]
+    [Description("CPU架构。目标指令集架构，0表示通用")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("Architecture", "CPU架构。目标指令集架构，0表示通用", "")]
+    public Stardust.Models.CpuArch Architecture { get => _Architecture; set { if (OnPropertyChanging("Architecture", value)) { _Architecture = value; OnPropertyChanged("Architecture"); } } }
+
     private String _TargetRuntime;
-    /// <summary>目标运行时。目标.NET运行时主版本，如 4/5/6/7/8/9/10，*表示万能包</summary>
+    /// <summary>目标运行时。.NET为主版本号，如 4/5/6/7/8/9/10；原生Agent为 go/rust/cpp；*表示万能包</summary>
     [DisplayName("目标运行时")]
-    [Description("目标运行时。目标.NET运行时主版本，如 4/5/6/7/8/9/10，*表示万能包")]
+    [Description("目标运行时。.NET为主版本号，如 4/5/6/7/8/9/10；原生Agent为 go/rust/cpp；*表示万能包")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("TargetRuntime", "目标运行时。目标.NET运行时主版本，如 4/5/6/7/8/9/10，*表示万能包", "")]
+    [BindColumn("TargetRuntime", "目标运行时。.NET为主版本号，如 4/5/6/7/8/9/10；原生Agent为 go/rust/cpp；*表示万能包", "")]
     public String TargetRuntime { get => _TargetRuntime; set { if (OnPropertyChanging("TargetRuntime", value)) { _TargetRuntime = value; OnPropertyChanged("TargetRuntime"); } } }
 
     private String _FileName;
@@ -141,6 +157,8 @@ public partial class ProductPackage
         {
             "Id" => _Id,
             "ReleaseId" => _ReleaseId,
+            "OSKind" => _OSKind,
+            "Architecture" => _Architecture,
             "TargetRuntime" => _TargetRuntime,
             "FileName" => _FileName,
             "Source" => _Source,
@@ -160,6 +178,8 @@ public partial class ProductPackage
             {
                 case "Id": _Id = value.ToInt(); break;
                 case "ReleaseId": _ReleaseId = value.ToInt(); break;
+                case "OSKind": _OSKind = (Stardust.Models.OSKind)value.ToInt(); break;
+                case "Architecture": _Architecture = (Stardust.Models.CpuArch)value.ToInt(); break;
                 case "TargetRuntime": _TargetRuntime = Convert.ToString(value); break;
                 case "FileName": _FileName = Convert.ToString(value); break;
                 case "Source": _Source = Convert.ToString(value); break;
@@ -249,7 +269,13 @@ public partial class ProductPackage
         /// <summary>发布版本。所属发布版本</summary>
         public static readonly Field ReleaseId = FindByName("ReleaseId");
 
-        /// <summary>目标运行时。目标.NET运行时主版本，如 4/5/6/7/8/9/10，*表示万能包</summary>
+        /// <summary>操作系统。目标操作系统，0表示通用</summary>
+        public static readonly Field OSKind = FindByName("OSKind");
+
+        /// <summary>CPU架构。目标指令集架构，0表示通用</summary>
+        public static readonly Field Architecture = FindByName("Architecture");
+
+        /// <summary>目标运行时。.NET为主版本号，如 4/5/6/7/8/9/10；原生Agent为 go/rust/cpp；*表示万能包</summary>
         public static readonly Field TargetRuntime = FindByName("TargetRuntime");
 
         /// <summary>文件名。安装包文件名，如 staragent80.zip</summary>
@@ -294,7 +320,13 @@ public partial class ProductPackage
         /// <summary>发布版本。所属发布版本</summary>
         public const String ReleaseId = "ReleaseId";
 
-        /// <summary>目标运行时。目标.NET运行时主版本，如 4/5/6/7/8/9/10，*表示万能包</summary>
+        /// <summary>操作系统。目标操作系统，0表示通用</summary>
+        public const String OSKind = "OSKind";
+
+        /// <summary>CPU架构。目标指令集架构，0表示通用</summary>
+        public const String Architecture = "Architecture";
+
+        /// <summary>目标运行时。.NET为主版本号，如 4/5/6/7/8/9/10；原生Agent为 go/rust/cpp；*表示万能包</summary>
         public const String TargetRuntime = "TargetRuntime";
 
         /// <summary>文件名。安装包文件名，如 staragent80.zip</summary>
