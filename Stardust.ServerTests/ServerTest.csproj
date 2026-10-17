@@ -55,6 +55,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Stardust.Server\Stardust.Server.csproj" />
     <ProjectReference Include="..\Stardust.Web\Stardust.Web.csproj" Aliases="web" />
+    <ProjectReference Include="..\StarAgent.Mobile\StarAgent.Mobile.csproj" />
   </ItemGroup>
 
 </Project>

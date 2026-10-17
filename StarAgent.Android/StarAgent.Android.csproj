@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-android</TargetFramework>
+    <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
+    <OutputType>Exe</OutputType>
+    <AssemblyTitle>星尘代理（Android）</AssemblyTitle>
+    <Description>星尘代理 Android 简化版。以前台服务常驻，提供节点注册、心跳、设备指标、日志与命令子集。</Description>
+    <Company>新生命开发团队</Company>
+    <Copyright>©2002-2026 NewLife</Copyright>
+    <RootNamespace>StarAgent.Droid</RootNamespace>
+    <AssemblyName>StarAgent.Android</AssemblyName>
+    <RuntimeIdentifiers>android-arm64;android-x64</RuntimeIdentifiers>
+    <OutputPath>..\Bin\Agent\mobile\android</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <ApplicationId>com.newlife.staragent</ApplicationId>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+    <AndroidPackageFormat>apk</AndroidPackageFormat>
+    <!-- 首版关闭裁剪与AOT：NewLife 序列化/反射较多，先保证功能可用，后续再逐步适配 -->
+    <PublishTrimmed>false</PublishTrimmed>
+    <RunAOTCompilation>false</RunAOTCompilation>
+    <NoWarn>1701;1702;NU5104;NETSDK1138;CS7035;CS8600;CS8602;CS8603;CS8604;CS8618;CS8619;CS8625</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\StarAgent.Mobile\StarAgent.Mobile.csproj" />
+  </ItemGroup>
+
+</Project>

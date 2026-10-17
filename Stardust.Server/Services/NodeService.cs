@@ -363,6 +363,13 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         // 如果未打开动态注册，则把节点修改为禁用
         node.Enable = set.AutoRegister;
 
+        // 移动端受系统限制无法常驻，新节点默认关闭下线告警，避免间歇在线产生告警噪音
+        if (node.ID == 0)
+        {
+            var osKind = OSKindHelper.Parse(di.OSName, di.OSVersion);
+            if (osKind is OSKinds.Android or OSKinds.iOS) node.AlarmOnOffline = false;
+        }
+
         if (node.Name.IsNullOrEmpty()) node.Name = name;
 
         // 优先使用节点散列来生成节点证书，确保节点路由到其它接入网关时保持相同证书代码

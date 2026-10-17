@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyTitle>星尘移动代理核心</AssemblyTitle>
+    <Description>星尘代理移动端共享核心。提供登录心跳、设备信息采集、命令下发的平台无关实现，供 Android 与 iOS 宿主复用。</Description>
+    <Company>新生命开发团队</Company>
+    <Copyright>©2002-2026 NewLife</Copyright>
+    <OutputPath>..\Bin</OutputPath>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <SignAssembly>True</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\Doc\newlife.snk</AssemblyOriginatorKeyFile>
+    <IsPackable>False</IsPackable>
+    <NoWarn>1701;1702;NU5104;NETSDK1138;CS7035;CS8600;CS8602;CS8603;CS8604;CS8618;CS8619;CS8625</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Stardust\Stardust.csproj" />
+  </ItemGroup>
+
+</Project>

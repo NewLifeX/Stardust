@@ -27,6 +27,7 @@
   </Folder>
   <Project Path="DeployAgent/DeployAgent.csproj" />
   <Project Path="StarAgent/StarAgent.csproj" />
+  <Project Path="StarAgent.Mobile/StarAgent.Mobile.csproj" />
   <Project Path="Stardust.Data/Stardust.Data.csproj" />
   <Project Path="Stardust.Extensions/Stardust.Extensions.csproj" />
   <Project Path="Stardust.Server/Stardust.Server.csproj" />
