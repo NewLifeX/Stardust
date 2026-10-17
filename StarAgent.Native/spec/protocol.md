@@ -54,6 +54,8 @@ Authorization: Bearer <Token>
 - `LoginResponse.ServerTime` / `PingResponse.ServerTime`：Unix 毫秒（UTC），`Int64`。
 - `NodeInfo.Compile` / `NodeInfo.Time`：服务端使用本地时间转换器，建议格式 `yyyy-MM-dd HH:mm:ss`（UTC 值，不带时区后缀）。原生 Agent 必须发送 `Compile`（构建时间），`Time` 可发送当前 UTC 时间。
 - `NodeInfo.Dns` / `PingInfo.Dns`：服务端 `Node.Dns` 字段限制 50 字符，原生 Agent 应只上报前几个 DNS 地址并截断到 50 字符，否则节点校验会失败。
+- `NodeInfo.IP`：多个 IPv4 使用逗号分隔，主地址在前；`Gateway` 建议上报 `IP/MAC`（如 `10.0.0.1/00-E0-B4-5A-60-68`）。
+- `NodeInfo.OSName` 必须能被服务端识别，Windows 以 `Windows` 开头、Linux 以发行版名开头；`OSVersion` 使用数值版本（如 `10.0.19045`），不要使用 `22H2` 这类显示版本。
 - `CommandModel.StartTime` / `Expire`：同样使用 `yyyy-MM-dd HH:mm:ss` 形式的 UTC 时间；未设置时发送 `0001-01-01 00:00:00` 或省略。
 
 ### 2.3 响应包装

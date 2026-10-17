@@ -49,7 +49,17 @@ pwsh ./StarAgent.Native/packaging/build.ps1
 - CPU/内存/磁盘/网络/进程/运行时长等基础指标
 - `bash`/`cmd`/`node/synctime`/`node/setchannel`/`node/restart`
 - systemd / launchd / Windows Service / OpenWrt procd
-- 移动端由 .NET 移动代理覆盖（`StarAgent.Mobile` / `StarAgent.Android` / `StarAgent.iOS`，不在本目录）
+- 移动端由 .NET 移动代理覆盖（`StarAgent.Mobile` / `StarAgent.Android` / `StarAgent.iOS`，不在本目录）；`ProductCode=StarAgent-Mobile`，产物在 `Bin/Agent/mobile/`，构建与冒烟见各项目下的 `pack-android.ps1`、`run-android.ps1`、`run-ios.sh`
+
+### 系统与硬件信息
+
+已对齐标准 StarAgent 在节点页展示的主要字段：
+
+- 系统：操作系统名称/版本/种类、架构、机器名、用户名、全部 IPv4、网关+MAC、DNS、时区、DPI、分辨率、C 运行时
+- 硬件：CPU、内存、磁盘、产品名、制造商、处理器、GPU、UUID、MachineGuid、序列号、主板、磁盘序列号、物理网卡 MAC
+- 指标：CPU 使用率、内存、磁盘容量、网络速率、进程数、运行时长、负载
+
+原生 Agent 的 `Runtime` / `Framework` 上报自身语言运行时（Go/Rust/C++），不枚举本机 .NET Framework 集合。
 
 首版**不包含**：进程守护、远程发布（`deploy/*`）、自身升级、Web 管理面板、插件、防火墙、DNS、截屏。
 

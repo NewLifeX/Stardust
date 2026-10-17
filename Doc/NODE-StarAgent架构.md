@@ -31,6 +31,7 @@ StarAgent 是部署在每台应用服务器上的节点代理程序，以系统�
 
 移动端使用独立 `ProductCode=StarAgent-Mobile`，平台差异由 `OSKind` 表达；能力标签通过 `NodeInfo.Plugins` 上报（`agent:dotnet-mobile`、`cap:exec=false`、`cap:upgrade=false`、`cap:deploy=false`、`os:android`/`os:ios`）。
 构建产物统一输出到 `Bin/Agent/mobile/{android,ios}`，打包与冒烟脚本为 `StarAgent.Android/pack-android.ps1`、`StarAgent.Android/run-android.ps1`、`StarAgent.iOS/run-ios.sh`。
+详细说明见 [NODE-移动端代理](NODE-移动端代理.md)。
 
 ---
 
@@ -251,6 +252,9 @@ StarAgent 基于 NewLife.Agent 内置的 `AgentWebPanel` 框架，提供了轻�
 - CPU/内存/磁盘/网络/进程/运行时长/负载等基础指标
 - `bash`/`cmd`/`node/synctime`/`node/setchannel`/`node/restart`
 - systemd / launchd / Windows Service / OpenWrt procd
+- 系统/硬件信息：OS 名称版本与种类、全部 IPv4、网关+MAC、DNS、时区、DPI、分辨率、C 运行时、CPU/内存/磁盘、产品名/制造商/处理器/GPU、UUID/MachineGuid/序列号/主板/磁盘序列号/物理网卡 MAC
+
+原生 Agent 的 `Runtime` / `Framework` 上报自身语言运行时，不枚举本机 .NET Framework 集合；这是与标准 .NET Agent 的有意差异。
 
 首版**不包含**：进程守护、远程发布（`deploy/*`）、自身升级、Web 管理面板、插件、防火墙、DNS、截屏。`deploy/*`、`framework/install`、`node/reboot` 统一回复“不支持”。
 
