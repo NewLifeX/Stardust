@@ -1,0 +1,120 @@
+name: native-agents
+
+on:
+  push:
+    branches: ["*"]
+    paths:
+      - 'StarAgent.Native/**'
+      - '.github/workflows/native-agents.yml'
+  pull_request:
+    branches: ["*"]
+    paths:
+      - 'StarAgent.Native/**'
+      - '.github/workflows/native-agents.yml'
+  workflow_dispatch:
+
+jobs:
+  go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache-dependency-path: StarAgent.Native/go/go.sum
+      - name: Test
+        working-directory: StarAgent.Native/go
+        run: go test -count=1 ./...
+      - name: Build
+        working-directory: StarAgent.Native/go
+        run: CGO_ENABLED=0 go build -o /tmp/staragent-go ./cmd/staragent
+
+  conformance:
+    runs-on: ubuntu-latest
+    needs: go
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache-dependency-path: |
+            StarAgent.Native/go/go.sum
+            StarAgent.Native/conformance/go.sum
+      - name: Build agent
+        working-directory: StarAgent.Native/go
+        run: CGO_ENABLED=0 go build -o /tmp/staragent-go ./cmd/staragent
+      - name: Build conformance
+        working-directory: StarAgent.Native/conformance
+        run: go build -o /tmp/conformance ./cmd/conformance
+      - name: Run conformance
+        run: /tmp/conformance --agent /tmp/staragent-go --scenario all --timeout 5m
+
+  rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Rust project exists
+        id: check
+        run: if [ -f StarAgent.Native/rust/Cargo.toml ]; then echo "exists=true" >> "$GITHUB_OUTPUT"; else echo "exists=false" >> "$GITHUB_OUTPUT"; fi
+      - uses: dtolnay/rust-toolchain@stable
+        if: steps.check.outputs.exists == 'true'
+        with:
+          components: rustfmt, clippy
+      - name: Test
+        if: steps.check.outputs.exists == 'true'
+        working-directory: StarAgent.Native/rust
+        run: cargo test --all-targets
+      - name: Build
+        if: steps.check.outputs.exists == 'true'
+        working-directory: StarAgent.Native/rust
+        run: cargo build --release
+      - uses: actions/setup-go@v5
+        if: steps.check.outputs.exists == 'true'
+        with:
+          go-version: '1.24'
+          cache-dependency-path: StarAgent.Native/conformance/go.sum
+      - name: Build conformance
+        if: steps.check.outputs.exists == 'true'
+        working-directory: StarAgent.Native/conformance
+        run: go build -o /tmp/conformance ./cmd/conformance
+      - name: Run conformance
+        if: steps.check.outputs.exists == 'true'
+        run: /tmp/conformance --agent StarAgent.Native/rust/target/release/staragent --scenario all --timeout 5m
+
+  cpp:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check C++ project exists
+        id: check
+        shell: pwsh
+        run: |
+          if (Test-Path StarAgent.Native/cpp/CMakeLists.txt) { "exists=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append } else { "exists=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append }
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: steps.check.outputs.exists == 'true'
+      - name: Configure
+        if: steps.check.outputs.exists == 'true'
+        shell: pwsh
+        run: cmake -S StarAgent.Native/cpp -B StarAgent.Native/cpp/build -G "Visual Studio 17 2022" -A x64
+      - name: Build
+        if: steps.check.outputs.exists == 'true'
+        shell: pwsh
+        run: cmake --build StarAgent.Native/cpp/build --config Release
+      - name: Test
+        if: steps.check.outputs.exists == 'true'
+        shell: pwsh
+        run: ctest --test-dir StarAgent.Native/cpp/build -C Release --output-on-failure
+      - uses: actions/setup-go@v5
+        if: steps.check.outputs.exists == 'true'
+        with:
+          go-version: '1.24'
+          cache-dependency-path: StarAgent.Native/conformance/go.sum
+      - name: Build conformance
+        if: steps.check.outputs.exists == 'true'
+        shell: pwsh
+        working-directory: StarAgent.Native/conformance
+        run: go build -o conformance.exe ./cmd/conformance
+      - name: Run conformance
+        if: steps.check.outputs.exists == 'true'
+        shell: pwsh
+        run: .\StarAgent.Native\conformance\conformance.exe --agent .\StarAgent.Native\cpp\build\Release\staragent.exe --scenario all --timeout 5m
