@@ -1,0 +1,194 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://newlifex.com/stardust/node-agent.schema.json",
+  "title": "StarAgent Native Node Protocol",
+  "description": "StarAgent 原生实现与 StarServer Node/* 接口的 JSON 契约。字段使用 PascalCase；未知字段应被忽略。",
+  "$defs": {
+    "DateTimeString": {
+      "type": "string",
+      "description": "yyyy-MM-dd HH:mm:ss 形式的 UTC 时间；未设置时使用 0001-01-01 00:00:00。",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$"
+    },
+    "NodeInfo": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "Version": { "type": ["string", "null"] },
+        "Compile": { "$ref": "#/$defs/DateTimeString" },
+        "OSName": { "type": ["string", "null"] },
+        "OSVersion": { "type": ["string", "null"] },
+        "Architecture": { "type": ["string", "null"], "description": "X86/X64/Arm/Arm64/LA64/RiscV64/Mips64" },
+        "MachineName": { "type": ["string", "null"] },
+        "UserName": { "type": ["string", "null"] },
+        "IP": { "type": ["string", "null"] },
+        "Gateway": { "type": ["string", "null"] },
+        "Dns": { "type": ["string", "null"] },
+        "ProcessorCount": { "type": "integer", "minimum": 0 },
+        "Memory": { "type": "integer", "minimum": 0 },
+        "AvailableMemory": { "type": "integer", "minimum": 0 },
+        "FreeMemory": { "type": "integer", "minimum": 0 },
+        "TotalSize": { "type": "integer", "minimum": 0 },
+        "AvailableFreeSpace": { "type": "integer", "minimum": 0 },
+        "DriveSize": { "type": "integer", "minimum": 0 },
+        "DriveInfo": { "type": ["string", "null"] },
+        "MaxOpenFiles": { "type": "integer", "minimum": 0 },
+        "CLibVersion": { "type": ["string", "null"] },
+        "Dpi": { "type": ["string", "null"] },
+        "Resolution": { "type": ["string", "null"] },
+        "Product": { "type": ["string", "null"] },
+        "Vendor": { "type": ["string", "null"] },
+        "Processor": { "type": ["string", "null"] },
+        "GPU": { "type": ["string", "null"] },
+        "UUID": { "type": ["string", "null"] },
+        "MachineGuid": { "type": ["string", "null"] },
+        "SerialNumber": { "type": ["string", "null"] },
+        "Board": { "type": ["string", "null"] },
+        "DiskID": { "type": ["string", "null"] },
+        "Macs": { "type": ["string", "null"] },
+        "InstallPath": { "type": ["string", "null"] },
+        "Runtime": { "type": ["string", "null"] },
+        "Framework": { "type": ["string", "null"] },
+        "TimeZone": { "type": ["string", "null"] },
+        "Time": { "$ref": "#/$defs/DateTimeString" },
+        "Plugins": {
+          "type": ["array", "null"],
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "LoginRequest": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["ProductCode", "Node"],
+      "properties": {
+        "Code": { "type": ["string", "null"] },
+        "Secret": { "type": ["string", "null"] },
+        "ProductCode": { "type": "string", "minLength": 1 },
+        "ClientId": { "type": ["string", "null"] },
+        "Project": { "type": ["string", "null"] },
+        "Node": { "$ref": "#/$defs/NodeInfo" }
+      }
+    },
+    "LoginResponse": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "Code": { "type": ["string", "null"] },
+        "Secret": { "type": ["string", "null"] },
+        "Name": { "type": ["string", "null"] },
+        "Token": { "type": ["string", "null"] },
+        "Expire": { "type": "integer", "minimum": 0 },
+        "Time": { "type": "integer" },
+        "ServerTime": { "type": "integer" }
+      }
+    },
+    "PingInfo": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "Time": { "type": "integer" },
+        "IP": { "type": ["string", "null"] },
+        "Gateway": { "type": ["string", "null"] },
+        "Dns": { "type": ["string", "null"] },
+        "Macs": { "type": ["string", "null"] },
+        "DriveInfo": { "type": ["string", "null"] },
+        "Framework": { "type": ["string", "null"] },
+        "Processes": { "type": ["string", "null"] },
+        "ProcessCount": { "type": "integer", "minimum": 0 },
+        "Memory": { "type": "integer", "minimum": 0 },
+        "AvailableMemory": { "type": "integer", "minimum": 0 },
+        "FreeMemory": { "type": "integer", "minimum": 0 },
+        "TotalSize": { "type": "integer", "minimum": 0 },
+        "AvailableFreeSpace": { "type": "integer", "minimum": 0 },
+        "CpuRate": { "type": "number" },
+        "Temperature": { "type": "number" },
+        "Battery": { "type": "number" },
+        "Signal": { "type": "integer" },
+        "UplinkSpeed": { "type": "integer", "minimum": 0 },
+        "DownlinkSpeed": { "type": "integer", "minimum": 0 },
+        "Uptime": { "type": "integer", "minimum": 0 },
+        "Delay": { "type": "integer", "minimum": 0 },
+        "TcpConnections": { "type": "integer", "minimum": 0 },
+        "TcpTimeWait": { "type": "integer", "minimum": 0 },
+        "TcpCloseWait": { "type": "integer", "minimum": 0 },
+        "IntranetScore": { "type": "number" },
+        "InternetScore": { "type": "number" },
+        "SystemLoad": { "type": "number" },
+        "DiskIOPS": { "type": "integer", "minimum": 0 },
+        "DiskActiveTime": { "type": "number" },
+        "GatewayLatency": { "type": "integer", "minimum": 0 },
+        "GatewayLossRate": { "type": "number" },
+        "DnsLatency": { "type": "integer", "minimum": 0 },
+        "DnsLossRate": { "type": "number" },
+        "ServerLatency": { "type": "integer", "minimum": 0 },
+        "ServerLossRate": { "type": "number" }
+      }
+    },
+    "CommandModel": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["Id", "Command"],
+      "properties": {
+        "Id": { "type": "integer" },
+        "Command": { "type": "string", "minLength": 1 },
+        "Argument": { "type": ["string", "null"] },
+        "StartTime": { "$ref": "#/$defs/DateTimeString" },
+        "Expire": { "$ref": "#/$defs/DateTimeString" },
+        "TraceId": { "type": ["string", "null"] },
+        "Status": { "type": "integer", "enum": [0, 1, 2, 3, 4] }
+      }
+    },
+    "PingResponse": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "Time": { "type": "integer" },
+        "ServerTime": { "type": "integer" },
+        "Period": { "type": "integer", "minimum": 0 },
+        "Token": { "type": ["string", "null"] },
+        "NewServer": { "type": ["string", "null"] },
+        "SyncTime": { "type": "integer", "minimum": 0 },
+        "Commands": {
+          "type": ["array", "null"],
+          "items": { "$ref": "#/$defs/CommandModel" }
+        }
+      }
+    },
+    "CommandReplyModel": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["Id", "Status"],
+      "properties": {
+        "Id": { "type": "integer" },
+        "Status": { "type": "integer", "enum": [0, 1, 2, 3, 4] },
+        "Data": { "type": ["string", "null"], "maxLength": 65536 }
+      }
+    },
+    "EventModel": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["Time", "Type", "Name"],
+      "properties": {
+        "Time": { "type": "integer" },
+        "Type": { "type": "string", "enum": ["info", "alert", "error"] },
+        "Name": { "type": "string", "minLength": 1 },
+        "Remark": { "type": ["string", "null"] }
+      }
+    },
+    "UpgradeInfo": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "Version": { "type": ["string", "null"] },
+        "Source": { "type": ["string", "null"] },
+        "FileHash": { "type": ["string", "null"] },
+        "FileSize": { "type": "integer", "minimum": 0 },
+        "Preinstall": { "type": ["string", "null"] },
+        "Executor": { "type": ["string", "null"] },
+        "Force": { "type": "boolean" },
+        "Description": { "type": ["string", "null"] }
+      }
+    }
+  },
+  "$ref": "#/$defs/LoginRequest"
+}

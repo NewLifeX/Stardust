@@ -1,0 +1,17 @@
+# 原生 Agent 构建产物
+go/staragent
+go/staragent.exe
+go/*.test
+go/*.exe
+
+rust/target/
+cpp/build/
+cpp/out/
+packaging/out/
+cpp/**/*.exe
+cpp/**/*.pdb
+cpp/**/*.ilk
+
+# 日志与临时数据
+*.log
+data/

@@ -1,0 +1,110 @@
+{
+  "loginRequest": {
+    "Code": "",
+    "Secret": "",
+    "ProductCode": "StarAgent-Go",
+    "ClientId": "10.0.0.8@1234",
+    "Project": "",
+    "Node": {
+      "Version": "1.0.2026.1017",
+      "Compile": "2026-10-17 08:00:00",
+      "OSName": "Ubuntu",
+      "OSVersion": "24.04",
+      "Architecture": "X64",
+      "MachineName": "web-01",
+      "UserName": "root",
+      "IP": "10.0.0.8",
+      "Gateway": "10.0.0.1",
+      "Dns": "223.5.5.5",
+      "ProcessorCount": 8,
+      "Memory": 17179869184,
+      "AvailableMemory": 8589934592,
+      "FreeMemory": 4294967296,
+      "TotalSize": 107374182400,
+      "AvailableFreeSpace": 53687091200,
+      "DriveSize": 107374182400,
+      "DriveInfo": "/[ext4]=50G/100G",
+      "UUID": "hardware-uuid",
+      "MachineGuid": "machine-guid",
+      "SerialNumber": "serial",
+      "Board": "board",
+      "DiskID": "disk-id",
+      "Macs": "AA-BB-CC-DD-EE-FF",
+      "InstallPath": "/opt/staragent",
+      "Runtime": "go1.24.0",
+      "Framework": "go1.24.0",
+      "TimeZone": "Asia/Shanghai",
+      "Time": "2026-10-17 10:00:00",
+      "Plugins": ["agent:go", "cap:exec:false", "cap:upgrade=false", "os:linux"]
+    }
+  },
+  "loginResponse": {
+    "Code": "A1B2C3D4",
+    "Secret": "s3cr3t",
+    "Name": "web-01",
+    "Token": "jwt-token",
+    "Expire": 7200,
+    "Time": 0,
+    "ServerTime": 1760000000000
+  },
+  "pingRequest": {
+    "Time": 1760000000000,
+    "IP": "10.0.0.8",
+    "Gateway": "10.0.0.1",
+    "Dns": "223.5.5.5",
+    "Macs": "AA-BB-CC-DD-EE-FF",
+    "DriveInfo": "/[ext4]=50G/100G",
+    "Framework": "go1.24.0",
+    "Processes": "nginx,staragent",
+    "ProcessCount": 120,
+    "Memory": 17179869184,
+    "AvailableMemory": 8589934592,
+    "FreeMemory": 4294967296,
+    "TotalSize": 107374182400,
+    "AvailableFreeSpace": 53687091200,
+    "CpuRate": 12.5,
+    "UplinkSpeed": 1024,
+    "DownlinkSpeed": 2048,
+    "Uptime": 86400,
+    "Time": 1760000000000
+  },
+  "pingResponse": {
+    "Time": 0,
+    "ServerTime": 1760000000000,
+    "Period": 60,
+    "Token": null,
+    "NewServer": null,
+    "Commands": [
+      {
+        "Id": 123,
+        "Command": "bash",
+        "Argument": "{\"cmd\":\"uptime\",\"timeout\":30000}",
+        "StartTime": "0001-01-01 00:00:00",
+        "Expire": "0001-01-01 00:00:00",
+        "TraceId": null,
+        "Status": 0
+      }
+    ]
+  },
+  "commandReply": {
+    "Id": 123,
+    "Status": 2,
+    "Data": " 10:00:00 up 1 day,  0:00,  1 user,  load average: 0.10, 0.20, 0.30"
+  },
+  "event": {
+    "Time": 1760000000000,
+    "Type": "info",
+    "Name": "Startup",
+    "Remark": "agent started"
+  },
+  "upgradeInfo": {
+    "Version": "1.1.2026.1101",
+    "Source": "https://example.com/staragent-go-linux-amd64.zip",
+    "FileHash": "0123456789abcdef",
+    "FileSize": 12345678,
+    "Preinstall": null,
+    "Executor": null,
+    "Force": false,
+    "Description": "native agent"
+  }
+}

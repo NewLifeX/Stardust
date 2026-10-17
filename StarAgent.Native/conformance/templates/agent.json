@@ -1,0 +1,15 @@
+{
+  "Server": "{{SERVER}}",
+  "ProductCode": "StarAgent-Conformance",
+  "Code": "",
+  "Secret": "",
+  "Project": "",
+  "Channel": "Release",
+  "DataDir": "{{DATA_DIR}}",
+  "LogLevel": "info",
+  "MetricsInterval": 5,
+  "AllowExec": false,
+  "AllowedCommands": [],
+  "CommandTimeout": 30,
+  "TlsVerify": true
+}
