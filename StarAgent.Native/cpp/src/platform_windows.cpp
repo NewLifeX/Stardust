@@ -328,6 +328,13 @@ std::string FormatMac(const BYTE* data, ULONG length)
     return result;
 }
 
+std::string RunShellValue(const std::string& command)
+{
+    std::atomic<bool> cancelled{false};
+    const auto result = RunShell(command, 8000, cancelled);
+    return Trim(result.Output);
+}
+
 std::string ReadWmicValue(const std::string& arguments)
 {
     std::atomic<bool> cancelled{false};
@@ -653,6 +660,11 @@ HardwareInfo Hardware()
                                          L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
                                          L"ProcessorNameString");
     if (result.Board.empty()) result.Board = ReadWmicValue("baseboard get serialnumber /value");
+    if (result.Board.empty())
+    {
+        result.Board = RunShellValue(
+            "powershell -NoProfile -NonInteractive -Command (Get-CimInstance Win32_BaseBoard).SerialNumber");
+    }
     result.GPU = ReadGpuInfo();
     result.DiskID = ReadDiskSerials();
     result.Dpi = ReadDpi();
