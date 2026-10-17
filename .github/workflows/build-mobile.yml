@@ -72,6 +72,7 @@ jobs:
         sudo udevadm control --reload-rules
         sudo udevadm trigger --name-match=kvm
 
+    # CI 没有可用 StarServer，只验证冷启动与前台服务；-Smoke 需要真实服务端登录
     - name: Run Android smoke
       uses: reactivecircus/android-emulator-runner@v2
       with:
@@ -79,7 +80,7 @@ jobs:
         target: google_apis
         arch: x86_64
         disable-animations: true
-        script: pwsh -NoProfile -File StarAgent.Android/run-android.ps1 -Smoke
+        script: pwsh -NoProfile -File StarAgent.Android/run-android.ps1 -Start
 
     - uses: actions/upload-artifact@v4
       if: always()
