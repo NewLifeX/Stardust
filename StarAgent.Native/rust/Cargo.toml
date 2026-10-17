@@ -1,0 +1,72 @@
+[package]
+name = "staragent-native"
+version = "1.0.0"
+edition = "2021"
+rust-version = "1.82"
+description = "StarAgent native agent for StarServer (Rust implementation)"
+license = "MIT"
+readme = "README.md"
+default-run = "staragent"
+
+[[bin]]
+name = "staragent"
+path = "src/main.rs"
+
+[lib]
+name = "staragent_native"
+path = "src/lib.rs"
+
+[dependencies]
+anyhow = "1"
+chrono = { version = "0.4", features = ["serde"] }
+clap = { version = "4", features = ["derive"] }
+dirs = "5"
+futures-util = { version = "0.3", features = ["sink"] }
+get_if_addrs = "0.5"
+hostname = "0.4"
+http = "1"
+os_info = "3"
+rand = "0.8"
+reqwest = { version = "0.12", default-features = false, features = [
+    "charset",
+    "http2",
+    "json",
+    "rustls-tls",
+] }
+rustls = { version = "0.23", default-features = false, features = [
+    "logging",
+    "ring",
+    "std",
+    "tls12",
+] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sysinfo = "0.33"
+tempfile = "3"
+thiserror = "2"
+tokio = { version = "1", features = ["full"] }
+tokio-tungstenite = { version = "0.26", default-features = false, features = [
+    "connect",
+    "handshake",
+    "rustls-tls-webpki-roots",
+] }
+tokio-util = { version = "0.7", features = ["rt"] }
+tracing = "0.1"
+tracing-appender = "0.2"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "time"] }
+url = "2"
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[target.'cfg(windows)'.dependencies]
+windows-service = "0.7"
+
+[build-dependencies]
+chrono = "0.4"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true
+panic = "abort"
