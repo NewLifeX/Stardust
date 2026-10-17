@@ -12,7 +12,7 @@ namespace Stardust;
 /// <summary>星星客户端 - Windows平台信息采集</summary>
 public partial class StarClient
 {
-    private static ICache _cache = MemoryCache.Instance;
+    private static ICache? _cache;
 
     /// <summary>执行WMIC命令并缓存输出，避免频繁创建进程</summary>
     /// <param name="arguments">WMIC arguments</param>
@@ -23,11 +23,12 @@ public partial class StarClient
         if (arguments.IsNullOrEmpty()) return null;
 
         var key = $"wmic:{arguments}";
-        var rs = _cache.Get<String>(key);
+        var cache = _cache ??= MemoryCache.Instance;
+        var rs = cache.Get<String>(key);
         if (!rs.IsNullOrEmpty()) return rs;
 
         rs = Execute("wmic", arguments);
-        _cache.Set(key, rs, cacheSeconds);
+        cache.Set(key, rs, cacheSeconds);
 
         return rs;
     }

@@ -62,7 +62,7 @@ public static class AgentRuntime
             catch (Exception ex)
             {
                 XTrace.WriteException(ex);
-                Log("初始化失败：" + ex.Message);
+                Log("初始化失败：" + ex);
             }
 
             return _agent;

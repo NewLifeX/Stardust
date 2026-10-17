@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0-ios</TargetFramework>
-    <SupportedOSPlatformVersion>13.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
     <OutputType>Exe</OutputType>
     <AssemblyTitle>星尘代理（iOS）</AssemblyTitle>
     <Description>星尘代理 iOS 极简版。前台与后台任务唤醒时上报心跳、指标与日志，并执行唤醒时刻可用的指令。</Description>

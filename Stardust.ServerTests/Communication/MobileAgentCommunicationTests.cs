@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
+using NewLife;
 using NewLife.Log;
+using NewLife.Remoting.Models;
 using StarAgent.Mobile;
 using Stardust.Data.Nodes;
 using Stardust.Models;
@@ -50,6 +52,24 @@ public class MobileAgentCommunicationTests(StarServerFixture fixture)
         public void RestartApp() { }
     }
 
+    // ClientBase 首次登录只给 1 秒超时，CI 冷启动时服务端可能来不及响应，重试时超时递增
+    private static async Task<ILoginResponse?> LoginWithRetry(MobileStarClient client)
+    {
+        for (var i = 0; i < 3; i++)
+        {
+            try
+            {
+                return await client.Login();
+            }
+            catch (XException) when (i < 2)
+            {
+                await Task.Delay(1_000);
+            }
+        }
+
+        return null;
+    }
+
     [Theory]
     [InlineData("Android", OSKinds.Android)]
     [InlineData("iOS", OSKinds.iOS)]
@@ -64,7 +84,7 @@ public class MobileAgentCommunicationTests(StarServerFixture fixture)
 
         using var client = new MobileStarClient(setting, platform) { Log = XTrace.Log };
 
-        var rs = await client.Login();
+        var rs = await LoginWithRetry(client);
         Assert.NotNull(rs);
         Assert.True(client.Logined, "移动代理登录失败");
 

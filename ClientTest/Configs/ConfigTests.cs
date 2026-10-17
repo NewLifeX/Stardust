@@ -45,6 +45,8 @@ public class ConfigTests
     [Fact]
     public void Redis_ConfigTest()
     {
+        if (!TestEnvironment.CanGet("http://star.newlifex.com:6600")) return;
+
         using var star = new StarFactory("http://star.newlifex.com:6600", "Test", null);
 
         var services = ObjectContainer.Current;
