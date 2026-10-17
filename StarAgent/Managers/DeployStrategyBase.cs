@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using NewLife;
@@ -334,9 +334,9 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
             si.FileName = "java";
             si.Arguments = arguments.IsNullOrEmpty() ? $"-jar {runFile.FullName}" : $"-jar {runFile.FullName} {arguments}";
         }
-        else if (Runtime.Linux)
+        else if (Runtime.Linux || Runtime.OSX)
         {
-            // Linux下，需要给予可执行权限
+            // Linux/macOS 下，需要给予可执行权限
             Process.Start("chmod", $"+x {runFile.FullName}")?.WaitForExit(5_000);
         }
 

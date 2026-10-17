@@ -336,9 +336,9 @@ public class ZipDeploy
             si.FileName = "java";
             si.Arguments = $"{runfile.FullName} {Arguments}";
         }
-        else if (Runtime.Linux)
+        else if (Runtime.Linux || Runtime.OSX)
         {
-            // Linux下，需要给予可执行权限
+            // Linux/macOS 下，需要给予可执行权限
             Process.Start("chmod", $"+x {runfile.FullName}").WaitForExit(5_000);
         }
 

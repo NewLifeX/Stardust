@@ -159,6 +159,8 @@ public class NetRuntime
 
         if (IsWindows)
             return InstallOnWindows(fullFile, arg);
+        else if (Runtime.OSX)
+            return InstallOnOSX(fullFile, arg);
         else
             return InstallOnLinux(fullFile, arg);
     }
@@ -208,6 +210,34 @@ public class NetRuntime
         WriteLog("安装完成！");
 
         return true;
+    }
+
+    Boolean InstallOnOSX(String fullFile, String? arg)
+    {
+        // macOS 官方安装位置
+        var target = "/usr/local/share/dotnet";
+        if (!Directory.Exists(target)) Directory.CreateDirectory(target);
+
+        WriteLog($"解压缩[{fullFile}]到[{target}]");
+        Process.Start(new ProcessStartInfo("tar", $"-xzf {fullFile} -C {target}") { UseShellExecute = true })?.WaitForExit(600_000);
+
+        // 建立链接
+        var link = "/usr/local/bin/dotnet";
+        if (Force && File.Exists(link)) File.Delete(link);
+
+        if (!File.Exists(link) && File.Exists($"{target}/dotnet"))
+        {
+            WriteLog($"创建[{target}/dotnet]的软连接到[{link}]");
+            Process.Start(new ProcessStartInfo("ln", $"-s {target}/dotnet {link}") { UseShellExecute = true })?.WaitForExit(5_000);
+        }
+
+        var rs = File.Exists($"{target}/dotnet");
+        if (rs)
+            WriteLog("安装完成！");
+        else
+            WriteLog("安装失败！未找到 {0}/dotnet", target);
+
+        return rs;
     }
 
     static Version GetLast(IList<VerInfo> vers, String? prefix = null, String? suffix = null)
@@ -489,6 +519,38 @@ public class NetRuntime
 #endif
     }
 
+    /// <summary>在macOS上安装.NET运行时</summary>
+    /// <param name="target">目标版本。包括子版本，如6.0.15</param>
+    /// <param name="kind">安装类型。如aspnet</param>
+    public void InstallNetOnOSX(String target, String? kind = null)
+    {
+        var vers = GetNetCore();
+
+        var suffix = "";
+        if (!String.IsNullOrEmpty(kind)) suffix = "-" + kind;
+        var ver = GetLast(vers, "v" + target.Substring(0, 3), suffix);
+
+        // 目标版本
+        var targetVer = new Version(target);
+        if (!Force && ver >= targetVer)
+        {
+            WriteLog("已安装最新版 v{0}", ver);
+            return;
+        }
+
+#if NETSTANDARD || NETCOREAPP
+        var arch = RuntimeInformation.ProcessArchitecture.ToString().ToLower();
+
+        var file = kind switch
+        {
+            "aspnet" => $"aspnetcore-runtime-{target}-osx-{arch}.tar.gz",
+            _ => $"dotnet-runtime-{target}-osx-{arch}.tar.gz",
+        };
+
+        Install(file, "/dotnet/Runtime");
+#endif
+    }
+
     /// <summary>更新Linux中的libstdc++库</summary>
     public void UpgradeLibStdCxx()
     {
@@ -721,6 +783,8 @@ public class NetRuntime
             if (String.IsNullOrEmpty(dir)) return list;
             dir += "\\dotnet\\shared";
         }
+        else if (Runtime.OSX)
+            dir = "/usr/local/share/dotnet/shared";
         else
             dir = "/usr/share/dotnet/shared";
 

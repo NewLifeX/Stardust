@@ -75,6 +75,18 @@ public class FrameworkManager
 
             nr.InstallNetOnLinux(ver, kind);
         }
+        else if (Runtime.OSX)
+        {
+            var kind = "";
+            var p = ver.IndexOf('-');
+            if (p > 0)
+            {
+                kind = ver.Substring(p + 1);
+                ver = ver.Substring(0, p);
+            }
+
+            nr.InstallNetOnOSX(ver, kind);
+        }
         else if (ver.StartsWithIgnoreCase("4.0"))
         {
 #if NET5_0_OR_GREATER

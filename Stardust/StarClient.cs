@@ -192,9 +192,11 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
 #if NET5_0_OR_GREATER
         if (OperatingSystem.IsWindows()) FillOnWindows(di);
         if (OperatingSystem.IsLinux()) FillOnLinux(di);
+        if (OperatingSystem.IsMacOS()) FillOnOSX(di);
 #else
         if (Runtime.Windows) FillOnWindows(di);
         if (Runtime.Linux) FillOnLinux(di);
+        if (Runtime.OSX) FillOnOSX(di);
 #endif
 
         return di;
@@ -375,6 +377,7 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
         // 平台特定采集（Load1、DiskIOPS、GPU）
         if (Runtime.Windows) FillPingOnWindows(request);
         if (Runtime.Linux) FillPingOnLinux(request);
+        if (Runtime.OSX) FillPingOnOSX(request);
 
         // 最后设置时间，避免因为代码执行原因导致误差过大
         request.Uptime = (Int32)(Runtime.TickCount64 / 1000);

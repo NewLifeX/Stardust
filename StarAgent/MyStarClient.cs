@@ -376,6 +376,12 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
                 Thread.Sleep(5000);
                 "reboot".ShellExecute();
             }
+            else if (Runtime.OSX)
+            {
+                // 先同步数据到硬盘，再以非交互方式重启，避免等待 sudo 密码
+                "sync".ShellExecute();
+                "sudo".ShellExecute("-n shutdown -r now");
+            }
         }, TaskCreationOptions.LongRunning);
 
         return "success";
@@ -444,6 +450,12 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
             {
                 rs += "，" + "hwclock".Execute("-u -w", 5_000);
             }
+        }
+        else if (Runtime.OSX)
+        {
+            // macOS 修改系统时间需要 root 权限，-n 禁止交互式密码输入，避免命令挂起
+            rs = "sudo".Execute($"-n date -u -s \"{time:yyyy-MM-dd HH:mm:ss}\"", 5_000);
+            if (rs.IsNullOrEmpty()) rs = $"同步失败，需要 root 权限。请手动执行：sudo date -u -s \"{time:yyyy-MM-dd HH:mm:ss}\"";
         }
 
         WriteLog(rs);
