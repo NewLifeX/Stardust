@@ -1,0 +1,5 @@
+# 繁體中文譯文。鍵為英文源文，缺失時執行期回退英文。
+"The configuration file or nginx path is not set.": "配置文件或nginx路徑未設置"
+"The configuration file does not exist.": "配置文件不存在"
+"The nginx configuration directory does not exist.": "nginx配置目錄不存在"
+"Operations from remote hosts are not allowed.": "禁止非本機操作！"

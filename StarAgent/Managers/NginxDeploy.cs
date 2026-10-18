@@ -181,15 +181,15 @@ internal class NginxDeploy
     {
         // 判断配置文件是否存在，然后拷贝到nginx配置目录，并重新加载nginx配置
         if (String.IsNullOrEmpty(SiteFile) || String.IsNullOrEmpty(ConfigPath))
-            throw new InvalidOperationException("配置文件或nginx路径未设置");
+            throw new InvalidOperationException(L.T("The configuration file or nginx path is not set."));
 
         if (!File.Exists(SiteFile))
-            throw new FileNotFoundException("配置文件不存在", SiteFile);
+            throw new FileNotFoundException(L.T("The configuration file does not exist."), SiteFile);
 
         // 目标nginx配置目录
         var targetDir = ConfigPath;
         if (String.IsNullOrEmpty(targetDir) || !Directory.Exists(targetDir))
-            throw new DirectoryNotFoundException("nginx配置目录不存在");
+            throw new DirectoryNotFoundException(L.T("The nginx configuration directory does not exist."));
 
         // 拷贝配置文件
         var targetFile = targetDir.CombinePath(Path.GetFileName(SiteFile));

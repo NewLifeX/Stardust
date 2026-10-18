@@ -1,0 +1,5 @@
+# 繁體中文譯文。鍵為英文源文，缺失時執行期回退英文。
+"Action cannot be empty.": "操作不能為空！"
+"Application cannot be empty.": "應用不能為空！"
+"Name cannot be empty.": "名稱不能為空！"
+"Domain cannot be empty.": "域名不能為空！"

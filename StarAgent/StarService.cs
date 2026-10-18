@@ -316,7 +316,7 @@ public class StarService : DisposeBase, IApi
 
     private void CheckLocal()
     {
-        if (Session is INetSession ns && !ns.Remote.Address.IsLocal()) throw new InvalidOperationException("禁止非本机操作！");
+        if (Session is INetSession ns && !ns.Remote.Address.IsLocal()) throw new InvalidOperationException(L.T("Operations from remote hosts are not allowed."));
     }
 
     ///// <summary>杀死并启动进程</summary>

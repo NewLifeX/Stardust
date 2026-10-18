@@ -48,7 +48,7 @@ public class FrameworkManager
     private String? DoInstall(String? argument)
     {
         var model = argument?.ToJsonEntity<FrameworkModel>();
-        if (model == null || model.Version.IsNullOrEmpty()) throw new Exception("未指定版本！");
+        if (model == null || model.Version.IsNullOrEmpty()) throw new Exception(L.T("No version was specified."));
 
         WriteLog($"安装 {model.Version}");
 
@@ -142,7 +142,7 @@ public class FrameworkManager
     private String? DoUninstall(String? argument)
     {
         var model = argument?.ToJsonEntity<FrameworkModel>();
-        if (model == null || model.Version.IsNullOrEmpty()) throw new Exception("未指定版本！");
+        if (model == null || model.Version.IsNullOrEmpty()) throw new Exception(L.T("No version was specified."));
 
         var ver = model.Version;
         WriteLog($"卸载 {ver}");
@@ -188,8 +188,8 @@ public class FrameworkManager
         }
         else
         {
-            WriteLog("暂不支持当前OS卸载");
-            throw new Exception("暂不支持当前OS卸载");
+            WriteLog(L.T("Uninstalling is not supported on the current OS."));
+            throw new Exception(L.T("Uninstalling is not supported on the current OS."));
         }
 
         var paths = new String[] { "host/fxr", "shared/Microsoft.NETCore.App", "shared/Microsoft.AspNetCore.App", "shared/Microsoft.WindowsDesktop.App" };
