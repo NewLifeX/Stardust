@@ -44,13 +44,13 @@
 
   <!-- 纯 API 后端：引用 NuGet 版 NewLife.Cube(API版)，不再链接 Stardust.Web 源码 -->
   <ItemGroup>
-    <PackageReference Include="NewLife.IP" Version="2.5.2026.1016-beta1422" />
-    <PackageReference Include="NewLife.Redis" Version="6.6.2026.1016-beta0908" />
-    <PackageReference Include="NewLife.Remoting.Extensions" Version="3.9.2026.1016-beta0206" />
+    <PackageReference Include="NewLife.IP" Version="2.5.2026.1017-beta1408" />
+    <PackageReference Include="NewLife.Redis" Version="6.6.2026.1017-beta1441" />
+    <PackageReference Include="NewLife.Remoting.Extensions" Version="3.9.2026.1017-beta1444" />
     <!-- 魔方 WebAPI 核心库，复用其 EntityController/ApiResponse/AuthController 等纯 API 能力 -->
-    <PackageReference Include="NewLife.Cube" Version="6.15.2026.1017-beta1316" />
+    <PackageReference Include="NewLife.Cube" Version="6.15.2026.1017-beta1435" />
     <!-- 魔方 Swagger/Scalar 依赖的 OpenAPI 文档生成（AddCubeSwagger） -->
-    <PackageReference Include="NewLife.Cube.Swagger" Version="6.15.2026.1017-beta1316" />
+    <PackageReference Include="NewLife.Cube.Swagger" Version="6.15.2026.1017-beta1435" />
   </ItemGroup>
 
   <ItemGroup>
