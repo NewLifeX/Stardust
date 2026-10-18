@@ -1,14 +1,19 @@
 # NewLife.Stardust - 星尘分布式平台
 
 ![GitHub top language](https://img.shields.io/github/languages/top/newlifex/stardust?logo=github)
-![GitHub License](https://img.shields.io/github/license/newlifex/stardust?logo=github)
-![Nuget Downloads](https://img.shields.io/nuget/dt/newlife.stardust?logo=nuget)
-![Nuget](https://img.shields.io/nuget/v/newlife.stardust?logo=nuget)
-![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/newlife.stardust?label=dev%20nuget&logo=nuget)
 
-![Nuget Downloads](https://img.shields.io/nuget/dt/newlife.stardust.extensions?logo=nuget)
-![Nuget](https://img.shields.io/nuget/v/newlife.stardust.extensions?logo=nuget)
-![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/newlife.stardust.extensions?label=dev%20nuget&logo=nuget)
+
+![GitHub License](https://img.shields.io/github/license/NewLifeX/Stardust?logo=github)
+![NuGet Downloads](https://img.shields.io/nuget/dt/NewLife.Stardust?logo=nuget)
+![NuGet](https://img.shields.io/nuget/v/NewLife.Stardust?logo=nuget)
+![NuGet prerelease](https://img.shields.io/nuget/vpre/NewLife.Stardust?label=dev%20nuget&logo=nuget)
+[![test](https://github.com/NewLifeX/Stardust/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/NewLifeX/Stardust/actions/workflows/test.yml)
+![platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-blue)
+[![contributors](https://img.shields.io/github/contributors/NewLifeX/Stardust?logo=github)](https://github.com/NewLifeX/Stardust/graphs/contributors)
+
+<!-- lang:start -->
+🌐 [繁體中文](README.zh-TW.md) | [English](README.en.md) | [Español](README.es.md) | [Deutsch](README.de.md) | [日本語](README.ja.md) | [Français](README.fr.md) | [Português](README.pt.md) | [Русский](README.ru.md) | [한국어](README.ko.md) | [العربية](README.ar.md)
+<!-- lang:end -->
 
 ## 星尘
 应用服务犹如宇宙中的尘埃，而作为应用服务承载体的计算机节点是为星星，星星与尘埃构成整个浩瀚星空，即为星尘！  
