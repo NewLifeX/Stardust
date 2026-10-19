@@ -74,10 +74,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Remoting" Version="3.9.2026.1017-beta1444" />
+    <PackageReference Include="NewLife.Remoting" Version="3.9.2026.1019-beta1013" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="12.0.2026.1018-beta1517" />
+    <PackageReference Include="NewLife.Core" Version="12.0.2026.1019-beta1413" />
   </ItemGroup>
 
 </Project>

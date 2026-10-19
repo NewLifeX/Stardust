@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using NewLife;
 using NewLife.Agent;
@@ -316,7 +316,7 @@ public class StarService : DisposeBase, IApi
 
     private void CheckLocal()
     {
-        if (Session is INetSession ns && !ns.Remote.Address.IsLocal()) throw new InvalidOperationException(L.T("Operations from remote hosts are not allowed."));
+        if (Session is INetSession ns && !ns.Remote.Address.IsLocal()) throw new InvalidOperationException(Localization.Translate("Operations from remote hosts are not allowed."));
     }
 
     ///// <summary>杀死并启动进程</summary>

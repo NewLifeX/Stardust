@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using NewLife;
 using NewLife.Log;
 
@@ -181,15 +181,15 @@ internal class NginxDeploy
     {
         // 判断配置文件是否存在，然后拷贝到nginx配置目录，并重新加载nginx配置
         if (String.IsNullOrEmpty(SiteFile) || String.IsNullOrEmpty(ConfigPath))
-            throw new InvalidOperationException(L.T("The configuration file or nginx path is not set."));
+            throw new InvalidOperationException(Localization.Translate("The configuration file or nginx path is not set."));
 
         if (!File.Exists(SiteFile))
-            throw new FileNotFoundException(L.T("The configuration file does not exist."), SiteFile);
+            throw new FileNotFoundException(Localization.Translate("The configuration file does not exist."), SiteFile);
 
         // 目标nginx配置目录
         var targetDir = ConfigPath;
         if (String.IsNullOrEmpty(targetDir) || !Directory.Exists(targetDir))
-            throw new DirectoryNotFoundException(L.T("The nginx configuration directory does not exist."));
+            throw new DirectoryNotFoundException(Localization.Translate("The nginx configuration directory does not exist."));
 
         // 拷贝配置文件
         var targetFile = targetDir.CombinePath(Path.GetFileName(SiteFile));
