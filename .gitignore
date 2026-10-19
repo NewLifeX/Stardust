@@ -53,3 +53,7 @@ Stardust.Web.Vue/dist
 Stardust*/.github/
 Stardust/.github/
 *.csproj.lscache
+
+# Java SDK build output
+SDK/Java/target/
+SDK/Java/.mvn/
