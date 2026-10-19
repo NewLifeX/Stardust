@@ -1,0 +1,5 @@
+# Greek translation. Keys are English source texts; missing entries fall back to English at runtime.
+"The configuration file or nginx path is not set.": "Το αρχείο ρυθμίσεων ή η διαδρομή nginx δεν έχει οριστεί."
+"The configuration file does not exist.": "Το αρχείο ρυθμίσεων δεν υπάρχει."
+"The nginx configuration directory does not exist.": "Ο κατάλογος ρυθμίσεων του nginx δεν υπάρχει."
+"Operations from remote hosts are not allowed.": "Δεν επιτρέπονται ενέργειες από απομακρυσμένους διακομιστές."

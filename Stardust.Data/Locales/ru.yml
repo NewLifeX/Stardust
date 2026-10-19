@@ -1,0 +1,5 @@
+# Russian translation. Keys are English source texts; missing entries fall back to English at runtime.
+"Action cannot be empty.": "Действие не может быть пустым."
+"Application cannot be empty.": "Приложение не может быть пустым."
+"Name cannot be empty.": "Имя не может быть пустым."
+"Domain cannot be empty.": "Домен не может быть пустым."

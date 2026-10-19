@@ -1,0 +1,5 @@
+# Romanian translation. Keys are English source texts; missing entries fall back to English at runtime.
+"The configuration file or nginx path is not set.": "Fișierul de configurare sau calea nginx nu este setată."
+"The configuration file does not exist.": "Fișierul de configurare nu există."
+"The nginx configuration directory does not exist.": "Directorul de configurare nginx nu există."
+"Operations from remote hosts are not allowed.": "Operațiile de la gazde la distanță nu sunt permise."

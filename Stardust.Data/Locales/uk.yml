@@ -1,0 +1,5 @@
+# Ukrainian translation. Keys are English source texts; missing entries fall back to English at runtime.
+"Action cannot be empty.": "Дія не може бути порожньою."
+"Application cannot be empty.": "Програма не може бути порожньою."
+"Name cannot be empty.": "Ім'я не може бути порожнім."
+"Domain cannot be empty.": "Домен не може бути порожнім."

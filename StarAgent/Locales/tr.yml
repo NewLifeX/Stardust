@@ -1,0 +1,5 @@
+# Turkish translation. Keys are English source texts; missing entries fall back to English at runtime.
+"The configuration file or nginx path is not set.": "Yapılandırma dosyası veya nginx yolu ayarlanmamış."
+"The configuration file does not exist.": "Yapılandırma dosyası mevcut değil."
+"The nginx configuration directory does not exist.": "nginx yapılandırma dizini mevcut değil."
+"Operations from remote hosts are not allowed.": "Uzak ana makinelerden işlemlere izin verilmez."

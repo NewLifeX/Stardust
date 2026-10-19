@@ -1,0 +1,5 @@
+# Dutch translation. Keys are English source texts; missing entries fall back to English at runtime.
+"Action cannot be empty.": "Actie mag niet leeg zijn."
+"Application cannot be empty.": "Toepassing mag niet leeg zijn."
+"Name cannot be empty.": "Naam mag niet leeg zijn."
+"Domain cannot be empty.": "Domein mag niet leeg zijn."

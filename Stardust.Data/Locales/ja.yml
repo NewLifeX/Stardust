@@ -1,0 +1,5 @@
+# Japanese translation. Keys are English source texts; missing entries fall back to English at runtime.
+"Action cannot be empty.": "アクションを空にすることはできません。"
+"Application cannot be empty.": "アプリケーションを空にすることはできません。"
+"Name cannot be empty.": "名前を空にすることはできません。"
+"Domain cannot be empty.": "ドメインを空にすることはできません。"

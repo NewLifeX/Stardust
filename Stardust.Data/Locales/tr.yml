@@ -1,0 +1,5 @@
+# Turkish translation. Keys are English source texts; missing entries fall back to English at runtime.
+"Action cannot be empty.": "İşlem boş olamaz."
+"Application cannot be empty.": "Uygulama boş olamaz."
+"Name cannot be empty.": "Ad boş olamaz."
+"Domain cannot be empty.": "Etki alanı boş olamaz."

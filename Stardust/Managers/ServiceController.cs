@@ -851,7 +851,7 @@ public class ServiceController : DisposeBase
     /// <param name="args"></param>
     public void WriteLog(String format, params Object?[] args)
     {
-        Log?.Info($"[{Id}/{Name}]{format}", args);
+        Log?.InfoPrefixed($"[{Id}/{Name}]", format, args);
 
         var msg = (args == null || args.Length == 0) ? format : String.Format(format, args);
         DefaultSpan.Current?.AppendTag(msg);

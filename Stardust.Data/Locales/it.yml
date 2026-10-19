@@ -1,0 +1,5 @@
+# Italian translation. Keys are English source texts; missing entries fall back to English at runtime.
+"Action cannot be empty.": "L'azione non può essere vuota."
+"Application cannot be empty.": "L'applicazione non può essere vuota."
+"Name cannot be empty.": "Il nome non può essere vuoto."
+"Domain cannot be empty.": "Il dominio non può essere vuoto."

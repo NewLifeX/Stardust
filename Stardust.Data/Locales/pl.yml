@@ -1,0 +1,5 @@
+# Polish translation. Keys are English source texts; missing entries fall back to English at runtime.
+"Action cannot be empty.": "Akcja nie może być pusta."
+"Application cannot be empty.": "Aplikacja nie może być pusta."
+"Name cannot be empty.": "Nazwa nie może być pusta."
+"Domain cannot be empty.": "Domena nie może być pusta."

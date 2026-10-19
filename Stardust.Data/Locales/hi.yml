@@ -1,0 +1,5 @@
+# Hindi translation. Keys are English source texts; missing entries fall back to English at runtime.
+"Action cannot be empty.": "क्रिया खाली नहीं हो सकती।"
+"Application cannot be empty.": "एप्लिकेशन खाली नहीं हो सकता।"
+"Name cannot be empty.": "नाम खाली नहीं हो सकता।"
+"Domain cannot be empty.": "डोमेन खाली नहीं हो सकता।"

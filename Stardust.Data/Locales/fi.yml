@@ -1,0 +1,5 @@
+# Finnish translation. Keys are English source texts; missing entries fall back to English at runtime.
+"Action cannot be empty.": "Toiminto ei voi olla tyhjä."
+"Application cannot be empty.": "Sovellus ei voi olla tyhjä."
+"Name cannot be empty.": "Nimi ei voi olla tyhjä."
+"Domain cannot be empty.": "Verkkotunnus ei voi olla tyhjä."

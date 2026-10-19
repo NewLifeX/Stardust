@@ -1,0 +1,5 @@
+# Bengali translation. Keys are English source texts; missing entries fall back to English at runtime.
+"Action cannot be empty.": "অ্যাকশন খালি হতে পারে না।"
+"Application cannot be empty.": "অ্যাপ্লিকেশন খালি হতে পারে না।"
+"Name cannot be empty.": "নাম খালি হতে পারে না।"
+"Domain cannot be empty.": "ডোমেইন খালি হতে পারে না।"

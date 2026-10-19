@@ -1,0 +1,3 @@
+# Korean translation. Keys are English source texts; missing entries fall back to English at runtime.
+"No version was specified.": "버전이 지정되지 않았습니다."
+"Uninstalling is not supported on the current OS.": "현재 OS에서는 제거가 지원되지 않습니다."

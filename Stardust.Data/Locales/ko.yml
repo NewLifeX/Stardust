@@ -1,0 +1,5 @@
+# Korean translation. Keys are English source texts; missing entries fall back to English at runtime.
+"Action cannot be empty.": "작업은 비워 둘 수 없습니다."
+"Application cannot be empty.": "애플리케이션은 비워 둘 수 없습니다."
+"Name cannot be empty.": "이름은 비워 둘 수 없습니다."
+"Domain cannot be empty.": "도메인은 비워 둘 수 없습니다."

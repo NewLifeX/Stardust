@@ -188,7 +188,7 @@ public class FrameworkManager
         }
         else
         {
-            WriteLog(L.T("Uninstalling is not supported on the current OS."));
+            WriteLog(L.TLog("Uninstalling is not supported on the current OS."));
             throw new Exception(L.T("Uninstalling is not supported on the current OS."));
         }
 
@@ -246,7 +246,7 @@ public class FrameworkManager
     /// <param name="args"></param>
     public void WriteLog(String format, params Object?[] args)
     {
-        Log?.Info($"[FrameworkManager]{format}", args);
+        Log?.InfoPrefixed("[FrameworkManager]", format, args);
 
         var msg = (args == null || args.Length == 0) ? format : String.Format(format, args);
         DefaultSpan.Current?.AppendTag(msg);

@@ -1,0 +1,5 @@
+# Arabic translation. Keys are English source texts; missing entries fall back to English at runtime.
+"The configuration file or nginx path is not set.": "لم يتم تعيين ملف التكوين أو مسار nginx."
+"The configuration file does not exist.": "ملف التكوين غير موجود."
+"The nginx configuration directory does not exist.": "دليل تكوين nginx غير موجود."
+"Operations from remote hosts are not allowed.": "العمليات من المضيفين البعيدين غير مسموح بها."

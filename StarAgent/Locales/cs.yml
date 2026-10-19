@@ -1,0 +1,5 @@
+# Czech translation. Keys are English source texts; missing entries fall back to English at runtime.
+"The configuration file or nginx path is not set.": "Konfigurační soubor nebo cesta k nginx není nastavena."
+"The configuration file does not exist.": "Konfigurační soubor neexistuje."
+"The nginx configuration directory does not exist.": "Konfigurační adresář nginx neexistuje."
+"Operations from remote hosts are not allowed.": "Operace ze vzdálených hostitelů nejsou povoleny."

@@ -1,0 +1,5 @@
+# Spanish translation. Keys are English source texts; missing entries fall back to English at runtime.
+"The configuration file or nginx path is not set.": "No se ha establecido el archivo de configuración ni la ruta de nginx."
+"The configuration file does not exist.": "El archivo de configuración no existe."
+"The nginx configuration directory does not exist.": "El directorio de configuración de nginx no existe."
+"Operations from remote hosts are not allowed.": "No se permiten operaciones desde hosts remotos."

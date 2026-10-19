@@ -1,0 +1,5 @@
+# German translation. Keys are English source texts; missing entries fall back to English at runtime.
+"The configuration file or nginx path is not set.": "Die Konfigurationsdatei oder der nginx-Pfad ist nicht festgelegt."
+"The configuration file does not exist.": "Die Konfigurationsdatei existiert nicht."
+"The nginx configuration directory does not exist.": "Das nginx-Konfigurationsverzeichnis existiert nicht."
+"Operations from remote hosts are not allowed.": "Vorgänge von entfernten Hosts sind nicht zulässig."

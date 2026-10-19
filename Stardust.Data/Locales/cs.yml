@@ -1,0 +1,5 @@
+# Czech translation. Keys are English source texts; missing entries fall back to English at runtime.
+"Action cannot be empty.": "Akce nesmí být prázdná."
+"Application cannot be empty.": "Aplikace nesmí být prázdná."
+"Name cannot be empty.": "Název nesmí být prázdný."
+"Domain cannot be empty.": "Doména nesmí být prázdná."

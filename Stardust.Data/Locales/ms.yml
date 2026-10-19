@@ -1,0 +1,5 @@
+# Malay translation. Keys are English source texts; missing entries fall back to English at runtime.
+"Action cannot be empty.": "Tindakan tidak boleh kosong."
+"Application cannot be empty.": "Aplikasi tidak boleh kosong."
+"Name cannot be empty.": "Nama tidak boleh kosong."
+"Domain cannot be empty.": "Domain tidak boleh kosong."

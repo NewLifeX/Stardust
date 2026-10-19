@@ -1,0 +1,5 @@
+# Thai translation. Keys are English source texts; missing entries fall back to English at runtime.
+"The configuration file or nginx path is not set.": "ยังไม่ได้ตั้งค่าไฟล์กำหนดค่าหรือพาธ nginx"
+"The configuration file does not exist.": "ไม่มีไฟล์กำหนดค่า"
+"The nginx configuration directory does not exist.": "ไม่มีไดเรกทอรีกำหนดค่า nginx"
+"Operations from remote hosts are not allowed.": "ไม่อนุญาตการดำเนินการจากโฮสต์ระยะไกล"

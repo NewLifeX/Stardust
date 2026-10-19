@@ -1,0 +1,5 @@
+# French translation. Keys are English source texts; missing entries fall back to English at runtime.
+"Action cannot be empty.": "L'action ne peut pas être vide."
+"Application cannot be empty.": "L'application ne peut pas être vide."
+"Name cannot be empty.": "Le nom ne peut pas être vide."
+"Domain cannot be empty.": "Le domaine ne peut pas être vide."

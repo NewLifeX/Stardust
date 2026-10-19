@@ -1,0 +1,3 @@
+# Russian translation. Keys are English source texts; missing entries fall back to English at runtime.
+"No version was specified.": "Версия не указана."
+"Uninstalling is not supported on the current OS.": "Удаление не поддерживается в текущей ОС."

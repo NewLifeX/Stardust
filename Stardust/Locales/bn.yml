@@ -1,0 +1,3 @@
+# Bengali translation. Keys are English source texts; missing entries fall back to English at runtime.
+"No version was specified.": "কোনো সংস্করণ নির্দিষ্ট করা হয়নি।"
+"Uninstalling is not supported on the current OS.": "বর্তমান OS-এ আনইনস্টল সমর্থিত নয়।"

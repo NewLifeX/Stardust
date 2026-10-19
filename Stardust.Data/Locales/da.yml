@@ -1,0 +1,5 @@
+# Danish translation. Keys are English source texts; missing entries fall back to English at runtime.
+"Action cannot be empty.": "Handling må ikke være tom."
+"Application cannot be empty.": "Program må ikke være tomt."
+"Name cannot be empty.": "Navn må ikke være tomt."
+"Domain cannot be empty.": "Domæne må ikke være tomt."

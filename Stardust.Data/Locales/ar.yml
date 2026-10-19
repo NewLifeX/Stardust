@@ -1,0 +1,5 @@
+# Arabic translation. Keys are English source texts; missing entries fall back to English at runtime.
+"Action cannot be empty.": "لا يمكن أن يكون الإجراء فارغًا."
+"Application cannot be empty.": "لا يمكن أن يكون التطبيق فارغًا."
+"Name cannot be empty.": "لا يمكن أن يكون الاسم فارغًا."
+"Domain cannot be empty.": "لا يمكن أن يكون النطاق فارغًا."

@@ -1,0 +1,3 @@
+# Thai translation. Keys are English source texts; missing entries fall back to English at runtime.
+"No version was specified.": "ไม่ได้ระบุเวอร์ชัน"
+"Uninstalling is not supported on the current OS.": "ไม่รองรับการถอนการติดตั้งบนระบบปฏิบัติการปัจจุบัน"

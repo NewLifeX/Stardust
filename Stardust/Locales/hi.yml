@@ -1,0 +1,3 @@
+# Hindi translation. Keys are English source texts; missing entries fall back to English at runtime.
+"No version was specified.": "कोई संस्करण निर्दिष्ट नहीं किया गया।"
+"Uninstalling is not supported on the current OS.": "वर्तमान OS पर अनइंस्टॉल समर्थित नहीं है।"

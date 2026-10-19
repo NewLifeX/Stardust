@@ -1,0 +1,5 @@
+# Persian translation. Keys are English source texts; missing entries fall back to English at runtime.
+"Action cannot be empty.": "عملیات نمی‌تواند خالی باشد."
+"Application cannot be empty.": "برنامه نمی‌تواند خالی باشد."
+"Name cannot be empty.": "نام نمی‌تواند خالی باشد."
+"Domain cannot be empty.": "دامنه نمی‌تواند خالی باشد."

@@ -1,0 +1,5 @@
+# Russian translation. Keys are English source texts; missing entries fall back to English at runtime.
+"The configuration file or nginx path is not set.": "Не задан файл конфигурации или путь nginx."
+"The configuration file does not exist.": "Файл конфигурации не существует."
+"The nginx configuration directory does not exist.": "Каталог конфигурации nginx не существует."
+"Operations from remote hosts are not allowed.": "Операции с удалённых хостов запрещены."

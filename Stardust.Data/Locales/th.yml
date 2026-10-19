@@ -1,0 +1,5 @@
+# Thai translation. Keys are English source texts; missing entries fall back to English at runtime.
+"Action cannot be empty.": "การดำเนินการต้องไม่ว่างเปล่า"
+"Application cannot be empty.": "แอปพลิเคชันต้องไม่ว่างเปล่า"
+"Name cannot be empty.": "ชื่อต้องไม่ว่างเปล่า"
+"Domain cannot be empty.": "โดเมนต้องไม่ว่างเปล่า"

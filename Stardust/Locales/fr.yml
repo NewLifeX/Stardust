@@ -1,0 +1,3 @@
+# French translation. Keys are English source texts; missing entries fall back to English at runtime.
+"No version was specified.": "Aucune version n'a été spécifiée."
+"Uninstalling is not supported on the current OS.": "La désinstallation n'est pas prise en charge sur le système d'exploitation actuel."

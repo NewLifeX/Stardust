@@ -1,0 +1,5 @@
+# Korean translation. Keys are English source texts; missing entries fall back to English at runtime.
+"The configuration file or nginx path is not set.": "구성 파일 또는 nginx 경로가 설정되지 않았습니다."
+"The configuration file does not exist.": "구성 파일이 존재하지 않습니다."
+"The nginx configuration directory does not exist.": "nginx 구성 디렉터리가 존재하지 않습니다."
+"Operations from remote hosts are not allowed.": "원격 호스트에서의 작업은 허용되지 않습니다."

@@ -1,0 +1,5 @@
+# Malay translation. Keys are English source texts; missing entries fall back to English at runtime.
+"The configuration file or nginx path is not set.": "Fail konfigurasi atau laluan nginx tidak ditetapkan."
+"The configuration file does not exist.": "Fail konfigurasi tidak wujud."
+"The nginx configuration directory does not exist.": "Direktori konfigurasi nginx tidak wujud."
+"Operations from remote hosts are not allowed.": "Operasi daripada hos jauh tidak dibenarkan."

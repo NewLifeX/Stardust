@@ -1,0 +1,5 @@
+# Hebrew translation. Keys are English source texts; missing entries fall back to English at runtime.
+"Action cannot be empty.": "הפעולה לא יכולה להיות ריקה."
+"Application cannot be empty.": "היישום לא יכול להיות ריק."
+"Name cannot be empty.": "השם לא יכול להיות ריק."
+"Domain cannot be empty.": "התחום לא יכול להיות ריק."

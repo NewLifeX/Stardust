@@ -1,0 +1,3 @@
+# Polish translation. Keys are English source texts; missing entries fall back to English at runtime.
+"No version was specified.": "Nie określono wersji."
+"Uninstalling is not supported on the current OS.": "Odinstalowanie nie jest obsługiwane w bieżącym systemie operacyjnym."

@@ -1,0 +1,5 @@
+# Indonesian translation. Keys are English source texts; missing entries fall back to English at runtime.
+"The configuration file or nginx path is not set.": "File konfigurasi atau jalur nginx belum diatur."
+"The configuration file does not exist.": "File konfigurasi tidak ada."
+"The nginx configuration directory does not exist.": "Direktori konfigurasi nginx tidak ada."
+"Operations from remote hosts are not allowed.": "Operasi dari host jarak jauh tidak diizinkan."

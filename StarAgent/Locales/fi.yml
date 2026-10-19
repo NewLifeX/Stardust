@@ -1,0 +1,5 @@
+# Finnish translation. Keys are English source texts; missing entries fall back to English at runtime.
+"The configuration file or nginx path is not set.": "Määritystiedostoa tai nginx-polkua ei ole asetettu."
+"The configuration file does not exist.": "Määritystiedostoa ei ole olemassa."
+"The nginx configuration directory does not exist.": "nginx-määrityshakemistoa ei ole olemassa."
+"Operations from remote hosts are not allowed.": "Etäisäntien toiminnot eivät ole sallittuja."

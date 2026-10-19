@@ -1,0 +1,5 @@
+# Vietnamese translation. Keys are English source texts; missing entries fall back to English at runtime.
+"Action cannot be empty.": "Hành động không được để trống."
+"Application cannot be empty.": "Ứng dụng không được để trống."
+"Name cannot be empty.": "Tên không được để trống."
+"Domain cannot be empty.": "Tên miền không được để trống."

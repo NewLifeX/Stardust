@@ -1,0 +1,5 @@
+# Hungarian translation. Keys are English source texts; missing entries fall back to English at runtime.
+"The configuration file or nginx path is not set.": "A konfigurációs fájl vagy az nginx útvonal nincs beállítva."
+"The configuration file does not exist.": "A konfigurációs fájl nem létezik."
+"The nginx configuration directory does not exist.": "Az nginx konfigurációs könyvtára nem létezik."
+"Operations from remote hosts are not allowed.": "A távoli gazdagépekről végzett műveletek nem engedélyezettek."

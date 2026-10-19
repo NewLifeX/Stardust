@@ -1,0 +1,5 @@
+# Swedish translation. Keys are English source texts; missing entries fall back to English at runtime.
+"The configuration file or nginx path is not set.": "Konfigurationsfilen eller nginx-sökvägen är inte angiven."
+"The configuration file does not exist.": "Konfigurationsfilen finns inte."
+"The nginx configuration directory does not exist.": "nginx-konfigurationskatalogen finns inte."
+"Operations from remote hosts are not allowed.": "Åtgärder från fjärrvärdar är inte tillåtna."

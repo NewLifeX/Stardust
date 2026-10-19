@@ -1,0 +1,5 @@
+# German translation. Keys are English source texts; missing entries fall back to English at runtime.
+"Action cannot be empty.": "Aktion darf nicht leer sein."
+"Application cannot be empty.": "Anwendung darf nicht leer sein."
+"Name cannot be empty.": "Name darf nicht leer sein."
+"Domain cannot be empty.": "Domäne darf nicht leer sein."

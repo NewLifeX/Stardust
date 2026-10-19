@@ -1,0 +1,5 @@
+# Greek translation. Keys are English source texts; missing entries fall back to English at runtime.
+"Action cannot be empty.": "Η ενέργεια δεν μπορεί να είναι κενή."
+"Application cannot be empty.": "Η εφαρμογή δεν μπορεί να είναι κενή."
+"Name cannot be empty.": "Το όνομα δεν μπορεί να είναι κενό."
+"Domain cannot be empty.": "Ο τομέας δεν μπορεί να είναι κενός."

@@ -1016,7 +1016,7 @@ public class NetRuntime
     /// <param name="args"></param>
     public void WriteLog(String format, params Object?[] args)
     {
-        Log?.Info($"[NetRuntime]{format}", args);
+        Log?.InfoPrefixed("[NetRuntime]", format, args);
 
         var msg = (args == null || args.Length == 0) ? format : String.Format(format, args);
         DefaultSpan.Current?.AppendTag(msg);

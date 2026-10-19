@@ -1,0 +1,5 @@
+# Danish translation. Keys are English source texts; missing entries fall back to English at runtime.
+"The configuration file or nginx path is not set.": "Konfigurationsfilen eller nginx-stien er ikke angivet."
+"The configuration file does not exist.": "Konfigurationsfilen findes ikke."
+"The nginx configuration directory does not exist.": "nginx-konfigurationsmappen findes ikke."
+"Operations from remote hosts are not allowed.": "Handlinger fra eksterne værter er ikke tilladt."

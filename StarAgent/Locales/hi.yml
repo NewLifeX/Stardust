@@ -1,0 +1,5 @@
+# Hindi translation. Keys are English source texts; missing entries fall back to English at runtime.
+"The configuration file or nginx path is not set.": "कॉन्फ़िगरेशन फ़ाइल या nginx पथ सेट नहीं है।"
+"The configuration file does not exist.": "कॉन्फ़िगरेशन फ़ाइल मौजूद नहीं है।"
+"The nginx configuration directory does not exist.": "nginx कॉन्फ़िगरेशन निर्देशिका मौजूद नहीं है।"
+"Operations from remote hosts are not allowed.": "दूरस्थ होस्ट से संचालन की अनुमति नहीं है।"

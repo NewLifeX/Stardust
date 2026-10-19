@@ -1,0 +1,5 @@
+# Hungarian translation. Keys are English source texts; missing entries fall back to English at runtime.
+"Action cannot be empty.": "A művelet nem lehet üres."
+"Application cannot be empty.": "Az alkalmazás nem lehet üres."
+"Name cannot be empty.": "A név nem lehet üres."
+"Domain cannot be empty.": "A tartomány nem lehet üres."

@@ -1,0 +1,5 @@
+# Vietnamese translation. Keys are English source texts; missing entries fall back to English at runtime.
+"The configuration file or nginx path is not set.": "Chưa đặt tệp cấu hình hoặc đường dẫn nginx."
+"The configuration file does not exist.": "Tệp cấu hình không tồn tại."
+"The nginx configuration directory does not exist.": "Thư mục cấu hình nginx không tồn tại."
+"Operations from remote hosts are not allowed.": "Không cho phép thao tác từ máy chủ từ xa."

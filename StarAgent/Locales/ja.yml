@@ -1,0 +1,5 @@
+# Japanese translation. Keys are English source texts; missing entries fall back to English at runtime.
+"The configuration file or nginx path is not set.": "構成ファイルまたは nginx パスが設定されていません。"
+"The configuration file does not exist.": "構成ファイルが存在しません。"
+"The nginx configuration directory does not exist.": "nginx 構成ディレクトリが存在しません。"
+"Operations from remote hosts are not allowed.": "リモートホストからの操作は許可されていません。"

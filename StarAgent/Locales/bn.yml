@@ -1,0 +1,5 @@
+# Bengali translation. Keys are English source texts; missing entries fall back to English at runtime.
+"The configuration file or nginx path is not set.": "কনফিগারেশন ফাইল বা nginx পাথ সেট করা হয়নি।"
+"The configuration file does not exist.": "কনফিগারেশন ফাইল বিদ্যমান নেই।"
+"The nginx configuration directory does not exist.": "nginx কনফিগারেশন ডিরেক্টরি বিদ্যমান নেই।"
+"Operations from remote hosts are not allowed.": "দূরবর্তী হোস্ট থেকে অপারেশন অনুমোদিত নয়।"

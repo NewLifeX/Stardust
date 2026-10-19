@@ -1,0 +1,5 @@
+# Romanian translation. Keys are English source texts; missing entries fall back to English at runtime.
+"Action cannot be empty.": "Acțiunea nu poate fi goală."
+"Application cannot be empty.": "Aplicația nu poate fi goală."
+"Name cannot be empty.": "Numele nu poate fi gol."
+"Domain cannot be empty.": "Domeniul nu poate fi gol."

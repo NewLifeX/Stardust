@@ -1,0 +1,5 @@
+# Swedish translation. Keys are English source texts; missing entries fall back to English at runtime.
+"Action cannot be empty.": "Åtgärd får inte vara tom."
+"Application cannot be empty.": "Program får inte vara tomt."
+"Name cannot be empty.": "Namn får inte vara tomt."
+"Domain cannot be empty.": "Domän får inte vara tom."

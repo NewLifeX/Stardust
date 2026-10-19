@@ -1,0 +1,5 @@
+# Persian translation. Keys are English source texts; missing entries fall back to English at runtime.
+"The configuration file or nginx path is not set.": "فایل پیکربندی یا مسیر nginx تنظیم نشده است."
+"The configuration file does not exist.": "فایل پیکربندی وجود ندارد."
+"The nginx configuration directory does not exist.": "پوشه پیکربندی nginx وجود ندارد."
+"Operations from remote hosts are not allowed.": "عملیات از میزبان‌های راه دور مجاز نیست."

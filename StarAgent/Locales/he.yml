@@ -1,0 +1,5 @@
+# Hebrew translation. Keys are English source texts; missing entries fall back to English at runtime.
+"The configuration file or nginx path is not set.": "קובץ התצורה או נתיב nginx לא הוגדרו."
+"The configuration file does not exist.": "קובץ התצורה אינו קיים."
+"The nginx configuration directory does not exist.": "תיקיית התצורה של nginx אינה קיימת."
+"Operations from remote hosts are not allowed.": "פעולות ממארחים מרוחקים אינן מותרות."

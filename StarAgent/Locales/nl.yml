@@ -1,0 +1,5 @@
+# Dutch translation. Keys are English source texts; missing entries fall back to English at runtime.
+"The configuration file or nginx path is not set.": "Het configuratiebestand of het nginx-pad is niet ingesteld."
+"The configuration file does not exist.": "Het configuratiebestand bestaat niet."
+"The nginx configuration directory does not exist.": "De nginx-configuratiemap bestaat niet."
+"Operations from remote hosts are not allowed.": "Bewerkingen vanaf externe hosts zijn niet toegestaan."
