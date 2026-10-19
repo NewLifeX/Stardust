@@ -11,7 +11,7 @@ from typing import Any, Iterator, List
 from urllib.parse import urlsplit
 
 # 星尘服务端自身接口，不创建 Span，也不注入 traceparent
-SELF_PATH_PREFIXES = ("/App/", "/Trace/")
+SELF_PATH_PREFIXES = ("/App/", "/Trace/", "/Config/GetAll")
 
 _lock = threading.RLock()
 _tracer = None

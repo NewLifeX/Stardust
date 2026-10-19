@@ -47,6 +47,13 @@ class TestParseTraceparent(unittest.TestCase):
         self.assertEqual(parsed.trace_id, "1234abcd")
         self.assertEqual(parsed.span_id, "1a2b3c4d5e6f7a8b")
 
+    def test_parse_future_version_with_extensions(self):
+        parsed = parse_traceparent("01-%s-%s-01-extra" % (TRACE_ID, SPAN_ID))
+        self.assertIsNotNone(parsed)
+        self.assertEqual(parsed.version, "01")
+        self.assertEqual(parsed.trace_id, TRACE_ID)
+        self.assertEqual(parsed.span_id, SPAN_ID)
+
     def test_parse_invalid(self):
         cases = [
             "",

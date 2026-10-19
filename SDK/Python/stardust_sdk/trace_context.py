@@ -100,11 +100,13 @@ def parse_traceparent(value: Any) -> Optional[TraceParent]:
         return None
 
     parts = text.split("-")
-    if len(parts) != 4:
+    if len(parts) < 4:
         return None
 
-    version, trace_id, span_id, flags = parts
+    version, trace_id, span_id, flags = parts[:4]
     version = version.lower()
+    if version == "00" and len(parts) != 4:
+        return None
     trace_id = trace_id.lower()
     span_id = span_id.lower()
     flags = flags.lower()

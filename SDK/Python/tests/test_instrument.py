@@ -119,6 +119,16 @@ class TestHttpInstrumentation(InstrumentTestCase):
         self.assertEqual(span.tag, self.base_url + "/hello?q=1")
         self.assertEqual(span.error, "")
 
+    def test_requests_skips_config_self_path(self):
+        self.tracer.instrument()
+        response = self.session().post(self.base_url + "/Config/GetAll?Token=x")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual("", response.headers.get("X-Stardust-Traceparent"))
+        self.assertIsNone(
+            self.tracer.find_span("POST 127.0.0.1:%d/Config/GetAll" % self.port)
+        )
+
     def test_requests_keeps_existing_traceparent(self):
         self.tracer.instrument()
         response = self.session().get(

@@ -184,8 +184,13 @@ function traceRequest(original, self, args) {
 
         const injected = injectTraceparent(normalized.options, span);
         const callArgs = Array.prototype.slice.call(args);
-        if (normalized.optionsIndex === 1 && args[1] !== normalized.options) callArgs.splice(1, 0, injected);
-        else callArgs[normalized.optionsIndex] = injected;
+        if (normalized.optionsIndex === 1 && typeof args[1] === 'function') {
+            // request(url, callback)：在 URL 与回调之间插入 options
+            callArgs.splice(1, 0, injected);
+        } else {
+            // request(url, options|null|undefined, callback) 或 request(options, callback)
+            callArgs[normalized.optionsIndex] = injected;
+        }
 
         let settled = false;
         const finish = function (err) {

@@ -376,6 +376,8 @@ installAutoInstrumentation(tracer);
 | `httpTimeout` | `10000` | ✓ | — | Node HTTP 请求超时（毫秒） |
 | `enableMeter` | `true` | ✓ | ✓ | 上报时附带 `Info` 性能信息 |
 | `autoInstrument` | `true` | ✓ | ✓ | 自动埋点：Node 为 HTTP/数据库/Redis，浏览器为 fetch/XHR/页面/路由/错误 |
+| `tracePropagationTargets` | `null` | — | ✓ | traceparent 传播目标，默认仅同源；支持 `'*'`、origin/主机名或正则 |
+| `initialTraceparent` | — | — | ✓ | 后端注入的 traceparent，把页面 Span 关联到服务端链路 |
 | `autoFlushOnExit` | `true` | ✓ | — | 进程退出时自动刷新 |
 | `debug` | `false` | ✓ | ✓ | 输出调试日志（默认静默） |
 | `excludes` | `[]` | ✓ | ✓ | 排除的埋点名称（子串匹配） |

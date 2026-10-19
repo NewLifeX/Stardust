@@ -141,6 +141,8 @@ init({
 | fetch/XHR | 出站 Span、状态码/异常、`traceparent` 注入 |
 | 离页冲刷 | `sendBeacon`，回退 `fetch keepalive` |
 
+`traceparent` 默认只注入同源请求；跨域目标需通过 `tracePropagationTargets` 显式配置，避免自定义头触发 CORS 预检并阻断业务请求。
+
 只提供 `disabled`/`ignoreUrls`/`excludes` 等关闭开关，不要求用户逐个配置集成。
 
 ### 3.6 最小公开 API

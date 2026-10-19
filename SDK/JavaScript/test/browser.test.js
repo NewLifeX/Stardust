@@ -503,6 +503,12 @@ async function main() {
             await fakeWindow.fetch('https://api.example.com/users?x=1');
             const crossOrigin = tracer._builders.get('GET api.example.com/users');
             assert.ok(crossOrigin, '跨域请求应生成 host+path 埋点');
+            const crossCalls = findCalls('https://api.example.com/users?x=1');
+            assert.strictEqual(
+                getHeaderValue(crossCalls[crossCalls.length - 1].init.headers, 'traceparent'),
+                null,
+                '跨域请求默认不注入 traceparent，避免触发 CORS 预检'
+            );
 
             await fakeWindow.fetch('/api/fail');
             const failed = tracer._builders.get('GET /api/fail');

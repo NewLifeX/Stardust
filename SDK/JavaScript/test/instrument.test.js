@@ -218,6 +218,41 @@ async function main() {
         }
     });
 
+    await test('http.request 兼容 null/undefined options 与 callback', async () => {
+        const tracer = createAutoTracer();
+        let incomingHeaders = null;
+        const target = await listen((req, res) => {
+            incomingHeaders = req.headers;
+            res.end('ok');
+        });
+
+        try {
+            const call = (options) => new Promise((resolve, reject) => {
+                const timer = setTimeout(() => reject(new Error('callback not called')), 2000);
+                const req = http.request(target.url + '/null-options', options, (res) => {
+                    clearTimeout(timer);
+                    res.resume();
+                    res.on('end', resolve);
+                });
+                req.on('error', (err) => {
+                    clearTimeout(timer);
+                    reject(err);
+                });
+                req.end();
+            });
+
+            await call(null);
+            assert.ok(parseTraceparent(incomingHeaders.traceparent), 'null options 应正常发送并注入 traceparent');
+
+            await call(undefined);
+            assert.ok(parseTraceparent(incomingHeaders.traceparent), 'undefined options 应正常发送并注入 traceparent');
+
+            assert.ok(findSpan(tracer.spans, 'GET 127.0.0.1:' + target.port + '/null-options'), '应生成出站 Span');
+        } finally {
+            await close(target.server);
+        }
+    });
+
     await test('出站 fetch 注入 traceparent 并关联父 Span', async () => {
         if (typeof globalThis.fetch !== 'function') return;
 

@@ -98,6 +98,8 @@ export interface BrowserTracerOptions {
     autoInstrument?: boolean;
     /** 后端注入的 W3C traceparent，用于把 page.load 关联到服务端链路 */
     initialTraceparent?: string;
+    /** traceparent 传播目标，默认仅同源；支持 '*'、origin/主机名或正则 */
+    tracePropagationTargets?: string | RegExp | Array<string | RegExp>;
     /** 输出调试日志，默认 false */
     debug?: boolean;
     /** 排除的埋点名称（子串匹配） */
@@ -232,6 +234,7 @@ export class StardustBrowserTracer {
     timeout: number;
     enableMeter: boolean;
     autoInstrument: boolean;
+    tracePropagationTargets: string | RegExp | Array<string | RegExp> | null;
     excludes: string[];
     debug: boolean;
 

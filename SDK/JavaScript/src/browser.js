@@ -325,6 +325,46 @@
         return false;
     }
 
+    /**
+     * 判断是否向目标 URL 传播 traceparent。默认仅同源，避免跨域请求因自定义头触发 CORS 失败。
+     * @param {StardustTracer} tracer 追踪器
+     * @param {String} url 目标地址
+     * @returns {Boolean} 是否注入
+     */
+    function shouldPropagateTrace(tracer, url) {
+        var text = String(url || '');
+        if (!text) return false;
+
+        var targets = tracer ? tracer.tracePropagationTargets : null;
+        if (targets === true || targets === '*') return true;
+        if (!targets) {
+            var loc = tracer && tracer._loc ? tracer._loc : getWindowProperty(getRootWindow(), 'location');
+            var origin = loc && loc.origin ? String(loc.origin) : '';
+            return !origin || text.indexOf(origin + '/') === 0 || text === origin;
+        }
+
+        var list = Array.isArray(targets) ? targets : [targets];
+        var parsed = null;
+        try {
+            parsed = new URL(text, getHref(tracer._win));
+        } catch (err) {
+            parsed = null;
+        }
+        for (var i = 0; i < list.length; i++) {
+            var target = list[i];
+            if (target && typeof target === 'object' && typeof target.test === 'function') {
+                if (target.test(text)) return true;
+                continue;
+            }
+            var value = String(target || '');
+            if (!value) continue;
+            if (value === '*') return true;
+            if (text.indexOf(value) === 0) return true;
+            if (parsed && (parsed.host === value || parsed.hostname === value)) return true;
+        }
+        return false;
+    }
+
     function buildSpanName(method, url, win) {
         var parsed = null;
         try {
@@ -473,6 +513,7 @@
             this.timeout = positiveNumber(opts.timeout, 5000);
             this.enableMeter = opts.enableMeter !== false;
             this.autoInstrument = opts.autoInstrument !== false;
+            this.tracePropagationTargets = opts.tracePropagationTargets === undefined ? null : opts.tracePropagationTargets;
             this.debug = opts.debug === true;
             this.excludes = normalizeExcludes(opts.excludes);
 
@@ -1499,7 +1540,7 @@
                     if (!isIgnoredUrl(url)) {
                         span = tracer.newSpan(buildSpanName(method, url, win));
                         span.setTag(truncate(url, tracer._tagLimit()));
-                        actualInit = buildFetchInit(win, input, init, span);
+                        if (shouldPropagateTrace(tracer, url)) actualInit = buildFetchInit(win, input, init, span);
                     }
                 } catch (err) {
                     span = null;
@@ -1630,7 +1671,7 @@
 
                         try {
                             var sentHeaders = xhr.__stardustHeaders || {};
-                            if (!sentHeaders.traceparent && typeof xhr.setRequestHeader === 'function') {
+                            if (shouldPropagateTrace(tracer, absolute) && !sentHeaders.traceparent && typeof xhr.setRequestHeader === 'function') {
                                 xhr.setRequestHeader('traceparent', formatTraceparent(span.traceId, span.id, true));
                             }
                         } catch (err) {
