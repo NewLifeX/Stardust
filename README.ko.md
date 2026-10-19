@@ -15,6 +15,7 @@
 <!-- lang:end -->
 
 > ⚠️ 이 번역은 오래되었을 수 있습니다. 기준은 [영어 README](README.md)입니다.
+> ℹ️ 이 번역의 구조는 오래되었을 수 있으며, 기준은 [영어 README](README.md)입니다.
 
 Stardust는 노드 관리, 레지스트리, 구성 센터, APM 모니터링, 릴리스 센터, 원격 명령을 제공하는 분산 서비스 플랫폼입니다.
 
@@ -31,11 +32,14 @@ var client = new StarClient("http://star.newlifex.com:6600") { AppId = "app" };
 client.Start();
 ```
 
-## 주요 기능
+<details>
+<summary><b>주요 기능</b> (3)</summary>
 
 - 로깅, 추적, 런타임 진단 지원
 - 장기 운영 환경에서 검증됨
 - 플러그인 방식의 확장 가능한 아키텍처
+
+</details>
 
 ## 문서
 

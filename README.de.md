@@ -15,6 +15,7 @@
 <!-- lang:end -->
 
 > ⚠️ Diese Übersetzung kann veraltet sein; maßgeblich ist das [englische README](README.md).
+> ℹ️ Die Struktur dieser Übersetzung kann veraltet sein; maßgeblich ist das [englische README](README.md).
 
 Stardust ist eine Plattform für verteilte Dienste mit Knotenverwaltung, Registry, Konfigurationszentrale, APM-Monitoring, Release-Center und Fernbefehlen.
 
@@ -31,11 +32,14 @@ var client = new StarClient("http://star.newlifex.com:6600") { AppId = "app" };
 client.Start();
 ```
 
-## Funktionen
+<details>
+<summary><b>Funktionen</b> (3)</summary>
 
 - Umfassendes Logging, Tracing und Laufzeitdiagnose
 - Langjährig in Produktivumgebungen erprobt
 - Plug-in-fähige, erweiterbare Architektur für eigene Entwicklung
+
+</details>
 
 ## Dokumentation
 

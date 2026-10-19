@@ -15,6 +15,7 @@
 <!-- lang:end -->
 
 > ⚠️ この翻訳は古い場合があります。基準は [英語版 README](README.md) です。
+> ℹ️ この翻訳の構成は古い場合があります。基準は[英語版 README](README.md)です。
 
 Stardust はノード管理、レジストリ、設定センター、APM 監視、リリースセンター、リモートコマンドを備えた分散サービスプラットフォームです。
 
@@ -31,11 +32,14 @@ var client = new StarClient("http://star.newlifex.com:6600") { AppId = "app" };
 client.Start();
 ```
 
-## 主な機能
+<details>
+<summary><b>主な機能</b> (3)</summary>
 
 - ログ、トレーシング、実行時診断を充実
 - 長期の本番運用で実績あり
 - プラグイン可能な拡張アーキテクチャで二次開発が容易
+
+</details>
 
 ## ドキュメント
 
