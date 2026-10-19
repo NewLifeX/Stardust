@@ -1,6 +1,7 @@
 package stardust
 
 import (
+	"os"
 	"testing"
 	"time"
 )
@@ -13,11 +14,117 @@ func TestNewTracer(t *testing.T) {
 	if tracer.AppID != "TestApp" {
 		t.Errorf("Expected AppID=TestApp, got %s", tracer.AppID)
 	}
+	if tracer.AppName != "TestApp" {
+		t.Errorf("Expected AppName=TestApp, got %s", tracer.AppName)
+	}
 	if tracer.Secret != "TestSecret" {
 		t.Errorf("Expected Secret=TestSecret, got %s", tracer.Secret)
 	}
 	if tracer.Period != 60 {
 		t.Errorf("Expected Period=60, got %d", tracer.Period)
+	}
+	if tracer.MaxSamples != 1 {
+		t.Errorf("Expected MaxSamples=1, got %d", tracer.MaxSamples)
+	}
+	if tracer.MaxErrors != 10 {
+		t.Errorf("Expected MaxErrors=10, got %d", tracer.MaxErrors)
+	}
+	if tracer.Timeout != 5000 {
+		t.Errorf("Expected Timeout=5000, got %d", tracer.Timeout)
+	}
+	if tracer.MaxTagLen != 1024 {
+		t.Errorf("Expected MaxTagLen=1024, got %d", tracer.MaxTagLen)
+	}
+	if !tracer.EnableMeter {
+		t.Error("Expected EnableMeter=true by default")
+	}
+	if tracer.Version == "" {
+		t.Error("Expected non-empty default Version")
+	}
+	if tracer.IP == "" {
+		t.Error("Expected non-empty IP")
+	}
+	if tracer.ClientID == "" {
+		t.Error("Expected non-empty ClientID")
+	}
+	if tracer.startTime.IsZero() {
+		t.Error("Expected startTime to be initialized")
+	}
+}
+
+func TestTracerSetters(t *testing.T) {
+	tracer := NewTracer("http://localhost:6600", "TestApp", "TestSecret").
+		SetVersion("2.0.1").
+		SetAppName("MyGoApp").
+		SetIP("10.1.2.3").
+		SetEnableMeter(false).
+		SetPeriod(15)
+
+	if tracer.Version != "2.0.1" {
+		t.Errorf("Expected Version=2.0.1, got %s", tracer.Version)
+	}
+	if tracer.AppName != "MyGoApp" {
+		t.Errorf("Expected AppName=MyGoApp, got %s", tracer.AppName)
+	}
+	if tracer.IP != "10.1.2.3" {
+		t.Errorf("Expected IP=10.1.2.3, got %s", tracer.IP)
+	}
+	if tracer.EnableMeter {
+		t.Error("Expected EnableMeter=false")
+	}
+	if tracer.Period != 15 {
+		t.Errorf("Expected Period=15, got %d", tracer.Period)
+	}
+}
+
+func TestAppInfo(t *testing.T) {
+	tracer := NewTracer("http://localhost:6600", "TestApp", "TestSecret").
+		SetVersion("2.0.1").
+		SetAppName("MyGoApp").
+		SetIP("10.1.2.3")
+	t.Cleanup(tracer.Stop)
+
+	info := tracer.appInfo()
+
+	if info.Id != os.Getpid() {
+		t.Errorf("Expected Id=%d, got %d", os.Getpid(), info.Id)
+	}
+	if info.Name != "MyGoApp" {
+		t.Errorf("Expected Name=MyGoApp, got %s", info.Name)
+	}
+	if info.Version != "2.0.1" {
+		t.Errorf("Expected Version=2.0.1, got %s", info.Version)
+	}
+	if info.IP != "10.1.2.3" {
+		t.Errorf("Expected IP=10.1.2.3, got %s", info.IP)
+	}
+	if info.CommandLine == "" {
+		t.Error("Expected non-empty CommandLine")
+	}
+	if info.StartTime == "" {
+		t.Error("Expected non-empty StartTime")
+	} else if _, err := time.Parse(time.RFC3339, info.StartTime); err != nil {
+		t.Errorf("StartTime should be RFC3339: %v", err)
+	}
+	if info.WorkingSet <= 0 {
+		t.Errorf("Expected WorkingSet > 0, got %d", info.WorkingSet)
+	}
+	if info.HeapSize < 0 {
+		t.Errorf("Expected HeapSize >= 0, got %d", info.HeapSize)
+	}
+	if info.Threads < 1 {
+		t.Errorf("Expected Threads >= 1, got %d", info.Threads)
+	}
+	if info.Time <= 0 {
+		t.Errorf("Expected Time > 0, got %d", info.Time)
+	}
+	if info.GCCount < 0 {
+		t.Errorf("Expected GCCount >= 0, got %d", info.GCCount)
+	}
+
+	second := tracer.appInfo()
+	if second.GCCount < 0 {
+		t.Errorf("Expected second GCCount >= 0, got %d", second.GCCount)
 	}
 }
 
