@@ -196,6 +196,29 @@ func TestLoginSendsVersionAndIP(t *testing.T) {
 	}
 }
 
+func TestInitStartsAndLogsIn(t *testing.T) {
+	srv, rec := newRecordedServer(t, func(w http.ResponseWriter, req capturedRequest) {
+		switch req.Path {
+		case "/App/Login":
+			writeAPI(w, map[string]interface{}{"Token": "token-1", "Expire": 7200})
+		case "/App/Ping":
+			writeAPI(w, map[string]interface{}{"Time": time.Now().UnixMilli()})
+		default:
+			http.Error(w, "unexpected path", http.StatusNotFound)
+		}
+	})
+
+	tracer := Init(srv.URL, "TestApp", "TestSecret")
+	tracer.Stop()
+
+	if len(rec.filter("/App/Login")) != 1 {
+		t.Errorf("Init should start and log in once")
+	}
+	if token, _ := tracer.tokenSnapshot(); token != "token-1" {
+		t.Errorf("Expected token-1, got %s", token)
+	}
+}
+
 func TestPingSendsAppInfo(t *testing.T) {
 	srv, rec := newRecordedServer(t, func(w http.ResponseWriter, req capturedRequest) {
 		if req.Path == "/App/Ping" {

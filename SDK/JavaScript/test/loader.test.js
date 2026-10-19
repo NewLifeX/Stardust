@@ -71,6 +71,17 @@ async function main() {
 
         const legacy = loader.readConfig(fakeScript({ 'data-app-id': 'Legacy' }), fakeDocument(null));
         assert.strictEqual(legacy.appId, 'Legacy', '应兼容旧 data-app-id 属性');
+
+        const direct = loader.readConfig(
+            fakeScript({
+                'data-stardust-app': 'MyWeb',
+                'data-stardust-token-value': 'short-token',
+                'data-stardust-expire': '300'
+            }),
+            fakeDocument(null)
+        );
+        assert.strictEqual(direct.token, 'short-token', '应支持直接配置短期 Token');
+        assert.strictEqual(direct.expire, '300', '应支持配置令牌有效期');
     });
 
     await test('resolveSrc 默认替换为同目录 browser.js', () => {

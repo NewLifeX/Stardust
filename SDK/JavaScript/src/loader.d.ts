@@ -9,8 +9,12 @@ export interface LoaderConfig {
     appName?: string;
     server?: string;
     configUrl?: string;
+    token?: string;
     tokenUrl?: string;
+    expire?: string;
     version?: string;
+    environment?: string;
+    sampleRate?: string;
     debug?: boolean;
     autoInstrument?: boolean;
     traceparent?: string;

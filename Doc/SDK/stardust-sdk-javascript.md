@@ -39,7 +39,7 @@ npm install @newlifex/stardust
         defer></script>
 ```
 
-`loader.js` 会动态加载同目录 `browser.js`，读取后端配置并自动启动埋点；后端可注入 `<meta name="traceparent" content="...">` 关联 `page.load` 与服务端链路。npm 用户可使用 `import { init } from '@newlifex/stardust/browser'` 一行初始化。
+`loader.js` 会动态加载同目录 `browser.js`，读取后端配置并自动启动埋点；后端可注入 `<meta name="traceparent" content="...">` 把整个页面链路（`page.load`/路由/fetch/XHR/手动 Span）关联到服务端链路。静态页面可用 `data-stardust-token-value` 配置短期 Token，有后端时推荐 `data-stardust-token` 指向 Token 端点。npm 用户可使用 `import { init } from '@newlifex/stardust/browser'` 一行初始化。
 
 需要手动控制时：
 

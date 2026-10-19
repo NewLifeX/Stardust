@@ -431,6 +431,7 @@ async function main() {
             assert.ok(manual, '应包含手动埋点');
             assert.strictEqual(manual.Total, 1, '手动埋点计数应匹配');
             assert.strictEqual(manual.Samples[0].Tag, 'manual-tag', '样本 Tag 应匹配');
+            assert.strictEqual(manual.Samples[0].TraceId, INITIAL_TRACE_ID, '页面内手动埋点应复用页面 TraceId');
 
             const pageLoad = findBuilder(body, 'page.load');
             assert.ok(pageLoad, '应包含页面加载埋点');
@@ -496,6 +497,8 @@ async function main() {
             const dataHeaders = dataCalls[dataCalls.length - 1].init.headers || {};
             const traceparent = getHeaderValue(dataHeaders, 'traceparent');
             assert.ok(/^00-[0-9a-f]{32}-[0-9a-f]{16}-01$/.test(traceparent || ''), 'fetch 应注入 traceparent');
+            assert.strictEqual(traceparent.split('-')[1], INITIAL_TRACE_ID, 'fetch 应复用页面 TraceId');
+            assert.strictEqual(sameOrigin.samples[0].traceId, INITIAL_TRACE_ID, 'fetch 埋点应复用页面 TraceId');
 
             await fakeWindow.fetch('https://api.example.com/users?x=1');
             const crossOrigin = tracer._builders.get('GET api.example.com/users');
@@ -522,6 +525,7 @@ async function main() {
             assert.ok(builder, 'XHR 应生成埋点');
             assert.strictEqual(builder.total, 1, 'XHR 计数应匹配');
             assert.ok(/^00-[0-9a-f]{32}-[0-9a-f]{16}-01$/.test(xhr.headers.traceparent || ''), 'XHR 应注入 traceparent');
+            assert.strictEqual(xhr.headers.traceparent.split('-')[1], INITIAL_TRACE_ID, 'XHR 应复用页面 TraceId');
         });
 
         await test('withSpan 维护活动 Span 栈并继承上下文', async () => {

@@ -161,6 +161,18 @@ class TracerIntegrationTest {
     }
 
     @Test
+    @DisplayName("init 一行创建并启动追踪器")
+    void initStartsAndLogsIn() {
+        final StardustTracer tracer = StardustTracer.init(baseUrl, "TestApp", "secret");
+        try {
+            assertTrue(tracer.isRunning());
+            assertEquals(1, loginCount.get());
+        } finally {
+            tracer.stop();
+        }
+    }
+
+    @Test
     @DisplayName("心跳报文包含 Version 与进程信息")
     void heartbeatContainsMetrics() {
         final StardustTracer tracer = newTracer();

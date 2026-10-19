@@ -70,12 +70,12 @@
 <script src="https://cdn.example.com/stardust/loader.js"
         data-stardust-app="MyWebApp"
         data-stardust-server="https://star.example.com:6600"
-        data-stardust-token="/stardust/browser-token"
+        data-stardust-token-value="eyJ..."
         data-stardust-release="1.2.3"
         defer></script>
 ```
 
-`loader.js` 自动加载同目录 `browser.js`，读取配置并启动追踪器。npm 用户使用：
+也可以用 `data-stardust-token="/stardust/browser-token"` 指向 Token 端点；直接配置 Token 时可用 `data-stardust-expire="300"` 指定秒数。`loader.js` 自动加载同目录 `browser.js`，读取配置并启动追踪器。npm 用户使用：
 
 ```js
 import { init } from '@newlifex/stardust/browser';
@@ -171,15 +171,15 @@ Stardust.tracer                   // 高级用法
 已完成：
 
 - npm 包名统一为 `@newlifex/stardust`（浏览器子路径 `@newlifex/stardust/browser`）。
-- 新增 `src/loader.js`：支持 `data-stardust-app/config/server/token/release/env/sample/debug`，兼容旧的 `data-app-id` 等属性。
+- 新增 `src/loader.js`：支持 `data-stardust-app/config/server/token/token-value/expire/release/env/sample/debug`，兼容旧的 `data-app-id` 等属性。
 - 新增 `Stardust.init()`、`Stardust.captureException()`、`Stardust.flush()`。
 - 支持 `initialTraceparent`：`page.load` 可复用后端注入的 TraceId/ParentId。
+- 页面级链路连续性：`page.load`、`page.view`、fetch/XHR、手动 Span 共用同一页面 TraceId；有初始 `traceparent` 时整体挂到后端链路。
 - 保留页面/路由/JS 错误/资源错误/fetch/XHR/离页冲刷。
 
 待后续：
 
 - `GET /stardust/browser-config` 与 `POST /stardust/browser-token` 服务端端点。
-- 页面级链路连续性（当前 fetch/XHR 使用各自出站 Span 的 TraceId；page.load 已支持初始上下文）。
 - Web Vitals、Session Replay、OTLP 导出、框架专用包（React/Vue）。
 - CDN 正式域名与版本化产物（`stardust.min.js` / `stardust-loader.min.js`）。
 
@@ -190,7 +190,7 @@ Stardust.tracer                   // 高级用法
 | 阶段 | 内容 |
 |------|------|
 | P1（MVP） | loader + `data-stardust-*`、`Stardust.init`、配置端点回退、页面/路由/错误/fetch/XHR、`traceparent`、开关与采样 |
-| P2 | 配置/Token 服务端端点、页面级链路、Web Vitals、懒加载 loader、Source Map |
+| P2 | 配置/Token 服务端端点、Web Vitals、懒加载 loader、Source Map |
 | P3 | Session Replay、OTLP/OpenTelemetry 桥接、跨域链路、React/Vue 封装 |
 
 > 原则：一行接入、默认自动、前端无 secret、W3C `traceparent` 唯一跨端契约。

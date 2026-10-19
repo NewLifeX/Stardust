@@ -47,10 +47,12 @@ cp -r SDK/JavaScript/src /your-project/node_modules/@newlifex/stardust
 <script src="https://cdn.example.com/stardust/loader.js"
         data-stardust-app="MyWebApp"
         data-stardust-server="https://star.example.com:6600"
-        data-stardust-token="/stardust/browser-token"
+        data-stardust-token-value="eyJ..."
         data-stardust-release="1.2.3"
         defer></script>
 ```
+
+`data-stardust-token` 也可以指向 Token 端点（推荐有后端时使用）。`data-stardust-token-value` 适合静态页面，配合 `data-stardust-expire="300"` 指定有效期；Token 应短有效期且仅具备上报权限。
 
 npm 用户可以使用一行 `init`：
 
