@@ -32,7 +32,7 @@ public partial class AppDeployVersion : Entity<AppDeployVersion>
         if (!HasDirty) return;
 
         // 这里验证参数范围，建议抛出参数异常，指定参数名，前端用户界面可以捕获参数异常并聚焦到对应的参数输入框
-        if (Version.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Version), "版本不能为空！");
+        if (Version.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Version), L.T("Version cannot be empty."));
 
         // 建议先调用基类方法，基类方法会做一些统一处理
         base.Valid(isNew);

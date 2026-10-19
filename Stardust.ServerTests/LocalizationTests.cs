@@ -7,6 +7,7 @@ using Xunit;
 namespace ServerTest;
 
 /// <summary>数据层多语言词表测试。验证 31 种语言全部注册并可翻译</summary>
+[Collection("Localization")]
 public class LocalizationTests : IDisposable
 {
     private static readonly String[] _locales =
@@ -34,6 +35,10 @@ public class LocalizationTests : IDisposable
             Assert.NotEqual("Action cannot be empty.", Localization.Translate("Action cannot be empty."));
             Assert.NotEqual("Domain cannot be empty.", Localization.Translate("Domain cannot be empty."));
         }
+
+        Localization.Culture = new CultureInfo("zh-Hans");
+        Assert.Equal("版本号不能为空", Localization.Translate("Version cannot be empty."));
+        Assert.Equal("不能为空！", Localization.Translate("Cannot be empty."));
     }
 
     [Fact(DisplayName = "服务端词表注册并支持中文翻译")]
@@ -49,3 +54,7 @@ public class LocalizationTests : IDisposable
         Assert.Equal("必須指定節點", Localization.Translate("Node must be specified."));
     }
 }
+
+/// <summary>多语言测试集合。Localization.Culture 是进程级全局状态，禁止与其它测试并行</summary>
+[CollectionDefinition("Localization", DisableParallelization = true)]
+public class LocalizationCollection { }

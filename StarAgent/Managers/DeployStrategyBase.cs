@@ -58,7 +58,7 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
         fi = workDir.CombinePath(zipFile).AsFile();
         if (fi != null && fi.Exists) return fi;
 
-        context.WriteLog("Zip文件不存在：{0}", zipFile);
+        context.WriteLog("Zip file does not exist: {0}", zipFile);
         return null;
     }
 
@@ -72,7 +72,7 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
         var fi = zipFile.AsFile();
         if (fi == null || !fi.Exists)
         {
-            log?.Info("Zip文件不存在：{0}", zipFile);
+            log?.Info(L.T("Zip file does not exist: {0}"), zipFile);
             return;
         }
 
@@ -112,7 +112,7 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
                 if (!fileName.Contains('/') && !fileName.Contains('\\'))
                 {
                     // 不含路径分隔符的简单命令名（如ping），直接作为系统命令通过PATH解析
-                    context.WriteLog("使用系统命令：{0}", fileName);
+                    context.WriteLog("Using system command: {0}", fileName);
                     context.ExecuteFile = fileName;
                     context.Arguments = args;
                     return true;
@@ -129,7 +129,7 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
                 }
             }
 
-            context.WriteLog("无法找到可执行文件");
+            context.WriteLog("Unable to find the executable file");
             return false;
         }
 
@@ -146,7 +146,7 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
             {
                 if (!fileName.Contains('/') && !fileName.Contains('\\'))
                 {
-                    context.WriteLog("使用系统命令：{0}", fileName);
+                    context.WriteLog("Using system command: {0}", fileName);
                     context.ExecuteFile = fileName;
                     context.Arguments = args;
                     return true;
@@ -163,7 +163,7 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
                 }
             }
 
-            context.WriteLog("无法找到可执行文件");
+            context.WriteLog("Unable to find the executable file");
             return false;
         }
 
@@ -275,14 +275,14 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
         // 确保工作目录存在，避免 Process.Start 在 Linux 上因 GetCwd() 失败而抛 FileNotFoundException
         if (!String.IsNullOrEmpty(workDir) && !Directory.Exists(workDir))
         {
-            context.WriteLog("工作目录不存在，尝试创建：{0}", workDir);
+            context.WriteLog("The working directory does not exist; attempting to create it: {0}", workDir);
             try
             {
                 Directory.CreateDirectory(workDir);
             }
             catch (Exception ex)
             {
-                context.WriteLog("创建工作目录失败，使用当前目录：{0}", ex.Message);
+                context.WriteLog("Failed to create the working directory; using the current directory: {0}", ex.Message);
                 workDir = Environment.CurrentDirectory;
             }
         }
@@ -382,7 +382,7 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
             !targets.Any(e => e.EqualIgnoreCase("Stardust.dll")))
         {
             var dll = "Stardust.dll".GetFullPath();
-            context.WriteLog("执行目录：{0}，注入：{1}", dir, dll);
+            context.WriteLog("Execution directory: {0}, inject: {1}", dir, dll);
             si.EnvironmentVariables["DOTNET_STARTUP_HOOKS"] = dll;
             context.EnvironmentVariables?["DOTNET_STARTUP_HOOKS"] = dll;
         }
@@ -397,13 +397,13 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
         var service = context.Service;
         var user = service.UserName;
 
-        context.WriteLog("工作目录: {0}", si.WorkingDirectory);
-        context.WriteLog("启动文件: {0}", si.FileName);
-        context.WriteLog("启动参数: {0}", si.Arguments);
+        context.WriteLog("Working directory: {0}", si.WorkingDirectory);
+        context.WriteLog("Startup file: {0}", si.FileName);
+        context.WriteLog("Startup arguments: {0}", si.Arguments);
         if (context.EnvironmentVariables is { Count: > 0 })
-            context.WriteLog("环境变量: {0}", context.EnvironmentVariables.Select(e => $"{e.Key}={e.Value}").Join("; "));
+            context.WriteLog("Environment variables: {0}", context.EnvironmentVariables.Select(e => $"{e.Key}={e.Value}").Join("; "));
         if (!user.IsNullOrEmpty())
-            context.WriteLog("启动用户：{0}", user);
+            context.WriteLog("Startup user: {0}", user);
 
         Process? p = null;
 
@@ -430,7 +430,7 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
         }
         else if (Runtime.Windows && !user.IsNullOrEmpty())
         {
-            context.WriteLog("在Windows下以特定用户[{0}]启动进程，大概率失败，因没有密码令牌", user);
+            context.WriteLog("Launching the process as user [{0}] on Windows is likely to fail because no password token is available", user);
             p = Process.Start(si);
         }
         else
@@ -455,7 +455,7 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
             catch (Win32Exception ex)
             {
                 context.LastError = ex.Message;
-                context.WriteLog("启动失败！Win32Exception={0} File={1}", ex.NativeErrorCode, si.FileName);
+                context.WriteLog("Startup failed: Win32Exception={0} File={1}", ex.NativeErrorCode, si.FileName);
                 context.WriteLog(ex.ToString());
                 return null;
             }
@@ -466,7 +466,7 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
         // 进程优先级
         if (service.Priority != ProcessPriority.Normal)
         {
-            context.WriteLog("优先级：{0}", service.Priority);
+            context.WriteLog("Priority: {0}", service.Priority);
             p.PriorityClass = service.Priority switch
             {
                 ProcessPriority.Idle => ProcessPriorityClass.Idle,
@@ -484,13 +484,13 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
         {
             StarClient.SetOomScoreAdj(p.Id, service.OomScoreAdjust);
             if (service.OomScoreAdjust != 0)
-                context.WriteLog("OOM分值：{0}", service.OomScoreAdjust);
+                context.WriteLog("OOM score: {0}", service.OomScoreAdjust);
         }
 
         // 等待启动
         if (context.StartWait > 0 && p.WaitForExit(context.StartWait) && p.ExitCode != 0)
         {
-            context.WriteLog("启动失败！PID={0} ExitCode={1}", p.Id, p.ExitCode);
+            context.WriteLog("Startup failed: PID={0} ExitCode={1}", p.Id, p.ExitCode);
 
             if (si.RedirectStandardError)
             {
@@ -505,7 +505,7 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
             return null;
         }
 
-        context.WriteLog("启动成功！PID={0}/{1}", p.Id, p.ProcessName);
+        context.WriteLog("Started successfully, PID={0}/{1}", p.Id, p.ProcessName);
         return p;
     }
 
@@ -514,7 +514,7 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
     /// <returns>启动的进程</returns>
     protected Process? ExecuteCommand(DeployContext context)
     {
-        context.WriteLog("执行命令 {0} {1}", context.ExecuteFile, context.Arguments);
+        context.WriteLog("Executing command {0} {1}", context.ExecuteFile, context.Arguments);
 
         var psi = new ProcessStartInfo
         {
@@ -530,7 +530,7 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
             p = Process.Start(psi);
             if (p != null)
             {
-                context.WriteLog("启动成功！PID={0}", p.Id);
+                context.WriteLog("Started successfully, PID={0}", p.Id);
 
                 // OOM分值。Linux下子进程默认继承父进程（StarAgent）的 -1000，需重置为普通进程
                 var oomScore = context.Service?.OomScoreAdjust ?? 0;
@@ -541,7 +541,7 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
         catch (Exception ex)
         {
             context.LastError = ex.Message;
-            context.WriteLog("执行命令失败：{0}", ex.Message);
+            context.WriteLog("Command execution failed: {0}", ex.Message);
         }
 
         return p;

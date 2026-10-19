@@ -32,7 +32,7 @@ namespace Stardust.Data.Configs
             // InitData一般用于当数据表没有数据时添加一些默认数据，该实体类的任何第一次数据库操作都会触发该方法，默认异步调用
             if (Meta.Count > 0) return;
 
-            if (XTrace.Debug) XTrace.WriteLine("开始初始化AppRule[应用规则]数据……");
+            if (XTrace.Debug) XTrace.WriteLine("Initializing AppRule data...");
 
             var entity = new AppRule
             {
@@ -70,7 +70,7 @@ namespace Stardust.Data.Configs
             };
             entity.Insert();
 
-            if (XTrace.Debug) XTrace.WriteLine("完成初始化AppRule[应用规则]数据！");
+            if (XTrace.Debug) XTrace.WriteLine("AppRule data initialization completed.");
         }
         #endregion
 

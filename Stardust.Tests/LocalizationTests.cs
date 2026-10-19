@@ -7,6 +7,7 @@ using Xunit;
 namespace Stardust.Tests;
 
 /// <summary>多语言词表测试。验证 31 种语言全部注册并可翻译，以及未提供语言时回退英文</summary>
+[Collection("Localization")]
 public class LocalizationTests : IDisposable
 {
     private static readonly String[] _locales =
@@ -30,6 +31,7 @@ public class LocalizationTests : IDisposable
     {
         RuntimeHelpers.RunModuleConstructor(typeof(global::Stardust.StarClient).Module.ModuleHandle);
         RuntimeHelpers.RunModuleConstructor(typeof(global::StarAgent.StarService).Module.ModuleHandle);
+        RuntimeHelpers.RunModuleConstructor(typeof(global::StarAgent.Mobile.MobileAgent).Module.ModuleHandle);
         RuntimeHelpers.RunModuleConstructor(typeof(global::Microsoft.Extensions.DependencyInjection.StarFactoryExtensions).Module.ModuleHandle);
     }
 
@@ -82,4 +84,21 @@ public class LocalizationTests : IDisposable
         Localization.Culture = new CultureInfo("zh-Hant");
         Assert.Equal("未註冊StarFactory，請調用AddStardust註冊。", Localization.Translate("StarFactory is not registered; call AddStardust to register."));
     }
+
+    [Fact(DisplayName = "代理与移动端词表注册并支持中文翻译")]
+    public void AgentLocalesRegistered()
+    {
+        LoadAssemblies();
+
+        Localization.Culture = new CultureInfo("zh-Hans");
+        Assert.Equal("启动成功！PID=123", Localization.Translate("Started successfully, PID={0}", 123));
+        Assert.Equal("[Android] 登录成功，节点编码：abc", Localization.Translate("[{0}] Login succeeded, node code: {1}", "Android", "abc"));
+
+        Localization.Culture = new CultureInfo("zh-Hant");
+        Assert.Equal("啟動成功！PID=123", Localization.Translate("Started successfully, PID={0}", 123));
+    }
 }
+
+/// <summary>多语言测试集合。Localization.Culture 是进程级全局状态，禁止与其它测试并行</summary>
+[CollectionDefinition("Localization", DisableParallelization = true)]
+public class LocalizationCollection { }

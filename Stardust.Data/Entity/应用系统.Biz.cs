@@ -48,7 +48,7 @@ public partial class App : Entity<App>, IDeviceModel2, ILogProvider
         if (!HasDirty) return;
 
         // 这里验证参数范围，建议抛出参数异常，指定参数名，前端用户界面可以捕获参数异常并聚焦到对应的参数输入框
-        if (Name.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Name), "名称不能为空！");
+        if (Name.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Name), L.T("Name cannot be empty."));
 
         // 安全治理：强制应用密钥非空，空密钥=匿名接入=认证绕过。新建或补录自动生成
         if (Secret.IsNullOrEmpty()) Secret = Rand.NextString(16);
@@ -147,7 +147,7 @@ public partial class App : Entity<App>, IDeviceModel2, ILogProvider
                     // 仅在有变化时才保存，避免不必要的数据库操作
                     if (dirty)
                     {
-                        XTrace.WriteLine($"[AppDeploy 同步] 应用 {Name} 更新，同步部署配置 {deploy.Name} (Id={deploy.Id})");
+                        XTrace.WriteLine(L.TLog("[AppDeploy sync] Application {0} updated; syncing deployment configuration {1} (Id={2})", Name, deploy.Name, deploy.Id));
                         deploy.Save();
                     }
                 }

@@ -22,7 +22,7 @@ public partial class GatewayCluster : Entity<GatewayCluster>
     {
         if (!HasDirty) return;
         base.Valid(isNew);
-        if (Name.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Name), "名称不能为空！");
+        if (Name.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Name), L.T("Name cannot be empty."));
     }
     #endregion
 

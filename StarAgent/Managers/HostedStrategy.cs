@@ -50,8 +50,8 @@ public class HostedStrategy : DeployStrategyBase
         if (fi == null) return false;
 
         var workDir = context.WorkingDirectory;
-        context.WriteLog("托管模式，解压到工作目录：{0}", workDir);
-        context.WriteLog("外部主机（如IIS/Nginx）将托管应用");
+        context.WriteLog("Hosted mode: extract to the working directory: {0}", workDir);
+        context.WriteLog("An external host (such as IIS/Nginx) will manage the application");
 
         // 检测是否为IIS部署
         var isIisDeploy = false;
@@ -62,7 +62,7 @@ public class HostedStrategy : DeployStrategyBase
         if (Runtime.Windows && File.Exists(webConfigPath))
         {
             isIisDeploy = true;
-            context.WriteLog("检测到 web.config，判定为 IIS 部署");
+            context.WriteLog("web.config detected; treating this as an IIS deployment");
         }
 
         // IIS部署策略：创建app_offline.htm确保网站离线
@@ -71,12 +71,12 @@ public class HostedStrategy : DeployStrategyBase
             appOfflinePath = workDir.CombinePath(AppOfflineFileName);
             try
             {
-                context.WriteLog("创建 app_offline.htm 使网站离线");
+                context.WriteLog("Creating app_offline.htm to take the site offline");
                 File.WriteAllText(appOfflinePath, AppOfflineHtml);
 
                 // 备份并删除web.config，进一步确保文件不被占用
                 webConfigBackupPath = webConfigPath + BackupExtension;
-                context.WriteLog("备份 web.config 到 {0}", webConfigBackupPath);
+                context.WriteLog("Backing up web.config to {0}", webConfigBackupPath);
                 File.Copy(webConfigPath, webConfigBackupPath, true);
                 File.Delete(webConfigPath);
 
@@ -85,7 +85,7 @@ public class HostedStrategy : DeployStrategyBase
             }
             catch (Exception ex)
             {
-                context.WriteLog("创建 app_offline.htm 失败: {0}", ex.Message);
+                context.WriteLog("Failed to create app_offline.htm: {0}", ex.Message);
             }
         }
 
@@ -107,12 +107,12 @@ public class HostedStrategy : DeployStrategyBase
                         // 检查zip包是否包含新的web.config
                         if (File.Exists(webConfigPath))
                         {
-                            context.WriteLog("检测到 zip 包中包含新的 web.config，保留新版本");
+                            context.WriteLog("A new web.config was found in the zip package; keeping the new version");
                             File.Delete(webConfigBackupPath);
                         }
                         else
                         {
-                            context.WriteLog("恢复 web.config 从 {0}", webConfigBackupPath);
+                            context.WriteLog("Restoring web.config from {0}", webConfigBackupPath);
                             File.Copy(webConfigBackupPath, webConfigPath, true);
                             File.Delete(webConfigBackupPath);
                         }
@@ -121,13 +121,13 @@ public class HostedStrategy : DeployStrategyBase
                     // 删除app_offline.htm使网站上线
                     if (!appOfflinePath.IsNullOrEmpty() && File.Exists(appOfflinePath))
                     {
-                        context.WriteLog("删除 app_offline.htm 使网站上线");
+                        context.WriteLog("Deleting app_offline.htm to bring the site online");
                         File.Delete(appOfflinePath);
                     }
                 }
                 catch (Exception ex)
                 {
-                    context.WriteLog("清理 IIS 部署文件失败: {0}", ex.Message);
+                    context.WriteLog("Failed to clean up IIS deployment files: {0}", ex.Message);
                 }
             }
         }
@@ -141,7 +141,7 @@ public class HostedStrategy : DeployStrategyBase
     public override Process? Execute(DeployContext context)
     {
         // 托管模式不执行进程
-        context.WriteLog("托管模式，不启动进程");
+        context.WriteLog("Hosted mode: do not start the process");
         return null;
     }
 }

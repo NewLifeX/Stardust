@@ -39,11 +39,11 @@ public class TaskStrategy : DeployStrategyBase
             var fileName = context.Service.FileName;
             if (fileName.IsNullOrEmpty())
             {
-                context.WriteLog("任务模式未指定执行文件");
+                context.WriteLog("Task mode did not specify an executable");
                 return false;
             }
 
-            context.WriteLog("任务模式，直接执行命令");
+            context.WriteLog("Task mode: execute the command directly");
 
             // 查找可执行文件
             var args = context.Arguments ?? context.Service.Arguments;
@@ -68,7 +68,7 @@ public class TaskStrategy : DeployStrategyBase
         var fi = RetrieveZip(context);
         if (fi == null) return false;
 
-        context.WriteLog("任务模式，解压到工作目录：{0}", workDir);
+        context.WriteLog("Task mode: extract to the working directory: {0}", workDir);
 
         // 直接解压到工作目录
         ExtractZip(fi.FullName, workDir, context.Deploy, context.Log);
@@ -86,24 +86,24 @@ public class TaskStrategy : DeployStrategyBase
 
         if (context.ExecuteFile.IsNullOrEmpty())
         {
-            context.WriteLog("可执行文件路径为空");
+            context.WriteLog("The executable path is empty");
             return null;
         }
 
-        context.WriteLog("任务模式，运行后不守护");
+        context.WriteLog("Task mode: run without supervision");
 
         var runFile = context.ExecuteFile.AsFile();
 
         // 如果文件存在，使用标准启动流程
         if (runFile != null && runFile.Exists)
         {
-            context.WriteLog("运行文件 {0}", runFile.FullName);
+            context.WriteLog("Run file: {0}", runFile.FullName);
             var si = BuildProcessStartInfo(context, runFile);
             return StartProcess(context, si);
         }
 
         // 否则直接执行命令
-        context.WriteLog("执行命令 {0} {1}", context.ExecuteFile, context.Arguments);
+        context.WriteLog("Executing command {0} {1}", context.ExecuteFile, context.Arguments);
 
         var psi = new ProcessStartInfo
         {
@@ -119,7 +119,7 @@ public class TaskStrategy : DeployStrategyBase
             p = Process.Start(psi);
             if (p != null)
             {
-                context.WriteLog("启动成功！PID={0}", p.Id);
+                context.WriteLog("Started successfully, PID={0}", p.Id);
 
                 // OOM分值。Linux下子进程默认继承父进程（StarAgent）的 -1000，需重置为普通进程
                 var oomScore = context.Service?.OomScoreAdjust ?? 0;
@@ -130,7 +130,7 @@ public class TaskStrategy : DeployStrategyBase
         catch (Exception ex)
         {
             context.LastError = ex.Message;
-            context.WriteLog("执行命令失败：{0}", ex.Message);
+            context.WriteLog("Command execution failed: {0}", ex.Message);
         }
 
         return p;

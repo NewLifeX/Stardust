@@ -86,7 +86,7 @@ internal sealed class AgentExpansionService
         var server = StarSetting.Current.Server;
         if (server.IsNullOrEmpty())
         {
-            Log.Info("未配置StarServer，跳过自动安装");
+            Log.Info("StarServer is not configured; skipping automatic installation");
             return;
         }
 
@@ -146,14 +146,14 @@ internal sealed class AgentExpansionService
             var info = await client.InvokeAsync<AgentInfo>("Info", local).ConfigureAwait(false);
             if (info != null)
             {
-                Log.Info("节点 {0} 已存在StarAgent({1})", address, info.Version);
+                Log.Info("Node {0} already has StarAgent ({1})", address, info.Version);
                 return true;
             }
         }
         catch (TimeoutException) { }
         catch (Exception ex)
         {
-            Log.Debug("{0} 探测失败：{1}", address, ex.Message);
+            Log.Debug("{0} probe failed: {1}", address, ex.Message);
         }
 
         return false;
@@ -181,7 +181,7 @@ internal sealed class AgentExpansionService
             {
                 if (expectedKey.IsNullOrEmpty())
                 {
-                    Log.Info("节点 {0} 未配置SSH指纹，跳过校验", address);
+                    Log.Info("Node {0} has no SSH fingerprint configured; skipping verification", address);
                     args.CanTrust = true;
                     return;
                 }
@@ -189,7 +189,7 @@ internal sealed class AgentExpansionService
                 var actual = NormalizeHostKey(BitConverter.ToString(args.FingerPrint));
                 args.CanTrust = actual.EqualIgnoreCase(expectedKey);
                 if (!args.CanTrust)
-                    Log.Info("节点 {0} SSH指纹不匹配，期望 {1} 实际 {2}", address, expectedKey, actual);
+                    Log.Info("SSH fingerprint mismatch for node {0}; expected {1}, actual {2}", address, expectedKey, actual);
             };
             client.Connect();
             if (!client.IsConnected) return false;
@@ -204,16 +204,16 @@ internal sealed class AgentExpansionService
             var command = BuildInstallCommand(remoteFile, targetPath, server);
             var result = client.RunCommand(command);
             if (result.ExitStatus != 0)
-                Log.Info("节点 {0} 执行安装命令返回：{1}", address, result.Error);
+                Log.Info("Node {0} returned from the installation command: {1}", address, result.Error);
             else
-                Log.Info("节点 {0} 已发送安装命令", address);
+                Log.Info("Installation command sent to node {0}", address);
 
             client.Disconnect();
             return true;
         }
         catch (Exception ex)
         {
-            Log.Debug("{0} SSH失败：{1}", address, ex.Message);
+            Log.Debug("{0} SSH failed: {1}", address, ex.Message);
             return false;
         }
     }
@@ -229,11 +229,11 @@ internal sealed class AgentExpansionService
         if (url.IsNullOrEmpty()) return false;
         if (!url.StartsWith("https://", StringComparison.OrdinalIgnoreCase) && set.PackageSha512.IsNullOrEmpty())
         {
-            Log.Info("节点 {0} Telnet下载需HTTPS或配置PackageSha512", address);
+            Log.Info("Telnet download for node {0} requires HTTPS or a configured PackageSha512.", address);
             return false;
         }
         if (!url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-            Log.Info("节点 {0} Telnet使用HTTP下载存在风险，请评估网络安全", address);
+            Log.Info("Telnet download over HTTP for node {0} is risky; assess network security.", address);
 
         try
         {
@@ -245,12 +245,12 @@ internal sealed class AgentExpansionService
             await session.WriteLineAsync(command, cancellationToken).ConfigureAwait(false);
             await session.ReadAsync(set.Timeout, cancellationToken).ConfigureAwait(false);
 
-            Log.Info("节点 {0} 已发送Telnet安装命令", address);
+            Log.Info("Telnet installation command sent to node {0}", address);
             return true;
         }
         catch (Exception ex)
         {
-            Log.Debug("{0} Telnet失败：{1}", address, ex.Message);
+            Log.Debug("{0} Telnet failed: {1}", address, ex.Message);
             return false;
         }
     }
@@ -261,11 +261,11 @@ internal sealed class AgentExpansionService
         if (url.IsNullOrEmpty()) return null;
         if (!url.StartsWith("https://", StringComparison.OrdinalIgnoreCase) && set.PackageSha512.IsNullOrEmpty())
         {
-            Log.Info("安装包下载需HTTPS或配置PackageSha512");
+            Log.Info("Package download requires HTTPS or a configured PackageSha512.");
             return null;
         }
         if (!url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-            Log.Info("安装包使用HTTP下载存在风险，请评估网络安全");
+            Log.Info("Downloading the package over HTTP is risky; assess network security.");
 
         await _packageLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -285,7 +285,7 @@ internal sealed class AgentExpansionService
                 var actual = NetRuntime.GetSHA512(file);
                 if (!actual.EqualIgnoreCase(expected))
                 {
-                    Log.Info("安装包哈希校验失败，期望 {0} 实际 {1}", expected, actual);
+                    Log.Info("Package hash verification failed; expected {0}, actual {1}", expected, actual);
                     File.Delete(file);
                     return null;
                 }

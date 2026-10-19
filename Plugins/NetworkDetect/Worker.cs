@@ -19,7 +19,7 @@ internal class Worker
     {
         if (_timer == null)
         {
-            XTrace.WriteLine("网络探测[{0}]：{1}", Item.Name, Item.Address);
+            XTrace.WriteLine("Network probe [{0}]: {1}", Item.Name, Item.Address);
 
             var set = NetworkDetectSetting.Current;
             var p = set.Period;

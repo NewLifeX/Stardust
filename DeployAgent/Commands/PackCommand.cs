@@ -11,7 +11,7 @@ internal class PackCommand : ICommand
     public void Process(String[] args)
     {
         // *.zip aa.txt bb/*.cs
-        XTrace.WriteLine("开始打包：{0}", args.Join(" "));
+        XTrace.WriteLine("Starting packaging: {0}", args.Join(" "));
 
         // -r 递归压缩
         var recurse = args.Any(e => e == "-r");
@@ -34,7 +34,7 @@ internal class PackCommand : ICommand
                 if (fi.Exists)
                     fi.Compress(target);
                 else
-                    throw new FileNotFoundException("文件不存在", patterns[0]);
+                    throw new FileNotFoundException(L.T("File does not exist"), patterns[0]);
             }
         }
         else if (target.EndsWithIgnoreCase(".zip"))
@@ -42,7 +42,7 @@ internal class PackCommand : ICommand
             PackZip(target, patterns, recurse);
         }
         else
-            throw new NotSupportedException("不支持的压缩格式！");
+            throw new NotSupportedException(L.T("Unsupported archive format."));
     }
 
     private void PackZip(String target, String[] patterns, Boolean recurse)
@@ -75,12 +75,12 @@ internal class PackCommand : ICommand
                 }
 
                 // 遍历文件
-                WriteLog("扫描：\e[31;1m{0}\e[0m 匹配：\u001b[32;1m{1}\u001b[0m", di.FullName, pt);
+                WriteLog("Scanning: \e[31;1m{0}\e[0m matched: \u001b[32;1m{1}\u001b[0m", di.FullName, pt);
                 var option = recurse ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
                 foreach (var fi in di.GetFiles(pt, option))
                 {
                     var name = recurse ? GetEntryName(di, fi) : fi.Name;
-                    WriteLog("\t添加：{0}", name);
+                    WriteLog("\tAdded: {0}", name);
                     //zip.CreateEntryFromFile(fi.FullName, name);
                     CreateEntryFromFile(zip, fi, name, context);
                 }
@@ -91,21 +91,21 @@ internal class PackCommand : ICommand
                 if (fi.Exists)
                 {
                     var name = fi.Name;
-                    WriteLog("添加：{0}", name);
+                    WriteLog("Added: {0}", name);
                     //zip.CreateEntryFromFile(fi.FullName, name);
                     CreateEntryFromFile(zip, fi, name, context);
                 }
                 else
                 {
                     var di = item.GetCurrentPath().AsDirectory();
-                    if (!di.Exists) throw new FileNotFoundException("文件不存在", item);
+                    if (!di.Exists) throw new FileNotFoundException(L.T("File does not exist"), item);
 
-                    WriteLog("扫描：\e[31;1m{0}\e[0m", di.FullName);
+                    WriteLog("Scanning: \e[31;1m{0}\e[0m", di.FullName);
                     var option = recurse ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
                     foreach (var fi2 in di.GetFiles("", option))
                     {
                         var name = GetEntryName(di, fi2);
-                        WriteLog("\t添加：{0}", name);
+                        WriteLog("\tAdded: {0}", name);
                         CreateEntryFromFile(zip, fi2, name, context);
                     }
                 }
@@ -121,7 +121,7 @@ internal class PackCommand : ICommand
         //context.CompressSize = target.AsFile().Length;
         var rate = context.Size == 0 ? 0 : context.CompressSize / (Double)context.Size;
 
-        WriteLog("压缩完成，大小：\e[31;1m{0:n0}\e[0m，压缩后大小：\e[31;1m{1:n0}\e[0m，压缩比：\e[31;1m{2:p1}\e[0m", context.Size, context.CompressSize, rate);
+        WriteLog("Compression completed, size: \e[31;1m{0:n0}\e[0m, compressed size: \e[31;1m{1:n0}\e[0m, ratio: \e[31;1m{2:p1}\e[0m", context.Size, context.CompressSize, rate);
     }
 
     /// <summary>获取压缩条目相对路径</summary>

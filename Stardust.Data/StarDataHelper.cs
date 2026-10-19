@@ -84,7 +84,7 @@ public static class StarDataHelper
                     try
                     {
                         // 迁移数据
-                        XTrace.WriteLine("迁移表[{0}]到数据库[{1}]，文件：{2}", name, key, file);
+                        XTrace.WriteLine("Migrating table [{0}] to database [{1}], file: {2}", name, key, file);
 
                         var sql = $"""
                         ATTACH DATABASE '{file}' AS target;
@@ -97,7 +97,7 @@ public static class StarDataHelper
                     catch (Exception ex)
                     {
                         XTrace.WriteException(ex);
-                        XTrace.WriteLine("迁移表[{0}]失败，继续处理其他表", name);
+                        XTrace.WriteLine("Failed to migrate table [{0}]; continuing with other tables", name);
                     }
                 }
 
@@ -109,7 +109,7 @@ public static class StarDataHelper
                     try
                     {
                         // 迁移数据
-                        XTrace.WriteLine("迁移表[{0}]到数据库[{1}]，文件：{2}", name, key, file);
+                        XTrace.WriteLine("Migrating table [{0}] to database [{1}], file: {2}", name, key, file);
 
                         var sql = $"""
                         ATTACH DATABASE '{file}' AS target;
@@ -122,7 +122,7 @@ public static class StarDataHelper
                     catch (Exception ex)
                     {
                         XTrace.WriteException(ex);
-                        XTrace.WriteLine("迁移表[{0}]失败，继续处理其他表", name);
+                        XTrace.WriteLine("Failed to migrate table [{0}]; continuing with other tables", name);
                     }
                 }
             }
@@ -161,13 +161,13 @@ public static class StarDataHelper
                     try
                     {
                         // 迁移数据
-                        XTrace.WriteLine("迁移表[{0}]到数据库[{1}]，文件：{2}", name, key, file);
+                        XTrace.WriteLine("Migrating table [{0}] to database [{1}], file: {2}", name, key, file);
 
                         var oldTable = tables.FirstOrDefault(e => e.TableName.EqualIgnoreCase(name));
                         var insertSql = BuildSafeInsertSql(factory.Table.DataTable, oldTable, "main", "target");
                         if (insertSql.IsNullOrEmpty())
                         {
-                            XTrace.WriteLine("跳过表[{0}]的迁移", name);
+                            XTrace.WriteLine("Skipping migration of table [{0}]", name);
                             continue;
                         }
 
@@ -182,7 +182,7 @@ public static class StarDataHelper
                     catch (Exception ex)
                     {
                         XTrace.WriteException(ex);
-                        XTrace.WriteLine("迁移表[{0}]失败，继续处理其他表", name);
+                        XTrace.WriteLine("Failed to migrate table [{0}]; continuing with other tables", name);
                     }
                 }
             }
@@ -197,14 +197,14 @@ public static class StarDataHelper
                 catch (Exception ex)
                 {
                     XTrace.WriteException(ex);
-                    XTrace.WriteLine("VACUUM操作失败，不影响正常使用");
+                    XTrace.WriteLine("VACUUM failed; normal use is not affected");
                 }
             }
         }
         catch (Exception ex)
         {
             XTrace.WriteException(ex);
-            XTrace.WriteLine("SplitSqliteTables执行失败，但不影响应用启动");
+            XTrace.WriteLine("SplitSqliteTables failed, but application startup is not affected");
         }
     }
 
@@ -252,7 +252,7 @@ public static class StarDataHelper
         // 如果没有公共字段，返回空操作（避免SQL错误）
         if (fieldNames.Count == 0)
         {
-            XTrace.WriteLine("警告：表[{0}]在新旧结构中没有公共字段，跳过迁移", newTable.TableName);
+            XTrace.WriteLine("Warning: table [{0}] has no common columns in the old and new schemas; skipping migration", newTable.TableName);
             return null;
         }
 

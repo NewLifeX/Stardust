@@ -1,4 +1,5 @@
-﻿using NewLife.Agent;
+using NewLife;
+using NewLife.Agent;
 using NewLife.Agent.Command;
 
 namespace StarAgent.CommandHandler
@@ -15,9 +16,9 @@ namespace StarAgent.CommandHandler
         public override void Process(String[] args)
         {
             var set = ((MyService)Service).StarSetting;
-            if (!String.IsNullOrEmpty(set.Server)) Console.WriteLine("服务端：{0}", set.Server);
+            if (!String.IsNullOrEmpty(set.Server)) Console.WriteLine(L.T("Server: {0}"), set.Server);
 
-            Console.WriteLine("请输入新的服务端：");
+            Console.WriteLine(L.T("Enter the new server: "));
 
             var addr = Console.ReadLine();
             if (String.IsNullOrEmpty(addr)) addr = "http://127.0.0.1:6600";
@@ -25,7 +26,7 @@ namespace StarAgent.CommandHandler
             set.Server = addr;
             set.Save();
 
-            Service.WriteLog("服务端修改为：{0}", addr);
+            Service.WriteLog("Server changed to: {0}", addr);
         }
     }
 }

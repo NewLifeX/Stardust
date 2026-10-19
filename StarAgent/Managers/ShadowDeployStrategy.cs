@@ -34,7 +34,7 @@ public class ShadowDeployStrategy : DeployStrategyBase
             var shadow = CreateShadow(workDir, $"{context.Name}-{hash}");
 
             context.Shadow = shadow;
-            context.WriteLog("影子模式，解压到影子目录：{0}", shadow);
+            context.WriteLog("Shadow mode: extract to the shadow directory: {0}", shadow);
 
             var sdi = shadow.AsDirectory();
             if (sdi == null || !sdi.Exists)
@@ -62,7 +62,7 @@ public class ShadowDeployStrategy : DeployStrategyBase
         else
         {
             // 没有 zip 包时，假设文件已经存在于工作目录中
-            context.WriteLog("影子模式降级为标准模式，无需解压，直接使用工作目录：{0}", workDir);
+            context.WriteLog("Shadow mode downgraded to standard mode; no extraction needed, using the working directory directly: {0}", workDir);
 
             // 查找可执行文件（在工作目录中）
             if (!RetrieveExeFile(context, workDir))
@@ -81,7 +81,7 @@ public class ShadowDeployStrategy : DeployStrategyBase
 
         if (context.ExecuteFile.IsNullOrEmpty())
         {
-            context.WriteLog("可执行文件路径为空");
+            context.WriteLog("The executable path is empty");
             return null;
         }
 
@@ -92,7 +92,7 @@ public class ShadowDeployStrategy : DeployStrategyBase
             return ExecuteCommand(context);
         }
 
-        context.WriteLog("运行文件：{0}", runFile.FullName);
+        context.WriteLog("Run file: {0}", runFile.FullName);
 
         var si = BuildProcessStartInfo(context, runFile);
 

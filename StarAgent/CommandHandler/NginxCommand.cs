@@ -20,16 +20,16 @@ internal class NgidnxCommand : BaseCommandHandler
         var sites = NginxDeploy.DetectNginxConfig(dir).ToList();
         if (sites.Count == 0)
         {
-            XTrace.WriteLine("没有找到Nginx配置文件，请检查目录 {0} 是否存在", dir);
+            XTrace.WriteLine("No nginx configuration file found; check whether directory {0} exists", dir);
             return;
         }
 
-        XTrace.WriteLine("Nginx配置目录：{0}", sites[0].ConfigPath);
-        XTrace.WriteLine("Nginx扩展名：{0}", sites[0].Extension);
+        XTrace.WriteLine("Nginx configuration directory: {0}", sites[0].ConfigPath);
+        XTrace.WriteLine("Nginx extension: {0}", sites[0].Extension);
 
         foreach (var nd in sites)
         {
-            XTrace.WriteLine("站点：{0}", nd.SiteFile);
+            XTrace.WriteLine("Site: {0}", nd.SiteFile);
             nd.Publish();
         }
     }

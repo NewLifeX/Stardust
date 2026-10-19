@@ -140,10 +140,27 @@ if (!$SkipOrphan) {
         ForEach-Object { [IO.File]::ReadAllText($_.FullName) }) -join "`n"
 
     foreach ($key in $reference.Entries.Keys) {
-        # 源码中的字面量形式：制表符写作 \t，引号写作 \"
+        # 源码中的字面量形式：制表符写作 \t，引号写作 \"；ANSI 转义在源码中可能是 \e 或 \u001b
         $escaped = $key.Replace('\', '\\').Replace('"', '\"').Replace("`t", '\t').Replace("`r", '\r').Replace("`n", '\n')
-        if (!$sourceText.Contains($key) -and !$sourceText.Contains($escaped)) {
-            $orphans += $key
+        $variants = @($key, $escaped)
+        $esc = [String][Char]27
+        if ($key.Contains($esc)) {
+            $variants += $key.Replace($esc, '\e')
+            $variants += $key.Replace($esc, '\u001b')
+            $variants += $key.Replace($esc, '\x1b')
+        }
+        $found = $false
+        foreach ($v in $variants) {
+            if ($sourceText.Contains($v)) { $found = $true; break }
+        }
+        if (!$found) {
+            # 去掉 ANSI 颜色序列与制表符转义后再比对，避免 \e / \u001b 混用导致误报
+            $plainKey = $key.Replace($esc, '') -replace '\[[0-9;]*m', ''
+            $plainKey = $plainKey.Replace("`t", '\t')
+            $plainSource = $sourceText -replace '(\\e|\\u001b|\\x1b)\[[0-9;]*m', ''
+            if (!$plainSource.Contains($plainKey)) {
+                $orphans += $key
+            }
         }
     }
     foreach ($o in $orphans) { $allErrors += "孤儿键（源码中找不到）：$o" }

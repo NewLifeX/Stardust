@@ -28,11 +28,11 @@ namespace StarGateway
             {
                 app.AppName = "StarGateway";
                 app.ClientId = $"Gateway@{NetHelper.MyIP()}";
-                XTrace.WriteLine("StarGateway 已连接 StarServer: {0}", Star.Server);
+                XTrace.WriteLine("StarGateway connected to StarServer: {0}", Star.Server);
             }
             else
             {
-                XTrace.WriteLine("StarGateway 未配置 StarServer，将以独立模式运行（仅数据库 + 本地配置）");
+                XTrace.WriteLine("StarGateway has no StarServer configured; running in standalone mode (database + local configuration only)");
             }
 
             // // 不需要兜底设置，因为三级配置，不配置StarGatewaySetting.StarServer代表不会从StarServer获取配置，直接使用本地DB或者本地配置文件gateway.json

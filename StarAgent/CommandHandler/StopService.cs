@@ -27,12 +27,12 @@ public class StopService : BaseCommandHandler
         var services = client.Invoke<ServicesInfo>("GetServices");
         if (services == null || services.Services == null || services.Services.Length == 0)
         {
-            XTrace.WriteLine("没有找到任何子服务");
+            XTrace.WriteLine("No child services found");
             return;
         }
         
         // 显示服务列表
-        XTrace.WriteLine("请选择要停止的服务：");
+        XTrace.WriteLine("Select the service to stop: ");
         for (var i = 0; i < services.Services.Length; i++)
         {
             var svc = services.Services[i];
@@ -42,14 +42,14 @@ public class StopService : BaseCommandHandler
                 XTrace.WriteLine("{0}. {1} (PID: {2})", i + 1, svc.Name, es.ProcessId);
             }
         }
-        XTrace.WriteLine("0. 返回主菜单");
+        XTrace.WriteLine("0. Return to the main menu");
         
         // 获取用户输入
-        XTrace.WriteLine("请输入服务序号或名称（0 返回主菜单）：");
+        XTrace.WriteLine("Enter the service number or name (0 to return to the main menu): ");
         var input = Console.ReadLine();
         if (String.IsNullOrEmpty(input) || input == "0")
         {
-            XTrace.WriteLine("返回主菜单...");
+            XTrace.WriteLine("Returning to the main menu...");
             return;
         }
         
@@ -64,7 +64,7 @@ public class StopService : BaseCommandHandler
             serviceName = input;
         }
         
-        XTrace.WriteLine("准备停止服务：{0}", serviceName);
+        XTrace.WriteLine("Preparing to stop service: {0}", serviceName);
 
         try
         {
@@ -73,22 +73,22 @@ public class StopService : BaseCommandHandler
 
             if (response == null)
             {
-                XTrace.WriteLine("停止服务失败：未收到响应");
+                XTrace.WriteLine("Failed to stop service: no response received");
                 return;
             }
 
             if (response.Success)
             {
-                XTrace.WriteLine("服务 {0} 停止成功", serviceName);
+                XTrace.WriteLine("Service {0} stopped successfully", serviceName);
             }
             else
             {
-                XTrace.WriteLine("停止服务失败：{0}", response.Message);
+                XTrace.WriteLine("Failed to stop service: {0}", response.Message);
             }
         }
         catch (Exception ex)
         {
-            XTrace.WriteLine("停止服务时发生错误：{0}", ex.Message);
+            XTrace.WriteLine("Error while stopping service: {0}", ex.Message);
         }
     }
 }

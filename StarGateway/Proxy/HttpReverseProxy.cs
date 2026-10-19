@@ -104,7 +104,7 @@ public class HttpReverseProxy : ProxyServer
         _timer = new TimerX(DoRefreshConfig, null, ConfigRefreshInterval * 1000, ConfigRefreshInterval * 1000) { Async = true };
         _healthTimer = new TimerX(DoHealthCheck, null, HealthCheckInterval * 1000, HealthCheckInterval * 1000) { Async = true };
 
-        WriteLog("Http反向代理启动，监听端口：{0}，路由数：{1}", Port, _routes?.Count ?? 0);
+        WriteLog("HTTP reverse proxy started, listening on port {0}, route count: {1}", Port, _routes?.Count ?? 0);
         base.OnStart();
     }
     #endregion
@@ -135,7 +135,7 @@ public class HttpReverseProxy : ProxyServer
     {
         if (certs == null || certs.Count == 0)
         {
-            WriteLog("未配置SSL证书，仅支持HTTP");
+            WriteLog("No SSL certificate configured; only HTTP is supported");
             return;
         }
 
@@ -166,7 +166,7 @@ public class HttpReverseProxy : ProxyServer
 #pragma warning restore SYSLIB0057
                 Certificate = x509;
                 SslProtocol = SslProtocols.Tls12;
-                WriteLog("加载SSL证书: {0} -> {1}", cert.Domain, x509.Subject);
+                WriteLog("Loading SSL certificate: {0} -> {1}", cert.Domain, x509.Subject);
                 break;
             }
             catch (Exception ex)
@@ -203,7 +203,7 @@ public class HttpReverseProxy : ProxyServer
             LoadConfig();
             if (_routes != null && _routes.Count > 0)
             {
-                WriteLog("从数据库加载路由配置完成，共 {0} 条路由", _routes.Count);
+                WriteLog("Loaded route configuration from the database: {0} route(s)", _routes.Count);
                 return;
             }
         }
@@ -278,13 +278,13 @@ public class HttpReverseProxy : ProxyServer
             // P1-1：远程路由为空时视为未提供有效配置，直接回退数据库（不覆盖、不阻断）
             if (routes.Count == 0)
             {
-                WriteLog("从 StarServer 拉取的路由为空，回退数据库");
+                WriteLog("Routes fetched from StarServer are empty; falling back to the database");
                 return false;
             }
 
             Interlocked.Exchange(ref _routes, routes);
             _configSource = "server";
-            WriteLog("从 StarServer 拉取路由配置完成，共 {0} 条路由", routes.Count);
+            WriteLog("Fetched route configuration from StarServer: {0} route(s)", routes.Count);
 
             // 证书同源覆盖：仅当远程确实下发证书时才覆盖并跳过数据库证书加载；
             // 若远程证书列表为空，_configFromServer 保持 0（未覆盖），由上层回退查库
@@ -382,7 +382,7 @@ public class HttpReverseProxy : ProxyServer
         foreach (var kv in targets) _directTargets[kv.Key] = kv.Value;
         Interlocked.Exchange(ref _routes, routes);
         _configSource = "file";
-        WriteLog("从本地文件 {0} 加载路由配置，共 {1} 条（本地兜底）", file, routes.Count);
+        WriteLog("Loaded route configuration from local file {0}: {1} route(s) (local fallback)", file, routes.Count);
     }
 
     protected virtual void LoadConfig()
@@ -433,7 +433,7 @@ public class HttpReverseProxy : ProxyServer
                 {
                     node.IsHealthy = healthy;
                     node.Update();
-                    WriteLog("健康检查: {0} -> {1}", node.Address, healthy ? "🟢" : "🔴");
+                    WriteLog("Health check: {0} -> {1}", node.Address, healthy ? "🟢" : "🔴");
                 }
             }
         }

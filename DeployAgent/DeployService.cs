@@ -36,14 +36,14 @@ internal class DeployService : ServiceBase
     /// </remarks>
     public override void StartWork(String reason)
     {
-        XTrace.WriteLine("开始 Deploy 客户端");
+        XTrace.WriteLine("Starting the Deploy client");
 
         var set = StarSetting.Current;
 
         var server = set.Server;
         if (server.IsNullOrEmpty())
         {
-            XTrace.WriteLine("未配置星尘服务端地址，请配置 config/Star.config 中的 Server");
+            XTrace.WriteLine("The Stardust server address is not configured; set Server in config/Star.config.");
             return;
         }
 
@@ -103,7 +103,7 @@ internal class DeployService : ServiceBase
         var trimmedKey = deployKey.TrimStart();
         if (!trimmedKey.StartsWith("-----BEGIN"))
         {
-            XTrace.WriteLine("警告：仓库密钥格式无效，跳过 SSH 密钥设置");
+            XTrace.WriteLine("Warning: invalid repository key format; skipping SSH key setup");
             return null;
         }
 
@@ -118,7 +118,7 @@ internal class DeployService : ServiceBase
             catch { }
         }
 
-        XTrace.WriteLine("已设置 SSH 密钥：{0}", keyFile);
+        XTrace.WriteLine("SSH key configured: {0}", keyFile);
         return keyFile;
     }
 
@@ -130,11 +130,11 @@ internal class DeployService : ServiceBase
         try
         {
             File.Delete(keyFile);
-            XTrace.WriteLine("已清理 SSH 密钥：{0}", keyFile);
+            XTrace.WriteLine("SSH key cleaned up: {0}", keyFile);
         }
         catch (Exception ex)
         {
-            XTrace.WriteLine("警告：清理 SSH 密钥失败：{0}", ex.Message);
+            XTrace.WriteLine("Warning: failed to clean up the SSH key: {0}", ex.Message);
         }
     }
     #endregion
@@ -150,9 +150,9 @@ internal class DeployService : ServiceBase
         // 解密仓库密码并用凭据组装克隆 URL
         var cloneUrl = BuildCloneUrl(cmd);
 
-        XTrace.WriteLine("========== 开始编译任务 ==========");
-        XTrace.WriteLine("仓库：{0}", Stardust.Models.CompileCommand.RedactUrlForLog(cloneUrl));
-        XTrace.WriteLine("分支：{0}", cmd.Branch ?? "main");
+        XTrace.WriteLine("========== Starting build task ==========");
+        XTrace.WriteLine("Repository: {0}", Stardust.Models.CompileCommand.RedactUrlForLog(cloneUrl));
+        XTrace.WriteLine("Branch: {0}", cmd.Branch ?? "main");
 
         var sshKeyFile = SetupSshKey(cmd.DeployKey);
 
@@ -180,7 +180,7 @@ internal class DeployService : ServiceBase
             // 上传到星尘
             UploadBuildPackageSync(cmd, zipFile, version, commitId, commitLog, commitTime);
 
-            XTrace.WriteLine("========== 编译任务完成 ==========");
+            XTrace.WriteLine("========== Build task completed ==========");
 
             // 上报部署完成事件
             ReportDeployEvent(cmd.DeployName, "done", $"部署代理处理完成（应用：{cmd.DeployName}，产物：{zipFile}）");
@@ -189,7 +189,7 @@ internal class DeployService : ServiceBase
         }
         catch (Exception ex)
         {
-            XTrace.WriteLine("编译任务失败：{0}", ex.Message);
+            XTrace.WriteLine("Build task failed: {0}", ex.Message);
             XTrace.WriteException(ex);
 
             // 将累计构建日志带入异常，便于服务端回传（仅保留尾部，避免消息过大）
@@ -198,7 +198,7 @@ internal class DeployService : ServiceBase
             // 上报失败事件（含日志），服务端写入 AppDeployHistory
             ReportDeployEvent(cmd.DeployName, "error", tail);
 
-            throw new Exception($"编译任务失败：{ex.Message}\n----累计构建日志----\n{tail}");
+            throw new Exception(L.T("Build task failed: {0}\n---- accumulated build log ----\n{1}", ex.Message, tail));
         }
         finally
         {
@@ -211,7 +211,7 @@ internal class DeployService : ServiceBase
     private static CompileCommand ParseCompileCommand(String args)
     {
         var cmd = args.ToJsonEntity<CompileCommand>();
-        if (cmd == null) throw new ArgumentNullException(nameof(args), "无法解析编译命令参数");
+        if (cmd == null) throw new ArgumentNullException(nameof(args), L.T("Unable to parse the build command arguments"));
         return cmd;
     }
 
@@ -232,7 +232,7 @@ internal class DeployService : ServiceBase
             }
             catch (Exception ex)
             {
-                XTrace.WriteLine("解密仓库密码失败：{0}", ex.Message);
+                XTrace.WriteLine("Failed to decrypt the repository password: {0}", ex.Message);
             }
         }
         else if (!cmd.RepoUserName.IsNullOrEmpty())
@@ -250,7 +250,7 @@ internal class DeployService : ServiceBase
         {
             var lenBuild = buildLog.Length;
             var publishDir = BuildProject(cmd, repoDir, outputPath, buildLog);
-            XTrace.WriteLine("编译完成，输出目录：{0}", publishDir);
+            XTrace.WriteLine("Build completed, output directory: {0}", publishDir);
             ReportDeployEvent(cmd.DeployName, "build", buildLog.ToString(lenBuild, buildLog.Length - lenBuild));
             return publishDir;
         }
@@ -266,7 +266,7 @@ internal class DeployService : ServiceBase
 
         var (commitId, commitLog, commitTime) = GetGitCommitInfo(repoDir);
         if (!commitId.IsNullOrEmpty())
-            XTrace.WriteLine("提交：{0} {1} {2}", commitId, commitLog, commitTime);
+            XTrace.WriteLine("Commit: {0} {1} {2}", commitId, commitLog, commitTime);
 
         return (commitId, commitLog, commitTime);
     }
@@ -277,7 +277,7 @@ internal class DeployService : ServiceBase
         if (!cmd.PackageOutput) return ("", "");
 
         if (!Directory.Exists(publishDir))
-            throw new DirectoryNotFoundException($"产物目录不存在：{publishDir}");
+            throw new DirectoryNotFoundException(L.T("Artifact directory does not exist: {0}", publishDir));
 
         var packageName = cmd.DeployName ?? "app";
         // 如果没有临时工作目录，则在源代码目录上级创建临时目录存放zip
@@ -286,7 +286,7 @@ internal class DeployService : ServiceBase
         var timestamp = now.ToString("yyyyMMdd-HHmmss");
         var zipFile = Path.Combine(zipDir, $"{packageName}-{timestamp}.zip");
         ZipCompress(publishDir, zipFile, cmd.PackageFilters);
-        XTrace.WriteLine("打包完成：{0} ({1:n0} bytes)", zipFile, new FileInfo(zipFile).Length);
+        XTrace.WriteLine("Packaging completed: {0} ({1:n0} bytes)", zipFile, new FileInfo(zipFile).Length);
         ReportDeployEvent(cmd.DeployName, "package", $"打包完成：{zipFile} ({new FileInfo(zipFile).Length:n0} bytes)");
 
         var version = $"v{now:yyyyMMdd-HHmmss}";
@@ -299,13 +299,13 @@ internal class DeployService : ServiceBase
         if (!cmd.UploadPackage || zipFile.IsNullOrEmpty()) return;
 
         if (cmd.DeployName.IsNullOrEmpty())
-            throw new InvalidOperationException("未指定应用部署集名称，无法上传");
+            throw new InvalidOperationException(L.T("The application deployment set name is not specified; cannot upload."));
 
         UploadPackageAsync(_client.Server, cmd.DeployName, zipFile, version, commitId, commitLog, commitTime)
             .ConfigureAwait(false)
             .GetAwaiter()
             .GetResult();
-        XTrace.WriteLine("上传成功：{0}", zipFile);
+        XTrace.WriteLine("Upload succeeded: {0}", zipFile);
         ReportDeployEvent(cmd.DeployName, "upload", $"上传成功：{zipFile}");
     }
 
@@ -356,7 +356,7 @@ internal class DeployService : ServiceBase
         }
         catch (Exception ex)
         {
-            XTrace.WriteLine("上报部署事件失败：{0}", ex.Message);
+            XTrace.WriteLine("Failed to report the deployment event: {0}", ex.Message);
         }
     }
 
@@ -372,7 +372,7 @@ internal class DeployService : ServiceBase
         // 编译前先清空输出目录，避免上次编译产物影响
         if (Directory.Exists(publishDir))
         {
-            XTrace.WriteLine("清空输出目录：{0}", publishDir);
+            XTrace.WriteLine("Clearing output directory: {0}", publishDir);
             Directory.Delete(publishDir, true);
         }
 
@@ -407,7 +407,7 @@ internal class DeployService : ServiceBase
                         : Path.Combine(repoDir, cmd.ProjectPath);
 
                     if (!File.Exists(buildScript))
-                        throw new FileNotFoundException($"构建脚本不存在：{buildScript}");
+                        throw new FileNotFoundException(L.T("Build script does not exist: {0}", buildScript));
 
                     ExecuteBuildScript(buildScript, repoDir, log);
                 }
@@ -455,7 +455,7 @@ internal class DeployService : ServiceBase
             }
         };
 
-        if (!p.Start()) throw new Exception($"无法启动进程：{fileName}");
+        if (!p.Start()) throw new Exception(L.T("Unable to start process: {0}", fileName));
         p.StandardInput.Close();  // 关键：关闭标准输入，防止阻塞
         p.BeginOutputReadLine();
         p.BeginErrorReadLine();
@@ -468,7 +468,7 @@ internal class DeployService : ServiceBase
             log?.AppendLine($"{fileName} 执行超时，已终止（{timeout} ms）");
             log?.Append(outputSb);
             log?.Append(errorSb);
-            throw new Exception($"{fileName} 执行超时，已终止（{timeout} ms）\n{outputSb}\n{errorSb}");
+            throw new Exception(L.T("{0} execution timed out and was terminated ({1} ms)\n{2}\n{3}", fileName, timeout, outputSb, errorSb));
         }
 
         p.WaitForExit();
@@ -478,7 +478,7 @@ internal class DeployService : ServiceBase
             log?.AppendLine($"{fileName} 执行失败，退出码：{p.ExitCode}");
             log?.Append(outputSb);
             log?.Append(errorSb);
-            throw new Exception($"{fileName} 执行失败，退出码：{p.ExitCode}\n{outputSb}\n{errorSb}");
+            throw new Exception(L.T("{0} execution failed with exit code {1}\n{2}\n{3}", fileName, p.ExitCode, outputSb, errorSb));
         }
 
         // 记录成功输出，供上层回传构建日志
@@ -490,13 +490,13 @@ internal class DeployService : ServiceBase
     private void GitClone(String repoUrl, String branch, String targetPath, StringBuilder? log = null, String? sshKeyFile = null)
     {
         var safeUrl = Stardust.Models.CompileCommand.RedactUrlForLog(repoUrl);
-        XTrace.WriteLine("开始克隆仓库：{0} 分支：{1}", safeUrl, branch);
+        XTrace.WriteLine("Cloning repository {0}, branch: {1}", safeUrl, branch);
 
         var args = $"clone -b {branch} --depth 1 {repoUrl} \"{targetPath}\"";
         XTrace.WriteLine("git {0}", $"clone -b {branch} --depth 1 {safeUrl} \"{targetPath}\"");
         ExecuteProcess("git", args, null, log, sshKeyFile);
 
-        XTrace.WriteLine("Git 克隆成功");
+        XTrace.WriteLine("Git clone succeeded");
     }
 
     /// <summary>Git 拉取最新代码</summary>
@@ -504,7 +504,7 @@ internal class DeployService : ServiceBase
     /// <param name="branch">分支名称</param>
     private void GitPull(String repoDir, String? branch, StringBuilder? log = null, String? sshKeyFile = null)
     {
-        XTrace.WriteLine("开始拉取代码：{0}", repoDir);
+        XTrace.WriteLine("Pulling code: {0}", repoDir);
 
         // 如果指定了分支则先切换
         if (!branch.IsNullOrEmpty())
@@ -514,35 +514,35 @@ internal class DeployService : ServiceBase
 
         ExecuteProcess("git", "pull", repoDir, log, sshKeyFile);
 
-        XTrace.WriteLine("Git 拉取成功");
+        XTrace.WriteLine("Git pull succeeded");
     }
 
     /// <summary>执行构建脚本。自动判断执行环境，Linux直接使用bash，Windows使用Git Bash</summary>
     private void ExecuteBuildScript(String scriptPath, String workingDirectory, StringBuilder? log = null)
     {
-        XTrace.WriteLine("开始执行构建脚本：{0}", scriptPath);
+        XTrace.WriteLine("Executing build script: {0}", scriptPath);
 
         if (OperatingSystem.IsWindows())
         {
             // Windows 环境，使用 Git Bash 执行
             var gitBash = FindGitBash();
             if (gitBash.IsNullOrEmpty())
-                throw new Exception("未找到 Git Bash，请安装 Git for Windows");
+                throw new Exception(L.T("Git Bash was not found; install Git for Windows."));
 
-            XTrace.WriteLine("使用 Git Bash: {0}", gitBash);
+            XTrace.WriteLine("Using Git Bash: {0}", gitBash);
             ExecuteProcess(gitBash, $"-l -c \"bash '{scriptPath}'\"", workingDirectory, log);
         }
         else
         {
             // Linux/macOS 环境，直接使用 bash
-            XTrace.WriteLine("使用 bash 执行脚本");
+            XTrace.WriteLine("Executing the script with bash");
 
             // 确保脚本有执行权限
             ExecuteProcess("chmod", $"+x \"{scriptPath}\"", workingDirectory, log);
             ExecuteProcess("bash", $"\"{scriptPath}\"", workingDirectory, log);
         }
 
-        XTrace.WriteLine("构建脚本执行成功");
+        XTrace.WriteLine("Build script executed successfully");
     }
 
     /// <summary>查找 Git Bash 路径</summary>
@@ -580,7 +580,7 @@ internal class DeployService : ServiceBase
     /// <param name="filters">过滤器，支持通配符，多项分号隔开</param>
     private void ZipCompress(String sourceDir, String zipFile, String? filters = null)
     {
-        XTrace.WriteLine("开始压缩：{0} -> {1}", sourceDir, zipFile);
+        XTrace.WriteLine("Starting compression: {0} -> {1}", sourceDir, zipFile);
 
         if (File.Exists(zipFile)) File.Delete(zipFile);
 
@@ -636,7 +636,7 @@ internal class DeployService : ServiceBase
         }
         catch (Exception ex)
         {
-            XTrace.WriteLine("获取Git提交信息失败：{0}", ex.Message);
+            XTrace.WriteLine("Failed to get Git commit information: {0}", ex.Message);
             return ("", "", "");
         }
     }
@@ -644,7 +644,7 @@ internal class DeployService : ServiceBase
     /// <summary>尝试备份现有仓库并重新克隆（失败则尝试还原备份）</summary>
     private void TryRecoverAndReclone(String repoUrl, String branch, String repoDir, String? sshKeyFile = null)
     {
-        XTrace.WriteLine("尝试备份并重新拉取仓库：{0}", repoDir);
+        XTrace.WriteLine("Attempting to back up and re-pull the repository: {0}", repoDir);
 
         var backupDir = "";
         try
@@ -653,37 +653,37 @@ internal class DeployService : ServiceBase
             {
                 backupDir = repoDir + ".backup." + DateTime.Now.ToString("yyyyMMddHHmmss");
                 Directory.Move(repoDir, backupDir);
-                XTrace.WriteLine("已备份原仓库到：{0}", backupDir);
+                XTrace.WriteLine("Original repository backed up to: {0}", backupDir);
             }
         }
         catch (Exception ex)
         {
-            XTrace.WriteLine("备份原仓库失败：{0}", ex.Message);
+            XTrace.WriteLine("Failed to back up the original repository: {0}", ex.Message);
             XTrace.WriteException(ex);
         }
 
         try
         {
             GitClone(repoUrl, branch ?? "main", repoDir, null, sshKeyFile);
-            XTrace.WriteLine("重新克隆成功：{0}", repoDir);
+            XTrace.WriteLine("Re-clone succeeded: {0}", repoDir);
 
             if (!string.IsNullOrEmpty(backupDir) && Directory.Exists(backupDir))
             {
                 try
                 {
                     Directory.Delete(backupDir, true);
-                    XTrace.WriteLine("已删除备份：{0}", backupDir);
+                    XTrace.WriteLine("Backup deleted: {0}", backupDir);
                 }
                 catch (Exception ex)
                 {
-                    XTrace.WriteLine("删除备份失败：{0}", ex.Message);
+                    XTrace.WriteLine("Failed to delete the backup: {0}", ex.Message);
                     XTrace.WriteException(ex);
                 }
             }
         }
         catch (Exception ex)
         {
-            XTrace.WriteLine("重新克隆失败：{0}", ex.Message);
+            XTrace.WriteLine("Re-clone failed: {0}", ex.Message);
             XTrace.WriteException(ex);
 
             // 尝试还原备份
@@ -696,12 +696,12 @@ internal class DeployService : ServiceBase
                         try { Directory.Delete(repoDir, true); } catch { }
                     }
                     Directory.Move(backupDir, repoDir);
-                    XTrace.WriteLine("已还原备份到：{0}", repoDir);
+                    XTrace.WriteLine("Backup restored to: {0}", repoDir);
                 }
             }
             catch (Exception ex2)
             {
-                XTrace.WriteLine("还原备份失败：{0}", ex2.Message);
+                XTrace.WriteLine("Failed to restore the backup: {0}", ex2.Message);
                 XTrace.WriteException(ex2);
             }
 
@@ -716,11 +716,11 @@ internal class DeployService : ServiceBase
         if (cmd.SourcePath.IsNullOrEmpty())
         {
             if (!cmd.PullCode || cmd.Repository.IsNullOrEmpty())
-                throw new InvalidOperationException("未指定源代码目录或代码仓库地址");
+                throw new InvalidOperationException(L.T("Neither a source directory nor a code repository address was specified."));
 
             workDir = Path.Combine(Path.GetTempPath(), $"stardust-build-{Guid.NewGuid():N}");
             Directory.CreateDirectory(workDir);
-            XTrace.WriteLine("工作目录：{0}", workDir);
+            XTrace.WriteLine("Working directory: {0}", workDir);
 
             var repoDir = Path.Combine(workDir, "repo");
             CloneWithRetry(cloneUrl, cmd.Branch ?? "main", repoDir, buildLog, sshKeyFile, cmd.DeployName);
@@ -728,7 +728,7 @@ internal class DeployService : ServiceBase
         }
 
         var repo = cmd.SourcePath;
-        XTrace.WriteLine("使用本地源代码目录：{0}", repo);
+        XTrace.WriteLine("Using local source directory: {0}", repo);
 
         // 目录不存在或存在但 .git 不存在，都走 clone
         var needClone = !Directory.Exists(repo) || !Directory.Exists(Path.Combine(repo, ".git"));
@@ -756,12 +756,12 @@ internal class DeployService : ServiceBase
         {
             var lenGit = buildLog.Length;
             GitClone(repoUrl, branch, repoDir, buildLog, sshKeyFile);
-            XTrace.WriteLine("代码拉取完成：{0}", repoDir);
+            XTrace.WriteLine("Code pull completed: {0}", repoDir);
             ReportDeployEvent(deployName, "gitclone", buildLog.ToString(lenGit, buildLog.Length - lenGit));
         }
         catch (Exception ex)
         {
-            XTrace.WriteLine("Git 克隆失败：{0}", ex.Message);
+            XTrace.WriteLine("Git clone failed: {0}", ex.Message);
             XTrace.WriteException(ex);
             RecoverAndReclone(repoUrl, branch, repoDir, sshKeyFile);
         }
@@ -774,12 +774,12 @@ internal class DeployService : ServiceBase
         {
             var lenPull = buildLog.Length;
             GitPull(repoDir, branch, buildLog, sshKeyFile);
-            XTrace.WriteLine("代码拉取完成");
+            XTrace.WriteLine("Code pull completed");
             ReportDeployEvent(deployName, "gitpull", buildLog.ToString(lenPull, buildLog.Length - lenPull));
         }
         catch (Exception ex)
         {
-            XTrace.WriteLine("Git 拉取失败：{0}", ex.Message);
+            XTrace.WriteLine("Git pull failed: {0}", ex.Message);
             XTrace.WriteException(ex);
             var repoUrl = cmdRepository.IsNullOrEmpty() ? cloneUrl : cmdRepository;
             RecoverAndReclone(repoUrl, branch ?? "main", repoDir, sshKeyFile);
@@ -790,7 +790,7 @@ internal class DeployService : ServiceBase
     private void RecoverAndReclone(String repoUrl, String branch, String repoDir, String? sshKeyFile = null)
     {
         var safeUrl = Stardust.Models.CompileCommand.RedactUrlForLog(repoUrl);
-        XTrace.WriteLine("尝试备份并重新拉取仓库：{0}", safeUrl);
+        XTrace.WriteLine("Attempting to back up and re-pull the repository: {0}", safeUrl);
 
         var backupDir = "";
         try
@@ -799,37 +799,37 @@ internal class DeployService : ServiceBase
             {
                 backupDir = repoDir + ".backup." + DateTime.Now.ToString("yyyyMMddHHmmss");
                 Directory.Move(repoDir, backupDir);
-                XTrace.WriteLine("已备份原仓库到：{0}", backupDir);
+                XTrace.WriteLine("Original repository backed up to: {0}", backupDir);
             }
         }
         catch (Exception ex)
         {
-            XTrace.WriteLine("备份原仓库失败：{0}", ex.Message);
+            XTrace.WriteLine("Failed to back up the original repository: {0}", ex.Message);
             XTrace.WriteException(ex);
         }
 
         try
         {
             GitClone(repoUrl, branch ?? "main", repoDir, null, sshKeyFile);
-            XTrace.WriteLine("重新克隆成功：{0}", repoDir);
+            XTrace.WriteLine("Re-clone succeeded: {0}", repoDir);
 
             if (!string.IsNullOrEmpty(backupDir) && Directory.Exists(backupDir))
             {
                 try
                 {
                     Directory.Delete(backupDir, true);
-                    XTrace.WriteLine("已删除备份：{0}", backupDir);
+                    XTrace.WriteLine("Backup deleted: {0}", backupDir);
                 }
                 catch (Exception ex)
                 {
-                    XTrace.WriteLine("删除备份失败：{0}", ex.Message);
+                    XTrace.WriteLine("Failed to delete the backup: {0}", ex.Message);
                     XTrace.WriteException(ex);
                 }
             }
         }
         catch (Exception ex)
         {
-            XTrace.WriteLine("重新克隆失败：{0}", ex.Message);
+            XTrace.WriteLine("Re-clone failed: {0}", ex.Message);
             XTrace.WriteException(ex);
 
             // 尝试还原备份
@@ -842,12 +842,12 @@ internal class DeployService : ServiceBase
                         try { Directory.Delete(repoDir, true); } catch { }
                     }
                     Directory.Move(backupDir, repoDir);
-                    XTrace.WriteLine("已还原备份到：{0}", repoDir);
+                    XTrace.WriteLine("Backup restored to: {0}", repoDir);
                 }
             }
             catch (Exception ex2)
             {
-                XTrace.WriteLine("还原备份失败：{0}", ex2.Message);
+                XTrace.WriteLine("Failed to restore the backup: {0}", ex2.Message);
                 XTrace.WriteException(ex2);
             }
 
@@ -865,7 +865,7 @@ internal class DeployService : ServiceBase
     /// <param name="commitTime">提交时间</param>
     private async Task UploadPackageAsync(String server, String deployName, String packagePath, String version, String? commitId = null, String? commitLog = null, String? commitTime = null)
     {
-        XTrace.WriteLine("开始上传包文件：{0}", packagePath);
+        XTrace.WriteLine("Uploading package file: {0}", packagePath);
 
         using var httpClient = new HttpClient
         {
@@ -883,7 +883,7 @@ internal class DeployService : ServiceBase
         if (!commitId.IsNullOrEmpty()) uploadUrl += $"&commitId={Uri.EscapeDataString(commitId)}";
         if (!commitLog.IsNullOrEmpty()) uploadUrl += $"&commitLog={Uri.EscapeDataString(commitLog)}";
         if (!commitTime.IsNullOrEmpty()) uploadUrl += $"&commitTime={Uri.EscapeDataString(commitTime)}";
-        XTrace.WriteLine("上传 URL: {0}{1}", server, uploadUrl);
+        XTrace.WriteLine("Upload URL: {0}{1}", server, uploadUrl);
 
         const Int32 maxRetries = 3;
         Exception lastError = null;
@@ -897,7 +897,7 @@ internal class DeployService : ServiceBase
                 // 检测 401 认证失效
                 if (result.StatusCode == 401 || IsUnauthorizedBody(result.Body))
                 {
-                    XTrace.WriteLine("上传收到 401 认证失效，尝试重新登录");
+                    XTrace.WriteLine("Upload received 401 (authentication expired); attempting to log in again");
                     var newToken = await EnsureLoginAsync().ConfigureAwait(false);
                     // 更新 HttpClient 的 X-Token 头
                     httpClient.DefaultRequestHeaders.Remove("X-Token");
@@ -911,7 +911,7 @@ internal class DeployService : ServiceBase
                 // 非 2xx 状态码
                 if (result.StatusCode < 200 || result.StatusCode >= 300)
                 {
-                    throw new Exception($"上传失败：HTTP {result.StatusCode} - {result.Body}");
+                    throw new Exception(L.T("Upload failed: HTTP {0} - {1}", result.StatusCode, result.Body));
                 }
 
                 // 检查响应体中的应用层错误码（ApiFilter 返回 HTTP 200，错误信息在 body 中）
@@ -922,7 +922,7 @@ internal class DeployService : ServiceBase
                         var uploadResult = result.Body.ToJsonEntity<UploadResult>();
                         if (uploadResult != null && uploadResult.Code != 0 && uploadResult.Code == 401)
                         {
-                            XTrace.WriteLine("响应体 code=401，尝试重新登录");
+                            XTrace.WriteLine("Response body code=401; attempting to log in again");
                             var newToken = await EnsureLoginAsync().ConfigureAwait(false);
                             httpClient.DefaultRequestHeaders.Remove("X-Token");
                             if (!newToken.IsNullOrEmpty())
@@ -931,7 +931,7 @@ internal class DeployService : ServiceBase
                             continue;
                         }
                         if (uploadResult != null && uploadResult.Code != 0)
-                            throw new Exception($"上传失败：{uploadResult.Code} - {uploadResult.Message}");
+                            throw new Exception(L.T("Upload failed: {0} - {1}", uploadResult.Code, uploadResult.Message));
                     }
                     catch (Exception ex) when (!ex.Message.StartsWith("上传失败："))
                     {
@@ -939,7 +939,7 @@ internal class DeployService : ServiceBase
                     }
                 }
 
-                XTrace.WriteLine("上传成功：{0}", result.Body);
+                XTrace.WriteLine("Upload succeeded: {0}", result.Body);
                 return;
             }
             catch (Exception ex) when (ex is HttpRequestException or IOException or System.Net.Sockets.SocketException or TaskCanceledException)
@@ -948,11 +948,11 @@ internal class DeployService : ServiceBase
                 if (attempt >= maxRetries)
                 {
                     XTrace.WriteException(ex);
-                    throw new Exception($"上传失败，已重试 {maxRetries} 次：{ex.Message}", ex);
+                    throw new Exception(L.T("Upload failed after {0} retries: {1}", maxRetries, ex.Message), ex);
                 }
 
                 var delay = (Int32)Math.Pow(2, attempt) * 1000; // 1s, 2s, 4s
-                XTrace.WriteLine("第 {0} 次重试，原因：{1}，等待 {2} 秒", attempt + 1, ex.Message, delay / 1000);
+                XTrace.WriteLine("Retry {0}, reason: {1}, waiting {2} second(s)", attempt + 1, ex.Message, delay / 1000);
                 await Task.Delay(delay).ConfigureAwait(false);
             }
             catch (Exception ex)
@@ -963,7 +963,7 @@ internal class DeployService : ServiceBase
             }
         }
 
-        if (lastError != null) throw new Exception($"上传失败，已重试 {maxRetries} 次：{lastError.Message}", lastError);
+        if (lastError != null) throw new Exception(L.T("Upload failed after {0} retries: {1}", maxRetries, lastError.Message), lastError);
     }
 
     /// <summary>执行单次上传请求。封装打开文件流→构建内容→POST→解析响应的完整流程，供重试调用</summary>
@@ -985,18 +985,18 @@ internal class DeployService : ServiceBase
     /// <summary>重新登录获取新 token。在 401 认证失效时调用</summary>
     private async Task<String?> EnsureLoginAsync()
     {
-        XTrace.WriteLine("Token 失效，重新登录后重试上传");
+        XTrace.WriteLine("Token expired; retrying upload after logging in again");
         try
         {
             await _client.Login("上传认证失效重试").ConfigureAwait(false);
             var newToken = _client.Client?.Token;
-            if (newToken.IsNullOrEmpty()) throw new Exception("重新登录后 token 仍为空");
+            if (newToken.IsNullOrEmpty()) throw new Exception(L.T("Token is still empty after logging in again"));
             return newToken;
         }
         catch (Exception ex)
         {
             XTrace.WriteException(ex);
-            throw new Exception($"重新登录失败：{ex.Message}", ex);
+            throw new Exception(L.T("Re-login failed: {0}", ex.Message), ex);
         }
     }
 

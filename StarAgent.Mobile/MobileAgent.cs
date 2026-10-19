@@ -98,7 +98,7 @@ public class MobileAgent : DisposeBase
         Client.OnLogined += (_, _) =>
         {
             Client.PingPeriod = GetPingPeriod();
-            XTrace.WriteLine($"[{Platform.Name}] 登录成功，节点编码：{Client.Code}");
+            XTrace.WriteLine(L.TLog("[{0}] Login succeeded, node code: {1}", Platform.Name, Client.Code));
         };
     }
     #endregion
@@ -112,14 +112,14 @@ public class MobileAgent : DisposeBase
 
         try
         {
-            XTrace.WriteLine($"[{Platform.Name}] 启动代理，服务端：{Setting.Server}");
+            XTrace.WriteLine(L.TLog("[{0}] Starting agent, server: {1}", Platform.Name, Setting.Server));
             Client.Open();
             LastError = null;
         }
         catch (Exception ex)
         {
             LastError = ex.Message;
-            XTrace.WriteLine($"[{Platform.Name}] 启动失败：{ex.Message}");
+            XTrace.WriteLine(L.TLog("[{0}] Startup failed: {1}", Platform.Name, ex.Message));
         }
     }
 

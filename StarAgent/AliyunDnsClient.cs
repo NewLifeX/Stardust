@@ -96,7 +96,7 @@ public class AliyunDnsClient
     /// <param name="interval">更新间隔（秒）</param>
     public void Start(Int32 interval)
     {
-        Log.Info("启动阿里云DNS动态域名解析：{0}.{1}", Record, Domain);
+        Log.Info("Starting Aliyun DNS dynamic domain resolution: {0}.{1}", Record, Domain);
 
         // 立即执行一次更新
         ThreadPoolX.QueueUserWorkItem(async () =>
@@ -119,7 +119,7 @@ public class AliyunDnsClient
                 Async = true
             };
 
-            Log.Info("阿里云DNS更新间隔：{0}秒", interval);
+            Log.Info("Aliyun DNS update interval: {0} second(s)", interval);
         }
     }
 
@@ -158,7 +158,7 @@ public class AliyunDnsClient
                 ipAddress = await GetPublicIpAsync();
                 if (ipAddress.IsNullOrEmpty())
                 {
-                    Log.Error("无法获取公网IP地址");
+                    Log.Error("Unable to obtain the public IP address");
                     return false;
                 }
             }
@@ -166,11 +166,11 @@ public class AliyunDnsClient
             // IP地址未变化，无需更新
             if (ipAddress == _lastIp && !_recordId.IsNullOrEmpty())
             {
-                Log.Debug("IP地址未变化：{0}，无需更新", ipAddress);
+                Log.Debug("IP address unchanged: {0}; no update needed", ipAddress);
                 return true;
             }
 
-            Log.Info("开始更新阿里云DNS记录：{0}.{1} => {2}", Record, Domain, ipAddress);
+            Log.Info("Updating Aliyun DNS record: {0}.{1} => {2}", Record, Domain, ipAddress);
 
             // 查询记录ID
             if (_recordId.IsNullOrEmpty())
@@ -193,18 +193,18 @@ public class AliyunDnsClient
             if (result)
             {
                 _lastIp = ipAddress;
-                Log.Info("成功更新阿里云DNS记录：{0}.{1} => {2}", Record, Domain, ipAddress);
+                Log.Info("Aliyun DNS record updated successfully: {0}.{1} => {2}", Record, Domain, ipAddress);
             }
             else
             {
-                Log.Error("更新阿里云DNS记录失败：{0}.{1} => {2}", Record, Domain, ipAddress);
+                Log.Error("Failed to update Aliyun DNS record: {0}.{1} => {2}", Record, Domain, ipAddress);
             }
 
             return result;
         }
         catch (Exception ex)
         {
-            Log.Error("更新阿里云DNS记录异常：{0}", ex.Message);
+            Log.Error("Error updating Aliyun DNS record: {0}", ex.Message);
             return false;
         }
     }
@@ -232,13 +232,13 @@ public class AliyunDnsClient
                     ip = ip?.Trim();
                     if (!ip.IsNullOrEmpty())
                     {
-                        Log.Debug("获取公网IP地址：{0} from {1}", ip, url);
+                        Log.Debug("Public IP address obtained: {0} from {1}", ip, url);
                         return ip;
                     }
                 }
                 catch (Exception ex)
                 {
-                    Log.Debug("从 {0} 获取公网IP失败：{1}", url, ex.Message);
+                    Log.Debug("Failed to obtain the public IP from {0}: {1}", url, ex.Message);
                 }
             }
 
@@ -246,7 +246,7 @@ public class AliyunDnsClient
         }
         catch (Exception ex)
         {
-            Log.Error("获取公网IP地址异常：{0}", ex.Message);
+            Log.Error("Error obtaining the public IP address: {0}", ex.Message);
             return null;
         }
     }
@@ -287,7 +287,7 @@ public class AliyunDnsClient
                 if (rr == Record && type == RecordType)
                 {
                     var recordId = record["RecordId"] as String;
-                    Log.Debug("找到DNS记录ID：{0}", recordId);
+                    Log.Debug("Found DNS record ID: {0}", recordId);
                     return recordId;
                 }
             }
@@ -296,7 +296,7 @@ public class AliyunDnsClient
         }
         catch (Exception ex)
         {
-            Log.Error("获取DNS记录ID异常：{0}", ex.Message);
+            Log.Error("Error obtaining DNS record ID: {0}", ex.Message);
             return null;
         }
     }
@@ -325,7 +325,7 @@ public class AliyunDnsClient
             if (json.TryGetValue("RecordId", out var recordId))
             {
                 _recordId = recordId?.ToString();
-                Log.Debug("添加DNS记录成功，记录ID：{0}", _recordId);
+                Log.Debug("DNS record added successfully, record ID: {0}", _recordId);
                 return true;
             }
 
@@ -333,7 +333,7 @@ public class AliyunDnsClient
         }
         catch (Exception ex)
         {
-            Log.Error("添加DNS记录异常：{0}", ex.Message);
+            Log.Error("Error adding DNS record: {0}", ex.Message);
             return false;
         }
     }
@@ -360,7 +360,7 @@ public class AliyunDnsClient
         }
         catch (Exception ex)
         {
-            Log.Error("更新DNS记录异常：{0}", ex.Message);
+            Log.Error("Error updating DNS record: {0}", ex.Message);
             return false;
         }
     }
@@ -395,7 +395,7 @@ public class AliyunDnsClient
         }
         catch (Exception ex)
         {
-            Log.Error("调用阿里云API异常：{0}", ex.Message);
+            Log.Error("Error calling the Aliyun API: {0}", ex.Message);
             return null;
         }
     }

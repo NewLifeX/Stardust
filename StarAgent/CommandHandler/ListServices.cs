@@ -30,12 +30,12 @@ public class ListServices : BaseCommandHandler
 
             if (response == null || response.Services == null)
             {
-                XTrace.WriteLine("没有找到任何子服务");
+                XTrace.WriteLine("No child services found");
                 return;
             }
 
-            XTrace.WriteLine("所有子服务列表：");
-            XTrace.WriteLine("{0,-5} {1,-15} {2,-5} {3,-10} {4,-10} {5,-10}", "序号", "服务名称", "启用", "状态", "进程Id", "进程名称");
+            XTrace.WriteLine("All child services:");
+            XTrace.WriteLine("{0,-5} {1,-15} {2,-5} {3,-10} {4,-10} {5,-10}", "No.", "Service name", "Enabled", "Status", "Process ID", "Process name");
 
             for (var i = 0; i < response.Services.Length; i++)
             {
@@ -66,11 +66,11 @@ public class ListServices : BaseCommandHandler
 
         //if (manager == null || manager.Services == null || manager.Services.Length == 0)
         //{
-        //    Console.WriteLine("没有找到任何子服务");
+        //    Console.WriteLine(L.T("No child services found"));
         //    return;
         //}
 
-        //Console.WriteLine("所有子服务列表：");
+        //Console.WriteLine(L.T("All child services:"));
         //Console.WriteLine("序号\t服务名称\t启用");
 
         //for (int i = 0; i < manager.Services.Length; i++)

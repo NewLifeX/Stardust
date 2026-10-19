@@ -20,9 +20,9 @@ public class UseMicroService : BaseCommandHandler
     {
         var service = (MyService)Service;
         if (_lastService.IsNullOrEmpty())
-            Console.WriteLine("请输入要测试的微服务名称：");
+            Console.WriteLine(L.T("Enter the microservice name to test: "));
         else
-            Console.WriteLine("请输入要测试的微服务名称（{0}）：", _lastService);
+            Console.WriteLine(L.T("Enter the microservice name to test ({0}): "), _lastService);
 
         var serviceName = Console.ReadLine();
         if (serviceName.IsNullOrEmpty()) serviceName = _lastService;

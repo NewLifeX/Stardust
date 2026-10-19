@@ -199,16 +199,16 @@ internal class NginxDeploy
         if (File.Exists(targetFile) && File.ReadAllText(SiteFile).MD5() == File.ReadAllText(targetFile).MD5())
             return false;
 
-        WriteLog("正在发布站点配置到nginx：{0} => {1}", SiteFile, targetFile);
+        WriteLog("Publishing site configuration to nginx: {0} => {1}", SiteFile, targetFile);
         File.Copy(SiteFile, targetFile, true);
 
         // 重新加载nginx配置
-        WriteLog("正在重新加载nginx配置...");
+        WriteLog("Reloading nginx configuration...");
         if (Runtime.Windows)
             targetDir.CombinePath("../nginx.exe").Run("-s reload", 5_000);
         else
             "nginx".Run("-s reload", 5_000);
-        WriteLog("nginx配置重新加载完成。");
+        WriteLog("nginx configuration reloaded.");
 
         return true;
     }
@@ -254,7 +254,7 @@ internal class NginxDeploy
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException("重载nginx配置失败: " + ex.Message, ex);
+            throw new InvalidOperationException(L.T("Failed to reload nginx configuration: ") + ex.Message, ex);
         }
     }
     #endregion

@@ -1,4 +1,5 @@
-﻿using NewLife.Agent;
+using NewLife;
+using NewLife.Agent;
 using NewLife.Agent.Command;
 using NewLife.Log;
 using NewLife.Remoting;
@@ -27,27 +28,27 @@ public class RestartService : BaseCommandHandler
         var services = client.Invoke<ServicesInfo>("GetServices");
         if (services == null || services.Services == null || services.Services.Length == 0)
         {
-            XTrace.WriteLine("没有找到任何子服务");
+            XTrace.WriteLine("No child services found");
             return;
         }
         
         // 显示服务列表
-        XTrace.WriteLine("请选择要重启的服务：");
+        XTrace.WriteLine("Select the service to restart: ");
         for (var i = 0; i < services.Services.Length; i++)
         {
             var svc = services.Services[i];
             var es = services.RunningServices?.FirstOrDefault(e => e.Name == svc.Name);
-            var status = es != null ? "运行中" : "已停止";
+            var status = es != null ? L.T("Running") : L.T("Stopped");
             XTrace.WriteLine("{0}. {1} ({2})", i + 1, svc.Name, status);
         }
-        XTrace.WriteLine("0. 返回主菜单");
+        XTrace.WriteLine("0. Return to the main menu");
         
         // 获取用户输入
-        XTrace.WriteLine("请输入服务序号或名称（0 返回主菜单）：");
+        XTrace.WriteLine("Enter the service number or name (0 to return to the main menu): ");
         var input = Console.ReadLine();
         if (String.IsNullOrEmpty(input) || input == "0")
         {
-            XTrace.WriteLine("返回主菜单...");
+            XTrace.WriteLine("Returning to the main menu...");
             return;
         }
         
@@ -62,7 +63,7 @@ public class RestartService : BaseCommandHandler
             serviceName = input;
         }
         
-        XTrace.WriteLine("准备重启服务：{0}", serviceName);
+        XTrace.WriteLine("Preparing to restart service: {0}", serviceName);
 
         try
         {
@@ -71,22 +72,22 @@ public class RestartService : BaseCommandHandler
 
             if (response == null)
             {
-                XTrace.WriteLine("重启服务失败：未收到响应");
+                XTrace.WriteLine("Failed to restart service: no response received");
                 return;
             }
 
             if (response.Success)
             {
-                XTrace.WriteLine("服务 {0} 重启成功", serviceName);
+                XTrace.WriteLine("Service {0} restarted successfully", serviceName);
             }
             else
             {
-                XTrace.WriteLine("重启服务失败：{0}", response.Message);
+                XTrace.WriteLine("Failed to restart service: {0}", response.Message);
             }
         }
         catch (Exception ex)
         {
-            XTrace.WriteLine("重启服务时发生错误：{0}", ex.Message);
+            XTrace.WriteLine("Error while restarting service: {0}", ex.Message);
         }
     }
 }

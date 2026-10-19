@@ -43,12 +43,12 @@ internal class Program
         var msWait = 3_000;
         if ("-upgrade".EqualIgnoreCase(args))
         {
-            XTrace.WriteLine("更新模式启动，等待{0}秒", msWait);
+            XTrace.WriteLine("Update mode started; waiting {0} second(s)", msWait);
             Thread.Sleep(msWait);
         }
         else if ("-delay".EqualIgnoreCase(args))
         {
-            XTrace.WriteLine("延迟启动，等待{0}秒", msWait);
+            XTrace.WriteLine("Delayed startup; waiting {0} second(s)", msWait);
             Thread.Sleep(msWait);
         }
 
@@ -157,7 +157,7 @@ internal class MyService : ServiceBase, IServiceProvider
     /// <returns>StarAgent Web管理面板</returns>
     protected override AgentWebPanel CreateWebPanel(ServiceBase service)
     {
-        WriteLog("创建 StarAgent Web 管理面板");
+        WriteLog("Creating the StarAgent web management panel");
 
         var set = NewLife.Agent.Setting.Current;
         set.WebPort = AgentSetting.LocalPort;
@@ -210,7 +210,7 @@ internal class MyService : ServiceBase, IServiceProvider
         var txt = File.ReadAllText(file);
         if (!txt.IsNullOrEmpty() && txt.Contains("KillMode") && txt.Contains("StarAgent")) return;
 
-        WriteLog("旧版service文件，修正KillMode");
+        WriteLog("Legacy service file detected; correcting KillMode");
 
         var exe = Process.GetCurrentProcess().MainModule.FileName;
 
@@ -299,7 +299,7 @@ internal class MyService : ServiceBase, IServiceProvider
         StarAgentSetting.Provider.Changed += OnSettingChanged;
 
         // 启动插件
-        WriteLog("启动插件[{0}]", pm.Identity);
+        WriteLog("Starting plugin [{0}]", pm.Identity);
         pm.Load();
         pm.Init();
         foreach (var item in pm.Plugins)
@@ -331,7 +331,7 @@ internal class MyService : ServiceBase, IServiceProvider
 
     private void OnSettingChanged(Object? sender, EventArgs eventArgs)
     {
-        WriteLog("重新加载应用服务");
+        WriteLog("Reloading application services");
 
         // 支持动态更新
         //_Manager.Services = AgentSetting.Services;
@@ -395,7 +395,7 @@ internal class MyService : ServiceBase, IServiceProvider
         base.StopWork(reason);
 
         // 停止插件
-        WriteLog("停止插件[{0}]", _PluginManager.Identity);
+        WriteLog("Stopping plugin [{0}]", _PluginManager.Identity);
         foreach (var item in _PluginManager.Plugins)
         {
             if (item is IAgentPlugin plugin)
@@ -478,7 +478,7 @@ internal class MyService : ServiceBase, IServiceProvider
             // 如果该进程前面没有出现过，就是新进程，无需杀死
             if (!olds.Contains(p.Id)) continue;
 
-            WriteLog("重启时遇到残留进程 {0}/{1}，准备杀死", p.Id, p.ProcessName);
+            WriteLog("Residual process {0}/{1} found during restart; preparing to kill it", p.Id, p.ProcessName);
             try
             {
                 p.SafetyKill();
@@ -495,7 +495,7 @@ internal class MyService : ServiceBase, IServiceProvider
         var server = StarSetting.Server;
         if (server.IsNullOrEmpty()) return;
 
-        WriteLog("初始化服务端地址：{0}", server);
+        WriteLog("Initializing server address: {0}", server);
 
         var set = AgentSetting;
         var client = new MyStarClient(set)
@@ -622,7 +622,7 @@ internal class MyService : ServiceBase, IServiceProvider
     /// <summary>修复模式启动StarAgent，以修复正式的StarAgent</summary>
     public void Repair()
     {
-        WriteLog("修复模式启动StarAgent，以修复正式的StarAgent");
+        WriteLog("Starting StarAgent in repair mode to repair the production StarAgent");
 
         // 校验当前程序的MD5，避免重复执行
         var mf = "data/repair.md5".GetBasePath();
@@ -663,15 +663,15 @@ internal class MyService : ServiceBase, IServiceProvider
         if (!di.Exists) di = "../StarAgent".GetBasePath().AsDirectory();
         if (!di.Exists)
         {
-            WriteLog("目标不存在 {0}", di.FullName);
+            WriteLog("Target does not exist: {0}", di.FullName);
 
             var cur = "./".GetBasePath().TrimEnd('/', '\\');
-            WriteLog("当前目录 {0}", cur);
+            WriteLog("Current directory: {0}", cur);
 
             // 遍历所有子目录，但跳过当前
             foreach (var item in "../".GetBasePath().AsDirectory().GetDirectories())
             {
-                WriteLog("检查 {0}", item.FullName);
+                WriteLog("Check {0}", item.FullName);
                 if (item.FullName.TrimEnd('/', '\\').EqualIgnoreCase(cur)) continue;
 
                 var fi = item.GetFiles("StarAgent.dll").FirstOrDefault();
@@ -685,17 +685,17 @@ internal class MyService : ServiceBase, IServiceProvider
 
         if (!di.Exists)
         {
-            WriteLog("未能找到正式StarAgent所在，修复失败！");
+            WriteLog("Could not locate the production StarAgent; repair failed.");
             Thread.Sleep(1_000);
             return;
         }
 
-        WriteLog("正式StarAgent所在目录：{0}", di.FullName);
+        WriteLog("Production StarAgent directory: {0}", di.FullName);
 
         // 等待一会，拉起修复进程的进程，可能还有别的善后工作
         Thread.Sleep(5_000);
 
-        WriteLog("停止服务……");
+        WriteLog("Stopping service...");
         //Init();
         Host.Stop(ServiceName);
         //Process.Start("net", $"stop {ServiceName}");
@@ -706,7 +706,7 @@ internal class MyService : ServiceBase, IServiceProvider
         {
             try
             {
-                WriteLog("复制 {0}", fi.Name);
+                WriteLog("Copy {0}", fi.Name);
 
                 var dst = di.FullName.CombinePath(fi.Name);
                 if (File.Exists(dst)) File.Move(dst, Path.GetTempFileName());
@@ -719,7 +719,7 @@ internal class MyService : ServiceBase, IServiceProvider
             }
         }
 
-        WriteLog("启动服务……");
+        WriteLog("Starting service...");
         Host.Start(ServiceName);
         //Process.Start("net", $"start {ServiceName}");
         Thread.Sleep(1_000);
@@ -732,7 +732,7 @@ internal class MyService : ServiceBase, IServiceProvider
         base.ShowMenu();
 
         var set = StarSetting;
-        if (!set.Server.IsNullOrEmpty()) Console.WriteLine("服务端：{0}", set.Server);
+        if (!set.Server.IsNullOrEmpty()) Console.WriteLine(L.T("Server: {0}"), set.Server);
         Console.WriteLine();
     }
 
@@ -751,7 +751,7 @@ internal class MyService : ServiceBase, IServiceProvider
                     set.Server = args[i + 1];
                     set.Save();
 
-                    XTrace.WriteLine("服务端修改为：{0}", set.Server);
+                    XTrace.WriteLine("Server changed to: {0}", set.Server);
 
                     break;
                 }
@@ -760,7 +760,7 @@ internal class MyService : ServiceBase, IServiceProvider
                     set2.Project = args[i + 1];
                     set2.Save();
 
-                    XTrace.WriteLine("项目修改为：{0}", set2.Project);
+                    XTrace.WriteLine("Project changed to: {0}", set2.Project);
 
                     break;
                 }
@@ -778,7 +778,7 @@ internal class MyService : ServiceBase, IServiceProvider
         var file = args.FirstOrDefault(e => e.EndsWithIgnoreCase(".zip"));
         if (file.IsNullOrEmpty()) return false;
 
-        XTrace.WriteLine("开始运行Zip发布文件 {0}", file);
+        XTrace.WriteLine("Running zip deployment file {0}", file);
 
 #pragma warning disable CS0618 // 暂时保留 ZipDeploy 兼容，后续迁移到 IDeployStrategy
         var deploy = new ZipDeploy
@@ -831,7 +831,7 @@ internal class MyService : ServiceBase, IServiceProvider
                 try
                 {
                     _Client?.WriteInfoEvent("删除", fi.FullName);
-                    XTrace.WriteLine("删除：{0}", fi.FullName);
+                    XTrace.WriteLine("Delete: {0}", fi.FullName);
                     fi.Delete();
                 }
                 catch (Exception ex)
@@ -848,7 +848,7 @@ internal class MyService : ServiceBase, IServiceProvider
             try
             {
                 _Client?.WriteInfoEvent("删除", di.FullName);
-                XTrace.WriteLine("删除：{0}", di.FullName);
+                XTrace.WriteLine("Delete: {0}", di.FullName);
                 di.Delete(true);
             }
             catch (Exception ex)

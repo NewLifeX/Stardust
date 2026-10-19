@@ -114,7 +114,7 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
                 }
                 catch (Exception ex)
                 {
-                    WriteLog("同步时间失败：{0}", ex.Message);
+                    WriteLog("Time synchronization failed: {0}", ex.Message);
                 }
             }
         }
@@ -129,7 +129,7 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
             var syncTime = mpr.SyncTime;
             if (syncTime > 0 && syncTime != set.SyncTime)
             {
-                WriteLog("同步时间间隔变更为：{0}秒", syncTime);
+                WriteLog("Time synchronization interval changed to {0} second(s)", syncTime);
 
                 set.SyncTime = syncTime;
                 set.Save();
@@ -159,7 +159,7 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
 
             // 先上报再删除：入队失败时保留标记，下次心跳重试
             this.WriteInfoEvent("Rescue", "星尘代理自愈恢复：" + content);
-            WriteLog("已上报设备侧自愈记录：{0}", content);
+            WriteLog("Reported device-side self-healing record: {0}", content);
 
             File.Delete(flag);
         }
@@ -511,7 +511,7 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
 
         // 审计日志：记录命令执行前的信息
         var now = DateTime.Now;
-        WriteLog("执行Bash命令：{0}，超时：{1}ms", cmd, timeout);
+        WriteLog("Executing Bash command: {0}, timeout: {1}ms", cmd, timeout);
         WriteEvent("warn", "RunBash", $"执行命令：{cmd}，超时：{timeout}ms，时间：{now:yyyy-MM-dd HH:mm:ss}");
 
         var sw = Stopwatch.StartNew();
@@ -522,7 +522,7 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
 
             // 审计日志：记录成功执行的详细信息（输出过长时截断）
             var resultPreview = rs?.Length > 1000 ? rs.Substring(0, 1000) + "..." : rs;
-            WriteLog("执行成功，耗时：{0}ms，输出长度：{1}", sw.ElapsedMilliseconds, rs?.Length ?? 0);
+            WriteLog("Execution succeeded, elapsed: {0}ms, output length: {1}", sw.ElapsedMilliseconds, rs?.Length ?? 0);
             WriteEvent("info", "RunBash", $"执行成功，命令：{cmd}，耗时：{sw.ElapsedMilliseconds}ms，输出长度：{rs?.Length ?? 0}");
 
             return rs;
@@ -532,7 +532,7 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
             sw.Stop();
 
             // 审计日志：记录失败信息
-            WriteLog("执行失败：{0}，耗时：{1}ms", ex.Message, sw.ElapsedMilliseconds);
+            WriteLog("Execution failed: {0}, elapsed: {1}ms", ex.Message, sw.ElapsedMilliseconds);
             WriteEvent("error", "RunBash", $"执行失败，命令：{cmd}，耗时：{sw.ElapsedMilliseconds}ms，错误：{ex.Message}");
 
             return $"执行失败：{ex.Message}";
@@ -571,7 +571,7 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
 
         // 审计日志：记录命令执行前的信息
         var now = DateTime.Now;
-        WriteLog("执行CMD命令：{0}，超时：{1}ms", cmd, timeout);
+        WriteLog("Executing CMD command: {0}, timeout: {1}ms", cmd, timeout);
         WriteEvent("warn", "RunCmd", $"执行命令：{cmd}，超时：{timeout}ms，时间：{now:yyyy-MM-dd HH:mm:ss}");
 
         var sw = Stopwatch.StartNew();
@@ -582,7 +582,7 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
 
             // 审计日志：记录成功执行的详细信息（输出过长时截断）
             var resultPreview = rs?.Length > 1000 ? rs.Substring(0, 1000) + "..." : rs;
-            WriteLog("执行成功，耗时：{0}ms，输出长度：{1}", sw.ElapsedMilliseconds, rs?.Length ?? 0);
+            WriteLog("Execution succeeded, elapsed: {0}ms, output length: {1}", sw.ElapsedMilliseconds, rs?.Length ?? 0);
             WriteEvent("info", "RunCmd", $"执行成功，命令：{cmd}，耗时：{sw.ElapsedMilliseconds}ms，输出长度：{rs?.Length ?? 0}");
 
             return rs;
@@ -592,7 +592,7 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
             sw.Stop();
 
             // 审计日志：记录失败信息
-            WriteLog("执行失败：{0}，耗时：{1}ms", ex.Message, sw.ElapsedMilliseconds);
+            WriteLog("Execution failed: {0}, elapsed: {1}ms", ex.Message, sw.ElapsedMilliseconds);
             WriteEvent("error", "RunCmd", $"执行失败，命令：{cmd}，耗时：{sw.ElapsedMilliseconds}ms，错误：{ex.Message}");
 
             return $"执行失败：{ex.Message}";

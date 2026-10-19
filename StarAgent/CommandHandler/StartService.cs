@@ -27,25 +27,25 @@ public class StartService : BaseCommandHandler
         var services = client.Invoke<ServicesInfo>("GetServices");
         if (services == null || services.Services == null || services.Services.Length == 0)
         {
-            XTrace.WriteLine("没有找到任何子服务");
+            XTrace.WriteLine("No child services found");
             return;
         }
         
         // 显示服务列表
-        XTrace.WriteLine("请选择要启动的服务：");
+        XTrace.WriteLine("Select the service to start: ");
         for (var i = 0; i < services.Services.Length; i++)
         {
             var svc = services.Services[i];
             XTrace.WriteLine("{0}. {1}", i + 1, svc.Name);
         }
-        XTrace.WriteLine("0. 返回主菜单");
+        XTrace.WriteLine("0. Return to the main menu");
         
         // 获取用户输入
-        XTrace.WriteLine("请输入服务序号或名称（0 返回主菜单）：");
+        XTrace.WriteLine("Enter the service number or name (0 to return to the main menu): ");
         var input = Console.ReadLine();
         if (String.IsNullOrEmpty(input) || input == "0")
         {
-            XTrace.WriteLine("返回主菜单...");
+            XTrace.WriteLine("Returning to the main menu...");
             return;
         }
         
@@ -60,7 +60,7 @@ public class StartService : BaseCommandHandler
             serviceName = input;
         }
         
-        XTrace.WriteLine("准备启动服务：{0}", serviceName);
+        XTrace.WriteLine("Preparing to start service: {0}", serviceName);
 
         try
         {
@@ -69,22 +69,22 @@ public class StartService : BaseCommandHandler
 
             if (response == null)
             {
-                XTrace.WriteLine("启动服务失败：未收到响应");
+                XTrace.WriteLine("Failed to start service: no response received");
                 return;
             }
 
             if (response.Success)
             {
-                XTrace.WriteLine("服务 {0} 启动成功", serviceName);
+                XTrace.WriteLine("Service {0} started successfully", serviceName);
             }
             else
             {
-                XTrace.WriteLine("启动服务失败：{0}", response.Message);
+                XTrace.WriteLine("Failed to start service: {0}", response.Message);
             }
         }
         catch (Exception ex)
         {
-            XTrace.WriteLine("启动服务时发生错误：{0}", ex.Message);
+            XTrace.WriteLine("Error while starting service: {0}", ex.Message);
         }
     }
 }

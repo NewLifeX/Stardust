@@ -19,7 +19,7 @@ namespace StarGateway.Proxy
         protected override void OnStart()
         {
             var rs = RemoteServer;
-            WriteLog("NAT代理 => {0}", rs);
+            WriteLog("NAT proxy => {0}", rs);
 
             if (rs.Type == 0) rs.Type = ProtocolType;
 

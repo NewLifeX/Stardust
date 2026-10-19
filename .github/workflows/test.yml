@@ -41,7 +41,7 @@ jobs:
       shell: pwsh
       run: |
         $failed = $false
-        foreach ($dir in @('Stardust', 'Stardust.Extensions', 'Stardust.Server', 'Stardust.Web', 'Stardust.WebApi')) {
+        foreach ($dir in @('Stardust', 'Stardust.Extensions', 'Stardust.Server', 'Stardust.Web', 'Stardust.WebApi', 'Stardust.Data', 'StarAgent', 'StarGateway', 'Plugins/AgentExpansion', 'Plugins/NetworkDetect', 'DeployAgent', 'StarAgent.Mobile')) {
           pwsh -File ./check-english-exceptions.ps1 -Root . -Dir $dir
           if ($LASTEXITCODE -ne 0) { $failed = $true }
         }

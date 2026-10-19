@@ -105,7 +105,7 @@ public class StaticFileHandler
         var root = Path.GetFullPath(staticRoot);
         if (!Directory.Exists(root))
         {
-            WriteLog("静态文件根目录不存在: {0}", root);
+            WriteLog("Static file root directory not found: {0}", root);
             response = BuildError(404, "Not Found");
             return true;
         }
@@ -137,7 +137,7 @@ public class StaticFileHandler
         // 安全检查：确保解析后的路径仍在根目录下（带尾分隔符，杜绝 C:\web 匹配 C:\webx 类边界）
         if (!localPath.StartsWith(rootWithSep, StringComparison.OrdinalIgnoreCase))
         {
-            WriteLog("路径穿越攻击被阻止: {0}", path);
+            WriteLog("Path traversal attack blocked: {0}", path);
             response = BuildError(403, "Forbidden");
             return true;
         }
@@ -184,7 +184,7 @@ public class StaticFileHandler
                 }
             }
 
-            WriteLog("静态目录无默认页: {0}", localPath);
+            WriteLog("No default page in static directory: {0}", localPath);
             response = BuildError(404, "Not Found");
             return true;
         }
@@ -196,13 +196,13 @@ public class StaticFileHandler
             if (File.Exists(indexPath))
             {
                 if (LogEnabled)
-                    WriteLog("SPA回退: {0} -> {1}", path, indexFile);
+                    WriteLog("SPA fallback: {0} -> {1}", path, indexFile);
 
                 return ServeFile(indexPath, method, headers, out response);
             }
         }
 
-        WriteLog("静态文件不存在: {0}", localPath);
+        WriteLog("Static file not found: {0}", localPath);
         response = BuildError(404, "Not Found");
         return true;
     }
@@ -312,7 +312,7 @@ public class StaticFileHandler
         }
         catch (Exception ex)
         {
-            WriteLog("读取静态文件失败: {0} - {1}", localPath, ex.Message);
+            WriteLog("Failed to read static file: {0} - {1}", localPath, ex.Message);
             response = BuildError(500, "Internal Server Error");
             return true;
         }

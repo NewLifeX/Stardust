@@ -34,7 +34,7 @@ namespace StarGateway
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
-            XTrace.WriteLine("正在优雅关闭服务……");
+            XTrace.WriteLine("Gracefully shutting down the service...");
 
             // 反向顺序停止服务（先启动的后停止）
             for (var i = Services.Count - 1; i >= 0; i--)
@@ -49,7 +49,7 @@ namespace StarGateway
                 }
                 catch (OperationCanceledException)
                 {
-                    XTrace.WriteLine("服务 [{0}] 停止超时，强制关闭", item.GetType().Name);
+                    XTrace.WriteLine("Service [{0}] stop timed out; forcing shutdown", item.GetType().Name);
                 }
                 catch (Exception ex)
                 {

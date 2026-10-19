@@ -24,7 +24,7 @@ class InitService : IHostedService
         _ = GatewayRoute.Meta.Count;
         _ = SslCertificate.Meta.Count;
 
-        XTrace.WriteLine("数据库初始化完成");
+        XTrace.WriteLine("Database initialization completed");
 
         return Task.CompletedTask;
     }

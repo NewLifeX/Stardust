@@ -30,7 +30,7 @@ public partial class GatewayNode : Entity<GatewayNode>
 
         base.Valid(isNew);
 
-        if (Address.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Address), "地址不能为空！");
+        if (Address.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Address), L.T("Address cannot be empty."));
 
         if (Weight <= 0) Weight = 1;
         if (MaxFails <= 0) MaxFails = 3;

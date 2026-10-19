@@ -138,7 +138,7 @@ public class StarService : DisposeBase, IApi
             set.Server = server;
             set.Save();
 
-            XTrace.WriteLine("StarAgent使用[{0}]送过来的星尘服务端地址：{1}", Session, server);
+            XTrace.WriteLine("StarAgent uses the Stardust server address provided by [{0}]: {1}", Session, server);
 
             if (Provider?.GetService<ServiceBase>() is MyService svc)
             {
@@ -470,7 +470,7 @@ public class StarService : DisposeBase, IApi
                     _dogs.Remove(item);
                 else
                 {
-                    XTrace.WriteLine("进程[{0}/{1}]超过一定时间没有心跳，可能已经假死，准备重启。", p.ProcessName, p.Id);
+                    XTrace.WriteLine("Process [{0}/{1}] has not sent a heartbeat for a while and may be hung; preparing to restart.", p.ProcessName, p.Id);
 
                     var restartSuccess = false;
 
@@ -483,7 +483,7 @@ public class StarService : DisposeBase, IApi
                             var controller = manager.QueryByProcess(item);
                             if (controller != null && !controller.Name.IsNullOrEmpty())
                             {
-                                XTrace.WriteLine("尝试通过服务重启：{0}", controller.Name);
+                                XTrace.WriteLine("Attempting to restart via the service: {0}", controller.Name);
                                 span?.AppendTag($"RestartService {controller.Name}");
 
                                 // 使用共同的重启逻辑
@@ -491,11 +491,11 @@ public class StarService : DisposeBase, IApi
 
                                 if (restartSuccess)
                                 {
-                                    XTrace.WriteLine("服务[{0}]重启成功", controller.Name);
+                                    XTrace.WriteLine("Service [{0}] restarted successfully", controller.Name);
                                 }
                                 else
                                 {
-                                    XTrace.WriteLine("服务[{0}]重启失败", controller.Name);
+                                    XTrace.WriteLine("Failed to restart service [{0}]", controller.Name);
                                 }
                             }
                         }
@@ -508,7 +508,7 @@ public class StarService : DisposeBase, IApi
                     // 如果服务重启失败，则使用原有的SafetyKill方法
                     if (!restartSuccess)
                     {
-                        XTrace.WriteLine("服务重启失败，使用SafetyKill强制杀死进程[{0}/{1}]", p.ProcessName, p.Id);
+                        XTrace.WriteLine("Service restart failed; using SafetyKill to force-terminate process [{0}/{1}]", p.ProcessName, p.Id);
                         span?.AppendTag($"SafetyKill {p.ProcessName}/{p.Id}");
                         p.SafetyKill();
                     }
@@ -574,7 +574,7 @@ public class StarService : DisposeBase, IApi
             var service = manager.Services?.FirstOrDefault(e => e.Name.EqualIgnoreCase(serviceName));
             if (service == null)
             {
-                XTrace.WriteLine("服务重启失败：服务[{0}]不存在", serviceName);
+                XTrace.WriteLine("Service restart failed: service [{0}] does not exist", serviceName);
                 span?.AppendTag("ServiceNotFound");
                 return false;
             }
@@ -583,53 +583,53 @@ public class StarService : DisposeBase, IApi
             var runningServices = manager.RunningServices;
             var isRunning = runningServices?.Any(e => e.Name.EqualIgnoreCase(serviceName)) == true;
 
-            XTrace.WriteLine("开始重启服务[{0}]，当前状态：{1}，原因：{2}", serviceName, isRunning ? "运行中" : "已停止", reason);
+            XTrace.WriteLine("Restarting service [{0}], current state: {1}, reason: {2}", serviceName, isRunning ? L.TLog("Running") : L.TLog("Stopped"), reason);
 
             if (isRunning)
             {
                 // 服务正在运行，先停止服务
-                XTrace.WriteLine("停止服务[{0}]", serviceName);
+                XTrace.WriteLine("Stopping service [{0}]", serviceName);
                 span?.AppendTag("StopService");
 
                 var stopResult = manager.Stop(serviceName, reason);
                 if (stopResult != true)
                 {
-                    XTrace.WriteLine("服务重启失败：无法停止服务[{0}]", serviceName);
+                    XTrace.WriteLine("Service restart failed: unable to stop service [{0}]", serviceName);
                     span?.AppendTag("StopFailed");
                     return false;
                 }
 
-                XTrace.WriteLine("服务[{0}]停止成功，等待1秒后启动", serviceName);
+                XTrace.WriteLine("Service [{0}] stopped successfully; starting it after 1 second", serviceName);
                 // 等待服务完全停止
                 Thread.Sleep(1000);
             }
             else
             {
-                XTrace.WriteLine("服务[{0}]未运行，直接启动", serviceName);
+                XTrace.WriteLine("Service [{0}] is not running; starting it directly", serviceName);
                 span?.AppendTag("DirectStart");
             }
 
             // 启动服务（无论之前是否运行）
-            XTrace.WriteLine("启动服务[{0}]", serviceName);
+            XTrace.WriteLine("Starting service [{0}]", serviceName);
             span?.AppendTag("StartService");
 
             var startResult = manager.Start(serviceName);
             if (startResult == true)
             {
-                XTrace.WriteLine("服务[{0}]重启成功", serviceName);
+                XTrace.WriteLine("Service [{0}] restarted successfully", serviceName);
                 span?.AppendTag("Success");
                 return true;
             }
             else
             {
-                XTrace.WriteLine("服务重启失败：无法启动服务[{0}]", serviceName);
+                XTrace.WriteLine("Service restart failed: unable to start service [{0}]", serviceName);
                 span?.AppendTag("StartFailed");
                 return false;
             }
         }
         catch (Exception ex)
         {
-            XTrace.WriteLine("服务[{0}]重启时发生异常：{1}", serviceName, ex.Message);
+            XTrace.WriteLine("Error while restarting service [{0}]: {1}", serviceName, ex.Message);
             span?.SetError(ex, null);
             return false;
         }

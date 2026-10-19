@@ -61,7 +61,7 @@ namespace Stardust.Data.Nodes
             // InitData一般用于当数据表没有数据时添加一些默认数据，该实体类的任何第一次数据库操作都会触发该方法，默认异步调用
             if (Meta.Session.Count > 0) return;
 
-            if (XTrace.Debug) XTrace.WriteLine("开始初始化RedisNode[Redis节点]数据……");
+            if (XTrace.Debug) XTrace.WriteLine("Initializing RedisNode data...");
 
             var entity = new RedisNode
             {
@@ -74,7 +74,7 @@ namespace Stardust.Data.Nodes
             };
             entity.Insert();
 
-            if (XTrace.Debug) XTrace.WriteLine("完成初始化RedisNode[Redis节点]数据！");
+            if (XTrace.Debug) XTrace.WriteLine("RedisNode data initialization completed.");
         }
         #endregion
 

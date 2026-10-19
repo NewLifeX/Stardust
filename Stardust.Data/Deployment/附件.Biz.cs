@@ -214,7 +214,7 @@ namespace Stardust.Data.Deployment
             //if (uploadPath.IsNullOrEmpty()) uploadPath = Setting.Current.UploadPath;
 
             var fullFile = uploadPath.CombinePath(file).GetBasePath();
-            XTrace.WriteLine("抓取附件 {0}，保存到 {1}", url, file);
+            XTrace.WriteLine("Fetching attachment {0}, saving to {1}", url, file);
 
             fullFile.EnsureDirectory(true);
             //if (File.Exists(fullFile)) File.Delete(fullFile);

@@ -45,7 +45,7 @@ class MyService : IHostedService
 
         _proxy = proxy;
 
-        XTrace.WriteLine("StarGateway 已启动，监听端口 {0}，远程服务器 {1}", port, serverUrl);
+        XTrace.WriteLine("StarGateway started, listening on port {0}, remote server {1}", port, serverUrl);
 
         return Task.CompletedTask;
     }

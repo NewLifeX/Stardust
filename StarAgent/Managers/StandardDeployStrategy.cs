@@ -28,7 +28,7 @@ public class StandardDeployStrategy : DeployStrategyBase
         var fi = RetrieveZip(context);
         if (fi != null)
         {
-            context.WriteLog("标准模式，解压到工作目录：{0}", workDir);
+            context.WriteLog("Standard mode: extract to the working directory: {0}", workDir);
 
             // 直接解压到工作目录
             ExtractZip(fi.FullName, workDir, context.Deploy, context.Log);
@@ -36,7 +36,7 @@ public class StandardDeployStrategy : DeployStrategyBase
         else
         {
             // 没有 zip 包时，假设文件已经存在于工作目录中
-            context.WriteLog("标准模式，无需解压，直接使用工作目录：{0}", workDir);
+            context.WriteLog("Standard mode: no extraction needed, using the working directory directly: {0}", workDir);
         }
 
         // 查找可执行文件
@@ -52,7 +52,7 @@ public class StandardDeployStrategy : DeployStrategyBase
 
         if (context.ExecuteFile.IsNullOrEmpty())
         {
-            context.WriteLog("可执行文件路径为空");
+            context.WriteLog("The executable path is empty");
             return null;
         }
 
@@ -63,7 +63,7 @@ public class StandardDeployStrategy : DeployStrategyBase
             return ExecuteCommand(context);
         }
 
-        context.WriteLog("运行文件：{0}", runFile.FullName);
+        context.WriteLog("Run file: {0}", runFile.FullName);
 
         var si = BuildProcessStartInfo(context, runFile);
         return StartProcess(context, si);
