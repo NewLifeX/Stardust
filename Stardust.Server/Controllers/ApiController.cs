@@ -64,7 +64,7 @@ public class ApiController : ControllerBase
     public IList<String> All()
     {
         // 安全V-13：接口枚举仅内网可见，防止公网侦察接口面
-        if (!IsIntranet(HttpContext)) throw new ApiException(ApiCode.Forbidden, "仅内网可访问接口列表");
+        if (!IsIntranet(HttpContext)) throw new ApiException(ApiCode.Forbidden, L.T("The API list is accessible only from the intranet."));
 
         var set = new List<EndpointDataSource>();
         var eps = new List<String>();

@@ -104,9 +104,9 @@ public class ConfigDataController : ConfigsEntityController<ConfigData>
             // 在用版本禁止修改，未发布的新版本可以
             if (entity.Version > 0)
             {
-                if (e.Dirtys[nameof(entity.Key)]) throw new ArgumentException("禁止修改名称，建议新增配置", nameof(entity.Key));
-                if (e.Dirtys[nameof(entity.Scope)]) throw new ArgumentException("禁止修改作用域，建议新增配置", nameof(entity.Scope));
-                if (e.Dirtys[nameof(entity.Value)]) throw new ArgumentException("禁止修改正在使用的数值！", nameof(entity.Value));
+                if (e.Dirtys[nameof(entity.Key)]) throw new ArgumentException(L.T("The name cannot be modified; add a new configuration instead."), nameof(entity.Key));
+                if (e.Dirtys[nameof(entity.Scope)]) throw new ArgumentException(L.T("The scope cannot be modified; add a new configuration instead."), nameof(entity.Scope));
+                if (e.Dirtys[nameof(entity.Value)]) throw new ArgumentException(L.T("The value in use cannot be modified."), nameof(entity.Value));
             }
 
             var ver = entity.Config.AcquireNewVersion();

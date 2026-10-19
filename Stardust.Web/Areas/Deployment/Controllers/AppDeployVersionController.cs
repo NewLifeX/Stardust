@@ -96,7 +96,7 @@ public class AppDeployVersionController : DeploymentEntityController<AppDeployVe
                 if (!name.IsNullOrEmpty() && deploy != null)
                 {
                     if (!deploy.PackageName.IsNullOrEmpty() && !deploy.PackageName.IsMatch(name, StringComparison.OrdinalIgnoreCase))
-                        throw new InvalidOperationException($"文件名[{name}]与应用包名[{deploy.PackageName}]不匹配！");
+                        throw new InvalidOperationException(L.T("File name [{0}] does not match the application package name [{1}].", name, deploy.PackageName));
 
                     //var deploy = AppDeploy.FindByName(name);
                     //if (deploy != null && deploy.Id != entity.AppId)
@@ -239,11 +239,11 @@ public class AppDeployVersionController : DeploymentEntityController<AppDeployVe
     public async Task<ActionResult> UseVersion(Int32 id)
     {
         var ver = AppDeployVersion.FindById(id);
-        if (ver == null) throw new Exception("找不到版本！");
+        if (ver == null) throw new Exception(L.T("Version not found."));
 
-        if (!ver.Enable) throw new Exception("版本未启用！");
-        if (ver.Version.IsNullOrEmpty()) throw new Exception("版本号未设置！");
-        if (ver.Url.IsNullOrEmpty()) throw new Exception("文件不存在！");
+        if (!ver.Enable) throw new Exception(L.T("Version is not enabled."));
+        if (ver.Version.IsNullOrEmpty()) throw new Exception(L.T("Version is not set."));
+        if (ver.Url.IsNullOrEmpty()) throw new Exception(L.T("File does not exist."));
 
         ver.TraceId = DefaultSpan.Current?.TraceId;
         ver.Update();
@@ -285,7 +285,7 @@ public class AppDeployVersionController : DeploymentEntityController<AppDeployVe
                     //    }));
                     //}
                 }
-                span?.AppendTag($"控制{ts.Count}个节点");
+                span?.AppendTag(L.TLog("Controlling {0} node(s)", ts.Count));
                 await Task.WhenAll(ts);
             }
             catch (Exception ex)

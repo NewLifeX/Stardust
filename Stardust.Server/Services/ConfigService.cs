@@ -73,7 +73,7 @@ public class ConfigService
                 var ap2 = AppConfig.FindByName(app2);
                 var scope3 = !scope2.IsNullOrEmpty() ? scope2 : scope;
                 var cfg2 = ConfigData.Acquire(ap2 ?? app, key2, scope3);
-                if (cfg2 == null) throw new Exception($"在应用[{app}]的[{cfg.Key}]中无法解析[{item}]");
+                if (cfg2 == null) throw new Exception(L.T("Unable to parse [{2}] in [{1}] of application [{0}]", app, cfg.Key, item));
 
                 item = Resolve(ap2 ?? app, cfg2, scope3);
             }
@@ -325,7 +325,7 @@ public class ConfigService
         {
             var app = AppConfig.FindById(appId) ?? throw new ArgumentNullException(nameof(appId));
 
-            if (app.Version >= app.NextVersion) throw new ApiException(701, "已经是最新版本！");
+            if (app.Version >= app.NextVersion) throw new ApiException(701, L.T("Already the latest version."));
             app.Publish();
 
             await _starFactory.SendAppCommandAsync(app.Name, null, "config/publish", "", 0, 3600, 5, cancellationToken);

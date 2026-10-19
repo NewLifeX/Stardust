@@ -52,7 +52,7 @@ public class TraceService
 
         try
         {
-            if (!File.Exists(logPath)) throw new Exception($"日志文件不存在！{logPath}");
+            if (!File.Exists(logPath)) throw new Exception(L.T("Log file not found: {0}", logPath));
 
             var fi = new FileInfo(logPath);
             Int64 getBytes = 1024 * 1024;
@@ -71,7 +71,7 @@ public class TraceService
         }
         catch (Exception ex)
         {
-            XTrace.WriteLine($"取日志失败！{ex}");
+            XTrace.WriteLine(L.TLog("Failed to get logs: {0}", ex));
         }
 
         return null;

@@ -201,23 +201,23 @@ public class DeployController(NodeService nodeService, DeployService deployServi
     [RequestFormLimits(MultipartBodyLengthLimit = 1 * 1024 * 1024 * 1024)]
     public async Task<Object> UploadBuildFile(String deployName, String version, String? commitId, String? commitLog, String? commitTime, [FromForm] IFormFile file)
     {
-        if (deployName.IsNullOrEmpty()) throw new ApiException(400, "应用部署集名称不能为空");
-        if (version.IsNullOrEmpty()) throw new ApiException(400, "版本号不能为空");
-        if (file == null || file.Length == 0) throw new ApiException(400, "上传文件不能为空");
+        if (deployName.IsNullOrEmpty()) throw new ApiException(400, L.T("The application deployment set name cannot be empty."));
+        if (version.IsNullOrEmpty()) throw new ApiException(400, L.T("Version cannot be empty."));
+        if (file == null || file.Length == 0) throw new ApiException(400, L.T("The uploaded file cannot be empty."));
 
         var node = Context.Device as Node;
 
         // 查找应用部署集
         var app = AppDeploy.FindByName(deployName);
-        if (app == null) throw new ApiException(404, $"应用部署集[{deployName}]不存在");
+        if (app == null) throw new ApiException(404, L.T("Application deployment set [{0}] does not exist.", deployName));
 
         // 安全V-4：仅允许该发布集的编译/部署关联节点上传构建产物，防止任意已注册节点覆盖升级包（供应链投毒）
         var nodeId = node?.ID ?? 0;
-        if (nodeId <= 0) throw new ApiException(ApiCode.Forbidden, "无法识别上传节点");
+        if (nodeId <= 0) throw new ApiException(ApiCode.Forbidden, L.T("Unable to identify the uploading node."));
         var buildNodes = AppBuildNode.FindAll(AppBuildNode._.DeployId == app.Id);
         var deployNodes = AppDeployNode.FindAllByDeployId(app.Id);
         if (!buildNodes.Any(e => e.Enable && e.NodeId == nodeId) && !deployNodes.Any(e => e.Enable && e.NodeId == nodeId))
-            throw new ApiException(ApiCode.Forbidden, $"节点[{node?.Name}]不属于部署集[{app.Name}]的编译/部署节点，禁止上传构建产物！请在部署集中配置该节点");
+            throw new ApiException(ApiCode.Forbidden, L.T("Node [{0}] is not a build/deploy node of deployment set [{1}]; uploading build artifacts is forbidden. Configure this node in the deployment set.", node?.Name, app.Name));
 
         var set = StarServerSetting.Current;
 

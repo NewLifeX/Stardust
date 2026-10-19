@@ -38,7 +38,7 @@ internal class StarHttpConfigProvider : HttpConfigProvider
                 {
                     //var dic = new Dictionary<String, Object>(inf);
                     //dic.Remove("configs");
-                    XTrace.WriteLine("从配置中心加载：{0}", ci.Configs.Keys.ToArray().Join());
+                    XTrace.WriteLine("Loaded from the configuration center: {0}", ci.Configs.Keys.ToArray().Join());
                 }
             }
 
@@ -52,7 +52,7 @@ internal class StarHttpConfigProvider : HttpConfigProvider
                     var id = wid.ToInt();
                     if (id > 0 && _useWorkerId)
                     {
-                        XTrace.WriteLine("配置中心为当前应用实例分配全局WorkerId={0}，保障雪花Id的唯一性", id);
+                        XTrace.WriteLine("The configuration center assigned the global WorkerId={0} to this application instance to ensure snowflake ID uniqueness", id);
                         Snowflake.GlobalWorkerId = id;
                     }
                 }
@@ -64,7 +64,7 @@ internal class StarHttpConfigProvider : HttpConfigProvider
                         !svr.EqualIgnoreCase(set.PluginServer) &&
                         (asm == null || !asm.Name.EqualIgnoreCase("StarWeb", "StarServer")))
                     {
-                        XTrace.WriteLine("据配置中心发布，插件服务器PluginServer变更为 {0}", svr);
+                        XTrace.WriteLine("According to the configuration center, the PluginServer has changed to {0}", svr);
                         set.PluginServer = svr;
                         set.Save();
                     }

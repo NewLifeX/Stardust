@@ -50,7 +50,7 @@ public class FrameworkManager
         var model = argument?.ToJsonEntity<FrameworkModel>();
         if (model == null || model.Version.IsNullOrEmpty()) throw new Exception(L.T("No version was specified."));
 
-        WriteLog($"安装 {model.Version}");
+        WriteLog(L.TLog("Installing {0}", model.Version));
 
         var nr = new NetRuntime
         {
@@ -131,7 +131,7 @@ public class FrameworkManager
                 nr.InstallNet("v" + ver.Substring(0, pv), ver, kind);
             }
             else
-                throw new Exception($"不支持的.NET版本[{ver}]");
+                throw new Exception(L.T("Unsupported .NET version [{0}]", ver));
         }
 
         CheckPing();
@@ -145,7 +145,7 @@ public class FrameworkManager
         if (model == null || model.Version.IsNullOrEmpty()) throw new Exception(L.T("No version was specified."));
 
         var ver = model.Version;
-        WriteLog($"卸载 {ver}");
+        WriteLog(L.TLog("Uninstalling {0}", ver));
 
         //目前仅支持NetCore
         var rs = false;
@@ -165,12 +165,12 @@ public class FrameworkManager
 
         CheckPing();
 
-        return rs ? "卸载成功" : "卸载失败";
+        return rs ? L.T("Uninstalled successfully") : L.T("Uninstall failed");
     }
 
     Boolean Uninstall(String verion)
     {
-        WriteLog($"卸载 {verion}");
+        WriteLog(L.TLog("Uninstalling {0}", verion));
 
         var ver = verion.Trim('v', 'V');
         var p = ver.IndexOf('-');
@@ -203,19 +203,19 @@ public class FrameworkManager
                 {
                     Directory.Delete(dir, true);
                     rs = true;
-                    WriteLog($"删除 {item}/{ver}");
+                    WriteLog(L.TLog("Deleting {0}/{1}", item, ver));
                 }
                 catch (Exception ex)
                 {
-                    WriteLog($"卸载时出现异常 {ex.Message}");
+                    WriteLog(L.TLog("Error while uninstalling: {0}", ex.Message));
                 }
             }
         }
 
         if (rs)
-            WriteLog("{0} 卸载成功", verion);
+            WriteLog("{0} uninstalled successfully", verion);
         else
-            WriteLog("{0} 卸载失败", verion);
+            WriteLog("Failed to uninstall {0}", verion);
 
         return rs;
     }
@@ -251,7 +251,7 @@ public class FrameworkManager
         var msg = (args == null || args.Length == 0) ? format : String.Format(format, args);
         DefaultSpan.Current?.AppendTag(msg);
 
-        if (format.Contains("错误") || format.Contains("失败"))
+        if (format.Contains("错误") || format.Contains("失败") || format.Contains("error", StringComparison.OrdinalIgnoreCase) || format.Contains("fail", StringComparison.OrdinalIgnoreCase) || format.Contains("exception", StringComparison.OrdinalIgnoreCase))
             _eventProvider?.WriteErrorEvent(nameof(FrameworkManager), msg);
         else
             _eventProvider?.WriteInfoEvent(nameof(FrameworkManager), msg);

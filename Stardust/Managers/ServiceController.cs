@@ -118,7 +118,7 @@ public class ServiceController : DisposeBase
             // 连续错误一定数量后，不再尝试启动
             if (_error >= MaxFails)
             {
-                if (_error == MaxFails) WriteLog("应用[{0}]累计错误次数{1}达到最大值{2}", Name, _error, MaxFails);
+                if (_error == MaxFails) WriteLog("Application [{0}] has reached the maximum error count {2} (current: {1})", Name, _error, MaxFails);
 
                 _error++;
                 return false;
@@ -130,7 +130,7 @@ public class ServiceController : DisposeBase
             var file = service.FileName?.Trim();
             if (file.IsNullOrEmpty())
             {
-                WriteLog("应用[{0}]文件名为空", Name);
+                WriteLog("The file name of application [{0}] is empty", Name);
                 return false;
             }
 
@@ -141,7 +141,7 @@ public class ServiceController : DisposeBase
             if (workDir.IsNullOrEmpty()) workDir = Path.GetDirectoryName(file);
             if (workDir.IsNullOrEmpty())
             {
-                WriteLog("应用[{0}]工作目录为空", Name);
+                WriteLog("The working directory of application [{0}] is empty", Name);
                 return false;
             }
 
@@ -156,10 +156,10 @@ public class ServiceController : DisposeBase
             var allowMultiple = DeployStrategyFactory.IsMultipleAllowed(service);
 
             var args = service.Arguments?.Trim();
-            WriteLog("启动应用：{0} {1} workDir={2} Mode={3} Times={4}", file, args, workDir, deployMode, _error);
-            if (service.MaxMemory > 0) WriteLog("内存限制：{0:n0}M", service.MaxMemory);
-            if (!AppId.IsNullOrEmpty()) WriteLog("应用编码：{0}", AppId);
-            if (allowMultiple) WriteLog("多实例模式");
+            WriteLog("Starting application: {0} {1} workDir={2} Mode={3} Times={4}", file, args, workDir, deployMode, _error);
+            if (service.MaxMemory > 0) WriteLog("Memory limit: {0:n0}M", service.MaxMemory);
+            if (!AppId.IsNullOrEmpty()) WriteLog("Application code: {0}", AppId);
+            if (allowMultiple) WriteLog("Multiple instance mode");
 
             using var span = Tracer?.NewSpan("StartService", service);
             try
@@ -190,7 +190,7 @@ public class ServiceController : DisposeBase
                 // 解压部署包
                 if (!strategy.Extract(context))
                 {
-                    WriteLog("解压部署包失败");
+                    WriteLog("Failed to extract the deployment package");
                     return false;
                 }
 
@@ -202,7 +202,7 @@ public class ServiceController : DisposeBase
                 // 托管模式，不执行
                 if (actualMode == DeployMode.Hosted)
                 {
-                    WriteLog("托管模式，外部主机将托管应用");
+                    WriteLog("Hosted mode; an external host will manage the application");
                     //CheckStarApp(context.Shadow, workDir);
                     Running = true;
                     return true;
@@ -216,13 +216,13 @@ public class ServiceController : DisposeBase
                     return false;
                 }
 
-                WriteLog("启动成功 PID={0}/{1}", p.Id, p.ProcessName);
+                WriteLog("Started successfully, PID={0}/{1}", p.Id, p.ProcessName);
                 CheckStarApp(Path.GetDirectoryName(_fileName), workDir);
 
                 // 任务模式，运行后不守护
                 if (actualMode == DeployMode.Task)
                 {
-                    WriteLog("任务完成，禁用该应用服务");
+                    WriteLog("Task completed; disabling this application service");
                     service.Enable = false;
                     Running = false;
                     return true;
@@ -242,22 +242,22 @@ public class ServiceController : DisposeBase
                     // 检查进程是否还在运行
                     if (p.GetHasExited())
                     {
-                        WriteLog("健康检查失败：进程已退出");
+                        WriteLog("Health check failed: the process has exited");
                         Running = false;
                         return false;
                     }
 
                     // 执行健康检查
-                    WriteLog("执行健康检查: {0}", service.HealthCheck);
+                    WriteLog("Performing health check: {0}", service.HealthCheck);
                     var isHealthy = HealthCheckHelper.Check(service.HealthCheck, 5000, new ActionLog(WriteLog));
                     if (!isHealthy)
                     {
-                        WriteLog("健康检查失败，应用可能未正常启动");
+                        WriteLog("Health check failed; the application may not have started correctly");
                         // 健康检查失败不影响启动，只记录日志
                     }
                     else
                     {
-                        WriteLog("健康检查成功");
+                        WriteLog("Health check succeeded");
                     }
                 }
 
@@ -290,17 +290,17 @@ public class ServiceController : DisposeBase
         var sites = NginxDeploy.DetectNginxConfig(workDir).ToList();
         if (sites.Count > 0)
         {
-            WriteLog("Nginx配置目录：{0}", sites[0].ConfigPath);
-            WriteLog("Nginx扩展名：{0}", sites[0].Extension);
+            WriteLog("Nginx configuration directory: {0}", sites[0].ConfigPath);
+            WriteLog("Nginx extension: {0}", sites[0].Extension);
 
             if (!sites[0].ConfigPath.IsNullOrEmpty())
             {
                 foreach (var site in sites)
                 {
-                    WriteLog("站点：{0}", site.SiteFile);
+                    WriteLog("Site: {0}", site.SiteFile);
                     site.Log = new ActionLog(WriteLog);
                     var rs = site.Publish();
-                    WriteLog("站点发布{0}！", rs ? "成功" : "无变化");
+                    WriteLog(rs ? "Site published successfully: {0}" : "Site is unchanged: {0}", site.SiteFile);
                 }
             }
         }
@@ -317,21 +317,21 @@ public class ServiceController : DisposeBase
 
             if (!firewall.Available)
             {
-                WriteLog("未检测到可用的防火墙或无权限访问，跳过端口开放");
+                WriteLog("No usable firewall was detected or access was denied; skipping port opening");
                 return;
             }
 
-            WriteLog("检测到防火墙类型：{0}", firewall.Type);
+            WriteLog("Detected firewall type: {0}", firewall.Type);
 
             // 检测需要开放的端口
             var ports = FirewallManager.DetectPorts(workDir, arguments).ToList();
             if (ports.Count == 0)
             {
-                WriteLog("未检测到需要开放的端口");
+                WriteLog("No ports need to be opened");
                 return;
             }
 
-            WriteLog("检测到 {0} 个端口需要开放: {1}", ports.Count, String.Join(", ", ports));
+            WriteLog("Detected {0} port(s) to open: {1}", ports.Count, String.Join(", ", ports));
 
             // 开放每个端口
             foreach (var port in ports)
@@ -340,13 +340,13 @@ public class ServiceController : DisposeBase
                 var success = firewall.OpenPort(port, ruleName);
                 if (!success)
                 {
-                    WriteLog("端口 {0} 开放失败", port);
+                    WriteLog("Failed to open port {0}", port);
                 }
             }
         }
         catch (Exception ex)
         {
-            WriteLog("开放防火墙端口时发生异常: {0}", ex.Message);
+            WriteLog("An error occurred while opening firewall ports: {0}", ex.Message);
         }
     }
 
@@ -376,7 +376,7 @@ public class ServiceController : DisposeBase
         SetProcess(null);
         if (p == null) return;
 
-        WriteLog("停止应用 PID={0}/{1} 原因：{2}", p.Id, p.ProcessName, reason);
+        WriteLog("Stopping application PID={0}/{1}, reason: {2}", p.Id, p.ProcessName, reason);
 
         using var span = Tracer?.NewSpan("StopService", $"{Info?.Name} reason={reason}");
         _timer.TryDispose();
@@ -386,7 +386,7 @@ public class ServiceController : DisposeBase
         {
             if (!p.GetHasExited() && p.CloseMainWindow())
             {
-                WriteLog("已发送关闭窗口消息，等待目标进程退出");
+                WriteLog("Sent the close-window message; waiting for the target process to exit");
 
                 for (var i = 0; i < 50 && !p.GetHasExited(); i++)
                 {
@@ -399,7 +399,7 @@ public class ServiceController : DisposeBase
         // 优雅关闭进程
         if (!p.GetHasExited())
         {
-            WriteLog("优雅退出进程：PID={0}/{1}，最大等待{2}毫秒", p.Id, p.ProcessName, 50 * 200);
+            WriteLog("Gracefully exiting process PID={0}/{1}, maximum wait {2} ms", p.Id, p.ProcessName, 50 * 200);
             p.SafetyKill(5_000, 50, 200);
         }
 
@@ -407,15 +407,15 @@ public class ServiceController : DisposeBase
         {
             if (!p.GetHasExited())
             {
-                WriteLog("强行结束进程 PID={0}/{1}", p.Id, p.ProcessName);
+                WriteLog("Force-terminating process PID={0}/{1}", p.Id, p.ProcessName);
                 p.ForceKill();
             }
 
-            if (p.GetHasExited()) WriteLog("进程[PID={0}]已退出！ExitCode={1}", p.Id, p.ExitCode);
+            if (p.GetHasExited()) WriteLog("Process [PID={0}] has exited, ExitCode={1}", p.Id, p.ExitCode);
         }
         catch (Exception ex)
         {
-            WriteLog("进程[PID={0}]退出失败！{1}", p.Id, ex.Message);
+            WriteLog("Failed to exit process [PID={0}]: {1}", p.Id, ex.Message);
             span?.SetError(ex, null);
         }
     }
@@ -445,7 +445,7 @@ public class ServiceController : DisposeBase
         var p = Process;
         if (p != null && p.GetHasExited())
         {
-            WriteLog("应用[{0}/{1}]已退出！", p.Id, Name);
+            WriteLog("Application [{0}/{1}] has exited.", p.Id, Name);
 
             p = null;
             Process = null;
@@ -555,7 +555,7 @@ public class ServiceController : DisposeBase
                 var args = ProcessHelper.GetCommandLineArgs(item.Id);
                 if (args == null || args.Length == 0)
                 {
-                    span?.AppendTag($"无法获取命令行");
+                    span?.AppendTag(L.TLog("Failed to get the command line"));
                     continue;
                 }
 
@@ -563,7 +563,7 @@ public class ServiceController : DisposeBase
                 var dllOrJar = args.FirstOrDefault(e => e.EndsWithIgnoreCase(".dll", ".jar"));
                 if (dllOrJar.IsNullOrEmpty())
                 {
-                    span?.AppendTag($"命令行中无dll/jar");
+                    span?.AppendTag(L.TLog("No dll/jar in the command line"));
                     continue;
                 }
 
@@ -580,7 +580,7 @@ public class ServiceController : DisposeBase
                     var mainModule = item.MainModule?.FileName;
                     if (mainModule.IsNullOrEmpty())
                     {
-                        span?.AppendTag($"无法获取MainModule");
+                        span?.AppendTag(L.TLog("Failed to get MainModule"));
                         continue;
                     }
 
@@ -591,7 +591,7 @@ public class ServiceController : DisposeBase
                 }
                 catch
                 {
-                    span?.AppendTag($"获取MainModule异常");
+                    span?.AppendTag(L.TLog("Failed to get MainModule"));
                 }
             }
         }
@@ -623,7 +623,7 @@ public class ServiceController : DisposeBase
             if (actualPath.EndsWithIgnoreCase(target)) return true;
         }
 
-        span?.AppendTag($"路径不匹配");
+        span?.AppendTag(L.TLog("Path mismatch"));
         return false;
     }
 
@@ -666,7 +666,7 @@ public class ServiceController : DisposeBase
             }
             if (mem <= inf.MaxMemory) return p;
 
-            WriteLog("内存超限！PrivateMemorySize64={0}M / WorkingSet64={1}M > MaxMemory={2}M", prv, ws, inf.MaxMemory);
+            WriteLog("Memory limit exceeded: PrivateMemorySize64={0}M / WorkingSet64={1}M > MaxMemory={2}M", prv, ws, inf.MaxMemory);
 
             Stop("内存超限");
 
@@ -690,7 +690,7 @@ public class ServiceController : DisposeBase
     {
         using var span = Tracer?.NewSpan(nameof(TakeOver), new { p.Id, p.ProcessName, reason });
 
-        WriteLog("应用[{0}/{1}]已启动（{2}），直接接管", p.Id, Name, reason);
+        WriteLog("Application [{0}/{1}] is already running ({2}); taking over directly", p.Id, Name, reason);
 
         SetProcess(p);
 
@@ -786,7 +786,7 @@ public class ServiceController : DisposeBase
         var di = dir.AsDirectory();
         if (di == null || !di.Exists) return;
 
-        if (first) WriteLog("监视文件改变：{0}", di.FullName);
+        if (first) WriteLog("Watching file changes: {0}", di.FullName);
 
         foreach (var fi in di.GetAllFiles("*.dll;*.exe;*.zip;*.jar"))
         {
@@ -856,7 +856,7 @@ public class ServiceController : DisposeBase
         var msg = (args == null || args.Length == 0) ? format : String.Format(format, args);
         DefaultSpan.Current?.AppendTag(msg);
 
-        if (format.Contains("错误") || format.Contains("失败"))
+        if (format.Contains("错误") || format.Contains("失败") || format.Contains("error", StringComparison.OrdinalIgnoreCase) || format.Contains("fail", StringComparison.OrdinalIgnoreCase) || format.Contains("exception", StringComparison.OrdinalIgnoreCase))
             WriteEvent("error", msg);
         else
             WriteEvent("info", msg);

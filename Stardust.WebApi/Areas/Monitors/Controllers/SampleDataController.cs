@@ -113,6 +113,6 @@ public class SampleDataController : WebReadOnlyEntityController<SampleData>
             return entity;
         }
 
-        throw new Exception($"无法找到数据[{key}]！");
+        throw new Exception(L.T("Data [{0}] not found.", key));
     }
 }

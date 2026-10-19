@@ -149,7 +149,7 @@ public class ServiceManager : DisposeBase
 
         using var span = Tracer?.NewSpan("ServiceManager-Start");
 
-        WriteLog("启动应用服务管理");
+        WriteLog("Starting application service management");
 
         var data = Setting.Current.DataPath;
         var db = new CsvDb<ProcessInfo>((x, y) => x?.Name == y?.Name) { FileName = data.CombinePath("Service.csv") };
@@ -181,7 +181,7 @@ public class ServiceManager : DisposeBase
     {
         using var span = Tracer?.NewSpan("ServiceManager-Stop", reason);
 
-        WriteLog("停止应用服务管理：{0}", reason);
+        WriteLog("Stopping application service management: {0}", reason);
 
         _timer?.TryDispose();
         _timer = null;
@@ -390,7 +390,7 @@ public class ServiceManager : DisposeBase
         }
         else
         {
-            span?.AppendTag($"无法找到服务[{serviceName}]的控制器");
+            span?.AppendTag(L.TLog("Controller for service [{0}] not found", serviceName));
         }
 
         return false;
@@ -424,7 +424,7 @@ public class ServiceManager : DisposeBase
         {
             using var span = Tracer?.NewSpan("ServiceManager-SetServices", services);
 
-            WriteLog("应用服务配置变更");
+            WriteLog("Application service configuration changed");
 
             // 拷贝，避免应用后无法及时感知变化。具体ServiceInfo也要克隆，否则上面对比service配置信息时永远失败
             Services = services.Select(e => e.Clone()).ToArray();
@@ -444,7 +444,7 @@ public class ServiceManager : DisposeBase
         if (svcs.Length == 0) return;
 
         using var span = Tracer?.NewSpan(nameof(UploadService), svcs);
-        WriteLog("上报应用服务 {0}", svcs.Join(",", e => e.Name));
+        WriteLog("Reporting application services {0}", svcs.Join(",", e => e.Name));
 
         await _client.UploadDeploy(svcs);
     }
@@ -455,7 +455,7 @@ public class ServiceManager : DisposeBase
         if (_client == null) return null;
 
         using var span = Tracer?.NewSpan(nameof(PullService), new { deployId, deployName, appName });
-        WriteLog("拉取应用服务：{0}", appName ?? "（所有）");
+        WriteLog("Pulling application services: {0}", appName ?? L.TLog("(all)"));
 
         var rs = await _client.GetDeploy(deployId, deployName, appName);
         if (rs == null) return null;
@@ -478,14 +478,14 @@ public class ServiceManager : DisposeBase
 
         if (rs.Length > 0)
         {
-            WriteLog("取得应用服务：{0}", rs.Join(",", e => e.Name));
-            WriteLog("可用：{0}", rs.Where(e => e.Service != null && e.Service.Enable).Join(",", e => e.Service.Name));
+            WriteLog("Retrieved application services: {0}", rs.Join(",", e => e.Name));
+            WriteLog("Available: {0}", rs.Where(e => e.Service != null && e.Service.Enable).Join(",", e => e.Service.Name));
             WriteLog(rs.ToJson(true));
         }
 
         // 旧版服务
         var svcs = Services.ToList();
-        span?.AppendTag("旧版服务：" + svcs.Select(e => e.Name).Join(","));
+        span?.AppendTag("Legacy service: " + svcs.Select(e => e.Name).Join(","));
 
         // 合并
         foreach (var item in rs)
@@ -503,7 +503,7 @@ public class ServiceManager : DisposeBase
             var old = svcs.FirstOrDefault(e => e.Name.EqualIgnoreCase(deployName));
             if (old == null)
             {
-                WriteLog("新增[{0}]：Enable={1}", deployName, svc.Enable);
+                WriteLog("Added [{0}]: Enable={1}", deployName, svc.Enable);
 
                 old = svc;
                 //svc.ReloadOnChange = true;
@@ -513,9 +513,9 @@ public class ServiceManager : DisposeBase
             else
             {
                 if (!old.Enable && svc.Enable)
-                    WriteLog("启用[{0}]", deployName);
+                    WriteLog("Enable [{0}]", deployName);
                 else if (old.Enable && !svc.Enable)
-                    WriteLog("禁用[{0}]", deployName);
+                    WriteLog("Disable [{0}]", deployName);
 
                 old.FileName = svc.FileName;
                 old.Arguments = svc.Arguments;
@@ -571,7 +571,7 @@ public class ServiceManager : DisposeBase
         var flag = false;
         if (!dst.Exists)
         {
-            WriteLog("文件不存在：{0}", dst);
+            WriteLog("File not found: {0}", dst);
             flag = true;
         }
         else if (!info.Hash.IsNullOrEmpty())
@@ -579,14 +579,14 @@ public class ServiceManager : DisposeBase
             var hash = dst.MD5().ToHex();
             if (!hash.EqualIgnoreCase(info.Hash))
             {
-                WriteLog("文件哈希不匹配：{0}（本地）!={1}（远程）", hash, info.Hash);
+                WriteLog("File hash mismatch: {0} (local) != {1} (remote)", hash, info.Hash);
                 flag = true;
             }
         }
         if (!flag)
         {
             var hash = dst.MD5().ToHex();
-            WriteLog("文件已存在：{0} MD5: {1}", dst, hash);
+            WriteLog("File already exists: {0} MD5: {1}", dst, hash);
 
             svc.ZipFile = dst.FullName;
         }
@@ -594,7 +594,7 @@ public class ServiceManager : DisposeBase
         {
             if (_client != null) url = _client.BuildUrl(url);
 
-            WriteLog("下载[{0}]：{1} {2}", svc.Name, info.Version, url);
+            WriteLog("Download [{0}]: {1} {2}", svc.Name, info.Version, url);
 
             // 先下载到临时目录，再整体拷贝，避免进程退出
             var tmp = Path.GetTempFileName();
@@ -602,13 +602,13 @@ public class ServiceManager : DisposeBase
             var http = new HttpClient();
             await http.DownloadFileAsync(url, tmp);
 
-            WriteLog("下载完成，准备覆盖：{0}", dst.FullName);
+            WriteLog("Download completed; ready to overwrite: {0}", dst.FullName);
 
             // 校验哈希
             var ti = tmp.AsFile();
             var hash = ti.MD5().ToHex();
             if (!info.Hash.IsNullOrEmpty() && !hash.EqualIgnoreCase(info.Hash))
-                WriteLog("下载失败，校验错误！{0}（本地）!={1}（远程）", hash, info.Hash);
+                WriteLog("Download failed, verification error: {0} (local) != {1} (remote)", hash, info.Hash);
             else
             {
                 // 删除原文件
@@ -856,7 +856,7 @@ public class ServiceManager : DisposeBase
             "deploy/stop" => OnStop(serviceName, cmd),
             "deploy/restart" => OnRestart(serviceName, cmd),
             "deploy/uninstall" => OnUninstall(serviceName, cmd),
-            _ => throw new Exception($"不支持命令[{cmd.Command}]"),
+            _ => throw new Exception(L.T("Unsupported command [{0}]", cmd.Command)),
         };
 
         // 保存状态
@@ -879,7 +879,7 @@ public class ServiceManager : DisposeBase
         using var span = Tracer?.NewSpan("ServiceManager-Install", cmd.Argument);
 
         var dis = await PullService(deployId, serviceName, appName).ConfigureAwait(false);
-        if (dis == null || dis.Length == 0) throw new Exception($"无法从服务器取得应用信息，安装{serviceName}失败！");
+        if (dis == null || dis.Length == 0) throw new Exception(L.T("Failed to obtain application information from the server; installation of {0} failed.", serviceName));
 
         // 马上停止并拉起应用服务，定时器只用于双保险
         var svc = dis[0]?.Service;
@@ -891,7 +891,7 @@ public class ServiceManager : DisposeBase
         }
         else
         {
-            span?.AppendTag($"无法找到{dis[0]}的服务");
+            span?.AppendTag(L.TLog("Service {0} not found", dis[0]));
         }
 
         // 尽快调度一次，拉起服务
@@ -906,7 +906,7 @@ public class ServiceManager : DisposeBase
         using var span = Tracer?.NewSpan("ServiceManager-Start", cmd);
 
         var svc = (Services?.FirstOrDefault(e => e.Name.EqualIgnoreCase(serviceName)))
-            ?? throw new Exception($"无法找到服务[{serviceName}]");
+            ?? throw new Exception(L.T("Service [{0}] not found", serviceName));
 
         var changed = false;
         svc.Enable = true;
@@ -922,7 +922,7 @@ public class ServiceManager : DisposeBase
         using var span = Tracer?.NewSpan("ServiceManager-Stop", cmd);
 
         var svc = (Services?.FirstOrDefault(e => e.Name.EqualIgnoreCase(serviceName)))
-            ?? throw new Exception($"无法找到服务[{serviceName}]");
+            ?? throw new Exception(L.T("Service [{0}] not found", serviceName));
 
         var changed = false;
         svc.Enable = false;
@@ -938,7 +938,7 @@ public class ServiceManager : DisposeBase
         using var span = Tracer?.NewSpan("ServiceManager-Restart", cmd);
 
         var svc = (Services?.FirstOrDefault(e => e.Name.EqualIgnoreCase(serviceName)))
-            ?? throw new Exception($"无法找到服务[{serviceName}]");
+            ?? throw new Exception(L.T("Service [{0}] not found", serviceName));
 
         var changed = false;
         svc.Enable = false;
@@ -957,7 +957,7 @@ public class ServiceManager : DisposeBase
         using var span = Tracer?.NewSpan("ServiceManager-Uninstall", cmd);
 
         var svc = (Services?.FirstOrDefault(e => e.Name.EqualIgnoreCase(serviceName)))
-            ?? throw new Exception($"无法找到服务[{serviceName}]");
+            ?? throw new Exception(L.T("Service [{0}] not found", serviceName));
 
         var changed = false;
         svc.Enable = false;
@@ -988,7 +988,7 @@ public class ServiceManager : DisposeBase
         var msg = (args == null || args.Length == 0) ? format : String.Format(format, args);
         DefaultSpan.Current?.AppendTag(msg);
 
-        if (format.Contains("错误") || format.Contains("失败"))
+        if (format.Contains("错误") || format.Contains("失败") || format.Contains("error", StringComparison.OrdinalIgnoreCase) || format.Contains("fail", StringComparison.OrdinalIgnoreCase) || format.Contains("exception", StringComparison.OrdinalIgnoreCase))
             _client?.WriteErrorEvent(nameof(ServiceManager), msg);
         else
             _client?.WriteInfoEvent(nameof(ServiceManager), msg);

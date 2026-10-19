@@ -1131,7 +1131,7 @@ public partial class StarClient
         catch (UnauthorizedAccessException) { }
         catch (Exception ex)
         {
-            XTrace.WriteLine("设置进程[{0}] OOM分值={1} 失败：{2}", pid, score, ex.Message);
+            XTrace.WriteLine("Failed to set OOM score {1} for process [{0}]: {2}", pid, score, ex.Message);
         }
     }
 

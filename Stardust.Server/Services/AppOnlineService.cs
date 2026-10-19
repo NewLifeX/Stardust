@@ -43,7 +43,7 @@ public class AppOnlineService(ICacheProvider cacheProvider, ITracer tracer)
             var list = AppOnline.FindAllByAppAndIP(app.Id, localIp);
             online = list.FirstOrDefault(e => e.Client == clientId);
             online ??= list.OrderBy(e => e.Id).FirstOrDefault(e => e.UpdateIP == ip);
-            span?.AppendTag($"该应用内网IP[{localIp}]共有应用在线[{list.Count}]个");
+            span?.AppendTag(L.TLog("The application has {1} instance(s) online on intranet IP [{0}]", localIp, list.Count));
 
             // 处理多IP
             if (online == null)
@@ -52,7 +52,7 @@ public class AppOnlineService(ICacheProvider cacheProvider, ITracer tracer)
                 online = list.OrderBy(e => e.Id).FirstOrDefault(e => !e.IP.IsNullOrEmpty() && e.UpdateIP == ip && e.IP.Split(",").Contains(localIp));
             }
 
-            if (online != null) span?.AppendTag($"匹配到在线[id={online.Id}]");
+            if (online != null) span?.AppendTag(L.TLog("Matched online instance [id={0}]", online.Id));
         }
 
         var isNew = online == null;

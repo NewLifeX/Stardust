@@ -422,7 +422,7 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
         }
         catch (Exception ex)
         {
-            XTrace.WriteLine($"后台网络质量测量失败：{ex.Message}");
+            XTrace.WriteLine(L.TLog("Background network quality measurement failed: {0}", ex.Message));
         }
         finally
         {

@@ -61,12 +61,12 @@ public class DotNetSyncService : IHostedService
         {
             // 禁用时改为每分钟检查，确保配置变化后能快速恢复
             _timer.Period = 60_000;
-            XTrace.WriteLine("DotNetSyncService 已暂停，配置周期={0}", period);
+            XTrace.WriteLine("DotNetSyncService is paused, configured period={0}", period);
         }
         else
         {
             _timer.Period = period * 1000;
-            XTrace.WriteLine("DotNetSyncService 周期已更新为 {0}秒", period);
+            XTrace.WriteLine("DotNetSyncService period updated to {0} second(s)", period);
         }
     }
 

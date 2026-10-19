@@ -161,13 +161,13 @@ public static class RegistryExtensions
             if (svc != null)
             {
                 services.Remove(svc);
-                XTrace.WriteLine("服务[{0}]删除地址：name={1} address={2} weight={3}", serviceName, svc.Name, svc.Address, svc.Weight);
+                XTrace.WriteLine("Service [{0}] removed address: name={1} address={2} weight={3}", serviceName, svc.Name, svc.Address, svc.Weight);
             }
 
             var v = item.Value;
-            client.AddServer(v.Internal ? "内网" : "外网", v.Address, v.Model.Weight);
+            client.AddServer(v.Internal ? "Intranet" : "Internet", v.Address, v.Model.Weight);
             svc = services[^1];
-            XTrace.WriteLine("服务[{0}]新增地址：name={1} address={2} weight={3}", serviceName, svc.Name, v.Address, v.Model.Weight);
+            XTrace.WriteLine("Service [{0}] added address: name={1} address={2} weight={3}", serviceName, svc.Name, v.Address, v.Model.Weight);
         }
 
         // 删掉旧的
@@ -176,7 +176,7 @@ public static class RegistryExtensions
             var svc = services[i];
             if (!svc.UriName.IsNullOrEmpty() && !dicModels.ContainsKey(svc.UriName))
             {
-                XTrace.WriteLine("服务[{0}]删除地址：name={1} address={2} weight={3}", serviceName, svc.Name, svc.Address, svc.Weight);
+                XTrace.WriteLine("Service [{0}] removed address: name={1} address={2} weight={3}", serviceName, svc.Name, svc.Address, svc.Weight);
 
                 services.RemoveAt(i);
             }

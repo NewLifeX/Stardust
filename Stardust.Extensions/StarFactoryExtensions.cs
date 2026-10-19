@@ -136,7 +136,7 @@ public static class StarFactoryExtensions
     public static IApplicationBuilder RegisterService(this IApplicationBuilder app, String serviceName, String? address = null, String? tag = null, String? health = null)
     {
         var star = app.ApplicationServices.GetRequiredService<StarFactory>();
-        if (star == null) throw new InvalidOperationException("未注册StarFactory，需要AddStardust注册。");
+        if (star == null) throw new InvalidOperationException(L.T("StarFactory is not registered; call AddStardust to register."));
 
         if (serviceName.IsNullOrEmpty()) serviceName = AssemblyX.Entry?.Name!;
 
@@ -165,7 +165,7 @@ public static class StarFactoryExtensions
 
                     if (address.IsNullOrEmpty())
                     {
-                        if (feature == null) throw new Exception("尘埃客户端未能取得本地服务地址。");
+                        if (feature == null) throw new Exception(L.T("The dust client failed to obtain the local service address."));
 
                         star.Service?.Register(serviceName, () => feature?.Addresses.Join(","), tag, health);
 

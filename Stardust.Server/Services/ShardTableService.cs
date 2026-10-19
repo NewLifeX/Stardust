@@ -89,7 +89,7 @@ public class ShardTableService : IHostedService
                     ts.Add(table2);
                 }
 
-                XTrace.WriteLine("检查循环天表[{0}]：{1}", ts.Count, ts.Join(",", e => e.TableName));
+                XTrace.WriteLine("Checking daily table [{0}]: {1}", ts.Count, ts.Join(",", e => e.TableName));
                 dal.Db.CreateMetaData().SetTables(Migration.On, ts.ToArray());
 
                 // 首次建表时，为 MySQL 设置压缩存储格式
@@ -128,7 +128,7 @@ public class ShardTableService : IHostedService
         var now = DateTime.Now;
         var startTime = now.AddDays(-days);
 
-        XTrace.WriteLine("检查数据分表，保留数据{0}天，起始时间：{1}", days, startTime);
+        XTrace.WriteLine("Checking sharded tables, retaining data for {0} day(s), start time: {1}", days, startTime);
 
         var rs = 0;
         using var span = _tracer?.NewSpan("ClearDetails", $"{startTime.ToFullString()}");
@@ -211,7 +211,7 @@ public class ShardTableService : IHostedService
 
         if (span != null) span.Value = rs;
 
-        XTrace.WriteLine("检查数据表完成");
+        XTrace.WriteLine("Data table check completed");
     }
 
     /// <summary>计算指定日序号在今天之前最近一次出现的日期，用于定位循环天表分片</summary>
@@ -253,16 +253,16 @@ public class ShardTableService : IHostedService
             // 太小的文件可能是空库，不管它
             if (fi.Length < 1_000_000) return;
 
-            XTrace.WriteLine("SQLite分片库[{0}]已过期，删除数据库文件：{1}", dd, file);
+            XTrace.WriteLine("SQLite shard database [{0}] expired; deleting database file: {1}", dd, file);
             File.Delete(file);
 
             RebuildSqliteDayTables(dalTrace, dd);
-            XTrace.WriteLine("SQLite分片库[{0}]已重建", dd);
+            XTrace.WriteLine("SQLite shard database [{0}] rebuilt", dd);
         }
         catch (Exception ex)
         {
             XTrace.WriteException(ex);
-            XTrace.WriteLine("重建SQLite分片库[{0}]失败", dd);
+            XTrace.WriteLine("Failed to rebuild SQLite shard database [{0}]", dd);
         }
     }
 

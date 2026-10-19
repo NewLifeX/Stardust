@@ -113,7 +113,7 @@ public class RedisNodeController : WebEntityController<RedisNode>
         var node = RedisNode.FindById(id);
         if (node != null)
         {
-            XTrace.WriteLine("刷新 {0}/{1} {2}", node.Name, node.Id, node.Server);
+            XTrace.WriteLine("Refreshing {0}/{1} {2}", node.Name, node.Id, node.Server);
 
             try
             {
@@ -126,7 +126,7 @@ public class RedisNodeController : WebEntityController<RedisNode>
                     item.Update();
                 }
 
-                LogProvider.Provider.WriteLog("RedisNode", "Refresh", true, $"刷新Redis节点[{node}]成功");
+                LogProvider.Provider.WriteLog("RedisNode", "Refresh", true, L.TLog("Redis node [{0}] refreshed successfully.", node));
             }
             catch (Exception ex)
             {

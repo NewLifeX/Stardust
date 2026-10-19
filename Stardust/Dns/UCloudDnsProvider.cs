@@ -73,7 +73,7 @@ public class UCloudDnsProvider : IDnsProvider
         }
         catch (Exception ex)
         {
-            Log.Error("UCloud DNS更新异常：{0}", ex.Message);
+            Log.Error("UCloud DNS update error: {0}", ex.Message);
             return false;
         }
     }
@@ -117,7 +117,7 @@ public class UCloudDnsProvider : IDnsProvider
 
         if (rs == null || !rs.Success)
         {
-            Log.Error("UCloud创建记录失败：{0}", rs?.Message);
+            Log.Error("UCloud failed to create record: {0}", rs?.Message);
             return false;
         }
 
@@ -144,7 +144,7 @@ public class UCloudDnsProvider : IDnsProvider
 
         if (rs == null || !rs.Success)
         {
-            Log.Error("UCloud修改记录失败：{0}", rs?.Message);
+            Log.Error("UCloud failed to update record: {0}", rs?.Message);
             return false;
         }
 
@@ -181,7 +181,7 @@ public class UCloudDnsProvider : IDnsProvider
         }
         catch (Exception ex)
         {
-            Log.Error("UCloud API调用异常：{0}", ex.Message);
+            Log.Error("UCloud API call error: {0}", ex.Message);
             return null;
         }
     }

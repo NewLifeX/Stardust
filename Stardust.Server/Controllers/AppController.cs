@@ -53,7 +53,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
 
         var request = model;
         var rs = registryService.Login(Context, request, "Http");
-        app = Context.Device as App ?? throw new ApiException(ApiCode.Unauthorized, "应用鉴权失败");
+        app = Context.Device as App ?? throw new ApiException(ApiCode.Unauthorized, L.T("Application authentication failed."));
 
         if (Context.Online is AppOnline online) deployService.UpdateDeployNode(online);
 
@@ -88,7 +88,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
     {
         var request = inf;
         var rs = registryService.Login(Context, request, "Http");
-        var app = Context.Device as App ?? throw new ApiException(ApiCode.Unauthorized, "应用鉴权失败");
+        var app = Context.Device as App ?? throw new ApiException(ApiCode.Unauthorized, L.T("Application authentication failed."));
 
         if (Context.Online is AppOnline online) deployService.UpdateDeployNode(online);
 
@@ -185,7 +185,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
 
     private async Task HandleNotify(DeviceContext context, WebSocket socket, CancellationToken cancellationToken)
     {
-        var app = context.Device as App ?? throw new InvalidOperationException("未登录！");
+        var app = context.Device as App ?? throw new InvalidOperationException(L.T("Not logged in."));
 
         // BaseController.OnAuthorize 中已通过 deviceService.GetOnline 设置 Context.Online，
         // WebSocket 升级请求也走 OnAuthorize，后续心跳消息可直接复用。
@@ -225,7 +225,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
     [HttpPost(nameof(SendCommand))]
     public Task<CommandReplyModel> SendCommand(CommandInModel model)
     {
-        if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), "必须指定应用");
+        if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), L.T("Application must be specified."));
         if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
 
         var code = model.Code;
@@ -237,22 +237,22 @@ public class AppController(RegistryService registryService, ITokenService tokenS
             code = code[..p];
         }
 
-        var target = App.FindByName(code) ?? throw new ArgumentOutOfRangeException(nameof(model.Code), "无效应用");
+        var target = App.FindByName(code) ?? throw new ArgumentOutOfRangeException(nameof(model.Code), L.T("Invalid application."));
 
         var app = Context.Device as App;
-        if (app == null) throw new ApiException(ApiCode.Unauthorized, "无权操作！");
+        if (app == null) throw new ApiException(ApiCode.Unauthorized, L.T("No permission to perform this operation."));
 
         // 安全V-2：未配置密钥的应用可被匿名冒用，禁止其向其它应用下发控制命令
         if (app.Secret.IsNullOrEmpty())
-            throw new ApiException(ApiCode.Forbidden, $"[{app}]未配置密钥，禁止下发控制命令！请在注册中心为该应用设置Secret");
+            throw new ApiException(ApiCode.Forbidden, L.T("[{0}] has no secret configured; control commands are forbidden. Set a Secret for this application in the registry.", app));
 
         if (!app.AllowControlNodes.IsNullOrEmpty())
         {
             if (app.AllowControlNodes != "*" && !target.Name.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
-                throw new ApiException(ApiCode.Forbidden, $"[{app}]无权操作应用[{target}]！\n安全设计需要，默认禁止所有应用向其它应用发送控制指令。\n可在注册中心应用系统中修改[{app}]的可控节点，添加[{target.Name}]，或者设置为*所有应用。");
+                throw new ApiException(ApiCode.Forbidden, L.T("[{0}] is not allowed to operate application [{1}].\nFor security, applications cannot send control commands to other applications by default.\nIn the registry, edit the controllable nodes of [{0}], add [{2}], or set it to * for all applications.", app, target, target.Name));
         }
         else if (!setting.AllowControlNodesWhenEmpty)
-            throw new ApiException(ApiCode.Unauthorized, "无权操作！");
+            throw new ApiException(ApiCode.Unauthorized, L.T("No permission to perform this operation."));
 
         return registryService.SendCommand(target, clientId, model, app + "");
     }
@@ -273,7 +273,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
             info = new Service { Name = serviceName, Enable = true };
             info.Insert();
         }
-        if (!info.Enable) throw new ApiException(ApiCode.Forbidden, $"服务[{serviceName}]已停用！");
+        if (!info.Enable) throw new ApiException(ApiCode.Forbidden, L.T("Service [{0}] is disabled.", serviceName));
 
         return info;
     }
@@ -337,7 +337,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
             };
             consumes.Add(svc);
 
-            WriteLog("ResolveService", true, $"消费服务[{model.ServiceName}] {model.ToJson()}");
+            WriteLog("ResolveService", true, L.TLog("Consuming service [{0}] {1}", model.ServiceName, model.ToJson()));
         }
 
         // 节点信息

@@ -128,11 +128,11 @@ public class ConfigController(ConfigService configService, ITokenService tokenSe
             if (ex != null) throw ex;
 
             var ap1 = App.FindByName(jwt?.Subject);
-            if (ap1 == null) throw new ApiException(ApiCode.Unauthorized, "无效应用令牌");
+            if (ap1 == null) throw new ApiException(ApiCode.Unauthorized, L.T("Invalid application token"));
 
             // 安全V-5：令牌主体必须与目标应用一致，禁止跨应用读写配置
             if (!appId.IsNullOrEmpty() && !appId.EqualIgnoreCase(ap1.Name))
-                throw new ApiException(ApiCode.Forbidden, $"令牌主体[{ap1.Name}]与目标应用[{appId}]不一致，禁止越权访问配置！");
+                throw new ApiException(ApiCode.Forbidden, L.T("Token subject [{0}] does not match the target application [{1}]; cross-application configuration access is forbidden.", ap1.Name, appId));
 
             if (appId.IsNullOrEmpty()) appId = ap1.Name;
             if (clientId.IsNullOrEmpty()) clientId = jwt.Id;
@@ -188,7 +188,7 @@ public class ConfigController(ConfigService configService, ITokenService tokenSe
         var online = appOnline.UpdateOnline(app, clientId, ip, token);
 
         // 检查应用有效性
-        if (!config.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");
+        if (!config.Enable) throw new ArgumentOutOfRangeException(nameof(appId), L.T("Application [{0}] is disabled.", appId));
 
         // 刷新WorkerId
         if (config.EnableWorkerId) configService.RefreshWorkerId(config, online);
@@ -208,7 +208,7 @@ public class ConfigController(ConfigService configService, ITokenService tokenSe
 
         // 验证
         var (app, _) = Valid(model.AppId, model.Secret, model.ClientId, token);
-        if (app.Readonly) throw new Exception($"应用[{app}]处于只读模式，禁止修改");
+        if (app.Readonly) throw new Exception(L.T("Application [{0}] is in read-only mode; modification is forbidden.", app));
 
         return configService.SetConfigs(app, model.Configs);
     }

@@ -27,7 +27,7 @@ public static class HttpExtensions
         }
         catch (Exception ex)
         {
-            DefaultSpan.Current?.AppendTag($"GetRawUrl：{url} 失败：{ex.Message}");
+            DefaultSpan.Current?.AppendTag(L.TLog("GetRawUrl: {0} failed: {1}", url, ex.Message));
             var port = request.Scheme switch
             {
                 "https" => 443,

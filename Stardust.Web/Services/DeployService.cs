@@ -27,7 +27,7 @@ public class DeployService(StarFactory starFactory, ITracer tracer)
         if (buildNode == null) throw new ArgumentNullException(nameof(buildNode));
 
         app ??= buildNode.Deploy;
-        if (app == null) throw new Exception($"编译节点[{buildNode}]上的应用部署集不存在！");
+        if (app == null) throw new Exception(L.T("The application deployment set does not exist on build node [{0}].", buildNode));
 
         await Task.Yield();
 
@@ -128,7 +128,7 @@ public class DeployService(StarFactory starFactory, ITracer tracer)
         if (deployNode == null) throw new ArgumentNullException(nameof(deployNode));
 
         app ??= deployNode.Deploy;
-        if (app == null || !app.Enable) throw new Exception($"节点[{deployNode}]上的应用部署集[{app}]未启用！");
+        if (app == null || !app.Enable) throw new Exception(L.T("The application deployment set [{1}] on node [{0}] is not enabled.", deployNode, app));
 
         await Task.Yield();
 
@@ -162,7 +162,7 @@ public class DeployService(StarFactory starFactory, ITracer tracer)
                     Uninstall(deployNode);
                     break;
                 default:
-                    throw new NotSupportedException($"不支持{action}");
+                    throw new NotSupportedException(L.T("Unsupported action: {0}", action));
             }
 
             // 发布安装命令时，为了兼容旧版本，继续传递AppName参数

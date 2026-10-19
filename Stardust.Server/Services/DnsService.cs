@@ -55,7 +55,7 @@ public class DnsService : IDisposable
         // IP未变化，无需更新
         if (ip == oldIp) return;
 
-        Log.Info("节点[{0}] IP已变化：{1} -> {2}，开始更新DNS", node.Name, oldIp, ip);
+        Log.Info("Node [{0}] IP changed: {1} -> {2}; updating DNS", node.Name, oldIp, ip);
 
         await RefreshNodeDomainsAsync(node, ip);
     }
@@ -80,7 +80,7 @@ public class DnsService : IDisposable
         ip ??= node.LastLoginIP;
         if (ip.IsNullOrEmpty())
         {
-            Log.Warn("节点[{0}] 没有IP地址，无法更新DNS", node.Name);
+            Log.Warn("Node [{0}] has no IP address; DNS cannot be updated", node.Name);
             return;
         }
 
@@ -112,29 +112,29 @@ public class DnsService : IDisposable
 
         if (credential == null)
         {
-            Log.Warn("域名[{0}] 未找到匹配的域名供应商配置（根域名：{1}），跳过更新", domainName, rootDomain);
+            Log.Warn("No matching domain provider configuration found for domain [{0}] (root domain: {1}); skipping update", domainName, rootDomain);
             return false;
         }
 
         var provider = _factory.GetProvider(credential.Provider);
         if (provider == null)
         {
-            Log.Warn("域名[{0}] 不支持的供应商类型：{1}", domainName, credential.Provider);
+            Log.Warn("Domain [{0}] uses an unsupported provider type: {1}", domainName, credential.Provider);
             return false;
         }
 
-        Log.Info("更新DNS记录：{0} -> {1}（供应商：{2}，凭据：{3}）", domainName, ip, credential.Provider, credential.Name);
+        Log.Info("Updating DNS record: {0} -> {1} (provider: {2}, credential: {3})", domainName, ip, credential.Provider, credential.Name);
 
         // 直接传递凭据实体（实现IDnsConfig），供应商内部按需读取配置
         var result = await provider.UpdateRecordAsync(credential, domainName, ip);
 
         if (result)
         {
-            Log.Info("DNS更新成功：{0} -> {1}", domainName, ip);
+            Log.Info("DNS updated successfully: {0} -> {1}", domainName, ip);
         }
         else
         {
-            Log.Error("DNS更新失败：{0} -> {1}", domainName, ip);
+            Log.Error("DNS update failed: {0} -> {1}", domainName, ip);
         }
 
         return result;
@@ -151,7 +151,7 @@ public class DnsService : IDisposable
             .Where(e => e.Enable && !e.Domains.IsNullOrEmpty() && !e.LastLoginIP.IsNullOrEmpty())
             .ToList();
 
-        Log.Debug("定时刷新DNS：共 {0} 个节点有域名配置", nodes.Count);
+        Log.Debug("Scheduled DNS refresh: {0} node(s) have domain configuration", nodes.Count);
 
         foreach (var node in nodes)
         {
@@ -161,7 +161,7 @@ public class DnsService : IDisposable
             }
             catch (Exception ex)
             {
-                Log.Error("刷新节点[{0}] DNS异常：{1}", node.Name, ex.Message);
+                Log.Error("Error refreshing DNS for node [{0}]: {1}", node.Name, ex.Message);
             }
         }
     }

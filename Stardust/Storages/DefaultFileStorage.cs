@@ -78,7 +78,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     {
         if (Interlocked.Exchange(ref _initialized, 1) == 1) return;
 
-        WriteLog("[{0}]初始化分布式文件存储，节点：{1}", Name, NodeName);
+        WriteLog("[{0}] Initialized distributed file storage, nodes: {1}", Name, NodeName);
         using var span = Tracer?.NewSpan("FileStorage-Init", new { Name, NodeName });
 
         await OnInitializedAsync(cancellationToken).ConfigureAwait(false);
@@ -164,7 +164,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
         // 默认忽略本节点自己发布的消息（除非需要自愈）
         if (info.SourceNode.EqualIgnoreCase(NodeName)) return;
 
-        WriteLog("收到新文件通知：{0}", msg);
+        WriteLog("Received new file notification: {0}", msg);
 
         // 检查本地是否已有文件且哈希正确。上传方可能还在处理（如向zip包注入配置），延迟重试几次再判定缺失
         if (!CheckLocalFile(info.Path, info.Hash))
@@ -210,14 +210,14 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
         if (sourceNode.IsNullOrEmpty()) throw new ArgumentNullException(nameof(sourceNode));
 
         if (!_nodeAddresses.TryGetValue(sourceNode, out var addr))
-            throw new InvalidDataException($"无法解析节点[{sourceNode}]的地址");
+            throw new InvalidDataException(L.T("Failed to resolve the address of node [{0}]", sourceNode));
 
         var url = DownloadUri;
         url = url.Replace("{Id}", file.Id + "");
         url = url.Replace("{Name}", file.Name);
 
         using var span = Tracer?.NewSpan("FileStorage-FetchFile", new { file.Name, url });
-        WriteLog("下载文件：{0}，来源：{1}", file.Name, url);
+        WriteLog("Download file {0}, source: {1}", file.Name, url);
         try
         {
             var fileName = RootPath.CombinePath(file.Path).GetFullPath();
@@ -245,12 +245,12 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
             // 使用竞速下载
             await client.DownloadFileRaceAsync(url, fileName, file.Hash, false, cancellationToken).ConfigureAwait(false);
 
-            WriteLog("下载文件：{0}，成功：{1}", file.Name, client.Current?.Address);
+            WriteLog("Download file {0}, success: {1}", file.Name, client.Current?.Address);
         }
         catch (Exception ex)
         {
             span?.SetError(ex);
-            WriteLog("下载文件：{0}，异常：{1}", file.Name, ex.Message);
+            WriteLog("Download file {0}, error: {1}", file.Name, ex.Message);
         }
     }
     #endregion
@@ -296,7 +296,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
 
         if (req.RequestNode.EqualIgnoreCase(NodeName)) return;
 
-        WriteLog("收到请求文件通知：{0}", req.ToJson());
+        WriteLog("Received file request notification: {0}", req.ToJson());
 
         // 附加消费上下文，便于排查问题（仅加标签，不改动消费逻辑）。
         // 【为什么用 DefaultSpan.Current，而不是下面 NewSpan 得到的 span】

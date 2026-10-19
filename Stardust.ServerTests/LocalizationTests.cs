@@ -35,4 +35,17 @@ public class LocalizationTests : IDisposable
             Assert.NotEqual("Domain cannot be empty.", Localization.Translate("Domain cannot be empty."));
         }
     }
+
+    [Fact(DisplayName = "服务端词表注册并支持中文翻译")]
+    public void ServerLocalesRegistered()
+    {
+        RuntimeHelpers.RunModuleConstructor(typeof(global::Stardust.Server.Startup).Module.ModuleHandle);
+
+        Localization.Culture = new CultureInfo("zh-Hans");
+        Assert.Equal("必须指定节点", Localization.Translate("Node must be specified."));
+        Assert.Equal("未登录！", Localization.Translate("Not logged in."));
+
+        Localization.Culture = new CultureInfo("zh-Hant");
+        Assert.Equal("必須指定節點", Localization.Translate("Node must be specified."));
+    }
 }

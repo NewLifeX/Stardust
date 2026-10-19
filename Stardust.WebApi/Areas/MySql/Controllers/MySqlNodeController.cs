@@ -84,13 +84,13 @@ public class MySqlNodeController : WebEntityController<MySqlNode>
         var node = MySqlNode.FindById(id);
         if (node != null)
         {
-            XTrace.WriteLine("刷新 {0}/{1} {2}:{3}", node.Name, node.Id, node.Server, node.Port);
+            XTrace.WriteLine("Refreshing {0}/{1} {2}:{3}", node.Name, node.Id, node.Server, node.Port);
 
             try
             {
                 _mySqlService.TraceNode(node);
 
-                LogProvider.Provider.WriteLog("MySqlNode", "Refresh", true, $"刷新MySql节点[{node}]成功");
+                LogProvider.Provider.WriteLog("MySqlNode", "Refresh", true, L.TLog("MySql node [{0}] refreshed successfully.", node));
             }
             catch (Exception ex)
             {

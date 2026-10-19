@@ -138,7 +138,7 @@ public class Startup
 
             if (!target.IsNullOrEmpty())
             {
-                XTrace.WriteLine("兼容旧配置，[StardustData]使用[{0}]的连接配置，建议直接设置[StardustData]的连接字符串", target);
+                XTrace.WriteLine("Legacy configuration compatibility: [StardustData] uses the connection settings from [{0}]; set the [StardustData] connection string directly instead.", target);
                 var dal = DAL.Create(target);
                 DAL.AddConnStr("StardustData", dal.ConnStr, null, dal.DbType + "");
             }
@@ -211,7 +211,7 @@ public class Startup
         var set2 = CubeSetting.Current;
         if (set2.IsNew || set2.UploadPath == "Uploads")
         {
-            XTrace.WriteLine("修正上传目录");
+            XTrace.WriteLine("Correcting the upload directory");
             set2.UploadPath = "../Uploads";
             set2.AvatarPath = "../Avatars";
             set2.Skin = "layui";
@@ -231,16 +231,16 @@ public class Startup
         var tables = dal.Tables;
         if (tables != null && !tables.Any(e => e.TableName.EqualIgnoreCase("StarApp")))
         {
-            XTrace.WriteLine("未发现Star应用新表 StarApp");
+            XTrace.WriteLine("The new StarApp table was not found");
 
             // 验证表名和部分字段名，避免误改其它表
             var dt = tables.FirstOrDefault(e => e.TableName.EqualIgnoreCase("App"));
             if (dt != null && dt.Columns.Any(e => e.ColumnName.EqualIgnoreCase("AutoActive")))
             {
-                XTrace.WriteLine("发现Star应用旧表 App ，准备重命名");
+                XTrace.WriteLine("Found legacy Star application table App; preparing to rename");
 
                 var rs = dal.Execute($"Alter Table App Rename To StarApp");
-                XTrace.WriteLine("重命名结果：{0}", rs);
+                XTrace.WriteLine("Rename result: {0}", rs);
             }
         }
 
@@ -380,7 +380,7 @@ public class Startup
         var dps = AppDeploy.FindAll(AppDeploy._.Mode < 10);
         if (dps.Count > 0)
         {
-            XTrace.WriteLine("把旧版本的 ServiceModes 一次性转换为 DeployMode");
+            XTrace.WriteLine("Converting legacy ServiceModes to DeployMode in one pass");
 
             foreach (var dp in dps)
             {

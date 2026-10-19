@@ -72,7 +72,7 @@ public class AppPipelineRunController : EntityController<AppPipelineRun>
     public ActionResult Detail(Int32 id)
     {
         var entity = AppPipelineRun.FindById(id);
-        if (entity == null) return Json(500, "运行记录不存在");
+        if (entity == null) return Json(500, L.T("Run record does not exist."));
 
         // 取消轮询        // 注入前端轮询脚本：状态为 Pending/Building/Deploying 时每 5 秒自动刷新一次
         //         ViewBag.ClientScript = @"

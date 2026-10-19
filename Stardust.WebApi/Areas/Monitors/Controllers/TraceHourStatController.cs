@@ -81,7 +81,7 @@ public class TraceHourStatController : WebReadOnlyEntityController<TraceHourStat
             if (ds.Count == 0) return JsonRefresh("找不到追踪数据");
 
             var list = SampleData.FindAllByDataIds(ds.Select(e => e.LinkId > 0 ? e.LinkId : e.Id).ToArray(), st.StatTime);
-            if (list.Count == 0) return JsonRefresh("找不到采样数据");
+            if (list.Count == 0) return JsonRefresh(L.T("Sample data not found."));
 
             traceId = list[0].TraceId;
             st.TraceId = traceId;

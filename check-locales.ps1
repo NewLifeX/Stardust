@@ -131,7 +131,7 @@ foreach ($w in $allWarnings) { Write-Host $w -ForegroundColor Yellow }
 # 孤儿键：基准表中的键在源码里完全找不到（改文案后遗留的死条目）
 $orphans = @()
 if (!$SkipOrphan) {
-    $sourceDirs = @($SourceDir | ForEach-Object {
+    $sourceDirs = @($SourceDir | ForEach-Object { $_ -split '[;,]' } | Where-Object { $_ } | ForEach-Object {
         if ([IO.Path]::IsPathRooted($_)) { $_ } else { Join-Path $root $_ }
     } | Where-Object { Test-Path $_ })
 

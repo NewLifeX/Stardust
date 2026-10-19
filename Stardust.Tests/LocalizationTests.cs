@@ -30,6 +30,7 @@ public class LocalizationTests : IDisposable
     {
         RuntimeHelpers.RunModuleConstructor(typeof(global::Stardust.StarClient).Module.ModuleHandle);
         RuntimeHelpers.RunModuleConstructor(typeof(global::StarAgent.StarService).Module.ModuleHandle);
+        RuntimeHelpers.RunModuleConstructor(typeof(global::Microsoft.Extensions.DependencyInjection.StarFactoryExtensions).Module.ModuleHandle);
     }
 
     [Fact(DisplayName = "星尘核心库与星尘代理的31种语言词表全部注册")]
@@ -68,5 +69,17 @@ public class LocalizationTests : IDisposable
 
         Assert.Equal("未指定版本！", L.T("No version was specified."));
         Assert.Equal("バージョンが指定されていません。", L.TLog("No version was specified."));
+    }
+
+    [Fact(DisplayName = "扩展库词表注册并支持中文翻译")]
+    public void ExtensionsLocalesRegistered()
+    {
+        LoadAssemblies();
+
+        Localization.Culture = new CultureInfo("zh-Hans");
+        Assert.Equal("未注册StarFactory，请调用AddStardust注册。", Localization.Translate("StarFactory is not registered; call AddStardust to register."));
+
+        Localization.Culture = new CultureInfo("zh-Hant");
+        Assert.Equal("未註冊StarFactory，請調用AddStardust註冊。", Localization.Translate("StarFactory is not registered; call AddStardust to register."));
     }
 }

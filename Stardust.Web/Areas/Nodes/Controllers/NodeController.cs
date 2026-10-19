@@ -278,7 +278,7 @@ public class NodeController : NodesEntityController<Node>
     public ActionResult FrameworkRecommend(Int32 id)
     {
         var node = Node.FindByID(id);
-        if (node == null) return Content("节点不存在");
+        if (node == null) return Content(L.T("Node does not exist."));
 
         ViewBag.Node = node;
         ViewBag.Recs = DotNetPackage.GetRecommendations(node);
@@ -292,7 +292,7 @@ public class NodeController : NodesEntityController<Node>
     public async Task<ActionResult> RefreshDns(Int32 id)
     {
         var node = FindByID(id);
-        if (node == null) throw new InvalidOperationException("节点不存在");
+        if (node == null) throw new InvalidOperationException(L.T("Node does not exist."));
 
         await _dnsService.RefreshNodeDomainsAsync(node);
 

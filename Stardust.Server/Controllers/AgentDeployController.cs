@@ -20,21 +20,21 @@ public class AgentDeployController(AgentDeployService deployService, ITokenServi
     private App Valid()
     {
         var token = ApiFilterAttribute.GetToken(HttpContext);
-        if (token.IsNullOrEmpty()) throw new ApiException(ApiCode.Unauthorized, "未提供令牌");
+        if (token.IsNullOrEmpty()) throw new ApiException(ApiCode.Unauthorized, L.T("No token provided."));
 
         var (jwt, ex) = tokenService.DecodeToken(token);
         if (ex != null) throw ex;
 
         var app = App.FindByName(jwt?.Subject);
-        if (app == null || !app.Enable) throw new ApiException(ApiCode.Unauthorized, "无效应用令牌");
+        if (app == null || !app.Enable) throw new ApiException(ApiCode.Unauthorized, L.T("Invalid application token"));
 
         // 空密钥应用可被匿名冒用（如种子StarWeb），禁止使用远程部署等高危能力
         if (app.Secret.IsNullOrEmpty())
-            throw new ApiException(ApiCode.Forbidden, $"[{app}]未配置密钥，禁止远程部署！请在注册中心为该应用设置Secret");
+            throw new ApiException(ApiCode.Forbidden, L.T("[{0}] has no secret configured; remote deployment is forbidden. Set a Secret for this application in the registry.", app));
 
         // 仅具控制权的管理应用（配置了AllowControlNodes）可远程部署
         if (app.AllowControlNodes.IsNullOrEmpty())
-            throw new ApiException(ApiCode.Forbidden, $"[{app}]无控制权限，禁止远程部署！");
+            throw new ApiException(ApiCode.Forbidden, L.T("[{0}] has no control permission; remote deployment is forbidden.", app));
 
         return app;
     }
@@ -51,14 +51,14 @@ public class AgentDeployController(AgentDeployService deployService, ITokenServi
 
         try
         {
-            XTrace.WriteLine($"收到远程部署请求: Hosts={model.Hosts}, User={model.UserName}, OS={model.OSType}, Server={model.ServerUrl}");
+            XTrace.WriteLine(L.TLog("Received remote deployment request: Hosts={0}, User={1}, OS={2}, Server={3}", model.Hosts, model.UserName, model.OSType, model.ServerUrl));
 
             var results = deployService.Deploy(model);
 
             var success = results.Count(r => r.Success);
             var failed = results.Count - success;
 
-            XTrace.WriteLine($"部署完成: 成功={success}, 失败={failed}");
+            XTrace.WriteLine(L.TLog("Deployment completed: succeeded={0}, failed={1}", success, failed));
 
             return results;
         }
@@ -101,7 +101,7 @@ public class AgentDeployController(AgentDeployService deployService, ITokenServi
             };
 
             using var process = System.Diagnostics.Process.Start(psi);
-            if (process == null) return new { success = false, message = "无法启动进程" };
+            if (process == null) return new { success = false, message = L.T("Unable to start the process.") };
 
             var output = process.StandardOutput.ReadToEnd();
             var error = process.StandardError.ReadToEnd();

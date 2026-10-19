@@ -41,7 +41,7 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
         }
 
         var node = Node.FindByCode(Jwt?.Subject);
-        if (node == null || !node.Enable) error ??= new ApiException(ApiCode.Unauthorized, "无效节点");
+        if (node == null || !node.Enable) error ??= new ApiException(ApiCode.Unauthorized, L.T("Invalid node."));
 
         Context.Device = node;
 
@@ -77,7 +77,7 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
         var inf = data.Deserialize<LoginInfo>(options);
         if (inf.Node == null || inf.Node.UUID.IsNullOrEmpty() && inf.Node.MachineGuid.IsNullOrEmpty() && inf.Node.Macs.IsNullOrEmpty())
         {
-            span?.AppendTag("兼容旧版本请求体");
+            span?.AppendTag("Compatible with legacy request body");
             inf.Node = data.Deserialize<NodeInfo>(options);
         }
 
@@ -87,13 +87,13 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
         var oldSecret = node?.Secret;
         Context.Device = node;
 
-        if (node != null && !node.Enable) throw new ApiException(ApiCode.Unauthorized, "禁止登录");
+        if (node != null && !node.Enable) throw new ApiException(ApiCode.Unauthorized, L.T("Login is forbidden."));
 
         // 支持自动识别2020年的XCoder版本，兼容性处理
         if (inf.ProductCode.IsNullOrEmpty())
         {
             var installPath = inf.Node?.InstallPath;
-            span?.AppendTag($"兼容旧版本XCoder（2020年），installPath:{installPath}");
+            span?.AppendTag(L.TLog("Compatible with the legacy XCoder (2020), installPath: {0}", installPath));
             if (!installPath.IsNullOrEmpty())
             {
                 if (installPath.Contains("XCoder"))
@@ -112,7 +112,7 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
         //node ??= nodeService.Register(inf, ip);
         //Context.Device = node;
 
-        //if (node == null) throw new ApiException(ApiCode.Unauthorized, "节点鉴权失败");
+        //if (node == null) throw new ApiException(ApiCode.Unauthorized, L.T("Node authentication failed."));
 
         //var tokenModel = nodeService.Login(node, inf, ip);
 
@@ -124,7 +124,7 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
 
         var request = inf;
         var rs = nodeService.Login(Context, request, "Http");
-        node = Context.Device as Node ?? throw new ApiException(ApiCode.Unauthorized, "节点鉴权失败");
+        node = Context.Device as Node ?? throw new ApiException(ApiCode.Unauthorized, L.T("Node authentication failed."));
 
         //rs.Time = inf.Node.Time;
         rs.ServerTime = DateTime.UtcNow.ToLong();
@@ -321,7 +321,7 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
     [HttpPost(nameof(SendCommand))]
     public Task<CommandReplyModel> SendCommand(CommandInModel model)
     {
-        if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), "必须指定节点");
+        if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), L.T("Node must be specified."));
         if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
 
         return nodeService.SendCommand(Context, model);

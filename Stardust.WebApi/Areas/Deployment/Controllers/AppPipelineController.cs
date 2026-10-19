@@ -73,7 +73,7 @@ public class AppPipelineController : DeploymentEntityController<AppPipeline>
     public ActionResult CopyWebhook(Int32 id)
     {
         var entity = AppPipeline.FindById(id);
-        if (entity == null) return Json(500, "流水线不存在");
+        if (entity == null) return Json(500, L.T("Pipeline does not exist."));
 
         var serviceAddress = StarSetting.Current.ServiceAddress?.Split(",").FirstOrDefault(e => e.StartsWithIgnoreCase("http"));
         var url = $"{serviceAddress}/Pipeline/Webhook?token={entity.Token}";

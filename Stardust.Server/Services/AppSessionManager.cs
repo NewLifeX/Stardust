@@ -45,7 +45,7 @@ class AppCommandSession(WebSocket socket) : WsCommandSession(socket)
     {
         if (command == null || command.Id == 0 || command.Expire.Year > 2000 && command.Expire < DateTime.UtcNow)
         {
-            Log?.WriteLog("WebSocket发送", false, "消息无效或已过期。" + message);
+            Log?.WriteLog("WebSocket send", false, "The message is invalid or has expired." + message);
 
             var log = AppCommand.FindById((Int32)command.Id);
             if (log != null)
@@ -58,7 +58,7 @@ class AppCommandSession(WebSocket socket) : WsCommandSession(socket)
         }
 
         {
-            Log?.WriteLog("WebSocket发送", true, message);
+            Log?.WriteLog("WebSocket send", true, message);
 
             var log = AppCommand.FindById((Int32)command.Id);
             if (log != null)

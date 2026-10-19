@@ -193,7 +193,7 @@ public class AppTracerController : MonitorsEntityController<AppTracer>
             var app = AppTracer.FindByID(item.ToInt());
             if (app != null)
             {
-                XTrace.WriteLine("修正 {0}/{1}", app.Name, app.ID);
+                XTrace.WriteLine("Correcting {0}/{1}", app.Name, app.ID);
 
                 //_traceItemStatService.Add(app.ID);
                 _traceItemStatService.Process(app.ID, 30);
@@ -214,7 +214,7 @@ public class AppTracerController : MonitorsEntityController<AppTracer>
             var app = AppTracer.FindByID(item.ToInt());
             if (app != null)
             {
-                XTrace.WriteLine("修正旧数据 {0}/{1}", app.Name, app.ID);
+                XTrace.WriteLine("Correcting legacy data {0}/{1}", app.Name, app.ID);
 
                 {
                     var list = TraceDayStat.FindAllByAppId(app.ID);

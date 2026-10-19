@@ -56,7 +56,7 @@ public class AliyunDnsProvider : IDnsProvider
         }
         catch (Exception ex)
         {
-            Log.Error("阿里云DNS更新异常：{0}", ex.Message);
+            Log.Error("Aliyun DNS update error: {0}", ex.Message);
             return false;
         }
     }

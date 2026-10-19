@@ -66,7 +66,7 @@ public class AppSecurityService(ITracer tracer) : IHostedService
 
             app.Update();
 
-            XTrace.WriteLine("已为[{0}]生成密钥，重注册模式={1}", app, app.ReRegister);
+            XTrace.WriteLine("Generated a secret for [{0}], re-registration mode={1}", app, app.ReRegister);
         }
     }
 
@@ -89,7 +89,7 @@ public class AppSecurityService(ITracer tracer) : IHostedService
             app.ReRegister = ReRegisterModes.Off;
             app.Update();
 
-            XTrace.WriteLine("已关闭[{0}]重注册窗口", app);
+            XTrace.WriteLine("Closed the re-registration window for [{0}]", app);
         }
     }
 }

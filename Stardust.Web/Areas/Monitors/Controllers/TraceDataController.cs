@@ -133,7 +133,7 @@ public class TraceDataController : ReadOnlyEntityController<TraceData>
         var start = DateTime.Today.AddDays(-30);
         var end = DateTime.Today;
         var list = SampleData.Search(id, "", null, start, end, new PageParameter { PageSize = 1000 });
-        if (list.Count == 0) throw new InvalidDataException("找不到采样数据");
+        if (list.Count == 0) throw new InvalidDataException(L.T("Sample data not found."));
 
         //return RedirectToAction("Index", "SampleData", new { traceId = list[0].TraceId });
         return Redirect($"/trace?id={list[0].TraceId}");

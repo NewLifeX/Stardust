@@ -96,7 +96,7 @@ public class McpTokenController : EntityController<McpToken>
     public ActionResult Reset(Int32 id)
     {
         var entity = McpToken.FindById(id);
-        if (entity == null) throw new Exception("找不到Token记录");
+        if (entity == null) throw new Exception(L.T("Token record not found."));
 
         var oldToken = entity.Token;
         // 生成新Token并更新（旧Token立即失效，因为数据库中Token字段已被替换）
@@ -104,7 +104,7 @@ public class McpTokenController : EntityController<McpToken>
 
         // 写日志（LogOnChange=true会自动记录实体变更）
         var masked = oldToken?.Length > 10 ? oldToken.Substring(0, 10) + "***" : oldToken;
-        XTrace.WriteLine("[McpToken] Token重置：Id={Id}, Name={Name}, 旧Token={Masked}, IP={IP}", entity.Id, entity.Name, masked, ManageProvider.UserHost);
+        XTrace.WriteLine("[McpToken] Token reset: Id={Id}, Name={Name}, old token={Masked}, IP={IP}", entity.Id, entity.Name, masked, ManageProvider.UserHost);
 
         return JsonRefresh("Token已重置！");
     }

@@ -320,11 +320,11 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
 
     private Node AutoRegister(Node node, LoginInfo inf, String ip, StarServerSetting set)
     {
-        if (!set.AutoRegister) throw new ApiException(ApiCode.Forbidden, "禁止自动注册");
+        if (!set.AutoRegister) throw new ApiException(ApiCode.Forbidden, L.T("Automatic registration is forbidden."));
 
         // 检查白名单
         //var ip = UserHost;
-        if (!IsMatchWhiteIP(set.WhiteIP, ip)) throw new ApiException(ApiCode.Forbidden, "非法来源，禁止注册");
+        if (!IsMatchWhiteIP(set.WhiteIP, ip)) throw new ApiException(ApiCode.Forbidden, L.T("Illegal source; registration is forbidden."));
 
         var di = inf.Node;
         using var span = _tracer?.NewSpan(nameof(AutoRegister), new { inf.ProductCode, di.UUID, di.MachineGuid, di.Macs, di.DiskID });
@@ -492,13 +492,13 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
                     // 有些标识符刚好带有大括号，导致误判以为是未解析变量
                     var len = p2 - p1 - 1;
                     if (len >= 2 && len < 10)
-                        XTrace.WriteLine("节点编码公式有误，存在未解析变量，uid={0}", uid);
+                        XTrace.WriteLine("The node code formula contains unresolved variables, uid={0}", uid);
                 }
             }
-            //if (uid.Contains('{') || uid.Contains('}')) XTrace.WriteLine("节点编码公式有误，存在未解析变量，uid={0}", uid);
+            //if (uid.Contains('{') || uid.Contains('}')) XTrace.WriteLine("The node code formula contains unresolved variables, uid={0}", uid);
             if (!uid.IsNullOrEmpty())
             {
-                XTrace.WriteLine("生成节点编码 uid={0} alg={1}", uid, ss[0]);
+                XTrace.WriteLine("Generated node code uid={0} alg={1}", uid, ss[0]);
 
                 // 使用产品类别加密一下，确保不同类别有不同编码
                 var buf = uid.GetBytes();
@@ -850,29 +850,29 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
     /// <returns></returns>
     public override Task<CommandReplyModel?> SendCommand(DeviceContext context, CommandInModel model, CancellationToken cancellationToken = default)
     {
-        if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), "必须指定节点");
+        if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), L.T("Node must be specified."));
         if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
 
         var node = Node.FindByCode(model.Code);
-        if (node == null) throw new ArgumentOutOfRangeException(nameof(model.Code), "无效节点");
+        if (node == null) throw new ArgumentOutOfRangeException(nameof(model.Code), L.T("Invalid node."));
 
         var (jwt, ex) = _tokenService.DecodeToken(context.Token);
         if (ex != null) throw ex;
 
         var app = App.FindByName(jwt?.Subject);
-        if (app == null) throw new ApiException(ApiCode.Unauthorized, "无权操作！");
+        if (app == null) throw new ApiException(ApiCode.Unauthorized, L.T("No permission to perform this operation."));
 
         // 安全V-2：未配置密钥的应用（如种子StarWeb）可被匿名冒用登录，禁止其向节点下发命令，防止全节点RCE
         if (app.Secret.IsNullOrEmpty())
-            throw new ApiException(ApiCode.Forbidden, $"[{app}]未配置密钥，禁止下发节点命令！请在注册中心为该应用设置Secret");
+            throw new ApiException(ApiCode.Forbidden, L.T("[{0}] has no secret configured; node commands are forbidden. Set a Secret for this application in the registry.", app));
 
         if (!app.AllowControlNodes.IsNullOrEmpty())
         {
             if (app.AllowControlNodes != "*" && !node.Code.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
-                throw new ApiException(ApiCode.Forbidden, $"[{app}]无权操作节点[{node}]！\n安全设计需要，默认禁止所有应用向任意节点发送控制指令。\n可在注册中心应用系统中修改[{app}]的可控节点，添加[{node.Code}]，或者设置为*所有节点。");
+                throw new ApiException(ApiCode.Forbidden, L.T("[{0}] is not allowed to operate node [{1}].\nFor security, applications cannot send control commands to arbitrary nodes by default.\nIn the registry, edit the controllable nodes of [{0}], add [{2}], or set it to * for all nodes.", app, node, node.Code));
         }
         else if (!_setting.AllowControlNodesWhenEmpty)
-            throw new ApiException(ApiCode.Unauthorized, "无权操作！");
+            throw new ApiException(ApiCode.Unauthorized, L.T("No permission to perform this operation."));
 
         return SendCommand(node, model, app + "", cancellationToken);
     }
@@ -928,7 +928,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
 
         // 安全V-17：防止水平越权，只允许命令所属节点回包（禁止伪造其它节点的命令状态）
         if (node == null || cmd.NodeID != node.ID)
-            throw new ApiException(ApiCode.Forbidden, $"[{node?.Name}]越权回包命令[{cmd.Id}]，命令属于节点[{cmd.NodeID}]");
+            throw new ApiException(ApiCode.Forbidden, L.T("[{0}] attempted to reply to command [{1}] that belongs to node [{2}]", node?.Name, cmd.Id, cmd.NodeID));
 
         cmd.Status = model.Status;
         cmd.Result = model.Data;

@@ -143,7 +143,7 @@ public class TraceDayStatController : ReadOnlyEntityController<TraceDayStat>
             if (ds.Count == 0) return Content("找不到追踪数据");
 
             var list = SampleData.FindAllByDataIds(ds.Select(e => e.LinkId > 0 ? e.LinkId : e.Id).ToArray(), st.StatDate);
-            if (list.Count == 0) return Content("找不到采样数据");
+            if (list.Count == 0) return Content(L.T("Sample data not found."));
 
             traceId = list[0].TraceId;
             st.TraceId = traceId;

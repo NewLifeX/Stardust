@@ -124,7 +124,7 @@ internal class FirewallManager
         }
         catch (Exception ex)
         {
-            WriteLog("开放端口 {0} 失败: {1}", port, ex.Message);
+            WriteLog("Failed to open port {0}: {1}", port, ex.Message);
             return false;
         }
     }
@@ -139,7 +139,7 @@ internal class FirewallManager
         var output = "netsh".Execute(checkCmd, 5_000);
         if (!output.IsNullOrEmpty() && output.Contains(ruleName))
         {
-            WriteLog("防火墙规则 {0} 已存在", ruleName);
+            WriteLog("Firewall rule {0} already exists", ruleName);
             return true;
         }
 
@@ -149,9 +149,9 @@ internal class FirewallManager
 
         var success = !output.IsNullOrEmpty() && (output.Contains("确定") || output.Contains("Ok"));
         if (success)
-            WriteLog("已开放端口 {0} (规则: {1})", port, ruleName);
+            WriteLog("Opened port {0} (rule: {1})", port, ruleName);
         else
-            WriteLog("开放端口 {0} 失败: {1}", port, output);
+            WriteLog("Failed to open port {0}: {1}", port, output);
 
         return success;
     }
@@ -164,7 +164,7 @@ internal class FirewallManager
         var output = "firewall-cmd".Execute(checkCmd, 5_000);
         if (!output.IsNullOrEmpty() && output.Contains("yes"))
         {
-            WriteLog("端口 {0} 已开放", port);
+            WriteLog("Port {0} is open", port);
             return true;
         }
 
@@ -173,7 +173,7 @@ internal class FirewallManager
         output = "firewall-cmd".Execute(cmd, 5_000);
         if (output.IsNullOrEmpty() || !output.Contains("success"))
         {
-            WriteLog("开放端口 {0} 失败: {1}", port, output);
+            WriteLog("Failed to open port {0}: {1}", port, output);
             return false;
         }
 
@@ -181,7 +181,7 @@ internal class FirewallManager
         output = "firewall-cmd".Execute("--reload", 5_000);
         var success = !output.IsNullOrEmpty() && output.Contains("success");
         if (success)
-            WriteLog("已开放端口 {0} (firewalld)", port);
+            WriteLog("Opened port {0} (firewalld)", port);
 
         return success;
     }
@@ -198,9 +198,9 @@ internal class FirewallManager
                        output.Contains("规则已添加") || output.Contains("跳过"));
         
         if (success)
-            WriteLog("已开放端口 {0} (ufw)", port);
+            WriteLog("Opened port {0} (ufw)", port);
         else
-            WriteLog("开放端口 {0} 失败: {1}", port, output);
+            WriteLog("Failed to open port {0}: {1}", port, output);
 
         return success;
     }
@@ -213,7 +213,7 @@ internal class FirewallManager
         var output = "iptables".Execute(checkCmd, 5_000);
         if (String.IsNullOrEmpty(output))
         {
-            WriteLog("端口 {0} 已开放", port);
+            WriteLog("Port {0} is open", port);
             return true;
         }
 
@@ -224,7 +224,7 @@ internal class FirewallManager
         var success = String.IsNullOrEmpty(output) || !output.Contains("error");
         if (success)
         {
-            WriteLog("已开放端口 {0} (iptables)", port);
+            WriteLog("Opened port {0} (iptables)", port);
 
             // 尝试保存规则（可选，因为可能需要特定的保存命令）
             try
@@ -238,7 +238,7 @@ internal class FirewallManager
         }
         else
         {
-            WriteLog("开放端口 {0} 失败: {1}", port, output);
+            WriteLog("Failed to open port {0}: {1}", port, output);
         }
 
         return success;

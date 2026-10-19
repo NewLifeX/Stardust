@@ -238,7 +238,7 @@ public class NodeController : NodesEntityController<Node>
     public async Task<ActionResult> RefreshDns(Int32 id)
     {
         var node = FindByID(id);
-        if (node == null) throw new InvalidOperationException("节点不存在");
+        if (node == null) throw new InvalidOperationException(L.T("Node does not exist."));
 
         await _dnsService.RefreshNodeDomainsAsync(node);
 

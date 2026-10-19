@@ -42,10 +42,10 @@ public class HotAppEventService(StarFactory starFactory, ITraceStatService stat)
         {
             bus.Subscribe(OnHotApp);
             _bus = bus;
-            XTrace.Log.Info("热门应用事件已订阅");
+            XTrace.Log.Info("Subscribed to hot application events");
         }
         else
-            XTrace.Log.Warn("热门应用事件总线不可用，热窗口通知将失效");
+            XTrace.Log.Warn("The hot application event bus is unavailable; hot-window notifications will be disabled");
     }
 
     /// <summary>停止服务，释放事件总线</summary>
@@ -72,12 +72,12 @@ public class HotAppEventService(StarFactory starFactory, ITraceStatService stat)
         var clientId = (context as EventContext)?.ClientId;
         if (!clientId.IsNullOrEmpty() && !IsAllowedPublisher(clientId))
         {
-            XTrace.Log.Warn("忽略来源[{0}]的热门应用通知：{1}", clientId, appId);
+            XTrace.Log.Warn("Ignoring hot application notification from [{0}]: {1}", clientId, appId);
             return Task.CompletedTask;
         }
 
         stat.SetHotApp(appId);
-        XTrace.Log.Debug("收到热门应用通知：{0}，来源：{1}", appId, clientId);
+        XTrace.Log.Debug("Received hot application notification: {0}, source: {1}", appId, clientId);
 
         return Task.CompletedTask;
     }

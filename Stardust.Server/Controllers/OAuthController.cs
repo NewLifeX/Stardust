@@ -56,7 +56,7 @@ public class OAuthController(ITokenService tokenService, AppTokenService appToke
                 var app = App.FindByName(jwt?.Subject);
                 if (app == null || !app.Enable)
                 {
-                    ex ??= new ApiException(ApiCode.Unauthorized, $"无效应用[{jwt.Subject}]");
+                    ex ??= new ApiException(ApiCode.Unauthorized, L.T("Invalid application [{0}]", jwt.Subject));
                 }
 
                 if (clientId.IsNullOrEmpty()) clientId = jwt.Id;
@@ -77,7 +77,7 @@ public class OAuthController(ITokenService tokenService, AppTokenService appToke
             }
             else
             {
-                throw new NotSupportedException($"未支持 grant_type={model.grant_type}");
+                throw new NotSupportedException(L.T("Unsupported grant_type={0}", model.grant_type));
             }
         }
         catch (Exception ex)

@@ -100,7 +100,7 @@ public class TracerMiddleware(RequestDelegate next)
                         }
                         catch (Exception ex)
                         {
-                            XTrace.Log.Error("[{0}]读取请求主体失败：{1}", action, ex.Message);
+                            XTrace.Log.Error("[{0}] Failed to read the request body: {1}", action, ex.Message);
                         }
                         finally
                         {
@@ -180,7 +180,7 @@ public class TracerMiddleware(RequestDelegate next)
                             }
                             catch (Exception ex)
                             {
-                                XTrace.Log.Error("[{0}]读取响应主体失败：{1}", action, ex.Message);
+                                XTrace.Log.Error("[{0}] Failed to read the response body: {1}", action, ex.Message);
                             }
                             finally
                             {
@@ -429,11 +429,11 @@ public class TracerMiddleware(RequestDelegate next)
         }
         catch (Exception ex)
         {
-            XTrace.Log.Error("保存埋点名称截断前缀失败：{0}", ex.Message);
+            XTrace.Log.Error("Failed to save the tracing name truncation prefix: {0}", ex.Message);
         }
 
         _lastPrefixesConfig = null;
-        XTrace.WriteLine("埋点名称截断前缀：{0}", value);
+        XTrace.WriteLine("Tracing name truncation prefix: {0}", value);
     }
 
     private static volatile HashSet<String>? _namePrefixes;

@@ -90,7 +90,7 @@ public static class FileCacheExtensions
         }
         catch (Exception ex)
         {
-            XTrace.WriteLine("获取本地监听端口失败：{0}", ex.Message);
+            XTrace.WriteLine("Failed to obtain the local listening port: {0}", ex.Message);
         }
     }
 
@@ -104,7 +104,7 @@ public static class FileCacheExtensions
         var selfs = svrs.Where(e => !e.IsNullOrEmpty() && CacheFileProvider.IsSelf(e)).ToList();
         if (selfs.Count == 0) return;
 
-        XTrace.WriteLine("警告：文件缓存上游[{0}]指向自身，已禁用该上游的文件拉取，请检查配置项PluginServer", selfs.Join());
+        XTrace.WriteLine("Warning: file cache upstream [{0}] points to itself; file pulling from this upstream is disabled. Check the PluginServer setting.", selfs.Join());
 
         // 剔除指向自身的上游，避免每次请求都空等超时
         provider.Servers = svrs.Where(e => !CacheFileProvider.IsSelf(e)).ToArray();

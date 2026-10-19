@@ -44,7 +44,7 @@ public class AgentDeployService
 
         // 解析主机列表
         var hosts = ParseHosts(model.Hosts);
-        XTrace.WriteLine($"解析到 {hosts.Count} 个目标主机");
+        XTrace.WriteLine(L.TLog("Resolved {0} target host(s)", hosts.Count));
 
         var results = new List<AgentDeployResult>();
         foreach (var host in hosts)
@@ -72,7 +72,7 @@ public class AgentDeployService
     /// <summary>部署到单个主机</summary>
     private AgentDeployResult DeploySingle(String host, AgentDeployModel model)
     {
-        XTrace.WriteLine($"开始部署到 {host}");
+        XTrace.WriteLine(L.TLog("Starting deployment to {0}", host));
 
         var result = new AgentDeployResult { Host = host };
 
@@ -98,7 +98,7 @@ public class AgentDeployService
 
             // 写入脚本文件
             File.WriteAllText(scriptFile, scriptContent);
-            XTrace.WriteLine($"生成脚本文件: {scriptFile}");
+            XTrace.WriteLine(L.TLog("Generated script file: {0}", scriptFile));
 
             // 执行部署命令
             var output = ExecuteCommand(executeCmd, 300000); // 5分钟超时
@@ -112,13 +112,13 @@ public class AgentDeployService
             {
                 result.Success = true;
                 result.Message = "部署成功";
-                XTrace.WriteLine($"部署成功: {host}");
+                XTrace.WriteLine(L.TLog("Deployment succeeded: {0}", host));
             }
             else
             {
                 result.Success = false;
                 result.Message = "部署失败，请查看输出日志";
-                XTrace.WriteLine($"部署失败: {host}");
+                XTrace.WriteLine(L.TLog("Deployment failed: {0}", host));
             }
         }
         catch (Exception ex)
@@ -300,7 +300,7 @@ Write-Host ""StarAgent安装成功""
         };
 
         using var process = Process.Start(psi);
-        if (process == null) throw new InvalidOperationException("无法启动进程");
+        if (process == null) throw new InvalidOperationException(L.T("Unable to start the process."));
 
         var output = new StringBuilder();
         var error = new StringBuilder();
@@ -321,7 +321,7 @@ Write-Host ""StarAgent安装成功""
         if (!process.WaitForExit(timeout))
         {
             process.Kill();
-            throw new TimeoutException($"命令执行超时（{timeout}ms）");
+            throw new TimeoutException(L.T("Command execution timed out ({0} ms).", timeout));
         }
 
         var result = output.ToString();
@@ -408,7 +408,7 @@ Write-Host ""StarAgent安装成功""
         }
         catch (Exception ex)
         {
-            XTrace.WriteLine($"解析CIDR失败: {cidr}, {ex.Message}");
+            XTrace.WriteLine(L.TLog("Failed to parse CIDR: {0}, {1}", cidr, ex.Message));
         }
 
         return result;

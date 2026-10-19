@@ -132,7 +132,7 @@ public class AppDayStatController : MonitorsEntityController<AppDayStat>
             var stat = FindByID(item.ToInt());
             if (stat != null)
             {
-                XTrace.WriteLine("重新统计 {0}/{1} {2}", stat.AppName, stat.AppId, stat.StatDate);
+                XTrace.WriteLine("Recomputing statistics {0}/{1} {2}", stat.AppName, stat.AppId, stat.StatDate);
 
                 _appStat.Add(stat.StatDate);
                 //TraceStat.Add(stat.AppId, stat.StatDate);

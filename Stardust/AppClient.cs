@@ -251,7 +251,7 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
 
         if (_publishServices.TryAdd(service.ServiceName, service))
         {
-            WriteLog("注册服务 {0}", service.ToJson());
+            WriteLog("Registering service {0}", service.ToJson());
 
             StartTimer();
         }
@@ -304,7 +304,7 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
         service.Health = health;
 
         var rs = await RegisterAsync(service).ConfigureAwait(false);
-        WriteLog("注册完成 {0}", rs?.ToJson());
+        WriteLog("Registration completed: {0}", rs?.ToJson());
 
         return service;
     }
@@ -338,7 +338,7 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
         if (!_publishServices.TryGetValue(serviceName, out var service)) return null;
         if (service == null) return null;
 
-        WriteLog("取消注册 {0}", service.ToJson());
+        WriteLog("Unregistering {0}", service.ToJson());
         UnregisterAsync(service).Wait();
 
         return service;
@@ -368,7 +368,7 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
         // 已缓存数据的Tag可能不一致，需要重新消费
         if (!_consumeServices.TryGetValue(serviceName, out var svc) || svc.Tag + "" != tag + "")
         {
-            WriteLog("消费服务 {0}", service.ToJson());
+            WriteLog("Consuming service {0}", service.ToJson());
 
             StartTimer();
 
@@ -390,7 +390,7 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
             }
             catch (Exception ex)
             {
-                WriteLog("消费服务[{0}]报错：{1}", serviceName, ex.Message);
+                WriteLog("Error consuming service [{0}]: {1}", serviceName, ex.Message);
             }
         }
 
@@ -557,7 +557,7 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
         {
             _initedEventBus = true;
 
-            WriteLog("星尘事件总线：应用事件通过 WebSocket 上报到 StarServer；StarServer 内部的 EventHub 按 topic 分发到对应的事件总线；订阅该 topic 的其它 WebSocket 会话再把消息下发到目标应用。StarServer 单体部署时内部总线使用内存实现；集群部署时内部总线使用 Redis 队列实现。");
+            WriteLog("Stardust event bus: application events are reported to StarServer over WebSocket; the EventHub inside StarServer dispatches them by topic to the corresponding event bus; other WebSocket sessions subscribed to that topic then deliver the messages to the target application. In a standalone StarServer deployment, the internal bus uses an in-memory implementation; in a clustered deployment, the internal bus uses a Redis queue.");
 
             _eventHub.Tracer = Factory?.Tracer;
             _eventHub.Log = Log;
@@ -622,7 +622,7 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
         var set = StarSetting.Current;
         if (serverAddress == set.ServiceAddress) return;
 
-        WriteLog("设置服务地址为：{0}", serverAddress);
+        WriteLog("Service address set to: {0}", serverAddress);
 
         var count = 0;
         foreach (var service in _publishServices.Values.ToArray())
@@ -665,7 +665,7 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
         var p = Process.GetCurrentProcess();
         var ws = p.WorkingSet64 / 1024 / 1024;
         var prv = p.PrivateMemorySize64 / 1024 / 1024;
-        WriteLog("收到下行指令，开始释放内存。GC={0}M，WorkingSet={1}M，PrivateMemory={2}M", gc, ws, prv);
+        WriteLog("Received a downstream command; releasing memory. GC={0}M, WorkingSet={1}M, PrivateMemory={2}M", gc, ws, prv);
 
         FreeMemory();
 
@@ -673,7 +673,7 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
         gc = GC.GetTotalMemory(false) / 1024 / 1024;
         ws = p.WorkingSet64 / 1024 / 1024;
         prv = p.PrivateMemorySize64 / 1024 / 1024;
-        WriteLog("释放内存完成。GC={0}M，WorkingSet={1}M，PrivateMemory={2}M", gc, ws, prv);
+        WriteLog("Memory release completed. GC={0}M, WorkingSet={1}M, PrivateMemory={2}M", gc, ws, prv);
 
         return "OK";
     }

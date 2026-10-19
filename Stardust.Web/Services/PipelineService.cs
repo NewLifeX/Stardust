@@ -37,15 +37,15 @@ public class PipelineService
     public async Task<AppPipelineRun> Trigger(Int32 pipelineId, String userHost)
     {
         var pipeline = AppPipeline.FindById(pipelineId);
-        if (pipeline == null) throw new ArgumentNullException(nameof(pipelineId), "流水线不存在");
-        if (!pipeline.Enable) throw new InvalidOperationException("流水线未启用");
+        if (pipeline == null) throw new ArgumentNullException(nameof(pipelineId), L.T("Pipeline does not exist."));
+        if (!pipeline.Enable) throw new InvalidOperationException(L.T("Pipeline is not enabled."));
 
         var app = AppDeploy.FindById(pipeline.DeployId);
-        if (app == null) throw new InvalidOperationException($"应用部署集[{pipeline.DeployId}]不存在");
+        if (app == null) throw new InvalidOperationException(L.T("Application deployment set [{0}] does not exist.", pipeline.DeployId));
 
         var buildNode = AppBuildNode.FindAllByNodeId(pipeline.BuildNodeId).FirstOrDefault(e => e.DeployId == pipeline.DeployId);
-        if (buildNode == null) throw new InvalidOperationException($"编译节点[{pipeline.BuildNodeId}]不存在或未关联到部署集[{pipeline.DeployId}]");
-        if (!buildNode.Enable) throw new InvalidOperationException($"编译节点[{buildNode}]未启用");
+        if (buildNode == null) throw new InvalidOperationException(L.T("Build node [{0}] does not exist or is not associated with deployment set [{1}].", pipeline.BuildNodeId, pipeline.DeployId));
+        if (!buildNode.Enable) throw new InvalidOperationException(L.T("Build node [{0}] is not enabled.", buildNode));
 
         var run = new AppPipelineRun
         {
@@ -71,18 +71,18 @@ public class PipelineService
     public async Task<AppPipelineRun> Reprocess(Int32 runId, String userHost)
     {
         var src = AppPipelineRun.FindById(runId);
-        if (src == null) throw new ArgumentNullException(nameof(runId), "运行记录不存在");
+        if (src == null) throw new ArgumentNullException(nameof(runId), L.T("Run record does not exist."));
 
         var pipeline = AppPipeline.FindById(src.PipelineId);
-        if (pipeline == null) throw new InvalidOperationException($"原运行所属流水线[{src.PipelineId}]不存在");
-        if (!pipeline.Enable) throw new InvalidOperationException($"流水线[{pipeline.Name}]未启用");
+        if (pipeline == null) throw new InvalidOperationException(L.T("The pipeline [{0}] of the original run does not exist.", src.PipelineId));
+        if (!pipeline.Enable) throw new InvalidOperationException(L.T("Pipeline [{0}] is not enabled.", pipeline.Name));
 
         var app = AppDeploy.FindById(pipeline.DeployId);
-        if (app == null) throw new InvalidOperationException($"应用部署集[{pipeline.DeployId}]不存在");
+        if (app == null) throw new InvalidOperationException(L.T("Application deployment set [{0}] does not exist.", pipeline.DeployId));
 
         var buildNode = AppBuildNode.FindAllByNodeId(pipeline.BuildNodeId).FirstOrDefault(e => e.DeployId == pipeline.DeployId);
-        if (buildNode == null) throw new InvalidOperationException($"编译节点[{pipeline.BuildNodeId}]不存在或未关联到部署集[{pipeline.DeployId}]");
-        if (!buildNode.Enable) throw new InvalidOperationException($"编译节点[{buildNode}]未启用");
+        if (buildNode == null) throw new InvalidOperationException(L.T("Build node [{0}] does not exist or is not associated with deployment set [{1}].", pipeline.BuildNodeId, pipeline.DeployId));
+        if (!buildNode.Enable) throw new InvalidOperationException(L.T("Build node [{0}] is not enabled.", buildNode));
 
         var run = new AppPipelineRun
         {
@@ -177,7 +177,7 @@ public class PipelineService
     public Boolean Cancel(Int32 runId, String userHost)
     {
         var run = AppPipelineRun.FindById(runId);
-        if (run == null) throw new ArgumentNullException(nameof(runId), "运行记录不存在");
+        if (run == null) throw new ArgumentNullException(nameof(runId), L.T("Run record does not exist."));
 
         // 仅允许取消未到终态的 run
         if (run.Status is PipelineStatus.Success or PipelineStatus.Failed or PipelineStatus.Cancelled)

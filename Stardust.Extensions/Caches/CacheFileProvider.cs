@@ -151,7 +151,7 @@ class CacheFileProvider : IFileProvider
                 // 同步下载必须限流，拿不到名额就快速失败，绝不让请求线程排队等待
                 else if (!_syncSemaphore.Wait(0))
                 {
-                    span?.AppendTag("下载并发已满，跳过本次下载");
+                    span?.AppendTag("Download concurrency limit reached; skipping this download.");
                     fi = null;
                 }
                 else
@@ -190,7 +190,7 @@ class CacheFileProvider : IFileProvider
                 // 上游指向自身时不做请求，否则会自己请求自己形成死循环
                 if (IsSelf(item))
                 {
-                    span?.AppendTag($"跳过自环上游：{item}");
+                    span?.AppendTag(L.TLog("Skipping self-referencing upstream: {0}", item));
                     continue;
                 }
 
@@ -199,7 +199,7 @@ class CacheFileProvider : IFileProvider
                     var url = BuildUrl(item, subpath);
 
                     span?.AppendTag(url);
-                    XTrace.WriteLine("下载文件：{0}", url);
+                    XTrace.WriteLine("Downloading file: {0}", url);
 
                     // 先下载到临时目录，避免出现下载半截的情况
                     var tmp = Path.GetTempFileName();
@@ -212,7 +212,7 @@ class CacheFileProvider : IFileProvider
 
                         // 非成功状态不得写入缓存，否则会把404页面当成文件缓存下来
                         if (!rs.IsSuccessStatusCode)
-                            throw new HttpRequestException($"下载失败，状态码[{(Int32)rs.StatusCode}]，地址[{url}]");
+                            throw new HttpRequestException(L.T("Download failed with status code [{0}], url [{1}]", (Int32)rs.StatusCode, url));
 
                         using var stream = await rs.Content.ReadAsStreamAsync().ConfigureAwait(false);
                         stream.CopyTo(fs);
@@ -238,7 +238,7 @@ class CacheFileProvider : IFileProvider
                         if (txt != txt2) File.WriteAllText(fullPath, txt2);
                     }
 
-                    XTrace.WriteLine("下载文件完成：{0}", fullPath);
+                    XTrace.WriteLine("File download completed: {0}", fullPath);
                     //fi = fullPath.AsFile();
                     return fullPath;
                 }
@@ -308,7 +308,7 @@ class CacheFileProvider : IFileProvider
                     // 同步下载必须限流，拿不到名额就快速失败，绝不让请求线程排队等待
                     else if (!_syncSemaphore.Wait(0))
                     {
-                        span?.AppendTag("下载并发已满，跳过本次下载");
+                        span?.AppendTag("Download concurrency limit reached; skipping this download.");
                     }
                     else
                     {
@@ -349,7 +349,7 @@ class CacheFileProvider : IFileProvider
             // 上游指向自身时不做请求，否则会自己请求自己形成死循环
             if (IsSelf(item))
             {
-                span?.AppendTag($"跳过自环上游：{item}");
+                span?.AppendTag(L.TLog("Skipping self-referencing upstream: {0}", item));
                 continue;
             }
 
@@ -358,7 +358,7 @@ class CacheFileProvider : IFileProvider
                 var url = BuildUrl(item, subpath);
 
                 span?.AppendTag(url);
-                XTrace.WriteLine("下载目录：{0}", url);
+                XTrace.WriteLine("Downloading directory: {0}", url);
 
                 using var cts = new CancellationTokenSource(DirectoryTimeout);
                 using var rs = await GetClient()
@@ -367,7 +367,7 @@ class CacheFileProvider : IFileProvider
 
                 // 非成功状态视为失败，避免把404页面当成目录索引解析
                 if (!rs.IsSuccessStatusCode)
-                    throw new HttpRequestException($"下载目录失败，状态码[{(Int32)rs.StatusCode}]，地址[{url}]");
+                    throw new HttpRequestException(L.T("Directory download failed with status code [{0}], url [{1}]", (Int32)rs.StatusCode, url));
 
                 var html = await rs.Content.ReadAsStringAsync().ConfigureAwait(false);
 
@@ -383,13 +383,13 @@ class CacheFileProvider : IFileProvider
                 var csv = new CsvDb<FileInfoModel> { FileName = fullPath };
                 csv.Write(list, false);
 
-                XTrace.WriteLine("下载目录完成：{0}", fullPath);
+                XTrace.WriteLine("Directory download completed: {0}", fullPath);
                 return fullPath;
             }
             catch (Exception ex)
             {
                 span?.SetError(ex, null);
-                XTrace.WriteLine("下载目录出错：{0}", ex.Message);
+                XTrace.WriteLine("Directory download error: {0}", ex.Message);
             }
         }
 
@@ -501,15 +501,15 @@ class CacheFileProvider : IFileProvider
 
         if (IsNegative(subpath))
         {
-            span?.AppendTag("负缓存命中，跳过下载");
+            span?.AppendTag("Negative cache hit; skipping download.");
             return false;
         }
 
         // 所有上游都指向自身，拉取必然是死循环，直接按文件不存在处理
         if (svrs.All(IsSelf))
         {
-            span?.AppendTag("上游指向自身，跳过下载");
-            XTrace.WriteLine("文件缓存上游[{0}]指向自身，跳过下载：{1}", svrs.Join(), subpath);
+            span?.AppendTag("Upstream points to itself; skipping download.");
+            XTrace.WriteLine("File cache upstream [{0}] points to itself; skipping download: {1}", svrs.Join(), subpath);
             return false;
         }
 

@@ -84,7 +84,7 @@ public class TraceDataController : WebReadOnlyEntityController<TraceData>
         var start = DateTime.Today.AddDays(-30);
         var end = DateTime.Today;
         var list = SampleData.Search(id, "", null, start, end, new PageParameter { PageSize = 1000 });
-        if (list.Count == 0) throw new InvalidDataException("找不到采样数据");
+        if (list.Count == 0) throw new InvalidDataException(L.T("Sample data not found."));
 
         // 纯 API 无视图跳转，返回统一响应
         return JsonRefresh(new { traceId = list[0].TraceId });

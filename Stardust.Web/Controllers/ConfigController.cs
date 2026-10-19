@@ -18,7 +18,7 @@ public class ConfigController(ConfigService configService, AppTokenService token
     public ConfigInfo GetAll(String appId, String secret, String scope, Int32 version)
     {
         if (appId.IsNullOrEmpty()) throw new ArgumentNullException(nameof(appId));
-        if (ManageProvider.User == null) throw new ApiException(ApiCode.Unauthorized, "未登录！");
+        if (ManageProvider.User == null) throw new ApiException(ApiCode.Unauthorized, L.T("Not logged in."));
 
         // 验证
         var app = Valid(appId, secret, out var online);
@@ -79,7 +79,7 @@ public class ConfigController(ConfigService configService, AppTokenService token
         online = appOnline.UpdateOnline(ap, null, ip, appId);
 
         // 检查应用有效性
-        if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");
+        if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), L.T("Application [{0}] is disabled.", appId));
 
         // 刷新WorkerId
         if (app.EnableWorkerId) configService.RefreshWorkerId(app, online);

@@ -166,7 +166,7 @@ public class StarTracer : DefaultTracer
             if (client == null) throw new ArgumentNullException(nameof(Client));
 
             var server = client is ClientBase cbase ? cbase.Server : (client + "");
-            WriteLog("星尘监控中心 Server={0} AppId={1} ClientId={2}", server, AppId, ClientId);
+            WriteLog("Stardust monitoring center Server={0} AppId={1} ClientId={2}", server, AppId, ClientId);
 
             _inited = 1;
         }
@@ -398,7 +398,7 @@ public class StarTracer : DefaultTracer
             var inf = client.GetInfo();
             server = inf?.Server;
 
-            if (!server.IsNullOrEmpty()) XTrace.WriteLine("星尘探测：{0}", server);
+            if (!server.IsNullOrEmpty()) XTrace.WriteLine("Stardust probe: {0}", server);
         }
         if (server.IsNullOrEmpty()) return null;
 

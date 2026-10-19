@@ -454,8 +454,8 @@ public class RedisService : IHostedService, IRedisService
                 };
                 newNode.Insert();
 
-                XTrace.WriteLine("自动添加集群节点: {0}", address);
-                WriteLog("DiscoverClusterNodes", true, $"自动添加集群节点 [{address}] 从 [{node.Server}]");
+                XTrace.WriteLine("Automatically added cluster node: {0}", address);
+                WriteLog("DiscoverClusterNodes", true, L.TLog("Automatically added cluster node [{0}] from [{1}]", address, node.Server));
             }
             catch (Exception ex)
             {
@@ -523,7 +523,7 @@ public class RedisService : IHostedService, IRedisService
             }
             catch (Exception ex)
             {
-                XTrace.Log.Debug("获取从节点失败 [{0}]: {1}", masterName, ex.Message);
+                XTrace.Log.Debug("Failed to get replica nodes [{0}]: {1}", masterName, ex.Message);
             }
 
             // 获取该master的哨兵节点
@@ -537,7 +537,7 @@ public class RedisService : IHostedService, IRedisService
             }
             catch (Exception ex)
             {
-                XTrace.Log.Debug("获取哨兵节点失败 [{0}]: {1}", masterName, ex.Message);
+                XTrace.Log.Debug("Failed to get sentinel nodes [{0}]: {1}", masterName, ex.Message);
             }
         }
     }
@@ -571,7 +571,7 @@ public class RedisService : IHostedService, IRedisService
         // Redis 返回的数组应该是偶数长度（key-value对）
         if (array.Length % 2 != 0)
         {
-            XTrace.WriteLine("警告: Redis 返回的数组长度为奇数 {0}，最后一个元素将被忽略", array.Length);
+            XTrace.WriteLine("Warning: Redis returned an array with an odd length {0}; the last element will be ignored", array.Length);
         }
 
         for (var i = 0; i < array.Length - 1; i += 2)
@@ -625,8 +625,8 @@ public class RedisService : IHostedService, IRedisService
             };
             newNode.Insert();
 
-            XTrace.WriteLine("自动添加{0}节点: {1}", role, address);
-            WriteLog("DiscoverSentinelNodes", true, $"自动添加{role}节点 [{address}] 从 [{parentNode.Server}]");
+            XTrace.WriteLine("Automatically added {0} node: {1}", role, address);
+            WriteLog("DiscoverSentinelNodes", true, L.TLog("Automatically added {0} node [{1}] from [{2}]", role, address, parentNode.Server));
         }
         catch (Exception ex)
         {

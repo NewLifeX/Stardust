@@ -47,7 +47,7 @@ public class TencentCloudDnsProvider : IDnsProvider
         }
         catch (Exception ex)
         {
-            Log.Error("腾讯云DNS更新异常：{0}", ex.Message);
+            Log.Error("Tencent Cloud DNS update error: {0}", ex.Message);
             return false;
         }
     }
@@ -162,7 +162,7 @@ public class TencentCloudDnsProvider : IDnsProvider
 
         if (!response.IsSuccessStatusCode)
         {
-            Log.Error("腾讯云API调用失败：{0} {1}", response.StatusCode, responseBody);
+            Log.Error("Tencent Cloud API call failed: {0} {1}", response.StatusCode, responseBody);
             return null;
         }
 

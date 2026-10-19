@@ -32,7 +32,7 @@ public class HotAppService(StarFactory starFactory, ITracer tracer)
         catch (Exception ex)
         {
             span?.SetError(ex, null);
-            XTrace.Log.Debug("设置热门应用失败：{0}", ex.Message);
+            XTrace.Log.Debug("Failed to set the hot application: {0}", ex.Message);
         }
     }
 }

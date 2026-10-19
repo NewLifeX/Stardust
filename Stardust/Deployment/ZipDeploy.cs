@@ -166,7 +166,7 @@ public class ZipDeploy
         if (!fi.Exists)
         {
             //throw new FileNotFoundException("找不到zip文件", fi.FullName);
-            WriteLog("找不到zip文件 {0}", fi.FullName);
+            WriteLog("Zip file not found: {0}", fi.FullName);
             return false;
         }
 
@@ -215,7 +215,7 @@ public class ZipDeploy
         if (fi == null || !fi.Exists)
         {
             //throw new Exception("未指定Zip文件");
-            WriteLog("未发现Zip文件 {0}", fi?.FullName ?? FileName);
+            WriteLog("No zip file found: {0}", fi?.FullName ?? FileName);
             return false;
         }
 
@@ -233,12 +233,12 @@ public class ZipDeploy
         if (rundir == null) return false;
 
         WriteLog("ZipDeploy {0}", name);
-        WriteLog("运行目录 {0}", rundir);
+        WriteLog("Run directory: {0}", rundir);
 
         // 影子目录，用于解压缩应用
         shadow = shadow.CombinePath($"{Name}-{hash}");
         if (!Path.IsPathRooted(shadow)) shadow = rundir.FullName.CombinePath(shadow).GetFullPath();
-        WriteLog("影子目录 {0}", shadow);
+        WriteLog("Shadow directory: {0}", shadow);
 
         var hasExtracted = false;
         var sdi = shadow.AsDirectory();
@@ -251,7 +251,7 @@ public class ZipDeploy
             {
                 foreach (var di in sdi.Parent.GetDirectories($"{Name}-*"))
                 {
-                    span?.AppendTag($"删除旧版 {di.FullName}");
+                    span?.AppendTag(L.TLog("Deleting old version {0}", di.FullName));
 
                     try
                     {
@@ -275,7 +275,7 @@ public class ZipDeploy
         // 执行
         if (runfile == null)
         {
-            WriteLog("无法找到名为[{0}]的可执行文件", name);
+            WriteLog("Executable named [{0}] was not found", name);
             DeleteShadow(shadow);
 
             return false;
@@ -285,7 +285,7 @@ public class ZipDeploy
         //Environment.SetEnvironmentVariable("BasePath", rundir.FullName);
         ExecuteFile = runfile.FullName;
 
-        WriteLog("运行文件 {0}", runfile);
+        WriteLog("Run file: {0}", runfile);
 
         var si = new ProcessStartInfo
         {
@@ -314,7 +314,7 @@ public class ZipDeploy
                 !targets.Any(e => e.EqualIgnoreCase("Stardust.dll")))
             {
                 var dll = "Stardust.dll".GetFullPath();
-                WriteLog("执行目录：{0}，注入：{1}", dir, dll);
+                WriteLog("Execution directory: {0}, inject: {1}", dir, dll);
                 si.EnvironmentVariables["DOTNET_STARTUP_HOOKS"] = dll;
                 envVars["DOTNET_STARTUP_HOOKS"] = dll;
             }
@@ -374,11 +374,11 @@ public class ZipDeploy
                 // ZipDeploy不引入桌面注入能力，避免增加依赖
                 if (user == "$" || user == "$$")
                 {
-                    WriteLog("ZipDeploy在Windows下不支持桌面用户[$/$$]启动（需桌面注入能力），将回退为当前用户启动");
+                    WriteLog("ZipDeploy does not support launching as the desktop user [$/$$] on Windows (desktop injection is required); falling back to the current user.");
                 }
                 else
                 {
-                    WriteLog("在Windows下以特定用户[{0}]启动进程，大概率失败，因没有密码令牌，将回退为当前用户启动", user);
+                    WriteLog("Launching the process as user [{0}] on Windows is likely to fail because no password token is available; falling back to the current user.", user);
                 }
 
                 user = null;
@@ -399,13 +399,13 @@ public class ZipDeploy
             si.RedirectStandardError = true;
         }
 
-        WriteLog("工作目录: {0}", si.WorkingDirectory);
-        WriteLog("启动文件: {0}", si.FileName);
-        WriteLog("启动参数: {0}", si.Arguments);
+        WriteLog("Working directory: {0}", si.WorkingDirectory);
+        WriteLog("Startup file: {0}", si.FileName);
+        WriteLog("Startup arguments: {0}", si.Arguments);
         if (envVars.Count > 0)
-            WriteLog("环境变量: {0}", envVars.Select(e => $"{e.Key}={e.Value}").Join("; "));
+            WriteLog("Environment variables: {0}", envVars.Select(e => $"{e.Key}={e.Value}").Join("; "));
         if (!si.UserName.IsNullOrEmpty())
-            WriteLog("启动用户：{0}", si.UserName);
+            WriteLog("Startup user: {0}", si.UserName);
 
         Process? p = null;
         try
@@ -415,7 +415,7 @@ public class ZipDeploy
         catch (Win32Exception ex)
         {
             LastError = ex.Message;
-            WriteLog("启动失败！Win32Exception={0} File={1} WorkDir={2} User={3}", ex.NativeErrorCode, si.FileName, si.WorkingDirectory, si.UserName);
+            WriteLog("Startup failed: Win32Exception={0} File={1} WorkDir={2} User={3}", ex.NativeErrorCode, si.FileName, si.WorkingDirectory, si.UserName);
             WriteLog(ex.ToString());
 
             if (!hasExtracted) DeleteShadow(shadow);
@@ -427,7 +427,7 @@ public class ZipDeploy
         // 进程优先级
         if (Priority != ProcessPriority.Normal)
         {
-            WriteLog("优先级：{0}", Priority);
+            WriteLog("Priority: {0}", Priority);
             p.PriorityClass = Priority switch
             {
                 ProcessPriority.Idle => ProcessPriorityClass.Idle,
@@ -445,13 +445,13 @@ public class ZipDeploy
         {
             StarClient.SetOomScoreAdj(p.Id, OomScoreAdjust.Value);
             if (OomScoreAdjust != 0)
-                WriteLog("OOM分值：{0}", OomScoreAdjust);
+                WriteLog("OOM score: {0}", OomScoreAdjust);
         }
 
         Process = p;
         if (msWait > 0 && p.WaitForExit(msWait) && p.ExitCode != 0)
         {
-            WriteLog("启动失败！PID={0} ExitCode={1}", p.Id, p.ExitCode);
+            WriteLog("Startup failed: PID={0} ExitCode={1}", p.Id, p.ExitCode);
 
             if (si.RedirectStandardError)
             {
@@ -468,7 +468,7 @@ public class ZipDeploy
             return false;
         }
 
-        WriteLog("Zip启动成功！PID={0}", p.Id);
+        WriteLog("Zip startup succeeded, PID={0}", p.Id);
 
         return true;
     }
@@ -478,7 +478,7 @@ public class ZipDeploy
         // 启动失败时，删除影子目录，有可能上一次解压以后，该目录被篡改过。这次删除以后，下一次启动时会再次解压缩
         try
         {
-            WriteLog("删除影子目录：{0}", shadow);
+            WriteLog("Deleting shadow directory: {0}", shadow);
             Directory.Delete(shadow, true);
         }
         catch (Exception ex)
@@ -495,7 +495,7 @@ public class ZipDeploy
         // 当前文件在覆盖列表内时，强制覆盖
         if (ovs != null && ovs.Any(e => e.IsMatch(item.Name, StringComparison.OrdinalIgnoreCase)))
         {
-            WriteLog("覆盖文件 {0}", item.Name);
+            WriteLog("Overwriting file {0}", item.Name);
 
             // 注意，appsettings.json 也可能覆盖
             item.CopyTo(dst, true);
@@ -521,7 +521,7 @@ public class ZipDeploy
 
         var fi = WorkingDirectory.CombinePath(FileName).AsFile();
         var rundir = fi.DirectoryName!;
-        WriteLog("解压缩 {0} 到 {1}", FileName, shadow);
+        WriteLog("Extracting {0} to {1}", FileName, shadow);
 
         var sdi = shadow.AsDirectory();
         var rdi = rundir.AsDirectory();
@@ -536,8 +536,8 @@ public class ZipDeploy
         if (File.Exists(webConfigPath))
         {
             isIisDeploy = true;
-            WriteLog("检测到 web.config，判定为 IIS 部署");
-            span?.AppendTag("IIS部署");
+            WriteLog("web.config detected; treating this as an IIS deployment");
+            span?.AppendTag("IIS deployment");
         }
 
         // IIS 部署策略：创建 app_offline.htm 确保网站离线
@@ -547,23 +547,23 @@ public class ZipDeploy
             appOfflinePath = rundir.CombinePath(AppOfflineFileName);
             try
             {
-                WriteLog("创建 app_offline.htm 使网站离线");
+                WriteLog("Creating app_offline.htm to take the site offline");
                 File.WriteAllText(appOfflinePath, AppOfflineHtml);
-                span?.AppendTag("已创建app_offline.htm");
+                span?.AppendTag("app_offline.htm created");
 
                 // 备份并删除 web.config，进一步确保文件不被占用
                 webConfigBackupPath = webConfigPath + BackupExtension;
-                WriteLog("备份 web.config 到 {0}", webConfigBackupPath);
+                WriteLog("Backing up web.config to {0}", webConfigBackupPath);
                 File.Copy(webConfigPath, webConfigBackupPath, true);
                 File.Delete(webConfigPath);
-                span?.AppendTag("已备份web.config");
+                span?.AppendTag("web.config backed up");
 
                 // 等待 IIS 释放文件锁（同步方法中使用 Thread.Sleep）
                 Thread.Sleep(IisFileReleaseDelayMs);
             }
             catch (Exception ex)
             {
-                WriteLog("创建 app_offline.htm 失败: {0}", ex.Message);
+                WriteLog("Failed to create app_offline.htm: {0}", ex.Message);
                 span?.SetError(ex, null);
             }
         }
@@ -578,7 +578,7 @@ public class ZipDeploy
                     break;
                 case DeployModes.Standard:
                     configfile = CopyModes.SkipExists;
-                    WriteLog("清空运行目录中的可执行文件");
+                    WriteLog("Clearing executable files from the run directory");
                     if (rdi.Exists)
                     {
                         foreach (var item in rdi.GetFiles("*", SearchOption.AllDirectories))
@@ -589,7 +589,7 @@ public class ZipDeploy
                     }
                     break;
                 case DeployModes.Full:
-                    WriteLog("清空运行目录中的所有文件");
+                    WriteLog("Clearing all files from the run directory");
                     if (rdi.Exists)
                     {
                         // 直接删除工作目录太狠，改为递归删除可执行文件，以及删除工作目录下的所有文件（不递归）
@@ -630,7 +630,7 @@ public class ZipDeploy
                 //    DeleteFiles(rundir, false, e => !IsExe(e) && !IsConfig(e));
                 //}
 
-                WriteLog("拷贝文件到运行目录：{0}", rundir);
+                WriteLog("Copying files to the run directory: {0}", rundir);
 
                 // 覆盖文件
                 foreach (var item in sdi.GetFiles())
@@ -651,7 +651,7 @@ public class ZipDeploy
                     var di = shadow.CombinePath(item.Name).AsDirectory();
                     var dest = rundir.CombinePath(item.Name).AsDirectory();
 
-                    WriteLog("覆盖目录 {0}", item.Name);
+                    WriteLog("Overwriting directory {0}", item.Name);
 
                     di.CopyTo(dest.FullName, allSub: true);
                 }
@@ -671,30 +671,30 @@ public class ZipDeploy
                         // 如果解压后 web.config 已存在，说明是从 zip 包解压出来的，应保留新文件
                         if (File.Exists(webConfigPath))
                         {
-                            WriteLog("检测到 zip 包中包含新的 web.config，保留新版本");
+                            WriteLog("A new web.config was found in the zip package; keeping the new version");
                             File.Delete(webConfigBackupPath);
-                            span?.AppendTag("保留zip包中的web.config");
+                            span?.AppendTag("Keeping the web.config from the zip package");
                         }
                         else
                         {
-                            WriteLog("恢复 web.config 从 {0}", webConfigBackupPath);
+                            WriteLog("Restoring web.config from {0}", webConfigBackupPath);
                             File.Copy(webConfigBackupPath, webConfigPath, true);
                             File.Delete(webConfigBackupPath);
-                            span?.AppendTag("已恢复web.config");
+                            span?.AppendTag("web.config restored");
                         }
                     }
 
                     // 删除 app_offline.htm 使网站上线
                     if (!appOfflinePath.IsNullOrEmpty() && File.Exists(appOfflinePath))
                     {
-                        WriteLog("删除 app_offline.htm 使网站上线");
+                        WriteLog("Deleting app_offline.htm to bring the site online");
                         File.Delete(appOfflinePath);
-                        span?.AppendTag("已删除app_offline.htm");
+                        span?.AppendTag("app_offline.htm deleted");
                     }
                 }
                 catch (Exception ex)
                 {
-                    WriteLog("清理 IIS 部署文件失败: {0}", ex.Message);
+                    WriteLog("Failed to clean up IIS deployment files: {0}", ex.Message);
                     span?.SetError(ex, null);
                 }
             }

@@ -65,10 +65,10 @@ public class McpService
             if (!action.Name.IsNullOrEmpty())
             {
                 _actions[action.Name] = action;
-                XTrace.WriteLine("MCP动作注册：{0} ({1})", action.Name, type.Name);
+                XTrace.WriteLine("MCP action registered: {0} ({1})", action.Name, type.Name);
             }
         }
-        XTrace.Log.Info("MCP服务共注册 {0} 个动作", _actions.Count);
+        XTrace.Log.Info("MCP service registered {0} action(s)", _actions.Count);
     }
 
     /// <summary>注册间接资源解析器（AppDeploy/AppPipeline/AppPipelineRun → ProjectId）</summary>
@@ -130,10 +130,10 @@ public class McpService
             if (!provider.ResourceType.IsNullOrEmpty())
             {
                 _resourceProviders[provider.ResourceType] = provider;
-                XTrace.WriteLine("MCP资源Provider注册：{0} ({1})", provider.ResourceType, type.Name);
+                XTrace.WriteLine("MCP resource provider registered: {0} ({1})", provider.ResourceType, type.Name);
             }
         }
-        XTrace.Log.Info("MCP服务共注册 {0} 个资源Provider", _resourceProviders.Count);
+        XTrace.Log.Info("MCP service registered {0} resource provider(s)", _resourceProviders.Count);
     }
 
     /// <summary>获取已注册的所有动作</summary>
@@ -225,7 +225,7 @@ public class McpService
             }
             catch (Exception ex)
             {
-                XTrace.Log.Warn("[McpService] 更新Token调用统计失败（已忽略）：{0}", ex.Message);
+                XTrace.Log.Warn("[McpService] Failed to update Token call statistics (ignored): {0}", ex.Message);
             }
 
             // 构造上下文
@@ -258,12 +258,12 @@ public class McpService
         }
         catch (McpException ex)
         {
-            XTrace.Log.Error("[McpService] MCP异常 method={0} action={1} code={2} err={3}", methodName, actionName, ex.Code, ex.Message);
+            XTrace.Log.Error("[McpService] MCP exception method={0} action={1} code={2} err={3}", methodName, actionName, ex.Code, ex.Message);
             return ErrorResult(id, ex.Code, ex.Message, acceptSse);
         }
         catch (Exception ex)
         {
-            XTrace.Log.Error("[McpService] 异常 method={0} action={1} err={2}", methodName, actionName, ex);
+            XTrace.Log.Error("[McpService] Exception method={0} action={1} err={2}", methodName, actionName, ex);
             return ErrorResult(id, -32603, "Internal error: " + ex.Message, acceptSse);
         }
     }
@@ -436,7 +436,7 @@ public class McpService
             }
             catch (Exception ex)
             {
-                XTrace.Log.Warn("[McpService] 写MCP审计日志失败（已忽略）：{0}", ex.Message);
+                XTrace.Log.Warn("[McpService] Failed to write the MCP audit log (ignored): {0}", ex.Message);
             }
         }
 

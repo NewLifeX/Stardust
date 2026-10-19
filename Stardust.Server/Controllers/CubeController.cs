@@ -35,19 +35,19 @@ public class CubeController(IFileStorage fileStorage, StarServerSetting setting,
 
         var token = HttpContext.Request.Query["token"] + "";
         if (!downloadTokenService.Valid(att.Id, token))
-            throw new ApiException(ApiCode.Unauthorized, "未授权下载附件，或下载令牌无效/已过期！");
+            throw new ApiException(ApiCode.Unauthorized, L.T("Not authorized to download the attachment, or the download token is invalid or expired."));
     }
 
     private async Task<(Attachment att, String filePath)> GetFile(String id)
     {
-        if (id.IsNullOrEmpty()) throw new ApiException(ApiCode.NotFound, "非法附件编号");
+        if (id.IsNullOrEmpty()) throw new ApiException(ApiCode.NotFound, L.T("Invalid attachment ID"));
 
         // 去掉仅用于装饰的后缀名
         var p = id.IndexOf('.');
         if (p > 0) id = id[..p];
 
         var att = Attachment.FindById(id.ToLong());
-        if (att == null) throw new ApiException(ApiCode.NotFound, "找不到附件信息");
+        if (att == null) throw new ApiException(ApiCode.NotFound, L.T("Attachment information not found"));
 
         // 安全V-11：附件下载鉴权（公开分类 / 短时下载令牌）
         CheckAttachment(att);
@@ -65,14 +65,14 @@ public class CubeController(IFileStorage fileStorage, StarServerSetting setting,
         if (filePath.IsNullOrEmpty() || !System.IO.File.Exists(filePath))
         {
             var url = att.Source;
-            if (url.IsNullOrEmpty()) throw new ApiException(ApiCode.NotFound, "找不到附件文件");
+            if (url.IsNullOrEmpty()) throw new ApiException(ApiCode.NotFound, L.T("Attachment file not found"));
 
             var rs = await att.Fetch(url, setting.UploadPath);
-            if (!rs) throw new ApiException(ApiCode.NotFound, "附件远程抓取失败");
+            if (!rs) throw new ApiException(ApiCode.NotFound, L.T("Failed to fetch the attachment remotely"));
 
             filePath = att.GetFilePath(setting.UploadPath);
         }
-        if (filePath.IsNullOrEmpty() || !System.IO.File.Exists(filePath)) throw new ApiException(ApiCode.NotFound, "附件文件不存在");
+        if (filePath.IsNullOrEmpty() || !System.IO.File.Exists(filePath)) throw new ApiException(ApiCode.NotFound, L.T("Attachment file not found"));
 
         return (att, filePath);
     }
@@ -83,7 +83,7 @@ public class CubeController(IFileStorage fileStorage, StarServerSetting setting,
     [AllowAnonymous]
     public async Task<ActionResult> Image(String id)
     {
-        if (id.IsNullOrEmpty()) return NotFound("非法附件编号");
+        if (id.IsNullOrEmpty()) return NotFound(L.T("Invalid attachment ID"));
 
         try
         {
@@ -113,7 +113,7 @@ public class CubeController(IFileStorage fileStorage, StarServerSetting setting,
     [AllowAnonymous]
     public async Task<ActionResult> File(String id)
     {
-        if (id.IsNullOrEmpty()) return NotFound("非法附件编号");
+        if (id.IsNullOrEmpty()) return NotFound(L.T("Invalid attachment ID"));
 
         try
         {
