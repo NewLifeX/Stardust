@@ -541,6 +541,16 @@ async function main() {
             assert.strictEqual(tracer._spanStack.length, 0, '活动 Span 栈应清空');
         });
 
+        await test('页面内 Span 共用页面 TraceId', async () => {
+            const first = tracer.newSpan('page.first');
+            const second = tracer.newSpan('page.second');
+            first.finish();
+            second.finish();
+
+            assert.strictEqual(first.traceId, INITIAL_TRACE_ID, '页面内 Span 应复用后端 TraceId');
+            assert.strictEqual(second.traceId, INITIAL_TRACE_ID, '多个页面内 Span 应共享同一 TraceId');
+        });
+
         await test('SPA 路由变化生成 page.view 埋点且去重', async () => {
             fakeWindow.history.pushState({}, '', '/app/users?id=1');
             const users = tracer._builders.get('page.view /app/users');

@@ -503,6 +503,7 @@
             this._errorListeners = null;
             this._spanStack = [];
             this._initialTraceparent = opts.initialTraceparent ? parseTraceparent(opts.initialTraceparent) : null;
+            this._pageTraceId = this._initialTraceparent ? this._initialTraceparent.traceId : generateTraceId();
 
             var fetchImpl = null;
             try {
@@ -578,6 +579,7 @@
                     trace = current.traceId || '';
                 }
             }
+            if (!trace) trace = this._pageTraceId;
 
             var span = {
                 id: generateSpanId(),
