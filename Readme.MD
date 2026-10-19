@@ -8,7 +8,8 @@
 ![NuGet](https://img.shields.io/nuget/v/NewLife.Stardust?logo=nuget)
 ![NuGet prerelease](https://img.shields.io/nuget/vpre/NewLife.Stardust?label=dev%20nuget&logo=nuget)
 [![test](https://github.com/NewLifeX/Stardust/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/NewLifeX/Stardust/actions/workflows/test.yml)
-![platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-blue)
+![platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS%20%7C%20Android%20%7C%20iOS-blue)
+![arch](https://img.shields.io/badge/arch-x64%20%7C%20arm64-orange)
 [![contributors](https://img.shields.io/github/contributors/NewLifeX/Stardust?logo=github)](https://github.com/NewLifeX/Stardust/graphs/contributors)
 
 <!-- lang:start -->
@@ -208,58 +209,37 @@ app.Run();
 
 | SDK | 说明 | 文档 |
 | --- | --- | --- |
-| JavaScript/Node.js | 支持Node.js和浏览器环境，提供APM监控能力 | [SDK/JavaScript/README.md](SDK/JavaScript/README.md) |
-| Python | Python 3.7+ APM监控SDK | [Doc/SDK/stardust-sdk-python.md](Doc/SDK/stardust-sdk-python.md) |
-| Java | Java APM监控SDK | [Doc/SDK/stardust-sdk-java.md](Doc/SDK/stardust-sdk-java.md) |
-| Go | Go语言APM监控SDK | [Doc/SDK/stardust-sdk-go.md](Doc/SDK/stardust-sdk-go.md) |
-| PHP | PHP APM监控SDK | [Doc/SDK/stardust-sdk-php.md](Doc/SDK/stardust-sdk-php.md) |
+| JavaScript（浏览器） | UMD 单文件，登录/心跳性能/页面与接口埋点 | [SDK/JavaScript/README.md](SDK/JavaScript/README.md) |
+| JavaScript/Node.js | 登录/心跳性能/Express/Koa 埋点 | [SDK/JavaScript/README.md](SDK/JavaScript/README.md) |
+| Java | Java 8+，Maven，零运行时依赖 | [SDK/Java/README.md](SDK/Java/README.md) |
+| Go | Go 1.18+，APM 与配置中心 | [SDK/Go/README.md](SDK/Go/README.md) |
+| Python | Python 3.7+ APM 与配置中心 | [Doc/SDK/stardust-sdk-python.md](Doc/SDK/stardust-sdk-python.md) |
+| PHP | PHP 7.4+ APM 与配置中心 | [SDK/PHP/README.md](SDK/PHP/README.md) |
+| Classic ASP | VBScript 登录/心跳/埋点 | [SDK/ASP/README.md](SDK/ASP/README.md) |
+
+> 统一能力矩阵、命名与发布计划见 [SDK/README.md](SDK/README.md)。
 
 **JavaScript SDK 快速示例：**
 ```javascript
 // Node.js 环境
-const { StardustTracer } = require('stardust-tracer');
-const tracer = new StardustTracer('http://star.example.com:6600', 'MyApp', 'MySecret');
+const { StardustTracer } = require('./SDK/JavaScript');
+const tracer = new StardustTracer({
+  server: 'http://star.example.com:6600',
+  appId: 'MyApp',
+  secret: 'MySecret',
+  version: '1.2.3',
+});
 await tracer.start();
 
-// 浏览器环境
-const tracer = new StardustBrowserTracer('http://star.example.com:6600', 'MyWebApp', 'MySecret');
-await tracer.start();
-installBrowserInterceptors(tracer); // 自动拦截fetch和XMLHttpRequest
+// 浏览器环境（UMD 单文件）
+const tracer = Stardust.createTracer({
+  server: 'http://star.example.com:6600',
+  appId: 'MyWebApp',
+  tokenProvider: async () => (await fetch('/api/stardust-token')).json(),
+  version: '1.2.3',
+});
+tracer.start(); // 自动采集页面加载、路由、JS 错误、fetch/XHR
 ```
-
----
-## 多语言 SDK 支持
-
-除了 .NET SDK 外，星尘还提供了多种语言的 SDK，方便不同技术栈的应用接入：
-
-### PHP SDK
-适用于 PHP 7.4+，支持 APM 监控和配置中心。
-
-```php
-// APM 监控
-require_once 'SDK/PHP/src/StardustTracer.php';
-$tracer = new StardustTracer('http://star.example.com:6600', 'MyPHPApp', 'secret');
-$tracer->login();
-$span = $tracer->newSpan('业务操作');
-// ... 业务逻辑
-$span->finish();
-$tracer->flush();
-
-// 配置中心
-require_once 'SDK/PHP/src/StardustConfig.php';
-$config = new StardustConfig('http://star.example.com:6600', 'MyPHPApp', 'secret', 'dev');
-$config->login();
-$dbHost = $config->get('database.host', 'localhost');
-```
-
-详细文档：[SDK/PHP/README.md](SDK/PHP/README.md) | [Doc/SDK/stardust-sdk-php.md](Doc/SDK/stardust-sdk-php.md)
-
-### 其他语言 SDK
-- **Java**：详见 [Doc/SDK/stardust-sdk-java.md](Doc/SDK/stardust-sdk-java.md)
-- **Go**：详见 [Doc/SDK/stardust-sdk-go.md](Doc/SDK/stardust-sdk-go.md)
-- **Python**：详见 [Doc/SDK/stardust-sdk-python.md](Doc/SDK/stardust-sdk-python.md)
-- **JavaScript**：详见 [Doc/SDK/stardust-sdk-javascript.md](Doc/SDK/stardust-sdk-javascript.md)
-- **ASP**：详见 [Doc/SDK/stardust-sdk-asp.md](Doc/SDK/stardust-sdk-asp.md)
 
 ---
 ## 配置中心使用
@@ -369,8 +349,6 @@ A: 可扩展构建脚本或在 Repository 中附加自定义打包脚本，再�
 
 ​	我们公开强命名证书`newlife.snk`以支持独自编译替换程序集。
 
-
-
 ​	命令行中运行以下命令快速体验NewLife组件：
 
 ```
@@ -379,7 +357,6 @@ dotnet new nconsole --name test
 cd test
 dotnet run
 ```
-
 
 ## 新生命项目矩阵
 各项目默认支持net9.0/netstandard2.1/netstandard2.0/net4.62/net4.5，旧版（2024.0801）支持net4.0/net2.0  
@@ -416,8 +393,6 @@ dotnet run
 |          [SmartA2](https://github.com/NewLifeX/SmartA2)          | 2019  | 嵌入式工业计算机，物联网边缘网关，高性能.NET8主机，应用于工业、农业、交通、医疗             |
 |                          FIoT物联网平台                          | 2020  | 物联网整体解决方案，建筑、环保、农业，软硬件及大数据分析一体化，单机十万级点位项目验证      |
 |                        UWB高精度室内定位                         | 2020  | 厘米级（10~20cm）高精度室内定位，软硬件一体化，与其它系统联动，大型展厅项目验证             |
-
-
 
 ## 新生命开发团队
 ![XCode](https://newlifex.com/logo.png)  
