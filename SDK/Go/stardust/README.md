@@ -155,7 +155,7 @@ rdb := redis.NewClient(&redis.Options{Addr: "127.0.0.1:6379"})
 rdb.AddHook(stardustredis.NewHook(tracer))
 ```
 
-> `stardust-redis` 当前通过本地 `replace` 指向核心模块；仓库发布 Go module tag 前，业务项目需在 `go.mod` 保留同样的 `replace`。核心包仍保持零第三方依赖。
+> `stardust-redis` 通过核心模块伪版本依赖核心包；仓库内 `SDK/Go/go.work` 已同时加入两个模块，开发和测试无需手工 `replace`。若核心提交尚未发布，可在业务 `go.mod` 中临时 `replace` 到本地源码。核心包仍保持零第三方依赖。
 
 - 片段名称：`redis:{COMMAND}`，如 `redis:GET`；Tag 为 key/参数摘要。
 - 管道记为 `redis:PIPELINE`，Tag 为前几个命令名称。

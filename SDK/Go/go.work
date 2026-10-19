@@ -1,0 +1,8 @@
+go 1.18
+
+use (
+	./stardust
+	./stardust-redis
+)
+
+replace github.com/NewLifeX/Stardust/SDK/Go/stardust v0.0.0-20261019221215-67baf473d6d2 => ./stardust

@@ -11,8 +11,8 @@
 # Output of the go coverage tool
 *.out
 
-# Go workspace file
-go.work
+# Go workspace checksum file
+go.work.sum
 
 # Dependency directories
 vendor/
