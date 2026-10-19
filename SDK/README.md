@@ -57,7 +57,7 @@
         data-stardust-release="1.2.3"></script>
 ```
 
-`loader.js` 自动加载 `browser.js` 并采集：页面加载、SPA 路由、JS 错误、资源错误、`fetch`/`XMLHttpRequest`；页面隐藏/卸载时通过 `sendBeacon` 冲刷数据。`data-stardust-token` 指向 Token 端点，`data-stardust-token-value` 可直接放短期 Token（配合 `data-stardust-expire` 秒数），`data-stardust-config` 可指向后端配置端点。`traceparent` 默认只注入同源请求，跨域目标需通过 `tracePropagationTargets` 配置，避免触发 CORS 预检。
+`loader.js` 自动加载 `browser.js` 并采集：页面加载、SPA 路由、JS 错误、资源错误、`fetch`/`XMLHttpRequest`；页面隐藏/卸载时通过 `sendBeacon` 冲刷数据。`data-stardust-token` 指向 Token 端点，`data-stardust-token-value` 可直接放短期 Token（配合 `data-stardust-expire` 秒数），`data-stardust-config` 可指向后端配置端点。`traceparent` 默认只注入同源请求，跨域目标需通过 `tracePropagationTargets` 配置（loader 可用 `data-stardust-trace-targets="https://api.example.com,..."`），避免触发 CORS 预检。
 
 需要自定义时仍可直接引用 `browser.js`：
 

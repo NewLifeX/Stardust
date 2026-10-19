@@ -52,7 +52,7 @@ cp -r SDK/JavaScript/src /your-project/node_modules/@newlifex/stardust
         defer></script>
 ```
 
-`data-stardust-token` 也可以指向 Token 端点（推荐有后端时使用）。`data-stardust-token-value` 适合静态页面，配合 `data-stardust-expire="300"` 指定有效期；Token 应短有效期且仅具备上报权限。
+`data-stardust-token` 也可以指向 Token 端点（推荐有后端时使用）。`data-stardust-token-value` 适合静态页面，配合 `data-stardust-expire="300"` 指定有效期；Token 应短有效期且仅具备上报权限。跨域链路传播需显式配置 `data-stardust-trace-targets="https://api.example.com,..."`，默认仅同源注入 `traceparent`。
 
 npm 用户可以使用一行 `init`：
 

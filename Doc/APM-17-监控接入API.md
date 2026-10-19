@@ -298,7 +298,7 @@ traceparent: 00-<trace-id>-<span-id>-<flags>
 - `flags`：`01` 表示采样。SDK 不做头部采样，出站统一写 `01`，最终采样由星尘服务端决定。
 - **入口**：Web 入口读取 `traceparent`，复用 TraceId，并把上游 SpanId 作为入口 Span 的 ParentId；缺失或非法时新建 TraceId。
 - **出口**：向外 HTTP 请求时，以当前活动 Span 的 TraceId/SpanId 注入 `traceparent`；调用方已显式设置时不覆盖。
-- **自身请求**：`/App/Login`、`/App/Ping`、`/Trace/Report`、`/Trace/ReportRaw` 不创建 Span，也不注入 `traceparent`。
+- **自身请求**：`/App/Login`、`/App/Ping`、`/Trace/Report`、`/Trace/ReportRaw`、`/Config/GetAll` 不创建 Span，也不注入 `traceparent`。
 - **大小写**：HTTP 头名不区分大小写，值按小写十六进制解析。
 
 > 该格式与 NewLife.Core 的 `ISpan.Detach` / `AttachParameter` 一致，可与 .NET 及 OpenTelemetry 链路互通。

@@ -98,6 +98,8 @@ import stardustredis "github.com/NewLifeX/Stardust/SDK/Go/stardust-redis"
 rdb.AddHook(stardustredis.NewHook(tracer))
 ```
 
+> `stardust-redis` 当前以源码子模块提供，`go.mod` 通过本地 `replace` 指向核心模块。仓库尚未发布 Go module tag 时，业务项目需在 `go.mod` 中保留同样的 `replace`（或等待正式版本发布）；核心 `stardust` 包仍保持零第三方依赖。
+>
 > 自动埋点遵循 W3C traceparent：SDK 生成 32 位 TraceId、16 位 SpanId；入站兼容 .NET 短 TraceId；SDK 自身登录/心跳/上报请求不埋点。
 > 仅覆盖标准库 `net/http` 与 `database/sql`；Gin/Echo/gRPC 需使用框架中间件 + `NewSpanFromContext`。完整说明见 [stardust/README.md](stardust/README.md#自动埋点)。
 

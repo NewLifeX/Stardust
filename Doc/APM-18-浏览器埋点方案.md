@@ -99,6 +99,7 @@ init({
   "environment": "production",
   "tokenUrl": "/stardust/browser-token",
   "sampleRate": 1.0,
+  "tracePropagationTargets": ["https://api.example.com"],
   "ignoreUrls": ["/health", "/metrics"],
   "disabled": []
 }
@@ -173,7 +174,7 @@ Stardust.tracer                   // 高级用法
 已完成：
 
 - npm 包名统一为 `@newlifex/stardust`（浏览器子路径 `@newlifex/stardust/browser`）。
-- 新增 `src/loader.js`：支持 `data-stardust-app/config/server/token/token-value/expire/release/env/sample/debug`，兼容旧的 `data-app-id` 等属性。
+- 新增 `src/loader.js`：支持 `data-stardust-app/config/server/token/token-value/expire/trace-targets/release/env/sample/debug`，兼容旧的 `data-app-id` 等属性。
 - 新增 `Stardust.init()`、`Stardust.captureException()`、`Stardust.flush()`。
 - 支持 `initialTraceparent`：`page.load` 可复用后端注入的 TraceId/ParentId。
 - 页面级链路连续性：`page.load`、`page.view`、fetch/XHR、手动 Span 共用同一页面 TraceId；有初始 `traceparent` 时整体挂到后端链路。

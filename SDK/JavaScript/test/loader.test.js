@@ -129,6 +129,7 @@ async function main() {
             server: 'http://star.example.com:6600',
             version: '1.2.3',
             traceparent: '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01',
+            tracePropagationTargets: 'https://api.example.com, https://other.example.com',
             tokenUrl: '/stardust/token'
         });
 
@@ -137,6 +138,7 @@ async function main() {
         assert.strictEqual(fakeTracer.started, true);
         assert.strictEqual(captured.appId, 'MyWeb');
         assert.strictEqual(captured.initialTraceparent, '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01');
+        assert.deepStrictEqual(captured.tracePropagationTargets, ['https://api.example.com', 'https://other.example.com']);
         const token = await captured.tokenProvider();
         assert.deepStrictEqual(token, { token: 'tk', expire: 7200 });
     });

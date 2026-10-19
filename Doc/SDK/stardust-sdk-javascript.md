@@ -132,7 +132,7 @@ const tracer = new StardustTracer({
 });
 ```
 
-浏览器通过 `autoInstrument: false` 关闭页面/路由/fetch/XHR 自动埋点。自动入口与 Express/Koa 中间件会去重，只产生一个请求 Span。
+浏览器通过 `autoInstrument: false` 关闭页面/路由/fetch/XHR 自动埋点。自动入口与 Express/Koa 中间件会去重，只产生一个请求 Span。`traceparent` 默认仅注入同源请求；跨域目标需配置 `tracePropagationTargets`，避免自定义头触发 CORS 预检。
 
 ## API 摘要
 

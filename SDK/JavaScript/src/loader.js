@@ -78,6 +78,7 @@
             version: get('release', 'version'),
             environment: get('env'),
             sampleRate: get('sample'),
+            tracePropagationTargets: get('trace-targets'),
             debug: bool('debug', null, false),
             autoInstrument: bool('auto-instrument', null, true),
             traceparent: traceparent,
@@ -158,6 +159,15 @@
             throw new Error('stardust browser SDK is not loaded');
         }
 
+        var targets = config.tracePropagationTargets;
+        if (typeof targets === 'string') {
+            targets = targets.split(',').map(function (item) {
+                return String(item).replace(/^\s+|\s+$/g, '');
+            }).filter(function (item) {
+                return !!item;
+            });
+        }
+
         var options = {
             appId: config.appId,
             appName: config.appName || undefined,
@@ -165,6 +175,7 @@
             version: config.version || undefined,
             debug: config.debug === true,
             autoInstrument: config.autoInstrument !== false,
+            tracePropagationTargets: targets,
             initialTraceparent: config.traceparent || undefined
         };
 

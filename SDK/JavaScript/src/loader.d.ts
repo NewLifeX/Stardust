@@ -15,6 +15,7 @@ export interface LoaderConfig {
     version?: string;
     environment?: string;
     sampleRate?: string;
+    tracePropagationTargets?: string | string[];
     debug?: boolean;
     autoInstrument?: boolean;
     traceparent?: string;
