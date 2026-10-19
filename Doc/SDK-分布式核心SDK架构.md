@@ -13,7 +13,9 @@ Stardust SDK 包含两个 NuGet 包：
 | 包名 | 说明 | 目标框架 |
 |------|------|----------|
 | `NewLife.Stardust` | 核心库（无 ASP.NET Core 依赖） | net45+ / netstandard2.0+ |
-| `NewLife.Stardust.Extensions` | ASP.NET Core 扩展 | netcoreapp3.1+ ~ net10.0 |
+| `NewLife.Stardust.Extensions` | ASP.NET Core 扩展（传递引用核心库） | netcoreapp3.1+ ~ net10.0 |
+
+> ASP.NET Core 应用只需引用 `NewLife.Stardust.Extensions`，然后 `builder.Services.AddStardust("AppId")` 一行接入。
 
 SDK 提供：配置拉取、服务注册与发现、调用追踪（APM）、性能监控、日志上报、事件总线等能力。
 
@@ -69,16 +71,17 @@ SDK 提供：配置拉取、服务注册与发现、调用追踪（APM）、性�
 ### 3.1 ASP.NET Core 应用
 
 ```csharp
-// 1. 注册服务
+// 一行接入：连接星尘、自动注入追踪中间件，并启用
+// HttpClient / WebApi / 数据库 / Redis 自动埋点。
 var star = builder.Services.AddStardust("MyApp");
 
-// 2. 使用中间件
-app.UseStardust();
+// 可选：需要自定义中间件顺序时再显式调用；重复调用是幂等的。
+// app.UseStardust();
 
-// 3. 注册服务
+// 注册服务
 app.RegisterService("MyService");
 
-// 4. 消费服务
+// 消费服务
 var services = app.ConsumeService("OtherService");
 ```
 
@@ -146,8 +149,8 @@ await client.Login();
 
 | 方法 | 说明 |
 |------|------|
-| `AddStardust()` | 注入 StarClient、StarTracer，注册配置服务 |
-| `UseStardust()` | 启用追踪中间件，自动创建 Span |
+| `AddStardust()` | 一行接入：注入 StarClient、StarTracer、配置服务，并自动注册追踪中间件与启动服务 |
+| `UseStardust()` | 显式启用追踪中间件，自动创建 Span；`AddStardust` 已自动调用，通常无需重复 |
 | `RegisterService()` | 注册当前应用为服务提供者 |
 | `ConsumeService()` | 消费指定服务，返回可用地址列表 |
 
@@ -163,7 +166,8 @@ await client.Login();
 业务应用
    │
    ├─ 手动埋点：Span/Tag/Error
-   ├─ 自动埋点：HTTP 中间件、浏览器 fetch/XHR、页面加载、路由、JS 错误
+   ├─ 自动埋点：Web 入口（traceparent 解析）、出站 HTTP（traceparent 注入）、
+   │            DB/Redis 驱动包装、浏览器 fetch/XHR、页面加载、路由、JS 错误
    │
    ▼
 语言 SDK（StardustTracer）
@@ -178,13 +182,16 @@ StarServer 6600：/App/Login、/App/Ping、/Trace/Report
 
 ### 7.2 语言矩阵
 
-| 语言 | 实现方式 | 自动埋点 |
-|------|----------|----------|
-| JavaScript（浏览器） | UMD 单文件，零依赖 | fetch/XHR、页面加载、SPA 路由、JS/资源错误 |
-| JavaScript/Node.js | CommonJS，零外部依赖 | Express/Koa 中间件 |
-| Java 8+ | Maven，零运行时依赖 | Servlet Filter（可选） |
-| Go | Go Module，零外部依赖 | 手动 Span，框架中间件由使用方包装 |
-| Python/PHP/ASP | 现有实现 | 框架中间件/示例 |
+| 语言 | 实现方式 | Web 入口自动 | 出站 HTTP 自动 | DB/Redis 自动 |
+|------|----------|--------------|----------------|---------------|
+| JavaScript（浏览器） | UMD 单文件，零依赖 | 页面加载、SPA 路由、JS/资源错误 | fetch/XHR（注入 `traceparent`） | - |
+| JavaScript/Node.js | CommonJS，零外部依赖 | `http.createServer`、Express/Koa | `http`/`https`/`fetch` | `pg`/`mysql2`、`redis`/`ioredis` |
+| Java 8+ | Maven，零运行时依赖 | ServletContainerInitializer + Filter | `StardustHttp` 一行包装 | `StardustJdbc` 一行包装、Redis 通用包装 |
+| Go | Go Module，零外部依赖 | `WrapHandler` 一行接入 | 默认 Transport 自动、`WrapClient` | `WrapDriver` 一行接入、Redis 通用包装 |
+| Python | 现有实现 | WSGI/ASGI、Flask/Django/Starlette | `requests`/`urllib` | DB-API、`redis` |
+| PHP/ASP | 现有实现 | 文档示例 | 文档示例 | 文档示例 |
+
+> 跨语言链路统一使用 W3C `traceparent`：Web 入口解析上游上下文，出站 HTTP 注入当前 Span 上下文，详见 [APM-17 监控接入 API](APM-17-监控接入API.md)。
 
 ### 7.3 鉴权模式
 
@@ -199,8 +206,8 @@ StarServer 6600：/App/Login、/App/Ping、/Trace/Report
 | 生态 | 坐标策略 |
 |------|----------|
 | NuGet | `NewLife.Stardust`（已发布） |
-| npm | `newlife` 已被占用，统一使用 `@newlifex/*` 或可用的 `stardust-tracer` |
-| Maven Central | 优先 `com.newlife`（验证 newlife.com），无法验证时用 `io.github.newlifex`（GitHub 命名空间） |
+| npm | `newlife` 已被占用，统一使用 `@newlifex/stardust` |
+| Maven Central | `com.newlife:stardust`（优先验证 newlife.com）；无法验证时用 `io.github.newlifex:stardust` |
 | Go | 模块路径即身份：`github.com/NewLifeX/Stardust/SDK/Go/stardust` |
 | crates.io | `stardust` 已被占用，使用 `newlifex-stardust` |
 | PyPI | `stardust`/`stardust-sdk` 已被占用，使用 `newlifex-stardust` |

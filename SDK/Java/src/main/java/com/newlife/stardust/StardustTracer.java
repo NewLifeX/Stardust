@@ -10,7 +10,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -25,10 +24,9 @@ import java.util.concurrent.TimeUnit;
  * It has no runtime dependencies beyond the JDK.</p>
  *
  * <pre>
- * StardustTracer tracer = new StardustTracer("http://star.example.com", "MyApp", "secret")
- *         .setAppName("MyApp")
- *         .setVersion("1.0.0")
- *         .start();
+ * // 一行接入：创建、启动并注册为默认实例
+ * StardustTracer tracer = StardustTracer.init("http://star.example.com", "MyApp", "secret");
+ * // 需要自定义名称/版本时改用 new StardustTracer(...).setVersion("1.0.0").start()
  * try (Span span = tracer.newSpan("order.create")) {
  *     span.setTag("orderId=123");
  *     // ... business code ...
@@ -65,6 +63,9 @@ public class StardustTracer {
     private volatile int maxErrors = 10;
     private volatile int maxTagLength = 1024;
     private volatile boolean debug;
+    private volatile boolean autoInstrument = true;
+
+    private static volatile StardustTracer defaultTracer;
 
     private volatile String token;
     private volatile long tokenExpireAt;
@@ -121,6 +122,9 @@ public class StardustTracer {
                 excludes.add(exclude);
             }
         }
+
+        // 自动埋点默认无需额外注册：最后创建的追踪器成为进程默认实例
+        if (autoInstrument) defaultTracer = this;
     }
 
     /**
@@ -239,6 +243,69 @@ public class StardustTracer {
     public StardustTracer setDebug(boolean debug) {
         this.debug = debug;
         return this;
+    }
+
+    /**
+     * Enables or disables automatic instrumentation helpers.
+     *
+     * <p>When disabled, {@link StardustFilter}, {@link StardustHttp}, {@link StardustJdbc}
+     * and {@link StardustRedis} pass calls through without creating spans or injecting
+     * {@code traceparent}. Manual {@link #newSpan(String)} calls are not affected. The
+     * default is {@code true}.</p>
+     *
+     * @param autoInstrument {@code true} to enable automatic instrumentation
+     * @return this tracer
+     */
+    public StardustTracer setAutoInstrument(boolean autoInstrument) {
+        this.autoInstrument = autoInstrument;
+        return this;
+    }
+
+    /**
+     * Returns whether automatic instrumentation helpers are enabled.
+     *
+     * @return automatic instrumentation flag
+     */
+    public boolean isAutoInstrument() {
+        return autoInstrument;
+    }
+
+    /**
+     * Returns the process-wide default tracer used by automatic instrumentation helpers.
+     *
+     * @return default tracer, or {@code null} when not configured
+     */
+    public static StardustTracer getDefault() {
+        return defaultTracer;
+    }
+
+    /**
+     * Creates and starts a tracer in one call.
+     *
+     * <p>Equivalent to {@code new StardustTracer(server, appId, secret).start()}. The created
+     * tracer is registered as the process default, so Servlet filters, {@code StardustHttp},
+     * {@code StardustJdbc} and {@code StardustRedis} work without extra registration.</p>
+     *
+     * @param server Stardust server base URL, for example {@code http://localhost:6600}
+     * @param appId application id
+     * @param secret application secret
+     * @return the started tracer
+     */
+    public static StardustTracer init(String server, String appId, String secret) {
+        return new StardustTracer(server, appId, secret).start();
+    }
+
+    /**
+     * Sets the process-wide default tracer used by automatic instrumentation helpers.
+     *
+     * <p>A tracer created with auto-instrumentation enabled automatically becomes the default,
+     * so Servlet filters, {@code StardustHttp}, {@code StardustJdbc} and {@code StardustRedis}
+     * can find it without an extra call. Use this method to override the default explicitly.</p>
+     *
+     * @param tracer tracer, may be {@code null} to clear the default
+     */
+    public static void setDefault(StardustTracer tracer) {
+        defaultTracer = tracer;
     }
 
     /**
@@ -484,10 +551,45 @@ public class StardustTracer {
 
         final Deque<Span> stack = spanStack.get();
         final Span parent = stack.peek();
-        final String traceId = parent != null ? parent.getTraceId() : newId();
+        final String traceId = parent != null ? parent.getTraceId() : newTraceId();
         final String parentId = parent != null ? parent.getId() : null;
-        final Span span = new Span(this, newId(), parentId, traceId, spanName, System.currentTimeMillis());
+        final Span span = new Span(this, newSpanId(), parentId, traceId, spanName, System.currentTimeMillis());
         stack.push(span);
+
+        return span;
+    }
+
+    /**
+     * Creates a new span from an upstream W3C trace context.
+     *
+     * <p>The trace id is reused and the upstream span id becomes the parent id, which
+     * connects this server span to the caller's trace.</p>
+     *
+     * @param name operation name
+     * @param context upstream trace context, may be {@code null}
+     * @return span
+     */
+    public Span newSpan(String name, TraceContext context) {
+        if (context == null) return newSpan(name);
+
+        final String spanName = name == null || name.length() == 0 ? "unknown" : name;
+        if (isExcluded(spanName)) return Span.noop(spanName);
+
+        final Span span = new Span(this, newSpanId(), context.getSpanId(), context.getTraceId(), spanName, System.currentTimeMillis());
+        spanStack.get().push(span);
+
+        return span;
+    }
+
+    /**
+     * Returns the current thread's active span.
+     *
+     * @return active span, or {@code null} when no span is active
+     */
+    public Span currentSpan() {
+        final Deque<Span> stack = spanStack.get();
+        final Span span = stack.peek();
+        if (span == null) spanStack.remove();
 
         return span;
     }
@@ -516,9 +618,9 @@ public class StardustTracer {
                 break;
             }
         }
-        if (traceId == null) traceId = newId();
+        if (traceId == null) traceId = newTraceId();
 
-        final Span span = new Span(this, newId(), parentId, traceId, spanName, System.currentTimeMillis());
+        final Span span = new Span(this, newSpanId(), parentId, traceId, spanName, System.currentTimeMillis());
         stack.push(span);
 
         return span;
@@ -754,8 +856,12 @@ public class StardustTracer {
         }
     }
 
-    private static String newId() {
-        return UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+    private static String newTraceId() {
+        return TraceContext.newTraceId();
+    }
+
+    private static String newSpanId() {
+        return TraceContext.newSpanId();
     }
 
     private static boolean matches(String pattern, String value) {

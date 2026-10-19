@@ -8,6 +8,9 @@
 const assert = require('assert');
 
 const SERVER = 'http://stardust.test';
+const INITIAL_TRACE_ID = '4bf92f3577b34da6a3ce929d0e0e4736';
+const INITIAL_PARENT_ID = '00f067aa0ba902b7';
+const INITIAL_TRACEPARENT = `00-${INITIAL_TRACE_ID}-${INITIAL_PARENT_ID}-01`;
 
 // ========== 浏览器全局伪造 ==========
 
@@ -190,11 +193,15 @@ function fakeFetch(url, init) {
 class FakeXMLHttpRequest {
     constructor() {
         this._listeners = Object.create(null);
+        this.headers = Object.create(null);
         this.status = 0;
     }
     open(method, url) {
         this.method = method;
         this.url = url;
+    }
+    setRequestHeader(name, value) {
+        this.headers[String(name).toLowerCase()] = value;
     }
     addEventListener(type, fn) {
         if (!this._listeners[type]) this._listeners[type] = [];
@@ -295,6 +302,16 @@ function parseBody(call) {
     }
 }
 
+function getHeaderValue(headers, name) {
+    if (!headers) return null;
+    if (typeof headers.get === 'function') return headers.get(name);
+    const lower = name.toLowerCase();
+    for (const key of Object.keys(headers)) {
+        if (key.toLowerCase() === lower) return headers[key];
+    }
+    return null;
+}
+
 function findCalls(pathPart) {
     return fetchCalls.filter(function (call) {
         return call.url.indexOf(pathPart) !== -1;
@@ -319,6 +336,7 @@ async function main() {
         period: 120,
         heartbeatPeriod: 30,
         debug: false,
+        initialTraceparent: INITIAL_TRACEPARENT,
     });
 
     try {
@@ -417,6 +435,8 @@ async function main() {
             const pageLoad = findBuilder(body, 'page.load');
             assert.ok(pageLoad, '应包含页面加载埋点');
             assert.strictEqual(pageLoad.Samples[0].Tag, 'dns=20;tcp=60;ttfb=50;dom=100;load=50', '页面加载 Tag 应匹配');
+            assert.strictEqual(pageLoad.Samples[0].TraceId, INITIAL_TRACE_ID, 'page.load 应复用后端 TraceId');
+            assert.strictEqual(pageLoad.Samples[0].ParentId, INITIAL_PARENT_ID, 'page.load 应挂到后端 SpanId 下');
 
             assert.strictEqual(tracer.period, 15, 'Period 应被应用');
             assert.strictEqual(tracer.maxSamples, 2, 'MaxSamples 应被应用');
@@ -472,6 +492,11 @@ async function main() {
             assert.strictEqual(sameOrigin.total, 1, '同源请求计数应匹配');
             assert.strictEqual(sameOrigin.samples[0].tag, 'https://example.com/api/data?q=1', 'Tag 应为完整 URL');
 
+            const dataCalls = findCalls('/api/data?q=1');
+            const dataHeaders = dataCalls[dataCalls.length - 1].init.headers || {};
+            const traceparent = getHeaderValue(dataHeaders, 'traceparent');
+            assert.ok(/^00-[0-9a-f]{32}-[0-9a-f]{16}-01$/.test(traceparent || ''), 'fetch 应注入 traceparent');
+
             await fakeWindow.fetch('https://api.example.com/users?x=1');
             const crossOrigin = tracer._builders.get('GET api.example.com/users');
             assert.ok(crossOrigin, '跨域请求应生成 host+path 埋点');
@@ -496,6 +521,24 @@ async function main() {
             const builder = tracer._builders.get('POST /api/xhr');
             assert.ok(builder, 'XHR 应生成埋点');
             assert.strictEqual(builder.total, 1, 'XHR 计数应匹配');
+            assert.ok(/^00-[0-9a-f]{32}-[0-9a-f]{16}-01$/.test(xhr.headers.traceparent || ''), 'XHR 应注入 traceparent');
+        });
+
+        await test('withSpan 维护活动 Span 栈并继承上下文', async () => {
+            let parent = null;
+            let child = null;
+
+            tracer.withSpan('ctx.parent', function (span) {
+                parent = span;
+                child = tracer.newSpan('ctx.child');
+                child.finish();
+            });
+
+            assert.ok(parent, '应返回父 Span');
+            assert.strictEqual(parent._finished, true, 'withSpan 结束时应结算父 Span');
+            assert.strictEqual(child.parentId, parent.id, '子 Span 父 ID 应匹配');
+            assert.strictEqual(child.traceId, parent.traceId, '子 Span 应继承 TraceId');
+            assert.strictEqual(tracer._spanStack.length, 0, '活动 Span 栈应清空');
         });
 
         await test('SPA 路由变化生成 page.view 埋点且去重', async () => {

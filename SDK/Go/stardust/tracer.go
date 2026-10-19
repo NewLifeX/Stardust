@@ -42,19 +42,25 @@ type Span struct {
 	Tag       string `json:"Tag"`
 	Error     string `json:"Error"`
 
-	name   string
-	tracer *Tracer
+	name     string
+	tracer   *Tracer
+	finished bool
 }
 
 // SetError 设置错误
 func (s *Span) SetError(err error) {
-	if err != nil {
-		s.Error = err.Error()
+	if s == nil || err == nil {
+		return
 	}
+	s.Error = err.Error()
 }
 
-// Finish 结束片段
+// Finish 结束片段。重复调用只生效一次。
 func (s *Span) Finish() {
+	if s == nil || s.finished {
+		return
+	}
+	s.finished = true
 	s.EndTime = time.Now().UnixMilli()
 	if s.tracer != nil {
 		s.tracer.finishSpan(s)
@@ -209,10 +215,11 @@ type Tracer struct {
 	wg        sync.WaitGroup
 }
 
-// NewTracer 创建追踪器
+// NewTracer 创建追踪器。创建后自动设为默认追踪器，并安装默认 HTTP 传输自动埋点；
+// 调用 SetAutoInstrument(false) 可卸载自动埋点。
 func NewTracer(server, appID, secret string) *Tracer {
 	ip := getLocalIP()
-	return &Tracer{
+	tracer := &Tracer{
 		Server:      server,
 		AppID:       appID,
 		AppName:     appID,
@@ -231,6 +238,17 @@ func NewTracer(server, appID, secret string) *Tracer {
 		stopCh:      make(chan struct{}),
 		client:      &http.Client{Timeout: 10 * time.Second},
 	}
+
+	SetDefaultTracer(tracer)
+	tracer.InstrumentDefaultTransport()
+	return tracer
+}
+
+// Init 创建并启动追踪器（一行接入）。等价于 NewTracer(...).Start()，返回已启动的追踪器。
+func Init(server, appID, secret string) *Tracer {
+	tracer := NewTracer(server, appID, secret)
+	tracer.Start()
+	return tracer
 }
 
 // SetVersion 设置应用版本号，返回自身以支持链式调用
@@ -300,12 +318,13 @@ func (t *Tracer) Stop() {
 	t.flush()
 }
 
-// NewSpan 创建追踪片段
+// NewSpan 创建追踪片段。parentID 为上游片段标识，可为空；挂到上下文时建议使用
+// NewSpanFromContext 或 NewChildSpan 以复用 TraceId。
 func (t *Tracer) NewSpan(name, parentID string) *Span {
 	return &Span{
-		ID:        randomHex(8),
+		ID:        NewSpanID(),
 		ParentID:  parentID,
-		TraceID:   randomHex(16),
+		TraceID:   NewTraceID(),
 		StartTime: time.Now().UnixMilli(),
 		name:      name,
 		tracer:    t,
@@ -712,6 +731,8 @@ func (t *Tracer) post(path, contentType string, body []byte, token string) (*API
 		return nil, 0, err
 	}
 	req.Header.Set("Content-Type", contentType)
+	// 标记 SDK 自身请求，避免默认传输自动埋点记录
+	req = req.WithContext(withSuppress(req.Context()))
 
 	resp, err := t.httpClient().Do(req)
 	if err != nil {

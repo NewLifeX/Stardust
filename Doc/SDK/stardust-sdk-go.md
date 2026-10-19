@@ -14,6 +14,8 @@
 - ✅ 服务端动态采样参数（`Period`、`MaxSamples`、`MaxErrors`、`Excludes` 等）
 - ✅ 大报文 GZip（`/Trace/ReportRaw`）
 - ✅ 配置中心客户端
+- ✅ 自动埋点：默认 HTTP Transport、`WrapHandler`、`WrapClient`、`database/sql` 驱动包装、Redis 通用包装
+- ✅ W3C `traceparent` 跨服务透传
 
 ## 安装
 
@@ -31,11 +33,13 @@ import (
 )
 
 func main() {
-    tracer := stardust.NewTracer("http://star.example.com:6600", "MyGoApp", "MySecret").
-        SetAppName("订单服务").
-        SetVersion("1.2.3")
-    tracer.Start()
+    // 一行接入：创建、登录并启动自动埋点
+    tracer := stardust.Init("http://star.example.com:6600", "MyGoApp", "MySecret")
     defer tracer.Stop()
+
+    // 需要自定义名称/版本时改用 builder
+    // tracer := stardust.NewTracer(server, appID, secret).SetAppName("订单服务").SetVersion("1.2.3")
+    // tracer.Start()
 
     span := tracer.NewSpan("order.create", "")
     span.Tag = "orderId=123"
@@ -57,6 +61,27 @@ func main() {
 | `SetHTTPClient(client)` | 自定义 HTTP 客户端 | 10 秒超时 |
 
 `Period`、`MaxSamples`、`MaxErrors`、`Timeout`、`MaxTagLen`、`Excludes`、`EnableMeter` 由服务端响应动态更新。
+
+## 自动埋点
+
+`NewTracer` 默认把出站 HTTP 自动埋点安装到 `http.DefaultTransport`，`Start()` 只负责登录与上报；
+`SetAutoInstrument(false)` 可卸载。Web 入口与数据库驱动需一行接入：
+
+```go
+// Web 入口：解析 traceparent、创建入口 Span，并在请求上下文传递
+http.ListenAndServe(":8080", stardust.WrapHandler(mux))
+
+// database/sql：包装驱动，自动记录 db:{system}:{action}:{tables}
+db, err := stardust.OpenDB(&sqlite3.SQLiteDriver{}, "file:app.db", tracer)
+
+// Redis 通用包装
+err = tracer.TraceRedis(ctx, "GET", func(ctx context.Context) error {
+    return client.Get(ctx, "key").Err()
+})
+```
+
+go-redis v9 可直接使用可选模块 `SDK/Go/stardust-redis` 的 `Hook`。Span 名称与标签遵循
+[APM-17 自动埋点语义约定](../APM-17-监控接入API.md)。
 
 ## 心跳性能
 
@@ -102,7 +127,7 @@ go test ./...
 go vet ./...
 ```
 
-覆盖登录、心跳性能、上报、GZip、401 重登录、令牌续期、动态周期与启停。
+覆盖登录、心跳性能、上报、GZip、401 重登录、令牌续期、动态周期、启停，以及 `traceparent`、HTTP 出入站与 `database/sql` 驱动包装。
 
 ## 相关资源
 

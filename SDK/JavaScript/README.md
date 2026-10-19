@@ -2,8 +2,8 @@
 
 星尘监控（Stardust APM）JavaScript/Node.js SDK，零运行时依赖，支持 Node.js 14+ 与现代浏览器。
 
-- **Node.js**：应用性能心跳、埋点聚合、GZip 上报、令牌自动续期、进程退出自动刷新。
-- **浏览器**：单文件 UMD、稳定 ClientId、页面加载/路由/AJAX/JS 错误自动埋点、`sendBeacon` 离页上报。
+- **Node.js**：应用性能心跳、埋点聚合、GZip 上报、令牌自动续期、进程退出自动刷新；默认自动埋点 HTTP 出入站、`pg`/`mysql2`、`redis`/`ioredis`。
+- **浏览器**：单文件 UMD 或 `loader.js` + `data-stardust-*` 一行接入、稳定 ClientId、页面加载/路由/AJAX/JS 错误自动埋点、`sendBeacon` 离页上报；fetch/XHR 自动注入 `traceparent`，支持后端注入 `initialTraceparent` 关联 `page.load`。
 
 所有接口均为 HTTP POST，成功返回 `{ code: 0, data: {...} }`，失败返回 `{ code, message }`（HTTP 200）。令牌通过 `?Token=...` 查询参数传递。
 
@@ -13,21 +13,73 @@
 
 ```bash
 # 发布到 npm 后
-npm install stardust-tracer
+npm install @newlifex/stardust
 
 # 或直接复制源码
-cp -r SDK/JavaScript/src /your-project/stardust-tracer
+cp -r SDK/JavaScript/src /your-project/node_modules/@newlifex/stardust
 ```
 
 浏览器无需构建步骤，直接引入 `src/browser.js`：
 
 ```html
-<script src="/path/to/stardust-tracer/src/browser.js"></script>
+<script src="node_modules/@newlifex/stardust/src/browser.js"></script>
+<!-- 或 CDN：https://cdn.jsdelivr.net/npm/@newlifex/stardust/src/browser.js -->
 ```
 
 ---
 
 ## 浏览器一键接入
+
+最简方式：只引一个 `loader.js`，配置全部放在 `data-*` 属性上（推荐公网应用使用配置端点，避免前端出现 secret）：
+
+```html
+<script src="https://cdn.example.com/stardust/loader.js"
+        data-stardust-app="MyWebApp"
+        data-stardust-config="/stardust/browser-config"
+        defer></script>
+```
+
+`loader.js` 会动态加载同目录的 `browser.js`，从 `/stardust/browser-config` 读取 `server`、`token`、`version`、`sampleRate` 等配置，然后自动启动页面/路由/fetch/XHR/JS 错误埋点。后端可在 HTML 中注入 `<meta name="traceparent" content="...">`（或 `stardust-traceparent`），把 `page.load` 关联到服务端链路。
+
+静态站点也可以不用配置端点：
+
+```html
+<script src="https://cdn.example.com/stardust/loader.js"
+        data-stardust-app="MyWebApp"
+        data-stardust-server="https://star.example.com:6600"
+        data-stardust-token="/stardust/browser-token"
+        data-stardust-release="1.2.3"
+        defer></script>
+```
+
+npm 用户可以使用一行 `init`：
+
+```js
+import { init } from '@newlifex/stardust/browser';
+
+const tracer = init({
+  appId: 'MyWebApp',
+  configUrl: '/stardust/browser-config',
+  tokenUrl: '/stardust/browser-token',
+  autoInstrument: true,
+});
+
+// 可选快捷 API
+Stardust.captureException(new Error('checkout failed'), { tag: 'order=123' });
+await Stardust.flush();
+```
+
+公开 API：
+
+| API | 说明 |
+|-----|------|
+| `Stardust.init(options)` | 创建并启动追踪器（loader 自动调用） |
+| `Stardust.captureException(err, { tag })` | 手动上报异常，生成 `js.error` Span |
+| `Stardust.flush()` | 立即上报当前聚合数据 |
+| `Stardust.createTracer(options)` / `tracer.start()` | 兼容旧接入，手动控制启动 |
+| `Stardust.tracer` | 初始化后的追踪器实例（高级用法） |
+
+需要手动控制时，仍可直接引入 `browser.js`：
 
 ```html
 <script src="../src/browser.js"></script>
@@ -105,8 +157,23 @@ const tracer = Stardust.createTracer({
 
 ## Node.js 快速开始
 
+一行接入（自动连接 + 自动埋点）：
+
 ```js
-const { StardustTracer } = require('stardust-tracer');
+const { init } = require('@newlifex/stardust');
+
+const tracer = init({
+    server: 'http://star.example.com:6600',
+    appId: 'MyApp',
+    secret: 'MySecret',
+    version: '1.2.3',
+});
+```
+
+需要手动控制启动/停止时：
+
+```js
+const { StardustTracer } = require('@newlifex/stardust');
 
 const tracer = new StardustTracer({
     server: 'http://star.example.com:6600',
@@ -189,8 +256,8 @@ Node.js 心跳会自动采集：
 
 ```js
 const express = require('express');
-const { StardustTracer } = require('stardust-tracer');
-const createExpressMiddleware = require('stardust-tracer/middleware/express');
+const { StardustTracer } = require('@newlifex/stardust');
+const createExpressMiddleware = require('@newlifex/stardust/middleware/express');
 
 const tracer = new StardustTracer({ server, appId, secret, version: '1.1.0' });
 tracer.start();
@@ -201,15 +268,88 @@ app.use(createExpressMiddleware(tracer));
 
 ```js
 const Koa = require('koa');
-const createKoaMiddleware = require('stardust-tracer/middleware/koa');
+const createKoaMiddleware = require('@newlifex/stardust/middleware/koa');
 
 app.use(createKoaMiddleware(tracer));
 ```
 
 - 优先使用路由模板路径（`req.route.path` / `ctx.routePath` / `_matchedRoute`），回退到实际 path。
+- 优先复用底层 `http.createServer` 自动入口创建的 Span，不会重复埋点；响应结束时把名称升级为路由模板。
 - 状态码 `>= 400` 自动标记为错误。
 - 自动忽略 `/App/`、`/Trace/` 监控接口。
 - 响应结束事件只结算一次，不会重复上报。
+
+---
+
+## Node.js 自动埋点
+
+`autoInstrument: true`（默认）时，追踪器**在构造阶段**安装自动埋点；`start()` 仍然只负责登录、心跳与上报。无需修改业务代码。
+
+```js
+const { StardustTracer } = require('@newlifex/stardust');
+
+const tracer = new StardustTracer({ server, appId, secret, autoInstrument: true });
+
+// 之后创建的 http 服务器与业务请求自动产生埋点
+const server = http.createServer((req, res) => res.end('ok'));
+```
+
+### 支持范围
+
+| 类型 | 名称 | Tag | 错误判定 |
+|------|------|-----|----------|
+| Web 入口 | `GET /users/:id`（路由模板，缺省为实际 path） | `GET /users/123?x=1` | 5xx 或未处理异常 |
+| 出站 HTTP | `GET api.example.com/users` | 完整 URL | 4xx/5xx 或网络异常 |
+| 数据库 | `db:postgresql:select:users`、`db:mysql:insert:orders` | SQL 文本（截断） | 驱动异常 |
+| Redis | `redis:GET` | `GET user:1`（命令 + 参数摘要，截断） | 客户端异常 |
+
+- **Web 入口**：包装 `http.createServer` / `https.createServer`，解析入站 `traceparent` 复用 TraceId，并把上游 SpanId 作为 ParentId；在 Span 上下文中执行监听器，异步业务天然串联。
+- **出站 HTTP**：包装 `http.request/get`、`https.request/get` 与全局 `fetch`（Node 18+），以当前活动 Span 注入 `traceparent`；调用方已显式设置该头时不覆盖。
+- **数据库**：自动检测并包装 `pg.Client.prototype.query`、`mysql2` 的 `Connection.prototype.query/execute`，同时支持回调与 Promise，`execute` 内部转调 `query` 不会重复计数。
+- **Redis**：自动检测 `redis`（`RedisClient.prototype.sendCommand`，未导出时包装 `createClient`）与 `ioredis`（`Redis.prototype.sendCommand`）。
+- 所有包装均为**幂等**，同一进程多次创建追踪器不会产生双份 Span；模块未安装时静默跳过。
+
+### 上下文 API
+
+```js
+const { getCurrentSpan, parseTraceparent, formatTraceparent } = require('@newlifex/stardust');
+
+// 手动建立上下文：内部创建的 Span/出站请求自动成为子 Span
+await tracer.withSpan('order.submit', async (span) => {
+    span.setTag('orderId=123');
+    await fetch('https://api.example.com/pay'); // 自动继承 traceId/parentId
+});
+
+// 显式指定上下文
+const child = tracer.newSpan('child', { parentId: '...', traceId: '...' });
+child.finish();
+
+getCurrentSpan();                                  // 当前活动 Span（AsyncLocalStorage）
+parseTraceparent('00-<trace-id>-<span-id>-01');    // → { traceId, spanId, sampled, ... }
+formatTraceparent(traceId, spanId);                // → '00-<trace-id>-<span-id>-01'
+```
+
+### 关闭自动埋点
+
+```js
+// 方式一：构造时关闭（不安装任何补丁）
+const tracer = new StardustTracer({ server, appId, autoInstrument: false });
+
+// 方式二：关闭后按需手动安装
+const { installAutoInstrumentation } = require('@newlifex/stardust');
+installAutoInstrumentation(tracer);
+```
+
+`/App/`、`/Trace/` 监控接口与 SDK 自身登录/心跳/上报请求始终被排除，不产生 Span、不注入 `traceparent`。
+
+### 限制
+
+- 仅覆盖 Node 内置 `http`/`https`/`fetch`；其他 HTTP 客户端若最终走内置模块可被间接覆盖，自定义传输层需手动埋点。
+- 入站自动埋点依赖 `http.createServer` / `https.createServer` 创建时传入的监听器（Express/Koa 应用函数即属此类）；创建后再用 `server.on('request', fn)` 挂载的监听器不会被自动包装。
+- `pg` 仅包装 `Client.prototype.query`（`Pool.query` 内部转发同样生效）；`mysql2` 仅包装 `Connection`，未覆盖 `mysql`（v1）。
+- 全局 Monkey Patch 对进程内所有请求生效；多个追踪器实例共用最近创建的一个统计。
+- `fetch` 自动埋点依赖 Node 18+ 的全局 `fetch`，低版本自动跳过。
+- 不采集 SQL 参数值，仅上报 SQL 文本与 Redis 参数摘要（按 `maxTagLength` 截断），避免泄露敏感数据。
 
 ---
 
@@ -233,7 +373,7 @@ app.use(createKoaMiddleware(tracer));
 | `timeout` | `5000` | ✓ | ✓ | 服务端判定的超时阈值（毫秒） |
 | `httpTimeout` | `10000` | ✓ | — | Node HTTP 请求超时（毫秒） |
 | `enableMeter` | `true` | ✓ | ✓ | 上报时附带 `Info` 性能信息 |
-| `autoInstrument` | `true` | — | ✓ | 自动安装 fetch/XHR/页面/路由/错误埋点 |
+| `autoInstrument` | `true` | ✓ | ✓ | 自动埋点：Node 为 HTTP/数据库/Redis，浏览器为 fetch/XHR/页面/路由/错误 |
 | `autoFlushOnExit` | `true` | ✓ | — | 进程退出时自动刷新 |
 | `debug` | `false` | ✓ | ✓ | 输出调试日志（默认静默） |
 | `excludes` | `[]` | ✓ | ✓ | 排除的埋点名称（子串匹配） |
@@ -255,10 +395,12 @@ app.use(createKoaMiddleware(tracer));
 
 自动忽略包含 `/Trace/`、`/App/Login`、`/App/Ping` 的请求，避免自监控递归。
 
+fetch/XHR 出站请求自动注入 `traceparent`（`00-<traceId>-<spanId>-01`），使用出站 Span 的 TraceId/SpanId；手动设置的 `traceparent` 不会被覆盖。浏览器侧可使用 `tracer.withSpan(name, fn)` 建立手动上下文。
+
 手动安装：
 
 ```js
-const { installBrowserInterceptors } = require('stardust-tracer/browser');
+const { installBrowserInterceptors } = require('@newlifex/stardust/browser');
 installBrowserInterceptors(tracer);
 ```
 
@@ -271,9 +413,19 @@ const span = tracer.newSpan('operation-name', parentId);
 span.setTag('key=value');
 span.setError(err);
 span.finish(); // 幂等，重复调用只结算一次
+
+// 上下文选项（Node 与浏览器一致）
+const child = tracer.newSpan('child', { parentId: '...', traceId: '...' });
+
+// 自动管理上下文与结束（支持同步与 Promise）
+const result = await tracer.withSpan('operation-name', async (span) => {
+    span.setTag('key=value');
+    return doSomething();
+});
 ```
 
-- `newSpan(name, parentId?)` 返回 Span（`id`、`traceId`、`startTime` 等）。
+- `newSpan(name, parentId?)` 返回 Span（`id`、`traceId`、`startTime` 等）；第二个参数也可传 `{ parentId, traceId }`。
+- Node 下未显式指定时自动继承 `AsyncLocalStorage` 中的当前 Span；浏览器维护活动 Span 栈，`withSpan` 入栈、结束时出栈。
 - `setTag` / `setError` 支持链式调用。
 - 数据自动按名称聚合：调用次数、错误数、总耗时、最大/最小耗时、样本。
 
@@ -356,11 +508,13 @@ npm test
 node test/test.js
 node test/integration.test.js
 node test/browser.test.js
+node test/instrument.test.js
 ```
 
 - `test/test.js`：Span、SpanBuilder、Tracer 配置与导出。
 - `test/integration.test.js`：本地 HTTP Mock 验证登录/心跳/上报字段、GZip、动态 Period、401 重登录、stop/flush。
 - `test/browser.test.js`：伪造浏览器全局，验证 ClientId、登录版本、心跳 Info、上报、Beacon、fetch/XHR、路由与 JS 错误埋点。
+- `test/instrument.test.js`：本地 HTTP 服务器与伪造 `pg`/`mysql2`/`redis`/`ioredis` 模块，验证 traceparent 解析/注入、出入站链路、中间件复用、排除规则、`autoInstrument:false` 以及数据库/Redis 埋点名称与错误。
 
 语法检查：
 

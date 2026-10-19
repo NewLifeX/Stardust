@@ -241,6 +241,8 @@ class TracerIntegrationTest {
             assertEquals(childId, childSample.get("Id"));
             assertEquals(rootId, childSample.get("ParentId"));
             assertEquals(rootSample.get("TraceId"), childSample.get("TraceId"));
+            assertEquals(32, String.valueOf(rootSample.get("TraceId")).length());
+            assertEquals(16, String.valueOf(rootSample.get("Id")).length());
 
             assertEquals(15, tracer.getPeriod());
             assertTrue(tracer.isExcluded("/health"));

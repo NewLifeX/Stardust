@@ -22,6 +22,7 @@ class StardustClient:
         scope: str = "",
         enable_trace: bool = True,
         enable_config: bool = True,
+        auto_instrument: bool = True,
     ):
         """
         初始化星尘客户端
@@ -34,6 +35,7 @@ class StardustClient:
             scope: 配置作用域，如 dev/test/prod
             enable_trace: 是否启用 APM 监控
             enable_config: 是否启用配置中心
+            auto_instrument: 是否启用自动埋点（HTTP/Web/DB/Redis）
         """
         self.server = server
         self.app_id = app_id
@@ -49,6 +51,7 @@ class StardustClient:
                 app_id=app_id,
                 secret=secret,
                 client_id=client_id,
+                auto_instrument=auto_instrument,
             )
 
         # 配置中心
@@ -77,17 +80,39 @@ class StardustClient:
             self._config.stop()
 
     # APM 监控相关方法
-    def new_span(self, name: str, parent_id: str = "") -> Span:
+    def new_span(
+        self,
+        name: str,
+        parent_id: str = "",
+        trace_id: Optional[str] = None,
+    ) -> Span:
         """创建追踪片段"""
         if not self._tracer:
             raise RuntimeError("Tracer is not enabled")
-        return self._tracer.new_span(name, parent_id)
+        return self._tracer.new_span(name, parent_id, trace_id)
 
     def trace(self, name: str) -> Callable:
         """追踪装饰器"""
         if not self._tracer:
             raise RuntimeError("Tracer is not enabled")
         return self._tracer.trace(name)
+
+    def instrument(self) -> None:
+        """安装自动埋点"""
+        if not self._tracer:
+            raise RuntimeError("Tracer is not enabled")
+        self._tracer.instrument()
+
+    def uninstrument(self) -> None:
+        """卸载自动埋点"""
+        if not self._tracer:
+            raise RuntimeError("Tracer is not enabled")
+        self._tracer.uninstrument()
+
+    @property
+    def current_span(self) -> Optional[Span]:
+        """获取当前活动 Span"""
+        return self._tracer.current_span if self._tracer else None
 
     @property
     def tracer(self) -> Optional[StardustTracer]:

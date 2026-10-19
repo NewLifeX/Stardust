@@ -9,40 +9,75 @@ import os
 import socket
 import threading
 import time
-import uuid
-from contextlib import contextmanager
 from typing import Any, Callable, Dict, List, Optional
 
 import requests
 
+from .context import current_span as _current_context_span
+from .context import pop_span, push_span
+from .trace_context import new_span_id, new_trace_id
+
 
 class Span:
-    """追踪片段"""
+    """追踪片段
 
-    def __init__(self, name: str, tracer: "StardustTracer", parent_id: str = ""):
-        self.id = uuid.uuid4().hex[:16]
-        self.parent_id = parent_id
-        self.trace_id = tracer._current_trace_id() or uuid.uuid4().hex
+    作为上下文管理器使用时，会自动压入/恢复当前追踪上下文，
+    使其间创建的 Span 自动成为子 Span。
+    """
+
+    def __init__(
+        self,
+        name: str,
+        tracer: "StardustTracer",
+        parent_id: str = "",
+        trace_id: Optional[str] = None,
+    ):
+        active = _current_context_span()
+        self.id = new_span_id()
+        self.parent_id = parent_id or (active.id if active is not None else "")
+        self.trace_id = (
+            trace_id
+            or (active.trace_id if active is not None else "")
+            or tracer._current_trace_id()
+            or new_trace_id()
+        )
         self.name = name
         self.start_time = int(time.time() * 1000)
         self.end_time = 0
         self.tag = ""
         self.error = ""
         self._tracer = tracer
+        self._token = None
+        self._finished = False
 
     def set_error(self, ex: Exception) -> None:
         """设置错误信息"""
         self.error = str(ex)
 
     def finish(self) -> None:
-        """结束片段"""
+        """结束片段（幂等，重复调用不会重复统计）"""
+        if self._finished:
+            return
+        self._finished = True
         self.end_time = int(time.time() * 1000)
-        self._tracer._finish_span(self)
+        try:
+            self._tracer._finish_span(self)
+        except Exception:
+            # 监控自身异常不得影响业务
+            pass
 
     def __enter__(self) -> "Span":
+        self._token = push_span(self)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        token = self._token
+        self._token = None
+        if token is not None:
+            try:
+                pop_span(token)
+            except (ValueError, RuntimeError):
+                pass
         if exc_val:
             self.set_error(exc_val)
         self.finish()
@@ -124,6 +159,7 @@ class StardustTracer:
         app_id: str,
         secret: str = "",
         client_id: Optional[str] = None,
+        auto_instrument: bool = True,
     ):
         self.server = server.rstrip("/")
         self.app_id = app_id
@@ -153,11 +189,13 @@ class StardustTracer:
         self._report_thread: Optional[threading.Thread] = None
         self._ping_thread: Optional[threading.Thread] = None
 
-        # Trace 上下文（线程局部存储）
-        self._local = threading.local()
+        # 自动埋点
+        self._instrumented = False
+        if auto_instrument:
+            self.instrument()
 
     def start(self) -> None:
-        """启动追踪器"""
+        """启动追踪器（登录与后台上报；自动埋点在构造时已完成）"""
         self._login()
         self._running = True
 
@@ -172,9 +210,48 @@ class StardustTracer:
         self._running = False
         self._flush()
 
-    def new_span(self, name: str, parent_id: str = "") -> Span:
-        """创建新的追踪片段"""
-        return Span(name, self, parent_id)
+    def instrument(self) -> None:
+        """安装自动埋点（requests/urllib、Web 框架、DB-API、Redis）"""
+        try:
+            from .instrument import install
+
+            install(self)
+            self._instrumented = True
+        except Exception as ex:
+            print(f"[Stardust] Instrument failed: {ex}")
+
+    def uninstrument(self) -> None:
+        """卸载自动埋点，恢复原始实现"""
+        try:
+            from .instrument import uninstall
+
+            uninstall()
+        except Exception as ex:
+            print(f"[Stardust] Uninstrument failed: {ex}")
+        self._instrumented = False
+
+    @property
+    def current_span(self) -> Optional[Span]:
+        """获取当前上下文中的活动 Span"""
+        return _current_context_span()
+
+    def new_span(
+        self,
+        name: str,
+        parent_id: str = "",
+        trace_id: Optional[str] = None,
+    ) -> Span:
+        """创建新的追踪片段
+
+        Args:
+            name: 操作名
+            parent_id: 父 SpanId，为空时自动使用当前活动 Span
+            trace_id: TraceId，为空时自动使用当前链路或新建
+
+        Returns:
+            新建的 Span
+        """
+        return Span(name, self, parent_id, trace_id)
 
     def trace(self, name: str) -> Callable:
         """装饰器，自动追踪函数调用"""
@@ -189,7 +266,8 @@ class StardustTracer:
         return decorator
 
     def _current_trace_id(self) -> Optional[str]:
-        return getattr(self._local, "trace_id", None)
+        span = _current_context_span()
+        return span.trace_id if span is not None else None
 
     def _finish_span(self, span: Span) -> None:
         """完成一个 Span，加入对应的 Builder"""

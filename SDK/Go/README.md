@@ -6,14 +6,26 @@
 
 ```
 SDK/Go/
-├── stardust/           # SDK 核心包
+├── stardust/           # SDK 核心包（零第三方依赖）
 │   ├── go.mod         # Go 模块定义
 │   ├── README.md      # SDK 使用文档
 │   ├── tracer.go      # APM 追踪器实现
 │   ├── tracer_appinfo.go # 心跳与性能指标采集
 │   ├── config.go      # 配置中心客户端实现
+│   ├── tracecontext.go # W3C traceparent 解析与生成
+│   ├── context.go     # 上下文片段与子片段辅助
+│   ├── http.go        # HTTP 入站/出站自动埋点
+│   ├── db.go          # database/sql 驱动自动埋点
+│   ├── redis.go       # Redis 通用埋点包装
 │   ├── stardust_test.go  # 单元测试
+│   ├── tracecontext_test.go # 链路上下文测试
+│   ├── http_instrument_test.go # HTTP 自动埋点测试
+│   ├── db_test.go     # 数据库自动埋点测试（假驱动）
 │   └── integration_test.go # 使用 httptest 的集成测试
+├── stardust-redis/    # 可选模块：go-redis v9 埋点 Hook
+│   ├── go.mod
+│   ├── hook.go
+│   └── hook_test.go
 └── examples/          # 示例程序
     ├── README.md      # 示例说明
     ├── apm_basic.go   # APM 基础示例
@@ -34,17 +46,60 @@ go get github.com/NewLifeX/Stardust/SDK/Go/stardust
 ```go
 import "github.com/NewLifeX/Stardust/SDK/Go/stardust"
 
-tracer := stardust.NewTracer("http://localhost:6600", "MyGoApp", "MySecret").
-    SetAppName("MyGoApp").
-    SetVersion("1.0.0") // 建议显式设置版本号，服务端据此下发采样参数
-tracer.Start()
+// 一行接入：创建、登录并启动自动埋点
+tracer := stardust.Init("http://localhost:6600", "MyGoApp", "MySecret")
 defer tracer.Stop()
+
+// 需要自定义版本号等参数时改用 builder
+// tracer := stardust.NewTracer(server, appID, secret).SetVersion("1.0.0")
+// tracer.Start()
 
 span := tracer.NewSpan("业务操作", "")
 span.Tag = "参数信息"
 defer span.Finish()
 // 你的业务代码
 ```
+
+### 自动埋点（一行接入）
+
+`NewTracer` 自动安装默认 HTTP 传输埋点，`Start()` 只负责登录、心跳与上报：
+
+```go
+tracer := stardust.NewTracer("http://localhost:6600", "MyGoApp", "MySecret")
+tracer.Start()
+defer tracer.Stop()
+
+// HTTP 服务端：入口 Span + 上游 traceparent 解析
+http.ListenAndServe(":8080", stardust.WrapHandler(mux))
+
+// HTTP 客户端：默认传输已埋点，普通 http.Client 即可；也可显式包装
+client := tracer.WrapClient(&http.Client{Timeout: 5 * time.Second})
+
+// 数据库：driver 为真实驱动实例
+db, err := stardust.OpenDB(&sqlite3.SQLiteDriver{}, "file:app.db", tracer)
+
+// Redis：通用包装
+err = tracer.TraceRedis(ctx, "GET", func(ctx context.Context) error {
+    return rdb.Get(ctx, "user:1").Err()
+})
+```
+
+关闭默认传输自动埋点：
+
+```go
+tracer.SetAutoInstrument(false)
+```
+
+go-redis v9 可选用独立模块（核心包仍零第三方依赖）：
+
+```go
+import stardustredis "github.com/NewLifeX/Stardust/SDK/Go/stardust-redis"
+
+rdb.AddHook(stardustredis.NewHook(tracer))
+```
+
+> 自动埋点遵循 W3C traceparent：SDK 生成 32 位 TraceId、16 位 SpanId；入站兼容 .NET 短 TraceId；SDK 自身登录/心跳/上报请求不埋点。
+> 仅覆盖标准库 `net/http` 与 `database/sql`；Gin/Echo/gRPC 需使用框架中间件 + `NewSpanFromContext`。完整说明见 [stardust/README.md](stardust/README.md#自动埋点)。
 
 ### APM 配置项
 
@@ -85,6 +140,9 @@ config.OnChange(func(configs map[string]string) {
 ## 特性
 
 - ✅ 完整的 APM 链路追踪支持
+- ✅ HTTP 入站/出站自动埋点（W3C traceparent，跨语言互通）
+- ✅ database/sql 驱动自动埋点（一行包装）
+- ✅ Redis 通用埋点包装 + 可选 go-redis v9 Hook
 - ✅ 配置中心客户端实现
 - ✅ 自动登录和 Token 刷新
 - ✅ 令牌到期前自动续期、401 自动重登录并重试
@@ -94,7 +152,7 @@ config.OnChange(func(configs map[string]string) {
 - ✅ 自动采样控制
 - ✅ 自动枚举网卡获取本机 IP
 - ✅ 配置变更推送
-- ✅ 无第三方依赖
+- ✅ 核心包无第三方依赖
 - ✅ 支持 Go 1.18+
 - ✅ 完整的单元测试与 httptest 集成测试
 
@@ -102,8 +160,12 @@ config.OnChange(func(configs map[string]string) {
 
 ```bash
 cd stardust
-go test ./...
-go test -race ./...   # 需要启用 CGO
+go test -count=1 ./...
+go vet ./...
+
+# 可选 go-redis Hook 模块
+cd ../stardust-redis
+go test -count=1 ./...
 ```
 
 ## 示例程序

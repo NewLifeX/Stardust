@@ -65,6 +65,10 @@ Set tracer = Nothing
 %>
 ```
 
+## 自动埋点现状
+
+Classic ASP 没有运行时 Hook，本轮仍以手动 Span 为主。推荐在 `global.asa` 或公共 include 中初始化 tracer，页面入口创建 `METHOD URL` Span，页面底部统一 `Finish` + `Flush`；出站 `ServerXMLHTTP` 需手动注入 W3C `traceparent`。完整模板见 [Doc/SDK/stardust-sdk-asp.md](../../Doc/SDK/stardust-sdk-asp.md#自动埋点说明本轮)。
+
 ## 文件说明
 
 ```

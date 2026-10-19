@@ -10,6 +10,12 @@
 - ✅ **轻量级**：核心代码约 500 行，易于集成和维护
 - ✅ **易于使用**：简洁的 API，几行代码即可完成接入
 
+## 安装
+
+```bash
+composer require newlifex/stardust
+```
+
 ## 依赖
 
 - PHP 7.4+
@@ -40,8 +46,8 @@ SDK/PHP/
 ```php
 require_once 'SDK/PHP/src/StardustTracer.php';
 
-$tracer = new StardustTracer('http://star.example.com:6600', 'MyPHPApp', 'MySecret');
-$tracer->login();
+// 一行接入：创建并登录
+$tracer = StardustTracer::init('http://star.example.com:6600', 'MyPHPApp', 'MySecret');
 
 // 创建追踪片段
 $span = $tracer->newSpan('业务操作');
@@ -79,6 +85,31 @@ if ($config->hasNewVersion()) {
     echo "有新版本配置等待发布\n";
 }
 ```
+
+## 自动埋点说明（本轮）
+
+PHP SDK 当前提供手动 `newSpan`，尚未内置运行时 Hook。推荐用以下方式实现接近自动的接入：
+
+1. **`auto_prepend_file` 初始化**：每个请求自动创建 tracer，并注册 `register_shutdown_function` 冲刷数据。
+2. **框架中间件**：Laravel/Symfony 在请求入口创建 `METHOD path` Span，解析上游 `traceparent`，在响应后结束。
+3. **PDO/Redis 包装**：在 DAO 层统一包装 `PDO::prepare/query/exec` 与 Redis `__call`，生成 `db:{system}:{action}:{tables}`、`redis:{COMMAND}` Span。
+4. **cURL 包装**：统一封装 `curl_exec`，注入 `traceparent` 并记录出站 Span。
+
+```php
+// php.ini: auto_prepend_file = /path/to/stardust_bootstrap.php
+require_once '/path/to/SDK/PHP/src/StardustTracer.php';
+
+$tracer = StardustTracer::init('http://star.example.com:6600', 'MyPHPApp', 'MySecret');
+
+$span = $tracer->newSpan($_SERVER['REQUEST_METHOD'] . ' ' . parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
+$span->tag = $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI'];
+register_shutdown_function(function () use ($span, $tracer) {
+    $span->finish();
+    $tracer->flush();
+});
+```
+
+> 以上为文档方案，本轮不修改 PHP 代码；PHP 的自动 Hook、PDO/Redis 包装将在后续版本实现。
 
 ## 完整文档
 

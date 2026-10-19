@@ -11,9 +11,9 @@
 - ✅ 应用登录与令牌自动续期
 - ✅ 心跳保活，携带应用性能指标（CPU、内存、堆、线程、GC 等）
 - ✅ APM 埋点（Span）采集、聚合、GZip 上报
-- ✅ 嵌套 Span 自动继承 `ParentId` / `TraceId`
+- ✅ 嵌套 Span 自动继承 `ParentId` / `TraceId`；W3C `traceparent` 跨服务透传
 - ✅ 服务端采样参数（`Period`、`MaxSamples`、`Excludes` 等）动态生效
-- ✅ 可选 Servlet Filter 自动埋点
+- ✅ 自动埋点：Servlet 容器自动注册 Filter、`StardustHttp`、JDBC 动态代理、Redis 通用包装
 - 🔧 配置中心：规划中
 
 ## Maven 坐标
@@ -21,7 +21,7 @@
 ```xml
 <dependency>
   <groupId>com.newlife</groupId>
-  <artifactId>stardust-sdk</artifactId>
+  <artifactId>stardust</artifactId>
   <version>1.0.0</version>
 </dependency>
 ```
@@ -45,10 +45,12 @@ import com.newlife.stardust.StardustTracer;
 
 public class Demo {
     public static void main(String[] args) {
-        StardustTracer tracer = new StardustTracer("http://star.example.com:6600", "MyApp", "MySecret")
-                .setAppName("订单服务")
-                .setVersion("1.0.0")
-                .start();
+        // 一行接入：创建、登录、启动并注册为默认实例
+        StardustTracer tracer = StardustTracer.init("http://star.example.com:6600", "MyApp", "MySecret");
+
+        // 需要自定义名称/版本时改用 builder：
+        // StardustTracer tracer = new StardustTracer(server, appId, secret)
+        //         .setAppName("订单服务").setVersion("1.0.0").start();
 
         try (Span span = tracer.newSpan("order.create")) {
             span.setTag("orderId=123");
@@ -91,6 +93,7 @@ tracer.pingNow();  // 立即发送一次心跳（含性能指标）
 
 | 方法 | 说明 |
 |------|------|
+| `StardustTracer.init(server, appId, secret)` | 一行创建、启动并设为默认实例 |
 | `new StardustTracer(server, appId, secret[, appName])` | 创建追踪器 |
 | `setAppName` / `setVersion` / `setClientId` | 应用身份 |
 | `setPeriod` / `setHeartbeatPeriod` | 上报周期 / 心跳周期（秒） |
@@ -128,6 +131,19 @@ tracer.pingNow();  // 立即发送一次心跳（含性能指标）
 - 心跳响应返回新 `Token` 时自动替换。
 - `Version` 必须随登录与上报发送，服务端才会下发 `Excludes` / `EnableMeter`。
 
+## 自动埋点
+
+自动埋点遵循星尘统一语义约定，所有采集代码都捕获自身异常，不影响业务：
+
+| 类型 | 接入方式 | Span 名称 |
+|------|----------|-----------|
+| Web 入口 | Servlet 3.0+ 容器自动注册 `StardustFilter` | `METHOD requestURI` |
+| 出站 HTTP | `StardustHttp.open/execute`（JDK 无全局 Hook） | `METHOD host/path` |
+| 数据库 | `StardustJdbc.wrap(dataSource)` 一行接入 | `db:{system}:{action}:{tables}` |
+| Redis | `StardustRedis.call(...)` 通用包装 | `redis:{COMMAND}` |
+
+启用自动埋点的 `StardustTracer` 在构造时自动成为默认实例，`StardustFilter` 会解析上游 `traceparent`；通过 `setAutoInstrument(false)` 整体关闭自动埋点（手工 `newSpan` 不受影响）。
+
 ## Servlet / Spring 集成
 
 ```java
@@ -135,6 +151,7 @@ StardustTracer tracer = new StardustTracer("http://star.example.com:6600", "MyAp
         .setVersion("1.0.0")
         .start();
 
+// 容器可通过 META-INF/services 自动注册；也可显式注册：
 StardustFilter filter = new StardustFilter(tracer);
 ```
 
@@ -156,7 +173,7 @@ cd SDK/Java
 mvn -B test
 ```
 
-测试使用 JDK 自带 `com.sun.net.httpserver.HttpServer` 模拟服务端，覆盖登录、心跳性能、上报、GZip、401 重登录、动态采样与停止。
+测试使用 JDK 自带 `com.sun.net.httpserver.HttpServer` 模拟服务端，覆盖登录、心跳性能、上报、GZip、401 重登录、动态采样、停止，以及 `traceparent`、Servlet 自动注册、JDBC 代理与 Redis 包装。
 
 ## 相关资源
 

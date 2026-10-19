@@ -83,7 +83,7 @@ Stardust  星尘，轻量级分布式服务框架！
 ```
 +--------------------+        +-------------------+        +---------------------+
 |    应用实例 App    | <----> |  Registry/Config  | <----> |    StarServer 核心   |
-| (UseStardust 扩展) |        | (服务/配置/发现)  |        |  (API & 任务/统计)   |
+| (AddStardust 扩展) |        | (服务/配置/发现)  |        |  (API & 任务/统计)   |
 +---------+----------+        +---------+---------+        +----------+----------+
           |                               ^                           |
           v                               |                           v
@@ -141,7 +141,7 @@ Stardust  星尘，轻量级分布式服务框架！
 ## 快速开始 (Quick Start)
 ### 1. 获取源码 / 二进制
 - 源码：clone 本仓库，使用 Visual Studio / Rider / `dotnet build` 直接编译
-- NuGet：`NewLife.Stardust` (核心)；`NewLife.Stardust.Extensions` (ASP.NET Core 扩展)
+- NuGet：`NewLife.Stardust` (核心)；`NewLife.Stardust.Extensions` (ASP.NET Core 扩展，传递引用核心包)
 
 ### 2. 启动平台
 1) 启动 StarServer：
@@ -198,9 +198,13 @@ dotnet add package NewLife.Stardust.Extensions
 在 Program / Startup：
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
+
+// 一行接入：连接星尘平台、注入追踪中间件，并启用
+// HttpClient / WebApi / 数据库 / Redis 自动埋点。
 var star = builder.Services.AddStardust("OrderService");
+
 var app = builder.Build();
-app.UseStardust();
+// app.UseStardust(); // 可选：需要自定义中间件顺序时再显式调用
 app.RegisterService("OrderService"); // 注册到星尘
 // app.ConsumeService("UserService"); // 可选：消费其它服务
 app.Run();
@@ -224,24 +228,23 @@ app.Run();
 
 **JavaScript SDK 快速示例：**
 ```javascript
-// Node.js 环境
-const { StardustTracer } = require('./SDK/JavaScript');
-const tracer = new StardustTracer({
+// Node.js 环境：一行创建并启动
+const { init } = require('./SDK/JavaScript');
+const tracer = init({
   server: 'http://star.example.com:6600',
   appId: 'MyApp',
   secret: 'MySecret',
   version: '1.2.3',
 });
-await tracer.start();
 
-// 浏览器环境（UMD 单文件）
-const tracer = Stardust.createTracer({
+// 浏览器环境：推荐 loader.js 一行接入（见 SDK/README.md），也可直接调用 init
+const webTracer = Stardust.init({
   server: 'http://star.example.com:6600',
   appId: 'MyWebApp',
   tokenProvider: async () => (await fetch('/api/stardust-token')).json(),
   version: '1.2.3',
 });
-tracer.start(); // 自动采集页面加载、路由、JS 错误、fetch/XHR
+// 自动采集页面加载、路由、JS 错误、fetch/XHR
 ```
 
 ---

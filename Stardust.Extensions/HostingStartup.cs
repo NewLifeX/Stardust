@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using NewLife.Log;
 
 // 通过程序集特性，将此类标记为宿主启动项
@@ -20,7 +21,7 @@ public class HostingStartup : IHostingStartup
         {
             services.AddStardust();
 
-            services.AddTransient<IStartupFilter, StartupFilter>();
+            services.TryAddEnumerable(ServiceDescriptor.Transient<IStartupFilter, StartupFilter>());
         });
 
         //builder.Configure(app =>

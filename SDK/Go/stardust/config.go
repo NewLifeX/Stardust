@@ -104,7 +104,7 @@ func (c *ConfigClient) login() {
 		return
 	}
 
-	resp, err := c.client.Post(c.Server+"/App/Login", "application/json", bytes.NewReader(body))
+	resp, err := c.post(c.Server+"/App/Login", "application/json", body)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[Stardust] Config login failed: %v\n", err)
 		return
@@ -142,7 +142,7 @@ func (c *ConfigClient) getAllConfig() {
 	}
 
 	reqURL := fmt.Sprintf("%s/Config/GetAll?Token=%s", c.Server, url.QueryEscape(c.token))
-	resp, err := c.client.Post(reqURL, "application/json", bytes.NewReader(body))
+	resp, err := c.post(reqURL, "application/json", body)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[Stardust] Config GetAll failed: %v\n", err)
 		return
@@ -181,6 +181,17 @@ func (c *ConfigClient) getAllConfig() {
 			go c.onChange(configInfo.Configs)
 		}
 	}
+}
+
+// post 发送 SDK 自身请求，并标记为不参与自动埋点
+func (c *ConfigClient) post(reqURL, contentType string, body []byte) (*http.Response, error) {
+	req, err := http.NewRequest(http.MethodPost, reqURL, bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", contentType)
+	req = req.WithContext(withSuppress(req.Context()))
+	return c.client.Do(req)
 }
 
 func (c *ConfigClient) pollLoop() {

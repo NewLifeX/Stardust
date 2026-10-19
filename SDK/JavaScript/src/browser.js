@@ -13,10 +13,17 @@
         module.exports = api.StardustTracer;
         module.exports.StardustTracer = api.StardustTracer;
         module.exports.createTracer = api.createTracer;
+        module.exports.init = api.init;
+        module.exports.captureException = api.captureException;
+        module.exports.flush = api.flush;
         module.exports.version = api.version;
         module.exports.installBrowserInterceptors = api.installBrowserInterceptors;
         module.exports.installFetchInterceptor = api.installFetchInterceptor;
         module.exports.installXHRInterceptor = api.installXHRInterceptor;
+        module.exports.parseTraceparent = api.parseTraceparent;
+        module.exports.formatTraceparent = api.formatTraceparent;
+        module.exports.generateTraceId = api.generateTraceId;
+        module.exports.generateSpanId = api.generateSpanId;
     }
 
     var win = null;
@@ -30,7 +37,14 @@
             if (!win.Stardust) win.Stardust = {};
             win.Stardust.StardustTracer = api.StardustTracer;
             win.Stardust.createTracer = api.createTracer;
+            win.Stardust.init = api.init;
+            win.Stardust.captureException = api.captureException;
+            win.Stardust.flush = api.flush;
             win.Stardust.version = api.version;
+            win.Stardust.parseTraceparent = api.parseTraceparent;
+            win.Stardust.formatTraceparent = api.formatTraceparent;
+            win.Stardust.generateTraceId = api.generateTraceId;
+            win.Stardust.generateSpanId = api.generateSpanId;
             win.StardustBrowserTracer = api.StardustTracer;
             win.installBrowserInterceptors = api.installBrowserInterceptors;
         } catch (err) {
@@ -119,6 +133,103 @@
             out += chars.charAt(Math.floor(Math.random() * 16));
         }
         return out;
+    }
+
+    var TRACEPARENT_PATTERN = /^([0-9a-f]{2})-([0-9a-f]{1,32})-([0-9a-f]{16})-([0-9a-f]{2})(?:-.*)?$/i;
+
+    /**
+     * 生成 32 位 TraceId。
+     * @returns {String} TraceId
+     */
+    function generateTraceId() {
+        return randomHex(32);
+    }
+
+    /**
+     * 生成 16 位 SpanId。
+     * @returns {String} SpanId
+     */
+    function generateSpanId() {
+        return randomHex(16);
+    }
+
+    /**
+     * 解析 traceparent 头。
+     * @param {String} value 头值
+     * @returns {Object|null} { version, traceId, spanId, flags, sampled }
+     */
+    function parseTraceparent(value) {
+        if (Array.isArray(value)) value = value.length > 0 ? value[0] : '';
+        if (value === null || value === undefined) return null;
+
+        var text = String(value).replace(/^\s+|\s+$/g, '');
+        if (!text) return null;
+
+        var match = TRACEPARENT_PATTERN.exec(text);
+        if (!match) return null;
+
+        var version = match[1].toLowerCase();
+        if (version === 'ff') return null;
+        if (version === '00' && text.split('-').length !== 4) return null;
+
+        var traceId = match[2].toLowerCase();
+        var spanId = match[3].toLowerCase();
+        if (/^0+$/.test(traceId) || /^0+$/.test(spanId)) return null;
+
+        var flags = parseInt(match[4], 16);
+        if (!isFinite(flags)) return null;
+
+        return {
+            version: version,
+            traceId: traceId,
+            spanId: spanId,
+            flags: flags,
+            sampled: (flags & 1) === 1,
+        };
+    }
+
+    /**
+     * 格式化 traceparent 头。
+     * @param {String} traceId TraceId
+     * @param {String} spanId SpanId
+     * @param {Boolean} [sampled] 是否采样，默认 true
+     * @returns {String} traceparent 值
+     */
+    function formatTraceparent(traceId, spanId, sampled) {
+        var trace = String(traceId || '').toLowerCase();
+        var span = String(spanId || '').toLowerCase();
+        if (!/^[0-9a-f]{1,32}$/.test(trace) || /^0+$/.test(trace)) return '';
+        if (!/^[0-9a-f]{16}$/.test(span) || /^0+$/.test(span)) return '';
+
+        var flags = sampled === false ? '00' : '01';
+        return '00-' + trace + '-' + span + '-' + flags;
+    }
+
+    /**
+     * 复制对象自有属性。
+     * @param {Object} target 目标
+     * @param {Object} source 来源
+     * @returns {Object} 目标
+     */
+    function assign(target, source) {
+        if (!source) return target;
+        for (var key in source) {
+            if (hasOwn(source, key)) target[key] = source[key];
+        }
+        return target;
+    }
+
+    /**
+     * 判断头集合是否已显式设置 traceparent。
+     * @param {Object} headers 头对象
+     * @returns {Boolean} 是否存在
+     */
+    function hasTraceparent(headers) {
+        if (!headers) return false;
+        for (var key in headers) {
+            if (hasOwn(headers, key) && String(key).toLowerCase() === 'traceparent') return true;
+        }
+        return false;
     }
 
     function getRootWindow() {
@@ -390,6 +501,8 @@
             this._lastViewPath = null;
             this._routeListeners = null;
             this._errorListeners = null;
+            this._spanStack = [];
+            this._initialTraceparent = opts.initialTraceparent ? parseTraceparent(opts.initialTraceparent) : null;
 
             var fetchImpl = null;
             try {
@@ -443,15 +556,33 @@
         /**
          * 创建手动 Span。
          * @param {String} name Span 名称
-         * @param {String} [parentId] 父 Span ID
+         * @param {String|Object} [parentId] 父 Span ID，或 { parentId, traceId } 配置对象
          * @returns {Object} Span
          */
         newSpan(name, parentId) {
             var tracer = this;
+            var parent = '';
+            var trace = '';
+
+            if (typeof parentId === 'string') {
+                parent = parentId;
+            } else if (parentId && typeof parentId === 'object') {
+                parent = parentId.parentId ? String(parentId.parentId) : '';
+                trace = parentId.traceId ? String(parentId.traceId) : '';
+            }
+
+            if (!trace && this._spanStack.length > 0) {
+                var current = this._spanStack[this._spanStack.length - 1];
+                if (current) {
+                    if (!parent) parent = current.id || '';
+                    trace = current.traceId || '';
+                }
+            }
+
             var span = {
-                id: randomHex(16),
-                parentId: parentId ? String(parentId) : '',
-                traceId: randomHex(32),
+                id: generateSpanId(),
+                parentId: parent,
+                traceId: trace || generateTraceId(),
                 name: String(name),
                 startTime: Date.now(),
                 endTime: 0,
@@ -497,6 +628,61 @@
             });
 
             return span;
+        }
+
+        /**
+         * 在新建 Span 的上下文中执行函数（支持同步与 Promise）。
+         * @param {String} name Span 名称
+         * @param {Function} fn 业务函数，入参为 Span
+         * @returns {*} fn 的返回值
+         */
+        withSpan(name, fn) {
+            var self = this;
+            var span = this.newSpan(name);
+            var finished = false;
+
+            var pop = function () {
+                var index = self._spanStack.lastIndexOf(span);
+                if (index >= 0) self._spanStack.splice(index, 1);
+            };
+            var finish = function (err) {
+                if (finished) return;
+                finished = true;
+                pop();
+                try {
+                    if (err) span.setError(err);
+                } catch (ignore) {
+                    // 忽略
+                }
+                try {
+                    span.finish();
+                } catch (ignore) {
+                    // 忽略
+                }
+            };
+
+            this._spanStack.push(span);
+
+            var result;
+            try {
+                result = typeof fn === 'function' ? fn(span) : undefined;
+            } catch (err) {
+                finish(err);
+                throw err;
+            }
+
+            if (result && typeof result.then === 'function') {
+                return result.then(function (value) {
+                    finish();
+                    return value;
+                }, function (err) {
+                    finish(err);
+                    throw err;
+                });
+            }
+
+            finish();
+            return result;
         }
 
         /**
@@ -1228,6 +1414,63 @@
     }
 
     /**
+     * 构造带 traceparent 的 fetch init。
+     * @param {Object} win 窗口
+     * @param {*} input fetch 入参
+     * @param {Object} init 原始 init
+     * @param {Object} span 出站 Span
+     * @returns {Object} 新 init
+     */
+    function buildFetchInit(win, input, init, span) {
+        var value = formatTraceparent(span.traceId, span.id, true);
+        var cloned = assign({}, init);
+        var HeadersCtor = getWindowProperty(win, 'Headers');
+        if (typeof HeadersCtor !== 'function' && root && typeof root.Headers === 'function') HeadersCtor = root.Headers;
+
+        if (typeof HeadersCtor === 'function') {
+            try {
+                var headers = new HeadersCtor();
+                if (input && typeof input === 'object' && input.headers && typeof input.headers.forEach === 'function') {
+                    input.headers.forEach(function (headerValue, headerName) {
+                        headers.set(headerName, headerValue);
+                    });
+                }
+                if (init && init.headers) {
+                    var own = new HeadersCtor(init.headers);
+                    own.forEach(function (headerValue, headerName) {
+                        headers.set(headerName, headerValue);
+                    });
+                }
+                if (!headers.has('traceparent')) headers.set('traceparent', value);
+                cloned.headers = headers;
+                return cloned;
+            } catch (err) {
+                // 回退到普通对象
+            }
+        }
+
+        var plain = {};
+        if (input && typeof input === 'object' && input.headers && typeof input.headers.forEach === 'function' && !(init && init.headers)) {
+            try {
+                input.headers.forEach(function (headerValue, headerName) {
+                    plain[headerName] = headerValue;
+                });
+            } catch (err) {
+                // 忽略
+            }
+        }
+        var ownHeaders = init && init.headers;
+        if (ownHeaders && !Array.isArray(ownHeaders) && typeof ownHeaders === 'object') {
+            for (var key in ownHeaders) {
+                if (hasOwn(ownHeaders, key)) plain[key] = ownHeaders[key];
+            }
+        }
+        if (!hasTraceparent(plain)) plain.traceparent = value;
+        cloned.headers = plain;
+        return cloned;
+    }
+
+    /**
      * 安装 fetch 拦截器。
      * @param {StardustTracer} tracer 追踪器
      */
@@ -1247,12 +1490,14 @@
                 var url = '';
                 var method = 'GET';
                 var span = null;
+                var actualInit = init;
                 try {
                     url = resolveAbsoluteUrl(resolveRequestUrl(input), win);
                     method = String((init && init.method) || (input && input.method) || 'GET').toUpperCase();
                     if (!isIgnoredUrl(url)) {
                         span = tracer.newSpan(buildSpanName(method, url, win));
                         span.setTag(truncate(url, tracer._tagLimit()));
+                        actualInit = buildFetchInit(win, input, init, span);
                     }
                 } catch (err) {
                     span = null;
@@ -1261,7 +1506,7 @@
 
                 var result;
                 try {
-                    result = original.apply(this, arguments);
+                    result = span ? original.call(this, input, actualInit) : original.apply(this, arguments);
                 } catch (err) {
                     if (span) {
                         try {
@@ -1344,11 +1589,25 @@
 
             var originalOpen = XHR.prototype.open;
             var originalSend = XHR.prototype.send;
+            var originalSetHeader = XHR.prototype.setRequestHeader;
+
+            if (typeof originalSetHeader === 'function') {
+                XHR.prototype.setRequestHeader = function (name) {
+                    try {
+                        if (!this.__stardustHeaders) this.__stardustHeaders = Object.create(null);
+                        this.__stardustHeaders[String(name).toLowerCase()] = true;
+                    } catch (err) {
+                        // 忽略
+                    }
+                    return originalSetHeader.apply(this, arguments);
+                };
+            }
 
             XHR.prototype.open = function (method, url) {
                 try {
                     this.__stardustMethod = method;
                     this.__stardustUrl = url;
+                    this.__stardustHeaders = Object.create(null);
                 } catch (err) {
                     // 忽略
                 }
@@ -1366,6 +1625,15 @@
                         var method = String(xhr.__stardustMethod || 'GET').toUpperCase();
                         span = tracer.newSpan(buildSpanName(method, absolute, win));
                         span.setTag(truncate(absolute, tracer._tagLimit()));
+
+                        try {
+                            var sentHeaders = xhr.__stardustHeaders || {};
+                            if (!sentHeaders.traceparent && typeof xhr.setRequestHeader === 'function') {
+                                xhr.setRequestHeader('traceparent', formatTraceparent(span.traceId, span.id, true));
+                            }
+                        } catch (err) {
+                            // 忽略头注入异常
+                        }
 
                         var finished = false;
                         finish = function (error) {
@@ -1452,7 +1720,10 @@
                     if (!entry.loadEventEnd && !entry.domContentLoadedEventEnd && !ready) return;
 
                     tracer._pageLoadEmitted = true;
-                    var span = tracer.newSpan('page.load');
+                    var initial = tracer._initialTraceparent;
+                    var span = initial
+                        ? tracer.newSpan('page.load', { parentId: initial.spanId, traceId: initial.traceId })
+                        : tracer.newSpan('page.load');
                     span.setTag(buildNavigationTag(entry));
                     span.finish();
                 } catch (err) {
@@ -1674,12 +1945,66 @@
         return new StardustTracer(options, appId, secret);
     }
 
+    var defaultTracer = null;
+
+    /**
+     * 创建并启动浏览器追踪器。适合 npm 包的一行接入。
+     * @param {Object|String} options 配置对象或服务器地址
+     * @param {String} [appId] 应用ID
+     * @param {String} [secret] 应用密钥
+     * @returns {StardustTracer} 追踪器
+     */
+    function init(options, appId, secret) {
+        var tracer = createTracer(options, appId, secret);
+        defaultTracer = tracer;
+        try {
+            if (root && root.Stardust) root.Stardust.tracer = tracer;
+        } catch (err) {
+            // 忽略只读全局对象
+        }
+        tracer.start();
+        return tracer;
+    }
+
+    /**
+     * 手动上报一个异常。
+     * @param {Error|String} err 异常
+     * @param {Object} [options] { tag }
+     * @returns {Object|null} Span
+     */
+    function captureException(err, options) {
+        var tracer = defaultTracer || (root && root.Stardust ? root.Stardust.tracer : null);
+        if (!tracer || typeof tracer.newSpan !== 'function') return null;
+
+        var span = tracer.newSpan('js.error');
+        if (options && options.tag) span.setTag(options.tag);
+        span.setError(err);
+        span.finish();
+        return span;
+    }
+
+    /**
+     * 立即上报当前聚合数据。
+     * @returns {Promise<void>} 完成
+     */
+    function flush() {
+        var tracer = defaultTracer || (root && root.Stardust ? root.Stardust.tracer : null);
+        return tracer && typeof tracer.flush === 'function' ? tracer.flush() : Promise.resolve();
+    }
+
     return {
         StardustTracer: StardustTracer,
         createTracer: createTracer,
+        init: init,
+        captureException: captureException,
+        flush: flush,
         version: VERSION,
         installBrowserInterceptors: installBrowserInterceptors,
         installFetchInterceptor: installFetchInterceptor,
         installXHRInterceptor: installXHRInterceptor,
+        parseTraceparent: parseTraceparent,
+        formatTraceparent: formatTraceparent,
+        generateTraceId: generateTraceId,
+        generateSpanId: generateSpanId,
     };
 });

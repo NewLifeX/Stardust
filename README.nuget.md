@@ -83,7 +83,7 @@ Demo system: [http://star.newlifex.com](http://star.newlifex.com)
 ```
 +--------------------+        +-------------------+        +---------------------+
 |   App Instance     | <----> |  Registry/Config  | <----> |   StarServer Core   |
-| (UseStardust ext)  |        | (service/config/  |        | (API & task/stats)  |
+| (AddStardust ext)  |        | (service/config/  |        | (API & task/stats)  |
 +---------+----------+        |    discovery)     |        +----------+----------+
           |                   +---------+---------+                   |
           v                             ^                             v
@@ -141,7 +141,7 @@ The call chain page supports the `TraceAnonymous` property. When set, unauthenti
 ## Quick Start
 ### 1. Get the source / binaries
 - Source: clone this repository and build directly with Visual Studio / Rider / `dotnet build`
-- NuGet: `NewLife.Stardust` (core); `NewLife.Stardust.Extensions` (ASP.NET Core extensions)
+- NuGet: `NewLife.Stardust` (core); `NewLife.Stardust.Extensions` (ASP.NET Core extensions, brings the core package transitively)
 
 ### 2. Start the platform
 1) Start StarServer:
@@ -198,9 +198,13 @@ dotnet add package NewLife.Stardust.Extensions
 In Program / Startup:
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
+
+// One line: connect to Stardust, inject the tracing middleware, and enable
+// HttpClient / WebApi / database / Redis auto-instrumentation.
 var star = builder.Services.AddStardust("OrderService");
+
 var app = builder.Build();
-app.UseStardust();
+// app.UseStardust(); // Optional: only when you need a custom middleware order
 app.RegisterService("OrderService"); // Register with Stardust
 // app.ConsumeService("UserService"); // Optional: consume other services
 app.Run();
@@ -224,24 +228,23 @@ In addition to the .NET SDK, Stardust also provides multi-language SDK support:
 
 **JavaScript SDK quick example:**
 ```javascript
-// Node.js environment
-const { StardustTracer } = require('./SDK/JavaScript');
-const tracer = new StardustTracer({
+// Node.js: one-line create and start
+const { init } = require('./SDK/JavaScript');
+const tracer = init({
   server: 'http://star.example.com:6600',
   appId: 'MyApp',
   secret: 'MySecret',
   version: '1.2.3',
 });
-await tracer.start();
 
-// Browser environment (UMD single file)
-const tracer = Stardust.createTracer({
+// Browser: prefer the one-line loader.js (see SDK/README.md), or call init directly
+const webTracer = Stardust.init({
   server: 'http://star.example.com:6600',
   appId: 'MyWebApp',
   tokenProvider: async () => (await fetch('/api/stardust-token')).json(),
   version: '1.2.3',
 });
-tracer.start(); // Automatically collects page loads, routes, JS errors, fetch/XHR
+// Automatically collects page loads, routes, JS errors, fetch/XHR
 ```
 
 ---

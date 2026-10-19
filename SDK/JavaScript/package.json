@@ -1,5 +1,5 @@
 {
-  "name": "stardust-tracer",
+  "name": "@newlifex/stardust",
   "version": "1.1.0",
   "description": "零依赖 JavaScript/Node.js SDK for Stardust APM (Application Performance Monitoring)",
   "main": "src/index.js",
@@ -16,6 +16,11 @@
       "types": "./src/browser.d.ts",
       "require": "./src/browser.js",
       "default": "./src/browser.js"
+    },
+    "./loader": {
+      "types": "./src/loader.d.ts",
+      "require": "./src/loader.js",
+      "default": "./src/loader.js"
     },
     "./middleware/express": "./src/middleware/express.js",
     "./middleware/koa": "./src/middleware/koa.js",
@@ -57,7 +62,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
-    "test": "node test/test.js && node test/integration.test.js && node test/browser.test.js"
+    "test": "node test/test.js && node test/integration.test.js && node test/browser.test.js && node test/instrument.test.js && node test/loader.test.js"
   },
   "engines": {
     "node": ">=14.0.0"

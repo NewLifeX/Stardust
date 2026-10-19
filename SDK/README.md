@@ -11,28 +11,65 @@
 | JavaScript/Node.js | [JavaScript](JavaScript) | ✅ | ✅ | ✅ | - | ✅ | ✅ |
 | Java 8+ | [Java](Java) | ✅ | ✅ | ✅ | 🔧 | ✅ | ✅ |
 | Go 1.18+ | [Go](Go) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Python 3.7+ | [Python](Python) | ✅ | 🟡 | ✅ | ✅ | 🟡 | 🟡 |
+| Python 3.7+ | [Python](Python) | ✅ | 🟡 | ✅ | ✅ | ✅ | 🟡 |
 | PHP 7.4+ | [PHP](PHP) | ✅ | 🟡 | ✅ | ✅ | 🟡 | 🟡 |
 | Classic ASP | [ASP](ASP) | ✅ | 🟡 | ✅ | - | ❌ | 🟡 |
 
 > ✅ 已实现并测试；🟡 部分实现；🔧 规划中；❌ 未开始。
 > Python/PHP/ASP 的登录与埋点已可用，心跳应用性能（`AppInfo`）与令牌续期将在 P1 补齐。
 
+### 自动埋点能力
+
+| 语言/运行时 | Web 入口 | 出站 HTTP | 数据库 | Redis |
+|-------------|:--------:|:---------:|:------:|:-----:|
+| JavaScript（浏览器） | 页面/SPA 路由 | fetch/XHR | - | - |
+| JavaScript/Node.js | `http.createServer`、Express/Koa | `http`/`https`/`fetch` | `pg`、`mysql2` | `redis`、`ioredis` |
+| Java 8+ | Servlet 自动注册 | `StardustHttp` 一行包装 | `StardustJdbc` 一行包装 | `StardustRedis` 通用包装 |
+| Go 1.18+ | `WrapHandler` 一行接入 | 默认 Transport 自动、`WrapClient` | `WrapDriver` 一行接入 | 通用包装 + 可选 go-redis Hook |
+| Python 3.7+ | WSGI/ASGI、Flask/Django/Starlette | `requests`、`urllib` | DB-API（sqlite3/pymysql/psycopg2） | `redis` |
+| PHP 7.4+ | 文档示例 | 文档示例 | 文档示例 | 文档示例 |
+| Classic ASP | 文档示例 | 文档示例 | 文档示例 | 文档示例 |
+
+> 自动埋点默认开启：JS/Python 在创建 tracer/client 时安装，无需额外调用 `instrument()`；Go 默认安装 HTTP 客户端传输；Java 的 Web 入口由 Servlet 容器自动注册，Java 的出站 HTTP/JDBC/Redis 与 Go 的 Web 入口/数据库按上表“一行接入”即可。跨服务链路统一使用 W3C `traceparent`，Web 入口解析上游上下文，出站 HTTP 注入当前 Span 上下文。关闭方式与各语言限制见对应语言 README。
+>
+> 浏览器推荐使用 `loader.js` + `data-stardust-*` 一行接入，无需手写初始化；方案与同行对比见 [APM-18 浏览器埋点方案](../Doc/APM-18-浏览器埋点方案.md)。
+
+## 引用方式
+
+| 语言/运行时 | 引用方式 |
+|-------------|----------|
+| C#/.NET ASP.NET Core | `dotnet add package NewLife.Stardust.Extensions`（自动带核心 `NewLife.Stardust`） |
+| C#/.NET 控制台/Worker | `dotnet add package NewLife.Stardust` |
+| JavaScript/Node.js/浏览器 | `npm install @newlifex/stardust` |
+| Java | Maven `com.newlife:stardust`（备选 `io.github.newlifex:stardust`） |
+| Go | `go get github.com/NewLifeX/Stardust/SDK/Go/stardust` |
+| Python | `pip install newlifex-stardust` |
+| PHP | `composer require newlifex/stardust` |
+
 ## 快速开始
 
-### JavaScript（浏览器，UMD 单文件）
+### JavaScript（浏览器，一行接入）
 
 ```html
-<script src="https://your-cdn/stardust/src/browser.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@newlifex/stardust/src/loader.js"
+        data-stardust-server="http://star.example.com:6600"
+        data-stardust-app="MyWeb"
+        data-stardust-release="1.2.3"></script>
+```
+
+`loader.js` 自动加载 `browser.js` 并采集：页面加载、SPA 路由、JS 错误、资源错误、`fetch`/`XMLHttpRequest`；页面隐藏/卸载时通过 `sendBeacon` 冲刷数据。`data-stardust-token` 可配置短期 Token，`data-stardust-config` 可指向后端配置端点。
+
+需要自定义时仍可直接引用 `browser.js`：
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@newlifex/stardust/src/browser.js"></script>
 <script>
-  const tracer = Stardust.createTracer({
+  const tracer = Stardust.init({
     server: 'http://star.example.com:6600',
     appId: 'MyWeb',
-    // 内网/低敏感场景可直接使用 secret；正式环境推荐 tokenProvider
     tokenProvider: async () => (await fetch('/api/stardust-token')).json(),
     version: '1.2.3',
   });
-  tracer.start();
 
   const span = tracer.newSpan('checkout');
   span.setTag('order=123');
@@ -40,12 +77,10 @@
 </script>
 ```
 
-自动采集：页面加载、SPA 路由、JS 错误、资源错误、`fetch`/`XMLHttpRequest`；页面隐藏/卸载时通过 `sendBeacon` 冲刷数据。
-
 ### JavaScript（Node.js）
 
 ```javascript
-const { StardustTracer } = require('./SDK/JavaScript');
+const { StardustTracer } = require('@newlifex/stardust');
 
 const tracer = new StardustTracer({
   server: 'http://star.example.com:6600',
@@ -65,7 +100,7 @@ span.finish();
 ```xml
 <dependency>
   <groupId>com.newlife</groupId>
-  <artifactId>stardust-sdk</artifactId>
+  <artifactId>stardust</artifactId>
   <version>1.0.0</version>
 </dependency>
 ```
@@ -73,8 +108,8 @@ span.finish();
 > 发布到 Maven Central 时，若 `com.newlife` 命名空间无法验证，可改用 GitHub 命名空间 `io.github.newlifex`。
 
 ```java
-StardustTracer tracer = new StardustTracer("http://star.example.com:6600", "MyJavaApp", "MySecret");
-tracer.setVersion("1.2.3").start();
+// 一行接入：创建、启动并注册为默认实例
+StardustTracer tracer = StardustTracer.init("http://star.example.com:6600", "MyJavaApp", "MySecret");
 
 try (Span span = tracer.newSpan("业务操作")) {
     span.setTag("order=123");
@@ -90,9 +125,8 @@ tracer.stop();
 ```go
 import "github.com/NewLifeX/Stardust/SDK/Go/stardust"
 
-tracer := stardust.NewTracer("http://star.example.com:6600", "MyGoApp", "MySecret")
-tracer.SetVersion("1.2.3")
-tracer.Start()
+// 一行接入：创建、登录并启动自动埋点
+tracer := stardust.Init("http://star.example.com:6600", "MyGoApp", "MySecret")
 defer tracer.Stop()
 
 span := tracer.NewSpan("业务操作", "")
@@ -138,9 +172,9 @@ SDK/
 
 | 生态 | 仓库 | 建议坐标/名称 | 说明 |
 |------|------|---------------|------|
-| NuGet | nuget.org | `NewLife.Stardust` | 已发布 |
-| npm | npmjs.com | `@newlifex/stardust`（或 `stardust-tracer`） | `newlife` 已被占用，统一用 `newlifex` |
-| Maven Central | central.sonatype.com | `com.newlife:stardust-sdk`（备选 `io.github.newlifex`） | 优先验证 `newlife.com`；无域名时用 GitHub 命名空间；需 GPG 签名 |
+| NuGet | nuget.org | `NewLife.Stardust`（核心）/ `NewLife.Stardust.Extensions`（ASP.NET Core，含核心） | ASP.NET Core 应用只需引用 `NewLife.Stardust.Extensions` |
+| npm | npmjs.com | `@newlifex/stardust` | `newlife` 已被占用，统一用 `newlifex` |
+| Maven Central | central.sonatype.com | `com.newlife:stardust`（备选 `io.github.newlifex:stardust`） | 优先验证 `newlife.com`；无域名时用 GitHub 命名空间；需 GPG 签名 |
 | Go | pkg.go.dev / GitHub | `github.com/NewLifeX/Stardust/SDK/Go/stardust` | 无中央注册，打子模块标签即可 |
 | crates.io | crates.io | `newlifex-stardust`（`stardust` 已被占用） | Rust SDK 启动时注册 |
 | PyPI | pypi.org | `newlifex-stardust` | `stardust`/`stardust-sdk` 已被占用 |

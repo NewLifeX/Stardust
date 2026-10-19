@@ -214,6 +214,24 @@ class StardustTracer
     }
 
     /**
+     * 一行接入：创建追踪器并登录星尘平台
+     *
+     * 登录失败不抛异常，后续 flush 时会自动重试。
+     *
+     * @param string $server 星尘服务器地址，如 http://star.example.com:6600
+     * @param string $appId 应用标识
+     * @param string $secret 应用密钥
+     * @return self 已登录的追踪器
+     */
+    public static function init(string $server, string $appId, string $secret = ''): self
+    {
+        $tracer = new self($server, $appId, $secret);
+        $tracer->login();
+
+        return $tracer;
+    }
+
+    /**
      * 设置调试模式
      * 
      * @param bool $debug

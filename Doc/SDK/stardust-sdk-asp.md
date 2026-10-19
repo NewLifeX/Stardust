@@ -35,6 +35,32 @@ Set tracer = Nothing
 %>
 ```
 
+## 自动埋点说明（本轮）
+
+Classic ASP 没有运行时 Hook 机制，本轮不提供自动埋点代码。推荐在 `global.asa` 或公共 include 中初始化 tracer，在页面入口创建 `METHOD URL` Span，在页面底部统一 `Finish` + `Flush`；出站 `ServerXMLHTTP` 请求需手动从当前 Span 注入 W3C `traceparent`（当前 SDK 未内置该方法，可参考 APM-17 的格式拼接请求头）。
+
+```asp
+<!--#include file="StardustTracer.asp"-->
+<%
+Dim tracer, span
+Set tracer = New StardustTracer
+tracer.Init "http://star.example.com:6600", "MyASPApp", "MySecret"
+tracer.Login
+
+Set span = tracer.NewSpan(Request.ServerVariables("REQUEST_METHOD") & " " & Request.ServerVariables("URL"))
+span.Tag = Request.ServerVariables("REQUEST_METHOD") & " " & Request.ServerVariables("URL")
+
+' 页面业务逻辑
+
+span.Finish
+tracer.Flush
+Set span = Nothing
+Set tracer = Nothing
+%>
+```
+
+> 自动入口、PDO/Redis/cURL 等自动 Hook 将在后续版本评估；当前请使用上述模板或公共 include 封装。
+
 ## 完整代码 (StardustTracer.asp)
 
 ```asp

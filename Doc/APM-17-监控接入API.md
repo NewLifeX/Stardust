@@ -1,6 +1,6 @@
 # APM-17 监控接入 API
 
-> 版本：v1.1 | 日期：2026-10-17
+> 版本：v1.2 | 日期：2026-10-19
 > 对应需求：APM-17 非 .NET 平台接入 API
 
 ---
@@ -285,6 +285,43 @@ SDK 必须检查 `code`，不能只看 HTTP 状态码。遇到 `code=401` 时应
 
 ---
 
+## 链路上下文（W3C traceparent）
+
+跨服务、跨语言链路统一使用 W3C Trace Context 标准头：
+
+```text
+traceparent: 00-<trace-id>-<span-id>-<flags>
+```
+
+- `trace-id`：32 位小写十六进制；SDK 生成时使用 32 位。为兼容 .NET 历史实现，接收时允许任意非空十六进制串（NewLife.Core 的 TraceId 可能短于 32 位），出站时保留原长度、不补零，避免破坏链路关联。
+- `span-id`：16 位小写十六进制。
+- `flags`：`01` 表示采样。SDK 不做头部采样，出站统一写 `01`，最终采样由星尘服务端决定。
+- **入口**：Web 入口读取 `traceparent`，复用 TraceId，并把上游 SpanId 作为入口 Span 的 ParentId；缺失或非法时新建 TraceId。
+- **出口**：向外 HTTP 请求时，以当前活动 Span 的 TraceId/SpanId 注入 `traceparent`；调用方已显式设置时不覆盖。
+- **自身请求**：`/App/Login`、`/App/Ping`、`/Trace/Report`、`/Trace/ReportRaw` 不创建 Span，也不注入 `traceparent`。
+- **大小写**：HTTP 头名不区分大小写，值按小写十六进制解析。
+
+> 该格式与 NewLife.Core 的 `ISpan.Detach` / `AttachParameter` 一致，可与 .NET 及 OpenTelemetry 链路互通。
+
+---
+
+## 自动埋点语义约定
+
+自动埋点遵循统一名称、标签与错误判定，便于跨语言对比：
+
+| 类型 | Span 名称 | Tag | 错误判定 |
+|------|-----------|-----|----------|
+| Web 入口 | `{METHOD} {路由模板或路径}` | `{METHOD} {原始URL}` | 服务端 5xx 或未处理异常 |
+| 向外 HTTP | `{METHOD} {host}{path}`（浏览器同源保留 path） | 完整 URL | 客户端 4xx/5xx 或网络异常 |
+| 数据库 | `db:{system}:{action}:{tables}`，如 `db:sqlite:select:users` | SQL 文本（截断到 `MaxTagLength`） | 驱动异常 |
+| Redis | `redis:{COMMAND}`，如 `redis:GET` | key/参数摘要（截断） | 客户端异常 |
+
+- SQL 表名识别 `from`、`insert into`、`update`、`join`、`drop table`、`truncate table`，并去掉日期分表后缀。
+- 自动埋点不得影响业务：所有采集代码必须捕获并忽略自身异常。
+- 同一请求只产生一个入口 Span；框架中间件与底层 HTTP 自动入口通过请求标记去重。
+
+---
+
 ## 多语言 SDK 支持
 
 | SDK | 位置 | 登录 | 心跳+性能 | 埋点 | 配置中心 | 说明 |
@@ -296,5 +333,16 @@ SDK 必须检查 `code`，不能只看 HTTP 状态码。遇到 `code=401` 时应
 | Python | `SDK/Python/` | ✅ | 🟡 | ✅ | ✅ | 心跳性能待补齐 |
 | PHP | `SDK/PHP/` | ✅ | 🟡 | ✅ | ✅ | 心跳性能待补齐 |
 | ASP | `SDK/ASP/` | ✅ | 🟡 | ✅ | - | Classic ASP |
+
+### 自动埋点能力
+
+| SDK | Web 入口 | 出站 HTTP | 数据库 | Redis |
+|-----|:--------:|:---------:|:------:|:-----:|
+| JavaScript（浏览器） | 页面/路由 | fetch/XHR | - | - |
+| JavaScript/Node.js | `http.createServer`、Express/Koa | `http`/`https`/`fetch` | `pg`、`mysql2` | `redis`、`ioredis` |
+| Java | Servlet 容器自动注册 | `StardustHttp`（标准库无全局 Hook） | `StardustJdbc` 一行包装 | `StardustRedis` 通用包装 |
+| Go | `WrapHandler` 一行接入 | 默认 Transport 自动、`WrapClient` | `WrapDriver` 一行接入 | 通用包装 + 可选 go-redis Hook |
+| Python | WSGI/ASGI、Flask/Django/Starlette | `requests`、`urllib` | DB-API（sqlite3/pymysql/psycopg2） | `redis` |
+| PHP/ASP | 文档示例 | 文档示例 | 文档示例 | 文档示例 |
 
 > 完整能力矩阵、安装方式与路线图见 [SDK/README.md](../SDK/README.md)。

@@ -11,6 +11,8 @@ const Span = require('./span');
 const SpanBuilder = require('./span-builder');
 const { AppInfoCollector, getLocalIP } = require('./app-info');
 const { postJson, postGzip, isAuthError } = require('./http');
+const { runWithSpan } = require('./trace-context');
+const { installAutoInstrumentation, unregister } = require('./instrument');
 
 const DEFAULT_VERSION = '1.1.0';
 const TOKEN_REFRESH_WINDOW_MS = 5 * 60 * 1000;
@@ -101,6 +103,7 @@ class StardustTracer {
         this.excludes = normalizeExcludes(opts.excludes);
         this.debug = opts.debug === true;
         this.autoFlushOnExit = opts.autoFlushOnExit !== false;
+        this.autoInstrument = opts.autoInstrument !== false;
 
         this._httpTimeout = positiveNumber(opts.httpTimeout, 10000);
         this._tokenProvider = typeof opts.tokenProvider === 'function' ? opts.tokenProvider : null;
@@ -122,6 +125,15 @@ class StardustTracer {
             version: this.version,
             ip: this._localIP,
         });
+
+        // 自动埋点在构造阶段安装，start() 只负责登录与上报
+        if (this.autoInstrument) {
+            try {
+                installAutoInstrumentation(this);
+            } catch (err) {
+                // 监控异常不得影响业务
+            }
+        }
     }
 
     /**
@@ -131,6 +143,14 @@ class StardustTracer {
     async start() {
         if (this._running) return this;
         this._running = true;
+
+        if (this.autoInstrument) {
+            try {
+                installAutoInstrumentation(this);
+            } catch (err) {
+                // 监控异常不得影响业务
+            }
+        }
 
         await this._ensureToken(false);
         this._scheduleTimers();
@@ -150,6 +170,13 @@ class StardustTracer {
         this._running = false;
         this._clearTimers();
         this._removeExitHooks();
+        if (this.autoInstrument) {
+            try {
+                unregister(this);
+            } catch (err) {
+                // 忽略
+            }
+        }
 
         const self = this;
         this._stopPromise = this.flush().then(function () {
@@ -164,11 +191,62 @@ class StardustTracer {
     /**
      * 创建新的 Span。
      * @param {String} name Span 名称
-     * @param {String} [parentId] 父 Span ID
+     * @param {String|Object} [parentId] 父 Span ID，或 { parentId, traceId } 配置对象
      * @returns {Span} Span 对象
      */
     newSpan(name, parentId) {
-        return new Span(name, this, parentId || '');
+        return new Span(name, this, parentId);
+    }
+
+    /**
+     * 在新建 Span 的上下文中执行函数（支持同步与 Promise）。
+     * @param {String} name Span 名称
+     * @param {Function} fn 业务函数，入参为 Span
+     * @returns {*} fn 的返回值
+     */
+    withSpan(name, fn) {
+        const span = this.newSpan(name);
+
+        return runWithSpan(span, function () {
+            let result;
+            try {
+                result = typeof fn === 'function' ? fn(span) : undefined;
+            } catch (err) {
+                try {
+                    span.setError(err);
+                    span.finish();
+                } catch (ignore) {
+                    // 忽略
+                }
+                throw err;
+            }
+
+            if (result && typeof result.then === 'function') {
+                return result.then(function (value) {
+                    try {
+                        span.finish();
+                    } catch (ignore) {
+                        // 忽略
+                    }
+                    return value;
+                }, function (err) {
+                    try {
+                        span.setError(err);
+                        span.finish();
+                    } catch (ignore) {
+                        // 忽略
+                    }
+                    throw err;
+                });
+            }
+
+            try {
+                span.finish();
+            } catch (ignore) {
+                // 忽略
+            }
+            return result;
+        });
     }
 
     /**

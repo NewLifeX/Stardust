@@ -4,7 +4,7 @@
 
 'use strict';
 
-const { randomBytes } = require('crypto');
+const { generateTraceId, generateSpanId, getCurrentSpan } = require('./trace-context');
 
 /**
  * 将错误对象格式化为可读消息。
@@ -32,12 +32,31 @@ class Span {
     /**
      * @param {String} name Span 名称
      * @param {Object} tracer 追踪器
-     * @param {String} [parentId] 父 Span ID
+     * @param {String|Object} [parentId] 父 Span ID，或 { parentId, traceId } 配置对象
      */
     constructor(name, tracer, parentId) {
-        this.id = randomBytes(8).toString('hex');
-        this.parentId = parentId || '';
-        this.traceId = randomBytes(16).toString('hex');
+        let parent = '';
+        let trace = '';
+
+        if (typeof parentId === 'string') {
+            parent = parentId;
+        } else if (parentId && typeof parentId === 'object') {
+            parent = parentId.parentId ? String(parentId.parentId) : '';
+            trace = parentId.traceId ? String(parentId.traceId) : '';
+        }
+
+        // 未显式指定时继承当前活动 Span；仅指定 parentId 时也优先继承当前 TraceId
+        if (!trace) {
+            const current = getCurrentSpan();
+            if (current) {
+                if (!parent) parent = current.id || '';
+                trace = current.traceId || '';
+            }
+        }
+
+        this.id = generateSpanId();
+        this.parentId = parent;
+        this.traceId = trace || generateTraceId();
         this.name = name;
         this.startTime = Date.now();
         this.endTime = 0;

@@ -227,6 +227,18 @@ class TestStardustClient(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             client.get_config("test")
 
+    def test_init_one_line(self):
+        """测试 init 一行接入"""
+        from stardust_sdk import init
+
+        with patch("stardust_sdk.StardustClient") as client_cls:
+            fake = client_cls.return_value
+            result = init("http://localhost:6600", "TestApp", "test_secret", scope="dev")
+
+            client_cls.assert_called_once()
+            fake.start.assert_called_once()
+            self.assertIs(result, fake)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -8,6 +8,7 @@
 const http = require('http');
 const https = require('https');
 const zlib = require('zlib');
+const { markInternal } = require('./instrument/marker');
 
 /**
  * 星尘接口错误。code 为业务错误码（401 表示令牌失效）。
@@ -102,17 +103,18 @@ function post(urlStr, body, contentType, timeoutMs) {
         };
 
         const buffer = Buffer.isBuffer(body) ? body : Buffer.from(String(body || ''), 'utf8');
+        const options = markInternal({
+            method: 'POST',
+            headers: {
+                'Content-Type': contentType,
+                'Content-Length': buffer.length,
+                'Connection': 'close',
+            },
+            timeout: timeout,
+        });
         let req;
         try {
-            req = mod.request(parsed, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': contentType,
-                    'Content-Length': buffer.length,
-                    'Connection': 'close',
-                },
-                timeout: timeout,
-            }, (res) => {
+            req = mod.request(parsed, options, (res) => {
                 const chunks = [];
                 res.on('data', (chunk) => chunks.push(chunk));
                 res.on('end', () => {

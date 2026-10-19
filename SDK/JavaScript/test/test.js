@@ -10,6 +10,7 @@ const {
     Span,
     SpanBuilder,
     createTracer,
+    init,
     installBrowserInterceptors,
 } = require('../src');
 
@@ -271,6 +272,23 @@ test('StardustTracer 令牌过期判断', () => {
 test('createTracer 工厂', () => {
     const tracer = createTracer({ server: 'http://localhost:6600', appId: 'test-app' });
     assert(tracer instanceof StardustTracer, '应该创建 Node 追踪器');
+});
+
+test('init 一行创建并启动追踪器', () => {
+    const originalStart = StardustTracer.prototype.start;
+    let started = 0;
+    StardustTracer.prototype.start = function () {
+        started++;
+        return this;
+    };
+
+    try {
+        const tracer = init({ server: 'http://localhost:6600', appId: 'test-app' });
+        assert(tracer instanceof StardustTracer, '应该创建 Node 追踪器');
+        assertEqual(started, 1, '应该自动启动一次');
+    } finally {
+        StardustTracer.prototype.start = originalStart;
+    }
 });
 
 test('浏览器导出与中间件兼容', () => {

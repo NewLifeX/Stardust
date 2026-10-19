@@ -4,6 +4,8 @@
 
 'use strict';
 
+const { parseTraceparent, runWithSpan } = require('../trace-context');
+
 /**
  * 是否需要忽略此路径。
  * @param {String} path 请求路径
@@ -12,6 +14,30 @@
 function isIgnoredPath(path) {
     const text = String(path || '');
     return /^\/(App|Trace)(\/|$)/i.test(text) || text.indexOf('/App/') !== -1 || text.indexOf('/Trace/') !== -1;
+}
+
+/**
+ * 读取请求头（不区分大小写）。
+ * @param {Object} req 请求
+ * @param {String} name 头名
+ * @returns {String} 头值
+ */
+function getHeader(req, name) {
+    const headers = req && req.headers;
+    if (!headers) return '';
+    const lower = name.toLowerCase();
+    let value = headers[lower];
+    if (value === undefined) value = headers[name];
+    if (value === undefined) {
+        for (const key of Object.keys(headers)) {
+            if (key.toLowerCase() === lower) {
+                value = headers[key];
+                break;
+            }
+        }
+    }
+    if (Array.isArray(value)) return value.length > 0 ? String(value[0]) : '';
+    return value === undefined || value === null ? '' : String(value);
 }
 
 /**
@@ -48,17 +74,34 @@ function createKoaMiddleware(tracer) {
         }
 
         const method = ctx && ctx.method ? String(ctx.method).toUpperCase() : 'GET';
+        const tag = method + ' ' + ((ctx && (ctx.originalUrl || ctx.url)) || path);
         let span = null;
         try {
-            span = tracer.newSpan(method + ' ' + getRoutePath(ctx, path));
-            span.setTag(method + ' ' + ((ctx && (ctx.originalUrl || ctx.url)) || path));
+            // 复用 HTTP 自动入口创建的 Span，避免重复
+            span = ctx && ctx.__stardustSpan ? ctx.__stardustSpan : null;
+            if (!span && ctx && ctx.req && ctx.req.__stardustSpan) span = ctx.req.__stardustSpan;
+            if (span) {
+                span.setTag(tag);
+            } else {
+                const inbound = parseTraceparent(getHeader(ctx && ctx.req, 'traceparent'));
+                if (inbound) span = tracer.newSpan(method + ' ' + getRoutePath(ctx, path), { parentId: inbound.spanId, traceId: inbound.traceId });
+                else span = tracer.newSpan(method + ' ' + getRoutePath(ctx, path));
+                span.setTag(tag);
+                if (ctx) ctx.__stardustSpan = span;
+            }
         } catch (err) {
             span = null;
         }
 
         let finished = false;
         try {
-            await next();
+            if (span) {
+                await runWithSpan(span, function () {
+                    return next();
+                });
+            } else {
+                await next();
+            }
 
             if (span && ctx && ctx.status >= 400) span.setError('HTTP ' + ctx.status);
         } catch (err) {

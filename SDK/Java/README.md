@@ -8,6 +8,8 @@
 - 心跳保活，携带应用性能指标（CPU、内存、线程、GC 等）
 - APM 埋点（Span）采集、聚合与批量上报
 - 嵌套 Span 自动继承 `ParentId` 与 `TraceId`
+- W3C `traceparent` 链路上下文解析与注入（TraceId 32 位、SpanId 16 位，兼容 .NET 短 TraceId）
+- 自动埋点：Servlet 入口自动注册、出站 HTTP / JDBC / Redis 一行包装
 - 大报文自动 GZip 压缩（走 `/Trace/ReportRaw`）
 - 服务端采样参数（周期、样本数、排除项等）动态生效
 - 可选 Servlet Filter（需 `javax.servlet-api`，`provided` 作用域）
@@ -19,7 +21,7 @@
 ```xml
 <dependency>
   <groupId>com.newlife</groupId>
-  <artifactId>stardust-sdk</artifactId>
+  <artifactId>stardust</artifactId>
   <version>1.0.0</version>
 </dependency>
 ```
@@ -45,12 +47,12 @@ import com.newlife.stardust.StardustTracer;
 
 public class Demo {
     public static void main(String[] args) {
-        StardustTracer tracer = new StardustTracer("http://star.example.com:6600", "MyApp", "MySecret")
-                .setAppName("订单服务")
-                .setVersion("1.0.0")
-                .setHeartbeatPeriod(60)
-                .setPeriod(60)
-                .start();
+        // 一行接入：创建、登录、启动并注册为默认实例
+        StardustTracer tracer = StardustTracer.init("http://star.example.com:6600", "MyApp", "MySecret");
+
+        // 需要自定义名称/版本/周期时改用 builder：
+        // StardustTracer tracer = new StardustTracer(server, appId, secret)
+        //         .setAppName("订单服务").setVersion("1.0.0").setPeriod(60).start();
 
         try {
             // 自动关闭（try-with-resources），嵌套 Span 自动共享 TraceId
@@ -86,6 +88,22 @@ try {
 ```
 
 `newSpan(name)` 会自动使用当前线程栈顶的 Span 作为父级；`newSpan(name, parentId)` 用于跨线程或手工传递父级 ID。
+
+### 链路上下文
+
+```java
+// 解析上游 traceparent（非法或缺失返回 null）
+TraceContext context = TraceContext.parse("00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01");
+
+// 复用上游 TraceId 与 ParentId 创建入口 Span
+Span server = tracer.newSpan("GET /orders", context);
+
+// 注入到出站请求（由 StardustHttp 自动完成）
+String header = new TraceContext(server.getTraceId(), server.getId(), true).format();
+```
+
+SDK 生成 32 位小写十六进制 TraceId 和 16 位 SpanId；解析时接受任意长度的非空十六进制 TraceId，
+以兼容 NewLife.Core / .NET 历史实现。HTTP 头名不区分大小写，值按小写解析。
 
 ### 异常标记
 
@@ -123,8 +141,10 @@ StardustTracer tracer = new StardustTracer("http://star.example.com:6600", "MyAp
 StardustFilter filter = new StardustFilter(tracer);
 ```
 
-Filter 会为每个请求创建名称为 `METHOD requestURI` 的 Span，查询字符串作为 Tag；
-HTTP 状态码 ≥ 500 或抛出异常时标记为错误。`tracer` 为 `null` 时直接放行。
+Filter 会为每个请求创建名称为 `METHOD requestURI` 的 Span，Tag 为 `METHOD 完整URL`；
+解析入口 `traceparent` 并复用上游 TraceId / SpanId；HTTP 状态码 ≥ 500 或抛出异常时标记为错误。
+`tracer` 为 `null` 时直接放行。使用无参构造器 `new StardustFilter()` 时，每次请求动态读取
+`StardustTracer.getDefault()`。
 
 ### Spring Boot（javax.servlet）
 
@@ -140,6 +160,7 @@ public class StardustConfig {
                 .setAppName("MyApp")
                 .setVersion("1.0.0")
                 .start();
+        // 构造时已自动注册为默认实例，供 StardustHttp / StardustJdbc / StardustRedis 使用
     }
 
     @Bean
@@ -153,12 +174,113 @@ public class StardustConfig {
 
     @PreDestroy
     public void destroy() {
+        StardustTracer.setDefault(null);
         if (tracer != null) tracer.stop();
     }
 }
 ```
 
 > 不使用 Filter 时，也可以只在 Service/DAO 等关键位置手工埋点。
+
+---
+
+## 自动埋点
+
+自动埋点遵循星尘统一语义约定，所有采集代码都捕获自身异常，不影响业务：
+
+| 类型 | Span 名称 | Tag | 错误判定 |
+|------|-----------|-----|----------|
+| Web 入口 | `METHOD requestURI` | `METHOD 完整URL` | 5xx 或未处理异常 |
+| 出站 HTTP | `METHOD host/path` | 完整 URL | 4xx/5xx 或网络异常 |
+| 数据库 | `db:{system}:{action}:{tables}` | SQL 文本（按 `MaxTagLength` 截断） | 驱动异常 |
+| Redis | `redis:{COMMAND}` | key / 参数摘要（截断） | 客户端异常 |
+
+自动埋点默认开启，通过 `tracer.setAutoInstrument(false)` 可整体关闭（手工 `newSpan` 不受影响）。
+启用自动埋点的追踪器在**构造时自动注册**为进程默认实例，无需额外调用；自动埋点类在**调用时**
+从 `StardustTracer.getDefault()` 取追踪器。同一进程存在多个追踪器时，最后创建者生效，也可显式覆盖：
+
+```java
+StardustTracer.setDefault(tracer);
+```
+
+### Servlet 自动注册
+
+SDK 内置 `META-INF/services/javax.servlet.ServletContainerInitializer`，Servlet 3.0+ 容器
+（Tomcat、Jetty、Undertow 等）启动时会自动把 `StardustFilter` 映射到 `/*` 的 `REQUEST` 分发。
+注册失败不会阻断应用启动；如需自定义映射，可自行注册 Filter，Stardust 会通过请求标记避免重复入口 Span。
+本 SDK 使用 `javax.servlet` 命名空间，Jakarta EE 9+（`jakarta.servlet`）项目需自行适配。
+
+```java
+StardustTracer tracer = new StardustTracer("http://star.example.com:6600", "MyApp", "MySecret")
+        .setVersion("1.0.0")
+        .start();
+// 构造时已自动成为默认实例，无需额外注册
+```
+
+### 出站 HTTP（StardustHttp）
+
+JDK 没有 HTTP 客户端的全局 Hook，只有走 `StardustHttp` 的请求才会自动埋点：
+
+```java
+// 仅打开连接并注入 traceparent，不创建 Span
+HttpURLConnection connection = StardustHttp.open("https://api.example.com/orders");
+try {
+    // 自定义请求
+} finally {
+    connection.disconnect();
+}
+
+// 创建 METHOD host/path Span、注入 traceparent、记录响应状态
+HttpURLConnection traced = StardustHttp.execute("GET", "https://api.example.com/orders");
+try {
+    InputStream in = traced.getInputStream();
+    // 读取响应体
+} finally {
+    traced.disconnect();
+}
+```
+
+`execute` 在收到响应头后结束 Span，响应体读取不在 Span 时长内；需要覆盖完整响应体时可在外层
+`newSpan` 包装。调用方已显式设置的 `traceparent` 不会被覆盖。
+
+**限制与扩展点**：OkHttp、Apache HttpClient、Lettuce 等客户端没有通用包装，可在其拦截器中
+手工创建 Span 并调用 `StardustHttp.traceparent(span)` 获取头值；`HttpURLConnection` 不支持
+`PATCH`，需要时请改用支持该方法的客户端。
+
+### JDBC（StardustJdbc）
+
+```java
+// 包装 DataSource（推荐）
+DataSource dataSource = StardustJdbc.wrap(rawDataSource);
+Connection connection = dataSource.getConnection();
+
+// 或包装已有连接
+Connection connection = StardustJdbc.wrap(rawConnection);
+
+PreparedStatement ps = connection.prepareStatement("select * from users where id=?");
+ps.setInt(1, 1);
+ps.executeQuery(); // Span: db:sqlite:select:users，Tag 为 SQL
+```
+
+覆盖 `execute` / `executeQuery` / `executeUpdate` / `executeBatch` 等方法，识别 `from`、`insert into`、
+`update`、`join`、`drop table`、`truncate table` 中的表名，并去掉日期分表后缀（如 `orders_202401`）。
+同一连接只产生一次执行 Span，包装是幂等的。
+
+**限制**：仅代理 `DataSource`、`Connection`、`Statement`、`PreparedStatement`、`CallableStatement`
+接口；将代理强制转换为驱动私有类型（如 `OracleConnection`）会失败，请通过原始对象使用厂商 API。
+
+### Redis（StardustRedis）
+
+Redis 客户端没有统一接口，使用通用包装：
+
+```java
+String value = StardustRedis.call(tracer, "GET", "user:1", () -> jedis.get("user:1"));
+
+// 客户端抛出受检异常时
+String checked = StardustRedis.callChecked(tracer, "GET", "user:1", () -> lettuce.get("user:1"));
+```
+
+命令名取首词并转大写（`GET`、`SET` 等），Tag 通常为 key 或参数摘要，超长自动截断。
 
 ---
 
@@ -244,6 +366,8 @@ SDK 的令牌生命周期：
 | `setMaxTagLength(int)` | `1024` | Tag 最大长度，超出截断 |
 | `setClientId(String)` | `ip@pid` | 客户端实例标识 |
 | `setDebug(boolean)` | `false` | 输出监控内部错误日志到标准错误 |
+| `setAutoInstrument(boolean)` | `true` | 自动埋点总开关（Servlet / HTTP / JDBC / Redis），不影响手工 `newSpan` |
+| `StardustTracer.setDefault(tracer)` | 自动注册 | 覆盖自动埋点使用的默认追踪器 |
 
 默认排除的埋点名：`/Trace/Report`、`/Trace/ReportRaw`、`/App/Login`、`/App/Ping`。
 可使用 `addExclude(String)` 追加，支持 `*`、`?` 通配符。
@@ -336,4 +460,5 @@ mvn -B -q package -DskipTests
 ```
 
 测试使用 JDK 自带的 `com.sun.net.httpserver.HttpServer` 模拟星尘服务端，覆盖登录、心跳指标、
-普通/压缩上报、服务端采样参数下发、401 重登录重试与 `stop()` 幂等性。
+普通/压缩上报、服务端采样参数下发、401 重登录重试与 `stop()` 幂等性；同时覆盖 `traceparent`
+解析/格式化、Servlet 入口埋点与自动注册、`StardustHttp`、`StardustJdbc` 与 `StardustRedis`。

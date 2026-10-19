@@ -11,22 +11,37 @@
 - ✅ 登录认证、令牌自动续期、`tokenProvider` 后端签发令牌
 - ✅ 心跳保活，携带应用性能信息（Node：RSS/堆/CPU/GC；浏览器：JS 堆/硬件线程数等）
 - ✅ APM 埋点：手动 Span、同名聚合、GZip 上报、动态采样
-- ✅ Node.js：Express/Koa 中间件、进程退出自动冲刷
+- ✅ Node.js：`http`/`https`/`fetch` 出入站、`http.createServer`、Express/Koa 中间件、进程退出自动冲刷；自动埋点 `pg`/`mysql2`、`redis`/`ioredis`
 - ✅ 浏览器：UMD 单文件、页面加载/SPA 路由/JS 错误/资源错误/fetch/XHR 自动埋点、`sendBeacon` 离页上报
+- ✅ 跨服务链路：Web 入口解析 W3C `traceparent`，出站 HTTP 自动注入
 
 ## 安装
 
 ```bash
-npm install stardust-tracer
+npm install @newlifex/stardust
 ```
 
 浏览器无需构建，直接引入：
 
 ```html
-<script src="node_modules/stardust-tracer/src/browser.js"></script>
+<script src="node_modules/@newlifex/stardust/src/browser.js"></script>
+<!-- 或 CDN：https://cdn.jsdelivr.net/npm/@newlifex/stardust/src/browser.js -->
 ```
 
 ## 浏览器快速开始
+
+最简方式：一个 `loader.js` + `data-stardust-*` 配置，无需手写初始化代码：
+
+```html
+<script src="https://cdn.example.com/stardust/loader.js"
+        data-stardust-app="MyWebApp"
+        data-stardust-config="/stardust/browser-config"
+        defer></script>
+```
+
+`loader.js` 会动态加载同目录 `browser.js`，读取后端配置并自动启动埋点；后端可注入 `<meta name="traceparent" content="...">` 关联 `page.load` 与服务端链路。npm 用户可使用 `import { init } from '@newlifex/stardust/browser'` 一行初始化。
+
+需要手动控制时：
 
 ```html
 <script src="../src/browser.js"></script>
@@ -55,8 +70,17 @@ npm install stardust-tracer
 
 ## Node.js 快速开始
 
+一行接入：
+
 ```javascript
-const { StardustTracer } = require('stardust-tracer');
+const { init } = require('@newlifex/stardust');
+const tracer = init({ server: 'http://star.example.com:6600', appId: 'MyApp', secret: 'MySecret' });
+```
+
+需要手动控制启动/停止时：
+
+```javascript
+const { StardustTracer } = require('@newlifex/stardust');
 
 const tracer = new StardustTracer({
   server: 'http://star.example.com:6600',
@@ -86,12 +110,39 @@ await tracer.stop();
 
 旧版位置参数 `new StardustTracer(server, appId, secret)` 仍兼容。
 
+## 自动埋点
+
+Node 追踪器构造时默认安装自动埋点，无需额外调用 `instrument()`；`start()` 只负责登录与上报。
+
+| 类型 | 自动采集 |
+|------|----------|
+| Web 入口 | `http.createServer`/`https.createServer`（Express/Koa `app.listen` 同样生效），解析上游 `traceparent` |
+| 出站 HTTP | `http.request/get`、`https.request/get`、全局 `fetch`（Node 18+），注入 `traceparent` |
+| 数据库 | `pg`（`Client.query`）、`mysql2`（`Connection.query/execute`） |
+| Redis | `redis`（`sendCommand`）、`ioredis`（`sendCommand`） |
+
+关闭自动埋点：
+
+```javascript
+const tracer = new StardustTracer({
+  server: 'http://star.example.com:6600',
+  appId: 'MyApp',
+  secret: 'MySecret',
+  autoInstrument: false,
+});
+```
+
+浏览器通过 `autoInstrument: false` 关闭页面/路由/fetch/XHR 自动埋点。自动入口与 Express/Koa 中间件会去重，只产生一个请求 Span。
+
 ## API 摘要
 
 | 成员 | 说明 |
 |------|------|
 | `new StardustTracer(options)` / `(server, appId, secret)` | 创建 Node 追踪器 |
 | `Stardust.createTracer(options)` | 创建浏览器追踪器 |
+| `Stardust.init(options)` | 创建并启动浏览器追踪器（loader/npm 一行接入） |
+| `Stardust.captureException(err, { tag })` | 手动上报异常 |
+| `Stardust.flush()` | 立即上报当前聚合数据 |
 | `start()` / `stop()` | 启动（登录 + 调度）/ 停止（冲刷 + 清理） |
 | `flush()` | 立即上报当前聚合数据 |
 | `newSpan(name[, parentId])` | 创建 Span |
@@ -122,7 +173,7 @@ cd SDK/JavaScript
 npm test
 ```
 
-覆盖 Node 基础单测、mock HTTP 集成测试（登录/心跳/上报/GZip/401/周期）与浏览器测试（clientId、心跳、beacon、路由、JS 错误）。
+覆盖 Node 基础单测、mock HTTP 集成测试（登录/心跳/上报/GZip/401/周期）、浏览器测试（clientId、心跳、beacon、路由、JS 错误）与自动埋点测试（traceparent、出入口 Span、pg/mysql2、Redis）。
 
 ## 相关资源
 

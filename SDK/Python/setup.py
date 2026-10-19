@@ -6,11 +6,11 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="stardust-sdk",
+    name="newlifex-stardust",
     version="1.0.0",
     author="NewLife Team",
     author_email="support@newlifex.com",
-    description="星尘监控 Python SDK，提供 APM 监控和配置中心功能",
+    description="星尘监控 Python SDK，提供 APM 监控、自动埋点和配置中心功能",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/NewLifeX/Stardust",

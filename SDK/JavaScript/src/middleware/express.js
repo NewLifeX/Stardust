@@ -4,6 +4,8 @@
 
 'use strict';
 
+const { parseTraceparent, runWithSpan } = require('../trace-context');
+
 /**
  * 是否需要忽略此路径。
  * @param {String} path 请求路径
@@ -12,6 +14,30 @@
 function isIgnoredPath(path) {
     const text = String(path || '');
     return /^\/(App|Trace)(\/|$)/i.test(text) || text.indexOf('/App/') !== -1 || text.indexOf('/Trace/') !== -1;
+}
+
+/**
+ * 读取请求头（不区分大小写）。
+ * @param {Object} req 请求
+ * @param {String} name 头名
+ * @returns {String} 头值
+ */
+function getHeader(req, name) {
+    const headers = req && req.headers;
+    if (!headers) return '';
+    const lower = name.toLowerCase();
+    let value = headers[lower];
+    if (value === undefined) value = headers[name];
+    if (value === undefined) {
+        for (const key of Object.keys(headers)) {
+            if (key.toLowerCase() === lower) {
+                value = headers[key];
+                break;
+            }
+        }
+    }
+    if (Array.isArray(value)) return value.length > 0 ? String(value[0]) : '';
+    return value === undefined || value === null ? '' : String(value);
 }
 
 /**
@@ -52,18 +78,27 @@ function createExpressMiddleware(tracer) {
             path = '/';
         }
 
-        let span = null;
-        let finished = false;
         const method = req && req.method ? String(req.method).toUpperCase() : 'GET';
         const tag = method + ' ' + ((req && (req.originalUrl || req.url)) || path);
+        let span = null;
 
         try {
-            span = tracer.newSpan(method + ' ' + getRoutePath(req, path));
-            span.setTag(tag);
+            // 复用 HTTP 自动入口创建的 Span，避免重复
+            span = req && req.__stardustSpan ? req.__stardustSpan : null;
+            if (span) {
+                span.setTag(tag);
+            } else {
+                const inbound = parseTraceparent(getHeader(req, 'traceparent'));
+                if (inbound) span = tracer.newSpan(method + ' ' + getRoutePath(req, path), { parentId: inbound.spanId, traceId: inbound.traceId });
+                else span = tracer.newSpan(method + ' ' + getRoutePath(req, path));
+                span.setTag(tag);
+                if (req) req.__stardustSpan = span;
+            }
         } catch (err) {
             span = null;
         }
 
+        let finished = false;
         const finish = function () {
             if (finished) return;
             finished = true;
@@ -95,7 +130,21 @@ function createExpressMiddleware(tracer) {
             // 监控异常不得影响业务
         }
 
-        return next();
+        if (!span) return next();
+
+        try {
+            return runWithSpan(span, function () {
+                return next();
+            });
+        } catch (err) {
+            try {
+                span.setError(err);
+            } catch (ignore) {
+                // 忽略
+            }
+            finish();
+            throw err;
+        }
     };
 }
 

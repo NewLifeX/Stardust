@@ -55,6 +55,8 @@ export interface TracerOptions {
     enableMeter?: boolean;
     /** 进程退出时自动刷新，默认 true */
     autoFlushOnExit?: boolean;
+    /** 是否自动安装 Node.js 埋点（HTTP/数据库/Redis），默认 true */
+    autoInstrument?: boolean;
     /** 输出调试日志，默认 false */
     debug?: boolean;
     /** 排除的埋点名称（子串匹配） */
@@ -94,15 +96,34 @@ export interface BrowserTracerOptions {
     enableMeter?: boolean;
     /** 是否自动安装浏览器埋点，默认 true */
     autoInstrument?: boolean;
+    /** 后端注入的 W3C traceparent，用于把 page.load 关联到服务端链路 */
+    initialTraceparent?: string;
     /** 输出调试日志，默认 false */
     debug?: boolean;
     /** 排除的埋点名称（子串匹配） */
     excludes?: string[];
 }
 
+/** 创建 Span 的上下文选项。 */
+export interface SpanOptions {
+    /** 父 Span ID */
+    parentId?: string;
+    /** 显式指定 TraceId，缺省继承父 Span 或自动生成 */
+    traceId?: string;
+}
+
+/** 解析后的 W3C traceparent。 */
+export interface TraceparentContext {
+    version: string;
+    traceId: string;
+    spanId: string;
+    flags: number;
+    sampled: boolean;
+}
+
 /** 单个追踪跨度。 */
 export class Span {
-    constructor(name: string, tracer: StardustTracer | StardustBrowserTracer, parentId?: string);
+    constructor(name: string, tracer: StardustTracer | StardustBrowserTracer, parentId?: string | SpanOptions);
 
     id: string;
     parentId: string;
@@ -182,11 +203,13 @@ export class StardustTracer {
     enableMeter: boolean;
     excludes: string[];
     debug: boolean;
+    autoInstrument: boolean;
 
     start(): Promise<this>;
     stop(): Promise<void>;
     flush(): Promise<void>;
-    newSpan(name: string, parentId?: string): Span;
+    newSpan(name: string, parentId?: string | SpanOptions): Span;
+    withSpan<T>(name: string, fn: (span: Span) => T): T;
 }
 
 /** 浏览器星尘追踪器。 */
@@ -215,12 +238,17 @@ export class StardustBrowserTracer {
     start(): Promise<this>;
     stop(): Promise<void>;
     flush(): Promise<void>;
-    newSpan(name: string, parentId?: string): Span;
+    newSpan(name: string, parentId?: string | SpanOptions): Span;
+    withSpan<T>(name: string, fn: (span: Span) => T): T;
 }
 
 /** 创建 Node.js 追踪器。 */
 export function createTracer(server: string, appId: string, secret?: string): StardustTracer;
 export function createTracer(options: TracerOptions): StardustTracer;
+
+/** 创建并启动 Node.js 追踪器（一行接入）。 */
+export function init(server: string, appId: string, secret?: string): StardustTracer;
+export function init(options: TracerOptions): StardustTracer;
 
 /** 安装浏览器自动埋点。 */
 export function installBrowserInterceptors(tracer: StardustBrowserTracer): void;
@@ -230,5 +258,26 @@ export function installFetchInterceptor(tracer: StardustBrowserTracer): void;
 
 /** 仅安装 XMLHttpRequest 埋点。 */
 export function installXHRInterceptor(tracer: StardustBrowserTracer): void;
+
+/** 手动安装 Node.js 自动埋点（HTTP/数据库/Redis）。autoInstrument 为 true 时无需调用。 */
+export function installAutoInstrumentation(tracer: StardustTracer): StardustTracer;
+
+/** 解析 W3C traceparent 头，非法时返回 null。 */
+export function parseTraceparent(value: string | string[] | null | undefined): TraceparentContext | null;
+
+/** 格式化 W3C traceparent 头（SDK 出站固定写 01）。 */
+export function formatTraceparent(traceId: string, spanId: string, sampled?: boolean): string;
+
+/** 生成 32 位小写十六进制 TraceId。 */
+export function generateTraceId(): string;
+
+/** 生成 16 位小写十六进制 SpanId。 */
+export function generateSpanId(): string;
+
+/** 获取当前活动 Span（Node.js AsyncLocalStorage 上下文）。 */
+export function getCurrentSpan(): Span | null;
+
+/** 在指定 Span 上下文中执行函数（Node.js）。 */
+export function runWithSpan<T>(span: Span | null, fn: () => T): T;
 
 export as namespace Stardust;

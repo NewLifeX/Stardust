@@ -7,6 +7,8 @@
 - **APM 监控**：自动追踪应用性能，记录调用链、错误、性能指标
 - **配置中心**：从星尘配置中心拉取配置，支持动态刷新和变更通知
 - **简单易用**：几行代码即可接入，支持装饰器和上下文管理器
+- **自动埋点**：默认自动采集 `requests`/`urllib`、WSGI/ASGI 与 Flask/Django/Starlette、DB-API、Redis
+- **跨服务链路**：W3C `traceparent` 解析与注入
 - **Web 框架集成**：提供 Django、Flask 等框架的集成示例
 
 ## 安装
@@ -26,6 +28,15 @@ pip install requests
 ```
 
 ## 快速开始
+
+### 一行接入（推荐）
+
+```python
+from stardust_sdk import init
+
+client = init("http://star.example.com:6600", "MyApp", "MySecret")
+# 自动完成登录、APM、自动埋点与配置中心初始化
+```
 
 ### 1. 统一客户端（推荐）
 
@@ -93,7 +104,29 @@ def query_users():
 tracer.stop()
 ```
 
-### 3. 仅使用配置中心
+### 3. 自动埋点
+
+`StardustClient` / `StardustTracer` 构造时默认安装自动埋点，`start()` 只负责登录与上报：
+
+| 类型 | 自动采集 |
+|------|----------|
+| Web 入口 | WSGI/ASGI 中间件；安装时已导入的 Flask、Django、Starlette 自动补丁 |
+| 出站 HTTP | `requests`、`urllib.request`，注入 `traceparent` |
+| 数据库 | DB-API：`sqlite3`、`pymysql`、`psycopg2` |
+| Redis | 同步 `redis.Redis.execute_command` |
+
+```python
+# 默认开启，无需额外调用
+client = StardustClient(server=..., app_id=..., secret=...)
+
+# 关闭自动埋点
+client = StardustClient(server=..., app_id=..., secret=..., auto_instrument=False)
+```
+
+若 Web 框架在 SDK 初始化之后才导入，请显式使用 `StardustWSGIMiddleware` / `StardustASGIMiddleware`。
+当前 Redis 仅支持同步客户端，数据库仅支持 DB-API 驱动；线程池中的新线程不会自动继承父线程的 `contextvars`。
+
+### 4. 仅使用配置中心
 
 ```python
 from stardust_sdk import ConfigClient
@@ -121,6 +154,8 @@ config.stop()
 ```
 
 ## 完整代码
+
+> 以下为早期版本源码，仅作历史参考；当前实现（含 `traceparent` 与自动埋点）以 [SDK/Python](../../SDK/Python) 为准。
 
 ```python
 """星尘监控 Python SDK"""
@@ -743,6 +778,13 @@ class StardustClient:
             return 0
         return self._config.version
 ```
+
+## 自动埋点限制
+
+- 同步 Redis 客户端；`redis.asyncio` 暂未覆盖。
+- 数据库为 DB-API 代理，ORM（SQLAlchemy/Django ORM）需通过其引擎事件或显式 Span 补充。
+- WSGI 流式响应在返回生成器时即结束入口 Span，实际传输耗时不计入。
+- 多线程场景请显式传递 Span，或在线程入口使用 `tracer.new_span` 手动建立父子关系。
 
 ## Django 中间件集成
 

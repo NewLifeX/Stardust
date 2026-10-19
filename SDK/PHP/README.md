@@ -10,6 +10,12 @@
 - ✅ **轻量级**：核心代码约 500 行，易于集成和维护
 - ✅ **易于使用**：简洁的 API，几行代码即可完成接入
 
+## 安装
+
+```bash
+composer require newlifex/stardust
+```
+
 ## 依赖要求
 
 - PHP 7.4+
@@ -23,9 +29,8 @@
 ```php
 require_once 'src/StardustTracer.php';
 
-// 初始化追踪器
-$tracer = new StardustTracer('http://star.example.com:6600', 'MyPHPApp', 'MySecret');
-$tracer->login();
+// 一行接入：创建并登录
+$tracer = StardustTracer::init('http://star.example.com:6600', 'MyPHPApp', 'MySecret');
 
 // 创建追踪片段
 $span = $tracer->newSpan('业务操作');
@@ -65,6 +70,10 @@ if ($config->hasNewVersion()) {
     echo "有新版本配置等待发布\n";
 }
 ```
+
+## 自动埋点现状
+
+当前 SDK 提供手动 `newSpan`，尚未内置 PHP 运行时 Hook。推荐通过 `auto_prepend_file` 在请求入口初始化 tracer、创建入口 Span 并注册 `register_shutdown_function` 冲刷；Laravel/Symfony 使用中间件，PDO/Redis/cURL 在 DAO 或客户端封装层统一埋点并注入 W3C `traceparent`。完整方案见 [Doc/SDK/stardust-sdk-php.md](../../Doc/SDK/stardust-sdk-php.md#自动埋点说明本轮)。
 
 ## 文件说明
 
