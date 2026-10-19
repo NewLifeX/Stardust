@@ -1,6 +1,6 @@
 # Stardust SDK 架构
 
-> 版本：v1.0 | 日期：2026-07-15
+> 版本：v1.1 | 日期：2026-10-17
 > 对应模块：SDK 分布式核心 SDK
 > 相关文档：[NODE-16-阿里云DNS动态域名解析](NODE-16-阿里云DNS动态域名解析.md)
 
@@ -150,3 +150,60 @@ await client.Login();
 | `UseStardust()` | 启用追踪中间件，自动创建 Span |
 | `RegisterService()` | 注册当前应用为服务提供者 |
 | `ConsumeService()` | 消费指定服务，返回可用地址列表 |
+
+---
+
+## 7. 多语言 SDK
+
+非 .NET 应用通过 HTTP 接入星尘，不依赖 .NET 运行时。统一契约见 [APM-17 监控接入 API](APM-17-监控接入API.md)，能力矩阵与发布计划见 [SDK/README.md](../SDK/README.md)。
+
+### 7.1 分层
+
+```
+业务应用
+   │
+   ├─ 手动埋点：Span/Tag/Error
+   ├─ 自动埋点：HTTP 中间件、浏览器 fetch/XHR、页面加载、路由、JS 错误
+   │
+   ▼
+语言 SDK（StardustTracer）
+   ├─ 本地聚合：同名 Span → Builder（Total/Errors/Cost/样本）
+   ├─ 心跳：30s，上报 AppInfo（CPU/内存/堆/线程/GC/句柄）
+   ├─ 上报：60s（可被服务端 Period 调整），>1KB GZip
+   └─ 令牌：登录获取，到期前重登录，401 重试
+   │
+   ▼
+StarServer 6600：/App/Login、/App/Ping、/Trace/Report
+```
+
+### 7.2 语言矩阵
+
+| 语言 | 实现方式 | 自动埋点 |
+|------|----------|----------|
+| JavaScript（浏览器） | UMD 单文件，零依赖 | fetch/XHR、页面加载、SPA 路由、JS/资源错误 |
+| JavaScript/Node.js | CommonJS，零外部依赖 | Express/Koa 中间件 |
+| Java 8+ | Maven，零运行时依赖 | Servlet Filter（可选） |
+| Go | Go Module，零外部依赖 | 手动 Span，框架中间件由使用方包装 |
+| Python/PHP/ASP | 现有实现 | 框架中间件/示例 |
+
+### 7.3 鉴权模式
+
+| 模式 | 适用场景 | 说明 |
+|------|----------|------|
+| `AppId + Secret` | 服务端/内网应用 | 简单直接；Secret 不得提交到公开仓库 |
+| `tokenProvider` | 浏览器/公开前端 | 后端用 Secret 登录后签发短期 Token，前端只持有 Token |
+| 匿名上报 | 多级级联/极简 SDK | 服务端需显式开启 `AnonymousReport`，默认关闭 |
+
+### 7.4 发布与命名
+
+| 生态 | 坐标策略 |
+|------|----------|
+| NuGet | `NewLife.Stardust`（已发布） |
+| npm | `newlife` 已被占用，统一使用 `@newlifex/*` 或可用的 `stardust-tracer` |
+| Maven Central | 优先 `com.newlife`（验证 newlife.com），无法验证时用 `io.github.newlifex`（GitHub 命名空间） |
+| Go | 模块路径即身份：`github.com/NewLifeX/Stardust/SDK/Go/stardust` |
+| crates.io | `stardust` 已被占用，使用 `newlifex-stardust` |
+| PyPI | `stardust`/`stardust-sdk` 已被占用，使用 `newlifex-stardust` |
+| Packagist | `newlifex/stardust` |
+
+> 命名原则：优先 `NewLife`，被占用时使用 `NewLifeX`；同一生态内保持前缀一致，避免同一 SDK 多套坐标。
