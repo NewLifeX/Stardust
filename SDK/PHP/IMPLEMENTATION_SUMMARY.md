@@ -86,7 +86,7 @@
 - 添加使用场景说明
 - 引用完整文档和示例
 
-#### Readme.MD
+#### README.zh-CN.md
 更新主 README：
 - 添加"多语言 SDK 支持"章节
 - 展示 PHP SDK 快速开始示例
