@@ -1,6 +1,8 @@
 /**
- * Express.js 应用示例
+ * Express.js 应用示例（新版配置对象 API）。
  */
+
+'use strict';
 
 const express = require('express');
 const { StardustTracer } = require('../src');
@@ -9,40 +11,43 @@ const createExpressMiddleware = require('../src/middleware/express');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// 创建追踪器
-const tracer = new StardustTracer(
-    process.env.STARDUST_SERVER || 'http://localhost:6600',
-    process.env.STARDUST_APP_ID || 'ExpressDemo',
-    process.env.STARDUST_SECRET || ''
-);
-
-// 启动追踪器
-tracer.start().then(() => {
-    console.log('Stardust tracer started');
+const tracer = new StardustTracer({
+    server: process.env.STARDUST_SERVER || 'http://localhost:6600',
+    appId: process.env.STARDUST_APP_ID || 'ExpressDemo',
+    appName: 'Express 示例',
+    secret: process.env.STARDUST_SECRET || '',
+    version: '1.1.0',
+    period: 60,
+    heartbeatPeriod: 30,
+    enableMeter: true,
+    debug: true,
 });
 
-// 使用中间件
+tracer.start().then(() => {
+    console.log('Stardust tracer started');
+}).catch(err => {
+    console.error('Stardust tracer failed:', err.message);
+});
+
+// 使用中间件（自动追踪所有 HTTP 请求）
 app.use(createExpressMiddleware(tracer));
 
-// 路由
 app.get('/', (req, res) => {
     res.send('Hello from Express + Stardust!');
 });
 
 app.get('/api/users', async (req, res) => {
-    // 手动埋点示例
     const span = tracer.newSpan('查询用户列表');
     span.setTag('method=GET, path=/api/users');
 
     try {
-        // 模拟数据库查询
         await new Promise(resolve => setTimeout(resolve, 50));
-        
+
         const users = [
             { id: 1, name: 'Alice' },
-            { id: 2, name: 'Bob' }
+            { id: 2, name: 'Bob' },
         ];
-        
+
         span.finish();
         res.json(users);
     } catch (err) {
@@ -53,16 +58,14 @@ app.get('/api/users', async (req, res) => {
 });
 
 app.get('/api/error', (req, res) => {
-    // 测试错误追踪
     res.status(500).json({ error: 'Simulated error' });
 });
 
 app.post('/api/data', express.json(), (req, res) => {
     const span = tracer.newSpan('处理数据');
     span.setTag(`body=${JSON.stringify(req.body)}`);
-    
+
     try {
-        // 处理数据
         res.json({ success: true, data: req.body });
     } catch (err) {
         span.setError(err);
@@ -72,7 +75,6 @@ app.post('/api/data', express.json(), (req, res) => {
     }
 });
 
-// 启动服务器
 const server = app.listen(port, () => {
     console.log(`Express server running on http://localhost:${port}`);
     console.log('Try these endpoints:');
@@ -85,8 +87,8 @@ const server = app.listen(port, () => {
 // 优雅退出
 process.on('SIGINT', () => {
     console.log('\nShutting down gracefully...');
-    server.close(() => {
-        tracer.stop();
+    server.close(async () => {
+        await tracer.stop();
         console.log('Server closed');
         process.exit();
     });

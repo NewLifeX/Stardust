@@ -1,9 +1,19 @@
 /**
- * SpanBuilder - 聚合同名Span的统计信息
+ * SpanBuilder - 聚合同名 Span 的统计信息。
  */
 
+'use strict';
+
+/**
+ * 同名 Span 统计构建器。
+ */
 class SpanBuilder {
-    constructor(name, maxSamples = 1, maxErrors = 10) {
+    /**
+     * @param {String} name 名称
+     * @param {Number} [maxSamples] 最大正常样本数
+     * @param {Number} [maxErrors] 最大错误样本数
+     */
+    constructor(name, maxSamples, maxErrors) {
         this.name = name;
         this.startTime = Date.now();
         this.endTime = 0;
@@ -14,43 +24,37 @@ class SpanBuilder {
         this.minCost = 0;
         this.samples = [];
         this.errorSamples = [];
-        this._maxSamples = maxSamples;
-        this._maxErrors = maxErrors;
+        this._maxSamples = maxSamples > 0 ? maxSamples : 1;
+        this._maxErrors = maxErrors > 0 ? maxErrors : 10;
     }
 
     /**
-     * 添加一个Span到构建器
-     * @param {Object} span Span对象
+     * 添加一个 Span 到构建器。
+     * @param {Object} span Span 对象
+     * @returns {SpanBuilder} 当前实例
      */
     addSpan(span) {
-        const elapsed = span.endTime - span.startTime;
+        const elapsed = Math.max(0, span.endTime - span.startTime);
         this.total++;
         this.cost += elapsed;
-        
-        if (this.maxCost === 0 || elapsed > this.maxCost) {
-            this.maxCost = elapsed;
-        }
-        if (this.minCost === 0 || elapsed < this.minCost) {
-            this.minCost = elapsed;
-        }
+
+        if (this.total === 1 || elapsed > this.maxCost) this.maxCost = elapsed;
+        if (this.total === 1 || elapsed < this.minCost) this.minCost = elapsed;
 
         if (span.error) {
             this.errors++;
-            if (this.errorSamples.length < this._maxErrors) {
-                this.errorSamples.push(span);
-            }
-        } else {
-            if (this.samples.length < this._maxSamples) {
-                this.samples.push(span);
-            }
+            if (this.errorSamples.length < this._maxErrors) this.errorSamples.push(span);
+        } else if (this.samples.length < this._maxSamples) {
+            this.samples.push(span);
         }
-        
+
         this.endTime = Date.now();
+        return this;
     }
 
     /**
-     * 转换为JSON对象
-     * @returns {Object} JSON对象
+     * 转换为 JSON 对象。
+     * @returns {Object} JSON 对象
      */
     toJSON() {
         return {

@@ -1,29 +1,34 @@
 /**
- * Node.js 基础使用示例
+ * Node.js 基础使用示例（新版配置对象 API）。
  */
+
+'use strict';
 
 const { StardustTracer } = require('../src');
 
-// 创建追踪器实例
-const tracer = new StardustTracer(
-    process.env.STARDUST_SERVER || 'http://localhost:6600',
-    process.env.STARDUST_APP_ID || 'NodeJsDemo',
-    process.env.STARDUST_SECRET || ''
-);
+const tracer = new StardustTracer({
+    server: process.env.STARDUST_SERVER || 'http://localhost:6600',
+    appId: process.env.STARDUST_APP_ID || 'NodeJsDemo',
+    appName: 'Node.js 示例',
+    secret: process.env.STARDUST_SECRET || '',
+    version: '1.1.0',
+    period: 60,
+    heartbeatPeriod: 30,
+    enableMeter: true,
+    autoFlushOnExit: true,
+    debug: true,
+});
 
-// 启动追踪器
 async function main() {
     await tracer.start();
     console.log('Tracer started');
 
-    // 模拟一些操作
     for (let i = 0; i < 10; i++) {
         await simulateOperation(i);
         await sleep(1000);
     }
 
-    // 停止追踪器
-    tracer.stop();
+    await tracer.stop();
     console.log('Tracer stopped');
 }
 
@@ -33,13 +38,9 @@ async function simulateOperation(index) {
     span.setTag(`index=${index}, timestamp=${Date.now()}`);
 
     try {
-        // 模拟一些处理时间
         await sleep(Math.random() * 100);
 
-        // 模拟偶尔出错
-        if (Math.random() < 0.1) {
-            throw new Error('随机错误');
-        }
+        if (Math.random() < 0.1) throw new Error('随机错误');
 
         console.log(`操作 ${index} 完成`);
     } catch (err) {
@@ -55,15 +56,14 @@ function sleep(ms) {
 }
 
 // 处理退出信号
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
     console.log('\n收到退出信号，正在停止...');
-    tracer.stop();
+    await tracer.stop();
     process.exit();
 });
 
-// 运行
-main().catch(err => {
+main().catch(async err => {
     console.error('Error:', err);
-    tracer.stop();
+    await tracer.stop();
     process.exit(1);
 });

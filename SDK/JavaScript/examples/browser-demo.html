@@ -64,28 +64,28 @@
         <div class="log-entry">日志将显示在这里...</div>
     </div>
 
-    <!-- 加载 SDK -->
-    <script src="../src/browser-tracer.js"></script>
-    <script src="../src/middleware/browser.js"></script>
+    <!-- 只需加载一个文件 -->
+    <script src="../src/browser.js"></script>
 
     <script>
-        // 创建浏览器追踪器
-        const tracer = new StardustBrowserTracer(
-            'http://localhost:6600',  // 请修改为实际的星尘服务器地址
-            'BrowserDemo',
-            ''
-        );
+        // 创建浏览器追踪器。autoInstrument 默认 true，会自动采集 fetch/XHR、页面加载、路由与 JS 错误。
+        const tracer = Stardust.createTracer({
+            server: 'http://localhost:6600',   // 请修改为实际的星尘服务器地址
+            appId: 'BrowserDemo',
+            appName: '浏览器示例',
+            secret: '',                        // 公网部署建议改用 tokenProvider
+            version: '1.1.0',
+            period: 60,
+            autoInstrument: true,
+            debug: true,
+            // tokenProvider: async () => ({ token: '从后端获取的令牌', expire: 7200 }),
+        });
 
-        // 启动追踪器
         tracer.start().then(() => {
             log('✅ Stardust 追踪器已启动');
         }).catch(err => {
             log('❌ 追踪器启动失败: ' + err.message);
         });
-
-        // 安装自动拦截器
-        installBrowserInterceptors(tracer);
-        log('✅ 浏览器拦截器已安装');
 
         // 测试 Fetch API
         async function testFetch() {
@@ -104,13 +104,13 @@
             log('🔄 发起 XMLHttpRequest 请求...');
             const xhr = new XMLHttpRequest();
             xhr.open('GET', 'https://api.github.com/users/microsoft');
-            xhr.onload = function() {
+            xhr.onload = function () {
                 if (xhr.status === 200) {
                     const data = JSON.parse(xhr.responseText);
                     log('✅ XHR 请求成功: ' + data.login);
                 }
             };
-            xhr.onerror = function() {
+            xhr.onerror = function () {
                 log('❌ XHR 请求失败');
             };
             xhr.send();
@@ -123,7 +123,6 @@
             span.setTag('action=manual_test, timestamp=' + Date.now());
 
             try {
-                // 模拟一些处理
                 await sleep(Math.random() * 500);
                 log('✅ 手动埋点操作完成');
             } catch (err) {
@@ -166,11 +165,6 @@
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
         }
-
-        // 页面卸载时停止追踪器
-        window.addEventListener('beforeunload', () => {
-            tracer.stop();
-        });
     </script>
 </body>
 </html>

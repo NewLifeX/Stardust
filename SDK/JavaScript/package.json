@@ -1,9 +1,37 @@
 {
   "name": "stardust-tracer",
-  "version": "1.0.0",
-  "description": "JavaScript/Node.js SDK for Stardust APM (Application Performance Monitoring)",
+  "version": "1.1.0",
+  "description": "零依赖 JavaScript/Node.js SDK for Stardust APM (Application Performance Monitoring)",
   "main": "src/index.js",
+  "browser": "src/browser.js",
   "types": "src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "browser": "./src/browser.js",
+      "require": "./src/index.js",
+      "default": "./src/index.js"
+    },
+    "./browser": {
+      "types": "./src/browser.d.ts",
+      "require": "./src/browser.js",
+      "default": "./src/browser.js"
+    },
+    "./middleware/express": "./src/middleware/express.js",
+    "./middleware/koa": "./src/middleware/koa.js",
+    "./middleware/browser": "./src/middleware/browser.js",
+    "./middleware/express": "./src/middleware/express.js",
+    "./middleware/koa": "./src/middleware/koa.js",
+    "./middleware/browser": "./src/middleware/browser.js",
+    "./src/middleware/express": "./src/middleware/express.js",
+    "./src/middleware/koa": "./src/middleware/koa.js",
+    "./src/middleware/browser": "./src/middleware/browser.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
   "keywords": [
     "stardust",
     "apm",
@@ -18,8 +46,18 @@
     "type": "git",
     "url": "https://github.com/NewLifeX/Stardust.git"
   },
+  "homepage": "https://github.com/NewLifeX/Stardust/tree/master/SDK/JavaScript",
+  "bugs": {
+    "url": "https://github.com/NewLifeX/Stardust/issues"
+  },
+  "unpkg": "src/browser.js",
+  "jsdelivr": "src/browser.js",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "scripts": {
-    "test": "node test/test.js"
+    "test": "node test/test.js && node test/integration.test.js && node test/browser.test.js"
   },
   "engines": {
     "node": ">=14.0.0"

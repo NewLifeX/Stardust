@@ -1,35 +1,104 @@
 /**
- * Express.js 中间件
- * 自动追踪HTTP请求
+ * Express.js 中间件：自动追踪 HTTP 请求。
  */
 
+'use strict';
+
 /**
- * 创建Express中间件
- * @param {StardustTracer} tracer 追踪器实例
- * @returns {Function} Express中间件函数
+ * 是否需要忽略此路径。
+ * @param {String} path 请求路径
+ * @returns {Boolean} 是否忽略
+ */
+function isIgnoredPath(path) {
+    const text = String(path || '');
+    return /^\/(App|Trace)(\/|$)/i.test(text) || text.indexOf('/App/') !== -1 || text.indexOf('/Trace/') !== -1;
+}
+
+/**
+ * 取路由模板路径，优先使用 Express 匹配到的路由。
+ * @param {Object} req 请求
+ * @param {String} fallback 回退路径
+ * @returns {String} 路径
+ */
+function getRoutePath(req, fallback) {
+    try {
+        const route = req && req.route ? req.route.path : null;
+        let path = null;
+        if (Array.isArray(route) && route.length > 0) path = route[0];
+        else if (typeof route === 'string') path = route;
+        if (!path || typeof path !== 'string') return fallback;
+
+        if (path.charAt(0) !== '/') path = '/' + path;
+        const baseUrl = req.baseUrl ? String(req.baseUrl).replace(/\/+$/, '') : '';
+        if (baseUrl && path.indexOf(baseUrl + '/') !== 0) path = baseUrl + path;
+        return path;
+    } catch (err) {
+        return fallback;
+    }
+}
+
+/**
+ * 创建 Express 中间件。
+ * @param {Object} tracer 追踪器实例
+ * @returns {Function} Express 中间件
  */
 function createExpressMiddleware(tracer) {
     return function stardustMiddleware(req, res, next) {
-        const name = `${req.method} ${req.path}`;
-        const span = tracer.newSpan(name);
-        span.setTag(`${req.method} ${req.originalUrl || req.url}`);
+        let path = '/';
+        try {
+            path = (req && (req.path || (req.url ? String(req.url).split('?')[0] : ''))) || '/';
+            if (isIgnoredPath(path)) return next();
+        } catch (err) {
+            path = '/';
+        }
 
-        // 在请求开始时创建 span，内部会记录开始时间
+        let span = null;
+        let finished = false;
+        const method = req && req.method ? String(req.method).toUpperCase() : 'GET';
+        const tag = method + ' ' + ((req && (req.originalUrl || req.url)) || path);
 
-        // 拦截响应结束事件
-        const originalEnd = res.end;
-        res.end = function (...args) {
-            // 检查响应状态码
-            if (res.statusCode >= 400) {
-                span.setError(`HTTP ${res.statusCode}`);
+        try {
+            span = tracer.newSpan(method + ' ' + getRoutePath(req, path));
+            span.setTag(tag);
+        } catch (err) {
+            span = null;
+        }
+
+        const finish = function () {
+            if (finished) return;
+            finished = true;
+            if (!span) return;
+
+            try {
+                const routePath = getRoutePath(req, path);
+                span.name = method + ' ' + routePath;
+                if (res && res.statusCode >= 400) span.setError('HTTP ' + res.statusCode);
+                span.finish();
+            } catch (err) {
+                // 监控异常不得影响业务
             }
-            
-            span.finish();
-            originalEnd.apply(res, args);
         };
 
-        next();
+        try {
+            if (res && typeof res.end === 'function') {
+                const originalEnd = res.end;
+                res.end = function () {
+                    finish();
+                    return originalEnd.apply(this, arguments);
+                };
+            }
+            if (res && typeof res.once === 'function') {
+                res.once('finish', finish);
+                res.once('close', finish);
+            }
+        } catch (err) {
+            // 监控异常不得影响业务
+        }
+
+        return next();
     };
 }
 
 module.exports = createExpressMiddleware;
+module.exports.isIgnoredPath = isIgnoredPath;
+module.exports.getRoutePath = getRoutePath;
