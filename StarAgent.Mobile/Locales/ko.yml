@@ -1,4 +1,5 @@
 # Korean translation. Keys are English source texts; missing entries fall back to English at runtime.
-"[{0}] Login succeeded, node code: {1}": "[{0}] Login succeeded, node code: {1}"
-"[{0}] Starting agent, server: {1}": "[{0}] Starting agent, server: {1}"
-"[{0}] Startup failed: {1}": "[{0}] Startup failed: {1}"
+"[{0}] Login succeeded, node code: {1}": "[{0}] 로그인 성공, 노드 코드: {1}"
+"[{0}] Starting agent, server: {1}": "[{0}] 에이전트 시작, 서버: {1}"
+"[{0}] Startup failed: {1}": "[{0}] 시작 실패: {1}"
+
