@@ -21,6 +21,7 @@
   let dict = null;
   const sorted = [];
   const originals = new WeakMap();
+  const titleSource = document.title;
 
   function translate(text) {
     if (!dict || !text) return text;
@@ -96,6 +97,9 @@
 
     document.documentElement.lang = lang;
     document.documentElement.dir = ['ar', 'fa', 'he'].includes(lang) ? 'rtl' : 'ltr';
+
+    document.title = (dict && dict[titleSource.trim()]) || titleSource;
+
     if (dict) translateTree(document.body);
 
     const sel = document.getElementById('lang-select');
