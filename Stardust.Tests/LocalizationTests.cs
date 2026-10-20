@@ -97,6 +97,20 @@ public class LocalizationTests : IDisposable
         Localization.Culture = new CultureInfo("zh-Hant");
         Assert.Equal("啟動成功！PID=123", Localization.Translate("Started successfully, PID={0}", 123));
     }
+
+    [Fact(DisplayName = "星尘设置描述支持中文与繁体翻译")]
+    public void SettingDescriptions()
+    {
+        LoadAssemblies();
+
+        Localization.Culture = new CultureInfo("zh-Hans");
+        Assert.Equal("调试开关。默认false", Localization.Translate("Debug switch. Default false"));
+        Assert.Equal("星尘设置", Localization.Translate("Stardust settings"));
+
+        Localization.Culture = new CultureInfo("zh-Hant");
+        Assert.Equal("偵錯開關。預設 false", Localization.Translate("Debug switch. Default false"));
+        Assert.Equal("星塵設定", Localization.Translate("Stardust settings"));
+    }
 }
 
 /// <summary>多语言测试集合。Localization.Culture 是进程级全局状态，禁止与其它测试并行</summary>
