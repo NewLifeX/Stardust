@@ -109,16 +109,16 @@ public class AgentDeployController(AgentDeployService deployService, ITokenServi
             if (!process.WaitForExit(15000))
             {
                 process.Kill();
-                return new { success = false, message = "连接超时" };
+                return new { success = false, message = L.T("Connection timed out.") };
             }
 
             if (process.ExitCode == 0 && output.Contains("connected"))
             {
-                return new { success = true, message = "连接成功" };
+                return new { success = true, message = L.T("Connected.") };
             }
             else
             {
-                return new { success = false, message = $"连接失败: {error}" };
+                return new { success = false, message = L.T("Connection failed: {0}", error) };
             }
         }
         catch (Exception ex)

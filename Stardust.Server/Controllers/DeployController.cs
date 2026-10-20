@@ -261,7 +261,7 @@ public class DeployController(NodeService nodeService, DeployService deployServi
         ver.Save();
         app.Fix();
 
-        WriteHistory(app.Id, nameof(UploadBuildFile), true, $"版本={version} 大小={att.Size:n0} 节点={node?.Name}");
+        WriteHistory(app.Id, nameof(UploadBuildFile), true, L.T("Version={0} Size={1:n0} Node={2}", version, att.Size, node?.Name));
 
         return new { ver.Id, ver.Version, ver.Url, ver.Size, ver.Hash };
     }

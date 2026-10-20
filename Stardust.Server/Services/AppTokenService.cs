@@ -55,12 +55,12 @@ public class AppTokenService
             }
 
             // 收敛窗口/开放：放行，等待客户端收敛；密钥由令牌接口（OAuth/Token）随响应下发
-            app.WriteHistory("应用重注册", true, $"[{app.Name}]密钥不符，按[{mode}]模式放行", null, ip, clientId);
+            app.WriteHistory(L.T("Application re-registered"), true, L.T("[{0}] secret mismatch; allowed by [{1}] mode", app.Name, mode), null, ip, clientId);
         }
         // 收敛窗口：客户端已携带正确密钥，自动关闭窗口完成收敛
         else if (app.ReRegister == ReRegisterModes.Auto)
         {
-            app.WriteHistory("应用重注册", true, $"[{app.Name}]客户端已携带正确密钥，收敛窗口自动关闭", null, ip, clientId);
+            app.WriteHistory(L.T("Application re-registered"), true, L.T("[{0}] the client now carries the correct secret; the convergence window is closed automatically", app.Name), null, ip, clientId);
             app.ReRegister = ReRegisterModes.Off;
             app.Update();
         }

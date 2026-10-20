@@ -23,3 +23,12 @@
 "Token string cannot be empty.": "Token string cannot be empty."
 "VACUUM failed; normal use is not affected": "VACUUM failed; normal use is not affected"
 "[AppDeploy sync] Application {0} updated; syncing deployment configuration {1} (Id={2})": "[AppDeploy sync] Application {0} updated; syncing deployment configuration {1} (Id={2})"
+# 运行时消息补充词条
+"Domain changed": "Domain changed"
+"Domains changed: {0} -> {1}": "Domains changed: {0} -> {1}"
+"Global default development": "Global default development"
+"Production environment": "Production environment"
+"Local development": "Local development"
+"Global shared configuration; other applications merge the configuration items of this application at startup": "Global shared configuration; other applications merge the configuration items of this application at startup"
+# 运行时消息补充词条
+"Plugin server. Links are analyzed by keyword on this page and plugins are downloaded from it": "Plugin server. Links are analyzed by keyword on this page and plugins are downloaded from it"

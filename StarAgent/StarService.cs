@@ -184,7 +184,7 @@ public class StarService : DisposeBase, IApi
 
         if (serviceName.IsNullOrEmpty())
         {
-            return new ServiceOperationResult { Success = false, Message = "服务名称不能为空" };
+            return new ServiceOperationResult { Success = false, Message = L.T("Service name cannot be empty.") };
         }
 
         try
@@ -193,7 +193,7 @@ public class StarService : DisposeBase, IApi
             return new ServiceOperationResult
             {
                 Success = result ?? false,
-                Message = result == true ? "服务启动成功" : "服务启动失败或服务不存在",
+                Message = result == true ? L.T("Service started successfully.") : L.T("Service failed to start or does not exist."),
                 ServiceName = serviceName
             };
         }
@@ -202,7 +202,7 @@ public class StarService : DisposeBase, IApi
             return new ServiceOperationResult
             {
                 Success = false,
-                Message = $"启动服务时发生错误: {ex.Message}",
+                Message = L.T("Error while starting service: {0}", ex.Message),
                 ServiceName = serviceName
             };
         }
@@ -218,7 +218,7 @@ public class StarService : DisposeBase, IApi
 
         if (serviceName.IsNullOrEmpty())
         {
-            return new ServiceOperationResult { Success = false, Message = "服务名称不能为空" };
+            return new ServiceOperationResult { Success = false, Message = L.T("Service name cannot be empty.") };
         }
 
         try
@@ -227,7 +227,7 @@ public class StarService : DisposeBase, IApi
             return new ServiceOperationResult
             {
                 Success = result ?? false,
-                Message = result == true ? "服务停止成功" : "服务停止失败或服务不存在",
+                Message = result == true ? L.T("Service stopped successfully.") : L.T("Service failed to stop or does not exist."),
                 ServiceName = serviceName
             };
         }
@@ -236,7 +236,7 @@ public class StarService : DisposeBase, IApi
             return new ServiceOperationResult
             {
                 Success = false,
-                Message = $"停止服务时发生错误: {ex.Message}",
+                Message = L.T("Error while stopping service: {0}", ex.Message),
                 ServiceName = serviceName
             };
         }
@@ -252,7 +252,7 @@ public class StarService : DisposeBase, IApi
 
         if (serviceName.IsNullOrEmpty())
         {
-            return new ServiceOperationResult { Success = false, Message = "服务名称不能为空" };
+            return new ServiceOperationResult { Success = false, Message = L.T("Service name cannot be empty.") };
         }
 
         try
@@ -261,7 +261,7 @@ public class StarService : DisposeBase, IApi
             var success = InternalRestartService(Manager, serviceName, "API调用重启");
 
             // 根据结果提供更详细的信息
-            var message = success ? "服务重启成功" : GetRestartFailureMessage(Manager, serviceName);
+            var message = success ? L.T("Service restarted successfully.") : GetRestartFailureMessage(Manager, serviceName);
 
             return new ServiceOperationResult
             {
@@ -275,7 +275,7 @@ public class StarService : DisposeBase, IApi
             return new ServiceOperationResult
             {
                 Success = false,
-                Message = $"重启服务时发生错误: {ex.Message}",
+                Message = L.T("Error while restarting service: {0}", ex.Message),
                 ServiceName = serviceName
             };
         }
@@ -286,17 +286,17 @@ public class StarService : DisposeBase, IApi
     {
         if (manager?.Services?.Any(e => e.Name.EqualIgnoreCase(serviceName)) != true)
         {
-            return "服务不存在";
+            return L.T("Service does not exist.");
         }
 
         var isRunning = manager.RunningServices?.Any(e => e.Name.EqualIgnoreCase(serviceName)) == true;
         if (isRunning)
         {
-            return "服务重启失败：停止服务失败";
+            return L.T("Service restart failed: unable to stop service [{0}]", serviceName);
         }
         else
         {
-            return "服务重启失败：启动服务失败";
+            return L.T("Service restart failed: unable to start service [{0}]", serviceName);
         }
     }
 

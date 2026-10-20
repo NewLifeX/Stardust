@@ -39,7 +39,7 @@ namespace Stardust.Data.Configs
                 Rule = "IP=*",
                 Result = "Scope=dev",
                 Priority = -1,
-                Remark = "全局默认开发",
+                Remark = L.T("Global default development"),
             };
             entity.Insert();
 
@@ -48,7 +48,7 @@ namespace Stardust.Data.Configs
                 Rule = "IP=172.*,10.*",
                 Result = "Scope=pro",
                 Priority = 10,
-                Remark = "正式环境",
+                Remark = L.T("Production environment"),
             };
             entity.Insert();
 
@@ -66,7 +66,7 @@ namespace Stardust.Data.Configs
                 Rule = "LocalIP=127.*,::1,192.*",
                 Result = "Scope=dev",
                 Priority = 20,
-                Remark = "本机开发",
+                Remark = L.T("Local development"),
             };
             entity.Insert();
 

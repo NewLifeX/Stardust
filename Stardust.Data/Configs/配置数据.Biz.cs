@@ -78,7 +78,7 @@ public partial class ConfigData : Entity<ConfigData>
             Enable = true,
             Version = 2,
             NewVersion = 2,
-            Remark = "插件服务器。将从该网页上根据关键字分析链接并下载插件",
+            Remark = L.T("Plugin server. Links are analyzed by keyword on this page and plugins are downloaded from it"),
         };
         entity.Insert();
     }

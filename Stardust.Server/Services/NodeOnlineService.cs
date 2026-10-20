@@ -48,12 +48,12 @@ public class NodeOnlineService(IServiceProvider serviceProvider, StarServerSetti
                     if (node != null)
                     {
                         var msg = $"[{node}/{online?.SessionID}]登录于{online.CreateTime}，最后活跃于{online.UpdateTime}";
-                        node.WriteHistory("超时下线", true, msg, online.CreateIP);
+                        node.WriteHistory(L.T("Timed out offline"), true, msg, online.CreateIP);
 
                         // 结算在线时长统一由 RemoveOnline 负责
                         _nodeService.RemoveOnline(new DeviceContext { Device = node, Online = online });
 
-                        CheckOffline(node, "超时下线");
+                        CheckOffline(node, L.T("Timed out offline"));
                     }
                 }
             }

@@ -23,3 +23,12 @@
 "Token string cannot be empty.": "Token字符串不能為空！"
 "VACUUM failed; normal use is not affected": "VACUUM操作失敗，不影響正常使用"
 "[AppDeploy sync] Application {0} updated; syncing deployment configuration {1} (Id={2})": "[AppDeploy 同步] 應用 {0} 更新，同步部署配置 {1} (Id={2})"
+# 运行时消息补充词条
+"Domain changed": "修改網域"
+"Domains changed: {0} -> {1}": "網域變更：{0} -> {1}"
+"Global default development": "全域預設開發"
+"Production environment": "正式環境"
+"Local development": "本機開發"
+"Global shared configuration; other applications merge the configuration items of this application at startup": "全域通用設定，其它應用啟動合併該應用下的設定項"
+# 运行时消息补充词条
+"Plugin server. Links are analyzed by keyword on this page and plugins are downloaded from it": "外掛伺服器。將從該網頁上根據關鍵字分析連結並下載外掛"

@@ -147,7 +147,7 @@ public class AppOnlineService(ICacheProvider cacheProvider, ITracer tracer)
         online.SaveAsync();
 
         if (isNew)
-            app.WriteHistory("关联上线", true, info.ToJson(), info?.Version, ip, clientId);
+            app.WriteHistory(L.T("Associated online"), true, info.ToJson(), info?.Version, ip, clientId);
 
         return online;
     }

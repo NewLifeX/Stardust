@@ -103,7 +103,7 @@ public class AgentDeployController : ControllerBaseX
             else
             {
                 // StarWeb本地执行（暂不支持）
-                result = new { success = false, message = "StarWeb本地执行功能暂未实现，请选择StarServer执行" };
+                result = new { success = false, message = L.T("Local execution in StarWeb is not implemented; use StarServer instead.") };
             }
 
             return Json(0, null, result);

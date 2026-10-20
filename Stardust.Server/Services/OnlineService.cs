@@ -62,9 +62,9 @@ public class OnlineService : IHostedService
                     if (app != null)
                     {
                         var msg = $"[{app}/{olt?.Client}]登录于{olt.CreateTime}，最后活跃于{olt.UpdateTime}";
-                        app.WriteHistory("超时下线", true, msg, olt.Version, olt.CreateIP, olt.Client);
+                        app.WriteHistory(L.T("Timed out offline"), true, msg, olt.Version, olt.CreateIP, olt.Client);
 
-                        CheckOffline(app, "超时下线");
+                        CheckOffline(app, L.T("Timed out offline"));
                     }
                 }
             }

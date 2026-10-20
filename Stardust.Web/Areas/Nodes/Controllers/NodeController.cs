@@ -112,7 +112,7 @@ public class NodeController : NodesEntityController<Node>
             var old = Node.FindByID(entity.ID);
             if (old != null && old.Domains != entity.Domains)
             {
-                entity.WriteHistory("修改域名", true, $"域名变更：{old.Domains} -> {entity.Domains}", ManageProvider.UserHost);
+                entity.WriteHistory(L.T("Domain changed"), true, L.T("Domains changed: {0} -> {1}", old.Domains, entity.Domains), ManageProvider.UserHost);
             }
         }
 

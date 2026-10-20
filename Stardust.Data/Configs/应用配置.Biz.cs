@@ -58,7 +58,7 @@ public partial class AppConfig : Entity<AppConfig>
             CanBeQuoted = true,
             IsGlobal = true,
 
-            Remark = "全局通用配置，其它应用启动合并该应用下的配置项",
+            Remark = L.T("Global shared configuration; other applications merge the configuration items of this application at startup"),
         };
         entity.Insert();
     }

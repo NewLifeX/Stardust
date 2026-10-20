@@ -123,7 +123,7 @@ public class StarApi : IHttpController
         var manager = GetManager();
         if (manager == null) return new { code = 500, message = "Service manager not available" };
 
-        if (serviceName.IsNullOrEmpty()) return new { code = 400, message = "服务名称不能为空" };
+        if (serviceName.IsNullOrEmpty()) return new { code = 400, message = L.T("Service name cannot be empty.") };
 
         try
         {
@@ -131,13 +131,13 @@ public class StarApi : IHttpController
             return new
             {
                 code = result ? 0 : 1,
-                message = result ? "服务启动成功" : "服务启动失败或服务不存在",
+                message = result ? L.T("Service started successfully.") : L.T("Service failed to start or does not exist."),
                 serviceName
             };
         }
         catch (Exception ex)
         {
-            return new { code = 1, message = $"启动服务时发生错误: {ex.Message}", serviceName };
+            return new { code = 1, message = L.T("Error while starting service: {0}", ex.Message), serviceName };
         }
     }
 
@@ -151,7 +151,7 @@ public class StarApi : IHttpController
         var manager = GetManager();
         if (manager == null) return new { code = 500, message = "Service manager not available" };
 
-        if (serviceName.IsNullOrEmpty()) return new { code = 400, message = "服务名称不能为空" };
+        if (serviceName.IsNullOrEmpty()) return new { code = 400, message = L.T("Service name cannot be empty.") };
 
         try
         {
@@ -159,13 +159,13 @@ public class StarApi : IHttpController
             return new
             {
                 code = result ? 0 : 1,
-                message = result ? "服务停止成功" : "服务停止失败或服务不存在",
+                message = result ? L.T("Service stopped successfully.") : L.T("Service failed to stop or does not exist."),
                 serviceName
             };
         }
         catch (Exception ex)
         {
-            return new { code = 1, message = $"停止服务时发生错误: {ex.Message}", serviceName };
+            return new { code = 1, message = L.T("Error while stopping service: {0}", ex.Message), serviceName };
         }
     }
 
@@ -179,7 +179,7 @@ public class StarApi : IHttpController
         var manager = GetManager();
         if (manager == null) return new { code = 500, message = "Service manager not available" };
 
-        if (serviceName.IsNullOrEmpty()) return new { code = 400, message = "服务名称不能为空" };
+        if (serviceName.IsNullOrEmpty()) return new { code = 400, message = L.T("Service name cannot be empty.") };
 
         try
         {
@@ -188,7 +188,7 @@ public class StarApi : IHttpController
             if (running)
             {
                 var stopResult = manager.Stop(serviceName, "Web面板调用重启");
-                if (!stopResult) return new { code = 1, message = "停止服务失败", serviceName };
+                if (!stopResult) return new { code = 1, message = L.T("Failed to stop service."), serviceName };
                 Thread.Sleep(1000);
             }
 
@@ -197,13 +197,13 @@ public class StarApi : IHttpController
             return new
             {
                 code = startResult ? 0 : 1,
-                message = startResult ? "服务重启成功" : "启动服务失败",
+                message = startResult ? L.T("Service restarted successfully.") : L.T("Failed to start service."),
                 serviceName
             };
         }
         catch (Exception ex)
         {
-            return new { code = 1, message = $"重启服务时发生错误: {ex.Message}", serviceName };
+            return new { code = 1, message = L.T("Error while restarting service: {0}", ex.Message), serviceName };
         }
     }
 
@@ -218,7 +218,7 @@ public class StarApi : IHttpController
         if (manager == null) return new { code = 500, message = "Service manager not available" };
 
         if (info == null || info.Name.IsNullOrEmpty())
-            return new { code = 400, message = "服务名称不能为空" };
+            return new { code = 400, message = L.T("Service name cannot be empty.") };
 
         try
         {
@@ -229,11 +229,11 @@ public class StarApi : IHttpController
             set.Services = manager.Services;
             set.Save();
 
-            return new { code = 0, message = $"服务 [{info.Name}] 已添加/更新", serviceName = info.Name };
+            return new { code = 0, message = L.T("Service [{0}] added or updated.", info.Name), serviceName = info.Name };
         }
         catch (Exception ex)
         {
-            return new { code = 1, message = $"添加服务时发生错误: {ex.Message}" };
+            return new { code = 1, message = L.T("Error while adding service: {0}", ex.Message) };
         }
     }
 
@@ -247,7 +247,7 @@ public class StarApi : IHttpController
         var manager = GetManager();
         if (manager == null) return new { code = 500, message = "Service manager not available" };
 
-        if (serviceName.IsNullOrEmpty()) return new { code = 400, message = "服务名称不能为空" };
+        if (serviceName.IsNullOrEmpty()) return new { code = 400, message = L.T("Service name cannot be empty.") };
 
         try
         {
@@ -262,11 +262,11 @@ public class StarApi : IHttpController
             set.Services = manager.Services;
             set.Save();
 
-            return new { code = 0, message = $"服务 [{serviceName}] 已删除", serviceName };
+            return new { code = 0, message = L.T("Service [{0}] removed.", serviceName), serviceName };
         }
         catch (Exception ex)
         {
-            return new { code = 1, message = $"删除服务时发生错误: {ex.Message}", serviceName };
+            return new { code = 1, message = L.T("Error while removing service: {0}", ex.Message), serviceName };
         }
     }
     #endregion
@@ -316,7 +316,7 @@ public class StarApi : IHttpController
         if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
 
         if (updates == null || updates.Count == 0)
-            return new { code = 400, message = "没有需要更新的配置项" };
+            return new { code = 400, message = L.T("No configuration items to update.") };
 
         try
         {
@@ -370,11 +370,11 @@ public class StarApi : IHttpController
             if (changedStar) saved.Add("StarSetting");
             if (changedAgent) saved.Add("StarAgentSetting");
 
-            return new { code = 0, message = $"配置已保存到: {saved.Join(", ")}" };
+            return new { code = 0, message = L.T("Configuration saved to: {0}", saved.Join(", ")) };
         }
         catch (Exception ex)
         {
-            return new { code = 1, message = $"保存配置时发生错误: {ex.Message}" };
+            return new { code = 1, message = L.T("Error while saving configuration: {0}", ex.Message) };
         }
     }
     #endregion
@@ -539,7 +539,7 @@ public class StarApi : IHttpController
         }
         catch (Exception ex)
         {
-            return new { code = 1, message = $"获取本机信息时发生错误: {ex.Message}" };
+            return new { code = 1, message = L.T("Error while getting machine information: {0}", ex.Message) };
         }
     }
 
@@ -595,7 +595,7 @@ public class StarApi : IHttpController
         }
         catch (Exception ex)
         {
-            return new { code = 1, message = $"获取进程列表时发生错误: {ex.Message}" };
+            return new { code = 1, message = L.T("Error while getting process list: {0}", ex.Message) };
         }
     }
     #endregion

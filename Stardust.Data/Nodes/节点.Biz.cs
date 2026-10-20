@@ -751,7 +751,7 @@ public partial class Node : Entity<Node>, IDeviceModel2, ILogProvider
         Domains = newDomains;
         Save();
 
-        WriteHistory("修改域名", true, $"域名变更：{oldDomains} -> {newDomains}", ip);
+        WriteHistory(L.T("Domain changed"), true, L.T("Domains changed: {0} -> {1}", oldDomains, newDomains), ip);
     }
 
     /// <summary>创建在线对象</summary>

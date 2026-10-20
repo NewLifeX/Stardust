@@ -339,7 +339,7 @@ internal class DeployService : ServiceBase
         if (remark.Length > maxRemark)
         {
             var keep = maxRemark - 30 - label.Length;
-            remark = $"…(日志过长已截断，保留尾部{keep}字符)\n{log.Substring(log.Length - keep)}{label}";
+            remark = L.T("...(the log is too long and was truncated; the last {0} characters are kept)\n", keep) + log.Substring(log.Length - keep) + label;
             if (remark.Length > maxRemark) remark = remark.Substring(remark.Length - maxRemark);
         }
 

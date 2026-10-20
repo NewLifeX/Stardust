@@ -192,7 +192,7 @@ public class PipelineService
 
         // 标记为已取消
         run.Status = PipelineStatus.Cancelled;
-        run.Remark = $"用户取消（IP: {userHost}）";
+        run.Remark = L.T("Cancelled by user (IP: {0})", userHost);
         if (run.BuildStartedTime != default && run.BuildFinishedTime == default) run.BuildFinishedTime = DateTime.Now;
         if (run.DeployStartedTime != default && run.DeployFinishedTime == default) run.DeployFinishedTime = DateTime.Now;
         run.Update();
@@ -202,7 +202,7 @@ public class PipelineService
         foreach (var s in steps)
         {
             s.Status = "Skipped";
-            s.Message = "运行被取消";
+            s.Message = L.T("Run cancelled.");
             s.FinishedTime = DateTime.Now;
             s.Update();
         }
@@ -261,11 +261,11 @@ public class PipelineService
                 {
                     buildStep.Status = "Failed";
                     buildStep.FinishedTime = DateTime.Now;
-                    buildStep.Message = "编译命令未发出（节点可能未就绪）";
+                    buildStep.Message = L.T("Build command was not sent (node may not be ready).");
                     buildStep.Update();
                     run.BuildFinishedTime = DateTime.Now;
                     run.Status = PipelineStatus.Failed;
-                    run.Remark = "编译命令未发出（节点可能未就绪）";
+                    run.Remark = L.T("Build command was not sent (node may not be ready).");
                     run.Update();
                     return;
                 }

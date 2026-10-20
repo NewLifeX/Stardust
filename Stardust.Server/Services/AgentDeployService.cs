@@ -61,7 +61,7 @@ public class AgentDeployService
                 {
                     Host = host,
                     Success = false,
-                    Message = $"部署失败: {ex.Message}"
+                    Message = L.T("Deployment failed: {0}", ex.Message)
                 });
             }
         }
@@ -111,13 +111,13 @@ public class AgentDeployService
             if (output.Contains("安装成功") || output.Contains("installed successfully") || !output.Contains("error", StringComparison.OrdinalIgnoreCase))
             {
                 result.Success = true;
-                result.Message = "部署成功";
+                result.Message = L.T("Deployment succeeded.");
                 XTrace.WriteLine(L.TLog("Deployment succeeded: {0}", host));
             }
             else
             {
                 result.Success = false;
-                result.Message = "部署失败，请查看输出日志";
+                result.Message = L.T("Deployment failed; check the output logs.");
                 XTrace.WriteLine(L.TLog("Deployment failed: {0}", host));
             }
         }

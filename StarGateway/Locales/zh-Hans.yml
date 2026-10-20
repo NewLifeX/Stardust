@@ -20,3 +20,5 @@
 "StarGateway has no StarServer configured; running in standalone mode (database + local configuration only)": "StarGateway 未配置 StarServer，将以独立模式运行（仅数据库 + 本地配置）"
 "StarGateway connected to StarServer: {0}": "StarGateway 已连接 StarServer: {0}"
 "StarGateway started, listening on port {0}, remote server {1}": "StarGateway 已启动，监听端口 {0}，远程服务器 {1}"
+# 运行时消息补充词条
+"Configuration refreshed.": "配置已刷新"

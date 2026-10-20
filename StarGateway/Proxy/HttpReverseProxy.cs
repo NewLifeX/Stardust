@@ -625,7 +625,7 @@ public class HttpReverseProxy : ProxyServer
         else if (path.EqualIgnoreCase("/api/refresh"))
         {
             RefreshConfig();
-            json = new { success = true, message = "配置已刷新" }.ToJson();
+            json = new { success = true, message = L.T("Configuration refreshed.") }.ToJson();
         }
         else
         {

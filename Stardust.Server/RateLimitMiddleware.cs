@@ -52,7 +52,7 @@ public class RateLimitMiddleware
                 if (count > _times)
                 {
                     context.Response.StatusCode = 429;
-                    await context.Response.WriteAsJsonAsync(new { code = 429, message = "请求过于频繁，请稍后再试！" });
+                    await context.Response.WriteAsJsonAsync(new { code = 429, message = L.T("Too many requests; please try again later.") });
                     return;
                 }
                 break;

@@ -192,10 +192,10 @@ public class PipelineResumeTests
     /// <summary>清理 build-only 测试产生的数据，避免污染共享测试库。</summary>
     private static void Cleanup((AppDeploy app, AppPipeline pipeline, AppPipelineRun run, AppPipelineStep step, NodeCommand cmd) data)
     {
-        // 删除编译成功时写入的部署历史（Remark=编译完成）
+        // 删除编译成功时写入的部署历史（Remark 以 Build completed 开头）
         foreach (var h in AppDeployHistory.FindAllByDeployId(data.app.Id))
         {
-            if (h.Remark == "编译完成") h.Delete();
+            if (h.Remark.StartsWith("Build completed")) h.Delete();
         }
         data.step?.Delete();
         data.run?.Delete();

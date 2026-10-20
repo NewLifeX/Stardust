@@ -77,10 +77,10 @@ public class AgentDeployController : ControllerBaseX
             else
             {
                 // StarWeb本地执行（暂不支持，返回错误）
-                return Json(new { code = 500, message = "StarWeb本地执行功能暂未实现，请选择StarServer执行" });
+                return Json(new { code = 500, message = L.T("Local execution in StarWeb is not implemented; use StarServer instead.") });
             }
 
-            return Json(new { code = 0, data = results, message = "部署完成" });
+            return Json(new { code = 0, data = results, message = L.T("Deployment completed.") });
         }
         catch (Exception ex)
         {
@@ -127,7 +127,7 @@ public class AgentDeployController : ControllerBaseX
             else
             {
                 // StarWeb本地执行（暂不支持）
-                result = new { success = false, message = "StarWeb本地执行功能暂未实现，请选择StarServer执行" };
+                result = new { success = false, message = L.T("Local execution in StarWeb is not implemented; use StarServer instead.") };
             }
 
             return Json(new { code = 0, data = result });

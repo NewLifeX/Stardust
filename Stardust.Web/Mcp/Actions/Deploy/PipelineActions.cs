@@ -193,7 +193,7 @@ public class PipelineCancelAction : McpActionBase
         {
             run_id = runId,
             cancelled = success,
-            message = success ? "运行已取消" : "运行已处于终态，无法取消",
+            message = success ? L.T("Run cancelled.") : L.T("The run is already in a final state and cannot be cancelled."),
         });
     }
 }

@@ -20,3 +20,5 @@
 "StarGateway has no StarServer configured; running in standalone mode (database + local configuration only)": "StarGateway has no StarServer configured; running in standalone mode (database + local configuration only)"
 "StarGateway connected to StarServer: {0}": "StarGateway connected to StarServer: {0}"
 "StarGateway started, listening on port {0}, remote server {1}": "StarGateway started, listening on port {0}, remote server {1}"
+# 运行时消息补充词条
+"Configuration refreshed.": "Configuration refreshed."

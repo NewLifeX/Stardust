@@ -74,3 +74,5 @@
 "Upload failed: HTTP {0} - {1}": "上傳失敗：HTTP {0} - {1}"
 "Unable to start process: {0}": "無法啟動進程：{0}"
 "Re-login failed: {0}": "重新登錄失敗：{0}"
+# 运行时消息补充词条
+"...(the log is too long and was truncated; the last {0} characters are kept)\n": "…（日誌過長已截斷，保留尾部{0}字元）\n"

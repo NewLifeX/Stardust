@@ -76,3 +76,13 @@
 "[McpService] MCP exception method={0} action={1} code={2} err={3}": "[McpService] MCP異常 method={0} action={1} code={2} err={3}"
 "[McpService] Exception method={0} action={1} err={2}": "[McpService] 異常 method={0} action={1} err={2}"
 "[McpService] Failed to write the MCP audit log (ignored): {0}": "[McpService] 寫MCP審計日誌失敗（已忽略）：{0}"
+# 运行时消息补充词条
+"Local execution in StarWeb is not implemented; use StarServer instead.": "StarWeb 本機執行功能尚未實作，請選擇 StarServer 執行"
+"Deployment completed.": "部署完成"
+"Cancelled by user (IP: {0})": "使用者取消（IP: {0}）"
+"Run cancelled.": "執行已取消"
+"Build command was not sent (node may not be ready).": "編譯命令未送出（節點可能未就緒）"
+"The run is already in a final state and cannot be cancelled.": "執行已處於終態，無法取消"
+# 运行时消息补充词条
+"Domain changed": "修改網域"
+"Domains changed: {0} -> {1}": "網域變更：{0} -> {1}"

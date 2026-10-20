@@ -63,7 +63,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         node = CheckNode(node, inf.Node, inf.ProductCode, ip, _setting.NodeCodeLevel);
         if (node == null)
         {
-            WriteHistory(node, "节点鉴权", false, "硬件信息变动过大", ip);
+            WriteHistory(node, L.T("Node authentication"), false, L.T("Hardware information changed too much."), ip);
             return false;
         }
 
@@ -78,7 +78,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         }
         if (request.Secret.IsNullOrEmpty() || !_passwordProvider.Verify(node.Secret, request.Secret))
         {
-            WriteHistory(context, "节点鉴权", false, "密钥校验失败");
+            WriteHistory(context, L.T("Node authentication"), false, L.T("Secret validation failed."));
             return false;
         }
 
@@ -117,13 +117,13 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
                 node = AutoRegister(node, inf, ip, _setting);
             }
 
-            node?.WriteHistory("动态注册", true, inf.ToJson(false, false, false), ip);
+            node?.WriteHistory(L.T("Dynamic registration"), true, inf.ToJson(false, false, false), ip);
         }
         catch (Exception ex)
         {
             span?.SetError(ex, null);
 
-            node?.WriteHistory("动态注册", false, inf.ToJson(false, false, false), ip);
+            node?.WriteHistory(L.T("Dynamic registration"), false, inf.ToJson(false, false, false), ip);
 
             throw;
         }
@@ -171,7 +171,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         }
 
         // 登录历史
-        WriteHistory(context, "节点鉴权", true, $"[{node.Name}/{node.Code}]鉴权成功 " + inf.ToJson(false, false, false));
+        WriteHistory(context, L.T("Node authentication"), true, L.T("[{0}/{1}] authenticated {2}", node.Name, node.Code, inf.ToJson(false, false, false)));
 
         // 检查节点上线恢复
         NodeOnlineService.CheckOnline(node);
@@ -244,22 +244,22 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         var level = 5;
         if (!uuid.IsNullOrEmpty() && uuid != node.Uuid)
         {
-            node.WriteHistory("登录校验", false, $"唯一标识不符！（新!=旧）{uuid}!={node.Uuid}", ip);
+            node.WriteHistory(L.T("Login validation"), false, L.T("Unique identifier mismatch (new != old): {0} != {1}", uuid, node.Uuid), ip);
             level--;
         }
         if (!guid.IsNullOrEmpty() && guid != node.MachineGuid)
         {
-            node.WriteHistory("登录校验", false, $"机器标识不符！（新!=旧）{guid}!={node.MachineGuid}", ip);
+            node.WriteHistory(L.T("Login validation"), false, L.T("Machine identifier mismatch (new != old): {0} != {1}", guid, node.MachineGuid), ip);
             level--;
         }
         if (!serial.IsNullOrEmpty() && serial != node.SerialNumber)
         {
-            node.WriteHistory("登录校验", false, $"计算机序列号不符！（新!=旧）{serial}!={node.SerialNumber}", ip);
+            node.WriteHistory(L.T("Login validation"), false, L.T("Computer serial number mismatch (new != old): {0} != {1}", serial, node.SerialNumber), ip);
             level--;
         }
         if (!board.IsNullOrEmpty() && board != node.Board)
         {
-            node.WriteHistory("登录校验", false, $"主板不符！（新!=旧）{board}!={node.Board}", ip);
+            node.WriteHistory(L.T("Login validation"), false, L.T("Motherboard mismatch (new != old): {0} != {1}", board, node.Board), ip);
             //flag = false;
         }
         //if (!diskid.IsNullOrEmpty() && diskid != node.DiskID)
@@ -269,14 +269,14 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         //}
         if (!node.ProductCode.IsNullOrEmpty() && !productCode.IsNullOrEmpty() && !node.ProductCode.EqualIgnoreCase(productCode))
         {
-            node.WriteHistory("登录校验", false, $"产品编码不符！（新!=旧）{productCode}!={node.ProductCode}", ip);
+            node.WriteHistory(L.T("Login validation"), false, L.T("Product code mismatch (new != old): {0} != {1}", productCode, node.ProductCode), ip);
             //level--;
         }
 
         // 机器名
         if (di.MachineName != node.MachineName)
         {
-            node.WriteHistory("登录校验", false, $"机器名不符！（新!=旧）{di.MachineName}!={node.MachineName}", ip);
+            node.WriteHistory(L.T("Login validation"), false, L.T("Machine name mismatch (new != old): {0} != {1}", di.MachineName, node.MachineName), ip);
         }
 
         // 网卡地址
@@ -287,7 +287,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
             // 任意匹配则通过
             if (!nodems.Any(e => dims.Contains(e)))
             {
-                node.WriteHistory("登录校验", false, $"网卡地址不符！（新!=旧）{di.Macs}!={node.MACs}", ip);
+                node.WriteHistory(L.T("Login validation"), false, L.T("MAC address mismatch (new != old): {0} != {1}", di.Macs, node.MACs), ip);
                 level--;
             }
         }
@@ -300,7 +300,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
             // 任意匹配则通过
             if (!nodems.Any(e => dims.Contains(e)))
             {
-                node.WriteHistory("登录校验", false, $"磁盘序列号不符！（新!=旧）{diskid}!={node.DiskID}", ip);
+                node.WriteHistory(L.T("Login validation"), false, L.T("Disk serial number mismatch (new != old): {0} != {1}", diskid, node.DiskID), ip);
                 level--;
             }
         }
@@ -344,7 +344,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
                 var msg = $"检测到节点[{inf.Code}/{di.Macs}]与旧节点[{node.Code}]高度相似，选择使用旧节点";
                 XTrace.WriteLine(msg);
                 span?.AppendTag(msg);
-                node.WriteHistory("匹配已有节点", true, msg, ip);
+                node.WriteHistory(L.T("Matched existing node"), true, msg, ip);
             }
         }
 
@@ -714,7 +714,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         // 检查是否已经升级过这个版本
         if (node.LastVersion == pv.Version) return null;
 
-        node.WriteHistory("自动更新", true, $"channel={ch} version={node.Version} last={node.LastVersion} => [{pv.ID}] {pv.Version} {pv.Executor}", ip);
+        node.WriteHistory(L.T("Auto update"), true, $"channel={ch} version={node.Version} last={node.LastVersion} => [{pv.ID}] {pv.Version} {pv.Executor}", ip);
 
         node.Channel = ch;
         node.LastVersion = pv.Version;
@@ -756,7 +756,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
             var pkg = release.MatchPackage(node);
             if (pkg == null) continue;
 
-            node.WriteHistory("自动更新", true, $"channel={channel} version={node.Version} last={node.LastVersion} => Release[{release.Id}] {release.Version} Package[{pkg.TargetRuntime}] {pkg.FileName}", ip);
+            node.WriteHistory(L.T("Auto update"), true, $"channel={channel} version={node.Version} last={node.LastVersion} => Release[{release.Id}] {release.Version} Package[{pkg.TargetRuntime}] {pkg.FileName}", ip);
 
             node.Channel = channel;
             node.LastVersion = release.Version;
@@ -834,7 +834,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
             };
             _ = SendCommand(node, model, $"NodeVersion:{pv.Version}");
 
-            node.WriteHistory("推送dotNet", true, $"version={node.Framework} => [{pv.ID}] {pv.Version} {fmodel.BaseUrl}", ip);
+            node.WriteHistory(L.T("Push dotNet"), true, $"version={node.Framework} => [{pv.ID}] {pv.Version} {fmodel.BaseUrl}", ip);
 
             return pv;
         }
@@ -988,7 +988,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
                 {
                     // 写编译成功历史（粒度日志由 Agent PostEvents 负责）
                     if (pipeline != null)
-                        AppDeployHistory.Create(pipeline.DeployId, cmd.NodeID, "deploy/compile/Build-Upload", true, $"编译完成，run={run.Id}", ip).Insert();
+                        AppDeployHistory.Create(pipeline.DeployId, cmd.NodeID, "deploy/compile/Build-Upload", true, L.T("Build completed, run={0}", run.Id), ip).Insert();
 
                     // 取版本 + 使用版本（必须在部署下发前；等价于 Web「使用版本」按钮 app.Version=ver.Version）
                     var version = pipeline != null ? AppDeployVersion.FindAllByDeployId(pipeline.DeployId, 1).FirstOrDefault() : null;
@@ -1001,22 +1001,22 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
                             app.Update();
                         }
                         if (pipeline != null)
-                            AppDeployHistory.Create(pipeline.DeployId, 0, "pipeline/version", true, $"使用版本 {version.Version}（Id={version.Id}）", ip).Insert();
+                            AppDeployHistory.Create(pipeline.DeployId, 0, "pipeline/version", true, L.T("Using version {0} (Id={1})", version.Version, version.Id), ip).Insert();
                     }
                     else
                     {
                         if (pipeline != null)
-                            AppDeployHistory.Create(pipeline.DeployId, 0, "pipeline/version", false, "未取到可部署版本", ip).Insert();
+                            AppDeployHistory.Create(pipeline.DeployId, 0, "pipeline/version", false, L.T("No deployable version was found."), ip).Insert();
                     }
                     run.BuildFinishedTime = DateTime.Now;
 
                     if (pipeline == null || !pipeline.AutoDeploy)
                     {
                         run.Status = PipelineStatus.Success;
-                        run.Remark = pipeline == null ? "流水线配置不存在" : "自动部署未开启，流水线结束";
+                        run.Remark = pipeline == null ? L.T("The pipeline configuration does not exist.") : L.T("Auto deploy is disabled; the pipeline ends.");
                         run.Update();
                         if (pipeline != null)
-                            AppDeployHistory.Create(pipeline.DeployId, 0, "pipeline/autoDeploy", true, "自动部署未开启，流水线结束", ip).Insert();
+                            AppDeployHistory.Create(pipeline.DeployId, 0, "pipeline/autoDeploy", true, L.T("Auto deploy is disabled; the pipeline ends."), ip).Insert();
                     }
                     else
                     {
@@ -1024,7 +1024,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
                         {
                             // 编译成功但未产出可部署版本（如未开启上传），无法自动部署
                             run.Status = PipelineStatus.Failed;
-                            run.Remark = "编译成功但未产出可部署版本（可能未开启上传），无法自动部署";
+                            run.Remark = L.T("The build succeeded but produced no deployable version (upload may be disabled); auto deploy is not possible.");
                             run.Update();
                             AppDeployHistory.Create(pipeline.DeployId, 0, "pipeline/autoDeploy", false, run.Remark, ip).Insert();
                             return;
@@ -1032,7 +1032,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
                         run.Status = PipelineStatus.Deploying;
                         run.DeployStartedTime = DateTime.Now;
                         run.Update();
-                        AppDeployHistory.Create(pipeline.DeployId, 0, "pipeline/autoDeploy", true, $"开始自动部署，run={run.Id}，版本={version.Version}", ip).Insert();
+                        AppDeployHistory.Create(pipeline.DeployId, 0, "pipeline/autoDeploy", true, L.T("Starting auto deploy, run={0}, version={1}", run.Id, version.Version), ip).Insert();
                         await DispatchDeployAsync(run, pipeline, app, ip);
 
                         // 收尾：本次实际下发的部署命令数为 0（节点为空 / 全部 Skipped / 全部下发失败）时直接完成判定，
@@ -1044,13 +1044,13 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
                             if (deploySteps.Any(e => e.Status == "Failed"))
                             {
                                 run.Status = PipelineStatus.Failed;
-                                run.Remark = "部署命令下发失败";
+                                run.Remark = L.T("Failed to dispatch the deploy command.");
                             }
                             else if (!deploySteps.Any(e => e.Status == "Success") && !deploySteps.Any(e => e.Status == "Skipped"))
                             {
                                 // 没有任何部署步骤（通常因为未配置部署节点），不能标记为成功
                                 run.Status = PipelineStatus.Failed;
-                                run.Remark = "未找到可部署节点，请检查流水线部署节点配置";
+                                run.Remark = L.T("No deployable node was found; check the pipeline deploy node configuration.");
                             }
                             else
                             {
@@ -1058,7 +1058,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
                             }
                             run.Update();
                             if (pipeline != null)
-                                AppDeployHistory.Create(pipeline.DeployId, 0, "deploy/install", run.Status == PipelineStatus.Success, run.Status == PipelineStatus.Success ? "部署完成" : run.Remark, ip).Insert();
+                                AppDeployHistory.Create(pipeline.DeployId, 0, "deploy/install", run.Status == PipelineStatus.Success, run.Status == PipelineStatus.Success ? L.T("Deployment completed.") : run.Remark, ip).Insert();
                             return;
                         }
                     }
@@ -1091,7 +1091,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
                         run.Update();
                         // 写部署完成历史（与 Build 分支风格一致）
                         if (pipeline != null)
-                            AppDeployHistory.Create(pipeline.DeployId, step.NodeId, "deploy/install/Deploy", true, "部署成功", ip).Insert();
+                            AppDeployHistory.Create(pipeline.DeployId, step.NodeId, "deploy/install/Deploy", true, L.T("Deployment succeeded."), ip).Insert();
                     }
                 }
                 else
@@ -1136,7 +1136,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         // 未勾选任何部署节点：不回退、不乱部署，仅记录明确日志并结束（上层据此标记 Failed，避免假成功）
         if (nodeIds.Length == 0)
         {
-            AppDeployHistory.Create(pipeline.DeployId, 0, "pipeline/autoDeploy", false, "自动部署未触发：流水线未勾选任何部署节点", ip).Insert();
+            AppDeployHistory.Create(pipeline.DeployId, 0, "pipeline/autoDeploy", false, L.T("Auto deploy was not triggered: no deploy node is selected for the pipeline."), ip).Insert();
             return;
         }
 
@@ -1160,19 +1160,19 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
             if (dn == null)
             {
                 deployStep.Status = "Skipped";
-                deployStep.Message = $"部署节点[{nid}]不存在";
+                deployStep.Message = L.T("Deployment node [{0}] does not exist.", nid);
                 AppDeployHistory.Create(pipeline.DeployId, 0, "pipeline/autoDeploy", false, deployStep.Message, ip).Insert();
             }
             else if (!dn.Enable)
             {
                 deployStep.Status = "Skipped";
-                deployStep.Message = $"部署节点[{dn.NodeName}]未启用";
+                deployStep.Message = L.T("Deployment node [{0}] is disabled.", dn.NodeName);
                 AppDeployHistory.Create(pipeline.DeployId, dn.NodeId, "pipeline/autoDeploy", false, deployStep.Message, ip).Insert();
             }
             else if (dn.DeployId != pipeline.DeployId)
             {
                 deployStep.Status = "Skipped";
-                deployStep.Message = $"部署节点[{dn.NodeName}]DeployId 不匹配";
+                deployStep.Message = L.T("Deployment node [{0}] DeployId mismatch.", dn.NodeName);
                 AppDeployHistory.Create(pipeline.DeployId, dn.NodeId, "pipeline/autoDeploy", false, deployStep.Message, ip).Insert();
             }
             else
@@ -1181,7 +1181,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
                 if (node == null)
                 {
                     deployStep.Status = "Skipped";
-                    deployStep.Message = $"节点[{dn.NodeId}]不存在";
+                    deployStep.Message = L.T("Node [{0}] does not exist.", dn.NodeId);
                     AppDeployHistory.Create(pipeline.DeployId, dn.NodeId, "pipeline/autoDeploy", false, deployStep.Message, ip).Insert();
                 }
                 else
@@ -1203,14 +1203,14 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
                         };
                         var reply = await SendCommand(node, cmdModel, "Pipeline");
                         deployStep.CommandId = (Int32)(reply?.Id ?? 0);
-                        AppDeployHistory.Create(pipeline.DeployId, dn.NodeId, "deploy/install", true, $"已向节点 {dn.NodeName} 下发部署命令（CommandId={deployStep.CommandId}）", ip).Insert();
+                        AppDeployHistory.Create(pipeline.DeployId, dn.NodeId, "deploy/install", true, L.T("Deploy command dispatched to node {0} (CommandId={1}).", dn.NodeName, deployStep.CommandId), ip).Insert();
                     }
                     catch (Exception ex)
                     {
                         deployStep.Status = "Failed";
                         deployStep.FinishedTime = DateTime.Now;
                         deployStep.Message = ex.Message;
-                        AppDeployHistory.Create(pipeline.DeployId, dn.NodeId, "deploy/install", false, $"向节点 {dn.NodeName} 下发部署命令失败：{ex.Message}", ip).Insert();
+                        AppDeployHistory.Create(pipeline.DeployId, dn.NodeId, "deploy/install", false, L.T("Failed to dispatch the deploy command to node {0}: {1}", dn.NodeName, ex.Message), ip).Insert();
                     }
                 }
             }
