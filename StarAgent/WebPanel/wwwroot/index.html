@@ -244,6 +244,7 @@ document.getElementById('lpass').addEventListener('keydown', e => {
 <span class="meta" id="header-meta"></span>
 </div>
 <div style="display:flex;align-items:center;gap:10px">
+<select id="lang-select" class="btn btn-ghost btn-sm" style="appearance:auto;padding:6px 8px" title="Language"></select>
 <button class="btn btn-ghost btn-sm" id="theme-toggle" onclick="toggleTheme()" title="切换浅色/深色主题">🌓</button>
 <button class="btn btn-ghost btn-sm" onclick="logout()">退出</button>
 </div>
@@ -325,6 +326,8 @@ function showApp(){
 async function api(url,opt={}){
  const h=opt.headers||{};
  if(token)h['Authorization']='Bearer '+token;
+ // 带上界面语言，服务端消息与面板一致
+ if(window.StarI18N&&StarI18N.lang&&!url.includes('lang='))url+=(url.includes('?')?'&':'?')+'lang='+StarI18N.lang;
  const r=await fetch(url,{...opt,headers:{...h,'Content-Type':'application/json'}});
  const j=await r.json();
  if(j.code===401||r.status===401){logout();showToast('登录已过期，请重新登录','error');throw new Error('Unauthorized')}
@@ -1037,5 +1040,6 @@ window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{
 token=sessionStorage.getItem('agent_token')||'';
 if(token)showApp();
 </script>
+<script src="/i18n.js"></script>
 </body>
 </html>
