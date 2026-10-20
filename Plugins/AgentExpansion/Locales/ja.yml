@@ -1,16 +1,26 @@
 # Japanese translation. Keys are English source texts; missing entries fall back to English at runtime.
-"{0} probe failed: {1}": "{0} probe failed: {1}"
-"{0} SSH failed: {1}": "{0} SSH failed: {1}"
-"{0} Telnet failed: {1}": "{0} Telnet failed: {1}"
-"Package hash verification failed; expected {0}, actual {1}": "Package hash verification failed; expected {0}, actual {1}"
-"Downloading the package over HTTP is risky; assess network security.": "Downloading the package over HTTP is risky; assess network security."
-"Package download requires HTTPS or a configured PackageSha512.": "Package download requires HTTPS or a configured PackageSha512."
-"Node {0} has no SSH fingerprint configured; skipping verification": "Node {0} has no SSH fingerprint configured; skipping verification"
-"Node {0} already has StarAgent ({1})": "Node {0} already has StarAgent ({1})"
-"Installation command sent to node {0}": "Installation command sent to node {0}"
-"Telnet installation command sent to node {0}": "Telnet installation command sent to node {0}"
-"Node {0} returned from the installation command: {1}": "Node {0} returned from the installation command: {1}"
-"SSH fingerprint mismatch for node {0}; expected {1}, actual {2}": "SSH fingerprint mismatch for node {0}; expected {1}, actual {2}"
-"Telnet download over HTTP for node {0} is risky; assess network security.": "Telnet download over HTTP for node {0} is risky; assess network security."
-"Telnet download for node {0} requires HTTPS or a configured PackageSha512.": "Telnet download for node {0} requires HTTPS or a configured PackageSha512."
-"StarServer is not configured; skipping automatic installation": "StarServer is not configured; skipping automatic installation"
+"{0} probe failed: {1}": "{0} プローブに失敗しました: {1}"
+"{0} SSH failed: {1}": "{0} の SSH に失敗しました: {1}"
+"{0} Telnet failed: {1}": "{0} の Telnet に失敗しました: {1}"
+"Package hash verification failed; expected {0}, actual {1}": "パッケージのハッシュ検証に失敗しました。期待値 {0}、実際 {1}"
+"Downloading the package over HTTP is risky; assess network security.": "HTTP 経由でのパッケージのダウンロードは危険です。ネットワークの安全性を評価してください。"
+"Package download requires HTTPS or a configured PackageSha512.": "パッケージのダウンロードには HTTPS または PackageSha512 の構成が必要です。"
+"Node {0} has no SSH fingerprint configured; skipping verification": "ノード {0} に SSH フィンガープリントが構成されていないため、検証をスキップします"
+"Node {0} already has StarAgent ({1})": "ノード {0} には既に StarAgent（{1}）があります"
+"Installation command sent to node {0}": "ノード {0} にインストールコマンドを送信しました"
+"Telnet installation command sent to node {0}": "ノード {0} に Telnet インストールコマンドを送信しました"
+"Node {0} returned from the installation command: {1}": "ノード {0} がインストールコマンドから返しました: {1}"
+"SSH fingerprint mismatch for node {0}; expected {1}, actual {2}": "ノード {0} の SSH フィンガープリントが一致しません。期待値 {1}、実際 {2}"
+"Telnet download over HTTP for node {0} is risky; assess network security.": "ノード {0} の HTTP 経由の Telnet ダウンロードは危険です。ネットワークの安全性を評価してください。"
+"Telnet download for node {0} requires HTTPS or a configured PackageSha512.": "ノード {0} の Telnet ダウンロードには HTTPS または PackageSha512 の構成が必要です。"
+"StarServer is not configured; skipping automatic installation": "StarServer が構成されていないため、自動インストールをスキップします"
+# 运行时消息补充词条
+# 运行时消息补充词条
+# 运行时消息补充词条
+# 运行时消息补充词条
+# 运行时消息补充词条
+# 运行时消息补充词条
+# 运行时消息补充词条
+# 运行时消息补充词条
+# 运行时消息补充词条
+

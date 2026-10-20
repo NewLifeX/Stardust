@@ -1,24 +1,34 @@
 # Japanese translation. Keys are English source texts; missing entries fall back to English at runtime.
-"Routes fetched from StarServer are empty; falling back to the database": "Routes fetched from StarServer are empty; falling back to the database"
-"Fetched route configuration from StarServer: {0} route(s)": "Fetched route configuration from StarServer: {0} route(s)"
-"Loaded route configuration from local file {0}: {1} route(s) (local fallback)": "Loaded route configuration from local file {0}: {1} route(s) (local fallback)"
-"Loaded route configuration from the database: {0} route(s)": "Loaded route configuration from the database: {0} route(s)"
-"Failed to read static file: {0} - {1}": "Failed to read static file: {0} - {1}"
-"Service [{0}] stop timed out; forcing shutdown": "Service [{0}] stop timed out; forcing shutdown"
-"Loading SSL certificate: {0} -> {1}": "Loading SSL certificate: {0} -> {1}"
-"Health check: {0} -> {1}": "Health check: {0} -> {1}"
-"No default page in static directory: {0}": "No default page in static directory: {0}"
-"Static file not found: {0}": "Static file not found: {0}"
-"Static file root directory not found: {0}": "Static file root directory not found: {0}"
-"Path traversal attack blocked: {0}": "Path traversal attack blocked: {0}"
-"Database initialization completed": "Database initialization completed"
-"No SSL certificate configured; only HTTP is supported": "No SSL certificate configured; only HTTP is supported"
-"Gracefully shutting down the service...": "Gracefully shutting down the service..."
-"HTTP reverse proxy started, listening on port {0}, route count: {1}": "HTTP reverse proxy started, listening on port {0}, route count: {1}"
-"NAT proxy => {0}": "NAT proxy => {0}"
-"SPA fallback: {0} -> {1}": "SPA fallback: {0} -> {1}"
-"StarGateway has no StarServer configured; running in standalone mode (database + local configuration only)": "StarGateway has no StarServer configured; running in standalone mode (database + local configuration only)"
-"StarGateway connected to StarServer: {0}": "StarGateway connected to StarServer: {0}"
-"StarGateway started, listening on port {0}, remote server {1}": "StarGateway started, listening on port {0}, remote server {1}"
+"Routes fetched from StarServer are empty; falling back to the database": "StarServer から取得したルートが空です。データベースにフォールバックします"
+"Fetched route configuration from StarServer: {0} route(s)": "StarServer からルート構成を取得しました: {0} 件"
+"Loaded route configuration from local file {0}: {1} route(s) (local fallback)": "ローカルファイル {0} からルート構成を読み込みました: {1} 件（ローカルフォールバック）"
+"Loaded route configuration from the database: {0} route(s)": "データベースからルート構成を読み込みました: {0} 件"
+"Failed to read static file: {0} - {1}": "静的ファイルの読み取りに失敗しました: {0} - {1}"
+"Service [{0}] stop timed out; forcing shutdown": "サービス[{0}]の停止がタイムアウトしました。強制終了します"
+"Loading SSL certificate: {0} -> {1}": "SSL 証明書を読み込んでいます: {0} -> {1}"
+"Health check: {0} -> {1}": "ヘルスチェック: {0} -> {1}"
+"No default page in static directory: {0}": "静的ディレクトリに既定ページがありません: {0}"
+"Static file not found: {0}": "静的ファイルが見つかりません: {0}"
+"Static file root directory not found: {0}": "静的ファイルのルートディレクトリが見つかりません: {0}"
+"Path traversal attack blocked: {0}": "パストラバーサル攻撃をブロックしました: {0}"
+"Database initialization completed": "データベースの初期化が完了しました"
+"No SSL certificate configured; only HTTP is supported": "SSL 証明書が構成されていないため、HTTP のみをサポートします"
+"Gracefully shutting down the service...": "サービスを正常に停止しています..."
+"HTTP reverse proxy started, listening on port {0}, route count: {1}": "HTTP リバースプロキシを起動しました。ポート {0} で待機中、ルート数: {1}"
+"NAT proxy => {0}": "NAT プロキシ => {0}"
+"SPA fallback: {0} -> {1}": "SPA フォールバック: {0} -> {1}"
+"StarGateway has no StarServer configured; running in standalone mode (database + local configuration only)": "StarGateway には StarServer が構成されていません。スタンドアロンモード（データベース + ローカル構成のみ）で実行します"
+"StarGateway connected to StarServer: {0}": "StarGateway が StarServer に接続しました: {0}"
+"StarGateway started, listening on port {0}, remote server {1}": "StarGateway を起動しました。ポート {0} で待機中、リモートサーバー {1}"
 # 运行时消息补充词条
-"Configuration refreshed.": "Configuration refreshed."
+"Configuration refreshed.": "構成を更新しました。"
+# 运行时消息补充词条
+# 运行时消息补充词条
+# 运行时消息补充词条
+# 运行时消息补充词条
+# 运行时消息补充词条
+# 运行时消息补充词条
+# 运行时消息补充词条
+# 运行时消息补充词条
+# 运行时消息补充词条
+

@@ -1,22 +1,32 @@
 # Japanese translation. Keys are English source texts; missing entries fall back to English at runtime.
-"GetRawUrl: {0} failed: {1}": "GetRawUrl: {0} failed: {1}"
-"StarFactory is not registered; call AddStardust to register.": "StarFactory is not registered; call AddStardust to register."
-"The dust client failed to obtain the local service address.": "The dust client failed to obtain the local service address."
-"Download concurrency limit reached; skipping this download.": "Download concurrency limit reached; skipping this download."
-"Skipping self-referencing upstream: {0}": "Skipping self-referencing upstream: {0}"
-"Downloading file: {0}": "Downloading file: {0}"
-"Download failed with status code [{0}], url [{1}]": "Download failed with status code [{0}], url [{1}]"
-"File download completed: {0}": "File download completed: {0}"
-"Downloading directory: {0}": "Downloading directory: {0}"
-"Directory download failed with status code [{0}], url [{1}]": "Directory download failed with status code [{0}], url [{1}]"
-"Directory download completed: {0}": "Directory download completed: {0}"
-"Directory download error: {0}": "Directory download error: {0}"
-"Negative cache hit; skipping download.": "Negative cache hit; skipping download."
-"Upstream points to itself; skipping download.": "Upstream points to itself; skipping download."
-"File cache upstream [{0}] points to itself; skipping download: {1}": "File cache upstream [{0}] points to itself; skipping download: {1}"
-"Failed to obtain the local listening port: {0}": "Failed to obtain the local listening port: {0}"
-"Warning: file cache upstream [{0}] points to itself; file pulling from this upstream is disabled. Check the PluginServer setting.": "Warning: file cache upstream [{0}] points to itself; file pulling from this upstream is disabled. Check the PluginServer setting."
-"[{0}] Failed to read the request body: {1}": "[{0}] Failed to read the request body: {1}"
-"[{0}] Failed to read the response body: {1}": "[{0}] Failed to read the response body: {1}"
-"Failed to save the tracing name truncation prefix: {0}": "Failed to save the tracing name truncation prefix: {0}"
-"Tracing name truncation prefix: {0}": "Tracing name truncation prefix: {0}"
+"GetRawUrl: {0} failed: {1}": "GetRawUrl: {0} が失敗しました: {1}"
+"StarFactory is not registered; call AddStardust to register.": "StarFactory が登録されていません。AddStardust を呼び出して登録してください。"
+"The dust client failed to obtain the local service address.": "Stardust クライアントがローカルサービスアドレスを取得できませんでした。"
+"Download concurrency limit reached; skipping this download.": "ダウンロードの同時実行数の上限に達しました。このダウンロードをスキップします。"
+"Skipping self-referencing upstream: {0}": "自分自身を指す上流をスキップします: {0}"
+"Downloading file: {0}": "ファイルをダウンロードしています: {0}"
+"Download failed with status code [{0}], url [{1}]": "ダウンロードに失敗しました。ステータスコード [{0}]、URL [{1}]"
+"File download completed: {0}": "ファイルのダウンロードが完了しました: {0}"
+"Downloading directory: {0}": "ディレクトリをダウンロードしています: {0}"
+"Directory download failed with status code [{0}], url [{1}]": "ディレクトリのダウンロードに失敗しました。ステータスコード [{0}]、URL [{1}]"
+"Directory download completed: {0}": "ディレクトリのダウンロードが完了しました: {0}"
+"Directory download error: {0}": "ディレクトリのダウンロードエラー: {0}"
+"Negative cache hit; skipping download.": "ネガティブキャッシュにヒットしました。ダウンロードをスキップします。"
+"Upstream points to itself; skipping download.": "上流が自分自身を指しています。ダウンロードをスキップします。"
+"File cache upstream [{0}] points to itself; skipping download: {1}": "ファイルキャッシュの上流 [{0}] が自分自身を指しています。ダウンロードをスキップします: {1}"
+"Failed to obtain the local listening port: {0}": "ローカルの待機ポートを取得できませんでした: {0}"
+"Warning: file cache upstream [{0}] points to itself; file pulling from this upstream is disabled. Check the PluginServer setting.": "警告: ファイルキャッシュの上流 [{0}] が自分自身を指しています。この上流からのファイル取得は無効です。PluginServer の設定を確認してください。"
+"[{0}] Failed to read the request body: {1}": "[{0}] リクエスト本文の読み取りに失敗しました: {1}"
+"[{0}] Failed to read the response body: {1}": "[{0}] 応答本文の読み取りに失敗しました: {1}"
+"Failed to save the tracing name truncation prefix: {0}": "トレース名の切り詰めプレフィックスの保存に失敗しました: {0}"
+"Tracing name truncation prefix: {0}": "トレース名の切り詰めプレフィックス: {0}"
+# 运行时消息补充词条
+# 运行时消息补充词条
+# 运行时消息补充词条
+# 运行时消息补充词条
+# 运行时消息补充词条
+# 运行时消息补充词条
+# 运行时消息补充词条
+# 运行时消息补充词条
+# 运行时消息补充词条
+
