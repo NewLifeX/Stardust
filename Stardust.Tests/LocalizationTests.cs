@@ -111,6 +111,20 @@ public class LocalizationTests : IDisposable
         Assert.Equal("偵錯開關。預設 false", Localization.Translate("Debug switch. Default false"));
         Assert.Equal("星塵設定", Localization.Translate("Stardust settings"));
     }
+
+    [Fact(DisplayName = "31种语言均提供设置描述译文")]
+    public void AllLocalesTranslateSettings()
+    {
+        LoadAssemblies();
+
+        const String key = "Debug switch. Default false";
+        foreach (var code in _locales)
+        {
+            Localization.Culture = new CultureInfo(code);
+
+            Assert.NotEqual(key, Localization.Translate(key));
+        }
+    }
 }
 
 /// <summary>多语言测试集合。Localization.Culture 是进程级全局状态，禁止与其它测试并行</summary>
