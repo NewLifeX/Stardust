@@ -167,7 +167,14 @@ internal class MyService : ServiceBase, IServiceProvider
 
         // 安全默认：面板仅本机监听，需要局域网访问时在 staragent.config 配置 WebBind=* 或指定IP
         var address = WebBindHelper.Parse(AgentSetting.WebBind);
-        if (address != null) panel.Server.Local.Address = address;
+        if (address != null)
+        {
+            panel.Server.Local.Address = address;
+
+            // 地址重用：多实例可监听同一端口，先启动者接收请求，前者退出后由后者接管。
+            // 仅回环地址启用，开放到局域网时保持独占，避免端口被本地进程抢占。
+            panel.Server.ReuseAddress = IPAddress.IsLoopback(address);
+        }
 
         return panel;
     }

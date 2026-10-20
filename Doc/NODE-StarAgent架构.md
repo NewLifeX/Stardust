@@ -222,6 +222,18 @@ StarAgent 基于 NewLife.Agent 内置的 `AgentWebPanel` 框架，提供了轻�
 - 非法绑定地址回退本机回环，避免配置笔误把面板误开放到局域网
 - 默认凭据：`WebUserName` / `WebPassword` 默认 `admin` / `admin`；开放远程前务必修改密码，面板启动日志会在“监听所有网卡且仍使用默认密码”时输出安全提醒
 
+### 6.7 多实例与地址重用
+
+StarAgent 的 Web 面板在回环地址（默认 `127.0.0.1`）上启用 `SO_REUSEADDR` 地址重用：
+
+- 多个 StarAgent 实例可同时监听同一个 `LocalPort`（默认 5500）
+- 先启动的实例接收请求；后启动的实例处于待命状态，不接收新连接
+- 先启动的实例退出后，后启动的实例自动接管，适合升级/重启交替
+- 仅 Windows 具备上述“多监听待命”语义；Linux 的 `SO_REUSEADDR` 只解决 TIME_WAIT，不支持两个活动监听
+- 当 `WebBind` 配置为 `*` 或局域网 IP 时不启用地址重用，避免本地进程抢占对外面板端口
+- 旧版本 StarAgent 可能仍以独占方式绑定端口，此时新实例会被系统拒绝（`WSAEACCES`/`WSAEADDRINUSE`）；需要停止旧实例或升级后重启
+- 端口被占用时的单行告警由 `NewLife.Agent` 的 `ServiceBase.StartWork` 提供，需使用包含该修改的包版本；旧包仍会打印异常堆栈
+
 ---
 
 ## 7. 多语言原生 Agent
