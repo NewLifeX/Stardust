@@ -1,4 +1,5 @@
 # French translation. Keys are English source texts; missing entries fall back to English at runtime.
-"[{0}] Login succeeded, node code: {1}": "[{0}] Login succeeded, node code: {1}"
-"[{0}] Starting agent, server: {1}": "[{0}] Starting agent, server: {1}"
-"[{0}] Startup failed: {1}": "[{0}] Startup failed: {1}"
+"[{0}] Login succeeded, node code: {1}": "[{0}] Connexion réussie, code du nœud : {1}"
+"[{0}] Starting agent, server: {1}": "[{0}] Démarrage de l'agent, serveur : {1}"
+"[{0}] Startup failed: {1}": "[{0}] Échec du démarrage : {1}"
+
