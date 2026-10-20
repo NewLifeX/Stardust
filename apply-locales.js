@@ -10,6 +10,39 @@ const fs = require('fs');
 const path = require('path');
 
 const [, , entriesFile, ...dirs] = process.argv;
+
+// 统计模式：node apply-locales.js --missing <lang> [localeDir...]
+// 默认扫描仓库内全部 Locales 目录，输出该语言仍为英文占位的键
+if (entriesFile === '--missing') {
+  const lang = dirs.shift();
+  const targets = dirs.length > 0 ? dirs : [
+    'Stardust/Locales', 'Stardust.Extensions/Locales', 'Stardust.Server/Locales', 'Stardust.Web/Locales',
+    'Stardust.WebApi/Locales', 'Stardust.Data/Locales', 'StarAgent/Locales', 'StarAgent.Mobile/Locales',
+    'StarGateway/Locales', 'DeployAgent/Locales', 'Plugins/AgentExpansion/Locales', 'Plugins/NetworkDetect/Locales',
+  ];
+  const unesc0 = (s) => s.replace(/\\(u[0-9a-fA-F]{4}|.)/g, (m, v) => {
+    if (v.length === 5) return String.fromCharCode(parseInt(v.slice(1), 16));
+    switch (v) { case 'n': return '\n'; case 'r': return '\r'; case 't': return '\t'; case '\\': return '\\'; case '"': return '"'; default: return m; }
+  });
+  const parse0 = (line) => {
+    if (typeof line !== 'string') return null;
+    const m = line.match(/^\s*"((?:[^"\\]|\\.)*)"\s*:\s*"((?:[^"\\]|\\.)*)"\s*$/);
+    return m ? { key: unesc0(m[1]), value: unesc0(m[2]) } : null;
+  };
+  const missing = new Set();
+  for (const dir of targets) {
+    const p = path.join(dir, lang + '.yml');
+    if (!fs.existsSync(p)) { console.log('missing file ' + p); continue; }
+    for (const line of fs.readFileSync(p, 'utf8').split(/\r?\n/)) {
+      const e = parse0(line);
+      if (e && e.value === e.key) missing.add(e.key);
+    }
+  }
+  for (const k of missing) console.log(k);
+  console.log(`untranslated=${missing.size}`);
+  process.exit(0);
+}
+
 const entries = JSON.parse(fs.readFileSync(entriesFile, 'utf8'));
 const keys = Object.keys(entries);
 if (keys.length === 0) { console.log('no entries'); process.exit(0); }
