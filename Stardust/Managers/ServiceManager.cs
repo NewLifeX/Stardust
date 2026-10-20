@@ -703,7 +703,7 @@ public class ServiceManager : DisposeBase
 
         foreach (var controller in needStop)
         {
-            controller.Stop("配置停止");
+            controller.Stop(L.TLog("Service removed or disabled"));
             lock (this)
             {
                 _controllers.Remove(controller);
@@ -730,7 +730,7 @@ public class ServiceManager : DisposeBase
 
         foreach (var controller in needRestart)
         {
-            controller.Stop("配置改变");
+            controller.Stop(L.TLog("Configuration changed"));
             lock (this)
             {
                 _controllers.Remove(controller);

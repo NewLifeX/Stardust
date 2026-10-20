@@ -202,4 +202,5 @@
 "Stardust settings": "Stardust-inställningar"
 # 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "Gränssnittsspråk, till exempel zh-Hans, zh-Hant, en eller ja; lämna tomt för att följa systemspråket"
-
+"Service removed or disabled": "Tjänst borttagen eller inaktiverad"
+"Configuration changed": "Konfigurationen ändrad"

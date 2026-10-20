@@ -59,19 +59,6 @@ public class StarApi : IHttpController
 
         return AgentWebPanel.Current?.ValidateToken(token) == true;
     }
-
-    /// <summary>按请求语言设置界面文化。优先 lang 查询参数，其次 Accept-Language</summary>
-    /// <returns>语言作用域，请求结束时还原</returns>
-    private IDisposable? UseRequestLanguage()
-    {
-        var ctx = Context;
-        if (ctx == null) return null;
-
-        var lang = ctx.Request["lang"] as String;
-        if (lang.IsNullOrEmpty() && ctx.Request.Headers.TryGetValue("Accept-Language", out var accept)) lang = accept;
-
-        return RequestCultureScope.Create(lang);
-    }
     #endregion
 
     #region 子服务管理
@@ -79,7 +66,6 @@ public class StarApi : IHttpController
     /// <returns>服务列表，含运行状态</returns>
     public Object Services()
     {
-        using var _ = UseRequestLanguage();
         if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
 
         var manager = GetManager();
@@ -132,7 +118,6 @@ public class StarApi : IHttpController
     /// <returns>操作结果</returns>
     public Object StartService(String serviceName)
     {
-        using var _ = UseRequestLanguage();
         if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
 
         var manager = GetManager();
@@ -161,7 +146,6 @@ public class StarApi : IHttpController
     /// <returns>操作结果</returns>
     public Object StopService(String serviceName)
     {
-        using var _ = UseRequestLanguage();
         if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
 
         var manager = GetManager();
@@ -171,7 +155,7 @@ public class StarApi : IHttpController
 
         try
         {
-            var result = manager.Stop(serviceName, "Web面板调用停止");
+            var result = manager.Stop(serviceName, L.TLog("Stopped from the web panel"));
             return new
             {
                 code = result ? 0 : 1,
@@ -190,7 +174,6 @@ public class StarApi : IHttpController
     /// <returns>操作结果</returns>
     public Object RestartService(String serviceName)
     {
-        using var _ = UseRequestLanguage();
         if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
 
         var manager = GetManager();
@@ -204,7 +187,7 @@ public class StarApi : IHttpController
             var running = manager.RunningServices?.Any(e => e.Name.EqualIgnoreCase(serviceName)) == true;
             if (running)
             {
-                var stopResult = manager.Stop(serviceName, "Web面板调用重启");
+                var stopResult = manager.Stop(serviceName, L.TLog("Restarted from the web panel"));
                 if (!stopResult) return new { code = 1, message = L.T("Failed to stop service."), serviceName };
                 Thread.Sleep(1000);
             }
@@ -229,7 +212,6 @@ public class StarApi : IHttpController
     /// <returns>操作结果</returns>
     public Object AddService(ServiceInfo info)
     {
-        using var _ = UseRequestLanguage();
         if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
 
         var manager = GetManager();
@@ -260,7 +242,6 @@ public class StarApi : IHttpController
     /// <returns>操作结果</returns>
     public Object RemoveService(String serviceName)
     {
-        using var _ = UseRequestLanguage();
         if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
 
         var manager = GetManager();
@@ -272,7 +253,7 @@ public class StarApi : IHttpController
         {
             // 先停止服务
             if (manager.RunningServices?.Any(e => e.Name.EqualIgnoreCase(serviceName)) == true)
-                manager.Stop(serviceName, "Web面板调用删除");
+                manager.Stop(serviceName, L.TLog("Removed from the web panel"));
 
             manager.Remove(serviceName);
 
@@ -295,7 +276,6 @@ public class StarApi : IHttpController
     /// <returns>StarSetting + StarAgentSetting 所有配置项</returns>
     public Object GetStarConfig()
     {
-        using var _ = UseRequestLanguage();
         if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
 
         var starSet = GetStarSetting();
@@ -304,25 +284,25 @@ public class StarApi : IHttpController
         var items = new List<Object>();
 
         // StarSetting 配置项
-        items.Add(new { group = "StarServer 连接", items = new Object[]
+        items.Add(new { group = L.T("StarServer connection"), items = new Object[]
         {
-            new { name = "Server", displayName = "服务端地址", value = (Object)(starSet.Server ?? ""), type = "String", description = "星尘服务端地址，如 http://star.newlifex.com:6600" },
-            new { name = "AppKey", displayName = "应用标识", value = (Object)(starSet.AppKey ?? ""), type = "String", description = "接入星尘注册中心的应用标识" },
-            new { name = "Secret", displayName = "应用密钥", value = (Object)(starSet.Secret ?? ""), type = "Password", description = "接入星尘注册中心的应用密钥" },
+            new { name = "Server", displayName = L.T("Server address"), value = (Object)(starSet.Server ?? ""), type = "String", description = L.T("Stardust server address, e.g. http://star.newlifex.com:6600") },
+            new { name = "AppKey", displayName = L.T("Application ID"), value = (Object)(starSet.AppKey ?? ""), type = "String", description = L.T("Application ID registered with the Stardust registry") },
+            new { name = "Secret", displayName = L.T("Application secret"), value = (Object)(starSet.Secret ?? ""), type = "Password", description = L.T("Application secret registered with the Stardust registry") },
         }});
 
-        items.Add(new { group = "StarAgent 本地配置", items = new Object[]
+        items.Add(new { group = L.T("StarAgent local settings"), items = new Object[]
         {
-            new { name = "LocalPort", displayName = "本地端口(UDP)", value = (Object)agentSet.LocalPort, type = "Int32", description = "本地API通信端口（UDP），默认5500。与 Web 面板端口共用，UDP 用于本地 RPC，TCP 用于 Web 面板" },
-            new { name = "WebBind", displayName = "面板绑定地址", value = (Object)(agentSet.WebBind ?? ""), type = "String", description = "Web 面板监听地址，默认127.0.0.1仅本机；设为*开放所有网卡，或指定具体IP。修改后需重启 StarAgent 生效" },
-            new { name = "Code", displayName = "节点编码", value = (Object)(agentSet.Code ?? ""), type = "String", description = "当前节点的唯一编码" },
-            new { name = "Secret_Agent", displayName = "节点密钥", value = (Object)(agentSet.Secret ?? ""), type = "Password", description = "节点通信密钥" },
-            new { name = "Project", displayName = "项目名", value = (Object)(agentSet.Project ?? ""), type = "String", description = "新节点默认所要加入的项目" },
-            new { name = "Channel", displayName = "更新通道", value = (Object)agentSet.Channel, type = "String", description = "更新通道：Release/Debug" },
-            new { name = "Delay", displayName = "延迟时间(ms)", value = (Object)agentSet.Delay, type = "Int32", description = "重启进程或服务的延迟时间，默认3000ms" },
-            new { name = "SyncTime", displayName = "同步间隔(s)", value = (Object)agentSet.SyncTime, type = "Int32", description = "定期同步服务器时间到本地，0表示不同步" },
-            new { name = "StartupHook", displayName = "启动挂钩", value = (Object)agentSet.StartupHook, type = "Boolean", description = "拉起目标进程时对dotNet应用注入星尘监控钩子" },
-            new { name = "UseAutorun", displayName = "Windows自启动", value = (Object)agentSet.UseAutorun, type = "Boolean", description = "自启动需要用户登录桌面，默认false使用系统服务" },
+            new { name = "LocalPort", displayName = L.T("Local port (UDP)"), value = (Object)agentSet.LocalPort, type = "Int32", description = L.T("Local API port (UDP), default 5500. Shares the port with the web panel: UDP for local RPC, TCP for the web panel") },
+            new { name = "WebBind", displayName = L.T("Panel bind address"), value = (Object)(agentSet.WebBind ?? ""), type = "String", description = L.T("Web panel listen address, default 127.0.0.1 for local access only. Set to * for all interfaces or a specific IP. Requires a StarAgent restart") },
+            new { name = "Code", displayName = L.T("Node code"), value = (Object)(agentSet.Code ?? ""), type = "String", description = L.T("Unique code of the current node") },
+            new { name = "Secret_Agent", displayName = L.T("Node secret"), value = (Object)(agentSet.Secret ?? ""), type = "Password", description = L.T("Secret used for node communication") },
+            new { name = "Project", displayName = L.T("Project"), value = (Object)(agentSet.Project ?? ""), type = "String", description = L.T("Project the new node joins by default") },
+            new { name = "Channel", displayName = L.T("Update channel"), value = (Object)agentSet.Channel, type = "String", description = L.T("Update channel: Release/Debug") },
+            new { name = "Delay", displayName = L.T("Delay (ms)"), value = (Object)agentSet.Delay, type = "Int32", description = L.T("Delay before restarting the process or service, default 3000 ms") },
+            new { name = "SyncTime", displayName = L.T("Sync interval (s)"), value = (Object)agentSet.SyncTime, type = "Int32", description = L.T("Periodically sync server time to local, 0 to disable") },
+            new { name = "StartupHook", displayName = L.T("Startup hook"), value = (Object)agentSet.StartupHook, type = "Boolean", description = L.T("Inject the Stardust monitoring hook into .NET applications when launching the target process") },
+            new { name = "UseAutorun", displayName = L.T("Windows autorun"), value = (Object)agentSet.UseAutorun, type = "Boolean", description = L.T("Autorun requires a signed-in desktop; false by default uses the system service") },
         }});
 
         return new { code = 0, data = new { groups = items } };
@@ -333,7 +313,6 @@ public class StarApi : IHttpController
     /// <returns>操作结果</returns>
     public Object UpdateStarConfig(Dictionary<String, Object> updates)
     {
-        using var _ = UseRequestLanguage();
         if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
 
         if (updates == null || updates.Count == 0)
@@ -405,7 +384,6 @@ public class StarApi : IHttpController
     /// <returns>丰富的本机信息</returns>
     public Object Machine()
     {
-        using var _ = UseRequestLanguage();
         if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
 
         try
@@ -571,7 +549,6 @@ public class StarApi : IHttpController
     /// <returns>进程列表</returns>
     public Object GetProcessList(String sort = "memory", Int32 count = 10)
     {
-        using var _ = UseRequestLanguage();
         if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
 
         try
@@ -643,9 +620,9 @@ public class StarApi : IHttpController
     private static String FormatUptime(Int64 seconds)
     {
         var ts = TimeSpan.FromSeconds(seconds);
-        if (ts.TotalDays >= 1) return $"{(Int32)ts.TotalDays}天{ts.Hours}小时{ts.Minutes}分";
-        if (ts.TotalHours >= 1) return $"{(Int32)ts.TotalHours}小时{ts.Minutes}分";
-        return $"{ts.Minutes}分{ts.Seconds}秒";
+        if (ts.TotalDays >= 1) return L.T("{0}d {1}h {2}m", (Int32)ts.TotalDays, ts.Hours, ts.Minutes);
+        if (ts.TotalHours >= 1) return L.T("{0}h {1}m", (Int32)ts.TotalHours, ts.Minutes);
+        return L.T("{0}m {1}s", ts.Minutes, ts.Seconds);
     }
 
     #endregion

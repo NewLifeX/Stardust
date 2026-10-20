@@ -167,12 +167,37 @@
 "Error while saving configuration: {0}": "Error al guardar la configuración: {0}"
 "Error while getting machine information: {0}": "Error al obtener la información de la máquina: {0}"
 "Error while getting process list: {0}": "Error al obtener la lista de procesos: {0}"
-# 运行时消息补充词条
-"UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "Idioma de la interfaz; por ejemplo, zh-Hans, zh-Hant, en o ja; déjelo vacío para seguir el idioma del sistema"
-
-
-
-
-
-
-
+"{0}d {1}h {2}m": "{0} d {1} h {2} min"
+"{0}h {1}m": "{0} h {1} min"
+"{0}m {1}s": "{0} min {1} s"
+"StarServer connection": "Conexión con StarServer"
+"StarAgent local settings": "Configuración local de StarAgent"
+"Server address": "Dirección del servidor"
+"Application ID": "ID de aplicación"
+"Application secret": "Secreto de aplicación"
+"Local port (UDP)": "Puerto local (UDP)"
+"Panel bind address": "Dirección de enlace del panel"
+"Node code": "Código del nodo"
+"Node secret": "Secreto del nodo"
+"Project": "Proyecto"
+"Update channel": "Canal de actualización"
+"Delay (ms)": "Retardo (ms)"
+"Sync interval (s)": "Intervalo de sincronización (s)"
+"Startup hook": "Enlace de inicio"
+"Windows autorun": "Inicio automático de Windows"
+"Stopped from the web panel": "Detenido desde el panel web"
+"Restarted from the web panel": "Reiniciado desde el panel web"
+"Removed from the web panel": "Eliminado desde el panel web"
+"Stardust server address, e.g. http://star.newlifex.com:6600": "Dirección del servidor Stardust, p. ej. http://star.newlifex.com:6600"
+"Application ID registered with the Stardust registry": "ID de aplicación registrado en el registro de Stardust"
+"Application secret registered with the Stardust registry": "Secreto de aplicación registrado en el registro de Stardust"
+"Local API port (UDP), default 5500. Shares the port with the web panel: UDP for local RPC, TCP for the web panel": "Puerto de API local (UDP), 5500 por defecto. Comparte el puerto con el panel web: UDP para RPC local, TCP para el panel web"
+"Web panel listen address, default 127.0.0.1 for local access only. Set to * for all interfaces or a specific IP. Requires a StarAgent restart": "Dirección de escucha del panel web; 127.0.0.1 por defecto solo local. Use * para todas las interfaces o una IP concreta. Requiere reiniciar StarAgent"
+"Unique code of the current node": "Código único del nodo actual"
+"Secret used for node communication": "Secreto usado para la comunicación del nodo"
+"Project the new node joins by default": "Proyecto al que se une el nuevo nodo por defecto"
+"Update channel: Release/Debug": "Canal de actualización: Release/Debug"
+"Delay before restarting the process or service, default 3000 ms": "Retardo antes de reiniciar el proceso o servicio, 3000 ms por defecto"
+"Periodically sync server time to local, 0 to disable": "Sincronizar periódicamente la hora del servidor en local; 0 para desactivar"
+"Inject the Stardust monitoring hook into .NET applications when launching the target process": "Inyectar el enlace de supervisión de Stardust en aplicaciones .NET al iniciar el proceso destino"
+"Autorun requires a signed-in desktop; false by default uses the system service": "El inicio automático requiere una sesión de escritorio iniciada; con false se usa el servicio del sistema"

@@ -202,4 +202,5 @@
 "Stardust settings": "Cài đặt Stardust"
 # 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "Ngôn ngữ giao diện, ví dụ zh-Hans, zh-Hant, en hoặc ja; để trống để theo ngôn ngữ hệ thống"
-
+"Service removed or disabled": "Dịch vụ đã bị xóa hoặc tắt"
+"Configuration changed": "Cấu hình đã thay đổi"

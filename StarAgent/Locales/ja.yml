@@ -167,15 +167,37 @@
 "Error while saving configuration: {0}": "構成の保存中にエラー: {0}"
 "Error while getting machine information: {0}": "マシン情報の取得中にエラー: {0}"
 "Error while getting process list: {0}": "プロセス一覧の取得中にエラー: {0}"
-# 运行时消息补充词条
-"UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "UI 言語。例: zh-Hans、zh-Hant、en、ja。空の場合はシステム言語に従います"
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-
+"{0}d {1}h {2}m": "{0}日{1}時間{2}分"
+"{0}h {1}m": "{0}時間{1}分"
+"{0}m {1}s": "{0}分{1}秒"
+"StarServer connection": "StarServer 接続"
+"StarAgent local settings": "StarAgent ローカル設定"
+"Server address": "サーバーアドレス"
+"Application ID": "アプリID"
+"Application secret": "アプリシークレット"
+"Local port (UDP)": "ローカルポート (UDP)"
+"Panel bind address": "パネルのバインドアドレス"
+"Node code": "ノードコード"
+"Node secret": "ノードシークレット"
+"Project": "プロジェクト"
+"Update channel": "更新チャネル"
+"Delay (ms)": "遅延 (ms)"
+"Sync interval (s)": "同期間隔 (秒)"
+"Startup hook": "起動フック"
+"Windows autorun": "Windows 自動起動"
+"Stopped from the web panel": "Web パネルから停止"
+"Restarted from the web panel": "Web パネルから再起動"
+"Removed from the web panel": "Web パネルから削除"
+"Stardust server address, e.g. http://star.newlifex.com:6600": "Stardust サーバーアドレス（例: http://star.newlifex.com:6600）"
+"Application ID registered with the Stardust registry": "Stardust レジストリに登録したアプリID"
+"Application secret registered with the Stardust registry": "Stardust レジストリに登録したアプリシークレット"
+"Local API port (UDP), default 5500. Shares the port with the web panel: UDP for local RPC, TCP for the web panel": "ローカル API ポート (UDP)、既定値 5500。Web パネルと同じポート番号を使い、UDP はローカル RPC、TCP は Web パネル用"
+"Web panel listen address, default 127.0.0.1 for local access only. Set to * for all interfaces or a specific IP. Requires a StarAgent restart": "Web パネルの待ち受けアドレス。既定の 127.0.0.1 はローカル専用。* で全インターフェイス、または特定の IP を指定。変更後は StarAgent の再起動が必要"
+"Unique code of the current node": "現在のノードの一意なコード"
+"Secret used for node communication": "ノード通信に使用するシークレット"
+"Project the new node joins by default": "新しいノードが既定で参加するプロジェクト"
+"Update channel: Release/Debug": "更新チャネル: Release/Debug"
+"Delay before restarting the process or service, default 3000 ms": "プロセスまたはサービスを再起動するまでの遅延、既定値 3000 ms"
+"Periodically sync server time to local, 0 to disable": "サーバー時刻を定期的にローカルへ同期します。0 で無効"
+"Inject the Stardust monitoring hook into .NET applications when launching the target process": "対象プロセスの起動時に .NET アプリへ Stardust 監視フックを注入します"
+"Autorun requires a signed-in desktop; false by default uses the system service": "自動起動にはデスクトップへのサインインが必要です。既定の false ではシステムサービスを使用します"

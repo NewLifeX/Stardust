@@ -202,4 +202,5 @@
 "Stardust settings": "Stardust সেটিংস"
 # 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "UI ভাষা, উদাহরণ zh-Hans, zh-Hant, en বা ja; সিস্টেম ভাষা অনুসরণ করতে খালি রাখুন"
-
+"Service removed or disabled": "সেবা সরানো বা নিষ্ক্রিয় করা হয়েছে"
+"Configuration changed": "কনফিগারেশন পরিবর্তিত হয়েছে"

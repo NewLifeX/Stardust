@@ -202,4 +202,5 @@
 "Stardust settings": "Stardust ayarları"
 # 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "Arayüz dili, örneğin zh-Hans, zh-Hant, en veya ja; sistem dilini izlemek için boş bırakın"
-
+"Service removed or disabled": "Hizmet kaldırıldı veya devre dışı bırakıldı"
+"Configuration changed": "Yapılandırma değişti"

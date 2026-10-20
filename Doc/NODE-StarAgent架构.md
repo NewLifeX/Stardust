@@ -128,7 +128,7 @@ StarServer 通过 `Node.ProductCode` 区分产品：标准 .NET Agent 为 `StarA
 | **Hosted** | 宿主进程托管 | StarAgent → Host → 插件 |
 | **Task** | 一次性任务 | StarAgent → 任务进程（执行后退出） |
 
-> **运行环境**：.NET 版本在 Linux 上依赖 ICU（安装 `libicu`）。无 ICU 的老旧/嵌入式系统可设置 `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1` 降级运行，此时只有英文界面与日志。界面语言跟随操作系统 UI 语言，详见 [多语言本地化](多语言本地化.md)。
+> **运行环境**：.NET 版本在 Linux 上依赖 ICU（安装 `libicu`）。无 ICU 的老旧/嵌入式系统可设置 `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1` 降级运行，此时只有英文界面与日志。界面语言默认跟随系统/浏览器语言，可在面板右上角切换并写入 Core 全局配置 `NewLife.Setting.Language`，详见 [多语言本地化](多语言本地化.md)。
 
 ---
 

@@ -202,4 +202,5 @@
 "Stardust settings": "Stardust 설정"
 # 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "UI 언어입니다(예: zh-Hans, zh-Hant, en, ja). 비워 두면 시스템 언어를 따릅니다"
-
+"Service removed or disabled": "서비스가 제거되었거나 사용 안 함으로 설정됨"
+"Configuration changed": "구성이 변경됨"

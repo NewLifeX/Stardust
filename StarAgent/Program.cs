@@ -65,9 +65,6 @@ internal class Program
         // 用户模式存储配置，方便服务模式读取。因为服务模式无法读取用户和分辨率等信息
         var set2 = StarAgentSetting.Current;
 
-        // 固定界面与日志语言。留空则跟随系统语言
-        StarLocalization.UseLanguage(set2.Language ?? set.Language);
-
         if (!"-s".EqualIgnoreCase(args) && !"-restart".EqualIgnoreCase(args))
             ThreadPoolX.QueueUserWorkItem(() => LoadUser(set2));
 

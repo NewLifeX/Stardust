@@ -202,6 +202,5 @@
 "Stardust settings": "Параметри Stardust"
 # 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "Мова інтерфейсу, наприклад zh-Hans, zh-Hant, en або ja; залиште порожнім, щоб дотримуватися системної мови"
-
-
-
+"Service removed or disabled": "Службу видалено або вимкнено"
+"Configuration changed": "Конфігурацію змінено"

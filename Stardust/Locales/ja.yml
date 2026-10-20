@@ -209,4 +209,5 @@
 # 运行时消息补充词条
 # 运行时消息补充词条
 # 运行时消息补充词条
-
+"Service removed or disabled": "サービスが削除または無効化された"
+"Configuration changed": "構成が変更された"

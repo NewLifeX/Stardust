@@ -202,3 +202,5 @@
 "Stardust settings": "星塵設定"
 # 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "介面語言。如 zh-Hans、zh-Hant、en、ja，留空時跟隨系統語言"
+"Service removed or disabled": "服務已刪除或停用"
+"Configuration changed": "設定已變更"

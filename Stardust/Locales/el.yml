@@ -202,4 +202,5 @@
 "Stardust settings": "Ρυθμίσεις Stardust"
 # 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "Γλώσσα διεπαφής, για παράδειγμα zh-Hans, zh-Hant, en ή ja· αφήστε κενό για να ακολουθείται η γλώσσα του συστήματος"
-
+"Service removed or disabled": "Η υπηρεσία αφαιρέθηκε ή απενεργοποιήθηκε"
+"Configuration changed": "Η διαμόρφωση άλλαξε"

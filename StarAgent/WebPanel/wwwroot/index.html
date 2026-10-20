@@ -326,13 +326,20 @@ function showApp(){
 async function api(url,opt={}){
  const h=opt.headers||{};
  if(token)h['Authorization']='Bearer '+token;
- // 带上界面语言，服务端消息与面板一致
- if(window.StarI18N&&StarI18N.lang&&!url.includes('lang='))url+=(url.includes('?')?'&':'?')+'lang='+StarI18N.lang;
  const r=await fetch(url,{...opt,headers:{...h,'Content-Type':'application/json'}});
  const j=await r.json();
  if(j.code===401||r.status===401){logout();showToast('登录已过期，请重新登录','error');throw new Error('Unauthorized')}
  return j;
 }
+
+// 面板语言写入 Core 全局配置，服务端消息与界面一致；切换后重载页面
+window.setPanelLanguage=async lang=>{
+ try{
+  const j=await api('/api/setLanguage?language='+encodeURIComponent(lang));
+  if(j.code!==0){showToast(j.message||'保存失败','error');return false}
+  location.reload();return true;
+ }catch(e){return false}
+};
 
 function showToast(msg,type='info'){
  const t=$('toast');t.textContent=msg;t.className='toast '+type+' show';
@@ -381,7 +388,7 @@ async function loadDashboard(){
   if(s.code!==0)return;statusData=s.data;
   const d=s.data;
   const title='StarAgent';
-  document.title=title+' 管理面板';
+  document.title=window.StarI18N?StarI18N.t(title+' 管理面板'):title+' 管理面板';
   $('header-title').textContent=title+' 管理面板';
   $('header-meta').textContent='PID '+d.processId;
   const dot=$('status-dot-header');
@@ -757,7 +764,7 @@ async function saveService(info){
 }
 
 function confirmRemoveService(name){
- showModal('确认删除',`确定要删除子服务 <strong>${esc(name)}</strong> 吗？<br><span style="color:var(--text-tertiary)">如果服务正在运行，会先停止再删除。</span>`,'删除',async()=>{
+ showModal('确认删除',StarI18N.t('确定要删除子服务 {0} 吗？').replace('{0}', `<strong>${esc(name)}</strong>`)+`<br><span style="color:var(--text-tertiary)">${StarI18N.t('如果服务正在运行，会先停止再删除。')}</span>`,'删除',async()=>{
   try{
    const j=await api('/star/removeService',{method:'POST',body:JSON.stringify({serviceName:name})});
    showToast(j.message||'删除成功',j.code?'error':'success');
@@ -844,10 +851,12 @@ async function updateControlStatus(){
 
 async function doControl(action){
  const labels={stop:'停止',start:'启动',restart:'重启'};
- showModal(`${labels[action]}服务`,`确定要${labels[action]}服务吗？${action==='restart'?'重启后服务将自动恢复。':''}`,labels[action],async()=>{
+ const titles={stop:'停止服务',start:'启动服务',restart:'重启服务'};
+ const confirms={stop:'确定要停止服务吗？',start:'确定要启动服务吗？',restart:'确定要重启服务吗？'};
+ showModal(titles[action],`${confirms[action]}${action==='restart'?'重启后服务将自动恢复。':''}`,labels[action],async()=>{
   try{
    const j=await api('/api/control',{method:'POST',body:JSON.stringify({action})});
-   cmdHistory.push({time:new Date().toLocaleString(),action:labels[action],result:j.message||'完成'});
+   cmdHistory.push({time:new Date().toLocaleString(window.StarI18N?StarI18N.lang:undefined),action:labels[action],result:j.message||'完成'});
    sessionStorage.setItem('agent_cmd_history',JSON.stringify(cmdHistory));
    showToast(j.message||'操作已提交',j.code?'error':'success');
    setTimeout(()=>{updateControlStatus();loadDashboard();},2000);

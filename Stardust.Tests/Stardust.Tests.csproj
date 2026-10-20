@@ -62,4 +62,11 @@
     <Content Include="..\Plugins\NetworkDetect\Locales\*.yml" Link="Locales\NetworkDetect\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <!-- 面板前端词表测试直接读取 StarAgent 的 wwwroot 资源 -->
+  <ItemGroup>
+    <Content Include="..\StarAgent\WebPanel\wwwroot\index.html" Link="WebPanel\index.html" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\StarAgent\WebPanel\wwwroot\i18n.js" Link="WebPanel\i18n.js" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\StarAgent\WebPanel\wwwroot\i18n\*.json" Link="WebPanel\i18n\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

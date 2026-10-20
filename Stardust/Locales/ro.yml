@@ -202,7 +202,5 @@
 "Stardust settings": "Setări Stardust"
 # 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "Limba interfeței, de exemplu zh-Hans, zh-Hant, en sau ja; lăsați gol pentru a urma limba sistemului"
-
-
-
-
+"Service removed or disabled": "Serviciu eliminat sau dezactivat"
+"Configuration changed": "Configurația s-a modificat"

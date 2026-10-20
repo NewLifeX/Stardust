@@ -202,4 +202,5 @@
 "Stardust settings": "Tetapan Stardust"
 # 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "Bahasa UI, contohnya zh-Hans, zh-Hant, en atau ja; biarkan kosong untuk mengikut bahasa sistem"
-
+"Service removed or disabled": "Perkhidmatan dialih keluar atau dinyahdayakan"
+"Configuration changed": "Konfigurasi berubah"
