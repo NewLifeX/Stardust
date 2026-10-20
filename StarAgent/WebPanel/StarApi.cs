@@ -1,4 +1,4 @@
-﻿#if !NET40
+#if !NET40
 using System.Diagnostics;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
@@ -59,6 +59,19 @@ public class StarApi : IHttpController
 
         return AgentWebPanel.Current?.ValidateToken(token) == true;
     }
+
+    /// <summary>按请求语言设置界面文化。优先 lang 查询参数，其次 Accept-Language</summary>
+    /// <returns>语言作用域，请求结束时还原</returns>
+    private IDisposable? UseRequestLanguage()
+    {
+        var ctx = Context;
+        if (ctx == null) return null;
+
+        var lang = ctx.Request["lang"] as String;
+        if (lang.IsNullOrEmpty() && ctx.Request.Headers.TryGetValue("Accept-Language", out var accept)) lang = accept;
+
+        return RequestCultureScope.Create(lang);
+    }
     #endregion
 
     #region 子服务管理
@@ -66,6 +79,7 @@ public class StarApi : IHttpController
     /// <returns>服务列表，含运行状态</returns>
     public Object Services()
     {
+        using var _ = UseRequestLanguage();
         if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
 
         var manager = GetManager();
@@ -118,6 +132,7 @@ public class StarApi : IHttpController
     /// <returns>操作结果</returns>
     public Object StartService(String serviceName)
     {
+        using var _ = UseRequestLanguage();
         if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
 
         var manager = GetManager();
@@ -146,6 +161,7 @@ public class StarApi : IHttpController
     /// <returns>操作结果</returns>
     public Object StopService(String serviceName)
     {
+        using var _ = UseRequestLanguage();
         if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
 
         var manager = GetManager();
@@ -174,6 +190,7 @@ public class StarApi : IHttpController
     /// <returns>操作结果</returns>
     public Object RestartService(String serviceName)
     {
+        using var _ = UseRequestLanguage();
         if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
 
         var manager = GetManager();
@@ -212,6 +229,7 @@ public class StarApi : IHttpController
     /// <returns>操作结果</returns>
     public Object AddService(ServiceInfo info)
     {
+        using var _ = UseRequestLanguage();
         if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
 
         var manager = GetManager();
@@ -242,6 +260,7 @@ public class StarApi : IHttpController
     /// <returns>操作结果</returns>
     public Object RemoveService(String serviceName)
     {
+        using var _ = UseRequestLanguage();
         if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
 
         var manager = GetManager();
@@ -276,6 +295,7 @@ public class StarApi : IHttpController
     /// <returns>StarSetting + StarAgentSetting 所有配置项</returns>
     public Object GetStarConfig()
     {
+        using var _ = UseRequestLanguage();
         if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
 
         var starSet = GetStarSetting();
@@ -313,6 +333,7 @@ public class StarApi : IHttpController
     /// <returns>操作结果</returns>
     public Object UpdateStarConfig(Dictionary<String, Object> updates)
     {
+        using var _ = UseRequestLanguage();
         if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
 
         if (updates == null || updates.Count == 0)
@@ -384,6 +405,7 @@ public class StarApi : IHttpController
     /// <returns>丰富的本机信息</returns>
     public Object Machine()
     {
+        using var _ = UseRequestLanguage();
         if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
 
         try
@@ -549,6 +571,7 @@ public class StarApi : IHttpController
     /// <returns>进程列表</returns>
     public Object GetProcessList(String sort = "memory", Int32 count = 10)
     {
+        using var _ = UseRequestLanguage();
         if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
 
         try
