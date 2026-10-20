@@ -43,7 +43,7 @@
     <Content Include="..\Doc\leaf.png" Link="leaf.png" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NewLife.Agent" Version="10.18.2026.1013-beta0145" />
+    <PackageReference Include="NewLife.Agent" Version="10.17.2026.1020-beta1532" />
   </ItemGroup>
 
   <ItemGroup>
