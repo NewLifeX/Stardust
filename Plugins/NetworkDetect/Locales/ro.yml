@@ -1,2 +1,3 @@
 # Romanian translation. Keys are English source texts; missing entries fall back to English at runtime.
-"Network probe [{0}]: {1}": "Network probe [{0}]: {1}"
+"Network probe [{0}]: {1}": "Sondă de rețea [{0}]: {1}"
+
