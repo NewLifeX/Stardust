@@ -57,3 +57,6 @@ Stardust/.github/
 # Java SDK build output
 SDK/Java/target/
 SDK/Java/.mvn/
+
+# 测试结果（dotnet test 的 trx、E2E 巡检报告与失败截图）
+/TestResults/

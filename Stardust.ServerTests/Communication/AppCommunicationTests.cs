@@ -259,6 +259,57 @@ public class AppCommunicationTests
     }
     #endregion
 
+    #region 服务搜索
+    [Fact(DisplayName = "应用通讯-服务搜索：按名称检索已注册服务")]
+    public async Task SearchService_FindsRegisteredService()
+    {
+        var publisherName = "e2e_srch_" + Rand.NextString(8);
+        var serviceName = "e2e_ssvc_" + Rand.NextString(6);
+        var address = "http://127.0.0.1:18081";
+
+        var publisher = CreateClient(publisherName, clientId: "e2e_" + Rand.NextString(8));
+        var service = Service.FindByName(serviceName);
+        try
+        {
+            var login = await publisher.Login();
+            Assert.NotNull(login);
+
+            await publisher.RegisterAsync(serviceName, address, "e2e");
+
+            using var http = new HttpClient { BaseAddress = new Uri(_fixture.ServerUrl) };
+            http.DefaultRequestHeaders.Add("X-Token", login!.Token);
+
+            var resp = await http.PostAsync($"/App/SearchService?serviceName={serviceName}&key=e2e", null);
+            var body = await resp.Content.ReadAsStringAsync();
+            Assert.True(resp.IsSuccessStatusCode, $"服务搜索失败：HTTP {(Int32)resp.StatusCode}，响应={body}");
+
+            // AppService 的时间字段是 XCode 默认格式，直接反序列化会触发 DateTime 解析失败，这里只取地址字段
+            using var doc = JsonDocument.Parse(body);
+            Assert.True(doc.RootElement.TryGetProperty("data", out var data), $"响应缺少 data：{body}");
+            Assert.Equal(JsonValueKind.Array, data.ValueKind);
+
+            var addresses = data.EnumerateArray()
+                .Select(e => e.TryGetProperty("address", out var a) ? a.GetString() : null)
+                .Where(e => !e.IsNullOrEmpty())
+                .ToList();
+            Assert.Contains(addresses, e => e!.Contains("18081"));
+        }
+        finally
+        {
+            publisher.Dispose();
+
+            service ??= Service.FindByName(serviceName);
+            if (service != null)
+            {
+                AppService.Delete(AppService._.ServiceId == service.Id);
+                AppConsume.Delete(AppConsume._.ServiceId == service.Id);
+                service.Delete();
+            }
+            CleanupApp(publisherName);
+        }
+    }
+    #endregion
+
     #region 命令下行
     [Fact(DisplayName = "应用通讯-命令下行：WebSocket 推送、执行与回复")]
     public async Task Command_Downlink_And_Reply()

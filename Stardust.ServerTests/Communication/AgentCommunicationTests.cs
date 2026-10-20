@@ -273,6 +273,47 @@ public class AgentCommunicationTests
             Cleanup(node);
         }
     }
+
+    [Fact(DisplayName = "代理通讯-服务上报：Deploy/Upload 建立应用部署与节点关联")]
+    public async Task DeployUpload_CreatesDeployNode()
+    {
+        var (client, node) = await LoginAsync();
+        var name = "e2e_up_" + Rand.NextString(8);
+        try
+        {
+            var rs = await client.UploadDeploy([
+                new ServiceInfo
+                {
+                    Name = name,
+                    FileName = "e2e.dll",
+                    Arguments = "--e2e",
+                    Enable = true,
+                    Mode = DeployMode.Standard,
+                }
+            ]);
+
+            Assert.True(rs > 0, $"服务上报应写入应用部署，实际返回 {rs}");
+
+            var deploy = AppDeploy.FindByName(name);
+            Assert.NotNull(deploy);
+            Assert.Equal("e2e.dll", deploy!.FileName);
+
+            var dn = AppDeployNode.Find(AppDeployNode._.DeployId == deploy.Id & AppDeployNode._.NodeId == node.ID);
+            Assert.NotNull(dn);
+        }
+        finally
+        {
+            client.Dispose();
+
+            var deploy = AppDeploy.FindByName(name);
+            if (deploy != null)
+            {
+                AppDeployNode.Delete(AppDeployNode._.DeployId == deploy.Id);
+                deploy.Delete();
+            }
+            Cleanup(node);
+        }
+    }
     #endregion
 
     #region 命令下行
