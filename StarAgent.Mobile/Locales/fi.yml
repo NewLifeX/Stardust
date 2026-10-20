@@ -1,4 +1,5 @@
 # Finnish translation. Keys are English source texts; missing entries fall back to English at runtime.
-"[{0}] Login succeeded, node code: {1}": "[{0}] Login succeeded, node code: {1}"
-"[{0}] Starting agent, server: {1}": "[{0}] Starting agent, server: {1}"
-"[{0}] Startup failed: {1}": "[{0}] Startup failed: {1}"
+"[{0}] Login succeeded, node code: {1}": "[{0}] Kirjautuminen onnistui, solmukoodi: {1}"
+"[{0}] Starting agent, server: {1}": "[{0}] Käynnistetään agentti, palvelin: {1}"
+"[{0}] Startup failed: {1}": "[{0}] Käynnistys epäonnistui: {1}"
+
