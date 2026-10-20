@@ -95,6 +95,7 @@
     await load(lang);
 
     document.documentElement.lang = lang;
+    document.documentElement.dir = ['ar', 'fa', 'he'].includes(lang) ? 'rtl' : 'ltr';
     if (dict) translateTree(document.body);
 
     const sel = document.getElementById('lang-select');
