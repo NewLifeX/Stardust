@@ -200,3 +200,5 @@
 "Collect OpenTelemetry traces. Converts third-party component activities into traces, default true": "Collect OpenTelemetry traces. Converts third-party component activities into traces, default true"
 "Trace name prefixes. Variable URL path segments are detected automatically; separate prefixes with semicolons and adjust manually if needed": "Trace name prefixes. Variable URL path segments are detected automatically; separate prefixes with semicolons and adjust manually if needed"
 "Stardust settings": "Stardust settings"
+# 运行时消息补充词条
+"UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language"

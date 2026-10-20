@@ -14,6 +14,10 @@ public class StarAgentSetting : Config<StarAgentSetting>, IClientSetting
     [Description("调试开关。默认true")]
     public Boolean Debug { get; set; } = true;
 
+    /// <summary>界面语言。如 zh-Hans、zh-Hant、en、ja，留空时跟随系统语言</summary>
+    [Description("UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language")]
+    public String? Language { get; set; }
+
     /// <summary>证书</summary>
     [Description("证书")]
     public String Code { get; set; } = null!;

@@ -176,3 +176,5 @@
 # 运行时消息补充词条
 "Associated online": "关联上线"
 "Dynamic registration": "动态注册"
+# 运行时消息补充词条
+"UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "界面语言。如 zh-Hans、zh-Hant、en、ja，留空时 Web 宿主按请求语言识别，其余跟随系统语言"

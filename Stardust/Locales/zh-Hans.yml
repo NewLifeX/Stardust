@@ -200,3 +200,5 @@
 "Collect OpenTelemetry traces. Converts third-party component activities into traces, default true": "采集 OpenTelemetry 埋点。把进程内第三方组件的活动转成埋点上报，默认true"
 "Trace name prefixes. Variable URL path segments are detected automatically; separate prefixes with semicolons and adjust manually if needed": "埋点名称截断前缀。自动识别URL路径中的可变参数后提取，多个前缀分号隔开，可手工调整"
 "Stardust settings": "星尘设置"
+# 运行时消息补充词条
+"UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "界面语言。如 zh-Hans、zh-Hant、en、ja，留空时跟随系统语言"

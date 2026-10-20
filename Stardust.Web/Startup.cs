@@ -155,6 +155,9 @@ public class Startup
         ThreadPoolX.QueueUserWorkItem(InitProject);
         ThreadPoolX.QueueUserWorkItem(FixAppDeployNode);
 
+        // 多语言。配置了固定语言时全进程生效，否则按请求语言识别
+        app.UseStardustLocalization();
+
         // 使用Cube前添加自己的管道
         if (env.IsDevelopment())
             app.UseDeveloperExceptionPage();

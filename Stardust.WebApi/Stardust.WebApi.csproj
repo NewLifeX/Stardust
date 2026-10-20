@@ -40,6 +40,7 @@
     <Compile Include="..\Stardust.Server\Services\DnsProviderFactory.cs" Link="Services\DnsProviderFactory.cs" />
     <Compile Include="..\Stardust.Server\Services\DnsService.cs" Link="Services\DnsService.cs" />
     <Compile Include="..\Stardust.Server\Setting.cs" Link="Setting.cs" />
+    <Compile Include="..\Stardust.Server\Localization\StardustLocalization.cs" Link="Localization\StardustLocalization.cs" />
   </ItemGroup>
 
   <!-- 纯 API 后端：引用 NuGet 版 NewLife.Cube(API版)，不再链接 Stardust.Web 源码 -->

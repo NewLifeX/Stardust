@@ -49,7 +49,13 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
 
     /// <summary>使用客户端设置来初始化</summary>
     /// <param name="setting"></param>
-    public StarClient(IClientSetting setting) : base(setting) => SetDefault();
+    public StarClient(IClientSetting setting) : base(setting)
+    {
+        SetDefault();
+
+        // 配置了语言时固定本进程的界面与日志语言
+        if (setting is StarSetting star) StarLocalization.UseLanguage(star.Language);
+    }
 
     /// <summary>实例化</summary>
     /// <param name="urls"></param>

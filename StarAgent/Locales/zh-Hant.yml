@@ -167,3 +167,5 @@
 "Error while saving configuration: {0}": "儲存設定時發生錯誤：{0}"
 "Error while getting machine information: {0}": "取得本機資訊時發生錯誤：{0}"
 "Error while getting process list: {0}": "取得處理程序清單時發生錯誤：{0}"
+# 运行时消息补充词条
+"UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "介面語言。如 zh-Hans、zh-Hant、en、ja，留空時跟隨系統語言"

@@ -14,6 +14,10 @@ public class StarSetting : Config<StarSetting>, IClientSetting
     [Description("Debug switch. Default false")]
     public Boolean Debug { get; set; }
 
+    /// <summary>界面语言。如 zh-Hans、zh-Hant、en、ja，留空时跟随系统语言</summary>
+    [Description("UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language")]
+    public String? Language { get; set; }
+
     /// <summary>禁用 SSH 严格主机密钥校验。默认false（启用校验）</summary>
     /// <remarks>设为true时跳过主机密钥校验，存在MITM风险，仅在明确知晓风险时使用</remarks>
     [Description("Disable strict SSH host key checking. Default false (checking enabled)")]

@@ -44,6 +44,7 @@
     <Compile Include="..\Stardust.Server\Services\DnsProviderFactory.cs" Link="Services\DnsProviderFactory.cs" />
     <Compile Include="..\Stardust.Server\Services\DnsService.cs" Link="Services\DnsService.cs" />
     <Compile Include="..\Stardust.Server\Setting.cs" Link="Setting.cs" />
+    <Compile Include="..\Stardust.Server\Localization\StardustLocalization.cs" Link="Localization\StardustLocalization.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -167,3 +167,5 @@
 "Error while saving configuration: {0}": "Error while saving configuration: {0}"
 "Error while getting machine information: {0}": "Error while getting machine information: {0}"
 "Error while getting process list: {0}": "Error while getting process list: {0}"
+# 运行时消息补充词条
+"UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language"

@@ -176,3 +176,5 @@
 # 运行时消息补充词条
 "Associated online": "Associated online"
 "Dynamic registration": "Dynamic registration"
+# 运行时消息补充词条
+"UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise"

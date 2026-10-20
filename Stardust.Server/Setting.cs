@@ -30,6 +30,10 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     //[Description("调试开关。默认true")]
     //public Boolean Debug { get; set; } = true;
 
+    /// <summary>界面语言。如 zh-Hans、zh-Hant、en、ja，留空时按请求语言识别，Web 之外跟随系统语言</summary>
+    [Description("UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise")]
+    public String? Language { get; set; }
+
     /// <summary>服务端口。默认6600</summary>
     [Description("服务端口。默认6600")]
     public Int32 Port { get; set; } = 6600;
