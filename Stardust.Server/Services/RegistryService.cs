@@ -659,13 +659,19 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
             ts.Add(_sessionManager.PublishAsync(code, cmdModel, null, model.Timeout, cancellationToken));
         }
 
-        // 目标应用没有任何在线实例（离线），无法下发命令，直接返回空，避免 await null 抛空引用异常
+        // 目标应用没有任何在线实例（离线），无法下发命令，直接返回空，避免等待空任务抛空引用异常
         if (ts.Count == 0) return null;
 
         await Task.WhenAll(ts);
 
-        // SessionManager.PublishAsync 内置timeout等待，取首个非空响应
-        return await ts.FirstOrDefault(t => t.Result != null);
+        // SessionManager.PublishAsync 内置timeout等待，取首个非空响应。
+        // 即发即忘（timeout<=0）时所有任务结果均为空，FirstOrDefault 会返回空任务，不能直接 await
+        foreach (var item in ts)
+        {
+            if (item.Result != null) return item.Result;
+        }
+
+        return null;
     }
 
     public override Task<CommandReplyModel?> SendCommand(DeviceContext context, CommandInModel model, CancellationToken cancellationToken = default)
