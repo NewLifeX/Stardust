@@ -46,4 +46,20 @@
     <Compile Include="..\Plugins\AgentExpansion\LanScan.cs" Link="AgentExpansion\LanScan.cs" />
   </ItemGroup>
 
+  <!-- 词表一致性测试直接读取各组件 Locales 词表 -->
+  <ItemGroup>
+    <Content Include="..\Stardust\Locales\*.yml" Link="Locales\Stardust\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\Stardust.Extensions\Locales\*.yml" Link="Locales\Stardust.Extensions\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\Stardust.Server\Locales\*.yml" Link="Locales\Stardust.Server\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\Stardust.Web\Locales\*.yml" Link="Locales\Stardust.Web\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\Stardust.WebApi\Locales\*.yml" Link="Locales\Stardust.WebApi\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\Stardust.Data\Locales\*.yml" Link="Locales\Stardust.Data\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\StarAgent\Locales\*.yml" Link="Locales\StarAgent\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\StarAgent.Mobile\Locales\*.yml" Link="Locales\StarAgent.Mobile\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\StarGateway\Locales\*.yml" Link="Locales\StarGateway\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\DeployAgent\Locales\*.yml" Link="Locales\DeployAgent\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\Plugins\AgentExpansion\Locales\*.yml" Link="Locales\AgentExpansion\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\Plugins\NetworkDetect\Locales\*.yml" Link="Locales\NetworkDetect\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
