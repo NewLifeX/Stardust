@@ -29,10 +29,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <RuntimeHostConfigurationOption Include="System.Globalization.Invariant" Value="true" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="NewLife.Core" Version="12.0.2026.1019-beta1502" />
   </ItemGroup>
 

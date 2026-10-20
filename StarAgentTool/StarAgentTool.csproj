@@ -64,10 +64,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <RuntimeHostConfigurationOption Include="System.Globalization.Invariant" Value="true" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="NewLife.Agent" Version="10.18.2026.1013-beta0145" />
   </ItemGroup>
 

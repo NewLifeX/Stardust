@@ -31,7 +31,6 @@
     <!--<GarbageCollectionAdaptationMode>1</GarbageCollectionAdaptationMode>-->
     <!--<PublishAot>true</PublishAot>-->
     <!--<OptimizationPreference>Size</OptimizationPreference>-->
-    <!--<InvariantGlobalization>true</InvariantGlobalization>-->
     <!--<StackTraceSupport>false</StackTraceSupport>-->
   </PropertyGroup>
 
@@ -41,10 +40,6 @@
     <Compile Include="..\Stardust\Managers\ServiceManager.cs" Link="Managers\ServiceManager.cs" />
   </ItemGroup>
   
-  <ItemGroup>
-    <RuntimeHostConfigurationOption Include="System.Globalization.Invariant" Value="true" />
-  </ItemGroup>
-
   <ItemGroup>
     <EmbeddedResource Include="WebPanel\wwwroot\**" />
   </ItemGroup>
