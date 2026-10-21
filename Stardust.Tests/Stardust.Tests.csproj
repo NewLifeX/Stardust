@@ -54,6 +54,8 @@
     <Content Include="..\Stardust.Web\Locales\*.yml" Link="Locales\Stardust.Web\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\Stardust.WebApi\Locales\*.yml" Link="Locales\Stardust.WebApi\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\Stardust.Data\Locales\*.yml" Link="Locales\Stardust.Data\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\Stardust.Data\Locales\metadata-keys.json" Link="Locales\Stardust.Data\metadata-keys.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\Stardust.Web\Locales\metadata-keys.json" Link="Locales\Stardust.Web\metadata-keys.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\StarAgent\Locales\*.yml" Link="Locales\StarAgent\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\StarAgent.Mobile\Locales\*.yml" Link="Locales\StarAgent.Mobile\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\StarGateway\Locales\*.yml" Link="Locales\StarGateway\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
