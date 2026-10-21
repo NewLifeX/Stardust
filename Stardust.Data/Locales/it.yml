@@ -32,5 +32,9 @@
 "Global shared configuration; other applications merge the configuration items of this application at startup": "Configurazione condivisa globale; le altre applicazioni uniscono gli elementi di configurazione di questa applicazione all'avvio"
 # 运行时消息补充词条
 "Plugin server. Links are analyzed by keyword on this page and plugins are downloaded from it": "Server dei plugin. I link vengono analizzati per parola chiave in questa pagina e i plugin vengono scaricati da essa"
-
-
+# 运行时消息补充词条
+"Node cannot be empty.": "Il nodo non può essere vuoto."
+"No matching package was found.": "Nessun pacchetto corrispondente trovato."
+"No matching package was found (version={0}, kind={1}).": "Nessun pacchetto corrispondente trovato (version={0}, kind={1})."
+"OS [{0}] is not compatible with .NET {1}": "Il sistema operativo [{0}] non è compatibile con .NET {1}"
+"GLIBC [{0}] does not meet the minimum requirement {1} of .NET {2}": "GLIBC [{0}] non soddisfa il requisito minimo {1} di .NET {2}"

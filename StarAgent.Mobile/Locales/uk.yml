@@ -2,4 +2,6 @@
 "[{0}] Login succeeded, node code: {1}": "[{0}] Вхід виконано, код вузла: {1}"
 "[{0}] Starting agent, server: {1}": "[{0}] Запуск агента, сервер: {1}"
 "[{0}] Startup failed: {1}": "[{0}] Помилка запуску: {1}"
-
+# 运行时消息补充词条
+"The current platform ({0}) does not support this command": "Поточна платформа ({0}) не підтримує цю команду"
+"Parameter is empty.": "Параметр порожній."

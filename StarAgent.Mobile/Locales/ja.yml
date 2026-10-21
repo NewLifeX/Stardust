@@ -11,4 +11,6 @@
 # 运行时消息补充词条
 # 运行时消息补充词条
 # 运行时消息补充词条
-
+# 运行时消息补充词条
+"The current platform ({0}) does not support this command": "現在のプラットフォーム（{0}）はこのコマンドをサポートしていません"
+"Parameter is empty.": "パラメーターが空です。"

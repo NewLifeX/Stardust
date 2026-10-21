@@ -32,4 +32,9 @@
 "Global shared configuration; other applications merge the configuration items of this application at startup": "Yleinen jaettu määritys; muut sovellukset yhdistävät tämän sovelluksen määrityskohteet käynnistyessään"
 # 运行时消息补充词条
 "Plugin server. Links are analyzed by keyword on this page and plugins are downloaded from it": "Liitännäispalvelin. Linkit analysoidaan avainsanojen perusteella tällä sivulla, ja liitännäiset ladataan siitä"
-
+# 运行时消息补充词条
+"Node cannot be empty.": "Solmu ei voi olla tyhjä."
+"No matching package was found.": "Vastaavaa pakettia ei löytynyt."
+"No matching package was found (version={0}, kind={1}).": "Vastaavaa pakettia ei löytynyt (version={0}, kind={1})."
+"OS [{0}] is not compatible with .NET {1}": "Käyttöjärjestelmä [{0}] ei ole yhteensopiva .NET {1}:n kanssa"
+"GLIBC [{0}] does not meet the minimum requirement {1} of .NET {2}": "GLIBC [{0}] ei täytä .NET {2}:n vähimmäisvaatimusta {1}"

@@ -2,4 +2,6 @@
 "[{0}] Login succeeded, node code: {1}": "[{0}] 로그인 성공, 노드 코드: {1}"
 "[{0}] Starting agent, server: {1}": "[{0}] 에이전트 시작, 서버: {1}"
 "[{0}] Startup failed: {1}": "[{0}] 시작 실패: {1}"
-
+# 运行时消息补充词条
+"The current platform ({0}) does not support this command": "현재 플랫폼({0})에서는 이 명령을 지원하지 않습니다"
+"Parameter is empty.": "매개 변수가 비어 있습니다."

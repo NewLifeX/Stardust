@@ -14,4 +14,6 @@
 "Telnet download over HTTP for node {0} is risky; assess network security.": "Muat turun Telnet melalui HTTP untuk nod {0} berisiko; nilai keselamatan rangkaian."
 "Telnet download for node {0} requires HTTPS or a configured PackageSha512.": "Muat turun Telnet untuk nod {0} memerlukan HTTPS atau PackageSha512 yang dikonfigurasikan."
 "StarServer is not configured; skipping automatic installation": "StarServer tidak dikonfigurasikan; melangkau pemasangan automatik"
-
+# 运行时消息补充词条
+"Target network {0} is not a local network address; ignored": "Rangkaian sasaran {0} bukan alamat rangkaian setempat; diabaikan"
+"The number of target addresses exceeds the limit {0}; only the first {0} addresses are scanned in this round. Adjust MaxHosts or narrow Networks": "Bilangan alamat sasaran melebihi had {0}; dalam pusingan ini hanya {0} alamat pertama diimbas. Laraskan MaxHosts atau sempitkan Networks"

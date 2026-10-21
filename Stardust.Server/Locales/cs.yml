@@ -178,6 +178,6 @@
 "Dynamic registration": "Dynamická registrace"
 # 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "Jazyk rozhraní, například zh-Hans, zh-Hant, en nebo ja; ponechte prázdné, aby weboví hostitelé určovali jazyk podle každého požadavku a v ostatních případech používali systémový jazyk"
-
-
-
+# 运行时消息补充词条
+"[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] přihlášen v {2}, naposledy aktivní v {3}"
+"Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "Uzel [{0}/{1}] je velmi podobný existujícímu uzlu [{2}]; použije se existující uzel"

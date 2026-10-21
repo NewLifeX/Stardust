@@ -178,5 +178,6 @@
 "Dynamic registration": "تسجيل ديناميكي"
 # 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "لغة واجهة المستخدم، مثل zh-Hans أو zh-Hant أو en أو ja؛ اتركها فارغة لاكتشافها من كل طلب في مضيفات الويب ولاتباع لغة النظام في غير ذلك"
-
-
+# 运行时消息补充词条
+"[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] سجّل الدخول في {2}، آخر نشاط في {3}"
+"Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "العقدة [{0}/{1}] شديدة التشابه بالعقدة الموجودة [{2}]؛ سيتم استخدام العقدة الموجودة"

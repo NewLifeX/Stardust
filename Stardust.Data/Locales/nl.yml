@@ -32,4 +32,9 @@
 "Global shared configuration; other applications merge the configuration items of this application at startup": "Globale gedeelde configuratie; andere applicaties voegen bij het starten de configuratie-items van deze applicatie samen"
 # 运行时消息补充词条
 "Plugin server. Links are analyzed by keyword on this page and plugins are downloaded from it": "Plugin-server. Koppelingen worden op deze pagina op trefwoord geanalyseerd en plugins worden ervan gedownload"
-
+# 运行时消息补充词条
+"Node cannot be empty.": "Knooppunt mag niet leeg zijn."
+"No matching package was found.": "Er is geen overeenkomstig pakket gevonden."
+"No matching package was found (version={0}, kind={1}).": "Er is geen overeenkomstig pakket gevonden (version={0}, kind={1})."
+"OS [{0}] is not compatible with .NET {1}": "Besturingssysteem [{0}] is niet compatibel met .NET {1}"
+"GLIBC [{0}] does not meet the minimum requirement {1} of .NET {2}": "GLIBC [{0}] voldoet niet aan de minimale vereiste {1} van .NET {2}"

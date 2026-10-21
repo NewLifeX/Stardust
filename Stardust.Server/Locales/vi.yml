@@ -178,4 +178,6 @@
 "Dynamic registration": "Đăng ký động"
 # 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "Ngôn ngữ giao diện, ví dụ zh-Hans, zh-Hant, en hoặc ja; để trống để phát hiện từ từng yêu cầu trên máy chủ web và theo ngôn ngữ hệ thống trong các trường hợp khác"
-
+# 运行时消息补充词条
+"[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] đăng nhập lúc {2}, hoạt động lần cuối lúc {3}"
+"Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "Nút [{0}/{1}] rất giống với nút hiện có [{2}]; sẽ sử dụng nút hiện có"

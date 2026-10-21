@@ -41,4 +41,9 @@
 # 运行时消息补充词条
 # 运行时消息补充词条
 # 运行时消息补充词条
-
+# 运行时消息补充词条
+"Node cannot be empty.": "ノードを空にすることはできません。"
+"No matching package was found.": "一致するパッケージが見つかりませんでした。"
+"No matching package was found (version={0}, kind={1}).": "一致するパッケージが見つかりませんでした (version={0}, kind={1})。"
+"OS [{0}] is not compatible with .NET {1}": "OS [{0}] は .NET {1} と互換性がありません"
+"GLIBC [{0}] does not meet the minimum requirement {1} of .NET {2}": "GLIBC [{0}] は .NET {2} の最小要件 {1} を満たしていません"

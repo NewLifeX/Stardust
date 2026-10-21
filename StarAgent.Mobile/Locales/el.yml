@@ -2,4 +2,6 @@
 "[{0}] Login succeeded, node code: {1}": "[{0}] Η σύνδεση πέτυχε, κωδικός κόμβου: {1}"
 "[{0}] Starting agent, server: {1}": "[{0}] Εκκίνηση πράκτορα, διακομιστής: {1}"
 "[{0}] Startup failed: {1}": "[{0}] Η εκκίνηση απέτυχε: {1}"
-
+# 运行时消息补充词条
+"The current platform ({0}) does not support this command": "Η τρέχουσα πλατφόρμα ({0}) δεν υποστηρίζει αυτήν την εντολή"
+"Parameter is empty.": "Η παράμετρος είναι κενή."

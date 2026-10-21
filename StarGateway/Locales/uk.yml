@@ -22,5 +22,23 @@
 "StarGateway started, listening on port {0}, remote server {1}": "StarGateway запущено, порт прослуховування {0}, віддалений сервер {1}"
 # 运行时消息补充词条
 "Configuration refreshed.": "Конфігурацію оновлено."
-
-
+# 运行时消息补充词条
+"Failed to load the SSL certificate configuration: {0}": "Не вдалося завантажити конфігурацію SSL-сертифіката: {0}"
+"Failed to load certificate {0}: {1}": "Не вдалося завантажити сертифікат {0}: {1}"
+"Failed to load configuration from {0}: {1}": "Не вдалося завантажити конфігурацію з {0}: {1}"
+"StarServer is using plain HTTP. Remote certificate loading is refused for security because the private key password would be exposed on the wire; falling back to the database. Use HTTPS in production.": "StarServer використовує незашифрований HTTP. Завантаження сертифіката з віддаленого джерела відхилено з міркувань безпеки, оскільки пароль закритого ключа було б передано мережею; використовується база даних. У робочому середовищі використовуйте HTTPS."
+"Failed to fetch configuration from StarServer; falling back to the database: {0}": "Не вдалося отримати конфігурацію з StarServer; використовується база даних: {0}"
+"Failed to load route configuration: {0}": "Не вдалося завантажити конфігурацію маршрутів: {0}"
+"Failed to start service {0} via StarAgent: {1}": "Не вдалося запустити службу {0} через StarAgent: {1}"
+"Failed to stop service {0} via StarAgent: {1}": "Не вдалося зупинити службу {0} через StarAgent: {1}"
+"Idle recycle: {0} has been inactive for more than {1} seconds": "Утилізація простою: {0} неактивний понад {1} секунд"
+"WebSocket is forbidden by route {0}: {1} {2}": "WebSocket заборонено маршрутом {0}: {1} {2}"
+"Static {0} {1} -> 404 {2}": "Статичний {0} {1} -> 404 {2}"
+"Route {0} has no available backend nodes": "Маршрут {0} не має доступних серверних вузлів"
+"Error handling request {0} {1}: {2}": "Помилка обробки запиту {0} {1}: {2}"
+"WS upgrade succeeded: {0}": "Оновлення WS виконано: {0}"
+"Cold start: trying to wake {0} (route: {1})": "Холодний запуск: спроба розбудити {0} (маршрут: {1})"
+"Failed to connect {0} to remote server {1}! elapsed {2}! {3}": "Не вдалося підключити {0} до віддаленого сервера {1}! витрачено {2}! {3}"
+"Error forwarding to the client: {0}": "Помилка під час пересилання клієнту: {0}"
+"Directory: {0}": "Каталог: {0}"
+"Failed to read directory: {0}": "Не вдалося прочитати каталог: {0}"

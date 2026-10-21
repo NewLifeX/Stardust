@@ -32,4 +32,9 @@
 "Global shared configuration; other applications merge the configuration items of this application at startup": "Globális megosztott konfiguráció; más alkalmazások indításkor egyesítik ezen alkalmazás konfigurációs elemeit"
 # 运行时消息补充词条
 "Plugin server. Links are analyzed by keyword on this page and plugins are downloaded from it": "Beépülőmodul-kiszolgáló. A hivatkozásokat kulcsszó alapján elemzi ezen az oldalon, és innen tölti le a beépülő modulokat"
-
+# 运行时消息补充词条
+"Node cannot be empty.": "A csomópont nem lehet üres."
+"No matching package was found.": "Nem található megfelelő csomag."
+"No matching package was found (version={0}, kind={1}).": "Nem található megfelelő csomag (version={0}, kind={1})."
+"OS [{0}] is not compatible with .NET {1}": "A(z) [{0}] operációs rendszer nem kompatibilis a .NET {1} verzióval"
+"GLIBC [{0}] does not meet the minimum requirement {1} of .NET {2}": "A GLIBC [{0}] nem felel meg a .NET {2} minimális követelményének ({1})"

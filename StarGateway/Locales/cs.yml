@@ -22,5 +22,23 @@
 "StarGateway started, listening on port {0}, remote server {1}": "StarGateway spuštěn, port pro naslouchání {0}, vzdálený server {1}"
 # 运行时消息补充词条
 "Configuration refreshed.": "Konfigurace obnovena."
-
-
+# 运行时消息补充词条
+"Failed to load the SSL certificate configuration: {0}": "Nepodařilo se načíst konfiguraci certifikátu SSL: {0}"
+"Failed to load certificate {0}: {1}": "Nepodařilo se načíst certifikát {0}: {1}"
+"Failed to load configuration from {0}: {1}": "Nepodařilo se načíst konfiguraci z {0}: {1}"
+"StarServer is using plain HTTP. Remote certificate loading is refused for security because the private key password would be exposed on the wire; falling back to the database. Use HTTPS in production.": "StarServer používá nešifrované HTTP. Vzdálené načtení certifikátu je odmítnuto z bezpečnostních důvodů, protože heslo soukromého klíče by bylo na síti vystaveno; použije se databáze. V produkci používejte HTTPS."
+"Failed to fetch configuration from StarServer; falling back to the database: {0}": "Nepodařilo se načíst konfiguraci ze StarServer; použije se databáze: {0}"
+"Failed to load route configuration: {0}": "Nepodařilo se načíst konfiguraci tras: {0}"
+"Failed to start service {0} via StarAgent: {1}": "Nepodařilo se spustit službu {0} prostřednictvím StarAgent: {1}"
+"Failed to stop service {0} via StarAgent: {1}": "Nepodařilo se zastavit službu {0} prostřednictvím StarAgent: {1}"
+"Idle recycle: {0} has been inactive for more than {1} seconds": "Recyklace nečinných: {0} je neaktivní více než {1} sekund"
+"WebSocket is forbidden by route {0}: {1} {2}": "WebSocket je zakázán trasou {0}: {1} {2}"
+"Static {0} {1} -> 404 {2}": "Statický {0} {1} -> 404 {2}"
+"Route {0} has no available backend nodes": "Trasa {0} nemá žádné dostupné uzly back-endu"
+"Error handling request {0} {1}: {2}": "Chyba při zpracování požadavku {0} {1}: {2}"
+"WS upgrade succeeded: {0}": "Upgrade WS proběhl úspěšně: {0}"
+"Cold start: trying to wake {0} (route: {1})": "Studený start: pokus probudit {0} (trasa: {1})"
+"Failed to connect {0} to remote server {1}! elapsed {2}! {3}": "Nepodařilo se připojit {0} ke vzdálenému serveru {1}! trvání {2}! {3}"
+"Error forwarding to the client: {0}": "Chyba při předávání klientovi: {0}"
+"Directory: {0}": "Adresář: {0}"
+"Failed to read directory: {0}": "Nepodařilo se přečíst adresář: {0}"

@@ -2,4 +2,6 @@
 "[{0}] Login succeeded, node code: {1}": "[{0}] लॉगिन सफल, नोड कोड: {1}"
 "[{0}] Starting agent, server: {1}": "[{0}] एजेंट प्रारंभ हो रहा है, सर्वर: {1}"
 "[{0}] Startup failed: {1}": "[{0}] स्टार्टअप विफल: {1}"
-
+# 运行时消息补充词条
+"The current platform ({0}) does not support this command": "वर्तमान प्लेटफ़ॉर्म ({0}) इस कमांड का समर्थन नहीं करता"
+"Parameter is empty.": "पैरामीटर खाली है।"

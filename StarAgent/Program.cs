@@ -838,13 +838,13 @@ internal class MyService : ServiceBase, IServiceProvider
             {
                 try
                 {
-                    _Client?.WriteInfoEvent("删除", fi.FullName);
+                    _Client?.WriteInfoEvent("Delete", fi.FullName);
                     XTrace.WriteLine("Delete: {0}", fi.FullName);
                     fi.Delete();
                 }
                 catch (Exception ex)
                 {
-                    _Client?.WriteErrorEvent("删除", ex.Message);
+                    _Client?.WriteErrorEvent("Delete", ex.Message);
                     XTrace.Log.Error(ex.Message);
                 }
             }
@@ -855,13 +855,13 @@ internal class MyService : ServiceBase, IServiceProvider
         {
             try
             {
-                _Client?.WriteInfoEvent("删除", di.FullName);
+                _Client?.WriteInfoEvent("Delete", di.FullName);
                 XTrace.WriteLine("Delete: {0}", di.FullName);
                 di.Delete(true);
             }
             catch (Exception ex)
             {
-                _Client?.WriteErrorEvent("删除", ex.Message);
+                _Client?.WriteErrorEvent("Delete", ex.Message);
                 XTrace.Log.Error(ex.Message);
             }
         }

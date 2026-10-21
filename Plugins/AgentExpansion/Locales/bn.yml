@@ -14,4 +14,6 @@
 "Telnet download over HTTP for node {0} is risky; assess network security.": "নোড {0} এর জন্য HTTP-এর মাধ্যমে Telnet ডাউনলোড ঝুঁকিপূর্ণ; নেটওয়ার্ক নিরাপত্তা মূল্যায়ন করুন।"
 "Telnet download for node {0} requires HTTPS or a configured PackageSha512.": "নোড {0} এর জন্য Telnet ডাউনলোডের জন্য HTTPS বা কনফিগার করা PackageSha512 প্রয়োজন।"
 "StarServer is not configured; skipping automatic installation": "StarServer কনফিগার করা নেই; স্বয়ংক্রিয় ইনস্টলেশন বাদ দেওয়া হচ্ছে"
-
+# 运行时消息补充词条
+"Target network {0} is not a local network address; ignored": "লক্ষ্য নেটওয়ার্ক {0} স্থানীয় নেটওয়ার্ক ঠিকানা নয়; উপেক্ষা করা হয়েছে"
+"The number of target addresses exceeds the limit {0}; only the first {0} addresses are scanned in this round. Adjust MaxHosts or narrow Networks": "লক্ষ্য ঠিকানার সংখ্যা সীমা {0} ছাড়িয়ে গেছে; এই রাউন্ডে শুধুমাত্র প্রথম {0} টি ঠিকানা স্ক্যান করা হবে। MaxHosts সামঞ্জস্য করুন বা Networks সংকীর্ণ করুন"

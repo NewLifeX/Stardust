@@ -12,7 +12,7 @@ internal class BinlogClear
     private TimerX _timer;
     public void Start()
     {
-        Event?.WriteInfoEvent("Binlog", "启动二进制日志清理");
+        Event?.WriteInfoEvent("Binlog", "Starting binary log cleanup");
 
         _timer = new TimerX(DoClear, null, 1000, 3600_000);
     }
@@ -41,7 +41,7 @@ internal class BinlogClear
                 var fi = new FileInfo(item);
                 if (fi.Extension.TrimStart('.').ToInt() > 0 && fi.LastWriteTime < exp)
                 {
-                    var msg = $"删除二进制日志：{fi.Name}，大小：{fi.Length.ToGMK()}";
+                    var msg = $"Deleting binary log: {fi.Name}, size: {fi.Length.ToGMK()}";
                     Event?.WriteInfoEvent("Binlog", msg);
                     XTrace.WriteLine(msg);
                     try

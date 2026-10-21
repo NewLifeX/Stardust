@@ -462,10 +462,10 @@ public class StaticFileHandler
         var encPath = WebUtility.HtmlEncode(requestPath);
         var sb = new StringBuilder();
         sb.Append("<!DOCTYPE html><html><head><meta charset=\"utf-8\">");
-        sb.Append($"<title>目录: {encPath}</title>");
+        sb.Append($"<title>{L.T("Directory: {0}", encPath)}</title>");
         sb.Append("<style>body{font-family:sans-serif;margin:20px}li{padding:4px 0}a{text-decoration:none;color:#0366d6}a:hover{text-decoration:underline}</style>");
         sb.Append("</head><body>");
-        sb.Append($"<h1>目录: {encPath}</h1><ul>");
+        sb.Append($"<h1>{L.T("Directory: {0}", encPath)}</h1><ul>");
 
         // 如果不是根目录，显示上级
         if (requestPath != "/")
@@ -488,7 +488,7 @@ public class StaticFileHandler
         }
         catch (Exception ex)
         {
-            sb.Append($"<li>读取目录失败: {WebUtility.HtmlEncode(ex.Message)}</li>");
+            sb.Append($"<li>{L.T("Failed to read directory: {0}", WebUtility.HtmlEncode(ex.Message))}</li>");
         }
 
         sb.Append("</ul></body></html>");

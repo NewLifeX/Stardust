@@ -178,4 +178,6 @@
 "Dynamic registration": "Pendaftaran dinamik"
 # 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "Bahasa UI, contohnya zh-Hans, zh-Hant, en atau ja; biarkan kosong untuk mengesan daripada setiap permintaan pada hos web dan mengikut bahasa sistem dalam kes lain"
-
+# 运行时消息补充词条
+"[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] log masuk pada {2}, terakhir aktif pada {3}"
+"Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "Nod [{0}/{1}] sangat serupa dengan nod sedia ada [{2}]; nod sedia ada digunakan"

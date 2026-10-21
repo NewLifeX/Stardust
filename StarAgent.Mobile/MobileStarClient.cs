@@ -144,7 +144,7 @@ public class MobileStarClient : StarClient
 
     private String? SetChannel(String? argument)
     {
-        if (argument.IsNullOrEmpty()) return "参数为空";
+        if (argument.IsNullOrEmpty()) return L.T("Parameter is empty.");
 
         _setting.Channel = argument;
         _setting.Save();
@@ -152,5 +152,5 @@ public class MobileStarClient : StarClient
         return "success " + argument;
     }
 
-    private String? Unsupported(String? argument) => $"当前平台（{Platform.Name}）不支持该指令";
+    private String? Unsupported(String? argument) => L.T("The current platform ({0}) does not support this command", Platform.Name);
 }

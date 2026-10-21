@@ -178,6 +178,6 @@
 "Dynamic registration": "डायनामिक पंजीकरण"
 # 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "UI भाषा, उदाहरण zh-Hans, zh-Hant, en या ja; वेब होस्ट में प्रत्येक अनुरोध से पहचानने और अन्यथा सिस्टम भाषा का पालन करने के लिए खाली छोड़ें"
-
-
-
+# 运行时消息补充词条
+"[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] ने {2} पर लॉग इन किया, अंतिम सक्रियता {3}"
+"Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "नोड [{0}/{1}] मौजूदा नोड [{2}] से बहुत मिलता-जुलता है; मौजूदा नोड का उपयोग किया जाएगा"

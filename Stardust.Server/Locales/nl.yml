@@ -178,4 +178,6 @@
 "Dynamic registration": "Dynamische registratie"
 # 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "UI-taal, bijvoorbeeld zh-Hans, zh-Hant, en of ja; laat leeg om deze per aanvraag in webhosts te detecteren en volg anders de systeemtaal"
-
+# 运行时消息补充词条
+"[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] aangemeld om {2}, laatst actief om {3}"
+"Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "Knooppunt [{0}/{1}] lijkt sterk op het bestaande knooppunt [{2}]; het bestaande knooppunt wordt gebruikt"

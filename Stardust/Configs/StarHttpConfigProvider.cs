@@ -81,7 +81,7 @@ internal class StarHttpConfigProvider : HttpConfigProvider
         catch (Exception ex)
         {
             if (Client is ApiHttpClient http)
-                http.Log?.Debug("配置中心[{0}]出错 {1}", http.Source, ex);
+                http.Log?.Debug("Configuration center [{0}] error: {1}", http.Source, ex);
         }
 
         return null;
@@ -127,6 +127,6 @@ internal class StarHttpConfigProvider : HttpConfigProvider
 
         DoRefresh(null);
 
-        return "刷新配置成功";
+        return L.T("Configuration refresh succeeded.");
     }
 }

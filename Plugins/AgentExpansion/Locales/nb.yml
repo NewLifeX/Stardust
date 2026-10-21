@@ -14,4 +14,6 @@
 "Telnet download over HTTP for node {0} is risky; assess network security.": "Telnet-nedlasting via HTTP for node {0} er risikabelt; vurder nettverkssikkerheten."
 "Telnet download for node {0} requires HTTPS or a configured PackageSha512.": "Telnet-nedlasting for node {0} krever HTTPS eller en konfigurert PackageSha512."
 "StarServer is not configured; skipping automatic installation": "StarServer er ikke konfigurert; hopper over den automatiske installasjonen"
-
+# 运行时消息补充词条
+"Target network {0} is not a local network address; ignored": "Målnettverket {0} er ikke en lokalnettverksadresse; ignoreres"
+"The number of target addresses exceeds the limit {0}; only the first {0} addresses are scanned in this round. Adjust MaxHosts or narrow Networks": "Antallet mål-adresser overskrider grensen {0}; bare de første {0} adressene skannes i denne runden. Juster MaxHosts eller begrens Networks"

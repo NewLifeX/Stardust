@@ -31,4 +31,23 @@
 # 运行时消息补充词条
 # 运行时消息补充词条
 # 运行时消息补充词条
-
+# 运行时消息补充词条
+"Failed to load the SSL certificate configuration: {0}": "SSL 証明書の構成を読み込めませんでした: {0}"
+"Failed to load certificate {0}: {1}": "証明書 {0} の読み込みに失敗しました: {1}"
+"Failed to load configuration from {0}: {1}": "{0} から構成を読み込めませんでした: {1}"
+"StarServer is using plain HTTP. Remote certificate loading is refused for security because the private key password would be exposed on the wire; falling back to the database. Use HTTPS in production.": "StarServer が平文 HTTP を使用しています。秘密鍵のパスワードが通信路上に露出するため、安全上の理由からリモートからの証明書の読み込みを拒否し、データベースから読み込みます。本番環境では HTTPS を使用してください。"
+"Failed to fetch configuration from StarServer; falling back to the database: {0}": "StarServer から構成を取得できませんでした。データベースにフォールバックします: {0}"
+"Failed to load route configuration: {0}": "ルート構成を読み込めませんでした: {0}"
+"Failed to start service {0} via StarAgent: {1}": "StarAgent を介してサービス {0} を開始できませんでした: {1}"
+"Failed to stop service {0} via StarAgent: {1}": "StarAgent を介してサービス {0} を停止できませんでした: {1}"
+"Idle recycle: {0} has been inactive for more than {1} seconds": "アイドル回収: {0} は {1} 秒以上非アクティブです"
+"WebSocket is forbidden by route {0}: {1} {2}": "ルート {0} では WebSocket が禁止されています: {1} {2}"
+"Static {0} {1} -> 404 {2}": "静的 {0} {1} -> 404 {2}"
+"Route {0} has no available backend nodes": "ルート {0} には利用可能なバックエンドノードがありません"
+"Error handling request {0} {1}: {2}": "リクエスト {0} {1} の処理中にエラーが発生しました: {2}"
+"WS upgrade succeeded: {0}": "WS アップグレードに成功しました: {0}"
+"Cold start: trying to wake {0} (route: {1})": "コールドスタート: {0} の起動を試みます (ルート: {1})"
+"Failed to connect {0} to remote server {1}! elapsed {2}! {3}": "{0} をリモートサーバー {1} に接続できませんでした！経過時間 {2}！{3}"
+"Error forwarding to the client: {0}": "クライアントへの転送中にエラーが発生しました: {0}"
+"Directory: {0}": "ディレクトリ: {0}"
+"Failed to read directory: {0}": "ディレクトリの読み取りに失敗しました: {0}"

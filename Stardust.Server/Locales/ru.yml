@@ -178,6 +178,6 @@
 "Dynamic registration": "Динамическая регистрация"
 # 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "Язык интерфейса, например zh-Hans, zh-Hant, en или ja; оставьте пустым, чтобы веб-хосты определяли его по каждому запросу, а в остальных случаях следовали системному языку"
-
-
-
+# 运行时消息补充词条
+"[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] вошёл в {2}, последняя активность в {3}"
+"Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "Узел [{0}/{1}] очень похож на существующий узел [{2}]; используется существующий узел"

@@ -263,14 +263,14 @@ public class StarTracer : DefaultTracer
         {
             var source = (client as ApiHttpClient)?.Source;
             var ex2 = ex is AggregateException aex ? aex.InnerException : ex;
-            if (ex2 is TaskCanceledException tce)
-                Log?.Debug("监控中心[{0}]出错 {1} TaskId={2}", source, ex2.GetType().Name, tce.Task?.Id);
-            else if (ex2 is HttpRequestException hre)
-                Log?.Debug("监控中心[{0}]出错 {1} {2}", source, ex2.GetType().Name, hre.Message);
-            else if (ex2 is SocketException se)
-                Log?.Debug("监控中心[{0}]出错 {1} SocketErrorCode={2}", source, ex2.GetType().Name, se.SocketErrorCode);
-            else
-                Log?.Debug("监控中心[{0}]出错 {1}", source, ex);
+            var detail = ex2 switch
+            {
+                TaskCanceledException tce => $"TaskId={tce.Task?.Id}",
+                HttpRequestException hre => hre.Message,
+                SocketException se => $"SocketErrorCode={se.SocketErrorCode}",
+                _ => ex + "",
+            };
+            Log?.Debug("Monitoring center [{0}] error: {1}: {2}", source, ex2.GetType().Name, detail);
 
             //if (ex2 is not HttpRequestException)
             //    Log?.Error(ex + "");
@@ -320,7 +320,7 @@ public class StarTracer : DefaultTracer
             }
             catch (Exception ex)
             {
-                Log?.Info("二次上报失败，放弃该批次采样数据，{0}", model.Builders?.FirstOrDefault()?.StartTime.ToDateTime());
+                Log?.Info("Failed to report the sample data twice; discarding this batch: {0}", model.Builders?.FirstOrDefault()?.StartTime.ToDateTime());
                 //if (Log != null && Log.Level <= LogLevel.Debug) Log?.Error(ex + "");
                 Log?.Debug("{0}", ex);
 

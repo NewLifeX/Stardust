@@ -32,5 +32,9 @@
 "Global shared configuration; other applications merge the configuration items of this application at startup": "پیکربندی مشترک سراسری؛ برنامه‌های دیگر هنگام راه‌اندازی، آیتم‌های پیکربندی این برنامه را ادغام می‌کنند"
 # 运行时消息补充词条
 "Plugin server. Links are analyzed by keyword on this page and plugins are downloaded from it": "سرور افزونه. لینک‌ها در این صفحه با کلمه کلیدی تحلیل می‌شوند و افزونه‌ها از آن دانلود می‌شوند"
-
-
+# 运行时消息补充词条
+"Node cannot be empty.": "گره نمی‌تواند خالی باشد."
+"No matching package was found.": "هیچ بستهٔ منطبقی یافت نشد."
+"No matching package was found (version={0}, kind={1}).": "هیچ بستهٔ منطبقی یافت نشد (version={0}، kind={1})."
+"OS [{0}] is not compatible with .NET {1}": "سیستم‌عامل [{0}] با .NET {1} سازگار نیست"
+"GLIBC [{0}] does not meet the minimum requirement {1} of .NET {2}": "GLIBC [{0}] حداقل نیاز {1} برای .NET {2} را برآورده نمی‌کند"

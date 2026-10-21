@@ -178,5 +178,6 @@
 "Dynamic registration": "Registro dinámico"
 # 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "Idioma de la interfaz; por ejemplo, zh-Hans, zh-Hant, en o ja; déjelo vacío para detectarlo en cada solicitud en hosts web y, en los demás casos, seguir el idioma del sistema"
-
-
+# 运行时消息补充词条
+"[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] inició sesión a las {2}, última actividad a las {3}"
+"Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "El nodo [{0}/{1}] es muy similar al nodo existente [{2}]; se utilizará el nodo existente"

@@ -32,4 +32,9 @@
 "Global shared configuration; other applications merge the configuration items of this application at startup": "Global delad konfiguration; andra applikationer sammanfogar denna applikations konfigurationsobjekt vid start"
 # 运行时消息补充词条
 "Plugin server. Links are analyzed by keyword on this page and plugins are downloaded from it": "Plugin-server. Länkar analyseras efter nyckelord på denna sida och plugins laddas ner från den"
-
+# 运行时消息补充词条
+"Node cannot be empty.": "Noden får inte vara tom."
+"No matching package was found.": "Inget matchande paket hittades."
+"No matching package was found (version={0}, kind={1}).": "Inget matchande paket hittades (version={0}, kind={1})."
+"OS [{0}] is not compatible with .NET {1}": "Operativsystemet [{0}] är inte kompatibelt med .NET {1}"
+"GLIBC [{0}] does not meet the minimum requirement {1} of .NET {2}": "GLIBC [{0}] uppfyller inte minimikravet {1} för .NET {2}"

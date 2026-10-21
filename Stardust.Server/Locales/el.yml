@@ -178,4 +178,6 @@
 "Dynamic registration": "Δυναμική εγγραφή"
 # 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "Γλώσσα διεπαφής, για παράδειγμα zh-Hans, zh-Hant, en ή ja· αφήστε κενό για ανίχνευση από κάθε αίτημα σε κεντρικούς υπολογιστές web και για να ακολουθείται η γλώσσα του συστήματος σε άλλες περιπτώσεις"
-
+# 运行时消息补充词条
+"[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] συνδέθηκε στις {2}, τελευταία δραστηριότητα στις {3}"
+"Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "Ο κόμβος [{0}/{1}] είναι πολύ παρόμοιος με τον υπάρχοντα κόμβο [{2}]· χρησιμοποιείται ο υπάρχων κόμβος"

@@ -47,7 +47,7 @@ public class NodeOnlineService(IServiceProvider serviceProvider, StarServerSetti
                     var node = online?.Node;
                     if (node != null)
                     {
-                        var msg = $"[{node}/{online?.SessionID}]登录于{online.CreateTime}，最后活跃于{online.UpdateTime}";
+                        var msg = L.T("[{0}/{1}] logged in at {2}, last active at {3}", node, online?.SessionID, online.CreateTime, online.UpdateTime);
                         node.WriteHistory(L.T("Timed out offline"), true, msg, online.CreateIP);
 
                         // 结算在线时长统一由 RemoveOnline 负责

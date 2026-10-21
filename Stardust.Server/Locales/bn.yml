@@ -178,5 +178,6 @@
 "Dynamic registration": "ডায়নামিক নিবন্ধন"
 # 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "UI ভাষা, উদাহরণ zh-Hans, zh-Hant, en বা ja; ওয়েব হোস্টে প্রতিটি অনুরোধ থেকে শনাক্ত করতে এবং অন্যথায় সিস্টেম ভাষা অনুসরণ করতে খালি রাখুন"
-
-
+# 运行时消息补充词条
+"[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] {2} এ লগ ইন করেছে, সর্বশেষ সক্রিয় {3}"
+"Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "নোড [{0}/{1}] বিদ্যমান নোড [{2}] এর সাথে খুব মিল; বিদ্যমান নোডটি ব্যবহার করা হবে"

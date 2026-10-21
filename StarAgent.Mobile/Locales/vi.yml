@@ -2,4 +2,6 @@
 "[{0}] Login succeeded, node code: {1}": "[{0}] Đăng nhập thành công, mã node: {1}"
 "[{0}] Starting agent, server: {1}": "[{0}] Đang khởi động agent, máy chủ: {1}"
 "[{0}] Startup failed: {1}": "[{0}] Khởi động thất bại: {1}"
-
+# 运行时消息补充词条
+"The current platform ({0}) does not support this command": "Nền tảng hiện tại ({0}) không hỗ trợ lệnh này"
+"Parameter is empty.": "Tham số trống."

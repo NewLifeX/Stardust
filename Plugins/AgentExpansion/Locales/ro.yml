@@ -14,4 +14,6 @@
 "Telnet download over HTTP for node {0} is risky; assess network security.": "Descărcarea Telnet prin HTTP pentru nodul {0} este riscantă; evaluați securitatea rețelei."
 "Telnet download for node {0} requires HTTPS or a configured PackageSha512.": "Descărcarea Telnet pentru nodul {0} necesită HTTPS sau un PackageSha512 configurat."
 "StarServer is not configured; skipping automatic installation": "StarServer nu este configurat; se omite instalarea automată"
-
+# 运行时消息补充词条
+"Target network {0} is not a local network address; ignored": "Rețeaua țintă {0} nu este o adresă de rețea locală; este ignorată"
+"The number of target addresses exceeds the limit {0}; only the first {0} addresses are scanned in this round. Adjust MaxHosts or narrow Networks": "Numărul de adrese țintă depășește limita {0}; în această rundă sunt scanate doar primele {0} adrese. Ajustați MaxHosts sau restrângeți Networks"

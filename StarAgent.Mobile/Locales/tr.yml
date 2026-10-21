@@ -2,4 +2,6 @@
 "[{0}] Login succeeded, node code: {1}": "[{0}] Oturum açma başarılı, düğüm kodu: {1}"
 "[{0}] Starting agent, server: {1}": "[{0}] Aracı başlatılıyor, sunucu: {1}"
 "[{0}] Startup failed: {1}": "[{0}] Başlatma başarısız: {1}"
-
+# 运行时消息补充词条
+"The current platform ({0}) does not support this command": "Geçerli platform ({0}) bu komutu desteklemiyor"
+"Parameter is empty.": "Parametre boş."

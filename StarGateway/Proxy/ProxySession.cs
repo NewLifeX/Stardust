@@ -123,7 +123,7 @@ namespace StarGateway.Proxy
                 catch (Exception ex)
                 {
                     sw.Stop();
-                    WriteError("无法为{0}连接远程服务器{1}！耗时{2}！{3}", Remote, RemoteServerUri, sw.Elapsed, ex.Message);
+                    WriteError("Failed to connect {0} to remote server {1}! elapsed {2}! {3}", Remote, RemoteServerUri, sw.Elapsed, ex.Message);
 
                     if (session != null) session.Dispose();
                     Dispose();
@@ -182,7 +182,7 @@ namespace StarGateway.Proxy
                     }
                     catch (Exception ex)
                     {
-                        WriteError("转发给客户端出错，{0}", ex.Message);
+                        WriteError("Error forwarding to the client: {0}", ex.Message);
 
                         Dispose();
                         throw;

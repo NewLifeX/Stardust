@@ -136,7 +136,7 @@ public class FrameworkManager
 
         CheckPing();
 
-        return "安装成功";
+        return L.T("Installation completed.");
     }
 
     private String? DoUninstall(String? argument)

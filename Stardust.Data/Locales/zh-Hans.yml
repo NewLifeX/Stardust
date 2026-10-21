@@ -32,3 +32,9 @@
 "Global shared configuration; other applications merge the configuration items of this application at startup": "全局通用配置，其它应用启动合并该应用下的配置项"
 # 运行时消息补充词条
 "Plugin server. Links are analyzed by keyword on this page and plugins are downloaded from it": "插件服务器。将从该网页上根据关键字分析链接并下载插件"
+# 运行时消息补充词条
+"Node cannot be empty.": "节点不能为空！"
+"No matching package was found.": "未找到匹配的安装包"
+"No matching package was found (version={0}, kind={1}).": "未找到匹配的安装包（version={0}、kind={1}）"
+"OS [{0}] is not compatible with .NET {1}": "操作系统[{0}]不兼容 .NET {1}"
+"GLIBC [{0}] does not meet the minimum requirement {1} of .NET {2}": "GLIBC[{0}]不满足 .NET {2} 的最低要求 {1}"

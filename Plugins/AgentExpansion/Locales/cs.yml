@@ -14,4 +14,6 @@
 "Telnet download over HTTP for node {0} is risky; assess network security.": "Stahování přes Telnet po HTTP pro uzel {0} je riskantní; posuďte zabezpečení sítě."
 "Telnet download for node {0} requires HTTPS or a configured PackageSha512.": "Stahování přes Telnet pro uzel {0} vyžaduje HTTPS nebo nakonfigurovaný PackageSha512."
 "StarServer is not configured; skipping automatic installation": "StarServer není nakonfigurován; automatická instalace se přeskakuje"
-
+# 运行时消息补充词条
+"Target network {0} is not a local network address; ignored": "Cílová síť {0} není adresa místní sítě; přeskočeno"
+"The number of target addresses exceeds the limit {0}; only the first {0} addresses are scanned in this round. Adjust MaxHosts or narrow Networks": "Počet cílových adres překračuje limit {0}; v tomto kole se prohledá pouze prvních {0} adres. Upravte MaxHosts nebo zúžte Networks"

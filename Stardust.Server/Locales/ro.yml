@@ -178,5 +178,6 @@
 "Dynamic registration": "Înregistrare dinamică"
 # 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "Limba interfeței, de exemplu zh-Hans, zh-Hant, en sau ja; lăsați gol pentru a o detecta din fiecare cerere în hosturile web și, în rest, pentru a urma limba sistemului"
-
-
+# 运行时消息补充词条
+"[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] s-a conectat la {2}, ultima activitate la {3}"
+"Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "Nodul [{0}/{1}] este foarte asemănător cu nodul existent [{2}]; se folosește nodul existent"

@@ -2,4 +2,6 @@
 "[{0}] Login succeeded, node code: {1}": "[{0}] Login berhasil, kode node: {1}"
 "[{0}] Starting agent, server: {1}": "[{0}] Menjalankan agen, server: {1}"
 "[{0}] Startup failed: {1}": "[{0}] Startup gagal: {1}"
-
+# 运行时消息补充词条
+"The current platform ({0}) does not support this command": "Platform saat ini ({0}) tidak mendukung perintah ini"
+"Parameter is empty.": "Parameter kosong."

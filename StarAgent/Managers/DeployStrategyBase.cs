@@ -76,7 +76,7 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
             return;
         }
 
-        log?.Info("解压缩 {0} 到 {1}", fi.Name, targetDir);
+        log?.Info("Extracting {0} to {1}", fi.Name, targetDir);
 
         targetDir.EnsureDirectory(false);
         fi.Extract(targetDir, true);
@@ -85,7 +85,7 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
         var ovs = deploy?.Overwrite?.Split(';');
         if (ovs != null && ovs.Length > 0)
         {
-            log?.Info("覆盖文件列表：{0}", deploy?.Overwrite);
+            log?.Info("Overwrite file list: {0}", deploy?.Overwrite);
         }
     }
 

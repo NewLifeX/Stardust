@@ -843,7 +843,7 @@ public class ServiceManager : DisposeBase
         var my = cmd.Argument?.ToJsonEntity<MyApp>();
         var serviceName = my?.DeployName ?? my?.AppName;
         if (my == null || serviceName.IsNullOrEmpty())
-            return new CommandReplyModel { Status = CommandStatus.错误, Data = "参数错误" };
+            return new CommandReplyModel { Status = CommandStatus.错误, Data = L.T("Invalid parameter.") };
 
         var appName = my.AppName;
         WriteLog("{0} Id={1} ServiceName={2} AppName={3}", cmd.Command, my.Id, serviceName, appName);
@@ -862,7 +862,7 @@ public class ServiceManager : DisposeBase
         // 保存状态
         if (changed) SaveDb();
 
-        return new CommandReplyModel { Data = "成功" };
+        return new CommandReplyModel { Data = L.T("Succeeded") };
     }
 
     private class MyApp

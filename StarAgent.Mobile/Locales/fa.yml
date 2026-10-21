@@ -2,4 +2,6 @@
 "[{0}] Login succeeded, node code: {1}": "[{0}] ورود موفق، کد گره: {1}"
 "[{0}] Starting agent, server: {1}": "[{0}] راه‌اندازی عامل، سرور: {1}"
 "[{0}] Startup failed: {1}": "[{0}] راه‌اندازی ناموفق: {1}"
-
+# 运行时消息补充词条
+"The current platform ({0}) does not support this command": "پلتفرم فعلی ({0}) از این فرمان پشتیبانی نمی‌کند"
+"Parameter is empty.": "پارامتر خالی است."

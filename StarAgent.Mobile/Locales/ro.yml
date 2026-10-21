@@ -2,4 +2,6 @@
 "[{0}] Login succeeded, node code: {1}": "[{0}] Autentificare reușită, cod nod: {1}"
 "[{0}] Starting agent, server: {1}": "[{0}] Se pornește agentul, server: {1}"
 "[{0}] Startup failed: {1}": "[{0}] Pornirea a eșuat: {1}"
-
+# 运行时消息补充词条
+"The current platform ({0}) does not support this command": "Platforma curentă ({0}) nu acceptă această comandă"
+"Parameter is empty.": "Parametrul este gol."

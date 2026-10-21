@@ -2,4 +2,6 @@
 "[{0}] Login succeeded, node code: {1}": "[{0}] הכניסה הצליחה, קוד צומת: {1}"
 "[{0}] Starting agent, server: {1}": "[{0}] מפעיל סוכן, שרת: {1}"
 "[{0}] Startup failed: {1}": "[{0}] ההפעלה נכשלה: {1}"
-
+# 运行时消息补充词条
+"The current platform ({0}) does not support this command": "הפלטפורמה הנוכחית ({0}) אינה תומכת בפקודה זו"
+"Parameter is empty.": "הפרמטר ריק."

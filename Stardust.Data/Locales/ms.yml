@@ -32,4 +32,9 @@
 "Global shared configuration; other applications merge the configuration items of this application at startup": "Konfigurasi dikongsi global; aplikasi lain menggabungkan item konfigurasi aplikasi ini semasa permulaan"
 # 运行时消息补充词条
 "Plugin server. Links are analyzed by keyword on this page and plugins are downloaded from it": "Pelayan pemalam. Pautan dianalisis mengikut kata kunci pada halaman ini dan pemalam dimuat turun daripadanya"
-
+# 运行时消息补充词条
+"Node cannot be empty.": "Nod tidak boleh kosong."
+"No matching package was found.": "Tiada pakej yang sepadan ditemui."
+"No matching package was found (version={0}, kind={1}).": "Tiada pakej yang sepadan ditemui (version={0}, kind={1})."
+"OS [{0}] is not compatible with .NET {1}": "Sistem pengendalian [{0}] tidak serasi dengan .NET {1}"
+"GLIBC [{0}] does not meet the minimum requirement {1} of .NET {2}": "GLIBC [{0}] tidak memenuhi keperluan minimum {1} bagi .NET {2}"

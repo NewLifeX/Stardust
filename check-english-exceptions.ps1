@@ -9,7 +9,7 @@ param(
     [String]$Root = $PSScriptRoot,
     [String[]]$Dir,
     [String[]]$Exclude = @(),
-    [String]$MessageCall = 'throw new|: base\(|Console\.Write|MessageBox\.Show|AppendTag\(|NewError\(|NewSpan\(|Debug\.Fail\(|WriteLog\(|OnWrite\(|XTrace\.|Log\.(Write|Error|Info|Debug|Warn|Fatal)|(Info|Error|Warn|Debug|Fatal)Prefixed\(|WritePrefixed\(|L\.T\(|Localization\.Translate|ApiException\(|HttpException\(|WriteAsJson|(?<![A-Za-z])(message|Message|Remark)\s*=[^=]|AppDeployHistory\.Create\(|WriteHistory\(|History\.Create\(',
+    [String]$MessageCall = 'throw new|: base\(|Console\.Write|MessageBox\.Show|AppendTag\(|NewError\(|NewSpan\(|Debug\.Fail\(|WriteLog\(|OnWrite\(|XTrace\.|Log\??\.(Write|Error|Info|Debug|Warn|Fatal)|(Info|Error|Warn|Debug|Fatal)Prefixed\(|WritePrefixed\(|L\.T\(|Localization\.Translate|ApiException\(|HttpException\(|WriteAsJson|(?<![A-Za-z])(message|Message|Remark)\s*=[^=]|AppDeployHistory\.Create\(|WriteHistory\(|History\.Create\(|Write(Error|Info|Warn|Debug)\(|Write(Info|Error|Warn|Debug)Event\(|WriteEvent\(|return\s+\$?"',
     [Switch]$List,
     [String]$Csv
 )
@@ -60,7 +60,7 @@ foreach ($dir in $dirs) {
             $code = $line -replace "//.*$", ""
             # 特性参数（Description/DisplayName/Obsolete/RequiresXxx/Justification 等）属元数据，不在本检查范围
             if ($code -match "^\s*\[") { continue }
-            if ($code -match $MessageCall -and $code -match "[\u4e00-\u9fa5]") {
+            if ($code -match $MessageCall -and $code -match '"[^"]*[\u4e00-\u9fa5][^"]*"') {
                 $hits += [pscustomobject]@{ File = $rel; Line = $i + 1; Text = $code }
             }
         }

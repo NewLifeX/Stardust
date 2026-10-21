@@ -32,6 +32,9 @@
 "Global shared configuration; other applications merge the configuration items of this application at startup": "Глобальная общая конфигурация; другие приложения объединяют элементы конфигурации этого приложения при запуске"
 # 运行时消息补充词条
 "Plugin server. Links are analyzed by keyword on this page and plugins are downloaded from it": "Сервер плагинов. На этой странице по ключевым словам анализируются ссылки и скачиваются плагины"
-
-
-
+# 运行时消息补充词条
+"Node cannot be empty.": "Узел не может быть пустым."
+"No matching package was found.": "Подходящий пакет не найден."
+"No matching package was found (version={0}, kind={1}).": "Подходящий пакет не найден (version={0}, kind={1})."
+"OS [{0}] is not compatible with .NET {1}": "ОС [{0}] несовместима с .NET {1}"
+"GLIBC [{0}] does not meet the minimum requirement {1} of .NET {2}": "GLIBC [{0}] не соответствует минимальному требованию {1} для .NET {2}"

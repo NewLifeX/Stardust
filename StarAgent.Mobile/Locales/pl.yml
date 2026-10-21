@@ -2,4 +2,6 @@
 "[{0}] Login succeeded, node code: {1}": "[{0}] Zalogowano, kod węzła: {1}"
 "[{0}] Starting agent, server: {1}": "[{0}] Uruchamianie agenta, serwer: {1}"
 "[{0}] Startup failed: {1}": "[{0}] Uruchomienie nie powiodło się: {1}"
-
+# 运行时消息补充词条
+"The current platform ({0}) does not support this command": "Bieżąca platforma ({0}) nie obsługuje tego polecenia"
+"Parameter is empty.": "Parametr jest pusty."

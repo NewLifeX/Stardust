@@ -32,4 +32,9 @@
 "Global shared configuration; other applications merge the configuration items of this application at startup": "Genel paylaşımlı yapılandırma; diğer uygulamalar başlatılırken bu uygulamanın yapılandırma öğelerini birleştirir"
 # 运行时消息补充词条
 "Plugin server. Links are analyzed by keyword on this page and plugins are downloaded from it": "Eklenti sunucusu. Bu sayfadaki bağlantılar anahtar sözcüğe göre çözümlenir ve eklentiler buradan indirilir"
-
+# 运行时消息补充词条
+"Node cannot be empty.": "Düğüm boş olamaz."
+"No matching package was found.": "Eşleşen paket bulunamadı."
+"No matching package was found (version={0}, kind={1}).": "Eşleşen paket bulunamadı (version={0}, kind={1})."
+"OS [{0}] is not compatible with .NET {1}": "İşletim sistemi [{0}] .NET {1} ile uyumlu değil"
+"GLIBC [{0}] does not meet the minimum requirement {1} of .NET {2}": "GLIBC [{0}], .NET {2} için minimum gereksinim {1} değerini karşılamıyor"

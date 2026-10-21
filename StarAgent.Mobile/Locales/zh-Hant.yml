@@ -2,3 +2,6 @@
 "[{0}] Login succeeded, node code: {1}": "[{0}] 登錄成功，節點編碼：{1}"
 "[{0}] Starting agent, server: {1}": "[{0}] 啟動代理，服務端：{1}"
 "[{0}] Startup failed: {1}": "[{0}] 啟動失敗：{1}"
+# 运行时消息补充词条
+"The current platform ({0}) does not support this command": "目前平台（{0}）不支援該指令"
+"Parameter is empty.": "參數為空"

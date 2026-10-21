@@ -14,4 +14,6 @@
 "Telnet download over HTTP for node {0} is risky; assess network security.": "Der Telnet-Download über HTTP für Knoten {0} ist riskant; bewerten Sie die Netzwerksicherheit."
 "Telnet download for node {0} requires HTTPS or a configured PackageSha512.": "Der Telnet-Download für Knoten {0} erfordert HTTPS oder eine konfigurierte PackageSha512."
 "StarServer is not configured; skipping automatic installation": "StarServer ist nicht konfiguriert; automatische Installation wird übersprungen"
-
+# 运行时消息补充词条
+"Target network {0} is not a local network address; ignored": "Zielnetzwerk {0} ist keine lokale Netzwerkadresse; wird ignoriert"
+"The number of target addresses exceeds the limit {0}; only the first {0} addresses are scanned in this round. Adjust MaxHosts or narrow Networks": "Die Anzahl der Zieladressen überschreitet das Limit {0}; in diesem Durchlauf werden nur die ersten {0} Adressen gescannt. Passen Sie MaxHosts an oder grenzen Sie Networks ein"

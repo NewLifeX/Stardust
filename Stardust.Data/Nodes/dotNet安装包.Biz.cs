@@ -323,7 +323,7 @@ public partial class DotNetPackage : Entity<DotNetPackage>
         reason = null;
         if (node == null)
         {
-            reason = "节点为空";
+            reason = L.T("Node cannot be empty.");
             return null;
         }
 
@@ -337,14 +337,14 @@ public partial class DotNetPackage : Entity<DotNetPackage>
         var pkg = auto ? Match(node, kind) : ResolveForNode(version, kind, node);
         if (pkg == null)
         {
-            reason = auto ? "未找到匹配的安装包" : $"未找到匹配的安装包（version={version}、kind={kind}）";
+            reason = auto ? L.T("No matching package was found.") : L.T("No matching package was found (version={0}, kind={1}).", version, kind);
             return null;
         }
 
         // 操作系统兼容性检查（如 Ubuntu18 无法安装 .NET10）
         if (!IsOSCompatible(node, pkg.Version))
         {
-            reason = $"OS[{node.OS}] 不兼容 .NET {pkg.Version}";
+            reason = L.T("OS [{0}] is not compatible with .NET {1}", node.OS, pkg.Version);
             return null;
         }
 
@@ -352,7 +352,7 @@ public partial class DotNetPackage : Entity<DotNetPackage>
         var minGLibc = GetDotNetMinGLibcVersion(pkg.Version);
         if (minGLibc != null && !CheckGLibc(node, minGLibc))
         {
-            reason = $"GLIBC[{node.CLibVersion}] 不满足 {GetNetMajorVersion(pkg.Version)} 最低要求 {minGLibc}";
+            reason = L.T("GLIBC [{0}] does not meet the minimum requirement {1} of .NET {2}", node.CLibVersion, minGLibc, GetNetMajorVersion(pkg.Version));
             return null;
         }
 

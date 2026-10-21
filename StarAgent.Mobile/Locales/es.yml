@@ -2,4 +2,6 @@
 "[{0}] Login succeeded, node code: {1}": "[{0}] Inicio de sesión correcto, código de nodo: {1}"
 "[{0}] Starting agent, server: {1}": "[{0}] Iniciando el agente, servidor: {1}"
 "[{0}] Startup failed: {1}": "[{0}] Error de inicio: {1}"
-
+# 运行时消息补充词条
+"The current platform ({0}) does not support this command": "La plataforma actual ({0}) no admite este comando"
+"Parameter is empty.": "El parámetro está vacío."

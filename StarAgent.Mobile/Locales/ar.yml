@@ -2,4 +2,6 @@
 "[{0}] Login succeeded, node code: {1}": "[{0}] نجح تسجيل الدخول، رمز العقدة: {1}"
 "[{0}] Starting agent, server: {1}": "[{0}] جارٍ بدء الوكيل، الخادم: {1}"
 "[{0}] Startup failed: {1}": "[{0}] فشل البدء: {1}"
-
+# 运行时消息补充词条
+"The current platform ({0}) does not support this command": "المنصة الحالية ({0}) لا تدعم هذا الأمر"
+"Parameter is empty.": "المعلمة فارغة."

@@ -178,4 +178,6 @@
 "Dynamic registration": "Dynaaminen rekisteröinti"
 # 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "Käyttöliittymän kieli, esimerkiksi zh-Hans, zh-Hant, en tai ja; jätä tyhjäksi havaitaksesi sen pyyntökohtaisesti verkkopalvelimissa ja muuten käyttääksesi järjestelmän kieltä"
-
+# 运行时消息补充词条
+"[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] kirjautui sisään {2}, viimeksi aktiivinen {3}"
+"Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "Solmu [{0}/{1}] muistuttaa hyvin paljon olemassa olevaa solmua [{2}]; käytetään olemassa olevaa solmua"

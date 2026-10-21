@@ -178,4 +178,6 @@
 "Dynamic registration": "Dynamisk registrering"
 # 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "UI-språk, for eksempel zh-Hans, zh-Hant, en eller ja; la feltet stå tomt for å oppdage det per forespørsel i webverter og ellers følge systemspråket"
-
+# 运行时消息补充词条
+"[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] logget inn {2}, sist aktiv {3}"
+"Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "Noden [{0}/{1}] ligner i stor grad den eksisterende noden [{2}]; den eksisterende noden brukes"

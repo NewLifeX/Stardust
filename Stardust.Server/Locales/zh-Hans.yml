@@ -178,3 +178,6 @@
 "Dynamic registration": "动态注册"
 # 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "界面语言。如 zh-Hans、zh-Hant、en、ja，留空时 Web 宿主按请求语言识别，其余跟随系统语言"
+# 运行时消息补充词条
+"[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}]登录于 {2}，最后活跃于 {3}"
+"Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "检测到节点[{0}/{1}]与旧节点[{2}]高度相似，选择使用旧节点"

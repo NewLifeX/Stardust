@@ -178,4 +178,6 @@
 "Dynamic registration": "Dinamik kayıt"
 # 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "Arayüz dili, örneğin zh-Hans, zh-Hant, en veya ja; web ana makinelerinde her istekten algılamak, diğer durumlarda sistem dilini izlemek için boş bırakın"
-
+# 运行时消息补充词条
+"[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] {2} tarihinde oturum açtı, son etkinlik {3}"
+"Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "Düğüm [{0}/{1}] mevcut düğüm [{2}] ile büyük ölçüde benzer; mevcut düğüm kullanılıyor"

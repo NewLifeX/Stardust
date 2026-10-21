@@ -89,7 +89,7 @@ public class StarService : DisposeBase, IApi
         var raw = (ControllerContext.Current?.Request as IPacket)?.ToStr();
         if (Provider?.GetService<StarClient>() is StarClient client)
         {
-            client.WriteEvent("info", "本地探测", raw);
+            client.WriteEvent("info", "LocalProbe", raw);
         }
 
         // 更新应用服务
@@ -99,7 +99,7 @@ public class StarService : DisposeBase, IApi
             // 标记为星尘应用，停止Deploy上报进程信息
             controller.IsStarApp = true;
 
-            controller.WriteEvent("本地探测", raw!);
+            controller.WriteEvent("LocalProbe", raw!);
         }
 
         // 返回插件服务器地址
@@ -223,7 +223,7 @@ public class StarService : DisposeBase, IApi
 
         try
         {
-            var result = Manager?.Stop(serviceName, "API调用停止");
+            var result = Manager?.Stop(serviceName, "API call stop");
             return new ServiceOperationResult
             {
                 Success = result ?? false,
@@ -258,7 +258,7 @@ public class StarService : DisposeBase, IApi
         try
         {
             // 使用共同的重启逻辑
-            var success = InternalRestartService(Manager, serviceName, "API调用重启");
+            var success = InternalRestartService(Manager, serviceName, "API call restart");
 
             // 根据结果提供更详细的信息
             var message = success ? L.T("Service restarted successfully.") : GetRestartFailureMessage(Manager, serviceName);
@@ -487,7 +487,7 @@ public class StarService : DisposeBase, IApi
                                 span?.AppendTag($"RestartService {controller.Name}");
 
                                 // 使用共同的重启逻辑
-                                restartSuccess = InternalRestartService(manager, controller.Name, "看门狗重启");
+                                restartSuccess = InternalRestartService(manager, controller.Name, "Watchdog restart");
 
                                 if (restartSuccess)
                                 {
@@ -562,7 +562,7 @@ public class StarService : DisposeBase, IApi
     /// <param name="serviceName">服务名称</param>
     /// <param name="reason">重启原因</param>
     /// <returns>是否成功</returns>
-    private static Boolean InternalRestartService(ServiceManager manager, String serviceName, String reason = "重启")
+    private static Boolean InternalRestartService(ServiceManager manager, String serviceName, String reason = "Restart")
     {
         if (manager == null || serviceName.IsNullOrEmpty()) return false;
 

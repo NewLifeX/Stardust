@@ -115,7 +115,7 @@ public class LocalStarClient
         catch (Exception ex)
         {
             // 本地探测失败视为本机未安装或未启动星尘代理，属正常状态，静默返回null
-            Log?.Debug("本地探测失败：{0}", ex.Message);
+            Log?.Debug("Local probe failed: {0}", ex.Message);
             return null;
         }
     }

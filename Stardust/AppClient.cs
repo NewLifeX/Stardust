@@ -606,7 +606,7 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
     {
         await RefreshConsume().ConfigureAwait(false);
 
-        return "刷新服务成功";
+        return L.T("Service refresh succeeded.");
     }
     #endregion
 

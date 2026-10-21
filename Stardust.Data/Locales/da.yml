@@ -32,4 +32,9 @@
 "Global shared configuration; other applications merge the configuration items of this application at startup": "Global delt konfiguration; andre applikationer fletter denne applikations konfigurationselementer ved start"
 # 运行时消息补充词条
 "Plugin server. Links are analyzed by keyword on this page and plugins are downloaded from it": "Plugin-server. Links analyseres efter nøgleord på denne side, og plugins downloades fra den"
-
+# 运行时消息补充词条
+"Node cannot be empty.": "Knuden må ikke være tom."
+"No matching package was found.": "Der blev ikke fundet nogen matchende pakke."
+"No matching package was found (version={0}, kind={1}).": "Der blev ikke fundet nogen matchende pakke (version={0}, kind={1})."
+"OS [{0}] is not compatible with .NET {1}": "Operativsystemet [{0}] er ikke kompatibelt med .NET {1}"
+"GLIBC [{0}] does not meet the minimum requirement {1} of .NET {2}": "GLIBC [{0}] opfylder ikke minimumskravet {1} for .NET {2}"

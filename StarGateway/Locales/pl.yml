@@ -22,5 +22,23 @@
 "StarGateway started, listening on port {0}, remote server {1}": "StarGateway uruchomiony, port nasłuchiwania {0}, serwer zdalny {1}"
 # 运行时消息补充词条
 "Configuration refreshed.": "Konfiguracja odświeżona."
-
-
+# 运行时消息补充词条
+"Failed to load the SSL certificate configuration: {0}": "Nie można załadować konfiguracji certyfikatu SSL: {0}"
+"Failed to load certificate {0}: {1}": "Nie można załadować certyfikatu {0}: {1}"
+"Failed to load configuration from {0}: {1}": "Nie można załadować konfiguracji z {0}: {1}"
+"StarServer is using plain HTTP. Remote certificate loading is refused for security because the private key password would be exposed on the wire; falling back to the database. Use HTTPS in production.": "StarServer używa nieszyfrowanego protokołu HTTP. Zdalne ładowanie certyfikatu jest odrzucane ze względów bezpieczeństwa, ponieważ hasło klucza prywatnego byłoby ujawnione w sieci; używana jest baza danych. W środowisku produkcyjnym użyj HTTPS."
+"Failed to fetch configuration from StarServer; falling back to the database: {0}": "Nie można pobrać konfiguracji z StarServer; używana jest baza danych: {0}"
+"Failed to load route configuration: {0}": "Nie można załadować konfiguracji tras: {0}"
+"Failed to start service {0} via StarAgent: {1}": "Nie można uruchomić usługi {0} przez StarAgent: {1}"
+"Failed to stop service {0} via StarAgent: {1}": "Nie można zatrzymać usługi {0} przez StarAgent: {1}"
+"Idle recycle: {0} has been inactive for more than {1} seconds": "Odzyskiwanie bezczynnych: {0} jest nieaktywny od ponad {1} sekund"
+"WebSocket is forbidden by route {0}: {1} {2}": "WebSocket jest zabroniony przez trasę {0}: {1} {2}"
+"Static {0} {1} -> 404 {2}": "Statyczne {0} {1} -> 404 {2}"
+"Route {0} has no available backend nodes": "Trasa {0} nie ma dostępnych węzłów zaplecza"
+"Error handling request {0} {1}: {2}": "Błąd podczas przetwarzania żądania {0} {1}: {2}"
+"WS upgrade succeeded: {0}": "Aktualizacja WS powiodła się: {0}"
+"Cold start: trying to wake {0} (route: {1})": "Zimny start: próba wybudzenia {0} (trasa: {1})"
+"Failed to connect {0} to remote server {1}! elapsed {2}! {3}": "Nie można połączyć {0} ze zdalnym serwerem {1}! czas {2}! {3}"
+"Error forwarding to the client: {0}": "Błąd podczas przekazywania do klienta: {0}"
+"Directory: {0}": "Katalog: {0}"
+"Failed to read directory: {0}": "Nie można odczytać katalogu: {0}"

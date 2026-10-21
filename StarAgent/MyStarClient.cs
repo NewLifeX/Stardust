@@ -158,7 +158,7 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
             var content = File.ReadAllText(flag);
 
             // 先上报再删除：入队失败时保留标记，下次心跳重试
-            this.WriteInfoEvent("Rescue", "星尘代理自愈恢复：" + content);
+            this.WriteInfoEvent("Rescue", L.T("Stardust agent self-healing completed: {0}", content));
             WriteLog("Reported device-side self-healing record: {0}", content);
 
             File.Delete(flag);
@@ -195,14 +195,14 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
         // 以服务方式运行时，重启服务，否则采取拉起进程的方式
         if (inService || Service.Host is DefaultHost host && host.InService)
         {
-            this.WriteInfoEvent("Upgrade", "强制更新完成，准备重启后台服务！PID=" + pid);
+            this.WriteInfoEvent("Upgrade", L.T("Forced update completed; restarting the background service. PID={0}", pid));
 
             // 冒烟测试：尝试拉起新版，若失败等 5s 重试一次（应对慢速存储落盘 / JIT 预热）
             var rs = upgrade.Run(exeName, "-restart -upgrade", 3_000);
             if (!rs)
             {
                 var delay = 5_000;
-                this.WriteInfoEvent("Upgrade", $"新版首次启动失败，等待{delay}ms后重试。{upgrade.LastErrorMessage}");
+                this.WriteInfoEvent("Upgrade", L.T("The new version failed to start for the first time; retrying in {0}ms. {1}", delay, upgrade.LastErrorMessage));
                 Thread.Sleep(delay);
                 rs = upgrade.Run(exeName, "-restart -upgrade", 3_000);
             }
@@ -210,25 +210,25 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
             //!! 这里不需要自杀，外部命令重启服务会结束当前进程
             if (rs)
             {
-                this.WriteInfoEvent("Upgrade", "强制更新完成，新进程已拉起，等待当前服务被重启！");
+                this.WriteInfoEvent("Upgrade", L.T("Forced update completed; the new process has been launched, waiting for the current service to restart."));
             }
             else
             {
                 // 两次均失败，确认新版有致命缺陷，回滚 .del 恢复旧版文件
                 upgrade.Rollback();
-                this.WriteInfoEvent("Upgrade", "新版启动失败（冒烟测试不通过），已回滚旧版文件，当前服务继续运行。" + upgrade.LastErrorMessage);
+                this.WriteInfoEvent("Upgrade", L.T("The new version failed to start (smoke test failed); the old files have been rolled back and the current service keeps running. {0}", upgrade.LastErrorMessage));
             }
         }
         else
         {
-            this.WriteInfoEvent("Upgrade", "强制更新完成，准备拉起新进程！PID=" + pid);
+            this.WriteInfoEvent("Upgrade", L.T("Forced update completed; launching the new process. PID={0}", pid));
 
             // 冒烟测试：尝试拉起新版，若失败等 5s 重试一次
             var rs = upgrade.Run(exeName, "-run -upgrade", 3_000);
             if (!rs)
             {
                 var delay = 5_000;
-                this.WriteInfoEvent("Upgrade", $"新版首次启动失败，等待{delay}ms后重试。{upgrade.LastErrorMessage}");
+                this.WriteInfoEvent("Upgrade", L.T("The new version failed to start for the first time; retrying in {0}ms. {1}", delay, upgrade.LastErrorMessage));
                 Thread.Sleep(delay);
                 rs = upgrade.Run(exeName, "-run -upgrade", 3_000);
             }
@@ -237,7 +237,7 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
             {
                 Service.StopWork("Upgrade");
 
-                this.WriteInfoEvent("Upgrade", "强制更新完成，新进程已拉起，准备退出当前进程！PID=" + pid);
+                this.WriteInfoEvent("Upgrade", L.T("Forced update completed; the new process has been launched and the current process is about to exit. PID={0}", pid));
 
                 upgrade.KillSelf();
             }
@@ -245,7 +245,7 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
             {
                 // 两次均失败，确认新版有致命缺陷，回滚 .del 恢复旧版文件
                 upgrade.Rollback();
-                this.WriteInfoEvent("Upgrade", "新版启动失败（冒烟测试不通过），已回滚旧版文件，当前服务继续运行。" + upgrade.LastErrorMessage);
+                this.WriteInfoEvent("Upgrade", L.T("The new version failed to start (smoke test failed); the old files have been rolled back and the current service keeps running. {0}", upgrade.LastErrorMessage));
             }
         }
     }
@@ -392,7 +392,7 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
     /// <returns></returns>
     private String? SetChannel(String? argument)
     {
-        if (argument.IsNullOrEmpty()) return "参数为空";
+        if (argument.IsNullOrEmpty()) return L.T("Parameter is empty.");
 
         var set = AgentSetting;
         set.Channel = argument;
@@ -415,14 +415,14 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
         }
 
         var ts = now - time;
-        if (Math.Abs(ts.TotalMilliseconds) < 1000) return "无需同步";
+        if (Math.Abs(ts.TotalMilliseconds) < 1000) return L.T("No synchronization required.");
 
-        var msg = $"同步时间为：{time.ToFullString()}，偏差：{ts}";
+        var msg = L.T("Synchronized time: {0}, offset: {1}", time.ToFullString(), ts);
         WriteLog(msg);
         WriteEvent("info", "SyncTime", msg);
         time = time.ToUniversalTime();
 
-        var rs = "不支持的系统！";
+        var rs = L.T("Unsupported system!");
         if (Runtime.Windows)
         {
             var st = new SYSTEMTIME
@@ -439,7 +439,7 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
             if (!SetSystemTime(ref st))
                 throw new InvalidOperationException("Unable to set system time.");
 
-            rs = "成功";
+            rs = L.T("Succeeded");
         }
         else if (Runtime.Linux)
         {
@@ -448,14 +448,14 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
             // 时间偏差较大时，需要写入RTC时钟，否则时间会被硬件时钟覆盖
             if (Math.Abs(ts.TotalSeconds) > 60)
             {
-                rs += "，" + "hwclock".Execute("-u -w", 5_000);
+                rs += ", " + "hwclock".Execute("-u -w", 5_000);
             }
         }
         else if (Runtime.OSX)
         {
             // macOS 修改系统时间需要 root 权限，-n 禁止交互式密码输入，避免命令挂起
             rs = "sudo".Execute($"-n date -u -s \"{time:yyyy-MM-dd HH:mm:ss}\"", 5_000);
-            if (rs.IsNullOrEmpty()) rs = $"同步失败，需要 root 权限。请手动执行：sudo date -u -s \"{time:yyyy-MM-dd HH:mm:ss}\"";
+            if (rs.IsNullOrEmpty()) rs = L.T("Synchronization failed; root permission is required. Run manually: sudo date -u -s \"{0}\"", time.ToString("yyyy-MM-dd HH:mm:ss"));
         }
 
         WriteLog(rs);
@@ -484,7 +484,7 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
     /// <returns></returns>
     public String? RunBash(String? argument)
     {
-        if (argument.IsNullOrEmpty()) return "参数为空";
+        if (argument.IsNullOrEmpty()) return L.T("Parameter is empty.");
 
         var cmd = argument;
         var timeout = 30_000;
@@ -507,12 +507,12 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
             }
         }
 
-        if (cmd.IsNullOrEmpty()) return "命令为空";
+        if (cmd.IsNullOrEmpty()) return L.T("Command is empty.");
 
         // 审计日志：记录命令执行前的信息
         var now = DateTime.Now;
         WriteLog("Executing Bash command: {0}, timeout: {1}ms", cmd, timeout);
-        WriteEvent("warn", "RunBash", $"执行命令：{cmd}，超时：{timeout}ms，时间：{now:yyyy-MM-dd HH:mm:ss}");
+        WriteEvent("warn", "RunBash", L.T("Executing command: {0}, timeout: {1}ms, time: {2}", cmd, timeout, now.ToString("yyyy-MM-dd HH:mm:ss")));
 
         var sw = Stopwatch.StartNew();
         try
@@ -523,7 +523,7 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
             // 审计日志：记录成功执行的详细信息（输出过长时截断）
             var resultPreview = rs?.Length > 1000 ? rs.Substring(0, 1000) + "..." : rs;
             WriteLog("Execution succeeded, elapsed: {0}ms, output length: {1}", sw.ElapsedMilliseconds, rs?.Length ?? 0);
-            WriteEvent("info", "RunBash", $"执行成功，命令：{cmd}，耗时：{sw.ElapsedMilliseconds}ms，输出长度：{rs?.Length ?? 0}");
+            WriteEvent("info", "RunBash", L.T("Execution succeeded, command: {0}, elapsed: {1}ms, output length: {2}", cmd, sw.ElapsedMilliseconds, rs?.Length ?? 0));
 
             return rs;
         }
@@ -533,9 +533,9 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
 
             // 审计日志：记录失败信息
             WriteLog("Execution failed: {0}, elapsed: {1}ms", ex.Message, sw.ElapsedMilliseconds);
-            WriteEvent("error", "RunBash", $"执行失败，命令：{cmd}，耗时：{sw.ElapsedMilliseconds}ms，错误：{ex.Message}");
+            WriteEvent("error", "RunBash", L.T("Execution failed, command: {0}, elapsed: {1}ms, error: {2}", cmd, sw.ElapsedMilliseconds, ex.Message));
 
-            return $"执行失败：{ex.Message}";
+            return L.T("Command execution failed: {0}", ex.Message);
         }
     }
 
@@ -544,7 +544,7 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
     /// <returns></returns>
     public String? RunCmd(String? argument)
     {
-        if (argument.IsNullOrEmpty()) return "参数为空";
+        if (argument.IsNullOrEmpty()) return L.T("Parameter is empty.");
 
         var cmd = argument;
         var timeout = 30_000;
@@ -567,12 +567,12 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
             }
         }
 
-        if (cmd.IsNullOrEmpty()) return "命令为空";
+        if (cmd.IsNullOrEmpty()) return L.T("Command is empty.");
 
         // 审计日志：记录命令执行前的信息
         var now = DateTime.Now;
         WriteLog("Executing CMD command: {0}, timeout: {1}ms", cmd, timeout);
-        WriteEvent("warn", "RunCmd", $"执行命令：{cmd}，超时：{timeout}ms，时间：{now:yyyy-MM-dd HH:mm:ss}");
+        WriteEvent("warn", "RunCmd", L.T("Executing command: {0}, timeout: {1}ms, time: {2}", cmd, timeout, now.ToString("yyyy-MM-dd HH:mm:ss")));
 
         var sw = Stopwatch.StartNew();
         try
@@ -583,7 +583,7 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
             // 审计日志：记录成功执行的详细信息（输出过长时截断）
             var resultPreview = rs?.Length > 1000 ? rs.Substring(0, 1000) + "..." : rs;
             WriteLog("Execution succeeded, elapsed: {0}ms, output length: {1}", sw.ElapsedMilliseconds, rs?.Length ?? 0);
-            WriteEvent("info", "RunCmd", $"执行成功，命令：{cmd}，耗时：{sw.ElapsedMilliseconds}ms，输出长度：{rs?.Length ?? 0}");
+            WriteEvent("info", "RunCmd", L.T("Execution succeeded, command: {0}, elapsed: {1}ms, output length: {2}", cmd, sw.ElapsedMilliseconds, rs?.Length ?? 0));
 
             return rs;
         }
@@ -593,9 +593,9 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
 
             // 审计日志：记录失败信息
             WriteLog("Execution failed: {0}, elapsed: {1}ms", ex.Message, sw.ElapsedMilliseconds);
-            WriteEvent("error", "RunCmd", $"执行失败，命令：{cmd}，耗时：{sw.ElapsedMilliseconds}ms，错误：{ex.Message}");
+            WriteEvent("error", "RunCmd", L.T("Execution failed, command: {0}, elapsed: {1}ms, error: {2}", cmd, sw.ElapsedMilliseconds, ex.Message));
 
-            return $"执行失败：{ex.Message}";
+            return L.T("Command execution failed: {0}", ex.Message);
         }
     }
     #endregion

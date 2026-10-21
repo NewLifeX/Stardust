@@ -178,4 +178,6 @@
 "Dynamic registration": "동적 등록"
 # 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "UI 언어입니다(예: zh-Hans, zh-Hant, en, ja). 웹 호스트에서는 각 요청에서 감지하도록 비워 두고, 그 외에는 시스템 언어를 따릅니다"
-
+# 运行时消息补充词条
+"[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] 로그인 시간 {2}, 마지막 활동 {3}"
+"Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "노드 [{0}/{1}]이(가) 기존 노드 [{2}]와 매우 유사하여 기존 노드를 사용합니다"

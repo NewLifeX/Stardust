@@ -60,7 +60,7 @@ internal static class LanScan
                 // 与本机网卡同一套过滤，避免误配成 169.254.0.0/16、0.0.0.0/0 等非局域网网段后全网段扫描
                 if (!IsLanAddress(range.Start))
                 {
-                    log?.Warn("目标网段 {0} 不是局域网地址，已忽略", part);
+                    log?.Warn("Target network {0} is not a local network address; ignored", part);
                     continue;
                 }
 
@@ -134,7 +134,7 @@ internal static class LanScan
                 count++;
                 if (maxHosts > 0 && count >= maxHosts)
                 {
-                    log?.Warn("目标地址超过上限 {0}，本轮仅扫描前 {0} 个地址，请调整MaxHosts或收窄Networks", maxHosts);
+                    log?.Warn("The number of target addresses exceeds the limit {0}; only the first {0} addresses are scanned in this round. Adjust MaxHosts or narrow Networks", maxHosts);
                     yield break;
                 }
             }

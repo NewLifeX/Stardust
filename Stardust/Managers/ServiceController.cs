@@ -812,7 +812,7 @@ public class ServiceController : DisposeBase
 
         if (!first && !changed.IsNullOrEmpty())
         {
-            var msg = $"文件[{changed}]发生改变，停止应用，延迟{Delay}毫秒后启动";
+            var msg = L.T("File [{0}] changed; stopping the application and starting it {1}ms later", changed, Delay);
             WriteLog(msg);
 
             // 进入就绪状态

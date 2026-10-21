@@ -87,7 +87,7 @@ public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEv
             await client.PublishEventAsync(topic, "subscribe").ConfigureAwait(false);
             _subscribed = true;
 
-            Log?.Info("事件总线[{0}]远程订阅成功！", topic);
+            Log?.Info("Event bus [{0}] remote subscription succeeded!", topic);
 
             return true;
         }
@@ -129,7 +129,7 @@ public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEv
         await client.PublishEventAsync(topic, "unsubscribe", cancellationToken).ConfigureAwait(false);
         _subscribed = false;
 
-        Log?.Info("事件总线[{0}]远程取消订阅成功！", topic);
+        Log?.Info("Event bus [{0}] remote unsubscription succeeded!", topic);
 
         return await base.UnsubscribeAsync(clientId, cancellationToken).ConfigureAwait(false);
     }

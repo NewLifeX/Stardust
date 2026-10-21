@@ -112,6 +112,25 @@ public class LocalizationTests : IDisposable
         Assert.Equal("星塵設定", Localization.Translate("Stardust settings"));
     }
 
+    [Fact(DisplayName = "新增的日志、事件与命令结果词条已注册")]
+    public void RuntimeMessagesRegistered()
+    {
+        LoadAssemblies();
+
+        Localization.Culture = new CultureInfo("zh-Hans");
+        Assert.Equal("健康检查失败：{0} - {1}", Localization.Translate("Health check failed: {0} - {1}"));
+        Assert.Equal("本地探测失败：{0}", Localization.Translate("Local probe failed: {0}"));
+        Assert.Equal("参数为空", Localization.Translate("Parameter is empty."));
+        Assert.Equal("删除影子目录：{0}", Localization.Translate("Deleting shadow directory: {0}"));
+
+        Localization.Culture = new CultureInfo("zh-Hant");
+        Assert.Equal("健康檢查失敗：{0} - {1}", Localization.Translate("Health check failed: {0} - {1}"));
+
+        Localization.Culture = new CultureInfo("de");
+        Assert.Equal("Integritätsprüfung fehlgeschlagen: {0} - {1}", Localization.Translate("Health check failed: {0} - {1}"));
+        Assert.Equal("Parameter ist leer.", Localization.Translate("Parameter is empty."));
+    }
+
     [Fact(DisplayName = "31种语言均提供设置描述译文")]
     public void AllLocalesTranslateSettings()
     {

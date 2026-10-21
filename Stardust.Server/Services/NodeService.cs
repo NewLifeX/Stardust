@@ -341,7 +341,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
             node = QueryByInfo(inf.ProductCode, di, set.NodeCodeLevel).FirstOrDefault();
             if (node != null)
             {
-                var msg = $"检测到节点[{inf.Code}/{di.Macs}]与旧节点[{node.Code}]高度相似，选择使用旧节点";
+                var msg = L.T("Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node", inf.Code, di.Macs, node.Code);
                 XTrace.WriteLine(msg);
                 span?.AppendTag(msg);
                 node.WriteHistory(L.T("Matched existing node"), true, msg, ip);

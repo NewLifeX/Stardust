@@ -36,13 +36,13 @@ public static class HealthCheckHelper
                 return CheckUdp(healthCheck, timeout, log);
             else
             {
-                log?.Warn("不支持的健康检查协议: {0}", healthCheck);
+                log?.Warn("Unsupported health check protocol: {0}", healthCheck);
                 return false;
             }
         }
         catch (Exception ex)
         {
-            log?.Error("健康检查异常: {0} - {1}", healthCheck, ex.Message);
+            log?.Error("Health check error: {0} - {1}", healthCheck, ex.Message);
             return false;
         }
     }
@@ -58,13 +58,13 @@ public static class HealthCheckHelper
             var isHealthy = response.StatusCode == HttpStatusCode.OK;
             
             if (!isHealthy)
-                log?.Warn("HTTP健康检查失败: {0} - {1}", url, response.StatusCode);
+                log?.Warn("Health check failed: {0} - {1}", url, response.StatusCode);
             
             return isHealthy;
         }
         catch (Exception ex)
         {
-            log?.Warn("HTTP健康检查失败: {0} - {1}", url, ex.GetTrue()?.Message);
+            log?.Warn("Health check failed: {0} - {1}", url, ex.GetTrue()?.Message);
             return false;
         }
     }
@@ -79,7 +79,7 @@ public static class HealthCheckHelper
 
         if (port <= 0)
         {
-            log?.Warn("TCP健康检查失败: 无效的端口 - {0}", address);
+            log?.Warn("Health check failed: invalid port - {0}", address);
             return false;
         }
 
@@ -93,13 +93,13 @@ public static class HealthCheckHelper
             }
             else
             {
-                log?.Warn("TCP健康检查超时: {0}", address);
+                log?.Warn("Health check timed out: {0}", address);
                 return false;
             }
         }
         catch (Exception ex)
         {
-            log?.Warn("TCP健康检查失败: {0} - {1}", address, ex.GetTrue()?.Message);
+            log?.Warn("Health check failed: {0} - {1}", address, ex.GetTrue()?.Message);
             return false;
         }
     }
@@ -114,7 +114,7 @@ public static class HealthCheckHelper
 
         if (port <= 0)
         {
-            log?.Warn("UDP健康检查失败: 无效的端口 - {0}", address);
+            log?.Warn("Health check failed: invalid port - {0}", address);
             return false;
         }
 
@@ -140,12 +140,12 @@ public static class HealthCheckHelper
         }
         catch (SocketException ex) when (ex.SocketErrorCode == SocketError.TimedOut)
         {
-            log?.Warn("UDP健康检查超时: {0}", address);
+            log?.Warn("Health check timed out: {0}", address);
             return false;
         }
         catch (Exception ex)
         {
-            log?.Warn("UDP健康检查失败: {0} - {1}", address, ex.GetTrue()?.Message);
+            log?.Warn("Health check failed: {0} - {1}", address, ex.GetTrue()?.Message);
             return false;
         }
     }
@@ -169,13 +169,13 @@ public static class HealthCheckHelper
                 return await CheckUdpAsync(healthCheck, timeout, log).ConfigureAwait(false);
             else
             {
-                log?.Warn("不支持的健康检查协议: {0}", healthCheck);
+                log?.Warn("Unsupported health check protocol: {0}", healthCheck);
                 return false;
             }
         }
         catch (Exception ex)
         {
-            log?.Error("健康检查异常: {0} - {1}", healthCheck, ex.Message);
+            log?.Error("Health check error: {0} - {1}", healthCheck, ex.Message);
             return false;
         }
     }
@@ -190,13 +190,13 @@ public static class HealthCheckHelper
             var isHealthy = response.StatusCode == HttpStatusCode.OK;
             
             if (!isHealthy)
-                log?.Warn("HTTP健康检查失败: {0} - {1}", url, response.StatusCode);
+                log?.Warn("Health check failed: {0} - {1}", url, response.StatusCode);
             
             return isHealthy;
         }
         catch (Exception ex)
         {
-            log?.Warn("HTTP健康检查失败: {0} - {1}", url, ex.GetTrue()?.Message);
+            log?.Warn("Health check failed: {0} - {1}", url, ex.GetTrue()?.Message);
             return false;
         }
     }
@@ -210,7 +210,7 @@ public static class HealthCheckHelper
 
         if (port <= 0)
         {
-            log?.Warn("TCP健康检查失败: 无效的端口 - {0}", address);
+            log?.Warn("Health check failed: invalid port - {0}", address);
             return false;
         }
 
@@ -224,7 +224,7 @@ public static class HealthCheckHelper
             var task = client.ConnectAsync(host, port);
             if (!task.Wait(timeout))
             {
-                log?.Warn("TCP健康检查超时: {0}", address);
+                log?.Warn("Health check timed out: {0}", address);
                 return false;
             }
 #endif
@@ -233,13 +233,13 @@ public static class HealthCheckHelper
 #if NET5_0_OR_GREATER
         catch (OperationCanceledException)
         {
-            log?.Warn("TCP健康检查超时: {0}", address);
+            log?.Warn("Health check timed out: {0}", address);
             return false;
         }
 #endif
         catch (Exception ex)
         {
-            log?.Warn("TCP健康检查失败: {0} - {1}", address, ex.GetTrue()?.Message);
+            log?.Warn("Health check failed: {0} - {1}", address, ex.GetTrue()?.Message);
             return false;
         }
     }
@@ -253,7 +253,7 @@ public static class HealthCheckHelper
 
         if (port <= 0)
         {
-            log?.Warn("UDP健康检查失败: 无效的端口 - {0}", address);
+            log?.Warn("Health check failed: invalid port - {0}", address);
             return false;
         }
 
@@ -285,7 +285,7 @@ public static class HealthCheckHelper
             }
             else
             {
-                log?.Warn("UDP健康检查超时: {0}", address);
+                log?.Warn("Health check timed out: {0}", address);
                 return false;
             }
 #endif
@@ -293,18 +293,18 @@ public static class HealthCheckHelper
 #if NET6_0_OR_GREATER
         catch (OperationCanceledException)
         {
-            log?.Warn("UDP健康检查超时: {0}", address);
+            log?.Warn("Health check timed out: {0}", address);
             return false;
         }
 #endif
         catch (SocketException ex) when (ex.SocketErrorCode == SocketError.TimedOut)
         {
-            log?.Warn("UDP健康检查超时: {0}", address);
+            log?.Warn("Health check timed out: {0}", address);
             return false;
         }
         catch (Exception ex)
         {
-            log?.Warn("UDP健康检查失败: {0} - {1}", address, ex.GetTrue()?.Message);
+            log?.Warn("Health check failed: {0} - {1}", address, ex.GetTrue()?.Message);
             return false;
         }
     }

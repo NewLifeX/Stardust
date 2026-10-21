@@ -2,4 +2,6 @@
 "[{0}] Login succeeded, node code: {1}": "[{0}] Login lykkedes, nodekode: {1}"
 "[{0}] Starting agent, server: {1}": "[{0}] Starter agenten, server: {1}"
 "[{0}] Startup failed: {1}": "[{0}] Start mislykkedes: {1}"
-
+# 运行时消息补充词条
+"The current platform ({0}) does not support this command": "Den aktuelle platform ({0}) understøtter ikke denne kommando"
+"Parameter is empty.": "Parameteren er tom."

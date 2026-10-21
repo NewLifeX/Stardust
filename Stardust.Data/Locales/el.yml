@@ -32,4 +32,9 @@
 "Global shared configuration; other applications merge the configuration items of this application at startup": "Καθολική κοινόχρηστη διαμόρφωση· άλλες εφαρμογές συγχωνεύουν τα στοιχεία διαμόρφωσης αυτής της εφαρμογής κατά την εκκίνηση"
 # 运行时消息补充词条
 "Plugin server. Links are analyzed by keyword on this page and plugins are downloaded from it": "Διακομιστής προσθέτων. Οι σύνδεσμοι αναλύονται με λέξη-κλειδί σε αυτή τη σελίδα και τα πρόσθετα λαμβάνονται από αυτόν"
-
+# 运行时消息补充词条
+"Node cannot be empty.": "Ο κόμβος δεν μπορεί να είναι κενός."
+"No matching package was found.": "Δεν βρέθηκε αντίστοιχο πακέτο."
+"No matching package was found (version={0}, kind={1}).": "Δεν βρέθηκε αντίστοιχο πακέτο (version={0}, kind={1})."
+"OS [{0}] is not compatible with .NET {1}": "Το λειτουργικό σύστημα [{0}] δεν είναι συμβατό με .NET {1}"
+"GLIBC [{0}] does not meet the minimum requirement {1} of .NET {2}": "Το GLIBC [{0}] δεν πληροί την ελάχιστη απαίτηση {1} του .NET {2}"

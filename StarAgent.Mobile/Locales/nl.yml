@@ -2,4 +2,6 @@
 "[{0}] Login succeeded, node code: {1}": "[{0}] Aanmelding geslaagd, knooppuntcode: {1}"
 "[{0}] Starting agent, server: {1}": "[{0}] Agent starten, server: {1}"
 "[{0}] Startup failed: {1}": "[{0}] Opstarten mislukt: {1}"
-
+# 运行时消息补充词条
+"The current platform ({0}) does not support this command": "Het huidige platform ({0}) ondersteunt deze opdracht niet"
+"Parameter is empty.": "Parameter is leeg."
