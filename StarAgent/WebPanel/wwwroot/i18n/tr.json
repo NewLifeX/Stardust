@@ -189,5 +189,7 @@
   "启动服务": "Hizmeti başlat",
   "停止服务": "Hizmeti durdur",
   "重启服务": "Hizmeti yeniden başlat",
-  "确定要删除子服务 {0} 吗？": "Alt hizmet {0} silinsin mi?"
+  "确定要删除子服务 {0} 吗？": "Alt hizmet {0} silinsin mi?",
+  "语言": "Dil",
+  "编辑": "Düzenle"
 }

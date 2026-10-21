@@ -189,5 +189,7 @@
   "启动服务": "Szolgáltatás indítása",
   "停止服务": "Szolgáltatás leállítása",
   "重启服务": "Szolgáltatás újraindítása",
-  "确定要删除子服务 {0} 吗？": "Törli a(z) {0} alszolgáltatást?"
+  "确定要删除子服务 {0} 吗？": "Törli a(z) {0} alszolgáltatást?",
+  "语言": "Nyelv",
+  "编辑": "Szerkesztés"
 }

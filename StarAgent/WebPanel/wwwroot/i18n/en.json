@@ -189,5 +189,7 @@
   "启动服务": "Start service",
   "停止服务": "Stop service",
   "重启服务": "Restart service",
-  "确定要删除子服务 {0} 吗？": "Delete child service {0}?"
+  "确定要删除子服务 {0} 吗？": "Delete child service {0}?",
+  "语言": "Language",
+  "编辑": "Edit"
 }

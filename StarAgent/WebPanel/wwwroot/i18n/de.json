@@ -189,5 +189,7 @@
   "启动服务": "Dienst starten",
   "停止服务": "Dienst stoppen",
   "重启服务": "Dienst neu starten",
-  "确定要删除子服务 {0} 吗？": "Unterdienst {0} löschen?"
+  "确定要删除子服务 {0} 吗？": "Unterdienst {0} löschen?",
+  "语言": "Sprache",
+  "编辑": "Bearbeiten"
 }

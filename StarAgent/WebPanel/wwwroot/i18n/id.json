@@ -189,5 +189,7 @@
   "启动服务": "Mulai layanan",
   "停止服务": "Hentikan layanan",
   "重启服务": "Mulai ulang layanan",
-  "确定要删除子服务 {0} 吗？": "Hapus layanan anak {0}?"
+  "确定要删除子服务 {0} 吗？": "Hapus layanan anak {0}?",
+  "语言": "Bahasa",
+  "编辑": "Edit"
 }

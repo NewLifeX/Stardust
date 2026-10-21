@@ -189,5 +189,7 @@
   "启动服务": "Spustit službu",
   "停止服务": "Zastavit službu",
   "重启服务": "Restartovat službu",
-  "确定要删除子服务 {0} 吗？": "Smazat podřízenou službu {0}?"
+  "确定要删除子服务 {0} 吗？": "Smazat podřízenou službu {0}?",
+  "语言": "Jazyk",
+  "编辑": "Upravit"
 }

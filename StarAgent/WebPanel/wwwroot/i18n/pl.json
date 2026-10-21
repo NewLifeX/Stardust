@@ -189,5 +189,7 @@
   "启动服务": "Uruchom usługę",
   "停止服务": "Zatrzymaj usługę",
   "重启服务": "Uruchom usługę ponownie",
-  "确定要删除子服务 {0} 吗？": "Usunąć usługę podrzędną {0}?"
+  "确定要删除子服务 {0} 吗？": "Usunąć usługę podrzędną {0}?",
+  "语言": "Język",
+  "编辑": "Edytuj"
 }

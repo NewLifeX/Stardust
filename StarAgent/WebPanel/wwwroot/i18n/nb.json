@@ -189,5 +189,7 @@
   "启动服务": "Start tjeneste",
   "停止服务": "Stopp tjeneste",
   "重启服务": "Start tjeneste på nytt",
-  "确定要删除子服务 {0} 吗？": "Slette undertjenesten {0}?"
+  "确定要删除子服务 {0} 吗？": "Slette undertjenesten {0}?",
+  "语言": "Språk",
+  "编辑": "Rediger"
 }

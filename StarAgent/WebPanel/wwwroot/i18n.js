@@ -1,5 +1,5 @@
 // StarAgent 管理面板多语言。中文为源文，其余语言按 /i18n/<lang>.json 覆盖文本节点与占位提示。
-// 语言以服务端 NewLife.Setting.Language 为准，未配置时跟随浏览器语言。
+// 语言以服务端 /api/languages 为准：优先固定语言，其次实际生效语言，末位跟随浏览器语言。
 (function () {
   const SUPPORTED = ['zh-Hans', 'zh-Hant', 'en', 'ar', 'bn', 'cs', 'da', 'de', 'el', 'es', 'fa', 'fi', 'fr', 'he', 'hi', 'hu', 'id', 'it', 'ja', 'ko', 'ms', 'nb', 'nl', 'pl', 'pt', 'ro', 'ru', 'sv', 'th', 'tr', 'uk', 'vi'];
 
@@ -73,7 +73,7 @@
   }
 
   function translateElement(el) {
-    for (const attr of ['placeholder', 'title']) {
+    for (const attr of ['placeholder', 'title', 'aria-label']) {
       const value = el.getAttribute && el.getAttribute(attr);
       if (!value) continue;
 
@@ -153,11 +153,25 @@
     } catch { return null; }
   }
 
+  // 服务端语言名形如“德语 (Deutsch)”，优先展示括号内的本地名称
+  function nativeName(name) {
+    if (!name) return name;
+
+    const m = String(name).match(/\(([^()]+)\)\s*$/);
+    return m ? m[1].trim() : String(name).trim();
+  }
+
   async function init() {
     const data = await loadLanguages();
     const current = data && data.current ? String(data.current) : '';
+    const effective = data && data.effective ? String(data.effective) : '';
     const fixed = normalize(current);
     if (fixed) lang = fixed;
+    else {
+      // 未固定语言时跟随服务端实际生效语言，保证界面与服务端消息一致
+      const actual = normalize(effective);
+      if (actual) lang = actual;
+    }
 
     const sel = document.getElementById('lang-select');
     if (sel) {
@@ -165,11 +179,22 @@
       sel.innerHTML = '';
       sel.add(new Option('🌐', ''));
       if (items.length) {
-        for (const it of items) sel.add(new Option(it.name, it.code));
+        for (const it of items) sel.add(new Option(nativeName(it.name), it.code));
       } else {
         for (const code of SUPPORTED) sel.add(new Option(code, code));
       }
-      sel.value = fixed ? current : '';
+
+      if (fixed) {
+        sel.value = current;
+        // 服务端语言码可能不是下拉项的值，按归一化语言再匹配一次
+        if (sel.value !== current) {
+          const hit = items.find(e => normalize(e.code) === fixed);
+          if (hit) sel.value = hit.code;
+        }
+      } else {
+        sel.value = '';
+      }
+
       sel.addEventListener('change', e => {
         if (window.setPanelLanguage) window.setPanelLanguage(e.target.value);
         else setLang(e.target.value);

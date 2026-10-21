@@ -189,5 +189,7 @@
   "启动服务": "Starta tjänst",
   "停止服务": "Stoppa tjänst",
   "重启服务": "Starta om tjänst",
-  "确定要删除子服务 {0} 吗？": "Ta bort undertjänsten {0}?"
+  "确定要删除子服务 {0} 吗？": "Ta bort undertjänsten {0}?",
+  "语言": "Språk",
+  "编辑": "Redigera"
 }

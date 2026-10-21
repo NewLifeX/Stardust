@@ -189,5 +189,7 @@
   "启动服务": "Käynnistä palvelu",
   "停止服务": "Pysäytä palvelu",
   "重启服务": "Käynnistä palvelu uudelleen",
-  "确定要删除子服务 {0} 吗？": "Poistetaanko alipalvelu {0}?"
+  "确定要删除子服务 {0} 吗？": "Poistetaanko alipalvelu {0}?",
+  "语言": "Kieli",
+  "编辑": "Muokkaa"
 }

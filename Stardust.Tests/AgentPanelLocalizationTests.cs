@@ -84,5 +84,9 @@ public class AgentPanelLocalizationTests
         Assert.Contains("/api/languages", js);
         Assert.DoesNotContain("staragent.lang", js);
         Assert.DoesNotContain("'lang='+StarI18N.lang", html);
+
+        // 未固定语言时跟随服务端实际生效语言，提示属性同样参与翻译
+        Assert.Contains("effective", js);
+        Assert.Contains("aria-label", js);
     }
 }

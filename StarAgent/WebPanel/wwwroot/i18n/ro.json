@@ -189,5 +189,7 @@
   "启动服务": "Pornire serviciu",
   "停止服务": "Oprire serviciu",
   "重启服务": "Repornire serviciu",
-  "确定要删除子服务 {0} 吗？": "Ștergeți serviciul secundar {0}?"
+  "确定要删除子服务 {0} 吗？": "Ștergeți serviciul secundar {0}?",
+  "语言": "Limbă",
+  "编辑": "Editează"
 }
