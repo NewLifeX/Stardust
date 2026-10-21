@@ -20,4 +20,6 @@
 "[{0}] Failed to read the response body: {1}": "[{0}] Kan de responsbody niet lezen: {1}"
 "Failed to save the tracing name truncation prefix: {0}": "Kan het afkappingsvoorvoegsel voor traceringsnamen niet opslaan: {0}"
 "Tracing name truncation prefix: {0}": "Afkappingsvoorvoegsel voor traceringsnamen: {0}"
-
+# 运行时消息补充词条
+"Stardust distributed extensions": "Stardust distributed extensions"
+"ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications.": "ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications."

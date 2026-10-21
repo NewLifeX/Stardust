@@ -42,3 +42,6 @@
 "Error forwarding to the client: {0}": "क्लाइंट को अग्रेषित करने में त्रुटि: {0}"
 "Directory: {0}": "निर्देशिका: {0}"
 "Failed to read directory: {0}": "निर्देशिका पढ़ने में विफल: {0}"
+# 运行时消息补充词条
+"Stardust gateway": "Stardust gateway"
+"Stardust gateway proxy. Provides traffic forwarding and reverse proxy with dynamic route switching, and works with the Stardust registry for service discovery and load balancing in microservice gateway scenarios.": "Stardust gateway proxy. Provides traffic forwarding and reverse proxy with dynamic route switching, and works with the Stardust registry for service discovery and load balancing in microservice gateway scenarios."

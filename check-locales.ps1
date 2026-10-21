@@ -23,6 +23,7 @@ if (!(Test-Path $localeDir)) {
 
 $pattern = '^\s*"((?:[^"\\]|\\.)*)"\s*:\s*"((?:[^"\\]|\\.)*)"\s*$'
 $placeholder = '\{(\d+)(?:,-?\d+)?(:[^}]*)?\}'
+$languageCode = '\b[a-z]{2}-[A-Za-z]{2,4}\b'
 
 function Unescape-Yaml([string]$text) {
     # 与源生成器保持一致：还原 \\ \" \n \r \t \uXXXX
@@ -58,6 +59,14 @@ function Get-PlaceholderSpecs([string]$text) {
     return $map
 }
 
+# 语言清单条目：译文中的语言代码集合必须与英文 key 一致，防止译者漏码
+function Test-LanguageCodeList([string]$key, [string]$value) {
+    if (!$key.StartsWith("UI language. Values:")) { return $true }
+    $expected = @([regex]::Matches($key, $languageCode) | ForEach-Object { $_.Value } | Sort-Object -Unique)
+    $actual = @([regex]::Matches($value, $languageCode) | ForEach-Object { $_.Value } | Sort-Object -Unique)
+    return !(Compare-Object $expected $actual)
+}
+
 function Read-Locale([string]$path) {
     $entries = [ordered]@{}
     $errors = @()
@@ -88,6 +97,12 @@ if (!(Test-Path -LiteralPath $referencePath)) {
 $reference = Read-Locale $referencePath
 $allErrors = @($reference.Errors | ForEach-Object { "$($Baseline): $_" })
 $allWarnings = @()
+
+foreach ($key in $reference.Entries.Keys) {
+    if (!(Test-LanguageCodeList $key $reference.Entries[$key])) {
+        $allErrors += "$($Baseline): 语言代码清单不一致 → $key"
+    }
+}
 
 foreach ($file in Get-ChildItem $localeDir -Filter *.yml | Sort-Object Name) {
     if ($file.Name -eq $Baseline) { continue }
@@ -122,6 +137,10 @@ foreach ($file in Get-ChildItem $localeDir -Filter *.yml | Sort-Object Name) {
                 break
             }
         }
+
+        if (!(Test-LanguageCodeList $key $value)) {
+            $allErrors += "$($file.Name): 语言代码清单不一致 → $key"
+        }
     }
 }
 
@@ -129,13 +148,14 @@ foreach ($e in $allErrors) { Write-Host $e -ForegroundColor Red }
 foreach ($w in $allWarnings) { Write-Host $w -ForegroundColor Yellow }
 
 # 孤儿键：基准表中的键在源码里完全找不到（改文案后遗留的死条目）
+# 源文范围含 .cs 与 .csproj：程序集标题/描述等元数据写在 csproj 中，同样是词表源文
 $orphans = @()
 if (!$SkipOrphan) {
     $sourceDirs = @($SourceDir | ForEach-Object { $_ -split '[;,]' } | Where-Object { $_ } | ForEach-Object {
         if ([IO.Path]::IsPathRooted($_)) { $_ } else { Join-Path $root $_ }
     } | Where-Object { Test-Path $_ })
 
-    $sourceText = ($sourceDirs | ForEach-Object { Get-ChildItem $_ -Recurse -Filter *.cs } |
+    $sourceText = ($sourceDirs | ForEach-Object { Get-ChildItem $_ -Recurse -Include *.cs, *.csproj } |
         Where-Object { $_.FullName -notmatch '\\(obj|bin|Locales)\\' } |
         ForEach-Object { [IO.File]::ReadAllText($_.FullName) }) -join "`n"
 

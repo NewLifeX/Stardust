@@ -229,3 +229,6 @@
 "Overwriting file {0}": "ファイル {0} を上書きしています"
 "Overwriting directory {0}": "ディレクトリ {0} を上書きしています"
 "Deleting shadow directory: {0}": "シャドウディレクトリを削除しています: {0}"
+# 运行时消息补充词条
+"Stardust agent": "Stardust agent"
+"Node guardian agent for Stardust. Deployed on every application server or edge node, providing process supervision, remote deployment, performance metrics collection (CPU/memory/disk/network/GPU), log and metric reporting, and supporting Windows services, Linux systemd, and IoT edge environments.": "Node guardian agent for Stardust. Deployed on every application server or edge node, providing process supervision, remote deployment, performance metrics collection (CPU/memory/disk/network/GPU), log and metric reporting, and supporting Windows services, Linux systemd, and IoT edge environments."

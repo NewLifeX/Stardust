@@ -36,6 +36,8 @@ public class StarLocalizationTests : IDisposable
     [InlineData("no", "nb")]
     [InlineData("iw", "he")]
     [InlineData("in", "id")]
+    [InlineData("mo", "ro")]
+    [InlineData("mo-MD", "ro")]
     public void NormalizeCulture(String name, String expected) => Assert.Equal(expected, StarLocalization.NormalizeCulture(name));
 
     [Theory(DisplayName = "带权重的请求头取首选语言")]

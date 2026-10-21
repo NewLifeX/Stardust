@@ -229,3 +229,6 @@
 "Overwriting file {0}": "ফাইল {0} ওভাররাইট করা হচ্ছে"
 "Overwriting directory {0}": "ডিরেক্টরি {0} ওভাররাইট করা হচ্ছে"
 "Deleting shadow directory: {0}": "শ্যাডো ডিরেক্টরি মুছে ফেলা হচ্ছে: {0}"
+# 运行时消息补充词条
+"Stardust agent": "Stardust agent"
+"Node guardian agent for Stardust. Deployed on every application server or edge node, providing process supervision, remote deployment, performance metrics collection (CPU/memory/disk/network/GPU), log and metric reporting, and supporting Windows services, Linux systemd, and IoT edge environments.": "Node guardian agent for Stardust. Deployed on every application server or edge node, providing process supervision, remote deployment, performance metrics collection (CPU/memory/disk/network/GPU), log and metric reporting, and supporting Windows services, Linux systemd, and IoT edge environments."

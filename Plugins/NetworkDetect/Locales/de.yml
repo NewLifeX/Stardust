@@ -1,3 +1,5 @@
 # German translation. Keys are English source texts; missing entries fall back to English at runtime.
 "Network probe [{0}]: {1}": "Netzwerkprüfung [{0}]: {1}"
-
+# 运行时消息补充词条
+"Network detect": "Network detect"
+"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs."

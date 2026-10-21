@@ -38,3 +38,6 @@
 "No matching package was found (version={0}, kind={1}).": "未找到匹配的安装包（version={0}、kind={1}）"
 "OS [{0}] is not compatible with .NET {1}": "操作系统[{0}]不兼容 .NET {1}"
 "GLIBC [{0}] does not meet the minimum requirement {1} of .NET {2}": "GLIBC[{0}]不满足 .NET {2} 的最低要求 {1}"
+# 运行时消息补充词条
+"Stardust Data": "星尘数据层"
+"Data layer of the Stardust distributed service framework. Defines entity models and statistics jobs based on XCode ORM, supporting persistence and computation for node management, application management, configuration center, registry, monitoring center, and release center, compatible with multiple databases.": "星尘分布式服务框架数据层。基于XCode ORM的实体模型定义与统计任务，支持节点管理、应用管理、配置中心、注册中心、监控中心、发布中心等业务数据持久化与计算，兼容多种数据库。"

@@ -221,3 +221,6 @@
 "Invalid parameter.": "参数错误"
 "Succeeded": "成功"
 "File [{0}] changed; stopping the application and starting it {1}ms later": "文件[{0}]发生改变，停止应用并延迟 {1}ms 后启动"
+# 运行时消息补充词条
+"Stardust distributed core": "星尘分布式核心"
+"Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting.": "星尘分布式服务框架核心库。提供配置中心、注册中心、服务发现、全链路追踪、APM性能监控、日志中心等客户端SDK，支持配置拉取、服务注册与发现、调用追踪、性能和日志上报。"

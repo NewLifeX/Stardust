@@ -35,6 +35,8 @@ public static class StarLocalization
         if (first.IsNullOrEmpty()) return null;
 
         // 兼容旧语言码
+        var oldCode = first.ToLowerInvariant();
+        if (oldCode == "mo" || oldCode.StartsWith("mo-")) first = "ro";
         first = first.ToLowerInvariant() switch
         {
             "iw" => "he",

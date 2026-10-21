@@ -17,3 +17,6 @@
 # 运行时消息补充词条
 "Target network {0} is not a local network address; ignored": "目標網段 {0} 不是區域網路位址，已忽略"
 "The number of target addresses exceeds the limit {0}; only the first {0} addresses are scanned in this round. Adjust MaxHosts or narrow Networks": "目標位址超過上限 {0}，本輪僅掃描前 {0} 個位址，請調整MaxHosts或縮小Networks"
+# 运行时消息补充词条
+"Agent expansion": "代理擴充"
+"LAN extension for the Stardust agent that discovers nodes and installs StarAgent automatically.": "星塵代理區域網路擴充，探測節點並自動安裝 StarAgent"

@@ -229,3 +229,6 @@
 "Overwriting file {0}": "{0} dosyasının üzerine yazılıyor"
 "Overwriting directory {0}": "{0} dizininin üzerine yazılıyor"
 "Deleting shadow directory: {0}": "Gölge dizini siliniyor: {0}"
+# 运行时消息补充词条
+"Stardust agent": "Stardust agent"
+"Node guardian agent for Stardust. Deployed on every application server or edge node, providing process supervision, remote deployment, performance metrics collection (CPU/memory/disk/network/GPU), log and metric reporting, and supporting Windows services, Linux systemd, and IoT edge environments.": "Node guardian agent for Stardust. Deployed on every application server or edge node, providing process supervision, remote deployment, performance metrics collection (CPU/memory/disk/network/GPU), log and metric reporting, and supporting Windows services, Linux systemd, and IoT edge environments."

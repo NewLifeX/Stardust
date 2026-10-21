@@ -1,2 +1,5 @@
 # 繁體中文譯文。鍵為英文源文，缺失時運行期回退英文。
 "Network probe [{0}]: {1}": "網絡探測[{0}]：{1}"
+# 运行时消息补充词条
+"Network detect": "網路監測"
+"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "偵測網路，若長期不可用則重新啟動系統，主要應用於嵌入式工控機"

@@ -857,9 +857,9 @@ public class ServiceController : DisposeBase
         DefaultSpan.Current?.AppendTag(msg);
 
         if (format.Contains("错误") || format.Contains("失败") || format.Contains("error", StringComparison.OrdinalIgnoreCase) || format.Contains("fail", StringComparison.OrdinalIgnoreCase) || format.Contains("exception", StringComparison.OrdinalIgnoreCase))
-            WriteEvent("error", msg);
+            WriteEvent("error", L.T(format, args));
         else
-            WriteEvent("info", msg);
+            WriteEvent("info", L.T(format, args));
     }
 
     /// <summary>写事件到服务端</summary>

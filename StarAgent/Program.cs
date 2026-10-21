@@ -141,6 +141,8 @@ internal class MyService : ServiceBase, IServiceProvider
     public MyService()
     {
         ServiceName = "StarAgent";
+        DisplayName = "Stardust agent";
+        Description = "Node guardian agent for Stardust. Deployed on every application server or edge node, providing process supervision, remote deployment, performance metrics collection (CPU/memory/disk/network/GPU), log and metric reporting, and supporting Windows services, Linux systemd, and IoT edge environments.";
 
         //// 控制应用服务。有些问题，只能控制当前进程管理的服务，而不能管理后台服务管理的应用
         //AddMenu('z', "启动所有应用服务", () => _Manager?.StartAll());

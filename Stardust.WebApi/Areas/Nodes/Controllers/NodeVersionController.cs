@@ -60,7 +60,7 @@ public class NodeVersionController : NodesEntityController<NodeVersion>
                 var attPath = att.GetFilePath();
                 if (System.IO.File.Exists(attPath))
                 {
-                    XTrace.Log.Error($"success delete {attPath}");
+                    XTrace.Log.Error("Successfully deleted {0}", attPath);
                     System.IO.File.Delete(attPath);
                 }
                 //删除记录

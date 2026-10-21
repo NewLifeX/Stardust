@@ -181,3 +181,6 @@
 # 运行时消息补充词条
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}]登录于 {2}，最后活跃于 {3}"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "检测到节点[{0}/{1}]与旧节点[{2}]高度相似，选择使用旧节点"
+# 运行时消息补充词条
+"Stardust service platform": "星尘服务平台"
+"Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally.": "星尘分布式服务平台后端核心。提供配置中心、注册中心、服务发现、远程发布、性能监控、日志中心等核心API服务，支持应用注册、配置下发、指标聚合、统计计算与任务调度，可横向扩展。"

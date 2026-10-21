@@ -42,3 +42,6 @@
 "Error forwarding to the client: {0}": "转发给客户端出错：{0}"
 "Directory: {0}": "目录：{0}"
 "Failed to read directory: {0}": "读取目录失败：{0}"
+# 运行时消息补充词条
+"Stardust gateway": "星尘网关"
+"Stardust gateway proxy. Provides traffic forwarding and reverse proxy with dynamic route switching, and works with the Stardust registry for service discovery and load balancing in microservice gateway scenarios.": "星尘网关代理。提供流量转发与反向代理能力，支持动态路由切换，可与星尘注册中心协同实现服务发现与负载均衡，适用于微服务网关场景。"

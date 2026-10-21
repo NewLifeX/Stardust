@@ -20,3 +20,6 @@
 "[{0}] Failed to read the response body: {1}": "[{0}]讀取響應主體失敗：{1}"
 "Failed to save the tracing name truncation prefix: {0}": "保存埋點名稱截斷前綴失敗：{0}"
 "Tracing name truncation prefix: {0}": "埋點名稱截斷前綴：{0}"
+# 运行时消息补充词条
+"Stardust distributed extensions": "星塵分散式擴充"
+"ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications.": "星塵分散式服務框架 ASP.NET Core 擴充庫。提供 AddStardust、UseStardust、RegisterService、ConsumeService 等中介軟體與便利方法，簡化服務註冊探索與監控接入，支援 Web/API 應用快速整合星塵平台。"

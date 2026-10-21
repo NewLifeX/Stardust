@@ -22,8 +22,8 @@ internal class DeployService : ServiceBase
     public DeployService()
     {
         ServiceName = "StarDeploy";
-        DisplayName = "星尘发布";
-        Description = "星尘构建发布工具。自动下载代码仓库、执行编译构建、打包输出并推送至星尘发布中心。";
+        DisplayName = "Stardust deploy";
+        Description = "Stardust build and deployment tool. Automatically downloads repositories, builds, packs, and pushes artifacts to the Stardust release center, with version management and multi-platform distribution, working with StarAgent for automated deployment pipelines.";
 
         MachineInfo.RegisterAsync();
     }

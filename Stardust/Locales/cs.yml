@@ -221,3 +221,6 @@
 "Invalid parameter.": "Neplatný parametr."
 "Succeeded": "Úspěch"
 "File [{0}] changed; stopping the application and starting it {1}ms later": "Soubor [{0}] se změnil; aplikace se zastaví a spustí za {1} ms"
+# 运行时消息补充词条
+"Stardust distributed core": "Stardust distributed core"
+"Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting.": "Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting."

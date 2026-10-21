@@ -29,4 +29,6 @@
 # 运行时消息补充词条
 # 运行时消息补充词条
 # 运行时消息补充词条
-
+# 运行时消息补充词条
+"Stardust distributed extensions": "Stardust distributed extensions"
+"ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications.": "ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications."

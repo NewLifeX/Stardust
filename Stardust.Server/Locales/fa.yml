@@ -181,3 +181,6 @@
 # 运行时消息补充词条
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] در {2} وارد شد، آخرین فعالیت در {3}"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "گره [{0}/{1}] بسیار شبیه به گره موجود [{2}] است؛ از گره موجود استفاده می‌شود"
+# 运行时消息补充词条
+"Stardust service platform": "Stardust service platform"
+"Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally.": "Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally."

@@ -5,8 +5,13 @@
 
   function normalize(name) {
     if (!name) return null;
-    const s = String(name).trim().toLowerCase();
+    let s = String(name).trim().toLowerCase();
     if (!s) return null;
+    // 旧语言码归一，与 Core Localization 保持一致
+    if (s === 'iw') s = 'he';
+    else if (s === 'in') s = 'id';
+    else if (s === 'no') s = 'nb';
+    else if (s === 'mo' || s.startsWith('mo-')) s = 'ro';
     if (s.startsWith('zh')) return /hant|tw|hk|mo/.test(s) ? 'zh-Hant' : 'zh-Hans';
 
     const lang = s.split('-')[0];

@@ -47,3 +47,6 @@
 "No matching package was found (version={0}, kind={1}).": "一致するパッケージが見つかりませんでした (version={0}, kind={1})。"
 "OS [{0}] is not compatible with .NET {1}": "OS [{0}] は .NET {1} と互換性がありません"
 "GLIBC [{0}] does not meet the minimum requirement {1} of .NET {2}": "GLIBC [{0}] は .NET {2} の最小要件 {1} を満たしていません"
+# 运行时消息补充词条
+"Stardust Data": "Stardust Data"
+"Data layer of the Stardust distributed service framework. Defines entity models and statistics jobs based on XCode ORM, supporting persistence and computation for node management, application management, configuration center, registry, monitoring center, and release center, compatible with multiple databases.": "Data layer of the Stardust distributed service framework. Defines entity models and statistics jobs based on XCode ORM, supporting persistence and computation for node management, application management, configuration center, registry, monitoring center, and release center, compatible with multiple databases."

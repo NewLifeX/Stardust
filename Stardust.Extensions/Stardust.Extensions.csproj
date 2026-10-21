@@ -3,8 +3,8 @@
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <TargetFrameworks>net6.0;net7.0;net8.0;net9.0;net10.0</TargetFrameworks>
-    <AssemblyTitle>星尘分布式扩展</AssemblyTitle>
-    <Description>星尘分布式服务框架ASP.NET Core扩展库。提供AddStardust、UseStardust、RegisterService、ConsumeService等中间件与便捷方法，简化服务注册发现与监控接入，支持Web/API应用快速集成星尘平台。</Description>
+    <AssemblyTitle>Stardust distributed extensions</AssemblyTitle>
+    <Description>ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications.</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2026 NewLife</Copyright>
     <VersionPrefix>3.10</VersionPrefix>
@@ -22,6 +22,8 @@
     <NoWarn>1701;1702;NU5104;NETSDK1138;CS7035</NoWarn>
     <AnalysisLevel>latest</AnalysisLevel>
     <WarningsAsErrors>CA2007</WarningsAsErrors>
+    <PackageDescription>星尘分布式服务框架ASP.NET Core扩展库。提供AddStardust、UseStardust、RegisterService、ConsumeService等中间件与便捷方法，简化服务注册发现与监控接入，支持Web/API应用快速集成星尘平台。
+ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications.</PackageDescription>
   </PropertyGroup>
 
   <PropertyGroup>

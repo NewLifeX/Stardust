@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <AssemblyTitle>星尘移动代理核心</AssemblyTitle>
-    <Description>星尘代理移动端共享核心。提供登录心跳、设备信息采集、命令下发的平台无关实现，供 Android 与 iOS 宿主复用。</Description>
+    <AssemblyTitle>Stardust mobile agent core</AssemblyTitle>
+    <Description>Shared core of the Stardust agent for mobile platforms. Provides platform-independent login, heartbeat, device information collection, and command dispatch for Android and iOS hosts.</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2026 NewLife</Copyright>
     <OutputPath>..\Bin</OutputPath>

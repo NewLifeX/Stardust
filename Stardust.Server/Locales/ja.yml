@@ -188,3 +188,6 @@
 # 运行时消息补充词条
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] は {2} にログインし、{3} に最後にアクティブでした"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "ノード [{0}/{1}] は既存のノード [{2}] と非常に類似しているため、既存のノードを使用します"
+# 运行时消息补充词条
+"Stardust service platform": "Stardust service platform"
+"Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally.": "Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally."

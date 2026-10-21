@@ -17,3 +17,6 @@
 # 运行时消息补充词条
 "Target network {0} is not a local network address; ignored": "Rețeaua țintă {0} nu este o adresă de rețea locală; este ignorată"
 "The number of target addresses exceeds the limit {0}; only the first {0} addresses are scanned in this round. Adjust MaxHosts or narrow Networks": "Numărul de adrese țintă depășește limita {0}; în această rundă sunt scanate doar primele {0} adrese. Ajustați MaxHosts sau restrângeți Networks"
+# 运行时消息补充词条
+"Agent expansion": "Agent expansion"
+"LAN extension for the Stardust agent that discovers nodes and installs StarAgent automatically.": "LAN extension for the Stardust agent that discovers nodes and installs StarAgent automatically."

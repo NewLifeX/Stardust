@@ -76,5 +76,6 @@
 "Re-login failed: {0}": "ورود مجدد ناموفق بود: {0}"
 # 运行时消息补充词条
 "...(the log is too long and was truncated; the last {0} characters are kept)\n": "...(لاگ بیش از حد طولانی است و بریده شد؛ آخرین {0} نویسه نگه داشته می‌شود)\n"
-
-
+# 运行时消息补充词条
+"Stardust deploy": "Stardust deploy"
+"Stardust build and deployment tool. Automatically downloads repositories, builds, packs, and pushes artifacts to the Stardust release center, with version management and multi-platform distribution, working with StarAgent for automated deployment pipelines.": "Stardust build and deployment tool. Automatically downloads repositories, builds, packs, and pushes artifacts to the Stardust release center, with version management and multi-platform distribution, working with StarAgent for automated deployment pipelines."

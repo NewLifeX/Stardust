@@ -20,4 +20,6 @@
 "[{0}] Failed to read the response body: {1}": "[{0}] प्रतिक्रिया बॉडी पढ़ने में विफल: {1}"
 "Failed to save the tracing name truncation prefix: {0}": "ट्रेसिंग नाम संक्षिप्तीकरण उपसर्ग सहेजने में विफल: {0}"
 "Tracing name truncation prefix: {0}": "ट्रेसिंग नाम संक्षिप्तीकरण उपसर्ग: {0}"
-
+# 运行时消息补充词条
+"Stardust distributed extensions": "Stardust distributed extensions"
+"ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications.": "ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications."

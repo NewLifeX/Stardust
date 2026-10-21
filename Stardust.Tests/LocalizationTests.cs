@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using NewLife;
 using Xunit;
@@ -129,6 +130,30 @@ public class LocalizationTests : IDisposable
         Localization.Culture = new CultureInfo("de");
         Assert.Equal("Integritätsprüfung fehlgeschlagen: {0} - {1}", Localization.Translate("Health check failed: {0} - {1}"));
         Assert.Equal("Parameter ist leer.", Localization.Translate("Parameter is empty."));
+    }
+
+    [Fact(DisplayName = "程序集标题与描述按新规范本地化")]
+    public void AssemblyMetadataIsLocalized()
+    {
+        LoadAssemblies();
+
+        // 程序集元数据保持英文源文，展示层用 L.T 翻译
+        var title = typeof(global::Stardust.StarClient).Assembly.GetCustomAttribute<AssemblyTitleAttribute>()?.Title;
+        Assert.Equal("Stardust distributed core", title);
+
+        var agentTitle = typeof(global::StarAgent.StarService).Assembly.GetCustomAttribute<AssemblyTitleAttribute>()?.Title;
+        Assert.Equal("Stardust agent", agentTitle);
+
+        Localization.Culture = new CultureInfo("zh-Hans");
+        Assert.Equal("星尘分布式核心", L.T(title!));
+        Assert.Equal("星尘代理", L.T(agentTitle!));
+
+        Localization.Culture = new CultureInfo("zh-Hant");
+        Assert.Equal("星塵分散式核心", L.T(title!));
+        Assert.Equal("星塵代理", L.T(agentTitle!));
+
+        Localization.Culture = new CultureInfo("de");
+        Assert.Equal("Stardust distributed core", L.T(title!));
     }
 
     [Fact(DisplayName = "31种语言均提供设置描述译文")]

@@ -229,3 +229,6 @@
 "Overwriting file {0}": "覆盖文件 {0}"
 "Overwriting directory {0}": "覆盖目录 {0}"
 "Deleting shadow directory: {0}": "删除影子目录：{0}"
+# 运行时消息补充词条
+"Stardust agent": "星尘代理"
+"Node guardian agent for Stardust. Deployed on every application server or edge node, providing process supervision, remote deployment, performance metrics collection (CPU/memory/disk/network/GPU), log and metric reporting, and supporting Windows services, Linux systemd, and IoT edge environments.": "星尘节点守护代理。部署于每台应用服务器或边缘节点，提供进程守护、远程发布部署、性能监控采集（CPU/内存/磁盘/网络/GPU）、日志与指标上报，支持Windows服务、Linux systemd与IoT边缘环境。"

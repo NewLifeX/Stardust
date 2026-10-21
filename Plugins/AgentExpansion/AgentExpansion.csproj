@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
-    <AssemblyTitle>代理扩展</AssemblyTitle>
-    <Description>星尘代理局域网扩展，探测节点并自动安装StarAgent</Description>
+    <AssemblyTitle>Agent expansion</AssemblyTitle>
+    <Description>LAN extension for the Stardust agent that discovers nodes and installs StarAgent automatically.</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2026 NewLife</Copyright>
     <VersionPrefix>1.0</VersionPrefix>

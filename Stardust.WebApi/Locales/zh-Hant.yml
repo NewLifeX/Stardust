@@ -86,3 +86,8 @@
 # 运行时消息补充词条
 "Domain changed": "修改網域"
 "Domains changed: {0} -> {1}": "網域變更：{0} -> {1}"
+# 运行时消息补充词条
+"Stardust management API": "星塵管理平台 API"
+"Decoupled WebApi backend for the Stardust distributed service platform. Reuses the area controllers and business services of Stardust.Web while exposing only JSON endpoints (GetPage/GetFields/Insert/Update/Delete and custom actions of EntityController), without Razor views, MCP, or static sites, for direct use by the Stardust.Web.Vue frontend.": "星塵分散式服務平台的解耦 WebApi 後端。重用 Stardust.Web 的區域控制器與業務服務，僅暴露 JSON 介面（EntityController 的 GetPage/GetFields/Insert/Update/Delete 及自訂 Action），剝離 Razor 檢視、MCP 與靜態網站，供 Stardust.Web.Vue 前端直接對接。"
+# 运行时消息补充词条
+"Successfully deleted {0}": "已刪除 {0}"

@@ -38,3 +38,6 @@
 "No matching package was found (version={0}, kind={1}).": "कोई मेल खाता पैकेज नहीं मिला (version={0}, kind={1})।"
 "OS [{0}] is not compatible with .NET {1}": "ऑपरेटिंग सिस्टम [{0}] .NET {1} के साथ संगत नहीं है"
 "GLIBC [{0}] does not meet the minimum requirement {1} of .NET {2}": "GLIBC [{0}] .NET {2} की न्यूनतम आवश्यकता {1} को पूरा नहीं करता"
+# 运行时消息补充词条
+"Stardust Data": "Stardust Data"
+"Data layer of the Stardust distributed service framework. Defines entity models and statistics jobs based on XCode ORM, supporting persistence and computation for node management, application management, configuration center, registry, monitoring center, and release center, compatible with multiple databases.": "Data layer of the Stardust distributed service framework. Defines entity models and statistics jobs based on XCode ORM, supporting persistence and computation for node management, application management, configuration center, registry, monitoring center, and release center, compatible with multiple databases."

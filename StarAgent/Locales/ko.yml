@@ -229,3 +229,6 @@
 "Overwriting file {0}": "파일 {0} 덮어쓰는 중"
 "Overwriting directory {0}": "디렉터리 {0} 덮어쓰는 중"
 "Deleting shadow directory: {0}": "섀도 디렉터리 삭제 중: {0}"
+# 运行时消息补充词条
+"Stardust agent": "Stardust agent"
+"Node guardian agent for Stardust. Deployed on every application server or edge node, providing process supervision, remote deployment, performance metrics collection (CPU/memory/disk/network/GPU), log and metric reporting, and supporting Windows services, Linux systemd, and IoT edge environments.": "Node guardian agent for Stardust. Deployed on every application server or edge node, providing process supervision, remote deployment, performance metrics collection (CPU/memory/disk/network/GPU), log and metric reporting, and supporting Windows services, Linux systemd, and IoT edge environments."

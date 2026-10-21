@@ -42,3 +42,6 @@
 "Error forwarding to the client: {0}": "ক্লায়েন্টের কাছে ফরওয়ার্ড করতে ত্রুটি: {0}"
 "Directory: {0}": "ডিরেক্টরি: {0}"
 "Failed to read directory: {0}": "ডিরেক্টরি পড়তে ব্যর্থ: {0}"
+# 运行时消息补充词条
+"Stardust gateway": "Stardust gateway"
+"Stardust gateway proxy. Provides traffic forwarding and reverse proxy with dynamic route switching, and works with the Stardust registry for service discovery and load balancing in microservice gateway scenarios.": "Stardust gateway proxy. Provides traffic forwarding and reverse proxy with dynamic route switching, and works with the Stardust registry for service discovery and load balancing in microservice gateway scenarios."

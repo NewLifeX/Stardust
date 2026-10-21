@@ -20,4 +20,6 @@
 "[{0}] Failed to read the response body: {1}": "[{0}] 응답 본문을 읽지 못했습니다: {1}"
 "Failed to save the tracing name truncation prefix: {0}": "추적 이름 잘림 접두사를 저장하지 못했습니다: {0}"
 "Tracing name truncation prefix: {0}": "추적 이름 잘림 접두사: {0}"
-
+# 运行时消息补充词条
+"Stardust distributed extensions": "Stardust distributed extensions"
+"ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications.": "ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications."

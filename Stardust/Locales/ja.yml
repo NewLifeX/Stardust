@@ -228,3 +228,6 @@
 "Invalid parameter.": "パラメーターが無効です。"
 "Succeeded": "成功"
 "File [{0}] changed; stopping the application and starting it {1}ms later": "ファイル[{0}]が変更されました。アプリケーションを停止し、{1}ms 後に起動します"
+# 运行时消息补充词条
+"Stardust distributed core": "Stardust distributed core"
+"Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting.": "Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting."
