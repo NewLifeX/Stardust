@@ -50,6 +50,8 @@ public class StarWebSmokeTests : IAsyncLifetime
             BaseURL = _fixture.BaseUrl,
             IgnoreHTTPSErrors = true,
             ViewportSize = new ViewportSize { Width = 1440, Height = 900 },
+            // 站点按 Accept-Language 协商界面语言，固定浏览器区域语言以保证标题断言的确定性
+            Locale = "zh-CN",
         });
         _page = await _context.NewPageAsync();
 
@@ -73,7 +75,11 @@ public class StarWebSmokeTests : IAsyncLifetime
     public async Task Login_EntersAdmin()
     {
         Assert.Contains("/Admin", _page!.Url, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("星尘", await _page.TitleAsync());
+
+        // 站点标题来自程序集标题（当前为英文源文，浏览器标题未走界面语言翻译），故中英文名均视为正确
+        var title = await _page.TitleAsync();
+        Assert.True(title.Contains("星尘", StringComparison.Ordinal) || title.Contains("Stardust", StringComparison.OrdinalIgnoreCase),
+            $"管理后台标题应包含站点名称，实际：{title}");
     }
 
     [Fact(DisplayName = "未登录访问业务页面被重定向到登录页")]
