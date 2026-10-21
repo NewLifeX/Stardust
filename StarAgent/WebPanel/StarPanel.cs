@@ -1,6 +1,13 @@
 ﻿#if !NET40
+using System.Collections.Concurrent;
+using System.Globalization;
+using System.Text;
+using System.Text.RegularExpressions;
+using NewLife;
 using NewLife.Agent;
 using NewLife.Agent.WebPanel;
+using NewLife.Data;
+using NewLife.Http;
 
 namespace StarAgent.WebPanel;
 
@@ -40,6 +47,73 @@ public class StarPanel(ServiceBase service) : AgentWebPanel(service)
 
         // 2. 再调用基类注册内置 API（/api/*）+ 静态文件（/*）
         base.RegisterRoutes();
+    }
+    #endregion
+
+    #region 首页本地化
+    /// <summary>本地化时保持原样的区块：脚本与样式</summary>
+    private static readonly Regex _protectedBlocks = new("(<script\\b[^>]*>[\\s\\S]*?</script>|<style\\b[^>]*>[\\s\\S]*?</style>)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    /// <summary>本地化首页缓存。Key 为语言</summary>
+    private static readonly ConcurrentDictionary<String, String> _pages = new(StringComparer.Ordinal);
+
+    /// <summary>输出按当前语言本地化的首页</summary>
+    /// <remarks>
+    /// 基类对整页做原文替换，译文中的撇号会写进内联脚本的单引号字符串，导致脚本语法错误（法语、乌克兰语已复现）。
+    /// 这里只替换脚本与样式之外的静态标记，脚本内的中文由浏览器端 i18n.js 按同一份词表翻译。
+    /// </remarks>
+    /// <param name="ctx">Http上下文</param>
+    protected override void WriteIndex(IHttpContext ctx)
+    {
+        var culture = Localization.Culture ?? CultureInfo.CurrentUICulture;
+        var language = UiLocalization.GetLanguage(culture);
+        var html = _pages.GetOrAdd(language, lang => LocalizeHtml(ReadIndexHtml(), lang,
+            UiLocalization.GetDictionary(EmbeddedResourceAssemblyType.Assembly, EmbeddedResourcePrefix, lang)));
+
+        ctx.Response.ContentType = "text/html; charset=utf-8";
+        ctx.Response.Headers["Cache-Control"] = "no-cache";
+        ctx.Response.Body = new ArrayPacket(html.GetBytes());
+    }
+
+    /// <summary>本地化首页源文</summary>
+    /// <param name="html">中文源文</param>
+    /// <param name="language">目标语言</param>
+    /// <param name="map">中文到目标语言的词表</param>
+    /// <returns>本地化后的页面</returns>
+    public static String LocalizeHtml(String html, String language, IDictionary<String, String> map)
+    {
+        if (html.IsNullOrEmpty()) return html;
+
+        if (language != "zh-Hans" && map != null && map.Count > 0)
+        {
+            var parts = _protectedBlocks.Split(html);
+            var keys = map.OrderByDescending(e => e.Key.Length).ToArray();
+            for (var i = 0; i < parts.Length; i += 2)
+            {
+                foreach (var item in keys)
+                {
+                    if (item.Key.IsNullOrEmpty() || item.Value.IsNullOrEmpty()) continue;
+
+                    parts[i] = parts[i].Replace(item.Key, item.Value);
+                }
+            }
+            html = String.Concat(parts);
+        }
+
+        var dir = UiLocalization.IsRightToLeft(language) ? " dir=\"rtl\"" : "";
+        return Regex.Replace(html, "<html[^>]*>", $"<html lang=\"{language}\"{dir}>", RegexOptions.IgnoreCase);
+    }
+
+    /// <summary>读取嵌入的首页源文</summary>
+    /// <returns>首页 HTML；资源不存在时返回空串</returns>
+    private String ReadIndexHtml()
+    {
+        using var stream = EmbeddedResourceAssemblyType.Assembly.GetManifestResourceStream($"{EmbeddedResourcePrefix}.index.html");
+        if (stream == null) return "";
+
+        using var reader = new StreamReader(stream, Encoding.UTF8);
+
+        return reader.ReadToEnd();
     }
     #endregion
 }

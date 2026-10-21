@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Text.Json;
 using NewLife;
 using Xunit;
 
@@ -88,5 +91,61 @@ public class AgentPanelLocalizationTests
         // 未固定语言时跟随服务端实际生效语言，提示属性同样参与翻译
         Assert.Contains("effective", js);
         Assert.Contains("aria-label", js);
+    }
+
+    [Fact(DisplayName = "面板服务端本地化不改写内联脚本")]
+    public void PanelServerLocalizationKeepsScripts()
+    {
+        var dir = Path.Combine(AppContext.BaseDirectory, "WebPanel");
+        var html = File.ReadAllText(Path.Combine(dir, "index.html"));
+        var scripts = ExtractScripts(html);
+        Assert.NotEmpty(scripts);
+
+        // 译文里的撇号若写进内联脚本的单引号字符串，会造成语法错误（法语、乌克兰语已复现）
+        foreach (var file in Directory.GetFiles(Path.Combine(dir, "i18n"), "*.json"))
+        {
+            var language = Path.GetFileNameWithoutExtension(file);
+            var map = JsonSerializer.Deserialize<Dictionary<String, String>>(File.ReadAllText(file))!;
+            var localized = StarAgent.WebPanel.StarPanel.LocalizeHtml(html, language, map);
+
+            Assert.Contains($"<html lang=\"{language}\"", localized);
+            foreach (var script in scripts) Assert.Contains(script, localized);
+        }
+    }
+
+    [Fact(DisplayName = "面板服务端本地化翻译静态文案")]
+    public void PanelServerLocalizationTranslatesMarkup()
+    {
+        var dir = Path.Combine(AppContext.BaseDirectory, "WebPanel");
+        var html = File.ReadAllText(Path.Combine(dir, "index.html"));
+        var map = JsonSerializer.Deserialize<Dictionary<String, String>>(File.ReadAllText(Path.Combine(dir, "i18n", "fr.json")))!;
+
+        var localized = StarAgent.WebPanel.StarPanel.LocalizeHtml(html, "fr", map);
+
+        Assert.Contains("Saisissez vos identifiants pour continuer", localized);
+        Assert.DoesNotContain("请输入凭据以继续", localized);
+    }
+
+    /// <summary>抽取页面内联脚本内容</summary>
+    private static String[] ExtractScripts(String html)
+    {
+        var list = new List<String>();
+        var index = 0;
+        while (index < html.Length)
+        {
+            var start = html.IndexOf("<script", index, StringComparison.OrdinalIgnoreCase);
+            if (start < 0) break;
+
+            var open = html.IndexOf('>', start);
+            if (open < 0) break;
+
+            var end = html.IndexOf("</script>", open, StringComparison.OrdinalIgnoreCase);
+            if (end < 0) break;
+
+            list.Add(html[(open + 1)..end]);
+            index = end + "</script>".Length;
+        }
+
+        return list.ToArray();
     }
 }
