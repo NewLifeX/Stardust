@@ -56,7 +56,11 @@ jobs:
             $proj = Split-Path $src -Leaf
             # Web/WebApi 通过 Compile Include 复用 Stardust.Server 源码，孤儿键扫描需同时覆盖
             if ($proj -in @('Stardust.Web', 'Stardust.WebApi')) { $src = "$src,Stardust.Server" }
-            pwsh -File ./check-locales.ps1 -LocaleDir $_.FullName -Baseline zh-Hans.yml -SourceDir $src
+            # 界面元数据（菜单名、实体字段描述）以中文源文为键，允许部分语言缺失并回退源文
+            $meta = Join-Path $_.FullName 'metadata-keys.json'
+            $extra = @()
+            if (Test-Path $meta) { $extra = @('-MetadataKeys', $meta) }
+            pwsh -File ./check-locales.ps1 -LocaleDir $_.FullName -Baseline zh-Hans.yml -SourceDir $src @extra
             if ($LASTEXITCODE -ne 0) { $failed = $true }
           }
         }

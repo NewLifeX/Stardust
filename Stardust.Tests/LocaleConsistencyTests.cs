@@ -75,6 +75,21 @@ public class LocaleConsistencyTests
         return dir;
     }
 
+    /// <summary>读取界面元数据键清单。菜单名与实体字段描述以中文为源文，允许缺失于基准并回退源文</summary>
+    private static HashSet<String> GetMetadataKeys(String project)
+    {
+        var keys = new HashSet<String>(StringComparer.Ordinal);
+        var path = Path.Combine(GetLocaleDir(project), "metadata-keys.json");
+        if (!File.Exists(path)) return keys;
+
+        foreach (var item in System.Text.Json.JsonSerializer.Deserialize<String[]>(File.ReadAllText(path)) ?? [])
+        {
+            if (!item.IsNullOrEmpty()) keys.Add(item);
+        }
+
+        return keys;
+    }
+
     [Fact(DisplayName = "各组件均提供 31 种语言词表")]
     public void AllProjectsHaveAllLocales()
     {
@@ -94,6 +109,7 @@ public class LocaleConsistencyTests
         {
             var dir = GetLocaleDir(project);
             var baseline = ReadLocale(Path.Combine(dir, "zh-Hans.yml"));
+            var metadata = GetMetadataKeys(project);
 
             foreach (var file in Directory.GetFiles(dir, "*.yml"))
             {
@@ -108,6 +124,9 @@ public class LocaleConsistencyTests
                 }
                 foreach (var key in locale.Keys)
                 {
+                    // 界面元数据键允许只出现在部分语言，缺失时运行时回退中文源文
+                    if (metadata.Contains(key)) continue;
+
                     Assert.True(baseline.ContainsKey(key), $"{project}/{name} 多余键：{key}");
                 }
 
@@ -137,11 +156,12 @@ public class LocaleConsistencyTests
         foreach (var project in _projects)
         {
             var dir = GetLocaleDir(project);
+            var metadata = GetMetadataKeys(project);
 
             foreach (var name in new[] { "zh-Hans.yml", "zh-Hant.yml" })
             {
                 var locale = ReadLocale(Path.Combine(dir, name));
-                var missing = locale.Where(e => e.Key == e.Value).Select(e => e.Key).ToArray();
+                var missing = locale.Where(e => e.Key == e.Value && !metadata.Contains(e.Key)).Select(e => e.Key).ToArray();
 
                 Assert.True(missing.Length == 0, $"{project}/{name} 未翻译 {missing.Length} 条，如：{missing.FirstOrDefault()}");
             }
