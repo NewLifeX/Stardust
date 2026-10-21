@@ -45,7 +45,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Agent" Version="10.17.2026.1020-beta1532" />
+    <PackageReference Include="NewLife.Agent" Version="10.17.2026.1021-beta0235" />
   </ItemGroup>
 
   <ItemGroup>
