@@ -56,6 +56,8 @@ foreach ($name in $projects.Keys) {
         $entries = Read-Locale $file.FullName
         $translated = 0
         foreach ($key in $entries.Keys) {
+            # 元数据键（菜单名、字段描述等中文源文）不计入运行时消息覆盖率
+            if (!$reference.Contains($key)) { continue }
             $value = $entries[$key]
             if (![string]::IsNullOrWhiteSpace($value) -and $value -ne $key) { $translated++ }
         }
@@ -63,6 +65,7 @@ foreach ($name in $projects.Keys) {
 
         if (!$stats.ContainsKey($locale)) { $stats[$locale] = @{ Translated = 0; Keys = @{} } }
         foreach ($key in $entries.Keys) {
+            if (!$reference.Contains($key)) { continue }
             $value = $entries[$key]
             if (![string]::IsNullOrWhiteSpace($value) -and $value -ne $key) { $stats[$locale].Keys[$key] = $true }
         }
@@ -117,6 +120,56 @@ foreach ($name in $projects.Keys) {
     $lines += $row
 }
 $lines += ""
+
+# 界面元数据词条：菜单名、实体字段描述等中文源文，按 Cube 约定允许部分语言缺失并回退源文
+$metaRows = @()
+foreach ($name in $projects.Keys) {
+    $dir = Join-Path $root $projects[$name]
+    $metaPath = Join-Path $dir "metadata-keys.json"
+    if (!(Test-Path $metaPath)) { continue }
+
+    # 只统计中文源文键（菜单名、字段描述），程序集标题/描述等英文单值元数据不在界面内渲染
+    $metaKeys = @(Get-Content -LiteralPath $metaPath -Raw -Encoding UTF8 | ConvertFrom-Json | ForEach-Object { [String]$_ } | Where-Object { $_ -match '[\u4e00-\u9fff]' })
+    if ($metaKeys.Count -eq 0) { continue }
+
+    # 统计口径为“该语言提供了该键的译文”：是否与源文同形（如繁体中文的“使用版本”）不影响计入
+    $perLang = [ordered]@{}
+    $translatable = @{}
+    foreach ($file in Get-ChildItem $dir -Filter *.yml | Sort-Object Name) {
+        $locale = $file.BaseName
+        if ($locale -eq [IO.Path]::GetFileNameWithoutExtension($baseline)) { continue }
+        $entries = Read-Locale $file.FullName
+        $hits = @{}
+        foreach ($key in $metaKeys) {
+            if (!$entries.Contains($key)) { continue }
+            $value = $entries[$key]
+            if (![string]::IsNullOrWhiteSpace($value)) { $hits[$key] = $true; $translatable[$key] = $true }
+        }
+        $perLang[$locale] = $hits
+    }
+    $total = $translatable.Count
+    if ($total -eq 0) { continue }
+
+    $full = 0; $partial = 0; $sum = 0; $langCount = 0
+    foreach ($locale in $perLang.Keys) {
+        $count = $perLang[$locale].Count
+        $langCount++
+        $sum += $count
+        if ($count -ge $total) { $full++ } elseif ($count -gt 0) { $partial++ }
+    }
+    $avg = if ($langCount -gt 0) { [math]::Round($sum * 100.0 / ($total * $langCount), 1) } else { 0 }
+    $metaRows += "| $name | $total | $full | $partial | $avg% |"
+}
+if ($metaRows.Count -gt 0) {
+    $lines += "## 3. 界面元数据词条"
+    $lines += ""
+    $lines += "> 键为中文源文（菜单名、实体字段描述），由 Cube `DataField.Localize` / `MenuHelper.GetDisplayName` 在请求期翻译；缺失回退中文源文。"
+    $lines += ""
+    $lines += "| 组件 | 键数 | 完整翻译语言 | 部分翻译语言 | 平均覆盖率 |"
+    $lines += "|------|------|--------------|--------------|------------|"
+    $lines += $metaRows
+    $lines += ""
+}
 
 $path = if ([IO.Path]::IsPathRooted($OutFile)) { $OutFile } else { Join-Path $root $OutFile }
 $dir = Split-Path $path -Parent

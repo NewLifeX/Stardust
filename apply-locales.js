@@ -4,12 +4,33 @@
 // 用法：
 //   node apply-locales.js entries.json Stardust/Locales Stardust.Server/Locales ...
 //   node apply-locales.js entries.json $(所有 Locales 目录)
+//   node apply-locales.js --metadata Stardust.Data/Locales/metadata-keys.json --section "# 界面元数据词条" entries.json Stardust.Data/Locales
 //
 // 说明：脚本只会写入词条中出现的语言；缺失语言保持英文占位，运行时回退英文。
+// 带 --metadata 时：元数据键（界面标题/字段描述等中文源文）允许不出现在 zh-Hans，
+// 也不参与按 zh-Hans 键集做的裁剪，与 check-locales.ps1 -MetadataKeys 的规则一致。
 const fs = require('fs');
 const path = require('path');
 
-const [, , entriesFile, ...dirs] = process.argv;
+let metadataFile = null;
+let sectionLabel = '# 运行时消息补充词条';
+const positional = [];
+const rawArgs = process.argv.slice(2);
+for (let i = 0; i < rawArgs.length; i++) {
+  if (rawArgs[i] === '--metadata') { metadataFile = rawArgs[++i]; continue; }
+  if (rawArgs[i] === '--section') { sectionLabel = rawArgs[++i]; continue; }
+  positional.push(rawArgs[i]);
+}
+
+const [entriesFile, ...dirs] = positional;
+
+const metadataKeys = new Set();
+if (metadataFile) {
+  const json = JSON.parse(fs.readFileSync(metadataFile, 'utf8'));
+  const items = Array.isArray(json) ? json : (json.keys || []);
+  for (const k of items) if (k) metadataKeys.add(String(k));
+}
+
 
 // 统计模式：node apply-locales.js --missing <lang> [localeDir...]
 // 默认扫描仓库内全部 Locales 目录，输出该语言仍为英文占位的键
@@ -91,7 +112,10 @@ for (const dir of dirs) {
     let removed = 0;
     if (refKeys && locale !== 'zh-Hans') {
       const before = lines.length;
-      lines = lines.filter((line) => { const e = parse(line); return !e || refKeys.has(e.key); });
+      lines = lines.filter((line) => {
+        const e = parse(line);
+        return !e || refKeys.has(e.key) || metadataKeys.has(e.key);
+      });
       removed = before - lines.length;
       pruned += removed;
     }
@@ -101,7 +125,7 @@ for (const dir of dirs) {
 
     const append = [];
     for (const key of keys) {
-      if (refKeys && !refKeys.has(key)) continue;
+      if (refKeys && !refKeys.has(key) && !metadataKeys.has(key)) continue;
 
       const value = entries[key][locale];
       if (value == null || value === '') continue;
@@ -120,7 +144,7 @@ for (const dir of dirs) {
 
     if (append.length > 0) {
       while (lines.length && lines[lines.length - 1].trim() === '') lines.pop();
-      lines.push('# 运行时消息补充词条');
+      lines.push(sectionLabel);
       lines.push(...append);
       added += append.length;
     }
