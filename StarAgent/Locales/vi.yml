@@ -201,3 +201,5 @@
 "Periodically sync server time to local, 0 to disable": "Định kỳ đồng bộ thời gian máy chủ về cục bộ, 0 để tắt"
 "Inject the Stardust monitoring hook into .NET applications when launching the target process": "Chèn móc giám sát Stardust vào ứng dụng .NET khi khởi động tiến trình đích"
 "Autorun requires a signed-in desktop; false by default uses the system service": "Tự khởi động yêu cầu đăng nhập máy tính; mặc định false sẽ dùng dịch vụ hệ thống"
+"Unauthorized": "Không được phép"
+"Service manager not available": "Trình quản lý dịch vụ không khả dụng"

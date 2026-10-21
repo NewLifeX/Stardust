@@ -201,3 +201,5 @@
 "Periodically sync server time to local, 0 to disable": "Pravidelně synchronizovat čas serveru s místním, 0 vypne"
 "Inject the Stardust monitoring hook into .NET applications when launching the target process": "Při spuštění cílového procesu vložit monitorovací hák Stardust do aplikací .NET"
 "Autorun requires a signed-in desktop; false by default uses the system service": "Automatické spuštění vyžaduje přihlášenou plochu; výchozí false používá systémovou službu"
+"Unauthorized": "Neautorizováno"
+"Service manager not available": "Správce služeb není k dispozici"

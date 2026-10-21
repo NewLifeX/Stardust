@@ -201,3 +201,5 @@
 "Periodically sync server time to local, 0 to disable": "Servertijd periodiek lokaal synchroniseren, 0 om uit te schakelen"
 "Inject the Stardust monitoring hook into .NET applications when launching the target process": "Injecteer de Stardust-bewakingshaak in .NET-toepassingen bij het starten van het doelproces"
 "Autorun requires a signed-in desktop; false by default uses the system service": "Automatisch starten vereist een aangemelde desktop; standaard false gebruikt de systeemdienst"
+"Unauthorized": "Niet geautoriseerd"
+"Service manager not available": "Servicebeheer is niet beschikbaar"

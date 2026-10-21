@@ -201,3 +201,5 @@
 "Periodically sync server time to local, 0 to disable": "सर्वर समय को समय-समय पर स्थानीय रूप से सिंक करें, 0 का अर्थ अक्षम"
 "Inject the Stardust monitoring hook into .NET applications when launching the target process": "लक्ष्य प्रोसेस शुरू करते समय .NET ऐप्स में Stardust मॉनिटरिंग हुक इंजेक्ट करें"
 "Autorun requires a signed-in desktop; false by default uses the system service": "ऑटोरन के लिए डेस्कटॉप में साइन-इन होना आवश्यक है; डिफ़ॉल्ट false सिस्टम सेवा का उपयोग करता है"
+"Unauthorized": "अनधिकृत"
+"Service manager not available": "सेवा प्रबंधक उपलब्ध नहीं है"

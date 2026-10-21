@@ -201,3 +201,5 @@
 "Periodically sync server time to local, 0 to disable": "A kiszolgáló idejének rendszeres helyi szinkronizálása, 0 letiltja"
 "Inject the Stardust monitoring hook into .NET applications when launching the target process": "A Stardust figyelési horog beoltása .NET-alkalmazásokba a célfolyamat indításakor"
 "Autorun requires a signed-in desktop; false by default uses the system service": "Az automatikus indítás bejelentkezett asztalt igényel; az alapértelmezett false a rendszerszolgáltatást használja"
+"Unauthorized": "Nincs jogosultság"
+"Service manager not available": "A szolgáltatáskezelő nem érhető el"

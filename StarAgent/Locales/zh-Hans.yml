@@ -201,3 +201,5 @@
 "Periodically sync server time to local, 0 to disable": "定期同步服务器时间到本地，0表示不同步"
 "Inject the Stardust monitoring hook into .NET applications when launching the target process": "拉起目标进程时对dotNet应用注入星尘监控钩子"
 "Autorun requires a signed-in desktop; false by default uses the system service": "自启动需要用户登录桌面，默认false使用系统服务"
+"Unauthorized": "未授权"
+"Service manager not available": "服务管理器不可用"

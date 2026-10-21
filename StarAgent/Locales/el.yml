@@ -201,3 +201,5 @@
 "Periodically sync server time to local, 0 to disable": "Περιοδικός συγχρονισμός της ώρας του διακομιστή τοπικά, 0 για απενεργοποίηση"
 "Inject the Stardust monitoring hook into .NET applications when launching the target process": "Έγχυση του άγκιστρου παρακολούθησης Stardust σε εφαρμογές .NET κατά την εκκίνηση της διεργασίας στόχου"
 "Autorun requires a signed-in desktop; false by default uses the system service": "Η αυτόματη εκκίνηση απαιτεί συνδεδεμένη επιφάνεια εργασίας· η προεπιλογή false χρησιμοποιεί την υπηρεσία συστήματος"
+"Unauthorized": "Μη εξουσιοδοτημένο"
+"Service manager not available": "Ο διαχειριστής υπηρεσιών δεν είναι διαθέσιμος"

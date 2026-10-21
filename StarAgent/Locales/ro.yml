@@ -201,3 +201,5 @@
 "Periodically sync server time to local, 0 to disable": "Sincronizează periodic ora serverului local, 0 dezactivează"
 "Inject the Stardust monitoring hook into .NET applications when launching the target process": "Injectează cârligul de monitorizare Stardust în aplicațiile .NET la pornirea procesului țintă"
 "Autorun requires a signed-in desktop; false by default uses the system service": "Pornirea automată necesită o sesiune de desktop autentificată; valoarea implicită false folosește serviciul de sistem"
+"Unauthorized": "Neautorizat"
+"Service manager not available": "Managerul de servicii nu este disponibil"

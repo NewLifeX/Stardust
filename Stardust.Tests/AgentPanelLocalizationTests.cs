@@ -52,6 +52,26 @@ public class AgentPanelLocalizationTests
         }
     }
 
+    [Fact(DisplayName = "面板鉴权与服务管理器缺失消息按语言返回")]
+    public void PanelMessagesAreLocalized()
+    {
+        var culture = Localization.Culture;
+        try
+        {
+            Localization.Culture = new CultureInfo("zh-Hans");
+            Assert.Equal("未授权", L.T("Unauthorized"));
+            Assert.Equal("服务管理器不可用", L.T("Service manager not available"));
+
+            Localization.Culture = new CultureInfo("de");
+            Assert.Equal("Nicht autorisiert", L.T("Unauthorized"));
+            Assert.Equal("Dienstmanager nicht verfügbar", L.T("Service manager not available"));
+        }
+        finally
+        {
+            Localization.Culture = culture;
+        }
+    }
+
     [Fact(DisplayName = "面板语言选择写入服务端配置")]
     public void PanelLanguageSwitchUsesServerApi()
     {

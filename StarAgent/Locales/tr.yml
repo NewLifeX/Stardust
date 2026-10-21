@@ -201,3 +201,5 @@
 "Periodically sync server time to local, 0 to disable": "Sunucu saatini yerelle düzenli olarak eşitle, 0 devre dışı bırakır"
 "Inject the Stardust monitoring hook into .NET applications when launching the target process": "Hedef işlem başlatılırken .NET uygulamalarına Stardust izleme kancasını ekle"
 "Autorun requires a signed-in desktop; false by default uses the system service": "Otomatik çalıştırma, oturum açılmış bir masaüstü gerektirir; varsayılan false sistem hizmetini kullanır"
+"Unauthorized": "Yetkisiz"
+"Service manager not available": "Hizmet yöneticisi kullanılamıyor"

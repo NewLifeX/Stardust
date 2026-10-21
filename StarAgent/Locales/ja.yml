@@ -201,3 +201,5 @@
 "Periodically sync server time to local, 0 to disable": "サーバー時刻を定期的にローカルへ同期します。0 で無効"
 "Inject the Stardust monitoring hook into .NET applications when launching the target process": "対象プロセスの起動時に .NET アプリへ Stardust 監視フックを注入します"
 "Autorun requires a signed-in desktop; false by default uses the system service": "自動起動にはデスクトップへのサインインが必要です。既定の false ではシステムサービスを使用します"
+"Unauthorized": "認証されていません"
+"Service manager not available": "サービスマネージャーを利用できません"

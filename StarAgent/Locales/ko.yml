@@ -201,3 +201,5 @@
 "Periodically sync server time to local, 0 to disable": "서버 시간을 주기적으로 로컬에 동기화합니다. 0이면 사용 안 함"
 "Inject the Stardust monitoring hook into .NET applications when launching the target process": "대상 프로세스를 시작할 때 .NET 응용 프로그램에 Stardust 모니터링 후크를 주입합니다"
 "Autorun requires a signed-in desktop; false by default uses the system service": "자동 실행은 데스크톱 로그인이 필요합니다. 기본값 false는 시스템 서비스를 사용합니다"
+"Unauthorized": "인증되지 않음"
+"Service manager not available": "서비스 관리자를 사용할 수 없습니다"

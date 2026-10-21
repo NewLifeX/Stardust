@@ -201,3 +201,5 @@
 "Periodically sync server time to local, 0 to disable": "Synkronoi palvelimen aika paikallisesti säännöllisesti, 0 poistaa käytöstä"
 "Inject the Stardust monitoring hook into .NET applications when launching the target process": "Syötä Stardust-seurantakoukku .NET-sovelluksiin kohdeprosessia käynnistettäessä"
 "Autorun requires a signed-in desktop; false by default uses the system service": "Automaattikäynnistys edellyttää kirjautunutta työpöytäistuntoa; oletus false käyttää järjestelmäpalvelua"
+"Unauthorized": "Ei valtuutettu"
+"Service manager not available": "Palvelunhallinta ei ole käytettävissä"

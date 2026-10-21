@@ -201,3 +201,5 @@
 "Periodically sync server time to local, 0 to disable": "Synkroniser servertid lokalt med jevne mellomrom, 0 deaktiverer"
 "Inject the Stardust monitoring hook into .NET applications when launching the target process": "Injiser Stardust-overvåkingskroken i .NET-applikasjoner ved oppstart av målprosessen"
 "Autorun requires a signed-in desktop; false by default uses the system service": "Autostart krever en pålogget skrivebordsøkt; standard false bruker systemtjenesten"
+"Unauthorized": "Ikke autorisert"
+"Service manager not available": "Tjenestebehandlingen er ikke tilgjengelig"

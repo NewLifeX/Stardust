@@ -201,3 +201,5 @@
 "Periodically sync server time to local, 0 to disable": "Sincronizar periódicamente la hora del servidor en local; 0 para desactivar"
 "Inject the Stardust monitoring hook into .NET applications when launching the target process": "Inyectar el enlace de supervisión de Stardust en aplicaciones .NET al iniciar el proceso destino"
 "Autorun requires a signed-in desktop; false by default uses the system service": "El inicio automático requiere una sesión de escritorio iniciada; con false se usa el servicio del sistema"
+"Unauthorized": "No autorizado"
+"Service manager not available": "El administrador de servicios no está disponible"

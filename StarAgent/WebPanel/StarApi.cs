@@ -66,10 +66,10 @@ public class StarApi : IHttpController
     /// <returns>服务列表，含运行状态</returns>
     public Object Services()
     {
-        if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
+        if (!CheckAuth()) return new { code = 401, message = L.T("Unauthorized") };
 
         var manager = GetManager();
-        if (manager == null) return new { code = 500, message = "Service manager not available" };
+        if (manager == null) return new { code = 500, message = L.T("Service manager not available") };
 
         var list = manager.Services;
         var runningList = manager.RunningServices;
@@ -118,10 +118,10 @@ public class StarApi : IHttpController
     /// <returns>操作结果</returns>
     public Object StartService(String serviceName)
     {
-        if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
+        if (!CheckAuth()) return new { code = 401, message = L.T("Unauthorized") };
 
         var manager = GetManager();
-        if (manager == null) return new { code = 500, message = "Service manager not available" };
+        if (manager == null) return new { code = 500, message = L.T("Service manager not available") };
 
         if (serviceName.IsNullOrEmpty()) return new { code = 400, message = L.T("Service name cannot be empty.") };
 
@@ -146,10 +146,10 @@ public class StarApi : IHttpController
     /// <returns>操作结果</returns>
     public Object StopService(String serviceName)
     {
-        if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
+        if (!CheckAuth()) return new { code = 401, message = L.T("Unauthorized") };
 
         var manager = GetManager();
-        if (manager == null) return new { code = 500, message = "Service manager not available" };
+        if (manager == null) return new { code = 500, message = L.T("Service manager not available") };
 
         if (serviceName.IsNullOrEmpty()) return new { code = 400, message = L.T("Service name cannot be empty.") };
 
@@ -174,10 +174,10 @@ public class StarApi : IHttpController
     /// <returns>操作结果</returns>
     public Object RestartService(String serviceName)
     {
-        if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
+        if (!CheckAuth()) return new { code = 401, message = L.T("Unauthorized") };
 
         var manager = GetManager();
-        if (manager == null) return new { code = 500, message = "Service manager not available" };
+        if (manager == null) return new { code = 500, message = L.T("Service manager not available") };
 
         if (serviceName.IsNullOrEmpty()) return new { code = 400, message = L.T("Service name cannot be empty.") };
 
@@ -212,10 +212,10 @@ public class StarApi : IHttpController
     /// <returns>操作结果</returns>
     public Object AddService(ServiceInfo info)
     {
-        if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
+        if (!CheckAuth()) return new { code = 401, message = L.T("Unauthorized") };
 
         var manager = GetManager();
-        if (manager == null) return new { code = 500, message = "Service manager not available" };
+        if (manager == null) return new { code = 500, message = L.T("Service manager not available") };
 
         if (info == null || info.Name.IsNullOrEmpty())
             return new { code = 400, message = L.T("Service name cannot be empty.") };
@@ -242,10 +242,10 @@ public class StarApi : IHttpController
     /// <returns>操作结果</returns>
     public Object RemoveService(String serviceName)
     {
-        if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
+        if (!CheckAuth()) return new { code = 401, message = L.T("Unauthorized") };
 
         var manager = GetManager();
-        if (manager == null) return new { code = 500, message = "Service manager not available" };
+        if (manager == null) return new { code = 500, message = L.T("Service manager not available") };
 
         if (serviceName.IsNullOrEmpty()) return new { code = 400, message = L.T("Service name cannot be empty.") };
 
@@ -276,7 +276,7 @@ public class StarApi : IHttpController
     /// <returns>StarSetting + StarAgentSetting 所有配置项</returns>
     public Object GetStarConfig()
     {
-        if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
+        if (!CheckAuth()) return new { code = 401, message = L.T("Unauthorized") };
 
         var starSet = GetStarSetting();
         var agentSet = GetAgentSetting();
@@ -313,7 +313,7 @@ public class StarApi : IHttpController
     /// <returns>操作结果</returns>
     public Object UpdateStarConfig(Dictionary<String, Object> updates)
     {
-        if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
+        if (!CheckAuth()) return new { code = 401, message = L.T("Unauthorized") };
 
         if (updates == null || updates.Count == 0)
             return new { code = 400, message = L.T("No configuration items to update.") };
@@ -384,7 +384,7 @@ public class StarApi : IHttpController
     /// <returns>丰富的本机信息</returns>
     public Object Machine()
     {
-        if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
+        if (!CheckAuth()) return new { code = 401, message = L.T("Unauthorized") };
 
         try
         {
@@ -549,7 +549,7 @@ public class StarApi : IHttpController
     /// <returns>进程列表</returns>
     public Object GetProcessList(String sort = "memory", Int32 count = 10)
     {
-        if (!CheckAuth()) return new { code = 401, message = "Unauthorized" };
+        if (!CheckAuth()) return new { code = 401, message = L.T("Unauthorized") };
 
         try
         {
