@@ -83,11 +83,9 @@
 "Run cancelled.": "Körningen avbröts."
 "Build command was not sent (node may not be ready).": "Byggkommandot skickades inte (noden är kanske inte redo)."
 "The run is already in a final state and cannot be cancelled.": "Körningen är redan i ett slutläge och kan inte avbrytas."
-# 运行时消息补充词条
 "Domain changed": "Domänen har ändrats"
 "Domains changed: {0} -> {1}": "Domänerna har ändrats: {0} -> {1}"
-# 运行时消息补充词条
 "Stardust management API": "Stardust management API"
 "Decoupled WebApi backend for the Stardust distributed service platform. Reuses the area controllers and business services of Stardust.Web while exposing only JSON endpoints (GetPage/GetFields/Insert/Update/Delete and custom actions of EntityController), without Razor views, MCP, or static sites, for direct use by the Stardust.Web.Vue frontend.": "Decoupled WebApi backend for the Stardust distributed service platform. Reuses the area controllers and business services of Stardust.Web while exposing only JSON endpoints (GetPage/GetFields/Insert/Update/Delete and custom actions of EntityController), without Razor views, MCP, or static sites, for direct use by the Stardust.Web.Vue frontend."
-# 运行时消息补充词条
 "Successfully deleted {0}": "{0} har tagits bort"
+"Unknown tool: {0}": "Okänt verktyg: {0}"

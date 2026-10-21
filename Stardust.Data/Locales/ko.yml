@@ -30,14 +30,11 @@
 "Production environment": "프로덕션 환경"
 "Local development": "로컬 개발"
 "Global shared configuration; other applications merge the configuration items of this application at startup": "전역 공유 구성입니다. 다른 애플리케이션이 시작할 때 이 애플리케이션의 구성 항목을 병합합니다"
-# 运行时消息补充词条
 "Plugin server. Links are analyzed by keyword on this page and plugins are downloaded from it": "플러그인 서버입니다. 이 페이지에서 키워드로 링크를 분석하고 여기에서 플러그인을 다운로드합니다"
-# 运行时消息补充词条
 "Node cannot be empty.": "노드는 비워 둘 수 없습니다."
 "No matching package was found.": "일치하는 패키지를 찾을 수 없습니다."
 "No matching package was found (version={0}, kind={1}).": "일치하는 패키지를 찾을 수 없습니다(version={0}, kind={1})."
 "OS [{0}] is not compatible with .NET {1}": "OS [{0}]은(는) .NET {1}과(와) 호환되지 않습니다"
 "GLIBC [{0}] does not meet the minimum requirement {1} of .NET {2}": "GLIBC [{0}]이(가) .NET {2}의 최소 요구 사항 {1}을(를) 충족하지 않습니다"
-# 运行时消息补充词条
 "Stardust Data": "Stardust Data"
 "Data layer of the Stardust distributed service framework. Defines entity models and statistics jobs based on XCode ORM, supporting persistence and computation for node management, application management, configuration center, registry, monitoring center, and release center, compatible with multiple databases.": "Data layer of the Stardust distributed service framework. Defines entity models and statistics jobs based on XCode ORM, supporting persistence and computation for node management, application management, configuration center, registry, monitoring center, and release center, compatible with multiple databases."

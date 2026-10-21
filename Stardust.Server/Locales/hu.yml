@@ -142,7 +142,6 @@
 "Auto deploy was not triggered: no deploy node is selected for the pipeline.": "Az automatikus üzembe helyezés nem indult el: nincs telepítési csomópont kiválasztva a folyamathoz."
 "Deploy command dispatched to node {0} (CommandId={1}).": "Az üzembe helyezési parancs elküldve a(z) {0} csomópontnak (CommandId={1})."
 "Failed to dispatch the deploy command to node {0}: {1}": "Nem sikerült elküldeni az üzembe helyezési parancsot a(z) {0} csomópontnak: {1}"
-# 运行时消息补充词条
 "Application authentication": "Alkalmazás-hitelesítés"
 "Application re-registered": "Az alkalmazás újraregisztrálva"
 "Application registered": "Az alkalmazás regisztrálva"
@@ -173,14 +172,10 @@
 "MAC address mismatch (new != old): {0} != {1}": "MAC-cím eltérés (új != régi): {0} != {1}"
 "Disk serial number mismatch (new != old): {0} != {1}": "Lemez sorozatszám eltérés (új != régi): {0} != {1}"
 "Version={0} Size={1:n0} Node={2}": "Verzió={0} Méret={1:n0} Csomópont={2}"
-# 运行时消息补充词条
 "Associated online": "Online társítva"
 "Dynamic registration": "Dinamikus regisztráció"
-# 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "Felhasználói felület nyelve, például zh-Hans, zh-Hant, en vagy ja; hagyja üresen, hogy webes gazdagépeknél minden kérésből felismerje, más esetben pedig a rendszer nyelvét kövesse"
-# 运行时消息补充词条
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] bejelentkezett: {2}, utolsó aktivitás: {3}"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "A(z) [{0}/{1}] csomópont nagyon hasonlít a meglévő [{2}] csomópontra; a meglévő csomópont lesz használva"
-# 运行时消息补充词条
 "Stardust service platform": "Stardust service platform"
 "Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally.": "Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally."

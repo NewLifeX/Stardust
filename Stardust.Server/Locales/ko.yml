@@ -142,7 +142,6 @@
 "Auto deploy was not triggered: no deploy node is selected for the pipeline.": "자동 배포가 트리거되지 않았습니다. 파이프라인에 배포 노드가 선택되지 않았습니다."
 "Deploy command dispatched to node {0} (CommandId={1}).": "노드 {0}에 배포 명령을 보냈습니다(CommandId={1})."
 "Failed to dispatch the deploy command to node {0}: {1}": "노드 {0}에 배포 명령을 보내지 못했습니다: {1}"
-# 运行时消息补充词条
 "Application authentication": "애플리케이션 인증"
 "Application re-registered": "애플리케이션 재등록됨"
 "Application registered": "애플리케이션 등록됨"
@@ -173,14 +172,10 @@
 "MAC address mismatch (new != old): {0} != {1}": "MAC 주소 불일치(신규 != 기존): {0} != {1}"
 "Disk serial number mismatch (new != old): {0} != {1}": "디스크 일련 번호 불일치(신규 != 기존): {0} != {1}"
 "Version={0} Size={1:n0} Node={2}": "버전={0} 크기={1:n0} 노드={2}"
-# 运行时消息补充词条
 "Associated online": "온라인 연결됨"
 "Dynamic registration": "동적 등록"
-# 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "UI 언어입니다(예: zh-Hans, zh-Hant, en, ja). 웹 호스트에서는 각 요청에서 감지하도록 비워 두고, 그 외에는 시스템 언어를 따릅니다"
-# 运行时消息补充词条
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] 로그인 시간 {2}, 마지막 활동 {3}"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "노드 [{0}/{1}]이(가) 기존 노드 [{2}]와 매우 유사하여 기존 노드를 사용합니다"
-# 运行时消息补充词条
 "Stardust service platform": "Stardust service platform"
 "Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally.": "Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally."

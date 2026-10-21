@@ -30,14 +30,11 @@
 "Production environment": "Środowisko produkcyjne"
 "Local development": "Lokalne środowisko programistyczne"
 "Global shared configuration; other applications merge the configuration items of this application at startup": "Globalna konfiguracja współdzielona; inne aplikacje scalają elementy konfiguracji tej aplikacji podczas uruchamiania"
-# 运行时消息补充词条
 "Plugin server. Links are analyzed by keyword on this page and plugins are downloaded from it": "Serwer wtyczek. Na tej stronie linki są analizowane według słów kluczowych i pobierane są wtyczki"
-# 运行时消息补充词条
 "Node cannot be empty.": "Węzeł nie może być pusty."
 "No matching package was found.": "Nie znaleziono pasującego pakietu."
 "No matching package was found (version={0}, kind={1}).": "Nie znaleziono pasującego pakietu (version={0}, kind={1})."
 "OS [{0}] is not compatible with .NET {1}": "System operacyjny [{0}] nie jest zgodny z .NET {1}"
 "GLIBC [{0}] does not meet the minimum requirement {1} of .NET {2}": "GLIBC [{0}] nie spełnia minimalnego wymagania {1} dla .NET {2}"
-# 运行时消息补充词条
 "Stardust Data": "Stardust Data"
 "Data layer of the Stardust distributed service framework. Defines entity models and statistics jobs based on XCode ORM, supporting persistence and computation for node management, application management, configuration center, registry, monitoring center, and release center, compatible with multiple databases.": "Data layer of the Stardust distributed service framework. Defines entity models and statistics jobs based on XCode ORM, supporting persistence and computation for node management, application management, configuration center, registry, monitoring center, and release center, compatible with multiple databases."

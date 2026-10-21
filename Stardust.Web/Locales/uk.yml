@@ -83,11 +83,9 @@
 "Run cancelled.": "Запуск скасовано."
 "Build command was not sent (node may not be ready).": "Команду збирання не надіслано (можливо, вузол не готовий)."
 "The run is already in a final state and cannot be cancelled.": "Запуск уже перебуває в кінцевому стані й не може бути скасований."
-# 运行时消息补充词条
 "Domain changed": "Домен змінено"
 "Domains changed: {0} -> {1}": "Домени змінено: {0} -> {1}"
-# 运行时消息补充词条
 "Stardust management portal": "Stardust management portal"
 "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries."
-# 运行时消息补充词条
 "Successfully deleted {0}": "{0} видалено"
+"Unknown tool: {0}": "Невідомий інструмент: {0}"

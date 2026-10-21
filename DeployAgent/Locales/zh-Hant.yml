@@ -76,6 +76,5 @@
 "Re-login failed: {0}": "重新登錄失敗：{0}"
 # 运行时消息补充词条
 "...(the log is too long and was truncated; the last {0} characters are kept)\n": "…（日誌過長已截斷，保留尾部{0}字元）\n"
-# 运行时消息补充词条
 "Stardust deploy": "星塵發佈"
 "Stardust build and deployment tool. Automatically downloads repositories, builds, packs, and pushes artifacts to the Stardust release center, with version management and multi-platform distribution, working with StarAgent for automated deployment pipelines.": "星塵建置發佈工具。自動下載程式碼倉庫、執行編譯建置、封裝輸出並推送至星塵發佈中心，支援資源版本管理與多平台散佈，配合 StarAgent 實現自動化部署管線。"

@@ -203,7 +203,6 @@
 "Autorun requires a signed-in desktop; false by default uses the system service": "การเรียกใช้อัตโนมัติต้องมีผู้ใช้ลงชื่อเข้าใช้เดสก์ท็อป ค่าเริ่มต้น false จะใช้บริการของระบบ"
 "Unauthorized": "ไม่ได้รับอนุญาต"
 "Service manager not available": "ไม่สามารถใช้ตัวจัดการบริการได้"
-# 运行时消息补充词条
 "Stardust agent self-healing completed: {0}": "เอเจนต์ Stardust ฟื้นฟูตัวเองสำเร็จ: {0}"
 "Forced update completed; restarting the background service. PID={0}": "อัปเดตแบบบังคับเสร็จสิ้น กำลังรีสตาร์ตบริการเบื้องหลัง PID={0}"
 "The new version failed to start for the first time; retrying in {0}ms. {1}": "เวอร์ชันใหม่เริ่มทำงานครั้งแรกไม่สำเร็จ จะลองใหม่ใน {0}ms {1}"
@@ -229,6 +228,5 @@
 "Overwriting file {0}": "กำลังเขียนทับไฟล์ {0}"
 "Overwriting directory {0}": "กำลังเขียนทับไดเรกทอรี {0}"
 "Deleting shadow directory: {0}": "กำลังลบไดเรกทอรีเงา: {0}"
-# 运行时消息补充词条
 "Stardust agent": "Stardust agent"
 "Node guardian agent for Stardust. Deployed on every application server or edge node, providing process supervision, remote deployment, performance metrics collection (CPU/memory/disk/network/GPU), log and metric reporting, and supporting Windows services, Linux systemd, and IoT edge environments.": "Node guardian agent for Stardust. Deployed on every application server or edge node, providing process supervision, remote deployment, performance metrics collection (CPU/memory/disk/network/GPU), log and metric reporting, and supporting Windows services, Linux systemd, and IoT edge environments."

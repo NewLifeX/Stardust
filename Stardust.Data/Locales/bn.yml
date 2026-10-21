@@ -30,14 +30,11 @@
 "Production environment": "প্রোডাকশন পরিবেশ"
 "Local development": "স্থানীয় ডেভেলপমেন্ট"
 "Global shared configuration; other applications merge the configuration items of this application at startup": "বৈশ্বিক শেয়ার্ড কনফিগারেশন; অন্যান্য অ্যাপ্লিকেশন স্টার্টআপে এই অ্যাপ্লিকেশনের কনফিগারেশন আইটেম একত্রিত করে"
-# 运行时消息补充词条
 "Plugin server. Links are analyzed by keyword on this page and plugins are downloaded from it": "প্লাগইন সার্ভার। এই পৃষ্ঠায় লিঙ্কগুলো কীওয়ার্ড দ্বারা বিশ্লেষণ করা হয় এবং প্লাগইন এখান থেকে ডাউনলোড করা হয়"
-# 运行时消息补充词条
 "Node cannot be empty.": "নোড খালি হতে পারে না।"
 "No matching package was found.": "কোনো মিলে যাওয়া প্যাকেজ পাওয়া যায়নি।"
 "No matching package was found (version={0}, kind={1}).": "কোনো মিলে যাওয়া প্যাকেজ পাওয়া যায়নি (version={0}, kind={1})।"
 "OS [{0}] is not compatible with .NET {1}": "অপারেটিং সিস্টেম [{0}] .NET {1} এর সাথে সামঞ্জস্যপূর্ণ নয়"
 "GLIBC [{0}] does not meet the minimum requirement {1} of .NET {2}": "GLIBC [{0}] .NET {2} এর ন্যূনতম প্রয়োজনীয়তা {1} পূরণ করে না"
-# 运行时消息补充词条
 "Stardust Data": "Stardust Data"
 "Data layer of the Stardust distributed service framework. Defines entity models and statistics jobs based on XCode ORM, supporting persistence and computation for node management, application management, configuration center, registry, monitoring center, and release center, compatible with multiple databases.": "Data layer of the Stardust distributed service framework. Defines entity models and statistics jobs based on XCode ORM, supporting persistence and computation for node management, application management, configuration center, registry, monitoring center, and release center, compatible with multiple databases."

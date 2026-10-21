@@ -83,11 +83,9 @@
 "Run cancelled.": "ยกเลิกการรันแล้ว"
 "Build command was not sent (node may not be ready).": "ไม่ได้ส่งคำสั่งบิลด์ (โหนดอาจยังไม่พร้อม)"
 "The run is already in a final state and cannot be cancelled.": "การรันอยู่ในสถานะสิ้นสุดแล้ว จึงยกเลิกไม่ได้"
-# 运行时消息补充词条
 "Domain changed": "โดเมนเปลี่ยนแล้ว"
 "Domains changed: {0} -> {1}": "โดเมนเปลี่ยน: {0} -> {1}"
-# 运行时消息补充词条
 "Stardust management API": "Stardust management API"
 "Decoupled WebApi backend for the Stardust distributed service platform. Reuses the area controllers and business services of Stardust.Web while exposing only JSON endpoints (GetPage/GetFields/Insert/Update/Delete and custom actions of EntityController), without Razor views, MCP, or static sites, for direct use by the Stardust.Web.Vue frontend.": "Decoupled WebApi backend for the Stardust distributed service platform. Reuses the area controllers and business services of Stardust.Web while exposing only JSON endpoints (GetPage/GetFields/Insert/Update/Delete and custom actions of EntityController), without Razor views, MCP, or static sites, for direct use by the Stardust.Web.Vue frontend."
-# 运行时消息补充词条
 "Successfully deleted {0}": "ลบ {0} แล้ว"
+"Unknown tool: {0}": "เครื่องมือที่ไม่รู้จัก: {0}"

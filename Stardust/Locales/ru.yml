@@ -204,7 +204,6 @@
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "Язык интерфейса, например zh-Hans, zh-Hant, en или ja; оставьте пустым, чтобы следовать системному языку"
 "Service removed or disabled": "Служба удалена или отключена"
 "Configuration changed": "Конфигурация изменена"
-# 运行时消息补充词条
 "Unsupported health check protocol: {0}": "Неподдерживаемый протокол проверки работоспособности: {0}"
 "Health check error: {0} - {1}": "Ошибка проверки работоспособности: {0} - {1}"
 "Health check failed: {0} - {1}": "Проверка работоспособности не удалась: {0} - {1}"
@@ -221,6 +220,5 @@
 "Invalid parameter.": "Недопустимый параметр."
 "Succeeded": "Успешно"
 "File [{0}] changed; stopping the application and starting it {1}ms later": "Файл [{0}] изменён; приложение остановлено и будет запущено через {1}мс"
-# 运行时消息补充词条
 "Stardust distributed core": "Stardust distributed core"
 "Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting.": "Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting."

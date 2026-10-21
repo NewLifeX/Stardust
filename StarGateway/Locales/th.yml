@@ -22,7 +22,6 @@
 "StarGateway started, listening on port {0}, remote server {1}": "StarGateway เริ่มทำงานแล้ว ฟังอยู่ที่พอร์ต {0} เซิร์ฟเวอร์ระยะไกล {1}"
 # 运行时消息补充词条
 "Configuration refreshed.": "รีเฟรชการกำหนดค่าแล้ว"
-# 运行时消息补充词条
 "Failed to load the SSL certificate configuration: {0}": "โหลดการกำหนดค่าส่วนรับรอง SSL ไม่สำเร็จ: {0}"
 "Failed to load certificate {0}: {1}": "โหลดส่วนรับรอง {0} ไม่สำเร็จ: {1}"
 "Failed to load configuration from {0}: {1}": "โหลดการกำหนดค่าจาก {0} ไม่สำเร็จ: {1}"
@@ -42,6 +41,5 @@
 "Error forwarding to the client: {0}": "เกิดข้อผิดพลาดขณะส่งต่อไปยังไคลเอนต์: {0}"
 "Directory: {0}": "ไดเรกทอรี: {0}"
 "Failed to read directory: {0}": "อ่านไดเรกทอรีไม่สำเร็จ: {0}"
-# 运行时消息补充词条
 "Stardust gateway": "Stardust gateway"
 "Stardust gateway proxy. Provides traffic forwarding and reverse proxy with dynamic route switching, and works with the Stardust registry for service discovery and load balancing in microservice gateway scenarios.": "Stardust gateway proxy. Provides traffic forwarding and reverse proxy with dynamic route switching, and works with the Stardust registry for service discovery and load balancing in microservice gateway scenarios."

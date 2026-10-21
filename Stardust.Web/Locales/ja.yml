@@ -83,20 +83,9 @@
 "Run cancelled.": "実行はキャンセルされました。"
 "Build command was not sent (node may not be ready).": "ビルドコマンドが送信されませんでした（ノードが準備できていない可能性があります）。"
 "The run is already in a final state and cannot be cancelled.": "実行は既に終了状態のため、キャンセルできません。"
-# 运行时消息补充词条
 "Domain changed": "ドメイン変更"
 "Domains changed: {0} -> {1}": "ドメインが変更されました: {0} -> {1}"
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
 "Stardust management portal": "Stardust management portal"
 "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries."
-# 运行时消息补充词条
 "Successfully deleted {0}": "{0} を削除しました"
+"Unknown tool: {0}": "不明なツール: {0}"

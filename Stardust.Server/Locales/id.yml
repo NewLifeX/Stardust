@@ -142,7 +142,6 @@
 "Auto deploy was not triggered: no deploy node is selected for the pipeline.": "Auto deploy tidak dipicu: tidak ada node deploy yang dipilih untuk pipeline."
 "Deploy command dispatched to node {0} (CommandId={1}).": "Perintah deploy dikirim ke node {0} (CommandId={1})."
 "Failed to dispatch the deploy command to node {0}: {1}": "Gagal mengirim perintah deploy ke node {0}: {1}"
-# 运行时消息补充词条
 "Application authentication": "Autentikasi aplikasi"
 "Application re-registered": "Aplikasi didaftarkan ulang"
 "Application registered": "Aplikasi terdaftar"
@@ -173,14 +172,10 @@
 "MAC address mismatch (new != old): {0} != {1}": "Alamat MAC tidak cocok (baru != lama): {0} != {1}"
 "Disk serial number mismatch (new != old): {0} != {1}": "Nomor seri disk tidak cocok (baru != lama): {0} != {1}"
 "Version={0} Size={1:n0} Node={2}": "Versi={0} Ukuran={1:n0} Node={2}"
-# 运行时消息补充词条
 "Associated online": "Terkait online"
 "Dynamic registration": "Pendaftaran dinamis"
-# 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "Bahasa UI, misalnya zh-Hans, zh-Hant, en, atau ja; kosongkan agar dideteksi dari setiap permintaan pada host web dan mengikuti bahasa sistem pada kasus lain"
-# 运行时消息补充词条
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] masuk pada {2}, terakhir aktif pada {3}"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "Node [{0}/{1}] sangat mirip dengan node yang ada [{2}]; node yang ada akan digunakan"
-# 运行时消息补充词条
 "Stardust service platform": "Stardust service platform"
 "Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally.": "Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally."

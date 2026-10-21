@@ -142,7 +142,6 @@
 "Auto deploy was not triggered: no deploy node is selected for the pipeline.": "ไม่ได้เรียกใช้ auto deploy: ไม่ได้เลือกโหนด deploy สำหรับไปป์ไลน์"
 "Deploy command dispatched to node {0} (CommandId={1}).": "ส่งคำสั่ง deploy ไปยังโหนด {0} แล้ว (CommandId={1})"
 "Failed to dispatch the deploy command to node {0}: {1}": "ส่งคำสั่ง deploy ไปยังโหนด {0} ไม่สำเร็จ: {1}"
-# 运行时消息补充词条
 "Application authentication": "การยืนยันตัวตนแอปพลิเคชัน"
 "Application re-registered": "แอปพลิเคชันลงทะเบียนใหม่แล้ว"
 "Application registered": "แอปพลิเคชันลงทะเบียนแล้ว"
@@ -173,14 +172,10 @@
 "MAC address mismatch (new != old): {0} != {1}": "ที่อยู่ MAC ไม่ตรงกัน (ใหม่ != เก่า): {0} != {1}"
 "Disk serial number mismatch (new != old): {0} != {1}": "หมายเลขซีเรียลดิสก์ไม่ตรงกัน (ใหม่ != เก่า): {0} != {1}"
 "Version={0} Size={1:n0} Node={2}": "เวอร์ชัน={0} ขนาด={1:n0} โหนด={2}"
-# 运行时消息补充词条
 "Associated online": "เชื่อมโยงออนไลน์"
 "Dynamic registration": "การลงทะเบียนแบบไดนามิก"
-# 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "ภาษาของ UI เช่น zh-Hans, zh-Hant, en หรือ ja เว้นว่างเพื่อตรวจหาจากแต่ละคำขอในโฮสต์เว็บ และใช้ภาษาของระบบในกรณีอื่น"
-# 运行时消息补充词条
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] เข้าสู่ระบบเมื่อ {2} ใช้งานล่าสุดเมื่อ {3}"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "โหนด [{0}/{1}] คล้ายกับโหนดที่มีอยู่ [{2}] มาก จะใช้โหนดที่มีอยู่"
-# 运行时消息补充词条
 "Stardust service platform": "Stardust service platform"
 "Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally.": "Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally."

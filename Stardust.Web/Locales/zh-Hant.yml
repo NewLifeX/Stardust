@@ -83,11 +83,9 @@
 "Run cancelled.": "執行已取消"
 "Build command was not sent (node may not be ready).": "編譯命令未送出（節點可能未就緒）"
 "The run is already in a final state and cannot be cancelled.": "執行已處於終態，無法取消"
-# 运行时消息补充词条
 "Domain changed": "修改網域"
 "Domains changed: {0} -> {1}": "網域變更：{0} -> {1}"
-# 运行时消息补充词条
 "Stardust management portal": "星塵管理平台"
 "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "星塵分散式服務平台管理介面。基於 NewLife.Cube 的視覺化管理系統，提供節點管理、應用程式管理、設定中心、註冊中心、監控中心、發佈中心、呼叫鏈追蹤、效能分析、日誌查詢等統一管理入口。"
-# 运行时消息补充词条
 "Successfully deleted {0}": "已刪除 {0}"
+"Unknown tool: {0}": "未知工具：{0}"

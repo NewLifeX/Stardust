@@ -30,14 +30,11 @@
 "Production environment": "Lingkungan produksi"
 "Local development": "Pengembangan lokal"
 "Global shared configuration; other applications merge the configuration items of this application at startup": "Konfigurasi bersama global; aplikasi lain menggabungkan item konfigurasi aplikasi ini saat startup"
-# 运行时消息补充词条
 "Plugin server. Links are analyzed by keyword on this page and plugins are downloaded from it": "Server plugin. Tautan dianalisis berdasarkan kata kunci di halaman ini dan plugin diunduh darinya"
-# 运行时消息补充词条
 "Node cannot be empty.": "Node tidak boleh kosong."
 "No matching package was found.": "Tidak ada paket yang cocok ditemukan."
 "No matching package was found (version={0}, kind={1}).": "Tidak ada paket yang cocok ditemukan (version={0}, kind={1})."
 "OS [{0}] is not compatible with .NET {1}": "Sistem operasi [{0}] tidak kompatibel dengan .NET {1}"
 "GLIBC [{0}] does not meet the minimum requirement {1} of .NET {2}": "GLIBC [{0}] tidak memenuhi persyaratan minimum {1} untuk .NET {2}"
-# 运行时消息补充词条
 "Stardust Data": "Stardust Data"
 "Data layer of the Stardust distributed service framework. Defines entity models and statistics jobs based on XCode ORM, supporting persistence and computation for node management, application management, configuration center, registry, monitoring center, and release center, compatible with multiple databases.": "Data layer of the Stardust distributed service framework. Defines entity models and statistics jobs based on XCode ORM, supporting persistence and computation for node management, application management, configuration center, registry, monitoring center, and release center, compatible with multiple databases."

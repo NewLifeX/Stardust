@@ -22,7 +22,6 @@
 "StarGateway started, listening on port {0}, remote server {1}": "StarGateway 已啟動，監聽端口 {0}，遠程服務器 {1}"
 # 运行时消息补充词条
 "Configuration refreshed.": "設定已重新整理"
-# 运行时消息补充词条
 "Failed to load the SSL certificate configuration: {0}": "載入SSL憑證設定失敗：{0}"
 "Failed to load certificate {0}: {1}": "載入憑證 {0} 失敗：{1}"
 "Failed to load configuration from {0}: {1}": "從 {0} 載入設定失敗：{1}"
@@ -42,6 +41,5 @@
 "Error forwarding to the client: {0}": "轉送給用戶端時發生錯誤：{0}"
 "Directory: {0}": "目錄：{0}"
 "Failed to read directory: {0}": "讀取目錄失敗：{0}"
-# 运行时消息补充词条
 "Stardust gateway": "星塵閘道"
 "Stardust gateway proxy. Provides traffic forwarding and reverse proxy with dynamic route switching, and works with the Stardust registry for service discovery and load balancing in microservice gateway scenarios.": "星塵閘道代理。提供流量轉發與反向代理能力，支援動態路由切換，可與星塵註冊中心協同實現服務探索與負載平衡，適用於微服務閘道情境。"

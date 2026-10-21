@@ -83,11 +83,9 @@
 "Run cancelled.": "Ajo peruutettiin."
 "Build command was not sent (node may not be ready).": "Koonnoskomentoa ei lähetetty (solmu ei ehkä ole valmis)."
 "The run is already in a final state and cannot be cancelled.": "Ajo on jo lopullisessa tilassa, eikä sitä voi peruuttaa."
-# 运行时消息补充词条
 "Domain changed": "Toimialue muuttui"
 "Domains changed: {0} -> {1}": "Toimialueet muuttuivat: {0} -> {1}"
-# 运行时消息补充词条
 "Stardust management API": "Stardust management API"
 "Decoupled WebApi backend for the Stardust distributed service platform. Reuses the area controllers and business services of Stardust.Web while exposing only JSON endpoints (GetPage/GetFields/Insert/Update/Delete and custom actions of EntityController), without Razor views, MCP, or static sites, for direct use by the Stardust.Web.Vue frontend.": "Decoupled WebApi backend for the Stardust distributed service platform. Reuses the area controllers and business services of Stardust.Web while exposing only JSON endpoints (GetPage/GetFields/Insert/Update/Delete and custom actions of EntityController), without Razor views, MCP, or static sites, for direct use by the Stardust.Web.Vue frontend."
-# 运行时消息补充词条
 "Successfully deleted {0}": "{0} poistettiin"
+"Unknown tool: {0}": "Tuntematon työkalu: {0}"

@@ -204,7 +204,6 @@
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "Limba interfeței, de exemplu zh-Hans, zh-Hant, en sau ja; lăsați gol pentru a urma limba sistemului"
 "Service removed or disabled": "Serviciu eliminat sau dezactivat"
 "Configuration changed": "Configurația s-a modificat"
-# 运行时消息补充词条
 "Unsupported health check protocol: {0}": "Protocol de verificare a stării neacceptat: {0}"
 "Health check error: {0} - {1}": "Eroare la verificarea stării: {0} - {1}"
 "Health check failed: {0} - {1}": "Verificarea stării a eșuat: {0} - {1}"
@@ -221,6 +220,5 @@
 "Invalid parameter.": "Parametru nevalid."
 "Succeeded": "Reușit"
 "File [{0}] changed; stopping the application and starting it {1}ms later": "Fișierul [{0}] s-a modificat; aplicația este oprită și pornită după {1}ms"
-# 运行时消息补充词条
 "Stardust distributed core": "Stardust distributed core"
 "Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting.": "Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting."

@@ -203,7 +203,6 @@
 "Autorun requires a signed-in desktop; false by default uses the system service": "自動啟動需要使用者登入桌面，預設 false 使用系統服務"
 "Unauthorized": "未授權"
 "Service manager not available": "服務管理員無法使用"
-# 运行时消息补充词条
 "Stardust agent self-healing completed: {0}": "星塵代理自癒恢復：{0}"
 "Forced update completed; restarting the background service. PID={0}": "強制更新完成，準備重新啟動背景服務！PID={0}"
 "The new version failed to start for the first time; retrying in {0}ms. {1}": "新版首次啟動失敗，等待 {0}ms 後重試。{1}"
@@ -229,6 +228,5 @@
 "Overwriting file {0}": "覆蓋文件 {0}"
 "Overwriting directory {0}": "覆蓋目錄 {0}"
 "Deleting shadow directory: {0}": "刪除影子目錄：{0}"
-# 运行时消息补充词条
 "Stardust agent": "星塵代理"
 "Node guardian agent for Stardust. Deployed on every application server or edge node, providing process supervision, remote deployment, performance metrics collection (CPU/memory/disk/network/GPU), log and metric reporting, and supporting Windows services, Linux systemd, and IoT edge environments.": "星塵節點守護代理。部署於每台應用程式伺服器或邊緣節點，提供行程守護、遠端發佈部署、效能監控採集（CPU/記憶體/磁碟/網路/GPU）、日誌與指標上報，支援 Windows 服務、Linux systemd 與 IoT 邊緣環境。"

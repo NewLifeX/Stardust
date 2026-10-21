@@ -83,11 +83,9 @@
 "Run cancelled.": "Ejecución cancelada."
 "Build command was not sent (node may not be ready).": "No se envió el comando de compilación (puede que el nodo no esté listo)."
 "The run is already in a final state and cannot be cancelled.": "La ejecución ya está en un estado final y no se puede cancelar."
-# 运行时消息补充词条
 "Domain changed": "Dominio modificado"
 "Domains changed: {0} -> {1}": "Dominios modificados: {0} -> {1}"
-# 运行时消息补充词条
 "Stardust management portal": "Stardust management portal"
 "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries."
-# 运行时消息补充词条
 "Successfully deleted {0}": "Se eliminó {0}"
+"Unknown tool: {0}": "Herramienta desconocida: {0}"

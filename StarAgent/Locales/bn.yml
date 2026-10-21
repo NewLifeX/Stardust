@@ -203,7 +203,6 @@
 "Autorun requires a signed-in desktop; false by default uses the system service": "অটোরানের জন্য ডেস্কটপে সাইন-ইন থাকা প্রয়োজন; ডিফল্ট false সিস্টেম সেবা ব্যবহার করে"
 "Unauthorized": "অননুমোদিত"
 "Service manager not available": "পরিষেবা ম্যানেজার উপলব্ধ নেই"
-# 运行时消息补充词条
 "Stardust agent self-healing completed: {0}": "Stardust এজেন্টের স্ব-নিরাময় সম্পন্ন: {0}"
 "Forced update completed; restarting the background service. PID={0}": "জোরপূর্বক আপডেট সম্পন্ন; পটভূমি পরিষেবা পুনরায় চালু করা হচ্ছে। PID={0}"
 "The new version failed to start for the first time; retrying in {0}ms. {1}": "নতুন সংস্করণ প্রথমবার চালু হতে ব্যর্থ হয়েছে; {0}ms পরে আবার চেষ্টা করা হবে। {1}"
@@ -229,6 +228,5 @@
 "Overwriting file {0}": "ফাইল {0} ওভাররাইট করা হচ্ছে"
 "Overwriting directory {0}": "ডিরেক্টরি {0} ওভাররাইট করা হচ্ছে"
 "Deleting shadow directory: {0}": "শ্যাডো ডিরেক্টরি মুছে ফেলা হচ্ছে: {0}"
-# 运行时消息补充词条
 "Stardust agent": "Stardust agent"
 "Node guardian agent for Stardust. Deployed on every application server or edge node, providing process supervision, remote deployment, performance metrics collection (CPU/memory/disk/network/GPU), log and metric reporting, and supporting Windows services, Linux systemd, and IoT edge environments.": "Node guardian agent for Stardust. Deployed on every application server or edge node, providing process supervision, remote deployment, performance metrics collection (CPU/memory/disk/network/GPU), log and metric reporting, and supporting Windows services, Linux systemd, and IoT edge environments."

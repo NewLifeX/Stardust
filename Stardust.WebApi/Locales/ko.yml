@@ -83,11 +83,9 @@
 "Run cancelled.": "실행이 취소되었습니다."
 "Build command was not sent (node may not be ready).": "빌드 명령을 보내지 않았습니다(노드가 준비되지 않았을 수 있음)."
 "The run is already in a final state and cannot be cancelled.": "실행이 이미 최종 상태이므로 취소할 수 없습니다."
-# 运行时消息补充词条
 "Domain changed": "도메인이 변경되었습니다"
 "Domains changed: {0} -> {1}": "도메인이 변경되었습니다: {0} -> {1}"
-# 运行时消息补充词条
 "Stardust management API": "Stardust management API"
 "Decoupled WebApi backend for the Stardust distributed service platform. Reuses the area controllers and business services of Stardust.Web while exposing only JSON endpoints (GetPage/GetFields/Insert/Update/Delete and custom actions of EntityController), without Razor views, MCP, or static sites, for direct use by the Stardust.Web.Vue frontend.": "Decoupled WebApi backend for the Stardust distributed service platform. Reuses the area controllers and business services of Stardust.Web while exposing only JSON endpoints (GetPage/GetFields/Insert/Update/Delete and custom actions of EntityController), without Razor views, MCP, or static sites, for direct use by the Stardust.Web.Vue frontend."
-# 运行时消息补充词条
 "Successfully deleted {0}": "{0}을(를) 삭제했습니다"
+"Unknown tool: {0}": "알 수 없는 도구: {0}"

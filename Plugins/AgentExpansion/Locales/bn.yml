@@ -17,6 +17,5 @@
 # 运行时消息补充词条
 "Target network {0} is not a local network address; ignored": "লক্ষ্য নেটওয়ার্ক {0} স্থানীয় নেটওয়ার্ক ঠিকানা নয়; উপেক্ষা করা হয়েছে"
 "The number of target addresses exceeds the limit {0}; only the first {0} addresses are scanned in this round. Adjust MaxHosts or narrow Networks": "লক্ষ্য ঠিকানার সংখ্যা সীমা {0} ছাড়িয়ে গেছে; এই রাউন্ডে শুধুমাত্র প্রথম {0} টি ঠিকানা স্ক্যান করা হবে। MaxHosts সামঞ্জস্য করুন বা Networks সংকীর্ণ করুন"
-# 运行时消息补充词条
 "Agent expansion": "Agent expansion"
 "LAN extension for the Stardust agent that discovers nodes and installs StarAgent automatically.": "LAN extension for the Stardust agent that discovers nodes and installs StarAgent automatically."

@@ -22,7 +22,6 @@
 "StarGateway started, listening on port {0}, remote server {1}": "StarGateway iniciado, escuchando en el puerto {0}, servidor remoto {1}"
 # 运行时消息补充词条
 "Configuration refreshed.": "Configuración actualizada."
-# 运行时消息补充词条
 "Failed to load the SSL certificate configuration: {0}": "No se pudo cargar la configuración del certificado SSL: {0}"
 "Failed to load certificate {0}: {1}": "No se pudo cargar el certificado {0}: {1}"
 "Failed to load configuration from {0}: {1}": "No se pudo cargar la configuración desde {0}: {1}"
@@ -42,6 +41,5 @@
 "Error forwarding to the client: {0}": "Error al reenviar al cliente: {0}"
 "Directory: {0}": "Directorio: {0}"
 "Failed to read directory: {0}": "No se pudo leer el directorio: {0}"
-# 运行时消息补充词条
 "Stardust gateway": "Stardust gateway"
 "Stardust gateway proxy. Provides traffic forwarding and reverse proxy with dynamic route switching, and works with the Stardust registry for service discovery and load balancing in microservice gateway scenarios.": "Stardust gateway proxy. Provides traffic forwarding and reverse proxy with dynamic route switching, and works with the Stardust registry for service discovery and load balancing in microservice gateway scenarios."

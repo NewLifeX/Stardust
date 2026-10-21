@@ -83,20 +83,9 @@
 "Run cancelled.": "実行はキャンセルされました。"
 "Build command was not sent (node may not be ready).": "ビルドコマンドが送信されませんでした（ノードが準備できていない可能性があります）。"
 "The run is already in a final state and cannot be cancelled.": "実行は既に終了状態のため、キャンセルできません。"
-# 运行时消息补充词条
 "Domain changed": "ドメイン変更"
 "Domains changed: {0} -> {1}": "ドメインが変更されました: {0} -> {1}"
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
 "Stardust management API": "Stardust management API"
 "Decoupled WebApi backend for the Stardust distributed service platform. Reuses the area controllers and business services of Stardust.Web while exposing only JSON endpoints (GetPage/GetFields/Insert/Update/Delete and custom actions of EntityController), without Razor views, MCP, or static sites, for direct use by the Stardust.Web.Vue frontend.": "Decoupled WebApi backend for the Stardust distributed service platform. Reuses the area controllers and business services of Stardust.Web while exposing only JSON endpoints (GetPage/GetFields/Insert/Update/Delete and custom actions of EntityController), without Razor views, MCP, or static sites, for direct use by the Stardust.Web.Vue frontend."
-# 运行时消息补充词条
 "Successfully deleted {0}": "{0} を削除しました"
+"Unknown tool: {0}": "不明なツール: {0}"

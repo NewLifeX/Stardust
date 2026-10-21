@@ -17,6 +17,5 @@
 # 运行时消息补充词条
 "Target network {0} is not a local network address; ignored": "Cílová síť {0} není adresa místní sítě; přeskočeno"
 "The number of target addresses exceeds the limit {0}; only the first {0} addresses are scanned in this round. Adjust MaxHosts or narrow Networks": "Počet cílových adres překračuje limit {0}; v tomto kole se prohledá pouze prvních {0} adres. Upravte MaxHosts nebo zúžte Networks"
-# 运行时消息补充词条
 "Agent expansion": "Agent expansion"
 "LAN extension for the Stardust agent that discovers nodes and installs StarAgent automatically.": "LAN extension for the Stardust agent that discovers nodes and installs StarAgent automatically."

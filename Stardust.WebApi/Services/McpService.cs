@@ -409,7 +409,7 @@ public class McpService
                     content = await HandleInvokeAction(arguments, context);
                     break;
                 default:
-                    throw new InvalidOperationException($"Unknown tool: {name}");
+                    throw new InvalidOperationException(L.T("Unknown tool: {0}", name));
             }
         }
         catch (McpException ex)

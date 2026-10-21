@@ -142,7 +142,6 @@
 "Auto deploy was not triggered: no deploy node is selected for the pipeline.": "自动部署未触发：流水线未勾选任何部署节点"
 "Deploy command dispatched to node {0} (CommandId={1}).": "已向节点 {0} 下发部署命令（CommandId={1}）"
 "Failed to dispatch the deploy command to node {0}: {1}": "向节点 {0} 下发部署命令失败：{1}"
-# 运行时消息补充词条
 "Application authentication": "应用鉴权"
 "Application re-registered": "应用重注册"
 "Application registered": "应用注册"
@@ -173,14 +172,10 @@
 "MAC address mismatch (new != old): {0} != {1}": "网卡地址不符！（新!=旧）{0}!={1}"
 "Disk serial number mismatch (new != old): {0} != {1}": "磁盘序列号不符！（新!=旧）{0}!={1}"
 "Version={0} Size={1:n0} Node={2}": "版本={0} 大小={1:n0} 节点={2}"
-# 运行时消息补充词条
 "Associated online": "关联上线"
 "Dynamic registration": "动态注册"
-# 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "界面语言。如 zh-Hans、zh-Hant、en、ja，留空时 Web 宿主按请求语言识别，其余跟随系统语言"
-# 运行时消息补充词条
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}]登录于 {2}，最后活跃于 {3}"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "检测到节点[{0}/{1}]与旧节点[{2}]高度相似，选择使用旧节点"
-# 运行时消息补充词条
 "Stardust service platform": "星尘服务平台"
 "Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally.": "星尘分布式服务平台后端核心。提供配置中心、注册中心、服务发现、远程发布、性能监控、日志中心等核心API服务，支持应用注册、配置下发、指标聚合、统计计算与任务调度，可横向扩展。"

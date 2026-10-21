@@ -204,7 +204,6 @@
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "Idioma da interface, por exemplo zh-Hans, zh-Hant, en ou ja; deixe vazio para seguir o idioma do sistema"
 "Service removed or disabled": "Serviço removido ou desativado"
 "Configuration changed": "Configuração alterada"
-# 运行时消息补充词条
 "Unsupported health check protocol: {0}": "Protocolo de verificação de integridade não suportado: {0}"
 "Health check error: {0} - {1}": "Erro na verificação de integridade: {0} - {1}"
 "Health check failed: {0} - {1}": "Falha na verificação de integridade: {0} - {1}"
@@ -221,6 +220,5 @@
 "Invalid parameter.": "Parâmetro inválido."
 "Succeeded": "Concluído"
 "File [{0}] changed; stopping the application and starting it {1}ms later": "O arquivo [{0}] foi alterado; a aplicação será parada e iniciada {1}ms depois"
-# 运行时消息补充词条
 "Stardust distributed core": "Stardust distributed core"
 "Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting.": "Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting."

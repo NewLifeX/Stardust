@@ -30,14 +30,11 @@
 "Production environment": "Produkční prostředí"
 "Local development": "Místní vývoj"
 "Global shared configuration; other applications merge the configuration items of this application at startup": "Globální sdílená konfigurace; ostatní aplikace při spuštění slučují položky konfigurace této aplikace"
-# 运行时消息补充词条
 "Plugin server. Links are analyzed by keyword on this page and plugins are downloaded from it": "Server pluginů. Na této stránce se odkazy analyzují podle klíčových slov a stahují se pluginy"
-# 运行时消息补充词条
 "Node cannot be empty.": "Uzel nesmí být prázdný."
 "No matching package was found.": "Nebyl nalezen žádný odpovídající balíček."
 "No matching package was found (version={0}, kind={1}).": "Nebyl nalezen žádný odpovídající balíček (version={0}, kind={1})."
 "OS [{0}] is not compatible with .NET {1}": "Operační systém [{0}] není kompatibilní s .NET {1}"
 "GLIBC [{0}] does not meet the minimum requirement {1} of .NET {2}": "GLIBC [{0}] nesplňuje minimální požadavek {1} pro .NET {2}"
-# 运行时消息补充词条
 "Stardust Data": "Stardust Data"
 "Data layer of the Stardust distributed service framework. Defines entity models and statistics jobs based on XCode ORM, supporting persistence and computation for node management, application management, configuration center, registry, monitoring center, and release center, compatible with multiple databases.": "Data layer of the Stardust distributed service framework. Defines entity models and statistics jobs based on XCode ORM, supporting persistence and computation for node management, application management, configuration center, registry, monitoring center, and release center, compatible with multiple databases."

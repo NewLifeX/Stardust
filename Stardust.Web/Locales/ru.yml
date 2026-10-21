@@ -83,11 +83,9 @@
 "Run cancelled.": "Запуск отменён."
 "Build command was not sent (node may not be ready).": "Команда сборки не отправлена (возможно, узел не готов)."
 "The run is already in a final state and cannot be cancelled.": "Запуск уже находится в конечном состоянии и не может быть отменён."
-# 运行时消息补充词条
 "Domain changed": "Домен изменён"
 "Domains changed: {0} -> {1}": "Домены изменены: {0} -> {1}"
-# 运行时消息补充词条
 "Stardust management portal": "Stardust management portal"
 "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries."
-# 运行时消息补充词条
 "Successfully deleted {0}": "{0} удалён"
+"Unknown tool: {0}": "Неизвестный инструмент: {0}"

@@ -142,7 +142,6 @@
 "Auto deploy was not triggered: no deploy node is selected for the pipeline.": "لم يتم تفعيل النشر التلقائي: لم يتم تحديد عقدة نشر لخط الأنابيب."
 "Deploy command dispatched to node {0} (CommandId={1}).": "تم إرسال أمر النشر إلى العقدة {0} (CommandId={1})."
 "Failed to dispatch the deploy command to node {0}: {1}": "فشل إرسال أمر النشر إلى العقدة {0}: {1}"
-# 运行时消息补充词条
 "Application authentication": "مصادقة التطبيق"
 "Application re-registered": "أُعيد تسجيل التطبيق"
 "Application registered": "تم تسجيل التطبيق"
@@ -173,14 +172,10 @@
 "MAC address mismatch (new != old): {0} != {1}": "عدم تطابق عنوان MAC (الجديد != القديم): {0} != {1}"
 "Disk serial number mismatch (new != old): {0} != {1}": "عدم تطابق الرقم التسلسلي للقرص (الجديد != القديم): {0} != {1}"
 "Version={0} Size={1:n0} Node={2}": "الإصدار={0} الحجم={1:n0} العقدة={2}"
-# 运行时消息补充词条
 "Associated online": "مرتبط ومتصل"
 "Dynamic registration": "تسجيل ديناميكي"
-# 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "لغة واجهة المستخدم، مثل zh-Hans أو zh-Hant أو en أو ja؛ اتركها فارغة لاكتشافها من كل طلب في مضيفات الويب ولاتباع لغة النظام في غير ذلك"
-# 运行时消息补充词条
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] سجّل الدخول في {2}، آخر نشاط في {3}"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "العقدة [{0}/{1}] شديدة التشابه بالعقدة الموجودة [{2}]؛ سيتم استخدام العقدة الموجودة"
-# 运行时消息补充词条
 "Stardust service platform": "Stardust service platform"
 "Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally.": "Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally."

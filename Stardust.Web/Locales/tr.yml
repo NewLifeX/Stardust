@@ -83,11 +83,9 @@
 "Run cancelled.": "Çalıştırma iptal edildi."
 "Build command was not sent (node may not be ready).": "Derleme komutu gönderilmedi (düğüm hazır olmayabilir)."
 "The run is already in a final state and cannot be cancelled.": "Çalıştırma zaten son durumda ve iptal edilemez."
-# 运行时消息补充词条
 "Domain changed": "Etki alanı değişti"
 "Domains changed: {0} -> {1}": "Etki alanları değişti: {0} -> {1}"
-# 运行时消息补充词条
 "Stardust management portal": "Stardust management portal"
 "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries."
-# 运行时消息补充词条
 "Successfully deleted {0}": "{0} silindi"
+"Unknown tool: {0}": "Bilinmeyen araç: {0}"

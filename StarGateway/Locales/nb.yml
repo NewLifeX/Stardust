@@ -22,7 +22,6 @@
 "StarGateway started, listening on port {0}, remote server {1}": "StarGateway er startet, lytter på port {0}, ekstern server {1}"
 # 运行时消息补充词条
 "Configuration refreshed.": "Konfigurasjonen er oppdatert."
-# 运行时消息补充词条
 "Failed to load the SSL certificate configuration: {0}": "Kunne ikke laste inn SSL-sertifikatkonfigurasjonen: {0}"
 "Failed to load certificate {0}: {1}": "Kunne ikke laste inn sertifikatet {0}: {1}"
 "Failed to load configuration from {0}: {1}": "Kunne ikke laste inn konfigurasjonen fra {0}: {1}"
@@ -42,6 +41,5 @@
 "Error forwarding to the client: {0}": "Feil ved videresending til klienten: {0}"
 "Directory: {0}": "Katalog: {0}"
 "Failed to read directory: {0}": "Kunne ikke lese katalogen: {0}"
-# 运行时消息补充词条
 "Stardust gateway": "Stardust gateway"
 "Stardust gateway proxy. Provides traffic forwarding and reverse proxy with dynamic route switching, and works with the Stardust registry for service discovery and load balancing in microservice gateway scenarios.": "Stardust gateway proxy. Provides traffic forwarding and reverse proxy with dynamic route switching, and works with the Stardust registry for service discovery and load balancing in microservice gateway scenarios."

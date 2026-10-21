@@ -83,11 +83,9 @@
 "Run cancelled.": "A futtatás megszakítva."
 "Build command was not sent (node may not be ready).": "Az összeállítási parancs nem lett elküldve (a csomópont esetleg nem kész)."
 "The run is already in a final state and cannot be cancelled.": "A futtatás már végállapotban van, és nem szakítható meg."
-# 运行时消息补充词条
 "Domain changed": "A tartomány megváltozott"
 "Domains changed: {0} -> {1}": "A tartományok megváltoztak: {0} -> {1}"
-# 运行时消息补充词条
 "Stardust management portal": "Stardust management portal"
 "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries."
-# 运行时消息补充词条
 "Successfully deleted {0}": "A(z) {0} törölve"
+"Unknown tool: {0}": "Ismeretlen eszköz: {0}"

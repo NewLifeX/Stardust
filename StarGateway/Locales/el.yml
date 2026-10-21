@@ -22,7 +22,6 @@
 "StarGateway started, listening on port {0}, remote server {1}": "Το StarGateway ξεκίνησε, ακρόαση στη θύρα {0}, απομακρυσμένος διακομιστής {1}"
 # 运行时消息补充词条
 "Configuration refreshed.": "Η διαμόρφωση ανανεώθηκε."
-# 运行时消息补充词条
 "Failed to load the SSL certificate configuration: {0}": "Αποτυχία φόρτωσης της ρύθμισης παραμέτρων πιστοποιητικού SSL: {0}"
 "Failed to load certificate {0}: {1}": "Αποτυχία φόρτωσης του πιστοποιητικού {0}: {1}"
 "Failed to load configuration from {0}: {1}": "Αποτυχία φόρτωσης ρυθμίσεων από {0}: {1}"
@@ -42,6 +41,5 @@
 "Error forwarding to the client: {0}": "Σφάλμα κατά την προώθηση στον πελάτη: {0}"
 "Directory: {0}": "Κατάλογος: {0}"
 "Failed to read directory: {0}": "Αποτυχία ανάγνωσης του καταλόγου: {0}"
-# 运行时消息补充词条
 "Stardust gateway": "Stardust gateway"
 "Stardust gateway proxy. Provides traffic forwarding and reverse proxy with dynamic route switching, and works with the Stardust registry for service discovery and load balancing in microservice gateway scenarios.": "Stardust gateway proxy. Provides traffic forwarding and reverse proxy with dynamic route switching, and works with the Stardust registry for service discovery and load balancing in microservice gateway scenarios."

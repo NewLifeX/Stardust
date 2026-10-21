@@ -203,7 +203,6 @@
 "Autorun requires a signed-in desktop; false by default uses the system service": "자동 실행은 데스크톱 로그인이 필요합니다. 기본값 false는 시스템 서비스를 사용합니다"
 "Unauthorized": "인증되지 않음"
 "Service manager not available": "서비스 관리자를 사용할 수 없습니다"
-# 运行时消息补充词条
 "Stardust agent self-healing completed: {0}": "Stardust 에이전트 자가 복구 완료: {0}"
 "Forced update completed; restarting the background service. PID={0}": "강제 업데이트가 완료되었습니다. 백그라운드 서비스를 다시 시작합니다. PID={0}"
 "The new version failed to start for the first time; retrying in {0}ms. {1}": "새 버전의 첫 시작에 실패했습니다. {0}ms 후에 다시 시도합니다. {1}"
@@ -229,6 +228,5 @@
 "Overwriting file {0}": "파일 {0} 덮어쓰는 중"
 "Overwriting directory {0}": "디렉터리 {0} 덮어쓰는 중"
 "Deleting shadow directory: {0}": "섀도 디렉터리 삭제 중: {0}"
-# 运行时消息补充词条
 "Stardust agent": "Stardust agent"
 "Node guardian agent for Stardust. Deployed on every application server or edge node, providing process supervision, remote deployment, performance metrics collection (CPU/memory/disk/network/GPU), log and metric reporting, and supporting Windows services, Linux systemd, and IoT edge environments.": "Node guardian agent for Stardust. Deployed on every application server or edge node, providing process supervision, remote deployment, performance metrics collection (CPU/memory/disk/network/GPU), log and metric reporting, and supporting Windows services, Linux systemd, and IoT edge environments."

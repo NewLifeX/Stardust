@@ -142,7 +142,6 @@
 "Auto deploy was not triggered: no deploy node is selected for the pipeline.": "自動配置は実行されませんでした。パイプラインで配置ノードが選択されていません。"
 "Deploy command dispatched to node {0} (CommandId={1}).": "ノード {0} に配置コマンドを送信しました（CommandId={1}）。"
 "Failed to dispatch the deploy command to node {0}: {1}": "ノード {0} への配置コマンド送信に失敗しました: {1}"
-# 运行时消息补充词条
 "Application authentication": "アプリケーション認証"
 "Application re-registered": "アプリケーション再登録"
 "Application registered": "アプリケーション登録"
@@ -173,21 +172,10 @@
 "MAC address mismatch (new != old): {0} != {1}": "MAC アドレスが一致しません（新 != 旧）: {0} != {1}"
 "Disk serial number mismatch (new != old): {0} != {1}": "ディスクのシリアル番号が一致しません（新 != 旧）: {0} != {1}"
 "Version={0} Size={1:n0} Node={2}": "バージョン={0} サイズ={1:n0} ノード={2}"
-# 运行时消息补充词条
 "Associated online": "オンライン関連付け"
 "Dynamic registration": "動的登録"
-# 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "UI 言語。例: zh-Hans、zh-Hant、en、ja。空の場合は Web ホストではリクエストごとに判定し、それ以外はシステム言語に従います"
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] は {2} にログインし、{3} に最後にアクティブでした"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "ノード [{0}/{1}] は既存のノード [{2}] と非常に類似しているため、既存のノードを使用します"
-# 运行时消息补充词条
 "Stardust service platform": "Stardust service platform"
 "Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally.": "Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally."

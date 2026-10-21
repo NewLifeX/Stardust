@@ -30,14 +30,11 @@
 "Production environment": "Môi trường sản xuất"
 "Local development": "Phát triển cục bộ"
 "Global shared configuration; other applications merge the configuration items of this application at startup": "Cấu hình chia sẻ toàn cục; các ứng dụng khác sẽ hợp nhất các mục cấu hình của ứng dụng này khi khởi động"
-# 运行时消息补充词条
 "Plugin server. Links are analyzed by keyword on this page and plugins are downloaded from it": "Máy chủ plugin. Liên kết được phân tích theo từ khóa trên trang này và plugin được tải xuống từ đó"
-# 运行时消息补充词条
 "Node cannot be empty.": "Nút không được để trống."
 "No matching package was found.": "Không tìm thấy gói phù hợp."
 "No matching package was found (version={0}, kind={1}).": "Không tìm thấy gói phù hợp (version={0}, kind={1})."
 "OS [{0}] is not compatible with .NET {1}": "Hệ điều hành [{0}] không tương thích với .NET {1}"
 "GLIBC [{0}] does not meet the minimum requirement {1} of .NET {2}": "GLIBC [{0}] không đáp ứng yêu cầu tối thiểu {1} của .NET {2}"
-# 运行时消息补充词条
 "Stardust Data": "Stardust Data"
 "Data layer of the Stardust distributed service framework. Defines entity models and statistics jobs based on XCode ORM, supporting persistence and computation for node management, application management, configuration center, registry, monitoring center, and release center, compatible with multiple databases.": "Data layer of the Stardust distributed service framework. Defines entity models and statistics jobs based on XCode ORM, supporting persistence and computation for node management, application management, configuration center, registry, monitoring center, and release center, compatible with multiple databases."

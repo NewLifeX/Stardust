@@ -83,11 +83,9 @@
 "Run cancelled.": "रन रद्द किया गया।"
 "Build command was not sent (node may not be ready).": "बिल्ड कमांड नहीं भेजा गया (नोड तैयार नहीं हो सकता)।"
 "The run is already in a final state and cannot be cancelled.": "रन पहले से अंतिम स्थिति में है और रद्द नहीं किया जा सकता।"
-# 运行时消息补充词条
 "Domain changed": "डोमेन बदल गया"
 "Domains changed: {0} -> {1}": "डोमेन बदले: {0} -> {1}"
-# 运行时消息补充词条
 "Stardust management portal": "Stardust management portal"
 "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries."
-# 运行时消息补充词条
 "Successfully deleted {0}": "{0} हटा दिया गया"
+"Unknown tool: {0}": "अज्ञात टूल: {0}"

@@ -22,7 +22,6 @@
 "StarGateway started, listening on port {0}, remote server {1}": "StarGateway प्रारंभ हुआ, पोर्ट {0} पर सुन रहा है, दूरस्थ सर्वर {1}"
 # 运行时消息补充词条
 "Configuration refreshed.": "कॉन्फ़िगरेशन रिफ़्रेश हुआ।"
-# 运行时消息补充词条
 "Failed to load the SSL certificate configuration: {0}": "SSL प्रमाणपत्र कॉन्फ़िगरेशन लोड करने में विफल: {0}"
 "Failed to load certificate {0}: {1}": "प्रमाणपत्र {0} लोड करने में विफल: {1}"
 "Failed to load configuration from {0}: {1}": "{0} से कॉन्फ़िगरेशन लोड करने में विफल: {1}"
@@ -42,6 +41,5 @@
 "Error forwarding to the client: {0}": "क्लाइंट को अग्रेषित करने में त्रुटि: {0}"
 "Directory: {0}": "निर्देशिका: {0}"
 "Failed to read directory: {0}": "निर्देशिका पढ़ने में विफल: {0}"
-# 运行时消息补充词条
 "Stardust gateway": "Stardust gateway"
 "Stardust gateway proxy. Provides traffic forwarding and reverse proxy with dynamic route switching, and works with the Stardust registry for service discovery and load balancing in microservice gateway scenarios.": "Stardust gateway proxy. Provides traffic forwarding and reverse proxy with dynamic route switching, and works with the Stardust registry for service discovery and load balancing in microservice gateway scenarios."

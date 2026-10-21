@@ -22,7 +22,6 @@
 "StarGateway started, listening on port {0}, remote server {1}": "StarGateway הופעל, מאזין על יציאה {0}, שרת מרוחק {1}"
 # 运行时消息补充词条
 "Configuration refreshed.": "התצורה רועננה."
-# 运行时消息补充词条
 "Failed to load the SSL certificate configuration: {0}": "טעינת תצורת תעודת ה-SSL נכשלה: {0}"
 "Failed to load certificate {0}: {1}": "טעינת התעודה {0} נכשלה: {1}"
 "Failed to load configuration from {0}: {1}": "טעינת התצורה מ-{0} נכשלה: {1}"
@@ -42,6 +41,5 @@
 "Error forwarding to the client: {0}": "שגיאה בהעברה ללקוח: {0}"
 "Directory: {0}": "ספרייה: {0}"
 "Failed to read directory: {0}": "קריאת הספרייה נכשלה: {0}"
-# 运行时消息补充词条
 "Stardust gateway": "Stardust gateway"
 "Stardust gateway proxy. Provides traffic forwarding and reverse proxy with dynamic route switching, and works with the Stardust registry for service discovery and load balancing in microservice gateway scenarios.": "Stardust gateway proxy. Provides traffic forwarding and reverse proxy with dynamic route switching, and works with the Stardust registry for service discovery and load balancing in microservice gateway scenarios."

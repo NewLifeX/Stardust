@@ -204,7 +204,6 @@
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "Käyttöliittymän kieli, esimerkiksi zh-Hans, zh-Hant, en tai ja; jätä tyhjäksi käyttääksesi järjestelmän kieltä"
 "Service removed or disabled": "Palvelu poistettu tai poistettu käytöstä"
 "Configuration changed": "Määritys muuttui"
-# 运行时消息补充词条
 "Unsupported health check protocol: {0}": "Tilankäynnin tarkistusprotokolla ei ole tuettu: {0}"
 "Health check error: {0} - {1}": "Virhe tilankäynnin tarkistuksessa: {0} - {1}"
 "Health check failed: {0} - {1}": "Tilankäynnin tarkistus epäonnistui: {0} - {1}"
@@ -221,6 +220,5 @@
 "Invalid parameter.": "Virheellinen parametri."
 "Succeeded": "Onnistui"
 "File [{0}] changed; stopping the application and starting it {1}ms later": "Tiedosto [{0}] muuttui; sovellus pysäytetään ja käynnistetään {1} ms kuluttua"
-# 运行时消息补充词条
 "Stardust distributed core": "Stardust distributed core"
 "Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting.": "Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting."

@@ -83,11 +83,9 @@
 "Run cancelled.": "Execuție anulată."
 "Build command was not sent (node may not be ready).": "Comanda de compilare nu a fost trimisă (este posibil ca nodul să nu fie pregătit)."
 "The run is already in a final state and cannot be cancelled.": "Execuția este deja într-o stare finală și nu poate fi anulată."
-# 运行时消息补充词条
 "Domain changed": "Domeniu modificat"
 "Domains changed: {0} -> {1}": "Domenii modificate: {0} -> {1}"
-# 运行时消息补充词条
 "Stardust management API": "Stardust management API"
 "Decoupled WebApi backend for the Stardust distributed service platform. Reuses the area controllers and business services of Stardust.Web while exposing only JSON endpoints (GetPage/GetFields/Insert/Update/Delete and custom actions of EntityController), without Razor views, MCP, or static sites, for direct use by the Stardust.Web.Vue frontend.": "Decoupled WebApi backend for the Stardust distributed service platform. Reuses the area controllers and business services of Stardust.Web while exposing only JSON endpoints (GetPage/GetFields/Insert/Update/Delete and custom actions of EntityController), without Razor views, MCP, or static sites, for direct use by the Stardust.Web.Vue frontend."
-# 运行时消息补充词条
 "Successfully deleted {0}": "{0} a fost șters"
+"Unknown tool: {0}": "Instrument necunoscut: {0}"

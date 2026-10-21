@@ -83,11 +83,9 @@
 "Run cancelled.": "اجرا لغو شد."
 "Build command was not sent (node may not be ready).": "دستور ساخت ارسال نشد (ممکن است گره آماده نباشد)."
 "The run is already in a final state and cannot be cancelled.": "اجرا از قبل در وضعیت نهایی است و لغو نمی‌شود."
-# 运行时消息补充词条
 "Domain changed": "دامنه تغییر کرد"
 "Domains changed: {0} -> {1}": "دامنه‌ها تغییر کرد: {0} -> {1}"
-# 运行时消息补充词条
 "Stardust management portal": "Stardust management portal"
 "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries."
-# 运行时消息补充词条
 "Successfully deleted {0}": "{0} حذف شد"
+"Unknown tool: {0}": "ابزار ناشناخته: {0}"

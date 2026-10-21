@@ -203,7 +203,6 @@
 "Autorun requires a signed-in desktop; false by default uses the system service": "يتطلب التشغيل التلقائي تسجيل الدخول إلى سطح المكتب؛ القيمة الافتراضية false تستخدم خدمة النظام"
 "Unauthorized": "غير مصرح"
 "Service manager not available": "مدير الخدمات غير متوفر"
-# 运行时消息补充词条
 "Stardust agent self-healing completed: {0}": "اكتمل الإصلاح الذاتي لوكيل Stardust: {0}"
 "Forced update completed; restarting the background service. PID={0}": "اكتمل التحديث الإجباري؛ إعادة تشغيل خدمة الخلفية. PID={0}"
 "The new version failed to start for the first time; retrying in {0}ms. {1}": "فشل تشغيل الإصدار الجديد في المرة الأولى؛ ستتم إعادة المحاولة خلال {0}ms. {1}"
@@ -229,6 +228,5 @@
 "Overwriting file {0}": "جارٍ الكتابة فوق الملف {0}"
 "Overwriting directory {0}": "جارٍ الكتابة فوق الدليل {0}"
 "Deleting shadow directory: {0}": "جارٍ حذف الدليل الظلي: {0}"
-# 运行时消息补充词条
 "Stardust agent": "Stardust agent"
 "Node guardian agent for Stardust. Deployed on every application server or edge node, providing process supervision, remote deployment, performance metrics collection (CPU/memory/disk/network/GPU), log and metric reporting, and supporting Windows services, Linux systemd, and IoT edge environments.": "Node guardian agent for Stardust. Deployed on every application server or edge node, providing process supervision, remote deployment, performance metrics collection (CPU/memory/disk/network/GPU), log and metric reporting, and supporting Windows services, Linux systemd, and IoT edge environments."

@@ -203,7 +203,6 @@
 "Autorun requires a signed-in desktop; false by default uses the system service": "Автозапуск потребує входу в систему; типове false використовує системну службу"
 "Unauthorized": "Не авторизовано"
 "Service manager not available": "Менеджер служб недоступний"
-# 运行时消息补充词条
 "Stardust agent self-healing completed: {0}": "Самовідновлення агента Stardust завершено: {0}"
 "Forced update completed; restarting the background service. PID={0}": "Примусове оновлення завершено; перезапуск фонової служби. PID={0}"
 "The new version failed to start for the first time; retrying in {0}ms. {1}": "Нова версія не запустилася з першого разу; повторна спроба через {0}мс. {1}"
@@ -229,6 +228,5 @@
 "Overwriting file {0}": "Перезапис файлу {0}"
 "Overwriting directory {0}": "Перезапис каталогу {0}"
 "Deleting shadow directory: {0}": "Видалення тіньового каталогу: {0}"
-# 运行时消息补充词条
 "Stardust agent": "Stardust agent"
 "Node guardian agent for Stardust. Deployed on every application server or edge node, providing process supervision, remote deployment, performance metrics collection (CPU/memory/disk/network/GPU), log and metric reporting, and supporting Windows services, Linux systemd, and IoT edge environments.": "Node guardian agent for Stardust. Deployed on every application server or edge node, providing process supervision, remote deployment, performance metrics collection (CPU/memory/disk/network/GPU), log and metric reporting, and supporting Windows services, Linux systemd, and IoT edge environments."

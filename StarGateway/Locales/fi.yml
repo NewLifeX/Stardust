@@ -22,7 +22,6 @@
 "StarGateway started, listening on port {0}, remote server {1}": "StarGateway käynnistetty, kuuntelee porttia {0}, etäpalvelin {1}"
 # 运行时消息补充词条
 "Configuration refreshed.": "Määritys päivitetty."
-# 运行时消息补充词条
 "Failed to load the SSL certificate configuration: {0}": "SSL-varmenteen määrityksen lataus epäonnistui: {0}"
 "Failed to load certificate {0}: {1}": "Varmenteen {0} lataus epäonnistui: {1}"
 "Failed to load configuration from {0}: {1}": "Määrityksen lataus kohteesta {0} epäonnistui: {1}"
@@ -42,6 +41,5 @@
 "Error forwarding to the client: {0}": "Virhe edelleenlähetyksessä asiakkaalle: {0}"
 "Directory: {0}": "Hakemisto: {0}"
 "Failed to read directory: {0}": "Hakemiston lukeminen epäonnistui: {0}"
-# 运行时消息补充词条
 "Stardust gateway": "Stardust gateway"
 "Stardust gateway proxy. Provides traffic forwarding and reverse proxy with dynamic route switching, and works with the Stardust registry for service discovery and load balancing in microservice gateway scenarios.": "Stardust gateway proxy. Provides traffic forwarding and reverse proxy with dynamic route switching, and works with the Stardust registry for service discovery and load balancing in microservice gateway scenarios."

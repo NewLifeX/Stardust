@@ -30,14 +30,11 @@
 "Production environment": "Mediu de producție"
 "Local development": "Dezvoltare locală"
 "Global shared configuration; other applications merge the configuration items of this application at startup": "Configurare partajată global; alte aplicații îmbină elementele de configurare ale acestei aplicații la pornire"
-# 运行时消息补充词条
 "Plugin server. Links are analyzed by keyword on this page and plugins are downloaded from it": "Server de pluginuri. Linkurile sunt analizate după cuvinte cheie pe această pagină, iar pluginurile sunt descărcate de acolo"
-# 运行时消息补充词条
 "Node cannot be empty.": "Nodul nu poate fi gol."
 "No matching package was found.": "Nu a fost găsit niciun pachet corespunzător."
 "No matching package was found (version={0}, kind={1}).": "Nu a fost găsit niciun pachet corespunzător (version={0}, kind={1})."
 "OS [{0}] is not compatible with .NET {1}": "Sistemul de operare [{0}] nu este compatibil cu .NET {1}"
 "GLIBC [{0}] does not meet the minimum requirement {1} of .NET {2}": "GLIBC [{0}] nu îndeplinește cerința minimă {1} pentru .NET {2}"
-# 运行时消息补充词条
 "Stardust Data": "Stardust Data"
 "Data layer of the Stardust distributed service framework. Defines entity models and statistics jobs based on XCode ORM, supporting persistence and computation for node management, application management, configuration center, registry, monitoring center, and release center, compatible with multiple databases.": "Data layer of the Stardust distributed service framework. Defines entity models and statistics jobs based on XCode ORM, supporting persistence and computation for node management, application management, configuration center, registry, monitoring center, and release center, compatible with multiple databases."

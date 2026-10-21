@@ -142,7 +142,6 @@
 "Auto deploy was not triggered: no deploy node is selected for the pipeline.": "استقرار خودکار فعال نشد: هیچ گره استقراری برای پایپ‌لاین انتخاب نشده است."
 "Deploy command dispatched to node {0} (CommandId={1}).": "دستور استقرار به گره {0} ارسال شد (CommandId={1})."
 "Failed to dispatch the deploy command to node {0}: {1}": "ارسال دستور استقرار به گره {0} ناموفق بود: {1}"
-# 运行时消息补充词条
 "Application authentication": "احراز هویت برنامه"
 "Application re-registered": "برنامه مجدداً ثبت شد"
 "Application registered": "برنامه ثبت شد"
@@ -173,14 +172,10 @@
 "MAC address mismatch (new != old): {0} != {1}": "ناسازگاری آدرس MAC (جدید != قدیم): {0} != {1}"
 "Disk serial number mismatch (new != old): {0} != {1}": "ناسازگاری شماره سریال دیسک (جدید != قدیم): {0} != {1}"
 "Version={0} Size={1:n0} Node={2}": "نسخه={0} اندازه={1:n0} گره={2}"
-# 运行时消息补充词条
 "Associated online": "مرتبط و آنلاین"
 "Dynamic registration": "ثبت پویا"
-# 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "زبان رابط کاربری، مثلاً zh-Hans، zh-Hant، en یا ja؛ برای تشخیص از هر درخواست در میزبان‌های وب و در غیر این صورت پیروی از زبان سیستم خالی بگذارید"
-# 运行时消息补充词条
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] در {2} وارد شد، آخرین فعالیت در {3}"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "گره [{0}/{1}] بسیار شبیه به گره موجود [{2}] است؛ از گره موجود استفاده می‌شود"
-# 运行时消息补充词条
 "Stardust service platform": "Stardust service platform"
 "Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally.": "Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally."

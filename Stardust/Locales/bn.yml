@@ -204,7 +204,6 @@
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "UI ভাষা, উদাহরণ zh-Hans, zh-Hant, en বা ja; সিস্টেম ভাষা অনুসরণ করতে খালি রাখুন"
 "Service removed or disabled": "সেবা সরানো বা নিষ্ক্রিয় করা হয়েছে"
 "Configuration changed": "কনফিগারেশন পরিবর্তিত হয়েছে"
-# 运行时消息补充词条
 "Unsupported health check protocol: {0}": "অসমর্থিত স্বাস্থ্য পরীক্ষা প্রোটোকল: {0}"
 "Health check error: {0} - {1}": "স্বাস্থ্য পরীক্ষায় ত্রুটি: {0} - {1}"
 "Health check failed: {0} - {1}": "স্বাস্থ্য পরীক্ষা ব্যর্থ: {0} - {1}"
@@ -221,6 +220,5 @@
 "Invalid parameter.": "অবৈধ প্যারামিটার।"
 "Succeeded": "সফল"
 "File [{0}] changed; stopping the application and starting it {1}ms later": "ফাইল [{0}] পরিবর্তিত হয়েছে; অ্যাপ্লিকেশনটি থামানো হচ্ছে এবং {1}ms পরে চালু হবে"
-# 运行时消息补充词条
 "Stardust distributed core": "Stardust distributed core"
 "Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting.": "Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting."

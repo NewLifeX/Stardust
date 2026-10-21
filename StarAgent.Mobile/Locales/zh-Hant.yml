@@ -5,6 +5,5 @@
 # 运行时消息补充词条
 "The current platform ({0}) does not support this command": "目前平台（{0}）不支援該指令"
 "Parameter is empty.": "參數為空"
-# 运行时消息补充词条
 "Stardust mobile agent core": "星塵行動代理核心"
 "Shared core of the Stardust agent for mobile platforms. Provides platform-independent login, heartbeat, device information collection, and command dispatch for Android and iOS hosts.": "星塵代理行動端共用核心。提供登入心跳、裝置資訊採集、命令下發的平台無關實作，供 Android 與 iOS 主機重用。"

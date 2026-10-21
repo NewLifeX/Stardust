@@ -83,11 +83,9 @@
 "Run cancelled.": "ยกเลิกการรันแล้ว"
 "Build command was not sent (node may not be ready).": "ไม่ได้ส่งคำสั่งบิลด์ (โหนดอาจยังไม่พร้อม)"
 "The run is already in a final state and cannot be cancelled.": "การรันอยู่ในสถานะสิ้นสุดแล้ว จึงยกเลิกไม่ได้"
-# 运行时消息补充词条
 "Domain changed": "โดเมนเปลี่ยนแล้ว"
 "Domains changed: {0} -> {1}": "โดเมนเปลี่ยน: {0} -> {1}"
-# 运行时消息补充词条
 "Stardust management portal": "Stardust management portal"
 "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries."
-# 运行时消息补充词条
 "Successfully deleted {0}": "ลบ {0} แล้ว"
+"Unknown tool: {0}": "เครื่องมือที่ไม่รู้จัก: {0}"

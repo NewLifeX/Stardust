@@ -83,11 +83,9 @@
 "Run cancelled.": "Spuštění zrušeno."
 "Build command was not sent (node may not be ready).": "Příkaz sestavení nebyl odeslán (uzel nemusí být připraven)."
 "The run is already in a final state and cannot be cancelled.": "Spuštění je již v konečném stavu a nelze jej zrušit."
-# 运行时消息补充词条
 "Domain changed": "Doména změněna"
 "Domains changed: {0} -> {1}": "Domény změněny: {0} -> {1}"
-# 运行时消息补充词条
 "Stardust management API": "Stardust management API"
 "Decoupled WebApi backend for the Stardust distributed service platform. Reuses the area controllers and business services of Stardust.Web while exposing only JSON endpoints (GetPage/GetFields/Insert/Update/Delete and custom actions of EntityController), without Razor views, MCP, or static sites, for direct use by the Stardust.Web.Vue frontend.": "Decoupled WebApi backend for the Stardust distributed service platform. Reuses the area controllers and business services of Stardust.Web while exposing only JSON endpoints (GetPage/GetFields/Insert/Update/Delete and custom actions of EntityController), without Razor views, MCP, or static sites, for direct use by the Stardust.Web.Vue frontend."
-# 运行时消息补充词条
 "Successfully deleted {0}": "{0} byl odstraněn"
+"Unknown tool: {0}": "Neznámý nástroj: {0}"

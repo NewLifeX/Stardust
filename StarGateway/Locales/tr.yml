@@ -22,7 +22,6 @@
 "StarGateway started, listening on port {0}, remote server {1}": "StarGateway başlatıldı, {0} portu dinleniyor, uzak sunucu {1}"
 # 运行时消息补充词条
 "Configuration refreshed.": "Yapılandırma yenilendi."
-# 运行时消息补充词条
 "Failed to load the SSL certificate configuration: {0}": "SSL sertifikası yapılandırması yüklenemedi: {0}"
 "Failed to load certificate {0}: {1}": "Sertifika {0} yüklenemedi: {1}"
 "Failed to load configuration from {0}: {1}": "{0} kaynağından yapılandırma yüklenemedi: {1}"
@@ -42,6 +41,5 @@
 "Error forwarding to the client: {0}": "İstemciye iletme sırasında hata: {0}"
 "Directory: {0}": "Dizin: {0}"
 "Failed to read directory: {0}": "Dizin okunamadı: {0}"
-# 运行时消息补充词条
 "Stardust gateway": "Stardust gateway"
 "Stardust gateway proxy. Provides traffic forwarding and reverse proxy with dynamic route switching, and works with the Stardust registry for service discovery and load balancing in microservice gateway scenarios.": "Stardust gateway proxy. Provides traffic forwarding and reverse proxy with dynamic route switching, and works with the Stardust registry for service discovery and load balancing in microservice gateway scenarios."

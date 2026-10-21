@@ -142,7 +142,6 @@
 "Auto deploy was not triggered: no deploy node is selected for the pipeline.": "פריסה אוטומטית לא הופעלה: לא נבחר צומת פריסה לצינור."
 "Deploy command dispatched to node {0} (CommandId={1}).": "פקודת הפריסה נשלחה לצומת {0} (CommandId={1})."
 "Failed to dispatch the deploy command to node {0}: {1}": "שליחת פקודת הפריסה לצומת {0} נכשלה: {1}"
-# 运行时消息补充词条
 "Application authentication": "אימות יישום"
 "Application re-registered": "היישום נרשם מחדש"
 "Application registered": "היישום נרשם"
@@ -173,14 +172,10 @@
 "MAC address mismatch (new != old): {0} != {1}": "אי התאמה בכתובת MAC (חדש != ישן): {0} != {1}"
 "Disk serial number mismatch (new != old): {0} != {1}": "אי התאמה במספר הסידורי של הדיסק (חדש != ישן): {0} != {1}"
 "Version={0} Size={1:n0} Node={2}": "גרסה={0} גודל={1:n0} צומת={2}"
-# 运行时消息补充词条
 "Associated online": "משויך ומקוון"
 "Dynamic registration": "רישום דינמי"
-# 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "שפת ממשק המשתמש, לדוגמה zh-Hans, zh-Hant, en או ja; השאירו ריק כדי לזהות מכל בקשה במארחי אינטרנט ולעקוב אחר שפת המערכת אחרת"
-# 运行时消息补充词条
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] התחבר ב-{2}, פעיל לאחרונה ב-{3}"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "הצומת [{0}/{1}] דומה מאוד לצומת הקיים [{2}]; הצומת הקיים ישמש"
-# 运行时消息补充词条
 "Stardust service platform": "Stardust service platform"
 "Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally.": "Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally."

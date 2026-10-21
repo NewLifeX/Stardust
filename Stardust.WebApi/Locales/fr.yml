@@ -83,11 +83,9 @@
 "Run cancelled.": "Exécution annulée."
 "Build command was not sent (node may not be ready).": "La commande de build n'a pas été envoyée (le nœud n'est peut-être pas prêt)."
 "The run is already in a final state and cannot be cancelled.": "L'exécution est déjà dans un état final et ne peut pas être annulée."
-# 运行时消息补充词条
 "Domain changed": "Domaine modifié"
 "Domains changed: {0} -> {1}": "Domaines modifiés : {0} -> {1}"
-# 运行时消息补充词条
 "Stardust management API": "Stardust management API"
 "Decoupled WebApi backend for the Stardust distributed service platform. Reuses the area controllers and business services of Stardust.Web while exposing only JSON endpoints (GetPage/GetFields/Insert/Update/Delete and custom actions of EntityController), without Razor views, MCP, or static sites, for direct use by the Stardust.Web.Vue frontend.": "Decoupled WebApi backend for the Stardust distributed service platform. Reuses the area controllers and business services of Stardust.Web while exposing only JSON endpoints (GetPage/GetFields/Insert/Update/Delete and custom actions of EntityController), without Razor views, MCP, or static sites, for direct use by the Stardust.Web.Vue frontend."
-# 运行时消息补充词条
 "Successfully deleted {0}": "{0} a été supprimé"
+"Unknown tool: {0}": "Outil inconnu : {0}"

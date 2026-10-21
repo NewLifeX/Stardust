@@ -203,7 +203,6 @@
 "Autorun requires a signed-in desktop; false by default uses the system service": "Automatické spuštění vyžaduje přihlášenou plochu; výchozí false používá systémovou službu"
 "Unauthorized": "Neautorizováno"
 "Service manager not available": "Správce služeb není k dispozici"
-# 运行时消息补充词条
 "Stardust agent self-healing completed: {0}": "Samoobnova agenta Stardust dokončena: {0}"
 "Forced update completed; restarting the background service. PID={0}": "Vynucená aktualizace dokončena; restartuje se služba na pozadí. PID={0}"
 "The new version failed to start for the first time; retrying in {0}ms. {1}": "Nová verze se napoprvé nespustila; opakování za {0} ms. {1}"
@@ -229,6 +228,5 @@
 "Overwriting file {0}": "Přepisování souboru {0}"
 "Overwriting directory {0}": "Přepisování adresáře {0}"
 "Deleting shadow directory: {0}": "Mazání stínového adresáře: {0}"
-# 运行时消息补充词条
 "Stardust agent": "Stardust agent"
 "Node guardian agent for Stardust. Deployed on every application server or edge node, providing process supervision, remote deployment, performance metrics collection (CPU/memory/disk/network/GPU), log and metric reporting, and supporting Windows services, Linux systemd, and IoT edge environments.": "Node guardian agent for Stardust. Deployed on every application server or edge node, providing process supervision, remote deployment, performance metrics collection (CPU/memory/disk/network/GPU), log and metric reporting, and supporting Windows services, Linux systemd, and IoT edge environments."

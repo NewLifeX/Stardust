@@ -22,7 +22,6 @@
 "StarGateway started, listening on port {0}, remote server {1}": "StarGateway가 시작되었습니다. 포트 {0}에서 수신 중, 원격 서버 {1}"
 # 运行时消息补充词条
 "Configuration refreshed.": "구성을 새로 고쳤습니다."
-# 运行时消息补充词条
 "Failed to load the SSL certificate configuration: {0}": "SSL 인증서 구성을 로드하지 못했습니다: {0}"
 "Failed to load certificate {0}: {1}": "인증서 {0}을(를) 로드하지 못했습니다: {1}"
 "Failed to load configuration from {0}: {1}": "{0}에서 구성을 로드하지 못했습니다: {1}"
@@ -42,6 +41,5 @@
 "Error forwarding to the client: {0}": "클라이언트로 전달 중 오류 발생: {0}"
 "Directory: {0}": "디렉터리: {0}"
 "Failed to read directory: {0}": "디렉터리를 읽지 못했습니다: {0}"
-# 运行时消息补充词条
 "Stardust gateway": "Stardust gateway"
 "Stardust gateway proxy. Provides traffic forwarding and reverse proxy with dynamic route switching, and works with the Stardust registry for service discovery and load balancing in microservice gateway scenarios.": "Stardust gateway proxy. Provides traffic forwarding and reverse proxy with dynamic route switching, and works with the Stardust registry for service discovery and load balancing in microservice gateway scenarios."

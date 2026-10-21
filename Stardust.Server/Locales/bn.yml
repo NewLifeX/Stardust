@@ -142,7 +142,6 @@
 "Auto deploy was not triggered: no deploy node is selected for the pipeline.": "অটো ডিপ্লয় ট্রিগার হয়নি: পাইপলাইনের জন্য কোনো ডিপ্লয় নোড নির্বাচন করা হয়নি।"
 "Deploy command dispatched to node {0} (CommandId={1}).": "ডিপ্লয় কমান্ড নোড {0} এ পাঠানো হয়েছে (CommandId={1})।"
 "Failed to dispatch the deploy command to node {0}: {1}": "নোড {0} এ ডিপ্লয় কমান্ড পাঠাতে ব্যর্থ: {1}"
-# 运行时消息补充词条
 "Application authentication": "অ্যাপ্লিকেশন প্রমাণীকরণ"
 "Application re-registered": "অ্যাপ্লিকেশন পুনঃনিবন্ধিত"
 "Application registered": "অ্যাপ্লিকেশন নিবন্ধিত"
@@ -173,14 +172,10 @@
 "MAC address mismatch (new != old): {0} != {1}": "MAC ঠিকানা মেলেনি (নতুন != পুরোনো): {0} != {1}"
 "Disk serial number mismatch (new != old): {0} != {1}": "ডিস্ক সিরিয়াল নম্বর মেলেনি (নতুন != পুরোনো): {0} != {1}"
 "Version={0} Size={1:n0} Node={2}": "সংস্করণ={0} আকার={1:n0} নোড={2}"
-# 运行时消息补充词条
 "Associated online": "সংযুক্ত অনলাইন"
 "Dynamic registration": "ডায়নামিক নিবন্ধন"
-# 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "UI ভাষা, উদাহরণ zh-Hans, zh-Hant, en বা ja; ওয়েব হোস্টে প্রতিটি অনুরোধ থেকে শনাক্ত করতে এবং অন্যথায় সিস্টেম ভাষা অনুসরণ করতে খালি রাখুন"
-# 运行时消息补充词条
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] {2} এ লগ ইন করেছে, সর্বশেষ সক্রিয় {3}"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "নোড [{0}/{1}] বিদ্যমান নোড [{2}] এর সাথে খুব মিল; বিদ্যমান নোডটি ব্যবহার করা হবে"
-# 运行时消息补充词条
 "Stardust service platform": "Stardust service platform"
 "Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally.": "Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally."

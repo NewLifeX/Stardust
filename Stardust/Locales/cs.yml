@@ -204,7 +204,6 @@
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "Jazyk rozhraní, například zh-Hans, zh-Hant, en nebo ja; ponechte prázdné pro použití systémového jazyka"
 "Service removed or disabled": "Služba odebrána nebo zakázána"
 "Configuration changed": "Konfigurace změněna"
-# 运行时消息补充词条
 "Unsupported health check protocol: {0}": "Nepodporovaný protokol kontroly stavu: {0}"
 "Health check error: {0} - {1}": "Chyba kontroly stavu: {0} - {1}"
 "Health check failed: {0} - {1}": "Kontrola stavu selhala: {0} - {1}"
@@ -221,6 +220,5 @@
 "Invalid parameter.": "Neplatný parametr."
 "Succeeded": "Úspěch"
 "File [{0}] changed; stopping the application and starting it {1}ms later": "Soubor [{0}] se změnil; aplikace se zastaví a spustí za {1} ms"
-# 运行时消息补充词条
 "Stardust distributed core": "Stardust distributed core"
 "Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting.": "Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting."

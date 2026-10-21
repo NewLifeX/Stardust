@@ -204,7 +204,6 @@
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "Γλώσσα διεπαφής, για παράδειγμα zh-Hans, zh-Hant, en ή ja· αφήστε κενό για να ακολουθείται η γλώσσα του συστήματος"
 "Service removed or disabled": "Η υπηρεσία αφαιρέθηκε ή απενεργοποιήθηκε"
 "Configuration changed": "Η διαμόρφωση άλλαξε"
-# 运行时消息补充词条
 "Unsupported health check protocol: {0}": "Μη υποστηριζόμενο πρωτόκολλο ελέγχου εύρυθμης λειτουργίας: {0}"
 "Health check error: {0} - {1}": "Σφάλμα ελέγχου εύρυθμης λειτουργίας: {0} - {1}"
 "Health check failed: {0} - {1}": "Ο έλεγχος εύρυθμης λειτουργίας απέτυχε: {0} - {1}"
@@ -221,6 +220,5 @@
 "Invalid parameter.": "Μη έγκυρη παράμετρος."
 "Succeeded": "Επιτυχία"
 "File [{0}] changed; stopping the application and starting it {1}ms later": "Το αρχείο [{0}] άλλαξε· η εφαρμογή σταματά και ξεκινά σε {1}ms"
-# 运行时消息补充词条
 "Stardust distributed core": "Stardust distributed core"
 "Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting.": "Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting."

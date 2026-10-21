@@ -142,7 +142,6 @@
 "Auto deploy was not triggered: no deploy node is selected for the pipeline.": "Không kích hoạt tự động triển khai: pipeline chưa chọn node triển khai."
 "Deploy command dispatched to node {0} (CommandId={1}).": "Đã gửi lệnh triển khai tới node {0} (CommandId={1})."
 "Failed to dispatch the deploy command to node {0}: {1}": "Gửi lệnh triển khai tới node {0} thất bại: {1}"
-# 运行时消息补充词条
 "Application authentication": "Xác thực ứng dụng"
 "Application re-registered": "Ứng dụng đã đăng ký lại"
 "Application registered": "Ứng dụng đã đăng ký"
@@ -173,14 +172,10 @@
 "MAC address mismatch (new != old): {0} != {1}": "Địa chỉ MAC không khớp (mới != cũ): {0} != {1}"
 "Disk serial number mismatch (new != old): {0} != {1}": "Số sê-ri ổ đĩa không khớp (mới != cũ): {0} != {1}"
 "Version={0} Size={1:n0} Node={2}": "Phiên bản={0} Kích thước={1:n0} Node={2}"
-# 运行时消息补充词条
 "Associated online": "Liên kết trực tuyến"
 "Dynamic registration": "Đăng ký động"
-# 运行时消息补充词条
 "UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "Ngôn ngữ giao diện, ví dụ zh-Hans, zh-Hant, en hoặc ja; để trống để phát hiện từ từng yêu cầu trên máy chủ web và theo ngôn ngữ hệ thống trong các trường hợp khác"
-# 运行时消息补充词条
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] đăng nhập lúc {2}, hoạt động lần cuối lúc {3}"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "Nút [{0}/{1}] rất giống với nút hiện có [{2}]; sẽ sử dụng nút hiện có"
-# 运行时消息补充词条
 "Stardust service platform": "Stardust service platform"
 "Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally.": "Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally."

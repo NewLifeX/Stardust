@@ -22,7 +22,6 @@
 "StarGateway started, listening on port {0}, remote server {1}": "StarGateway آغاز شد، شنود روی پورت {0}، سرور راه دور {1}"
 # 运行时消息补充词条
 "Configuration refreshed.": "پیکربندی بازخوانی شد."
-# 运行时消息补充词条
 "Failed to load the SSL certificate configuration: {0}": "بارگذاری پیکربندی گواهی SSL ناموفق بود: {0}"
 "Failed to load certificate {0}: {1}": "بارگذاری گواهی {0} ناموفق بود: {1}"
 "Failed to load configuration from {0}: {1}": "بارگذاری پیکربندی از {0} ناموفق بود: {1}"
@@ -42,6 +41,5 @@
 "Error forwarding to the client: {0}": "خطا در ارسال به سرویس‌گیرنده: {0}"
 "Directory: {0}": "پوشه: {0}"
 "Failed to read directory: {0}": "خواندن پوشه ناموفق بود: {0}"
-# 运行时消息补充词条
 "Stardust gateway": "Stardust gateway"
 "Stardust gateway proxy. Provides traffic forwarding and reverse proxy with dynamic route switching, and works with the Stardust registry for service discovery and load balancing in microservice gateway scenarios.": "Stardust gateway proxy. Provides traffic forwarding and reverse proxy with dynamic route switching, and works with the Stardust registry for service discovery and load balancing in microservice gateway scenarios."

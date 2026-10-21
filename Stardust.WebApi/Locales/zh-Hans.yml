@@ -83,11 +83,9 @@
 "Run cancelled.": "运行已取消"
 "Build command was not sent (node may not be ready).": "编译命令未发出（节点可能未就绪）"
 "The run is already in a final state and cannot be cancelled.": "运行已处于终态，无法取消"
-# 运行时消息补充词条
 "Domain changed": "修改域名"
 "Domains changed: {0} -> {1}": "域名变更：{0} -> {1}"
-# 运行时消息补充词条
 "Stardust management API": "星尘管理平台 API"
 "Decoupled WebApi backend for the Stardust distributed service platform. Reuses the area controllers and business services of Stardust.Web while exposing only JSON endpoints (GetPage/GetFields/Insert/Update/Delete and custom actions of EntityController), without Razor views, MCP, or static sites, for direct use by the Stardust.Web.Vue frontend.": "星尘分布式服务平台的解耦 WebApi 后端。复用 Stardust.Web 的区域控制器与业务服务，仅暴露 JSON 接口（EntityController 的 GetPage/GetFields/Insert/Update/Delete 及自定义 Action），剥离 Razor 视图、MCP 与静态站点，供 Stardust.Web.Vue 前端直接对接。"
-# 运行时消息补充词条
 "Successfully deleted {0}": "已删除 {0}"
+"Unknown tool: {0}": "未知工具：{0}"

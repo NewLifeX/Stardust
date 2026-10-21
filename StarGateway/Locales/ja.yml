@@ -22,16 +22,6 @@
 "StarGateway started, listening on port {0}, remote server {1}": "StarGateway を起動しました。ポート {0} で待機中、リモートサーバー {1}"
 # 运行时消息补充词条
 "Configuration refreshed.": "構成を更新しました。"
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
-# 运行时消息补充词条
 "Failed to load the SSL certificate configuration: {0}": "SSL 証明書の構成を読み込めませんでした: {0}"
 "Failed to load certificate {0}: {1}": "証明書 {0} の読み込みに失敗しました: {1}"
 "Failed to load configuration from {0}: {1}": "{0} から構成を読み込めませんでした: {1}"
@@ -51,6 +41,5 @@
 "Error forwarding to the client: {0}": "クライアントへの転送中にエラーが発生しました: {0}"
 "Directory: {0}": "ディレクトリ: {0}"
 "Failed to read directory: {0}": "ディレクトリの読み取りに失敗しました: {0}"
-# 运行时消息补充词条
 "Stardust gateway": "Stardust gateway"
 "Stardust gateway proxy. Provides traffic forwarding and reverse proxy with dynamic route switching, and works with the Stardust registry for service discovery and load balancing in microservice gateway scenarios.": "Stardust gateway proxy. Provides traffic forwarding and reverse proxy with dynamic route switching, and works with the Stardust registry for service discovery and load balancing in microservice gateway scenarios."

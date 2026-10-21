@@ -30,14 +30,11 @@
 "Production environment": "正式環境"
 "Local development": "本機開發"
 "Global shared configuration; other applications merge the configuration items of this application at startup": "全域通用設定，其它應用啟動合併該應用下的設定項"
-# 运行时消息补充词条
 "Plugin server. Links are analyzed by keyword on this page and plugins are downloaded from it": "外掛伺服器。將從該網頁上根據關鍵字分析連結並下載外掛"
-# 运行时消息补充词条
 "Node cannot be empty.": "節點不能為空！"
 "No matching package was found.": "找不到相符的安裝套件"
 "No matching package was found (version={0}, kind={1}).": "找不到相符的安裝套件（version={0}、kind={1}）"
 "OS [{0}] is not compatible with .NET {1}": "作業系統[{0}]不相容於 .NET {1}"
 "GLIBC [{0}] does not meet the minimum requirement {1} of .NET {2}": "GLIBC[{0}]不符合 .NET {2} 的最低要求 {1}"
-# 运行时消息补充词条
 "Stardust Data": "星塵資料層"
 "Data layer of the Stardust distributed service framework. Defines entity models and statistics jobs based on XCode ORM, supporting persistence and computation for node management, application management, configuration center, registry, monitoring center, and release center, compatible with multiple databases.": "星塵分散式服務框架資料層。基於 XCode ORM 的實體模型定義與統計工作，支援節點管理、應用程式管理、設定中心、註冊中心、監控中心、發佈中心等業務資料持久化與計算，相容多種資料庫。"
