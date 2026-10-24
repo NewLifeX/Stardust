@@ -8,8 +8,48 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-publish:
+  # 测试统一跑在 Ubuntu：四个测试工程都只面向 net10.0，Linux 构建与执行更快；
+  # Windows 侧差异由 build-solution 的整解决方案编译兜底（net45/net461 目标无法在 Linux 编译）
+  test:
+    name: test (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: core
+            project: Stardust.Tests/Stardust.Tests.csproj
+          - name: server
+            project: Stardust.ServerTests/ServerTest.csproj
+          - name: webapi
+            project: Stardust.WebApiTests/Stardust.WebApiTests.csproj
+          - name: client
+            project: ClientTest/ClientTest.csproj
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup dotNET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.x
+    - name: Test
+      run: |
+        dotnet test ${{ matrix.project }} -c Release --nologo \
+          --logger "trx;LogFileName=${{ matrix.name }}.trx" --results-directory TestResults
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-${{ matrix.name }}
+        path: TestResults/*.trx
+        if-no-files-found: ignore
+
+  # 整解决方案编译：覆盖 net45/net461 等仅 Windows 可编译的目标，以及移动端以外的全部工程
+  build-solution:
+    name: build solution (windows)
     runs-on: windows-latest
+    timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@v4
@@ -26,9 +66,6 @@ jobs:
       - name: Build
         run: |
           dotnet build 星尘.slnx -c Release
-      - name: Test
-        run: |
-          dotnet test 星尘.slnx -c Release --no-build --logger "trx;LogFileName=test_results.trx"
 
   localization:
     name: localization checks
@@ -70,21 +107,12 @@ jobs:
       run: pwsh -File ./sync-readme-languages.ps1 -Check
 
   # 多平台单元测试矩阵：Linux x64 / arm64 观察期，逐步转为阻断（与 Core 观察期约定一致）
-  test-matrix:
-    name: test (${{ matrix.rid }})
-    runs-on: ${{ matrix.os }}
+  # 多架构观察期：x64 已由 test 矩阵常驻覆盖，这里只保留 arm64，稳定后转为阻断
+  test-arm64:
+    name: test (linux-arm64)
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 90
-    continue-on-error: ${{ matrix.experimental }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - rid: linux-x64
-            os: ubuntu-latest
-            experimental: true
-          - rid: linux-arm64
-            os: ubuntu-24.04-arm
-            experimental: true
+    continue-on-error: true
 
     steps:
     - uses: actions/checkout@v4
@@ -93,11 +121,11 @@ jobs:
       with:
         dotnet-version: 10.x
     - name: Test
-      run: dotnet test Stardust.Tests/Stardust.Tests.csproj -c Release --nologo --logger "trx;LogFileName=${{ matrix.rid }}.trx" --results-directory TestResults
+      run: dotnet test Stardust.Tests/Stardust.Tests.csproj -c Release --nologo --logger "trx;LogFileName=linux-arm64.trx" --results-directory TestResults
     - name: Upload Test Results
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: test-results-${{ matrix.rid }}
+        name: test-results-linux-arm64
         path: TestResults/*.trx
         if-no-files-found: ignore

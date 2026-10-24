@@ -78,10 +78,9 @@ jobs:
       run: pwsh -NoProfile -File StarAgent.Android/pack-android.ps1 -Mode Jit -RuntimeIdentifier android-x64
 
     # CI 没有可用 StarServer，只验证冷启动与前台服务；-Smoke 需要真实服务端登录
-    # NewLife.Core 的 Host 静态构造在 Android/iOS 调用 Console.CancelKeyPress 会抛 PlatformNotSupportedException，
-    # 上游修复前冒烟不阻塞；构建仍为阻塞项
+    # NewLife.Core 12.0.2026.1024 已修复 Android/iOS 上 Host 退出钩子注册抛 PlatformNotSupportedException，
+    # 冒烟步骤随之转为阻塞项
     - name: Run Android smoke
-      continue-on-error: true
       uses: reactivecircus/android-emulator-runner@v2
       with:
         api-level: 36
@@ -112,10 +111,8 @@ jobs:
     - name: Build iOS
       run: dotnet build StarAgent.iOS/StarAgent.iOS.csproj -c Release -f net10.0-ios -p:RuntimeIdentifier=iossimulator-arm64 --nologo
 
-    # NewLife.Core 的 Host 静态构造在 Android/iOS 调用 Console.CancelKeyPress 会抛 PlatformNotSupportedException，
-    # 上游修复前冒烟不阻塞；构建仍为阻塞项
+    # NewLife.Core 12.0.2026.1024 已修复 Host 退出钩子注册异常，iOS 冒烟随构建一并阻塞
     - name: Run iOS smoke
-      continue-on-error: true
       run: bash StarAgent.iOS/run-ios.sh
       env:
         SKIP_BUILD: "1"

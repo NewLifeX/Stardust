@@ -9,6 +9,11 @@ on:
         - 'DeployAgent/**'
   workflow_dispatch:
 
+# GitHub Packages 推送需要 packages: write，缺省权限会 403
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build-publish:
     runs-on: windows-latest
