@@ -45,7 +45,7 @@ Stardust build and deployment tool. Automatically downloads repositories, builds
     <Content Include="..\Doc\leaf.png" Link="leaf.png" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NewLife.Agent" Version="10.17.2026.1021-beta0235" />
+    <PackageReference Include="NewLife.Agent" Version="10.18.2026.1024" />
   </ItemGroup>
 
   <ItemGroup>

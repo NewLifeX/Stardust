@@ -76,10 +76,10 @@ Stardust distributed service framework core library. Provides client SDKs for co
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Remoting" Version="3.9.2026.1019-beta1013" />
+    <PackageReference Include="NewLife.Remoting" Version="3.9.2026.1021-beta0410" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="12.0.2026.1021-beta0321" />
+    <PackageReference Include="NewLife.Core" Version="12.0.2026.1024" />
   </ItemGroup>
 
 </Project>
