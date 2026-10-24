@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using NewLife.Configuration;
 using NewLife.Remoting.Clients;
 using Stardust.Models;
@@ -11,19 +11,19 @@ public class StarAgentSetting : Config<StarAgentSetting>, IClientSetting
 {
     #region 属性
     /// <summary>调试开关。默认true</summary>
-    [Description("调试开关。默认true")]
+    [Description("Debug switch. Default true.")]
     public Boolean Debug { get; set; } = true;
 
     /// <summary>证书</summary>
-    [Description("证书")]
+    [Description("Certificate")]
     public String Code { get; set; } = null!;
 
     /// <summary>密钥</summary>
-    [Description("密钥")]
+    [Description("Secret key")]
     public String? Secret { get; set; }
 
     /// <summary>项目名。新节点默认所需要加入的项目</summary>
-    [Description("项目名。新节点默认所需要加入的项目")]
+    [Description("Project name. The project that new nodes join by default")]
     public String? Project { get; set; }
 
     ///// <summary>本地服务。默认udp://127.0.0.1:5500</summary>
@@ -31,47 +31,47 @@ public class StarAgentSetting : Config<StarAgentSetting>, IClientSetting
     //public String LocalServer { get; set; } = "udp://127.0.0.1:5500";
 
     /// <summary>本地端口。默认5500</summary>
-    [Description("本地端口。默认5500")]
+    [Description("Local port. Default 5500.")]
     public Int32 LocalPort { get; set; } = 5500;
 
     /// <summary>Web面板绑定地址。默认127.0.0.1仅本机访问，设为*监听所有网卡，也可指定具体IP</summary>
-    [Description("Web面板绑定地址。默认127.0.0.1仅本机访问，设为*监听所有网卡，也可指定具体IP")]
+    [Description("Web panel bind address. Default 127.0.0.1 allows local access only; set to * to listen on all NICs, or specify a concrete IP")]
     public String WebBind { get; set; } = "127.0.0.1";
 
     /// <summary>更新通道。默认Release</summary>
-    [Description("更新通道。默认Release")]
+    [Description("Update channel. Default Release.")]
     public String Channel { get; set; } = "Release";
 
     /// <summary>Windows自启动。自启动需要用户登录桌面，默认false使用系统服务</summary>
-    [Description("Windows自启动。自启动需要用户登录桌面，默认false使用系统服务")]
+    [Description("Windows auto-start. Auto-start requires a user logged in to the desktop; default false uses a system service")]
     public Boolean UseAutorun { get; set; }
 
     /// <summary>用户名称。用户模式存储，服务模式读取</summary>
-    [Description("用户名称。用户模式存储，服务模式读取")]
+    [Description("User name. Stored in user mode and read in service mode")]
     public String? UserName { get; set; }
 
     /// <summary>像素点。例如96*96。用户模式存储，服务模式读取</summary>
-    [Description("像素点。例如96*96。用户模式存储，服务模式读取")]
+    [Description("Pixels. For example 96*96. Stored in user mode and read in service mode")]
     public String? Dpi { get; set; }
 
     /// <summary>分辨率。例如1024*768。用户模式存储，服务模式读取</summary>
-    [Description("分辨率。例如1024*768。用户模式存储，服务模式读取")]
+    [Description("Resolution. e.g. 1024*768. Stored in user mode, read in service mode.")]
     public String? Resolution { get; set; }
 
     /// <summary>延迟时间。重启进程或服务的延迟时间，默认3000ms</summary>
-    [Description("延迟时间。重启进程或服务的延迟时间，默认3000ms")]
+    [Description("Delay time. Delay before restarting the process or service; default 3000ms")]
     public Int32 Delay { get; set; } = 3000;
 
     /// <summary>同步时间间隔。定期同步服务器时间到本地，默认0秒不同步</summary>
-    [Description("同步时间间隔。定期同步服务器时间到本地，默认0秒不同步")]
+    [Description("Time sync interval. Periodically syncs server time to local time; default 0 seconds (no sync).")]
     public Int32 SyncTime { get; set; }
 
     /// <summary>启动挂钩。拉起目标进程时，对dotNet应用注入星尘监控钩子，默认false</summary>
-    [Description("启动挂钩。拉起目标进程时，对dotNet应用注入星尘监控钩子，默认false")]
+    [Description("Startup hook. Injects the Stardust monitoring hook into dotNet applications when launching the target process. Default false.")]
     public Boolean StartupHook { get; set; }
 
     /// <summary>应用服务集合</summary>
-    [Description("应用服务集合")]
+    [Description("Application services")]
     public ServiceInfo[] Services { get; set; }
 
     String IClientSetting.Server { get; set; }

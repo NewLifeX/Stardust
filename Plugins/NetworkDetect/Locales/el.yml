@@ -2,4 +2,7 @@
 "Network probe [{0}]: {1}": "Δικτυακή δοκιμή [{0}]: {1}"
 # 运行时消息补充词条
 "Network detect": "Network detect"
-"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs."
+"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "Εντοπίζει τη διαθεσιμότητα δικτύου και επανεκκινεί το σύστημα μετά από παρατεταμένη διακοπή, κυρίως για ενσωματωμένους βιομηχανικούς υπολογιστές."
+"Debug. Enabled by default.": "Αποσφαλμάτωση. Ενεργή από προεπιλογή."
+"Interval. Detection interval, default 5 seconds": "Διάστημα. Διάστημα ελέγχου, προεπιλογή 5 δευτερόλεπτα"
+"Service collection": "Συλλογή υπηρεσιών"

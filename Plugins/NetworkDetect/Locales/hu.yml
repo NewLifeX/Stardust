@@ -2,4 +2,7 @@
 "Network probe [{0}]: {1}": "Hálózati próba [{0}]: {1}"
 # 运行时消息补充词条
 "Network detect": "Network detect"
-"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs."
+"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "Érzékeli a hálózat elérhetőségét, és hosszabb kiesés után újraindítja a rendszert, elsősorban beágyazott ipari PC-khez."
+"Debug. Enabled by default.": "Hibakeresés. Alapértelmezés szerint engedélyezve."
+"Interval. Detection interval, default 5 seconds": "Intervallum. Ellenőrzési időköz, alapértelmezés 5 másodperc"
+"Service collection": "Szolgáltatásgyűjtemény"

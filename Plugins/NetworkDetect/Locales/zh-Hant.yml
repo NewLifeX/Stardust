@@ -3,3 +3,6 @@
 # 运行时消息补充词条
 "Network detect": "網路監測"
 "Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "偵測網路，若長期不可用則重新啟動系統，主要應用於嵌入式工控機"
+"Debug. Enabled by default.": "偵錯。預設啟用"
+"Interval. Detection interval, default 5 seconds": "週期。偵測週期，預設5秒"
+"Service collection": "服務集合"

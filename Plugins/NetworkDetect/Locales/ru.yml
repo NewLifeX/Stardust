@@ -2,4 +2,7 @@
 "Network probe [{0}]: {1}": "Сетевой зонд [{0}]: {1}"
 # 运行时消息补充词条
 "Network detect": "Network detect"
-"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs."
+"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "Определяет доступность сети и перезагружает систему после длительного простоя; предназначено главным образом для встраиваемых промышленных ПК."
+"Debug. Enabled by default.": "Отладка. Включена по умолчанию."
+"Interval. Detection interval, default 5 seconds": "Интервал. Интервал проверки, по умолчанию 5 секунд"
+"Service collection": "Коллекция служб"

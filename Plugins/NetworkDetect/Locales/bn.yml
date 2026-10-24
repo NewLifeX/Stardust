@@ -2,4 +2,7 @@
 "Network probe [{0}]: {1}": "নেটওয়ার্ক প্রোব [{0}]: {1}"
 # 运行时消息补充词条
 "Network detect": "Network detect"
-"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs."
+"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "নেটওয়ার্কের প্রাপ্যতা শনাক্ত করে এবং দীর্ঘ সময় ডাউন থাকলে সিস্টেম রিস্টার্ট করে, মূলত এমবেডেড শিল্প পিসিতে ব্যবহৃত।"
+"Debug. Enabled by default.": "ডিবাগ। ডিফল্টভাবে সক্রিয়।"
+"Interval. Detection interval, default 5 seconds": "ব্যবধান। সনাক্তকরণের ব্যবধান, ডিফল্ট 5 সেকেন্ড"
+"Service collection": "পরিষেবা সংগ্রহ"

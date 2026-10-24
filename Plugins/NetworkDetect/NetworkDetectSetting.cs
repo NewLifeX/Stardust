@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using NewLife.Configuration;
 
 namespace NetworkDetect;
@@ -9,15 +9,15 @@ public class NetworkDetectSetting : Config<NetworkDetectSetting>
 {
     #region 属性
     /// <summary>调试。默认启用</summary>
-    [Description("调试。默认启用")]
+    [Description("Debug. Enabled by default.")]
     public Boolean Debug { get; set; } = true;
 
     /// <summary>周期。检测周期，默认5秒</summary>
-    [Description("周期。检测周期，默认5秒")]
+    [Description("Interval. Detection interval, default 5 seconds")]
     public Int32 Period { get; set; } = 5;
 
     /// <summary>服务集合</summary>
-    [Description("服务集合")]
+    [Description("Service collection")]
     public ServiceItem[] Services { get; set; }
     #endregion
 

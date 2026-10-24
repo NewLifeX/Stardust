@@ -2,4 +2,7 @@
 "Network probe [{0}]: {1}": "Nätverkssond [{0}]: {1}"
 # 运行时消息补充词条
 "Network detect": "Network detect"
-"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs."
+"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "Identifierar nätverkstillgänglighet och startar om systemet efter längre driftstopp, huvudsakligen för inbäddade industri-PC:er."
+"Debug. Enabled by default.": "Felsökning. Aktiverat som standard."
+"Interval. Detection interval, default 5 seconds": "Intervall. Kontrollintervall, standard 5 sekunder"
+"Service collection": "Tjänstesamling"

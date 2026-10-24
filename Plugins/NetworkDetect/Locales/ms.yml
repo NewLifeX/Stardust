@@ -2,4 +2,7 @@
 "Network probe [{0}]: {1}": "Probe rangkaian [{0}]: {1}"
 # 运行时消息补充词条
 "Network detect": "Network detect"
-"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs."
+"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "Mengesan ketersediaan rangkaian dan memulakan semula sistem selepas masa henti berpanjangan, terutamanya untuk PC industri terbenam."
+"Debug. Enabled by default.": "Nyahpepijat. Didayakan secara lalai."
+"Interval. Detection interval, default 5 seconds": "Selang. Selang pengesanan, lalai 5 saat"
+"Service collection": "Koleksi perkhidmatan"

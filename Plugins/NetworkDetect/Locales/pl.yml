@@ -2,4 +2,7 @@
 "Network probe [{0}]: {1}": "Sonda sieciowa [{0}]: {1}"
 # 运行时消息补充词条
 "Network detect": "Network detect"
-"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs."
+"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "Wykrywa dostępność sieci i po dłuższym przestoju restartuje system, głównie dla wbudowanych komputerów przemysłowych."
+"Debug. Enabled by default.": "Debugowanie. Domyślnie włączone."
+"Interval. Detection interval, default 5 seconds": "Interwał. Interwał wykrywania, domyślnie 5 sekund"
+"Service collection": "Kolekcja usług"

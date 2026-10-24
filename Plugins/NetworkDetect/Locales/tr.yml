@@ -2,4 +2,7 @@
 "Network probe [{0}]: {1}": "Ağ yoklaması [{0}]: {1}"
 # 运行时消息补充词条
 "Network detect": "Network detect"
-"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs."
+"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "Ağ kullanılabilirliğini algılar ve uzun süreli kesintiden sonra sistemi yeniden başlatır; öncelikle gömülü endüstriyel PC'ler içindir."
+"Debug. Enabled by default.": "Hata ayıklama. Varsayılan olarak etkin."
+"Interval. Detection interval, default 5 seconds": "Aralık. Algılama aralığı, varsayılan 5 saniye"
+"Service collection": "Hizmet koleksiyonu"

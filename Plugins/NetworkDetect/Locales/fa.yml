@@ -2,4 +2,7 @@
 "Network probe [{0}]: {1}": "کاوش شبکه [{0}]: {1}"
 # 运行时消息补充词条
 "Network detect": "Network detect"
-"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs."
+"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "دسترس‌پذیری شبکه را تشخیص می‌دهد و پس از قطعی طولانی، سیستم را راه‌اندازی مجدد می‌کند؛ عمدتاً برای رایانه‌های صنعتی جاسازی‌شده."
+"Debug. Enabled by default.": "اشکال‌زدایی. به‌طور پیش‌فرض فعال است."
+"Interval. Detection interval, default 5 seconds": "بازه. بازه بررسی، پیش‌فرض ۵ ثانیه"
+"Service collection": "مجموعه سرویس‌ها"

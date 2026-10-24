@@ -2,4 +2,7 @@
 "Network probe [{0}]: {1}": "Thăm dò mạng [{0}]: {1}"
 # 运行时消息补充词条
 "Network detect": "Network detect"
-"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs."
+"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "Phát hiện khả dụng mạng và khởi động lại hệ thống sau thời gian ngừng hoạt động kéo dài, chủ yếu dành cho máy tính công nghiệp nhúng."
+"Debug. Enabled by default.": "Gỡ lỗi. Được bật theo mặc định."
+"Interval. Detection interval, default 5 seconds": "Khoảng thời gian. Khoảng thời gian phát hiện, mặc định 5 giây"
+"Service collection": "Tập hợp dịch vụ"

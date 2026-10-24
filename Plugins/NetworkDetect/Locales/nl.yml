@@ -2,4 +2,7 @@
 "Network probe [{0}]: {1}": "Netwerkprobe [{0}]: {1}"
 # 运行时消息补充词条
 "Network detect": "Network detect"
-"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs."
+"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "Detecteert netwerkbeschikbaarheid en herstart het systeem na langdurige uitval, voornamelijk voor embedded industriële pc's."
+"Debug. Enabled by default.": "Foutopsporing. Standaard ingeschakeld."
+"Interval. Detection interval, default 5 seconds": "Interval. Detectie-interval, standaard 5 seconden"
+"Service collection": "Verzameling services"

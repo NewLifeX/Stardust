@@ -2,4 +2,7 @@
 "Network probe [{0}]: {1}": "Síťová sonda [{0}]: {1}"
 # 运行时消息补充词条
 "Network detect": "Network detect"
-"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs."
+"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "Detekuje dostupnost sítě a po dlouhém výpadku restartuje systém, určeno zejména pro vestavěné průmyslové počítače."
+"Debug. Enabled by default.": "Ladění. Standardně povoleno."
+"Interval. Detection interval, default 5 seconds": "Interval. Interval kontroly, výchozí 5 sekund"
+"Service collection": "Kolekce služeb"

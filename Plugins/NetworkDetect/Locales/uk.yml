@@ -2,4 +2,7 @@
 "Network probe [{0}]: {1}": "Мережевий зонд [{0}]: {1}"
 # 运行时消息补充词条
 "Network detect": "Network detect"
-"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs."
+"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "Визначає доступність мережі та перезавантажує систему після тривалого простою; призначено переважно для вбудованих промислових ПК."
+"Debug. Enabled by default.": "Налагодження. Увімкнено за замовчуванням."
+"Interval. Detection interval, default 5 seconds": "Інтервал. Інтервал перевірки, типово 5 секунд"
+"Service collection": "Колекція служб"

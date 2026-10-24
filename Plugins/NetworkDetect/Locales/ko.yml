@@ -2,4 +2,7 @@
 "Network probe [{0}]: {1}": "네트워크 프로브 [{0}]: {1}"
 # 运行时消息补充词条
 "Network detect": "Network detect"
-"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs."
+"Detects network availability and restarts the system after prolonged downtime, mainly for embedded industrial PCs.": "네트워크 가용성을 감지하고 장시간 중단 시 시스템을 재시작하며, 주로 임베디드 산업용 PC에 사용됩니다."
+"Debug. Enabled by default.": "디버그입니다. 기본적으로 사용 설정됩니다."
+"Interval. Detection interval, default 5 seconds": "주기. 검사 주기, 기본값 5초"
+"Service collection": "서비스 컬렉션"
