@@ -34,7 +34,7 @@ Stardust distributed service framework core library. Provides client SDKs for co
     <RepositoryUrl>https://github.com/NewLifeX/Stardust</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>MCP端点重构为中间件实现并升级ModelContextProtocol SDK至2.0，支持Streamable HTTP、协议版本协商、通知与ping心跳；资源/模块类型枚举化统一大小写命名，修复授权静默失效；流水线编译后自动部署支持克制节点选择，未勾选节点标记Failed杜绝假成功；文件存储哈希广播时序优化与IO异常容错；注册缺失的Web服务并支持分片日志搜索</PackageReleaseNotes>
+    <PackageReleaseNotes>跟随 NewLife.Core v12 完成 31 种语言本地化与请求级语言协商；安全扫描 V-1~V-17 加固（密钥、令牌、限流、CORS、越权封堵）；新增 Android/iOS 移动端代理与 Rust/C++/Go 原生代理；接入 OpenTelemetry 埋点并降低监控统计写放大；新增 WebApi 纯 API 后端与 75 例集成测试、Playwright 端到端巡检；修复 Linux 上 OS 类型误判与跨用户进程句柄采集异常；升级 NewLife 依赖至 2026.10.24 正式版</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -76,7 +76,7 @@ Stardust distributed service framework core library. Provides client SDKs for co
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Remoting" Version="3.9.2026.1021-beta0410" />
+    <PackageReference Include="NewLife.Remoting" Version="4.0.2026.1024" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NewLife.Core" Version="12.0.2026.1024" />
