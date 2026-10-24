@@ -85,8 +85,8 @@
 "The run is already in a final state and cannot be cancelled.": "Запуск уже перебуває в кінцевому стані й не може бути скасований."
 "Domain changed": "Домен змінено"
 "Domains changed: {0} -> {1}": "Домени змінено: {0} -> {1}"
-"Stardust management portal": "Stardust management portal"
-"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries."
+"Stardust management portal": "Портал керування Stardust"
+"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Портал керування розподіленою платформою сервісів Stardust. Візуальна система керування на базі NewLife.Cube, що надає єдину точку входу для керування вузлами, застосунками, центром конфігурації, реєстром, центром моніторингу, центром релізів, трасування ланцюжків викликів, аналізу продуктивності та запитів до журналів."
 "Successfully deleted {0}": "{0} видалено"
 "Unknown tool: {0}": "Невідомий інструмент: {0}"
 # 界面元数据词条

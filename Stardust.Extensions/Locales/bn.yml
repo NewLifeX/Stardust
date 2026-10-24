@@ -21,5 +21,5 @@
 "Failed to save the tracing name truncation prefix: {0}": "ট্রেসিং নাম সংক্ষিপ্তকরণ উপসর্গ সংরক্ষণ করতে ব্যর্থ: {0}"
 "Tracing name truncation prefix: {0}": "ট্রেসিং নাম সংক্ষিপ্তকরণ উপসর্গ: {0}"
 # 运行时消息补充词条
-"Stardust distributed extensions": "Stardust distributed extensions"
-"ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications.": "ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications."
+"Stardust distributed extensions": "Stardust বিতরণকৃত এক্সটেনশন"
+"ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications.": "Stardust ডিস্ট্রিবিউটেড সার্ভিস ফ্রেমওয়ার্কের জন্য ASP.NET Core এক্সটেনশন লাইব্রেরি। AddStardust, UseStardust, RegisterService এবং ConsumeService-এর মতো মিডলওয়্যার ও হেল্পার প্রদান করে, Web ও API অ্যাপ্লিকেশনের জন্য সার্ভিস নিবন্ধন, আবিষ্কার ও মনিটরিং ইন্টিগ্রেশন সহজ করে।"

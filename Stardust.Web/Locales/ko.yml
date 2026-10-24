@@ -85,8 +85,8 @@
 "The run is already in a final state and cannot be cancelled.": "실행이 이미 최종 상태이므로 취소할 수 없습니다."
 "Domain changed": "도메인이 변경되었습니다"
 "Domains changed: {0} -> {1}": "도메인이 변경되었습니다: {0} -> {1}"
-"Stardust management portal": "Stardust management portal"
-"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries."
+"Stardust management portal": "Stardust 관리 포털"
+"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Stardust 분산 서비스 플랫폼의 관리 포털입니다. NewLife.Cube를 기반으로 구축된 시각적 관리 시스템으로, 노드 관리, 애플리케이션 관리, 구성 센터, 레지스트리, 모니터링 센터, 릴리스 센터, 호출 체인 추적, 성능 분석, 로그 조회를 위한 통합 진입점을 제공합니다."
 "Successfully deleted {0}": "{0}을(를) 삭제했습니다"
 "Unknown tool: {0}": "알 수 없는 도구: {0}"
 # 界面元数据词条

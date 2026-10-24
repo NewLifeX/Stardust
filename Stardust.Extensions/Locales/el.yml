@@ -21,5 +21,5 @@
 "Failed to save the tracing name truncation prefix: {0}": "Αποτυχία αποθήκευσης του προθέματος περικοπής ονόματος ιχνηλάτησης: {0}"
 "Tracing name truncation prefix: {0}": "Πρόθεμα περικοπής ονόματος ιχνηλάτησης: {0}"
 # 运行时消息补充词条
-"Stardust distributed extensions": "Stardust distributed extensions"
-"ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications.": "ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications."
+"Stardust distributed extensions": "Κατανεμημένες επεκτάσεις Stardust"
+"ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications.": "Βιβλιοθήκη επέκτασης ASP.NET Core για το κατανεμημένο πλαίσιο υπηρεσιών Stardust. Παρέχει ενδιάμεσο λογισμικό και βοηθητικές μεθόδους όπως AddStardust, UseStardust, RegisterService και ConsumeService, απλοποιώντας την καταχώριση, την ανακάλυψη και την ενσωμάτωση παρακολούθησης υπηρεσιών για εφαρμογές Web και API."

@@ -85,8 +85,8 @@
 "The run is already in a final state and cannot be cancelled.": "Lần chạy đã ở trạng thái kết thúc và không thể hủy."
 "Domain changed": "Tên miền đã thay đổi"
 "Domains changed: {0} -> {1}": "Tên miền đã thay đổi: {0} -> {1}"
-"Stardust management portal": "Stardust management portal"
-"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries."
+"Stardust management portal": "Cổng quản trị Stardust"
+"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Cổng quản trị cho nền tảng dịch vụ phân tán Stardust. Hệ thống quản trị trực quan xây dựng trên NewLife.Cube, cung cấp điểm truy cập thống nhất cho quản lý nút, quản lý ứng dụng, trung tâm cấu hình, sổ đăng ký, trung tâm giám sát, trung tâm phát hành, theo dõi chuỗi gọi, phân tích hiệu năng và truy vấn nhật ký."
 "Successfully deleted {0}": "Đã xóa {0}"
 "Unknown tool: {0}": "Công cụ không xác định: {0}"
 # 界面元数据词条

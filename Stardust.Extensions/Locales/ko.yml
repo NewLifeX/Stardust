@@ -21,5 +21,5 @@
 "Failed to save the tracing name truncation prefix: {0}": "추적 이름 잘림 접두사를 저장하지 못했습니다: {0}"
 "Tracing name truncation prefix: {0}": "추적 이름 잘림 접두사: {0}"
 # 运行时消息补充词条
-"Stardust distributed extensions": "Stardust distributed extensions"
-"ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications.": "ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications."
+"Stardust distributed extensions": "Stardust 분산 확장"
+"ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications.": "Stardust 분산 서비스 프레임워크용 ASP.NET Core 확장 라이브러리입니다. AddStardust, UseStardust, RegisterService, ConsumeService 같은 미들웨어와 도우미를 제공하여 Web 및 API 애플리케이션의 서비스 등록, 검색, 모니터링 연동을 간소화합니다."

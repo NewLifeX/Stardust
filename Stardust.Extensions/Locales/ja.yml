@@ -21,5 +21,5 @@
 "Failed to save the tracing name truncation prefix: {0}": "トレース名の切り詰めプレフィックスの保存に失敗しました: {0}"
 "Tracing name truncation prefix: {0}": "トレース名の切り詰めプレフィックス: {0}"
 # 运行时消息补充词条
-"Stardust distributed extensions": "Stardust distributed extensions"
-"ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications.": "ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications."
+"Stardust distributed extensions": "Stardust 分散拡張機能"
+"ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications.": "Stardust 分散サービスフレームワーク向けの ASP.NET Core 拡張ライブラリ。AddStardust、UseStardust、RegisterService、ConsumeService などのミドルウェアとヘルパーを提供し、Web アプリケーションや API アプリケーションのサービス登録、検出、監視連携を簡素化します。"

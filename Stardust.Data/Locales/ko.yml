@@ -37,7 +37,7 @@
 "OS [{0}] is not compatible with .NET {1}": "OS [{0}]은(는) .NET {1}과(와) 호환되지 않습니다"
 "GLIBC [{0}] does not meet the minimum requirement {1} of .NET {2}": "GLIBC [{0}]이(가) .NET {2}의 최소 요구 사항 {1}을(를) 충족하지 않습니다"
 "Stardust Data": "Stardust Data"
-"Data layer of the Stardust distributed service framework. Defines entity models and statistics jobs based on XCode ORM, supporting persistence and computation for node management, application management, configuration center, registry, monitoring center, and release center, compatible with multiple databases.": "Data layer of the Stardust distributed service framework. Defines entity models and statistics jobs based on XCode ORM, supporting persistence and computation for node management, application management, configuration center, registry, monitoring center, and release center, compatible with multiple databases."
+"Data layer of the Stardust distributed service framework. Defines entity models and statistics jobs based on XCode ORM, supporting persistence and computation for node management, application management, configuration center, registry, monitoring center, and release center, compatible with multiple databases.": "Stardust 분산 서비스 프레임워크의 데이터 계층입니다. XCode ORM 기반의 엔터티 모델과 통계 작업을 정의하며, 노드 관리, 애플리케이션 관리, 구성 센터, 레지스트리, 모니터링 센터 및 릴리스 센터의 데이터 영속화와 연산을 지원하고 여러 데이터베이스와 호환됩니다."
 # 界面元数据词条
 "阿波罗": "아폴로"
 "阿波罗地址": "아폴로 주소"

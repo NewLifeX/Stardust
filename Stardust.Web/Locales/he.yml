@@ -85,8 +85,8 @@
 "The run is already in a final state and cannot be cancelled.": "ההרצה כבר במצב סופי ולא ניתן לבטלה."
 "Domain changed": "התחום השתנה"
 "Domains changed: {0} -> {1}": "התחומים השתנו: {0} -> {1}"
-"Stardust management portal": "Stardust management portal"
-"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries."
+"Stardust management portal": "פורטל הניהול של Stardust"
+"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "פורטל ניהול עבור פלטפורמת השירותים המבוזרת Stardust. מערכת ניהול חזותית המבוססת על NewLife.Cube, המספקת נקודת כניסה אחודה לניהול צמתים, ניהול יישומים, מרכז תצורה, רישום, מרכז ניטור, מרכז הפצות, מעקב אחר שרשראות קריאות, ניתוח ביצועים ושאילתות יומן."
 "Successfully deleted {0}": "{0} נמחק"
 "Unknown tool: {0}": "כלי לא מוכר: {0}"
 # 界面元数据词条

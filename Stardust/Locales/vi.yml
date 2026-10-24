@@ -220,5 +220,5 @@
 "Invalid parameter.": "Tham số không hợp lệ."
 "Succeeded": "Thành công"
 "File [{0}] changed; stopping the application and starting it {1}ms later": "Tệp [{0}] đã thay đổi; ứng dụng sẽ dừng và khởi động lại sau {1}ms"
-"Stardust distributed core": "Stardust distributed core"
-"Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting.": "Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting."
+"Stardust distributed core": "Lõi phân tán Stardust"
+"Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting.": "Thư viện lõi của khung dịch vụ phân tán Stardust. Cung cấp SDK máy khách cho trung tâm cấu hình, sổ đăng ký, khám phá dịch vụ, theo dõi phân tán, APM và trung tâm nhật ký, hỗ trợ lấy cấu hình, đăng ký và khám phá dịch vụ, theo dõi lệnh gọi cũng như báo cáo hiệu năng và nhật ký."

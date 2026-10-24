@@ -220,5 +220,5 @@
 "Invalid parameter.": "พารามิเตอร์ไม่ถูกต้อง"
 "Succeeded": "สำเร็จ"
 "File [{0}] changed; stopping the application and starting it {1}ms later": "ไฟล์ [{0}] มีการเปลี่ยนแปลง หยุดแอปพลิเคชันและเริ่มใหม่ใน {1}ms"
-"Stardust distributed core": "Stardust distributed core"
-"Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting.": "Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting."
+"Stardust distributed core": "แกนกลางแบบกระจาย Stardust"
+"Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting.": "ไลบรารีแกนกลางของเฟรมเวิร์กบริการแบบกระจาย Stardust ให้ SDK ฝั่งไคลเอนต์สำหรับศูนย์กำหนดค่า รีจิสทรี การค้นพบบริการ การติดตามแบบกระจาย APM และศูนย์บันทึก รองรับการดึงข้อมูลกำหนดค่า การลงทะเบียนและการค้นพบบริการ การติดตามการเรียก และการรายงานประสิทธิภาพและบันทึก"

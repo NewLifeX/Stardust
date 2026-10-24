@@ -220,5 +220,5 @@
 "Invalid parameter.": "Ugyldig parameter."
 "Succeeded": "Vellykket"
 "File [{0}] changed; stopping the application and starting it {1}ms later": "Filen [{0}] er endret; programmet stoppes og startes {1}ms senere"
-"Stardust distributed core": "Stardust distributed core"
-"Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting.": "Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting."
+"Stardust distributed core": "Stardust distribuert kjerne"
+"Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting.": "Kjernebibliotek for Stardust-distribuert tjenesterammeverk. Tilbyr klient-SDK-er for konfigurasjonssenter, register, tjenesteoppdagelse, distribuert sporing, APM og loggsenter, og støtter konfigurasjonshenting, tjenesteregistrering og -oppdagelse, kallsporing samt rapportering av ytelse og logger."

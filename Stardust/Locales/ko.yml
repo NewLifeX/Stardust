@@ -220,5 +220,5 @@
 "Invalid parameter.": "잘못된 매개 변수입니다."
 "Succeeded": "성공"
 "File [{0}] changed; stopping the application and starting it {1}ms later": "파일[{0}]이(가) 변경되었습니다. 응용 프로그램을 중지하고 {1}ms 후에 시작합니다"
-"Stardust distributed core": "Stardust distributed core"
-"Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting.": "Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting."
+"Stardust distributed core": "Stardust 분산 코어"
+"Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting.": "Stardust 분산 서비스 프레임워크 코어 라이브러리입니다. 구성 센터, 레지스트리, 서비스 검색, 분산 추적, APM 및 로그 센터용 클라이언트 SDK를 제공하며 구성 가져오기, 서비스 등록 및 검색, 호출 추적, 성능 및 로그 보고를 지원합니다."

@@ -220,5 +220,5 @@
 "Invalid parameter.": "अमान्य पैरामीटर।"
 "Succeeded": "सफल"
 "File [{0}] changed; stopping the application and starting it {1}ms later": "फ़ाइल [{0}] बदली; एप्लिकेशन रोका जा रहा है और {1}ms बाद प्रारंभ होगा"
-"Stardust distributed core": "Stardust distributed core"
-"Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting.": "Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting."
+"Stardust distributed core": "Stardust वितरित कोर"
+"Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting.": "Stardust वितरित सेवा फ़्रेमवर्क की कोर लाइब्रेरी। कॉन्फ़िगरेशन सेंटर, रजिस्ट्री, सेवा खोज, वितरित ट्रेसिंग, APM और लॉग सेंटर के लिए क्लाइंट SDK प्रदान करती है, तथा कॉन्फ़िगरेशन खींचने, सेवा पंजीकरण और खोज, कॉल ट्रेसिंग तथा प्रदर्शन और लॉग रिपोर्टिंग का समर्थन करती है।"

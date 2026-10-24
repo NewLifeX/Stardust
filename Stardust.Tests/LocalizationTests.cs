@@ -153,7 +153,7 @@ public class LocalizationTests : IDisposable
         Assert.Equal("星塵代理", L.T(agentTitle!));
 
         Localization.Culture = new CultureInfo("de");
-        Assert.Equal("Stardust distributed core", L.T(title!));
+        Assert.Equal("Verteilter Stardust-Kern", L.T(title!));
     }
 
     [Fact(DisplayName = "31种语言均提供设置描述译文")]

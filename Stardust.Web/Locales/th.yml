@@ -85,8 +85,8 @@
 "The run is already in a final state and cannot be cancelled.": "การรันอยู่ในสถานะสิ้นสุดแล้ว จึงยกเลิกไม่ได้"
 "Domain changed": "โดเมนเปลี่ยนแล้ว"
 "Domains changed: {0} -> {1}": "โดเมนเปลี่ยน: {0} -> {1}"
-"Stardust management portal": "Stardust management portal"
-"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries."
+"Stardust management portal": "พอร์ทัลการจัดการ Stardust"
+"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "พอร์ทัลการจัดการสำหรับแพลตฟอร์มบริการแบบกระจาย Stardust ระบบการจัดการแบบภาพที่สร้างบน NewLife.Cube ให้จุดเข้าใช้งานแบบรวมสำหรับการจัดการโหนด การจัดการแอปพลิเคชัน ศูนย์กำหนดค่า รีจิสทรี ศูนย์ตรวจสอบ ศูนย์เผยแพร่ การติดตามสายการเรียกใช้ การวิเคราะห์ประสิทธิภาพ และการค้นหาบันทึก"
 "Successfully deleted {0}": "ลบ {0} แล้ว"
 "Unknown tool: {0}": "เครื่องมือที่ไม่รู้จัก: {0}"
 # 界面元数据词条

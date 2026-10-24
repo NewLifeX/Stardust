@@ -85,8 +85,8 @@
 "The run is already in a final state and cannot be cancelled.": "Çalıştırma zaten son durumda ve iptal edilemez."
 "Domain changed": "Etki alanı değişti"
 "Domains changed: {0} -> {1}": "Etki alanları değişti: {0} -> {1}"
-"Stardust management portal": "Stardust management portal"
-"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries."
+"Stardust management portal": "Stardust yönetim portalı"
+"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Stardust dağıtık hizmet platformu için yönetim portalı. NewLife.Cube üzerine kurulu görsel yönetim sistemi; düğüm yönetimi, uygulama yönetimi, yapılandırma merkezi, kayıt defteri, izleme merkezi, sürüm merkezi, çağrı zinciri izleme, performans analizi ve günlük sorguları için birleşik giriş noktaları sunar."
 "Successfully deleted {0}": "{0} silindi"
 "Unknown tool: {0}": "Bilinmeyen araç: {0}"
 # 界面元数据词条

@@ -85,8 +85,8 @@
 "The run is already in a final state and cannot be cancelled.": "Execuția este deja într-o stare finală și nu poate fi anulată."
 "Domain changed": "Domeniu modificat"
 "Domains changed: {0} -> {1}": "Domenii modificate: {0} -> {1}"
-"Stardust management portal": "Stardust management portal"
-"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries."
+"Stardust management portal": "Portalul de administrare Stardust"
+"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Portal de administrare pentru platforma distribuită de servicii Stardust. Sistem vizual de administrare construit pe NewLife.Cube, care oferă un punct de intrare unificat pentru administrarea nodurilor, administrarea aplicațiilor, centrul de configurare, registru, centrul de monitorizare, centrul de lansări, urmărirea lanțurilor de apeluri, analiza performanței și interogări de jurnale."
 "Successfully deleted {0}": "{0} a fost șters"
 "Unknown tool: {0}": "Instrument necunoscut: {0}"
 # 界面元数据词条

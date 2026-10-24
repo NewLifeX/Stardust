@@ -85,8 +85,8 @@
 "The run is already in a final state and cannot be cancelled.": "Η εκτέλεση βρίσκεται ήδη σε τελική κατάσταση και δεν μπορεί να ακυρωθεί."
 "Domain changed": "Ο τομέας άλλαξε"
 "Domains changed: {0} -> {1}": "Οι τομείς άλλαξαν: {0} -> {1}"
-"Stardust management portal": "Stardust management portal"
-"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries."
+"Stardust management portal": "Πύλη διαχείρισης Stardust"
+"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Πύλη διαχείρισης για την κατανεμημένη πλατφόρμα υπηρεσιών Stardust. Οπτικό σύστημα διαχείρισης βασισμένο στο NewLife.Cube, που παρέχει ενιαίο σημείο εισόδου για διαχείριση κόμβων, διαχείριση εφαρμογών, κέντρο διαμόρφωσης, μητρώο, κέντρο παρακολούθησης, κέντρο εκδόσεων, ιχνηλάτηση αλυσίδας κλήσεων, ανάλυση απόδοσης και αναζήτηση καταγραφών."
 "Successfully deleted {0}": "Το {0} διαγράφηκε"
 "Unknown tool: {0}": "Άγνωστο εργαλείο: {0}"
 # 界面元数据词条

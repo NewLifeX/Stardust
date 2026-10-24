@@ -85,8 +85,8 @@
 "The run is already in a final state and cannot be cancelled.": "Larian sudah berada dalam keadaan akhir dan tidak boleh dibatalkan."
 "Domain changed": "Domain berubah"
 "Domains changed: {0} -> {1}": "Domain berubah: {0} -> {1}"
-"Stardust management portal": "Stardust management portal"
-"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries."
+"Stardust management portal": "Portal pengurusan Stardust"
+"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Portal pengurusan untuk platform perkhidmatan teragih Stardust. Sistem pengurusan visual yang dibina atas NewLife.Cube, menyediakan titik masuk bersepadu untuk pengurusan nod, pengurusan aplikasi, pusat konfigurasi, pendaftaran, pusat pemantauan, pusat pelepasan, penjejakan rantaian panggilan, analisis prestasi dan pertanyaan log."
 "Successfully deleted {0}": "{0} telah dipadam"
 "Unknown tool: {0}": "Alat tidak dikenali: {0}"
 # 界面元数据词条

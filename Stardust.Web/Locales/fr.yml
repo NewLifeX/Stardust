@@ -85,8 +85,8 @@
 "The run is already in a final state and cannot be cancelled.": "L'exécution est déjà dans un état final et ne peut pas être annulée."
 "Domain changed": "Domaine modifié"
 "Domains changed: {0} -> {1}": "Domaines modifiés : {0} -> {1}"
-"Stardust management portal": "Stardust management portal"
-"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries."
+"Stardust management portal": "Portail de gestion Stardust"
+"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Portail de gestion de la plateforme de services distribués Stardust. Système de gestion visuel basé sur NewLife.Cube, offrant un point d'entrée unifié pour la gestion des nœuds, la gestion des applications, le centre de configuration, le registre, le centre de supervision, le centre de publication, le traçage des chaînes d'appels, l'analyse des performances et les requêtes de journaux."
 "Successfully deleted {0}": "{0} a été supprimé"
 "Unknown tool: {0}": "Outil inconnu : {0}"
 # 界面元数据词条

@@ -85,8 +85,8 @@
 "The run is already in a final state and cannot be cancelled.": "রান ইতিমধ্যে চূড়ান্ত অবস্থায় আছে এবং বাতিল করা যাবে না।"
 "Domain changed": "ডোমেইন পরিবর্তিত হয়েছে"
 "Domains changed: {0} -> {1}": "ডোমেইনগুলো পরিবর্তিত হয়েছে: {0} -> {1}"
-"Stardust management portal": "Stardust management portal"
-"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries."
+"Stardust management portal": "Stardust ব্যবস্থাপনা পোর্টাল"
+"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Stardust বিতরণকৃত পরিষেবা প্ল্যাটফর্মের ব্যবস্থাপনা পোর্টাল। NewLife.Cube-এর উপর নির্মিত দৃশ্যমান ব্যবস্থাপনা সিস্টেম, যা নোড ব্যবস্থাপনা, অ্যাপ্লিকেশন ব্যবস্থাপনা, কনফিগারেশন সেন্টার, রেজিস্ট্রি, মনিটরিং সেন্টার, রিলিজ সেন্টার, কল চেইন ট্রেসিং, পারফরম্যান্স বিশ্লেষণ ও লগ অনুসন্ধানের জন্য একীভূত প্রবেশপথ প্রদান করে।"
 "Successfully deleted {0}": "{0} মুছে ফেলা হয়েছে"
 "Unknown tool: {0}": "অজানা টুল: {0}"
 # 界面元数据词条

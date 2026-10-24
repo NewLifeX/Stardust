@@ -220,5 +220,5 @@
 "Invalid parameter.": "Μη έγκυρη παράμετρος."
 "Succeeded": "Επιτυχία"
 "File [{0}] changed; stopping the application and starting it {1}ms later": "Το αρχείο [{0}] άλλαξε· η εφαρμογή σταματά και ξεκινά σε {1}ms"
-"Stardust distributed core": "Stardust distributed core"
-"Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting.": "Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting."
+"Stardust distributed core": "Κατανεμημένος πυρήνας Stardust"
+"Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting.": "Βασική βιβλιοθήκη του κατανεμημένου πλαισίου υπηρεσιών Stardust. Παρέχει SDK πελάτη για κέντρο διαμόρφωσης, μητρώο, ανακάλυψη υπηρεσιών, κατανεμημένη ιχνηλάτηση, APM και κέντρο καταγραφής, υποστηρίζοντας λήψη διαμόρφωσης, καταχώριση και ανακάλυψη υπηρεσιών, ιχνηλάτηση κλήσεων και αναφορά απόδοσης και αρχείων καταγραφής."

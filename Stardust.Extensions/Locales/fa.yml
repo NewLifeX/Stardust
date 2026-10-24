@@ -21,5 +21,5 @@
 "Failed to save the tracing name truncation prefix: {0}": "ذخیره پیشوند کوتاه‌سازی نام ردیابی ناموفق بود: {0}"
 "Tracing name truncation prefix: {0}": "پیشوند کوتاه‌سازی نام ردیابی: {0}"
 # 运行时消息补充词条
-"Stardust distributed extensions": "Stardust distributed extensions"
-"ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications.": "ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications."
+"Stardust distributed extensions": "افزونه‌های توزیع‌شده Stardust"
+"ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications.": "کتابخانه افزونه ASP.NET Core برای چارچوب سرویس توزیع‌شده Stardust. میان‌افزارها و متدهای کمکی مانند AddStardust، UseStardust، RegisterService و ConsumeService را فراهم می‌کند و ثبت، کشف و یکپارچه‌سازی پایش سرویس را برای برنامه‌های Web و API ساده می‌کند."

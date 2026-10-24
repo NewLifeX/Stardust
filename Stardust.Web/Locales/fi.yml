@@ -85,8 +85,8 @@
 "The run is already in a final state and cannot be cancelled.": "Ajo on jo lopullisessa tilassa, eikä sitä voi peruuttaa."
 "Domain changed": "Toimialue muuttui"
 "Domains changed: {0} -> {1}": "Toimialueet muuttuivat: {0} -> {1}"
-"Stardust management portal": "Stardust management portal"
-"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries."
+"Stardust management portal": "Stardust-hallintaportaali"
+"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Stardust-hajautetun palvelualustan hallintaportaali. NewLife.Cube-pohjainen visuaalinen hallintajärjestelmä, joka tarjoaa yhtenäisen käyttöliittymän solmujen hallintaan, sovellusten hallintaan, määrityskeskukseen, rekisteriin, valvontakeskukseen, julkaisukeskukseen, kutsuketjujen seurantaan, suorituskykyanalyysiin ja lokihakuihin."
 "Successfully deleted {0}": "{0} poistettiin"
 "Unknown tool: {0}": "Tuntematon työkalu: {0}"
 # 界面元数据词条

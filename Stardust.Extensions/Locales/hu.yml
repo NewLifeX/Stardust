@@ -21,5 +21,5 @@
 "Failed to save the tracing name truncation prefix: {0}": "Nem sikerült menteni a nyomkövetési név csonkítási előtagját: {0}"
 "Tracing name truncation prefix: {0}": "Nyomkövetési név csonkítási előtagja: {0}"
 # 运行时消息补充词条
-"Stardust distributed extensions": "Stardust distributed extensions"
-"ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications.": "ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications."
+"Stardust distributed extensions": "Stardust elosztott bővítmények"
+"ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications.": "ASP.NET Core bővítménykönyvtár a Stardust elosztott szolgáltatási keretrendszerhez. Olyan köztes szoftvereket és segédmetódusokat biztosít, mint az AddStardust, UseStardust, RegisterService és ConsumeService, egyszerűsítve a szolgáltatások regisztrálását, felderítését és a megfigyelés integrálását Web- és API-alkalmazásokhoz."

@@ -85,8 +85,8 @@
 "The run is already in a final state and cannot be cancelled.": "Kørslen er allerede i en sluttilstand og kan ikke annulleres."
 "Domain changed": "Domænet er ændret"
 "Domains changed: {0} -> {1}": "Domænerne er ændret: {0} -> {1}"
-"Stardust management portal": "Stardust management portal"
-"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries."
+"Stardust management portal": "Stardust-administrationsportal"
+"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Administrationsportal for den distribuerede Stardust-serviceplatform. Et visuelt administrationssystem bygget på NewLife.Cube, som giver et samlet indgangspunkt til nodeadministration, applikationsadministration, konfigurationscenter, register, overvågningscenter, udgivelsescenter, sporing af kaldskæder, ydeevneanalyse og logforespørgsler."
 "Successfully deleted {0}": "{0} blev slettet"
 "Unknown tool: {0}": "Ukendt værktøj: {0}"
 # 界面元数据词条

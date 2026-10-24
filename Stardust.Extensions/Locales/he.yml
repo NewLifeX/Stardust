@@ -21,5 +21,5 @@
 "Failed to save the tracing name truncation prefix: {0}": "שמירת קידומת הקיצור של שם המעקב נכשלה: {0}"
 "Tracing name truncation prefix: {0}": "קידומת הקיצור של שם המעקב: {0}"
 # 运行时消息补充词条
-"Stardust distributed extensions": "Stardust distributed extensions"
-"ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications.": "ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications."
+"Stardust distributed extensions": "הרחבות מבוזרות של Stardust"
+"ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications.": "ספריית הרחבה של ASP.NET Core עבור מסגרת השירותים המבוזרים Stardust. מספקת תוכנת ביניים ופונקציות עזר כגון AddStardust, UseStardust, RegisterService ו-ConsumeService, ומפשטת רישום, גילוי ואינטגרציית ניטור של שירותים עבור אפליקציות Web ו-API."

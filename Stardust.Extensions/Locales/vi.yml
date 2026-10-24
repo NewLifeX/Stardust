@@ -21,5 +21,5 @@
 "Failed to save the tracing name truncation prefix: {0}": "Lưu tiền tố cắt tên trace thất bại: {0}"
 "Tracing name truncation prefix: {0}": "Tiền tố cắt tên trace: {0}"
 # 运行时消息补充词条
-"Stardust distributed extensions": "Stardust distributed extensions"
-"ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications.": "ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications."
+"Stardust distributed extensions": "Tiện ích mở rộng phân tán Stardust"
+"ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications.": "Thư viện mở rộng ASP.NET Core cho khung dịch vụ phân tán Stardust. Cung cấp phần mềm trung gian và các phương thức hỗ trợ như AddStardust, UseStardust, RegisterService và ConsumeService, giúp đơn giản hóa việc đăng ký, khám phá và tích hợp giám sát dịch vụ cho ứng dụng Web và API."

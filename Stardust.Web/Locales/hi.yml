@@ -85,8 +85,8 @@
 "The run is already in a final state and cannot be cancelled.": "रन पहले से अंतिम स्थिति में है और रद्द नहीं किया जा सकता।"
 "Domain changed": "डोमेन बदल गया"
 "Domains changed: {0} -> {1}": "डोमेन बदले: {0} -> {1}"
-"Stardust management portal": "Stardust management portal"
-"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries."
+"Stardust management portal": "Stardust प्रबंधन पोर्टल"
+"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Stardust वितरित सेवा प्लेटफ़ॉर्म का प्रबंधन पोर्टल। NewLife.Cube पर आधारित दृश्य प्रबंधन प्रणाली, जो नोड प्रबंधन, एप्लिकेशन प्रबंधन, कॉन्फ़िगरेशन केंद्र, रजिस्ट्री, निगरानी केंद्र, रिलीज़ केंद्र, कॉल चेन ट्रेसिंग, प्रदर्शन विश्लेषण और लॉग क्वेरी के लिए एकीकृत प्रवेश बिंदु प्रदान करती है।"
 "Successfully deleted {0}": "{0} हटा दिया गया"
 "Unknown tool: {0}": "अज्ञात टूल: {0}"
 # 界面元数据词条

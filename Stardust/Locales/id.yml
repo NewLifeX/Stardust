@@ -220,5 +220,5 @@
 "Invalid parameter.": "Parameter tidak valid."
 "Succeeded": "Berhasil"
 "File [{0}] changed; stopping the application and starting it {1}ms later": "File [{0}] berubah; aplikasi dihentikan dan dimulai {1}ms kemudian"
-"Stardust distributed core": "Stardust distributed core"
-"Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting.": "Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting."
+"Stardust distributed core": "Inti terdistribusi Stardust"
+"Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting.": "Pustaka inti kerangka layanan terdistribusi Stardust. Menyediakan SDK klien untuk pusat konfigurasi, registri, penemuan layanan, pelacakan terdistribusi, APM, dan pusat log, mendukung penarikan konfigurasi, pendaftaran dan penemuan layanan, pelacakan panggilan, serta pelaporan kinerja dan log."

@@ -37,7 +37,7 @@
 "OS [{0}] is not compatible with .NET {1}": "ОС [{0}] несумісна з .NET {1}"
 "GLIBC [{0}] does not meet the minimum requirement {1} of .NET {2}": "GLIBC [{0}] не відповідає мінімальній вимозі {1} для .NET {2}"
 "Stardust Data": "Stardust Data"
-"Data layer of the Stardust distributed service framework. Defines entity models and statistics jobs based on XCode ORM, supporting persistence and computation for node management, application management, configuration center, registry, monitoring center, and release center, compatible with multiple databases.": "Data layer of the Stardust distributed service framework. Defines entity models and statistics jobs based on XCode ORM, supporting persistence and computation for node management, application management, configuration center, registry, monitoring center, and release center, compatible with multiple databases."
+"Data layer of the Stardust distributed service framework. Defines entity models and statistics jobs based on XCode ORM, supporting persistence and computation for node management, application management, configuration center, registry, monitoring center, and release center, compatible with multiple databases.": "Рівень даних розподіленої сервісної платформи Stardust. Визначає моделі сутностей і завдання статистики на основі XCode ORM, підтримує збереження й обчислення для керування вузлами, керування застосунками, центру конфігурації, реєстру, центру моніторингу та центру публікації, сумісний із різними базами даних."
 # 界面元数据词条
 "阿波罗": "Apollo"
 "阿波罗地址": "Адреса Apollo"

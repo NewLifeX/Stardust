@@ -220,5 +220,5 @@
 "Invalid parameter.": "Parâmetro inválido."
 "Succeeded": "Concluído"
 "File [{0}] changed; stopping the application and starting it {1}ms later": "O arquivo [{0}] foi alterado; a aplicação será parada e iniciada {1}ms depois"
-"Stardust distributed core": "Stardust distributed core"
-"Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting.": "Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting."
+"Stardust distributed core": "Núcleo distribuído Stardust"
+"Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting.": "Biblioteca principal do framework de serviços distribuídos Stardust. Fornece SDKs de cliente para centro de configuração, registro, descoberta de serviços, rastreamento distribuído, APM e central de logs, com suporte a obtenção de configuração, registro e descoberta de serviços, rastreamento de chamadas e envio de desempenho e logs."

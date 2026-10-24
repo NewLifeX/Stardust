@@ -37,7 +37,7 @@
 "OS [{0}] is not compatible with .NET {1}": "ऑपरेटिंग सिस्टम [{0}] .NET {1} के साथ संगत नहीं है"
 "GLIBC [{0}] does not meet the minimum requirement {1} of .NET {2}": "GLIBC [{0}] .NET {2} की न्यूनतम आवश्यकता {1} को पूरा नहीं करता"
 "Stardust Data": "Stardust Data"
-"Data layer of the Stardust distributed service framework. Defines entity models and statistics jobs based on XCode ORM, supporting persistence and computation for node management, application management, configuration center, registry, monitoring center, and release center, compatible with multiple databases.": "Data layer of the Stardust distributed service framework. Defines entity models and statistics jobs based on XCode ORM, supporting persistence and computation for node management, application management, configuration center, registry, monitoring center, and release center, compatible with multiple databases."
+"Data layer of the Stardust distributed service framework. Defines entity models and statistics jobs based on XCode ORM, supporting persistence and computation for node management, application management, configuration center, registry, monitoring center, and release center, compatible with multiple databases.": "Stardust वितरित सेवा फ़्रेमवर्क की डेटा परत। XCode ORM पर आधारित एंटिटी मॉडल और सांख्यिकी कार्य परिभाषित करती है, तथा नोड प्रबंधन, एप्लिकेशन प्रबंधन, कॉन्फ़िगरेशन सेंटर, रजिस्ट्री, निगरानी केंद्र और रिलीज़ सेंटर के लिए डेटा संग्रहण और गणना का समर्थन करती है, कई डेटाबेस के साथ संगत है।"
 # 界面元数据词条
 "阿波罗": "अपोलो"
 "阿波罗地址": "अपोलो पता"
