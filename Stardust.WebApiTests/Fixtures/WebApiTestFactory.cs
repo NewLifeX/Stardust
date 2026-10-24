@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -5,6 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using XCode;
 using XCode.DataAccessLayer;
+using XCode.Membership;
 using Xunit;
 
 namespace Stardust.WebApiTests.Fixtures;
@@ -17,8 +19,9 @@ namespace Stardust.WebApiTests.Fixtures;
 /// 1. SQLite 库文件——避免与正在运行的 6681 实例争抢同一个 Data/Stardust.db 导致锁冲突；
 /// 2. 星尘配置中心——本机 Star.config / StarAgent 会下发 MSSQL 连接串，连不上会拖垮测试。
 ///
-/// 隔离手段是进程级环境变量，因此由本类负责在 Dispose 中原样还原，
-/// 不把污染留给同一进程内的其它测试工程。
+/// 连接串必须在本进程任何实体首次访问之前改写：XCode 的 DAL 从 appsettings.json 读取连接串并缓存实例，
+/// 而 AddCube() 在应用 ConfigureServices 阶段就会访问 Menu/Role。若晚于这个时点改写，
+/// 成员体系的菜单与角色仍落在默认 Data 目录，而用户落在临时库，表现为登录成功却处处 403。
 /// </remarks>
 public class WebApiTestFactory : WebApplicationFactory<Program>
 {
@@ -40,16 +43,20 @@ public class WebApiTestFactory : WebApplicationFactory<Program>
         _dbDir = Path.Combine(Path.GetTempPath(), "stardust_webapi_test_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(_dbDir);
 
-        // NewLife.XCode 的 DAL 从 NewLife.Setting（合并 IConfiguration 环境变量提供器）读取连接串，
-        // 用 ConnectionStrings__X 双下划线环境变量格式最可靠（与 Cube E2E 测试一致）。
-        // StarFactory.Init 读取顺序为 环境变量 > appsettings > 本地StarAgent，环境变量非空即可跳过后者。
-        SetEnvironment("ConnectionStrings__Stardust", $"Data Source={_dbDir}/Stardust.db;provider=sqlite");
-        SetEnvironment("ConnectionStrings__StardustData", $"Data Source={_dbDir}/StardustData.db;provider=sqlite");
-        SetEnvironment("ConnectionStrings__Membership", $"Data Source={_dbDir}/Membership.db;provider=sqlite");
-        SetEnvironment("ConnectionStrings__Cube", $"Data Source={_dbDir}/Cube.db;provider=sqlite");
+        // 先于主机启动改写连接串，保证 AddCube() 初始化成员体系时也走临时库
+        OverrideConnections();
+
+        // 星尘客户端按环境变量读取服务端地址，避免连接到本机 StarAgent 下发的外部地址
         SetEnvironment("StarServer", "http://127.0.0.1:1");
 
         _token = new Lazy<Task<String>>(LoginAsync);
+    }
+
+    /// <summary>把 XCode 的四个连接串改写到临时目录。DAL 以连接名为键缓存实例，改写后需重新创建</summary>
+    private void OverrideConnections()
+    {
+        foreach (var item in BuildConnectionStrings())
+            DAL.AddConnStr(item.Key, item.Value, null, "SQLite");
     }
 
     /// <summary>把 XCode 配置文件改成关闭调试与 SQL 日志。适用工程启动时会重新读取该文件，仅靠内存赋值不可靠</summary>
@@ -99,14 +106,9 @@ public class WebApiTestFactory : WebApplicationFactory<Program>
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        // 关键：应用 ConfigureServices（AddStardust/AddCube 等）会依据 appsettings.json 的 MSSQL
-        // 连接串提前初始化 DAL 并缓存。这里在应用 ConfigureServices 之后再次强制写入 SQLite 连接串，
-        // 并用 DAL.AddConnStr 清除已缓存的 DAL 实例，确保 FixTable 与后续实体操作都走独立 SQLite 库。
-        builder.ConfigureServices((_, _) =>
-        {
-            foreach (var item in BuildConnectionStrings())
-                DAL.AddConnStr(item.Key, item.Value, null, "SQLite");
-        });
+        // 主机配置阶段再覆盖一次：应用 ConfigureServices（AddStardust/AddCube 等）可能依据 appsettings.json
+        // 重新解析连接串，这里确保 FixTable 与后续实体操作都走临时 SQLite 库。
+        builder.ConfigureServices((_, _) => OverrideConnections());
 
         // 同步 IConfiguration 侧的连接串，供从配置读取连接串的组件使用。
         // 用 UseSetting 而非 AddInMemoryCollection，省掉对 Microsoft.Extensions.Configuration 包的依赖。
@@ -127,6 +129,10 @@ public class WebApiTestFactory : WebApplicationFactory<Program>
     private async Task<String> LoginAsync()
     {
         using var bareClient = CreateClient();
+
+        // 菜单扫描与角色授权都是主机启动后的后台任务，必须先等它们落库，否则首个业务请求会因无权限被拒
+        Assert.True(WaitForCubeBootstrap(TimeSpan.FromSeconds(30)), "Cube 成员体系未在 30 秒内完成引导（菜单或系统角色授权缺失）");
+
         var resp = await bareClient.PostAsJsonAsync("/Auth/Login", new
         {
             Username = DefaultUserName,
@@ -140,6 +146,41 @@ public class WebApiTestFactory : WebApplicationFactory<Program>
         Assert.False(String.IsNullOrEmpty(token), $"登录响应未含 token，响应={body}");
 
         return token!;
+    }
+
+    /// <summary>
+    /// 等待 Cube 成员体系引导完成：目标菜单已落库，且系统角色已获得该菜单的查看权限。
+    /// </summary>
+    /// <remarks>
+    /// 菜单由 <c>AreaBase.RegisterArea</c> 的后台任务扫描生成，角色授权随后由 <c>Role.CheckRole</c> 补齐，
+    /// 两者都是异步的。这里按"菜单存在 + 系统角色拥有 Detail 权限"判定就绪，而不是固定 sleep。
+    /// 查询使用不带缓存的 FindAll 重载，避免实体缓存把空结果留住。
+    /// </remarks>
+    /// <param name="timeout">最长等待时间</param>
+    /// <returns>就绪返回 true，超时返回 false</returns>
+    private static Boolean WaitForCubeBootstrap(TimeSpan timeout)
+    {
+        var sw = Stopwatch.StartNew();
+        while (sw.Elapsed < timeout)
+        {
+            try
+            {
+                var menu = Menu.FindAll("Name='AppConfig'", null, null, 0, 1).FirstOrDefault();
+                if (menu != null)
+                {
+                    var role = Role.FindAll("IsSystem=1", null, null, 0, 1).FirstOrDefault();
+                    if (role != null && role.Has(menu.ID, PermissionFlags.Detail)) return true;
+                }
+            }
+            catch (Exception)
+            {
+                // 数据库尚未建表或正被写入，继续等待
+            }
+
+            Thread.Sleep(200);
+        }
+
+        return false;
     }
 
     /// <summary>兼容 access_token / AccessToken 两种字段名解析令牌。</summary>

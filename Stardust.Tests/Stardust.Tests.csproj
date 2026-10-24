@@ -46,6 +46,13 @@
     <Compile Include="..\Plugins\AgentExpansion\LanScan.cs" Link="AgentExpansion\LanScan.cs" />
   </ItemGroup>
 
+  <!-- 全局静态配置（StarSetting/TracerMiddleware）被多个测试类修改，关闭集合并行以避免互相干扰 -->
+  <ItemGroup>
+    <None Update="xunit.runner.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
   <!-- 词表一致性测试直接读取各组件 Locales 词表 -->
   <ItemGroup>
     <Content Include="..\Stardust\Locales\*.yml" Link="Locales\Stardust\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />

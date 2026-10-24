@@ -64,7 +64,10 @@ public class NginxFileTests
         //Assert.Equal("$proxy_add_x_forwarded_for", ds["proxy_set_header X-Forwarded-For"][0]);
         //Assert.Equal("$scheme", ds["proxy_set_header X-Forwarded-Proto"][0]);
 
+        // ToString 按平台换行符输出，源文本随仓库检出为 CRLF，比较前统一换行符，避免 Linux 上因 LF/CRLF 差异误报
         var txt2 = nginxFile.ToString();
-        Assert.Equal(txt, txt2);
+        Assert.Equal(Normalize(txt), Normalize(txt2));
+
+        static String Normalize(String value) => value.Replace("\r\n", "\n");
     }
 }
