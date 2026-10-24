@@ -111,11 +111,12 @@ jobs:
     - name: Build iOS
       run: dotnet build StarAgent.iOS/StarAgent.iOS.csproj -c Release -f net10.0-ios -p:RuntimeIdentifier=iossimulator-arm64 --nologo
 
-    # NewLife.Core 12.0.2026.1024 已修复 Host 退出钩子注册异常，iOS 冒烟随构建一并阻塞
+    # CI 没有可用 StarServer，-Smoke 需要真实登录，改用 start 模式校验冷启动（与 Android 的 -Start 一致）
     - name: Run iOS smoke
       run: bash StarAgent.iOS/run-ios.sh
       env:
         SKIP_BUILD: "1"
+        MODE: start
 
     - uses: actions/upload-artifact@v4
       if: always()

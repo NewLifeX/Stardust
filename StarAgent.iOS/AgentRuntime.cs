@@ -19,6 +19,9 @@ public static class AgentRuntime
     /// <summary>是否由冒烟测试启动</summary>
     public static Boolean SmokeRequested { get; private set; }
 
+    /// <summary>是否由冷启动验证启动。只验证代理能起来，不要求连上服务端</summary>
+    public static Boolean StartRequested { get; private set; }
+
     /// <summary>设置界面日志接收器</summary>
     /// <param name="sink">日志回调</param>
     public static void SetLogSink(Action<String>? sink) => _logSink = sink;
@@ -40,7 +43,9 @@ public static class AgentRuntime
         {
             try
             {
-                SmokeRequested = NSProcessInfo.ProcessInfo.Arguments.Any(e => e.Equals("--smoke", StringComparison.OrdinalIgnoreCase));
+                var args = NSProcessInfo.ProcessInfo.Arguments;
+                SmokeRequested = args.Any(e => e.Equals("--smoke", StringComparison.OrdinalIgnoreCase));
+                StartRequested = args.Any(e => e.Equals("--start", StringComparison.OrdinalIgnoreCase));
 
                 if (_agent == null)
                 {
@@ -59,11 +64,18 @@ public static class AgentRuntime
                 _agent.Start();
 
                 if (SmokeRequested) _ = RunSmokeAsync();
+                else if (StartRequested) _ = RunStartAsync();
             }
             catch (Exception ex)
             {
                 XTrace.WriteException(ex);
                 Log("启动失败：" + ex.Message);
+
+                if (StartRequested)
+                {
+                    WriteResult("agent-start.json", "started", false, ex.Message);
+                    Log("=== Agent start fail ===");
+                }
             }
         }
     }
@@ -96,21 +108,35 @@ public static class AgentRuntime
         }
 
         var ok = await PingOnceAsync().ConfigureAwait(false);
-        var server = _agent?.Setting.Server ?? "";
-        var error = _agent?.LastError ?? "";
+        WriteResult("agent-smoke.json", "ok", ok, _agent?.LastError ?? "");
 
+        Log(ok ? "=== Agent ready ===" : "=== Agent fail ===");
+    }
+
+    /// <summary>冷启动验证。CI 没有 StarServer，只确认代理实例已启动，不要求登录成功</summary>
+    private static async Task RunStartAsync()
+    {
+        // 留出登录尝试时间，便于区分"起来了但连不上服务端"与"根本没起来"
+        await Task.Delay(3_000).ConfigureAwait(false);
+
+        var started = _agent != null;
+        WriteResult("agent-start.json", "started", started, _agent?.LastError ?? "");
+
+        Log(started ? "=== Agent start ===" : "=== Agent start fail ===");
+    }
+
+    private static void WriteResult(String fileName, String flagName, Boolean ok, String error)
+    {
         try
         {
             var dir = _platform?.GetDataPath();
-            if (!dir.IsNullOrEmpty())
-            {
-                var json = $"{{\"ok\":{(ok ? "true" : "false")},\"server\":\"{Escape(server)}\",\"error\":\"{Escape(error)}\",\"time\":\"{DateTime.Now:yyyy-MM-dd HH:mm:ss}\"}}";
-                File.WriteAllText(Path.Combine(dir, "agent-smoke.json"), json);
-            }
+            if (dir.IsNullOrEmpty()) return;
+
+            var server = _agent?.Setting.Server ?? "";
+            var json = $"{{\"{flagName}\":{(ok ? "true" : "false")},\"server\":\"{Escape(server)}\",\"error\":\"{Escape(error)}\",\"time\":\"{DateTime.Now:yyyy-MM-dd HH:mm:ss}\"}}";
+            File.WriteAllText(Path.Combine(dir, fileName), json);
         }
         catch { }
-
-        Log(ok ? "=== Agent ready ===" : "=== Agent fail ===");
     }
 
     private static String Escape(String value) => (value ?? "").Replace("\\", "\\\\").Replace("\"", "\\\"");
