@@ -31,9 +31,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.IP" Version="2.5.2026.1019-beta1510" />
-    <PackageReference Include="NewLife.Redis" Version="6.6.2026.1019-beta1511" />
-    <PackageReference Include="NewLife.Remoting.Extensions" Version="3.9.2026.1021-beta0410" />
+    <PackageReference Include="NewLife.IP" Version="2.6.2026.1024" />
+    <PackageReference Include="NewLife.Redis" Version="7.0.2026.1024" />
+    <PackageReference Include="NewLife.Remoting.Extensions" Version="4.0.2026.1024" />
   </ItemGroup>
 
   <ItemGroup>
