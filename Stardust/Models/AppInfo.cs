@@ -135,7 +135,10 @@ public class AppInfo : IPingRequest, ICloneable
 
                 WorkingSet = _process.WorkingSet64;
                 Threads = _process.Threads.Count;
-                Handles = _process.HandleCount;
+
+                // Linux 下句柄数等价于枚举 /proc/{pid}/fd，跨用户进程会抛 UnauthorizedAccessException。
+                // 句柄数只是参考指标，取不到就跳过，不能让整个进程信息采集失败
+                try { Handles = _process.HandleCount; } catch { }
             }
 
             // 本进程才能采集线程池信息

@@ -18,14 +18,16 @@ public static class OSKindHelper
         var kind = ParseWindows(osName, osVersion);
         if (kind > 0) return kind;
 
-        kind = ParseLinux(osName, osVersion);
-        if (kind > 0) return kind;
-
+        // 移动端与苹果系统必须在 Linux 之前判定：ParseLinux 末尾有"运行在 Linux 上即视为 Linux"的兜底，
+        // 放在后面会把 iOS/macOS/Android 节点误判为 Linux（部署时选错 RID）
         if (osName.IndexOf("Android", StringComparison.OrdinalIgnoreCase) >= 0) return OSKinds.Android;
         if (osName.IndexOf("iOS", StringComparison.OrdinalIgnoreCase) >= 0 ||
             osName.IndexOf("iPhone", StringComparison.OrdinalIgnoreCase) >= 0 ||
             osName.IndexOf("iPad", StringComparison.OrdinalIgnoreCase) >= 0) return OSKinds.iOS;
         if (osName.IndexOf("Mac", StringComparison.InvariantCultureIgnoreCase) >= 0) return OSKinds.MacOSX;
+
+        kind = ParseLinux(osName, osVersion);
+        if (kind > 0) return kind;
 
         return 0;
     }
