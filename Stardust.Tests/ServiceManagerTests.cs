@@ -69,4 +69,32 @@ public class ServiceManagerTests
         Assert.Null(manager.QueryByProcess(-1));
         Assert.Null(manager.QueryByProcess(Environment.ProcessId));
     }
+
+    [Fact(DisplayName = "首次加载服务配置不算变更，不写变更日志")]
+    public void SetServices_FirstLoad_NoChangeLog()
+    {
+        var log = new CaptureLog();
+        using var manager = new ServiceManager { Log = log };
+
+        // 首次加载只是初始化，服务集合从无到有并不是“配置变更”，否则每次启动都会误报
+        manager.SetServices([new ServiceInfo { Name = "app1", FileName = "a.dll" }]);
+        Assert.Single(manager.Services!);
+        Assert.DoesNotContain(log.Messages, e => e.Contains("configuration changed"));
+
+        // 配置真的变了才写变更日志
+        manager.SetServices([new ServiceInfo { Name = "app1", FileName = "b.dll" }]);
+        Assert.Contains(log.Messages, e => e.Contains("configuration changed"));
+    }
+
+    /// <summary>捕获日志的简易实现，用于核对应用服务管理是否写了某条日志</summary>
+    private sealed class CaptureLog : NewLife.Log.Logger
+    {
+        /// <summary>已写入的消息集合</summary>
+        public List<String> Messages { get; } = [];
+
+        protected override void OnWrite(NewLife.Log.LogLevel level, String format, params Object?[] args)
+        {
+            lock (Messages) Messages.Add(args == null || args.Length == 0 ? format : String.Format(format, args));
+        }
+    }
 }

@@ -405,6 +405,8 @@ public class ServiceManager : DisposeBase
         // 一般由外部配置文件改变而驱动，所以本方法不会引发ServiceChanged事件
 
         var svcs = Services;
+        // 首次加载只是初始化，不存在“变更”，不写变更日志，避免每次启动都误报配置变更
+        var loaded = svcs != null;
         var flag = svcs == null || svcs.Length != services.Length;
         if (!flag)
         {
@@ -424,7 +426,7 @@ public class ServiceManager : DisposeBase
         {
             using var span = Tracer?.NewSpan("ServiceManager-SetServices", services);
 
-            WriteLog("Application service configuration changed");
+            if (loaded) WriteLog("Application service configuration changed");
 
             // 拷贝，避免应用后无法及时感知变化。具体ServiceInfo也要克隆，否则上面对比service配置信息时永远失败
             Services = services.Select(e => e.Clone()).ToArray();
