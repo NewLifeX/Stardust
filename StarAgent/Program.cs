@@ -27,6 +27,9 @@ internal class Program
 {
     private static void Main(String[] args)
     {
+        // 先按宿主语言初始化日志语言，保证首次写出的配置文件注释即为本地语言，避免稍后改写
+        StarLocalization.InitLogCulture();
+
 #if NETFRAMEWORK
         // .NET Framework 默认给 POST 附加 Expect: 100-continue 头，请求体要等服务端 100 响应后才发送。
         // 弱网、代理或休眠唤醒场景下容易造成请求体迟到，被服务端按最低速率限制断开（MinRequestBodyDataRate），

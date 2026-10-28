@@ -80,4 +80,46 @@ public class StarLocalizationTests : IDisposable
         Assert.Null(StarLocalization.UseLanguage("sw-KE"));
         Assert.Equal("ja", Localization.Culture?.Name);
     }
+
+    [Fact(DisplayName = "启动初始化只设置日志语言，界面语言保持自动识别")]
+    public void InitLogCultureSetsLogCultureOnly()
+    {
+        var saved = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("zh-CN");
+            Localization.Culture = null;
+            Localization.LogCulture = null;
+
+            StarLocalization.InitLogCulture();
+
+            // 日志语言取宿主语言，配置文件注释才不会先英文后中文
+            Assert.Equal("zh-CN", Localization.LogCulture?.Name);
+            // 界面语言保持自动识别（跟随请求），不能被固定成宿主语言
+            Assert.Null(Localization.Culture);
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = saved;
+        }
+    }
+
+    [Fact(DisplayName = "已有显式语言时启动初始化不覆盖")]
+    public void InitLogCultureKeepsExplicitCulture()
+    {
+        var saved = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("zh-CN");
+            Localization.LogCulture = CultureInfo.GetCultureInfo("ja");
+
+            StarLocalization.InitLogCulture();
+
+            Assert.Equal("ja", Localization.LogCulture?.Name);
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = saved;
+        }
+    }
 }

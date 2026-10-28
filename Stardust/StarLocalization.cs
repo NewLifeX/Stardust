@@ -21,6 +21,21 @@ public static class StarLocalization
     #endregion
 
     #region 方法
+    /// <summary>启动阶段按宿主语言初始化日志语言。应在读取任何配置之前调用</summary>
+    /// <remarks>
+    /// 配置文件是持久化产物，其注释只跟随 <see cref="Localization.LogCulture"/> 或 <see cref="Localization.Culture"/>，
+    /// 不跟随 <see cref="CultureInfo.CurrentUICulture"/>。若不提前设置，首次写出的注释是英文源文，
+    /// 等宿主语言稍后生效时又被改写成本地语言，导致每次启动都把配置文件重写一遍。
+    /// 这里只设置日志语言（配置文件注释），界面语言仍保持自动识别，避免影响按请求切换语言。
+    /// </remarks>
+    public static void InitLogCulture()
+    {
+        // 已显式指定语言（含配置文件里的 Language）时不再覆盖
+        if (Localization.LogCulture != null || Localization.Culture != null) return;
+
+        Localization.LogCulture = CultureInfo.CurrentUICulture;
+    }
+
     /// <summary>归一化语言名称。支持裸语言码、区域语言与带权重的请求头片段</summary>
     /// <param name="name">语言名称，如 zh-CN、zh-TW、de-AT、ja，或 en-US,en;q=0.9</param>
     /// <returns>受支持的语言名称；无法匹配时返回 null</returns>

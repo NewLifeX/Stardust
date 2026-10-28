@@ -10,6 +10,9 @@ internal class Program
 {
     private static void Main(String[] args)
     {
+        // 先按宿主语言初始化日志语言，保证首次写出的配置文件注释即为本地语言，避免稍后改写
+        Stardust.StarLocalization.InitLogCulture();
+
         // 启用控制台日志，拦截所有异常
         XTrace.UseConsole();
 
