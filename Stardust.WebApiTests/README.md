@@ -4,9 +4,9 @@ Stardust.WebApi（解耦纯 API 版）的**集成测试工程**（xUnit，net10.
 
 ## 测试分层定位
 
-本工程是** HTTP 集成测试**：用 `WebApplicationFactory<Program>` 启动真实的 Stardust.WebApi 主机，通过真实 HTTP 请求（带 Bearer 登录态）验证各区域的 `GetFields` 等端点，不 mock 控制器与数据层。
+本工程是** HTTP 集成测试**：用 `WebApplicationFactory<Program>` 启动真实的 Stardust.WebApi 主机，通过真实 HTTP 请求（带 Bearer 登录态）验证各区域的 `meta` 等端点，不 mock 控制器与数据层。
 
-- 验证对象：统一响应信封 `{code, data, message}`、各区域字段端点可用性、ViewKinds 契约。
+- 验证对象：统一响应信封 `{code, data, message}`、各区域字段端点（`GET {area}/{controller}/meta`）可用性、`list/form/search` 区段契约。
 - 单元测试（服务层、实体行为）放在 `Stardust.ServerTests`，不在本工程。
 - 前端 e2e 在 `Stardust.Web.Vue`（`pnpm exec playwright test`），与后端测试分层互不重叠。
 
@@ -37,10 +37,10 @@ Stardust.WebApi（解耦纯 API 版）的**集成测试工程**（xUnit，net10.
 
 ## 新增测试指引
 
-- 区域字段端点：在 `Areas/` 下对应区域文件里给 `Endpoints` 静态属性加一行 `"{Area}/{Controller}/GetFields?kind=List"`，复用 `[Theory] GetFields_ReturnsFieldList`。
+- 区域字段端点：在 `Areas/` 下对应区域文件里给 `Endpoints` 静态属性加一行 `"{Area}/{Controller}/meta"`，复用 `[Theory] Meta_ReturnsListFields`（断言 `data.list`；配置页只有 `form`，改用 `Meta_ConfigPage_ReturnsFormFields`）。
 - 需要自定义断言的端点：注入 `ITestOutputHelper` 构造 `ApiClient`，用 `GetApiAsync<T>` / `GetJsonAsync`，业务断言写在测试方法内（断言留在测试里，不藏进基类抛异常）。
 - 新的特性路由控制器（非 `api/{area}/{controller}/{action}` 模板）：在 `ApiClient.NormalizeUrl` 的 `_routeRules` 里加一行前缀映射。
-- 统一信封契约：见 `Contract/ApiResponseContractTests.cs`（覆盖 GetFields 的 5 种 ViewKinds）。
+- 统一信封契约：见 `Contract/ApiResponseContractTests.cs`（覆盖 `meta` 的 `list`/`form`/`search` 区段与 `add`/`detail` 省略规则）。
 
 ### 新增测试检查清单
 
