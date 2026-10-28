@@ -108,10 +108,18 @@ init({
 - 配置端点失败时回退到 `data-stardust-*` 与默认值，不阻塞页面加载。
 - `disabled` 是关闭开关列表（`page`/`route`/`error`/`resource`/`fetch`/`xhr`），不是必填的集成列表。
 - 建议在 `sessionStorage` 缓存 5 分钟。
+- 星尘服务端已实现该端点（`GET /stardust/browser-config`，`BrowserController`）：有 `appId` 时校验应用存在且启用，未知应用返回错误码；响应带 `Cache-Control: public, max-age=300`，不含任何密钥，`server` 取当前请求的协议与主机，便于同源代理场景直接回连。
 
 ### 3.3 短期匿名 Token
 
 `POST /stardust/browser-token` 校验 `appId`、Origin/Referer、域名白名单与限流，签发 5–10 分钟、仅 `trace:write` 的匿名 Token。前端只持有短期 Token，永不出现 App Secret；`401` 时刷新一次并重试。`sendBeacon` 无法设置自定义头，推荐 `fetch(..., { keepalive: true })` 或专用 `/Trace/ReportBeacon`。
+
+服务端实现要点（`BrowserTokenService` + `BrowserController`）：
+
+- 令牌是 `bw_` 前缀的不透明随机串，寄存于 `ICacheProvider`（单机内存、分布式为 Redis），默认 10 分钟过期。刻意不用 JWT，避免被当作应用令牌去调用配置、部署等其它受保护接口。
+- 来源校验取 `Origin`，缺失时回退 `Referer`；未配置 `CorsOrigins` 时放行任意来源（与 CORS 策略一致），配置后仅白名单来源可申请。
+- 限流：同一应用与来源 IP 在有效期内最多 60 次，超出返回 403；应用还需通过 `WhiteIP` 校验。
+- `Trace/Report` 在令牌不是 JWT 时尝试按浏览器令牌校验，令牌主体必须与上报应用一致，防止冒名灌数据。
 
 ### 3.4 链路关联
 
@@ -179,10 +187,10 @@ Stardust.tracer                   // 高级用法
 - 支持 `initialTraceparent`：`page.load` 可复用后端注入的 TraceId/ParentId。
 - 页面级链路连续性：`page.load`、`page.view`、fetch/XHR、手动 Span 共用同一页面 TraceId；有初始 `traceparent` 时整体挂到后端链路。
 - 保留页面/路由/JS 错误/资源错误/fetch/XHR/离页冲刷。
+- 服务端 `GET /stardust/browser-config` 与 `POST /stardust/browser-token` 已实现（`BrowserController`），配 9 例服务端测试（配置下发、来源校验、令牌签发与上报、冒名拒绝、令牌不得用于其它接口、限流）。
 
 待后续：
 
-- `GET /stardust/browser-config` 与 `POST /stardust/browser-token` 服务端端点。
 - Web Vitals、Session Replay、OTLP 导出、框架专用包（React/Vue）。
 - CDN 正式域名与版本化产物（`stardust.min.js` / `stardust-loader.min.js`）。
 
@@ -193,7 +201,7 @@ Stardust.tracer                   // 高级用法
 | 阶段 | 内容 |
 |------|------|
 | P1（MVP） | loader + `data-stardust-*`、`Stardust.init`、配置端点回退、页面/路由/错误/fetch/XHR、`traceparent`、开关与采样 |
-| P2 | 配置/Token 服务端端点、Web Vitals、懒加载 loader、Source Map |
+| P2 | Web Vitals、懒加载 loader、Source Map（配置/Token 服务端端点已完成） |
 | P3 | Session Replay、OTLP/OpenTelemetry 桥接、跨域链路、React/Vue 封装 |
 
 > 原则：一行接入、默认自动、前端无 secret、W3C `traceparent` 唯一跨端契约。

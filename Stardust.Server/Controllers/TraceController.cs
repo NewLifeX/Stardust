@@ -19,7 +19,7 @@ namespace Stardust.Server.Controllers;
 
 //[ApiController]
 [Route("[controller]")]
-public class TraceController(ITraceStatService stat, IAppDayStatService appStat, ITraceItemStatService itemStat, ITokenService tokenService, AppOnlineService appOnline, UplinkService uplink, MonitorService monitorService, StarServerSetting setting, ICacheProvider cacheProvider, ITracer tracer) : ControllerBase
+public class TraceController(ITraceStatService stat, IAppDayStatService appStat, ITraceItemStatService itemStat, ITokenService tokenService, AppOnlineService appOnline, UplinkService uplink, MonitorService monitorService, StarServerSetting setting, ICacheProvider cacheProvider, ITracer tracer, BrowserTokenService browserToken) : ControllerBase
 {
     /// <summary>接收埋点数据上报。支持 Vip 客户端高频采样与排除项</summary>
     /// <param name="model">埋点数据模型</param>
@@ -122,6 +122,23 @@ public class TraceController(ITraceStatService stat, IAppDayStatService appStat,
             if (clientId.IsNullOrEmpty()) clientId = jwt.Id;
 
             ap = ap1;
+        }
+        // 浏览器短期令牌。不透明令牌，仅能用于埋点上报，不能当作应用令牌访问其它接口
+        else if (!token.IsNullOrEmpty() && browserToken != null)
+        {
+            var ap2 = browserToken.Validate(token);
+            if (ap2 != null)
+            {
+                // 令牌主体必须与上报应用一致，防止冒名向其它应用灌数据
+                if (!appId.IsNullOrEmpty() && !appId.EqualIgnoreCase(ap2.Name))
+                    throw new ApiException(ApiCode.Forbidden, L.T("Token subject [{0}] does not match the reporting application [{1}].", ap2.Name, appId));
+
+                if (appId.IsNullOrEmpty()) appId = ap2.Name;
+
+                ap = ap2;
+            }
+            else if (!setting.AnonymousReport)
+                throw new ApiException(ApiCode.Unauthorized, L.T("No valid token provided; anonymous reporting is forbidden. Enable AnonymousReport in StarServer to allow multi-level cascading."));
         }
         // 匿名上报仅用于多级级联（下级StarServer转发）或未配置密钥的极简SDK，默认关闭（安全V-9）
         else if (!setting.AnonymousReport)
