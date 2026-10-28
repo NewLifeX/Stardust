@@ -8,11 +8,15 @@ using XCode.DataAccessLayer;
 
 namespace Stardust.Server.Services;
 
+/// <summary>MySQL 监控服务接口。供管理页面手动触发采集</summary>
 public interface IMySqlService
 {
+    /// <summary>采集单个 MySQL 节点的版本与运行状态</summary>
+    /// <param name="node">MySQL 节点</param>
     void TraceNode(MySqlNode node);
 }
 
+/// <summary>MySQL 监控服务。定时采集节点版本与全局状态，连续失败 5 次后停用节点</summary>
 public class MySqlService : IHostedService, IMySqlService
 {
     /// <summary>计算周期。默认60秒</summary>
@@ -29,6 +33,9 @@ public class MySqlService : IHostedService, IMySqlService
         _log = log;
     }
 
+    /// <summary>启动定时器。首次采集在 60 秒后开始，避免与应用启动争抢资源</summary>
+    /// <param name="cancellationToken">取消通知</param>
+    /// <returns>已完成的任务</returns>
     public Task StartAsync(CancellationToken cancellationToken)
     {
         // 初始化定时器
@@ -37,6 +44,9 @@ public class MySqlService : IHostedService, IMySqlService
         return Task.CompletedTask;
     }
 
+    /// <summary>停止并释放定时器</summary>
+    /// <param name="cancellationToken">取消通知</param>
+    /// <returns>已完成的任务</returns>
     public Task StopAsync(CancellationToken cancellationToken)
     {
         _traceNode?.TryDispose();
@@ -82,6 +92,8 @@ public class MySqlService : IHostedService, IMySqlService
         }
     }
 
+    /// <summary>采集单个 MySQL 节点的版本与运行状态，并落库保存采样数据</summary>
+    /// <param name="node">MySQL 节点</param>
     public void TraceNode(MySqlNode node)
     {
         using var span = _tracer?.NewSpan($"MySqlService-TraceNode", node);
