@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
+using NewLife.Log;
 using Stardust.Data.Monitors;
 using Stardust.Server;
 using Stardust.Server.Services;
@@ -67,6 +69,46 @@ public class DataRetentionServiceTests
         {
             AppMinuteStat.FindByID(old.ID)?.Delete();
             AppMinuteStat.FindByID(fresh.ID)?.Delete();
+        }
+    }
+
+    [Fact(DisplayName = "清理日志逐表带表名，能命中词表译文")]
+    public void DoWork_LogsPerTableFormat()
+    {
+        var log = new CaptureLog();
+        var old = XTrace.Log;
+        XTrace.Log = log;
+        try
+        {
+            var service = new DataRetentionService(new StarServerSetting { DataRetention = 1, DataRetention2 = 2, DataRetention3 = 3 }, null);
+            RunWork(service);
+        }
+        finally
+        {
+            XTrace.Log = old;
+        }
+
+        // 词表按表名逐条提供译文，格式串里必须带表名；用 {2} 之类通用模板会在运行时命中不到译文而退回英文
+        String[] tables =
+        [
+            "NodeData", "RedisData", "AppMeter", "AppMinuteStat", "TraceMinuteStat", "TraceHourStat", "TraceDayStat",
+            "NodeHistory", "AppHistory", "AppDeployHistory", "AlarmHistory",
+        ];
+        foreach (var table in tables)
+        {
+            Assert.Contains(log.Messages, e => e.Contains($"{table} records before"));
+        }
+    }
+
+    /// <summary>捕获日志的简易实现，用于核对清理日志的格式串</summary>
+    private sealed class CaptureLog : Logger
+    {
+        /// <summary>已写入的消息集合</summary>
+        public List<String> Messages { get; } = [];
+
+        protected override void OnWrite(LogLevel level, String format, params Object?[] args)
+        {
+            lock (Messages) Messages.Add(args == null || args.Length == 0 ? format : String.Format(format, args));
         }
     }
 }

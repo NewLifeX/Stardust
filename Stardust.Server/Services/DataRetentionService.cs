@@ -48,17 +48,18 @@ public class DataRetentionService(StarServerSetting setting, ITracer tracer) : I
         try
         {
             // 逐表清理。单表失败（表缺失/库锁等）只记录异常，不影响后续表的清理
-            Clear("NodeData", NodeData.DeleteBefore, time2);
-            Clear("RedisData", RedisData.DeleteBefore, time2);
-            Clear("AppMeter", AppMeter.DeleteBefore, time2);
-            Clear("AppMinuteStat", AppMinuteStat.DeleteBefore, time);
-            Clear("TraceMinuteStat", TraceMinuteStat.DeleteBefore, time);
-            Clear("TraceHourStat", TraceHourStat.DeleteBefore, time2);
-            Clear("TraceDayStat", TraceDayStat.DeleteBefore, time3);
-            Clear("NodeHistory", NodeHistory.DeleteBefore, time3);
-            Clear("AppHistory", AppHistory.DeleteBefore, time3);
-            Clear("AppDeployHistory", AppDeployHistory.DeleteBefore, time3);
-            Clear("AlarmHistory", AlarmHistory.DeleteBefore, time3);
+            // 格式串里的表名不能改用占位符：词表按“表名”逐条提供译文，通用模板在词表里没有对应条目，会退回英文
+            Clear(NodeData.DeleteBefore, time2, "Deleted {1:n0} NodeData records before [{0}]");
+            Clear(RedisData.DeleteBefore, time2, "Deleted {1:n0} RedisData records before [{0}]");
+            Clear(AppMeter.DeleteBefore, time2, "Deleted {1:n0} AppMeter records before [{0}]");
+            Clear(AppMinuteStat.DeleteBefore, time, "Deleted {1:n0} AppMinuteStat records before [{0}]");
+            Clear(TraceMinuteStat.DeleteBefore, time, "Deleted {1:n0} TraceMinuteStat records before [{0}]");
+            Clear(TraceHourStat.DeleteBefore, time2, "Deleted {1:n0} TraceHourStat records before [{0}]");
+            Clear(TraceDayStat.DeleteBefore, time3, "Deleted {1:n0} TraceDayStat records before [{0}]");
+            Clear(NodeHistory.DeleteBefore, time3, "Deleted {1:n0} NodeHistory records before [{0}]");
+            Clear(AppHistory.DeleteBefore, time3, "Deleted {1:n0} AppHistory records before [{0}]");
+            Clear(AppDeployHistory.DeleteBefore, time3, "Deleted {1:n0} AppDeployHistory records before [{0}]");
+            Clear(AlarmHistory.DeleteBefore, time3, "Deleted {1:n0} AlarmHistory records before [{0}]");
 
             //// 删除监控明细数据
             //rs = TraceData.DeleteBefore(time);
@@ -73,19 +74,19 @@ public class DataRetentionService(StarServerSetting setting, ITracer tracer) : I
     }
 
     /// <summary>清理单张表的过期数据。单表异常只记录，不中断整条清理链</summary>
-    /// <param name="name">表名，仅用于日志</param>
     /// <param name="deleteBefore">删除方法，参数为时间阈值，返回删除行数</param>
     /// <param name="time">时间阈值</param>
-    private void Clear(String name, Func<DateTime, Int32> deleteBefore, DateTime time)
+    /// <param name="format">日志格式串。必须与词表中的逐表译文完全一致，否则命中不到译文而退回英文</param>
+    private void Clear(Func<DateTime, Int32> deleteBefore, DateTime time, String format)
     {
         try
         {
             var rs = deleteBefore(time);
-            XTrace.WriteLine("Deleted {1:n0} {2} records before [{0}]", time.ToFullString(), rs, name);
+            XTrace.WriteLine(format, time.ToFullString(), rs);
         }
         catch (Exception ex)
         {
-            XTrace.Log.Error("Failed to clean {0} before [{1}]: {2}", name, time.ToFullString(), ex.Message);
+            XTrace.Log.Error("Failed to clean {0} before [{1}]: {2}", format, time.ToFullString(), ex.Message);
         }
     }
 }
