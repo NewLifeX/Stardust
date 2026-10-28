@@ -14,28 +14,28 @@ public class NodesTests
 
     public static TheoryData<String> Endpoints => new()
     {
-        "Nodes/Node/GetFields?kind=List",
-        "Nodes/NodeOnline/GetFields?kind=List",
-        "Nodes/NodeData/GetFields?kind=List",
-        "Nodes/NodeHistory/GetFields?kind=List",
-        "Nodes/NodeLocation/GetFields?kind=List",
-        "Nodes/NodeRule/GetFields?kind=List",
-        "Nodes/NodeFramework/GetFields?kind=List",
-        "Nodes/NodeVersion/GetFields?kind=List",
-        "Nodes/NodeStat/GetFields?kind=List",
-        "Nodes/NodeCommand/GetFields?kind=List",
-        "Nodes/DomainProvider/GetFields?kind=List",
-        "Nodes/DotNetPackage/GetFields?kind=List",
-        "Nodes/ProductPackage/GetFields?kind=List",
-        "Nodes/ProductRelease/GetFields?kind=List",
+        "Nodes/Node/meta",
+        "Nodes/NodeOnline/meta",
+        "Nodes/NodeData/meta",
+        "Nodes/NodeHistory/meta",
+        "Nodes/NodeLocation/meta",
+        "Nodes/NodeRule/meta",
+        "Nodes/NodeFramework/meta",
+        "Nodes/NodeVersion/meta",
+        "Nodes/NodeStat/meta",
+        "Nodes/NodeCommand/meta",
+        "Nodes/DomainProvider/meta",
+        "Nodes/DotNetPackage/meta",
+        "Nodes/ProductPackage/meta",
+        "Nodes/ProductRelease/meta",
     };
 
     [Theory]
     [MemberData(nameof(Endpoints))]
-    public async Task GetFields_ReturnsFieldList(String endpoint)
+    public async Task Meta_ReturnsListFields(String endpoint)
     {
         var api = await _api.GetJsonAsync(endpoint);
 
-        ApiAssert.FieldList(api.Data, endpoint);
+        ApiAssert.MetaFields(api.Data, "list", endpoint);
     }
 }

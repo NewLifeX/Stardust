@@ -14,25 +14,24 @@ public class DeploymentTests
 
     public static TheoryData<String> Endpoints => new()
     {
-        "Deployment/AppBuildNode/GetFields?kind=List",
-        "Deployment/AppDeploy/GetFields?kind=List",
-        "Deployment/AppDeployHistory/GetFields?kind=List",
-        "Deployment/AppDeployNode/GetFields?kind=List",
-        "Deployment/AppDeployVersion/GetFields?kind=List",
-        "Deployment/AppPipeline/GetFields?kind=List",
-        "Deployment/AppPipelineRun/GetFields?kind=List",
-        "Deployment/AppPipelineStep/GetFields?kind=List",
-        "Deployment/Attachment/GetFields?kind=List",
-        "Deployment/PipelineWebhook/GetFields?kind=List",
-        "Deployment/SslCertificate/GetFields?kind=List",
+        "Deployment/AppBuildNode/meta",
+        "Deployment/AppDeploy/meta",
+        "Deployment/AppDeployHistory/meta",
+        "Deployment/AppDeployNode/meta",
+        "Deployment/AppDeployVersion/meta",
+        "Deployment/AppPipeline/meta",
+        "Deployment/AppPipelineRun/meta",
+        "Deployment/AppPipelineStep/meta",
+        "Deployment/Attachment/meta",
+        "Deployment/SslCertificate/meta",
     };
 
     [Theory]
     [MemberData(nameof(Endpoints))]
-    public async Task GetFields_ReturnsFieldList(String endpoint)
+    public async Task Meta_ReturnsListFields(String endpoint)
     {
         var api = await _api.GetJsonAsync(endpoint);
 
-        ApiAssert.FieldList(api.Data, endpoint);
+        ApiAssert.MetaFields(api.Data, "list", endpoint);
     }
 }

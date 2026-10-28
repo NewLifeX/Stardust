@@ -14,23 +14,23 @@ public class RegistryTests
 
     public static TheoryData<String> Endpoints => new()
     {
-        "Registry/App/GetFields?kind=List",
-        "Registry/AppOnline/GetFields?kind=List",
-        "Registry/AppMeter/GetFields?kind=List",
-        "Registry/AppHistory/GetFields?kind=List",
-        "Registry/AppClientLog/GetFields?kind=List",
-        "Registry/AppCommand/GetFields?kind=List",
-        "Registry/AppConsume/GetFields?kind=List",
-        "Registry/AppService/GetFields?kind=List",
-        "Registry/Service/GetFields?kind=List",
+        "Registry/App/meta",
+        "Registry/AppOnline/meta",
+        "Registry/AppMeter/meta",
+        "Registry/AppHistory/meta",
+        "Registry/AppClientLog/meta",
+        "Registry/AppCommand/meta",
+        "Registry/AppConsume/meta",
+        "Registry/AppService/meta",
+        "Registry/Service/meta",
     };
 
     [Theory]
     [MemberData(nameof(Endpoints))]
-    public async Task GetFields_ReturnsFieldList(String endpoint)
+    public async Task Meta_ReturnsListFields(String endpoint)
     {
         var api = await _api.GetJsonAsync(endpoint);
 
-        ApiAssert.FieldList(api.Data, endpoint);
+        ApiAssert.MetaFields(api.Data, "list", endpoint);
     }
 }

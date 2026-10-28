@@ -14,20 +14,34 @@ public class PlatformTests
 
     public static TheoryData<String> Endpoints => new()
     {
-        "Platform/GalaxyProject/GetFields?kind=List",
-        "Platform/McpAudit/GetFields?kind=List",
-        "Platform/McpToken/GetFields?kind=List",
-        "Platform/McpTokenResource/GetFields?kind=List",
-        "Platform/ProjectUser/GetFields?kind=List",
-        "Platform/StarServer/GetFields?kind=List",
+        "Platform/GalaxyProject/meta",
+        "Platform/McpAudit/meta",
+        "Platform/McpToken/meta",
+        "Platform/McpTokenResource/meta",
+        "Platform/ProjectUser/meta",
     };
 
     [Theory]
     [MemberData(nameof(Endpoints))]
-    public async Task GetFields_ReturnsFieldList(String endpoint)
+    public async Task Meta_ReturnsListFields(String endpoint)
     {
         var api = await _api.GetJsonAsync(endpoint);
 
-        ApiAssert.FieldList(api.Data, endpoint);
+        ApiAssert.MetaFields(api.Data, "list", endpoint);
+    }
+
+    /// <summary>配置页（ConfigController）没有列表区段，字段统一在 form 区段下发。</summary>
+    public static TheoryData<String> ConfigPages => new()
+    {
+        "Platform/StarServer/meta",
+    };
+
+    [Theory]
+    [MemberData(nameof(ConfigPages))]
+    public async Task Meta_ConfigPage_ReturnsFormFields(String endpoint)
+    {
+        var api = await _api.GetJsonAsync(endpoint);
+
+        ApiAssert.MetaFields(api.Data, "form", endpoint);
     }
 }

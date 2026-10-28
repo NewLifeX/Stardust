@@ -14,19 +14,19 @@ public class ConfigsTests
 
     public static TheoryData<String> Endpoints => new()
     {
-        "Configs/AppConfig/GetFields?kind=List",
-        "Configs/AppRule/GetFields?kind=List",
-        "Configs/ConfigData/GetFields?kind=List",
-        "Configs/ConfigHistory/GetFields?kind=List",
+        "Configs/AppConfig/meta",
+        "Configs/AppRule/meta",
+        "Configs/ConfigData/meta",
+        "Configs/ConfigHistory/meta",
     };
 
     [Theory]
     [MemberData(nameof(Endpoints))]
-    public async Task GetFields_ReturnsFieldList(String endpoint)
+    public async Task Meta_ReturnsListFields(String endpoint)
     {
         var api = await _api.GetJsonAsync(endpoint);
 
-        ApiAssert.FieldList(api.Data, endpoint);
+        ApiAssert.MetaFields(api.Data, "list", endpoint);
     }
 
     [Fact]

@@ -14,16 +14,16 @@ public class MySqlTests
 
     public static TheoryData<String> Endpoints => new()
     {
-        "MySql/MySqlData/GetFields?kind=List",
-        "MySql/MySqlNode/GetFields?kind=List",
+        "MySql/MySqlData/meta",
+        "MySql/MySqlNode/meta",
     };
 
     [Theory]
     [MemberData(nameof(Endpoints))]
-    public async Task GetFields_ReturnsFieldList(String endpoint)
+    public async Task Meta_ReturnsListFields(String endpoint)
     {
         var api = await _api.GetJsonAsync(endpoint);
 
-        ApiAssert.FieldList(api.Data, endpoint);
+        ApiAssert.MetaFields(api.Data, "list", endpoint);
     }
 }

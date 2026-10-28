@@ -14,17 +14,17 @@ public class RedisTests
 
     public static TheoryData<String> Endpoints => new()
     {
-        "Redis/RedisNode/GetFields?kind=List",
-        "Redis/RedisData/GetFields?kind=List",
-        "Redis/RedisMessageQueue/GetFields?kind=List",
+        "Redis/RedisNode/meta",
+        "Redis/RedisData/meta",
+        "Redis/RedisMessageQueue/meta",
     };
 
     [Theory]
     [MemberData(nameof(Endpoints))]
-    public async Task GetFields_ReturnsFieldList(String endpoint)
+    public async Task Meta_ReturnsListFields(String endpoint)
     {
         var api = await _api.GetJsonAsync(endpoint);
 
-        ApiAssert.FieldList(api.Data, endpoint);
+        ApiAssert.MetaFields(api.Data, "list", endpoint);
     }
 }

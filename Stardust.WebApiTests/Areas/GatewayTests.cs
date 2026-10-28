@@ -14,18 +14,18 @@ public class GatewayTests
 
     public static TheoryData<String> Endpoints => new()
     {
-        "Gateway/GatewayCert/GetFields?kind=List",
-        "Gateway/GatewayCluster/GetFields?kind=List",
-        "Gateway/GatewayNode/GetFields?kind=List",
-        "Gateway/GatewayRoute/GetFields?kind=List",
+        "Gateway/GatewayCert/meta",
+        "Gateway/GatewayCluster/meta",
+        "Gateway/GatewayNode/meta",
+        "Gateway/GatewayRoute/meta",
     };
 
     [Theory]
     [MemberData(nameof(Endpoints))]
-    public async Task GetFields_ReturnsFieldList(String endpoint)
+    public async Task Meta_ReturnsListFields(String endpoint)
     {
         var api = await _api.GetJsonAsync(endpoint);
 
-        ApiAssert.FieldList(api.Data, endpoint);
+        ApiAssert.MetaFields(api.Data, "list", endpoint);
     }
 }

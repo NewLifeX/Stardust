@@ -14,29 +14,29 @@ public class MonitorsTests
 
     public static TheoryData<String> Endpoints => new()
     {
-        "Monitors/TraceData/GetFields?kind=List",
-        "Monitors/Trace/GetFields?kind=List",
-        "Monitors/AlarmGroup/GetFields?kind=List",
-        "Monitors/AlarmHistory/GetFields?kind=List",
-        "Monitors/AlarmRecord/GetFields?kind=List",
-        "Monitors/AppDayStat/GetFields?kind=List",
-        "Monitors/AppMinuteStat/GetFields?kind=List",
-        "Monitors/AppTracer/GetFields?kind=List",
-        "Monitors/SampleData2/GetFields?kind=List",
-        "Monitors/SampleData/GetFields?kind=List",
-        "Monitors/TraceDayStat/GetFields?kind=List",
-        "Monitors/TraceHourStat/GetFields?kind=List",
-        "Monitors/TraceItem/GetFields?kind=List",
-        "Monitors/TraceMinuteStat/GetFields?kind=List",
-        "Monitors/TraceRule/GetFields?kind=List",
+        "Monitors/TraceData/meta",
+        "Monitors/Trace/meta",
+        "Monitors/AlarmGroup/meta",
+        "Monitors/AlarmHistory/meta",
+        "Monitors/AlarmRecord/meta",
+        "Monitors/AppDayStat/meta",
+        "Monitors/AppMinuteStat/meta",
+        "Monitors/AppTracer/meta",
+        "Monitors/SampleData2/meta",
+        "Monitors/SampleData/meta",
+        "Monitors/TraceDayStat/meta",
+        "Monitors/TraceHourStat/meta",
+        "Monitors/TraceItem/meta",
+        "Monitors/TraceMinuteStat/meta",
+        "Monitors/TraceRule/meta",
     };
 
     [Theory]
     [MemberData(nameof(Endpoints))]
-    public async Task GetFields_ReturnsFieldList(String endpoint)
+    public async Task Meta_ReturnsListFields(String endpoint)
     {
         var api = await _api.GetJsonAsync(endpoint);
 
-        ApiAssert.FieldList(api.Data, endpoint);
+        ApiAssert.MetaFields(api.Data, "list", endpoint);
     }
 }

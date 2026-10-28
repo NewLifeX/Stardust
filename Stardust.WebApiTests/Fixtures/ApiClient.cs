@@ -115,7 +115,7 @@ public sealed class ApiClient
         }
 
         Assert.NotNull(api);
-        Assert.Equal(0, api!.Code);
+        Assert.True(api!.Code == 0, $"[{url}] 信封 Code={api.Code} 非 0（Message={api.Message}）：{raw}");
 
         return api;
     }
