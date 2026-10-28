@@ -221,3 +221,7 @@
 "Attachment download authentication. Whether to verify the attachment download token for /cube/file. Default false.": "مصادقة تنزيل المرفقات. هل يتم التحقق من رمز تنزيل المرفقات لمسار /cube/file. الافتراضي false."
 "Public attachment categories that require no login. Comma separated; matching items can be downloaded anonymously.": "فئات المرفقات العامة التي لا تتطلب تسجيل الدخول. مفصولة بفواصل، ويمكن تنزيل العناصر المطابقة دون الكشف عن الهوية."
 "Attachment download token validity. Seconds, default 600.": "صلاحية رمز تنزيل المرفقات. بالثواني، الافتراضي 600."
+# 运行时消息补充词条
+"DotNetSyncService.Sync {0}": "DotNetSyncService يقوم بمزامنة {0}"
+"DotNetSyncService failed to sync {0}: {1}": "فشل DotNetSyncService في مزامنة {0}: {1}"
+"DotNetSyncService.Error {0}": "خطأ DotNetSyncService: {0}"

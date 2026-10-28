@@ -221,3 +221,7 @@
 "Attachment download authentication. Whether to verify the attachment download token for /cube/file. Default false.": "সংযুক্তি ডাউনলোড প্রমাণীকরণ। /cube/file-এর জন্য সংযুক্তি ডাউনলোড টোকেন যাচাই করা হবে কি না। ডিফল্ট false।"
 "Public attachment categories that require no login. Comma separated; matching items can be downloaded anonymously.": "লগইন ছাড়াই প্রকাশ্য সংযুক্তির শ্রেণি। কমা দিয়ে পৃথক, মিলে যাওয়া আইটেম বেনামে ডাউনলোড করা যায়।"
 "Attachment download token validity. Seconds, default 600.": "সংযুক্তি ডাউনলোড টোকেনের বৈধতা। সেকেন্ড, ডিফল্ট 600।"
+# 运行时消息补充词条
+"DotNetSyncService.Sync {0}": "DotNetSyncService {0} সিঙ্ক করছে"
+"DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService {0} সিঙ্ক করতে ব্যর্থ: {1}"
+"DotNetSyncService.Error {0}": "DotNetSyncService ত্রুটি: {0}"

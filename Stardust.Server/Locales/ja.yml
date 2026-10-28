@@ -221,3 +221,7 @@
 "Attachment download authentication. Whether to verify the attachment download token for /cube/file. Default false.": "添付ファイルのダウンロード認証。/cube/fileの添付ファイルダウンロードトークンを検証するかどうか。既定値false。"
 "Public attachment categories that require no login. Comma separated; matching items can be downloaded anonymously.": "ログイン不要の公開添付ファイル分類。カンマ区切り、一致した項目は匿名でダウンロードできます。"
 "Attachment download token validity. Seconds, default 600.": "添付ファイルのダウンロードトークンの有効期間。秒、既定値600。"
+# 运行时消息补充词条
+"DotNetSyncService.Sync {0}": "DotNetSyncService が {0} を同期しています"
+"DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService による {0} の同期に失敗しました: {1}"
+"DotNetSyncService.Error {0}": "DotNetSyncService エラー: {0}"

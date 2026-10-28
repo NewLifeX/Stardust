@@ -221,3 +221,7 @@
 "Attachment download authentication. Whether to verify the attachment download token for /cube/file. Default false.": "การรับรองความถูกต้องของการดาวน์โหลดไฟล์แนบ จะตรวจสอบโทเค็นดาวน์โหลดไฟล์แนบสำหรับ /cube/file หรือไม่ ค่าเริ่มต้น false"
 "Public attachment categories that require no login. Comma separated; matching items can be downloaded anonymously.": "หมวดหมู่ไฟล์แนบสาธารณะที่ไม่ต้องเข้าสู่ระบบ คั่นด้วยเครื่องหมายจุลภาค รายการที่ตรงกันสามารถดาวน์โหลดได้โดยไม่ระบุตัวตน"
 "Attachment download token validity. Seconds, default 600.": "อายุของโทเค็นดาวน์โหลดไฟล์แนบ หน่วยเป็นวินาที ค่าเริ่มต้น 600"
+# 运行时消息补充词条
+"DotNetSyncService.Sync {0}": "DotNetSyncService กำลังซิงค์ {0}"
+"DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService ซิงค์ {0} ไม่สำเร็จ: {1}"
+"DotNetSyncService.Error {0}": "ข้อผิดพลาด DotNetSyncService: {0}"

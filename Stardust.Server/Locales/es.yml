@@ -221,3 +221,7 @@
 "Attachment download authentication. Whether to verify the attachment download token for /cube/file. Default false.": "Autenticación de descarga de adjuntos. Indica si se verifica el token de descarga de adjuntos para /cube/file. Predeterminado false."
 "Public attachment categories that require no login. Comma separated; matching items can be downloaded anonymously.": "Categorías de adjuntos públicos sin inicio de sesión. Separadas por comas; los elementos coincidentes se pueden descargar de forma anónima."
 "Attachment download token validity. Seconds, default 600.": "Validez del token de descarga de adjuntos. Segundos, predeterminado 600."
+# 运行时消息补充词条
+"DotNetSyncService.Sync {0}": "DotNetSyncService está sincronizando {0}"
+"DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService no pudo sincronizar {0}: {1}"
+"DotNetSyncService.Error {0}": "Error de DotNetSyncService: {0}"

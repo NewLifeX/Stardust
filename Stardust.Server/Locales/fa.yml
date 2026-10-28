@@ -221,3 +221,7 @@
 "Attachment download authentication. Whether to verify the attachment download token for /cube/file. Default false.": "احراز هویت دانلود پیوست. اینکه توکن دانلود پیوست برای /cube/file بررسی شود یا نه. پیش‌فرض false."
 "Public attachment categories that require no login. Comma separated; matching items can be downloaded anonymously.": "دسته‌های پیوست عمومی بدون ورود. با ویرگول جدا می‌شوند و موارد منطبق به‌صورت ناشناس قابل دانلود هستند."
 "Attachment download token validity. Seconds, default 600.": "اعتبار توکن دانلود پیوست. ثانیه، پیش‌فرض 600."
+# 运行时消息补充词条
+"DotNetSyncService.Sync {0}": "DotNetSyncService در حال همگام‌سازی {0} است"
+"DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService در همگام‌سازی {0} ناموفق بود: {1}"
+"DotNetSyncService.Error {0}": "خطای DotNetSyncService: {0}"

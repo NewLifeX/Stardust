@@ -221,3 +221,7 @@
 "Attachment download authentication. Whether to verify the attachment download token for /cube/file. Default false.": "Autentisering av bilagsnedladdning. Om nedladdningstoken för bilagor ska verifieras för /cube/file. Standard false."
 "Public attachment categories that require no login. Comma separated; matching items can be downloaded anonymously.": "Offentliga bilagekategorier utan inloggning. Kommaseparerade, matchande objekt kan laddas ned anonymt."
 "Attachment download token validity. Seconds, default 600.": "Giltighet för nedladdningstoken för bilagor. Sekunder, standard 600."
+# 运行时消息补充词条
+"DotNetSyncService.Sync {0}": "DotNetSyncService synkroniserar {0}"
+"DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService kunde inte synkronisera {0}: {1}"
+"DotNetSyncService.Error {0}": "Fel i DotNetSyncService: {0}"

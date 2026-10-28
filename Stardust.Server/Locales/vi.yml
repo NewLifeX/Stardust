@@ -221,3 +221,7 @@
 "Attachment download authentication. Whether to verify the attachment download token for /cube/file. Default false.": "Xác thực tải xuống tệp đính kèm. Có xác minh mã thông báo tải xuống tệp đính kèm cho /cube/file hay không. Mặc định false."
 "Public attachment categories that require no login. Comma separated; matching items can be downloaded anonymously.": "Danh mục tệp đính kèm công khai không cần đăng nhập. Phân tách bằng dấu phẩy, mục khớp có thể tải xuống ẩn danh."
 "Attachment download token validity. Seconds, default 600.": "Hiệu lực mã thông báo tải xuống tệp đính kèm. Giây, mặc định 600."
+# 运行时消息补充词条
+"DotNetSyncService.Sync {0}": "DotNetSyncService đang đồng bộ {0}"
+"DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService không đồng bộ được {0}: {1}"
+"DotNetSyncService.Error {0}": "Lỗi DotNetSyncService: {0}"

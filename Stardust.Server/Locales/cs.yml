@@ -221,3 +221,7 @@
 "Attachment download authentication. Whether to verify the attachment download token for /cube/file. Default false.": "Ověřování stahování příloh. Zda ověřovat token pro stahování příloh u /cube/file. Výchozí false."
 "Public attachment categories that require no login. Comma separated; matching items can be downloaded anonymously.": "Kategorie veřejných příloh bez přihlášení. Odděleno čárkami, odpovídající položky lze stáhnout anonymně."
 "Attachment download token validity. Seconds, default 600.": "Platnost tokenu pro stahování příloh. Sekundy, výchozí 600."
+# 运行时消息补充词条
+"DotNetSyncService.Sync {0}": "DotNetSyncService synchronizuje {0}"
+"DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService nedokázal synchronizovat {0}: {1}"
+"DotNetSyncService.Error {0}": "Chyba DotNetSyncService: {0}"

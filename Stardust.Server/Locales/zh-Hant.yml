@@ -221,3 +221,7 @@
 "Attachment download authentication. Whether to verify the attachment download token for /cube/file. Default false.": "附件下載驗證。是否驗證/cube/file附件下載權杖，預設false"
 "Public attachment categories that require no login. Comma separated; matching items can be downloaded anonymously.": "免登入公開附件分類。逗號分隔，命中可匿名下載"
 "Attachment download token validity. Seconds, default 600.": "附件下載權杖有效期間。秒，預設600"
+# 运行时消息补充词条
+"DotNetSyncService.Sync {0}": "DotNetSyncService 正在同步 {0}"
+"DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService 同步 {0} 失敗：{1}"
+"DotNetSyncService.Error {0}": "DotNetSyncService 異常：{0}"
