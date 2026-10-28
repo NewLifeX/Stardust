@@ -2,6 +2,7 @@ using System;
 using NewLife.Caching;
 using NewLife.Security;
 using Stardust.Data;
+using Stardust.Models;
 using Stardust.Server.Services;
 using Xunit;
 
@@ -72,5 +73,28 @@ public class AppOnlineServiceTests
         var svc = new AppOnlineService(new CacheProvider(), null);
 
         Assert.Null(svc.GetOnline("not-exists-" + Rand.NextString(8)));
+    }
+
+    [Fact(DisplayName = "更新在线信息写入应用标识、客户端标识与心跳次数")]
+    public void UpdateOnline_FillsSession()
+    {
+        var svc = new AppOnlineService(new CacheProvider(), null);
+        var app = CreateApp();
+        var clientId = "cli_" + Rand.NextString(10);
+        try
+        {
+            var info = new AppInfo { Name = app.Name, Version = "1.2.3", MachineName = "test-machine" };
+            var online = svc.UpdateOnline(app, clientId, "127.0.0.1", null, info);
+
+            Assert.NotNull(online);
+            Assert.Equal(app.Id, online.AppId);
+            Assert.Equal(clientId, online.Client);
+            Assert.True(online.PingCount >= 1);
+        }
+        finally
+        {
+            AppOnline.FindByClient(clientId)?.Delete();
+            app.Delete();
+        }
     }
 }

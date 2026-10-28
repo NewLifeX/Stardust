@@ -60,8 +60,13 @@ public class NodeOnlineService(IServiceProvider serviceProvider, StarServerSetti
         }
     }
 
+    /// <summary>检查节点离线并发送告警。未开启离线告警或未配置Webhook时直接跳过</summary>
+    /// <param name="node">节点。为空时直接返回</param>
+    /// <param name="reason">离线原因，写入告警内容</param>
     public static void CheckOffline(Node node, String reason)
     {
+        if (node == null) return;
+
         // 下线告警
         if (node.AlarmOnOffline)
         {
