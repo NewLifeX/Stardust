@@ -155,6 +155,7 @@ public class Startup
         TrimOldAppConfig();
         ThreadPoolX.QueueUserWorkItem(InitProject);
         ThreadPoolX.QueueUserWorkItem(FixAppDeployNode);
+        ThreadPoolX.QueueUserWorkItem(RemoveDeadMenus);
 
         // 多语言。配置了固定语言时全进程生效，否则按请求语言识别
         app.UseStardustLocalization();
@@ -365,6 +366,17 @@ public class Startup
         }
 
         entity.Update();
+    }
+
+    /// <summary>清理历史遗留的死菜单。接口控制器（如流水线 Webhook）没有管理页面，早期被区域扫描成了菜单，点开即 404</summary>
+    private static void RemoveDeadMenus()
+    {
+        var menu = XCode.Membership.Menu.Find(XCode.Membership.Menu._.Url == "/Deployment/PipelineWebhook");
+        if (menu != null)
+        {
+            XTrace.WriteLine("Remove dead menu [{0}]", menu.Url);
+            menu.Delete();
+        }
     }
 
     private static void FixAppDeployNode()
