@@ -47,44 +47,18 @@ public class DataRetentionService(StarServerSetting setting, ITracer tracer) : I
         using var span = tracer?.NewSpan("DataRetention", new { time, time2, time3 });
         try
         {
-            // 删除节点数据
-            var rs = NodeData.DeleteBefore(time2);
-            XTrace.WriteLine("Deleted {1:n0} NodeData records before [{0}]", time2.ToFullString(), rs);
-
-            // 删除Redis节点数据
-            rs = RedisData.DeleteBefore(time2);
-            XTrace.WriteLine("Deleted {1:n0} RedisData records before [{0}]", time2.ToFullString(), rs);
-
-            // 删除应用性能数据
-            rs = AppMeter.DeleteBefore(time2);
-            XTrace.WriteLine("Deleted {1:n0} AppMeter records before [{0}]", time2.ToFullString(), rs);
-
-            // 删除应用分钟统计数据
-            rs = AppMinuteStat.DeleteBefore(time);
-            XTrace.WriteLine("Deleted {1:n0} AppMinuteStat records before [{0}]", time.ToFullString(), rs);
-
-            // 删除追踪分钟统计数据
-            rs = TraceMinuteStat.DeleteBefore(time);
-            XTrace.WriteLine("Deleted {1:n0} TraceMinuteStat records before [{0}]", time.ToFullString(), rs);
-
-            // 删除追踪小时统计数据
-            rs = TraceHourStat.DeleteBefore(time2);
-            XTrace.WriteLine("Deleted {1:n0} TraceHourStat records before [{0}]", time2.ToFullString(), rs);
-
-            rs = TraceDayStat.DeleteBefore(time3);
-            XTrace.WriteLine("Deleted {1:n0} TraceDayStat records before [{0}]", time3.ToFullString(), rs);
-
-            rs = NodeHistory.DeleteBefore(time3);
-            XTrace.WriteLine("Deleted {1:n0} NodeHistory records before [{0}]", time3.ToFullString(), rs);
-
-            rs = AppHistory.DeleteBefore(time3);
-            XTrace.WriteLine("Deleted {1:n0} AppHistory records before [{0}]", time3.ToFullString(), rs);
-
-            rs = AppDeployHistory.DeleteBefore(time3);
-            XTrace.WriteLine("Deleted {1:n0} AppDeployHistory records before [{0}]", time3.ToFullString(), rs);
-
-            rs = AlarmHistory.DeleteBefore(time3);
-            XTrace.WriteLine("Deleted {1:n0} AlarmHistory records before [{0}]", time3.ToFullString(), rs);
+            // 逐表清理。单表失败（表缺失/库锁等）只记录异常，不影响后续表的清理
+            Clear("NodeData", NodeData.DeleteBefore, time2);
+            Clear("RedisData", RedisData.DeleteBefore, time2);
+            Clear("AppMeter", AppMeter.DeleteBefore, time2);
+            Clear("AppMinuteStat", AppMinuteStat.DeleteBefore, time);
+            Clear("TraceMinuteStat", TraceMinuteStat.DeleteBefore, time);
+            Clear("TraceHourStat", TraceHourStat.DeleteBefore, time2);
+            Clear("TraceDayStat", TraceDayStat.DeleteBefore, time3);
+            Clear("NodeHistory", NodeHistory.DeleteBefore, time3);
+            Clear("AppHistory", AppHistory.DeleteBefore, time3);
+            Clear("AppDeployHistory", AppDeployHistory.DeleteBefore, time3);
+            Clear("AlarmHistory", AlarmHistory.DeleteBefore, time3);
 
             //// 删除监控明细数据
             //rs = TraceData.DeleteBefore(time);
@@ -95,6 +69,23 @@ public class DataRetentionService(StarServerSetting setting, ITracer tracer) : I
         catch (Exception ex)
         {
             span?.SetError(ex, null);
+        }
+    }
+
+    /// <summary>清理单张表的过期数据。单表异常只记录，不中断整条清理链</summary>
+    /// <param name="name">表名，仅用于日志</param>
+    /// <param name="deleteBefore">删除方法，参数为时间阈值，返回删除行数</param>
+    /// <param name="time">时间阈值</param>
+    private void Clear(String name, Func<DateTime, Int32> deleteBefore, DateTime time)
+    {
+        try
+        {
+            var rs = deleteBefore(time);
+            XTrace.WriteLine("Deleted {1:n0} {2} records before [{0}]", time.ToFullString(), rs, name);
+        }
+        catch (Exception ex)
+        {
+            XTrace.Log.Error("Failed to clean {0} before [{1}]: {2}", name, time.ToFullString(), ex.Message);
         }
     }
 }

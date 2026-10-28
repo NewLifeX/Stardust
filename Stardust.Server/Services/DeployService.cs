@@ -73,8 +73,10 @@ public class DeployService
             >= OSKinds.iOS => OSKind.iOS,
             >= OSKinds.Android => OSKind.Android,
             >= OSKinds.MacOSX => OSKind.OSX,
-            >= OSKinds.Alpine => OSKind.LinuxMusl,
+            // Linux 各发行版（100+）属于 glibc，必须排在 Alpine（90）之前判断，
+            // 否则 Ubuntu/CentOS 等会被误判为 musl，导致多版本部署选不到 Linux 包
             >= OSKinds.Linux or OSKinds.SmartOS => OSKind.Linux,
+            >= OSKinds.Alpine => OSKind.LinuxMusl,
             >= OSKinds.Win10 => OSKind.Windows,
             _ => OSKind.Any,
         };

@@ -44,4 +44,29 @@ public class DataRetentionServiceTests
             entity.Delete();
         }
     }
+
+    [Fact(DisplayName = "启用保留期后按分钟统计保留期清理过期数据，保留期内数据不动")]
+    public void DoWork_Enabled_RemovesExpiredKeepsFresh()
+    {
+        // 三级保留期分别为 1/2/3 天，分钟统计使用第一级
+        var service = new DataRetentionService(new StarServerSetting { DataRetention = 1, DataRetention2 = 2, DataRetention3 = 3 }, null);
+
+        var old = CreateMinuteStat(DateTime.Now.AddDays(-10));
+        old.Insert();
+        var fresh = CreateMinuteStat(DateTime.Now);
+        fresh.Insert();
+        try
+        {
+            RunWork(service);
+
+            // 过期数据被清理，保留期内数据不受影响（单表失败不影响其它表）
+            Assert.Null(AppMinuteStat.FindByID(old.ID));
+            Assert.NotNull(AppMinuteStat.FindByID(fresh.ID));
+        }
+        finally
+        {
+            AppMinuteStat.FindByID(old.ID)?.Delete();
+            AppMinuteStat.FindByID(fresh.ID)?.Delete();
+        }
+    }
 }
