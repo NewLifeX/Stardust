@@ -39,7 +39,7 @@ npm install @newlifex/stardust
         defer></script>
 ```
 
-`loader.js` 会动态加载同目录 `browser.js`，读取后端配置并自动启动埋点；后端可注入 `<meta name="traceparent" content="...">` 把整个页面链路（`page.load`/路由/fetch/XHR/手动 Span）关联到服务端链路。静态页面可用 `data-stardust-token-value` 配置短期 Token，有后端时推荐 `data-stardust-token` 指向 Token 端点。npm 用户可使用 `import { init } from '@newlifex/stardust/browser'` 一行初始化。
+`loader.js` 会动态加载同目录 `browser.js`，读取后端配置并自动启动埋点；后端可注入 `<meta name="traceparent" content="...">` 把整个页面链路（`page.load`/路由/fetch/XHR/手动 Span）关联到服务端链路。静态页面可用 `data-stardust-token-value` 直接配置短期 `bw_` Token；推荐 `data-stardust-token` 指向星尘的 `/stardust/browser-token`（或同域反代路径），令牌由星尘签发，应用后端不参与。npm 用户可使用 `import { init } from '@newlifex/stardust/browser'` 一行初始化。
 
 需要手动控制时：
 
@@ -50,10 +50,14 @@ npm install @newlifex/stardust
     server: 'http://star.example.com:6600',
     appId: 'MyWebApp',
     version: '1.2.3',
-    // 公网应用推荐由后端签发短期令牌，避免在前端暴露 secret
+    // 公网应用由星尘签发短期令牌，避免在前端暴露 secret
     tokenProvider: async () => {
-      const resp = await fetch('/api/stardust-token', { credentials: 'same-origin' });
-      const data = await resp.json();
+      const body = await (await fetch('/stardust/browser-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ appId: 'MyWebApp' }),
+      })).json();
+      const data = body.data || body;
       return { token: data.token, expire: data.expire };
     },
   });

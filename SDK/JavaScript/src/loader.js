@@ -125,6 +125,27 @@
     }
 
     /**
+     * 把相对地址解析为绝对地址。
+     * @param {Object} root window
+     * @param {String} url 待解析地址
+     * @param {String} base 基准地址
+     * @returns {String} 绝对地址；已是绝对地址或解析失败时返回原值
+     */
+    function absoluteUrl(root, url, base) {
+        if (!url) return url;
+        if (/^[a-z][a-z0-9+.-]*:/i.test(url) || url.indexOf('//') === 0) return url;
+
+        var baseUrl = base || (root && root.location ? root.location.href : '') || '';
+        try {
+            var URLCtor = (root && root.URL) || (typeof URL === 'function' ? URL : null);
+            if (URLCtor && baseUrl) return new URLCtor(url, baseUrl).toString();
+        } catch (err) {
+            // 解析失败时回退为原值，由浏览器按页面地址解析
+        }
+        return url;
+    }
+
+    /**
      * 拉取后端配置。兼容统一响应 { code, data } 与直接对象。
      * @param {Object} root window
      * @param {String} url 配置地址
@@ -181,8 +202,15 @@
 
         var tokenUrl = config.tokenUrl;
         if (tokenUrl) {
-            options.tokenProvider = function () {
-                return root.fetch(tokenUrl, { credentials: 'same-origin' }).then(function (response) {
+            // 与服务端 POST /stardust/browser-token 契约对齐：JSON 报文携带 appId
+            options.tokenProvider = function (info) {
+                var appId = (info && info.appId) || config.appId;
+                return root.fetch(tokenUrl, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ appId: appId })
+                }).then(function (response) {
                     if (!response || !response.ok) throw new Error('stardust token HTTP ' + (response && response.status));
                     return response.json();
                 }).then(function (body) {
@@ -252,10 +280,15 @@
             ? Promise.resolve()
             : loadBrowser(doc, resolveSrc(config));
 
+        var configBase = '';
         return ready.then(function () {
             if (config.configUrl) {
                 return fetchConfig(root, config.configUrl).then(function (remote) {
-                    return mergeConfig(config, remote);
+                    var merged = mergeConfig(config, remote);
+                    // 令牌端点跟随配置端点解析：直连跨域时相对路径不能落到页面所在站点
+                    configBase = absoluteUrl(root, config.configUrl, root && root.location ? root.location.href : '');
+                    merged.tokenUrl = absoluteUrl(root, merged.tokenUrl, configBase);
+                    return merged;
                 }, function () {
                     // 配置端点不可用时回退到 data-stardust-* 与默认值，不阻塞页面
                     return config;
@@ -263,6 +296,10 @@
             }
             return config;
         }).then(function (merged) {
+            // 未取到配置端点但显式指定了星尘地址时，相对令牌地址按星尘地址解析
+            if (!configBase && merged.server && merged.tokenUrl)
+                merged.tokenUrl = absoluteUrl(root, merged.tokenUrl, String(merged.server).replace(/\/+$/, '') + '/');
+
             return start(root, merged);
         }).catch(function (err) {
             if (config.debug && root.console) root.console.warn('[Stardust] bootstrap failed: ' + (err && err.message ? err.message : err));

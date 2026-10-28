@@ -105,12 +105,14 @@ async function main() {
 
     await test('start 创建 tracer、注入初始 traceparent 与 tokenProvider', async () => {
         let captured = null;
+        let tokenRequest = null;
         const fakeTracer = {
             started: false,
             start() { this.started = true; }
         };
         const root = {
-            fetch() {
+            fetch(url, options) {
+                tokenRequest = { url: url, options: options };
                 return Promise.resolve({
                     ok: true,
                     json() { return Promise.resolve({ code: 0, data: { token: 'tk', expire: 7200 } }); }
@@ -139,8 +141,14 @@ async function main() {
         assert.strictEqual(captured.appId, 'MyWeb');
         assert.strictEqual(captured.initialTraceparent, '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01');
         assert.deepStrictEqual(captured.tracePropagationTargets, ['https://api.example.com', 'https://other.example.com']);
-        const token = await captured.tokenProvider();
+        const token = await captured.tokenProvider({ appId: 'MyWeb' });
         assert.deepStrictEqual(token, { token: 'tk', expire: 7200 });
+
+        // 与服务端契约对齐：POST + JSON 报文携带 appId
+        assert.strictEqual(tokenRequest.url, '/stardust/token');
+        assert.strictEqual(tokenRequest.options.method, 'POST');
+        assert.strictEqual(tokenRequest.options.headers['Content-Type'], 'application/json');
+        assert.deepStrictEqual(JSON.parse(tokenRequest.options.body), { appId: 'MyWeb' });
     });
 
     await test('bootstrap 使用配置端点并只启动一次', async () => {
@@ -204,6 +212,54 @@ async function main() {
         assert.strictEqual(tracer, fakeTracer);
         assert.strictEqual(captured.appId, 'FallbackApp');
         assert.strictEqual(captured.server, 'http://star.example.com:6600');
+    });
+
+    await test('配置端点跨域时令牌地址跟随配置端点解析', async () => {
+        let captured = null;
+        let tokenRequestUrl = null;
+        const fakeTracer = { start() {} };
+        const root = {
+            location: { href: 'https://www.example.com/app/' },
+            fetch(url) {
+                if (url === 'https://star.example.com:6600/stardust/browser-config') {
+                    return Promise.resolve({
+                        ok: true,
+                        json() {
+                            return Promise.resolve({
+                                code: 0,
+                                data: {
+                                    appId: 'MyWeb',
+                                    server: 'https://star.example.com:6600',
+                                    tokenUrl: '/stardust/browser-token'
+                                }
+                            });
+                        }
+                    });
+                }
+
+                tokenRequestUrl = url;
+                return Promise.resolve({
+                    ok: true,
+                    json() { return Promise.resolve({ code: 0, data: { token: 'tk', expire: 600 } }); }
+                });
+            },
+            Stardust: {
+                createTracer(options) {
+                    captured = options;
+                    return fakeTracer;
+                }
+            }
+        };
+        const doc = {
+            currentScript: fakeScript({ 'data-config-url': 'https://star.example.com:6600/stardust/browser-config' }),
+            querySelector() { return null; }
+        };
+
+        await loader.bootstrap(root, doc);
+        const token = await captured.tokenProvider({ appId: 'MyWeb' });
+
+        assert.strictEqual(token.token, 'tk');
+        assert.strictEqual(tokenRequestUrl, 'https://star.example.com:6600/stardust/browser-token');
     });
 
     console.log('\n==================================================');

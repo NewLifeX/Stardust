@@ -127,13 +127,14 @@ public class Startup
         });
 
         // CORS。默认允许任意来源（兼容浏览器端直接接入）；配置 CorsOrigins 后仅允许白名单来源（安全V-15）
+        // 必须显式声明方法：跨域 JSON POST 会先发 OPTIONS 预检，缺少 Allow-Methods 时浏览器直接拦截（浏览器埋点直报依赖此项）
         services.AddCors(options => options.AddPolicy("star_cors", builder =>
         {
             var corsOrigins = set.CorsOrigins;
             if (corsOrigins.IsNullOrEmpty())
-                builder.AllowAnyOrigin().AllowAnyHeader();
+                builder.AllowAnyOrigin().AllowAnyHeader().WithMethods("GET", "POST");
             else
-                builder.WithOrigins(corsOrigins.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)).AllowAnyHeader();
+                builder.WithOrigins(corsOrigins.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)).AllowAnyHeader().WithMethods("GET", "POST");
         }));
 
         // 后台服务。数据保留，定时删除过期数据

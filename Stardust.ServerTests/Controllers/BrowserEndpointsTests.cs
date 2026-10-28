@@ -124,6 +124,42 @@ public class BrowserEndpointsTests : StarTestBase
         }
     }
 
+    [Fact(DisplayName = "短期令牌可经查询串上报，覆盖浏览器直连全流程")]
+    public async Task Token_ReportTrace_ByQueryString_Success()
+    {
+        var app = CreateApp(out var tracer);
+        try
+        {
+            var origin = "https://demo.example.com";
+            var client = _server.CreateClient();
+
+            // 1) 跨域预检：浏览器跨域直连星尘前必须先通过 OPTIONS
+            var preflight = new HttpRequestMessage(HttpMethod.Options, "/stardust/browser-token");
+            preflight.Headers.Add("Origin", origin);
+            preflight.Headers.Add("Access-Control-Request-Method", "POST");
+            preflight.Headers.Add("Access-Control-Request-Headers", "content-type");
+            var preResp = await client.SendAsync(preflight);
+            Assert.True(preResp.Headers.TryGetValues("Access-Control-Allow-Methods", out var methods), "预检响应缺少 Access-Control-Allow-Methods");
+            Assert.Contains("POST", String.Join(",", methods));
+
+            // 2) 带来源申请短期令牌
+            var (token, body) = await IssueTokenAsync(app.Name, origin);
+            Assert.False(token.IsNullOrEmpty(), "应签发令牌：" + body);
+
+            // 3) 前端 SDK 通过查询串携带令牌上报
+            var resp = await client.PostAsync("/Trace/Report?Token=" + Uri.EscapeDataString(token),
+                JsonContent.Create(new { AppId = app.Name, ClientId = "browser-sdk" }));
+            var reportBody = await resp.Content.ReadAsStringAsync();
+
+            Assert.Contains("\"code\":0", reportBody);
+        }
+        finally
+        {
+            tracer.Delete();
+            app.Delete();
+        }
+    }
+
     [Fact(DisplayName = "短期令牌不能冒名向其它应用上报")]
     public async Task Token_CannotReportAsOtherApp()
     {

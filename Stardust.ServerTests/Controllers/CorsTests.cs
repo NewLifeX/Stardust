@@ -27,4 +27,34 @@ public class CorsTests : StarTestBase
         Assert.True(resp.Headers.TryGetValues("Access-Control-Allow-Origin", out var values), "响应缺少 Access-Control-Allow-Origin");
         Assert.Contains("*", values);
     }
+
+    [Fact(DisplayName = "跨域预检允许浏览器令牌申请的POST请求")]
+    public async Task Preflight_BrowserToken_AllowsPost()
+    {
+        var client = _server.CreateClient();
+        var req = new HttpRequestMessage(HttpMethod.Options, "/stardust/browser-token");
+        req.Headers.Add("Origin", "https://other.example.com");
+        req.Headers.Add("Access-Control-Request-Method", "POST");
+        req.Headers.Add("Access-Control-Request-Headers", "content-type");
+
+        var resp = await client.SendAsync(req);
+
+        Assert.True(resp.Headers.TryGetValues("Access-Control-Allow-Methods", out var methods), "预检响应缺少 Access-Control-Allow-Methods");
+        Assert.Contains("POST", String.Join(",", methods));
+    }
+
+    [Fact(DisplayName = "跨域预检允许埋点上报的POST请求")]
+    public async Task Preflight_TraceReport_AllowsPost()
+    {
+        var client = _server.CreateClient();
+        var req = new HttpRequestMessage(HttpMethod.Options, "/Trace/Report");
+        req.Headers.Add("Origin", "https://other.example.com");
+        req.Headers.Add("Access-Control-Request-Method", "POST");
+        req.Headers.Add("Access-Control-Request-Headers", "content-type");
+
+        var resp = await client.SendAsync(req);
+
+        Assert.True(resp.Headers.TryGetValues("Access-Control-Allow-Methods", out var methods), "预检响应缺少 Access-Control-Allow-Methods");
+        Assert.Contains("POST", String.Join(",", methods));
+    }
 }

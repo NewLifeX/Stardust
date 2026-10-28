@@ -161,7 +161,15 @@ const tracer = init({
 const webTracer = Stardust.init({
   server: 'http://star.example.com:6600',
   appId: 'MyWebApp',
-  tokenProvider: async () => (await fetch('/api/stardust-token')).json(),
+  // 短期權杖由星塵簽發，應用後端不參與
+  tokenProvider: async () => {
+    const body = await (await fetch('/stardust/browser-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ appId: 'MyWebApp' }),
+    })).json();
+    return body.data || body;
+  },
   version: '1.2.3',
 });
 // 自動蒐集頁面載入、路由、JS 錯誤、fetch/XHR

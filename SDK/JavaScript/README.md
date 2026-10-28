@@ -39,7 +39,7 @@ cp -r SDK/JavaScript/src /your-project/node_modules/@newlifex/stardust
         defer></script>
 ```
 
-`loader.js` 会动态加载同目录的 `browser.js`，从 `/stardust/browser-config` 读取 `server`、`token`、`version`、`sampleRate` 等配置，然后自动启动页面/路由/fetch/XHR/JS 错误埋点。后端可在 HTML 中注入 `<meta name="traceparent" content="...">`（或 `stardust-traceparent`），把 `page.load` 关联到服务端链路。
+`loader.js` 会动态加载同目录的 `browser.js`，从 `/stardust/browser-config` 读取 `server`、`tokenUrl`、`version`、`sampleRate` 等配置，再向 `tokenUrl`（星尘的 `/stardust/browser-token`）申请 10 分钟短期令牌，然后自动启动页面/路由/fetch/XHR/JS 错误埋点。埋点直接上报星尘，**不经过应用后端**。后端可在 HTML 中注入 `<meta name="traceparent" content="...">`（或 `stardust-traceparent`），把 `page.load` 关联到服务端链路。
 
 静态站点也可以不用配置端点：
 
@@ -47,12 +47,12 @@ cp -r SDK/JavaScript/src /your-project/node_modules/@newlifex/stardust
 <script src="https://cdn.example.com/stardust/loader.js"
         data-stardust-app="MyWebApp"
         data-stardust-server="https://star.example.com:6600"
-        data-stardust-token-value="eyJ..."
+        data-stardust-token-value="bw_xxxxxxxxxxxxxxxxxxxxxxxx"
         data-stardust-release="1.2.3"
         defer></script>
 ```
 
-`data-stardust-token` 也可以指向 Token 端点（推荐有后端时使用）。`data-stardust-token-value` 适合静态页面，配合 `data-stardust-expire="300"` 指定有效期；Token 应短有效期且仅具备上报权限。跨域链路传播需显式配置 `data-stardust-trace-targets="https://api.example.com,..."`，默认仅同源注入 `traceparent`。
+`data-stardust-token` 指向星尘的 Token 端点（默认 `/stardust/browser-token`，同域反代或直连均可），令牌由星尘签发，应用后端不参与。`data-stardust-token-value` 适合静态页面，配合 `data-stardust-expire="300"` 指定有效期；Token 应短有效期且仅具备上报权限。跨域链路传播需显式配置 `data-stardust-trace-targets="https://api.example.com,..."`，默认仅同源注入 `traceparent`。
 
 npm 用户可以使用一行 `init`：
 
@@ -93,7 +93,12 @@ await Stardust.flush();
         version: '1.1.0',
         // 公网应用必须使用 tokenProvider，不要在前端写 secret
         tokenProvider: async () => {
-            const resp = await fetch('/api/stardust-token', { credentials: 'same-origin' });
+            // 由星尘签发的 10 分钟短期令牌，不经过应用后端
+            const resp = await fetch('/stardust/browser-token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ appId: 'MyWebApp' }),
+            });
             const data = await resp.json();
             return { token: data.token, expire: data.expire };
         },
@@ -137,14 +142,19 @@ navigator.sendBeacon(`${server}/Trace/Report?Token=...`, new Blob([json], { type
 
 ### tokenProvider 推荐模式（公网必备）
 
-`secret` 会出现在前端源码中，**任何公网可访问的页面都不得使用 secret 模式**。推荐由后端用 AppId/Secret 登录后，把短期令牌下发给前端：
+`secret` 会出现在前端源码中，**任何公网可访问的页面都不得使用 secret 模式**。推荐由星尘签发短期令牌，前端直接申请：
 
 ```js
 const tracer = Stardust.createTracer({
     server: 'http://star.example.com:6600',
     appId: 'MyWebApp',
     tokenProvider: async () => {
-        const resp = await fetch('/api/stardust-token', { credentials: 'same-origin' });
+        // 服务端契约：POST /stardust/browser-token，JSON 携带 appId
+        const resp = await fetch('/stardust/browser-token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ appId: 'MyWebApp' }),
+        });
         const data = await resp.json();
         return { token: data.token, expire: data.expire }; // expire 支持相对秒/绝对秒/绝对毫秒
     },
@@ -153,6 +163,7 @@ const tracer = Stardust.createTracer({
 
 - 返回字符串或 `{ token, expire }` 均可，支持 `async`。
 - 令牌将在 5 分钟内过期时主动刷新；响应 `code: 401` 或 HTTP 401 时刷新并重试一次。
+- **不要让应用后端转发埋点**：后端故障时前端异常恰好收不回来。需要同域时由网关反代 `/stardust/*` 到星尘独立 upstream。
 - `secret` 模式仅建议用于内网、Electron 或受控环境。
 
 ---
@@ -491,7 +502,7 @@ const result = await tracer.withSpan('operation-name', async (span) => {
 |------|----------|
 | 登录失败 | 检查 `server`、`appId`、`secret`；打开 `debug: true` 查看错误消息 |
 | 数据未上报 | 确认调用了 `start()`；Node 退出前调用 `await tracer.stop()`；检查 `period` |
-| 浏览器 CORS | 服务端需允许页面域名跨域，并允许 `Content-Type: application/json` |
+| 浏览器 CORS | 星尘 `CorsOrigins` 需包含页面域名；CORS 允许 `GET`/`POST` 与 `Content-Type: application/json`（跨域 JSON POST 会先发 OPTIONS 预检）；也可改用同域反代规避 |
 | 浏览器 401 循环 | 检查 `tokenProvider` 返回值与过期时间；确认后端令牌接口可用 |
 | 心跳无性能数据 | `enableMeter` 是否为 `true`；Node 心跳是否被 `excludes` 排除 |
 | 上报走 `ReportRaw` | 正文超过 1024 字节时的正常行为，服务端需支持 `application/x-gzip` |

@@ -150,7 +150,15 @@ const tracer = init({
 const webTracer = Stardust.init({
   server: 'http://star.example.com:6600',
   appId: 'MyWebApp',
-  tokenProvider: async () => (await fetch('/api/stardust-token')).json(),
+  // Short-lived token issued by Stardust; the app backend is not involved
+  tokenProvider: async () => {
+    const body = await (await fetch('/stardust/browser-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ appId: 'MyWebApp' }),
+    })).json();
+    return body.data || body;
+  },
   version: '1.2.3',
 });
 // Automatically collects page loads, routes, JS errors, fetch/XHR
