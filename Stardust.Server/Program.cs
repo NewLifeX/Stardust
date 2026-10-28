@@ -5,6 +5,9 @@ using Stardust.Server;
 // 先按宿主语言初始化日志语言，保证首次写出的配置文件注释即为本地语言，避免稍后改写
 StarLocalization.InitLogCulture();
 
+// 首次启动时先按星尘约定落盘日志目录，避免首轮日志落到 Core 默认的 ../ServerLog
+StarHost.InitLogPath("../LogServer");
+
 XTrace.UseConsole();
 
 // 加大最小线程数，避免启动时线程饥饿
