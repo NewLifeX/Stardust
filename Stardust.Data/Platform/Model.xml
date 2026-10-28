@@ -125,7 +125,6 @@
       </Columns>
       <Indexes>
         <Index Columns="TokenId,ResourceType,ResourceId" Unique="True" />
-        <Index Columns="TokenId" />
         <Index Columns="ResourceType,ResourceId" />
       </Indexes>
     </Table>

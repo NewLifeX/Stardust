@@ -18,7 +18,6 @@ namespace Stardust.Data.Platform;
 [DataObject]
 [Description("MCP令牌资源授权。Token与项目/节点/应用的授权关系")]
 [BindIndex("IU_McpTokenResource_TokenId_ResourceType_ResourceId", true, "TokenId,ResourceType,ResourceId")]
-[BindIndex("IX_McpTokenResource_TokenId", false, "TokenId")]
 [BindIndex("IX_McpTokenResource_ResourceType_ResourceId", false, "ResourceType,ResourceId")]
 [BindTable("McpTokenResource", Description = "MCP令牌资源授权。Token与项目/节点/应用的授权关系", ConnName = "Stardust", DbType = DatabaseType.None)]
 public partial class McpTokenResource
