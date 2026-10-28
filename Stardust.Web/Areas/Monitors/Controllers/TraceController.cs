@@ -15,6 +15,9 @@ public class TraceController : ControllerBaseX
     {
         PageSetting.EnableNavbar = false;
 
+        // 自定义页面不会自动带上标题，不设置时浏览器标签页为空
+        ViewBag.Title = "链路查询";
+
         return View();
     }
 }

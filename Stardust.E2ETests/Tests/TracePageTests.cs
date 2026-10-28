@@ -112,6 +112,10 @@ public class TracePageTests : IAsyncLifetime
         Assert.Equal(200, status);
         Assert.Contains("全链路追踪", body);
         Assert.Empty(errors);
+
+        // 自定义页面不会自动带标题，控制器需显式设置，否则浏览器标签页为空
+        var title = await _page!.TitleAsync();
+        Assert.Contains("链路查询", title);
     }
 
     [Fact(DisplayName = "不存在的追踪编号给出降级提示而不崩溃")]
