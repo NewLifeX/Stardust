@@ -18,6 +18,13 @@ internal class StarHttpConfigProvider : HttpConfigProvider
     /// <summary>配置信息。包含配置字典和版本号</summary>
     public ConfigInfo? ConfigInfo { get; set; }
 
+    /// <summary>延迟加载。为 true 时，客户端尚未登录则不拉取远程配置，先用本地配置兜底</summary>
+    /// <remarks>
+    /// 自举服务端（StarServer）在开始监听之前登录自己必然失败，
+    /// 此时拉取只会产生一串连接失败与超时日志；登录成功后再由宿主触发加载。
+    /// </remarks>
+    public Boolean DelayLoad { get; set; }
+
     const String REGISTRY = "$Registry:";
     private Boolean _useWorkerId;
 
@@ -25,6 +32,9 @@ internal class StarHttpConfigProvider : HttpConfigProvider
     /// <returns>配置字典</returns>
     protected override IDictionary<String, Object?>? GetAll()
     {
+        // 客户端尚未登录时不拉取，避免无谓的连接失败日志
+        if (DelayLoad && Client is ClientBase { Logined: false }) return null;
+
         try
         {
             var rs = base.GetAll();

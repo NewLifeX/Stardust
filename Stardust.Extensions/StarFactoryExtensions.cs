@@ -43,8 +43,18 @@ public static class StarFactoryExtensions
     /// <para>需要自定义中间件顺序时，仍可显式调用 <c>app.UseStardust()</c>；重复调用是幂等的。</para>
     /// </remarks>
     public static StarFactory AddStardust(this IServiceCollection services, String? server = null, String? appId = null, String? secret = null)
+        => AddStardust(services, server, appId, secret, false);
+
+    /// <summary>添加星尘，可延迟登录服务端。自举服务端（StarServer）在主机开始监听之前登录自己必然失败，应先延迟</summary>
+    /// <param name="services"></param>
+    /// <param name="server">服务端地址。为空时先后读取appsettings.json、本地StarAgent、star.config</param>
+    /// <param name="appId">应用标识。为空时读取star.config，初始值为入口程序集名称</param>
+    /// <param name="secret">应用密钥。为空时读取star.config，初始值为空</param>
+    /// <param name="delayStart">延迟启动。为 true 时不立即登录服务端，由宿主在服务端就绪后调用 <c>StarFactory.Open()</c></param>
+    /// <returns></returns>
+    public static StarFactory AddStardust(this IServiceCollection services, String? server, String? appId, String? secret, Boolean delayStart)
     {
-        var star = new StarFactory(server, appId, secret);
+        var star = new StarFactory(server, appId, secret, delayStart);
 
         // 替换为混合配置提供者，优先本地配置
         var old = services.LastOrDefault(e => e.ServiceType == typeof(IConfigProvider))?.ImplementationInstance as IConfigProvider;
@@ -133,6 +143,22 @@ public static class StarFactoryExtensions
             }
             catch { }
         });
+
+        // 主机停止之前主动注销。等依赖注入容器释放时才注销的话，Web主机已经停止监听，
+        // 自举场景（服务端注销自己）与进程退出场景都会因连接被取消而记录一条注销错误
+        if (!app.Properties.ContainsKey("StardustLogout"))
+        {
+            app.Properties["StardustLogout"] = typeof(StarFactory);
+
+            lifetime.ApplicationStopping.Register(() =>
+            {
+                try
+                {
+                    app.ApplicationServices.GetService<StarFactory>()?.Logout();
+                }
+                catch { }
+            });
+        }
 
         return app;
     }

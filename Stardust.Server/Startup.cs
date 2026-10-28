@@ -37,7 +37,8 @@ public class Startup
 
         var set = StarServerSetting.Current;
         //var star = new StarFactory(null, "StarServer", null);
-        var star = services.AddStardust();
+        // 自举场景：服务端在开始监听之前登录自己必然失败，延迟到主机启动完成后再连接
+        var star = services.AddStardust(null, null, null, delayStart: true);
         if (star.Server.IsNullOrEmpty()) star.Server = $"http://127.0.0.1:{set.Port}";
 
         // 埋点跟踪
@@ -283,6 +284,9 @@ public class Startup
                 XTrace.WriteException(ex);
             }
         });
+
+        // 本机监听就绪后再登录自己，避免启动阶段的连接失败与超时日志
+        lifetime?.ApplicationStarted.Register(() => app.ApplicationServices.GetRequiredService<StarFactory>().Open());
 
         app.UseEndpoints(endpoints =>
         {

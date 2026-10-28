@@ -74,6 +74,13 @@ public class StarFactory : DisposeBase
     /// <summary>外网地址。用于外网访问的地址集，包括协议地址端口，多地址逗号隔开</summary>
     public String? ExternalAddress { get; set; }
 
+    /// <summary>延迟启动。为 true 时创建客户端后不立即登录服务端，由宿主在服务端就绪后调用 <see cref="Open"/> 启动</summary>
+    /// <remarks>
+    /// 自举场景（StarServer 自身也是本平台的客户端）在 Web 主机开始监听之前登录自己必然失败，
+    /// 先延迟再启动，可避免一串连接失败与超时日志。
+    /// </remarks>
+    public Boolean DelayStart { get; set; }
+
     private AppClient? _client;
     #endregion
 
@@ -88,11 +95,21 @@ public class StarFactory : DisposeBase
     /// <param name="appId">应用标识。为空时读取star.config，初始值为入口程序集名称</param>
     /// <param name="secret">应用密钥。为空时读取star.config，初始值为空</param>
     /// <returns></returns>
-    public StarFactory(String? server, String? appId, String? secret)
+    public StarFactory(String? server, String? appId, String? secret) => Init(server, appId, secret, false);
+
+    /// <summary>实例化星尘工厂，可延迟登录服务端</summary>
+    /// <param name="server">服务端地址。为空时先后读取appsettings.json、本地StarAgent、star.config，初始值为空，不连接服务端</param>
+    /// <param name="appId">应用标识。为空时读取star.config，初始值为入口程序集名称</param>
+    /// <param name="secret">应用密钥。为空时读取star.config，初始值为空</param>
+    /// <param name="delayStart">延迟启动。为 true 时创建客户端后不立即登录，等待宿主调用 <see cref="Open"/> 启动</param>
+    public StarFactory(String? server, String? appId, String? secret, Boolean delayStart) => Init(server, appId, secret, delayStart);
+
+    private void Init(String? server, String? appId, String? secret, Boolean delayStart)
     {
         Server = server;
         AppId = appId;
         Secret = secret;
+        DelayStart = delayStart;
 
         Init();
     }
@@ -307,13 +324,63 @@ public class StarFactory : DisposeBase
             InitTracer();
 
             client.Tracer = _tracer;
-            client.Open();
+
+            // 登录成功后补拉配置中心：配置可能在登录完成前被读取（延迟启动时必然如此），登录后再补一次，确保远端配置及时生效
+            client.OnLogined += OnClientLogined;
+
+            // 延迟启动时先不登录，等待宿主在服务端就绪后调用 Open
+            if (!DelayStart) client.Open();
 
             // 注册StarServer环境变量，子进程共享
             Environment.SetEnvironmentVariable("StarServer", Server);
         }
 
         return true;
+    }
+
+    /// <summary>启动客户端，登录服务端并开始心跳。仅用于 <see cref="DelayStart"/> 延迟启动的场景</summary>
+    /// <remarks>重复调用无效；未延迟启动时调用无效，避免重复打开连接。</remarks>
+    public void Open()
+    {
+        if (!DelayStart) return;
+
+        DelayStart = false;
+
+        if (!Valid()) return;
+
+        _client?.Open();
+    }
+
+    private void OnClientLogined(Object? sender, LoginEventArgs e)
+    {
+        if (sender is AppClient client) client.OnLogined -= OnClientLogined;
+
+        try
+        {
+            _config?.LoadAll();
+        }
+        catch (Exception ex)
+        {
+            Log?.Debug("Failed to load the configuration center after login: {0}", ex.Message);
+        }
+    }
+
+    /// <summary>注销并断开与服务端的连接。主机停止之前调用，避免服务端已停止响应后再注销而记录错误日志</summary>
+    /// <param name="reason">注销原因</param>
+    public void Logout(String? reason = null)
+    {
+        var client = _client;
+        if (client == null) return;
+
+        try
+        {
+            // 同步等待，超时放弃，避免停机流程被网络阻塞
+            client.Logout(reason ?? "Shutdown").Wait(3_000);
+        }
+        catch
+        {
+            // 注销失败不影响停机流程
+        }
     }
 
     /// <summary>设置服务端地址</summary>
@@ -409,6 +476,8 @@ public class StarFactory : DisposeBase
                     //Secret = Secret,
                     //ClientId = ClientId,
                     Client = _client,
+                    // 延迟启动期间客户端尚未登录，不拉取远程配置，先用本地配置兜底
+                    DelayLoad = _client is { Logined: false },
                 };
                 config.Attach(_client);
 
