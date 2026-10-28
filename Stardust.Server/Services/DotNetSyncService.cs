@@ -20,7 +20,8 @@ public class DotNetSyncService : IHostedService
     {
         _tracer = tracer;
         _setting = setting;
-        _http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+        // 单个大版本的元数据近 2MB，弱网（1.5MB/35s 量级）下 30 秒默认超时必然中断，这里放宽到 2 分钟
+        _http = new HttpClient { Timeout = TimeSpan.FromSeconds(120) };
     }
 
     /// <summary>启动服务，初始化定时器。不管配置是否禁用都启动，DoSync 内判断配置</summary>
@@ -93,13 +94,22 @@ public class DotNetSyncService : IHostedService
             foreach (var major in majors)
             {
                 var u = url.Replace("{major}", major + "");
-                await SyncMajor(major + ".0", u, span);
+                try
+                {
+                    await SyncMajor(major + ".0", u, span);
+                }
+                catch (Exception ex)
+                {
+                    // 单个大版本失败（典型为弱网超时）不应中断其余版本，降级为警告，等待下个周期重试
+                    span?.SetError(ex, null);
+                    XTrace.Log.Warn("DotNetSyncService failed to sync {0}: {1}", major + ".0", ex.Message);
+                }
             }
         }
         catch (Exception ex)
         {
             span?.SetError(ex, null);
-            XTrace.Log.Error("DotNetSyncService.Error {0}", ex.Message);
+            XTrace.Log.Warn("DotNetSyncService.Error {0}", ex.Message);
         }
         finally
         {
