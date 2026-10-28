@@ -152,6 +152,14 @@ public partial class Attachment
     [BindColumn("LastDownload", "最后下载。最后一次下载的时间", "")]
     public DateTime LastDownload { get => _LastDownload; set { if (OnPropertyChanging("LastDownload", value)) { _LastDownload = value; OnPropertyChanged("LastDownload"); } } }
 
+    private String _Storage;
+    /// <summary>存储类型。Local本地磁盘，Oss阿里云，Cos腾讯云，Qiniu七牛，EasyIO，默认Local</summary>
+    [DisplayName("存储类型")]
+    [Description("存储类型。Local本地磁盘，Oss阿里云，Cos腾讯云，Qiniu七牛，EasyIO，默认Local")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("Storage", "存储类型。Local本地磁盘，Oss阿里云，Cos腾讯云，Qiniu七牛，EasyIO，默认Local", "")]
+    public String Storage { get => _Storage; set { if (OnPropertyChanging("Storage", value)) { _Storage = value; OnPropertyChanged("Storage"); } } }
+
     private String _TraceId;
     /// <summary>追踪。链路追踪，用于APM性能追踪定位，还原该事件的调用链</summary>
     [Category("扩展")]
@@ -267,6 +275,7 @@ public partial class Attachment
             "Source" => _Source,
             "Downloads" => _Downloads,
             "LastDownload" => _LastDownload,
+            "Storage" => _Storage,
             "TraceId" => _TraceId,
             "CreateUser" => _CreateUser,
             "CreateUserID" => _CreateUserID,
@@ -299,6 +308,7 @@ public partial class Attachment
                 case "Source": _Source = Convert.ToString(value); break;
                 case "Downloads": _Downloads = value.ToInt(); break;
                 case "LastDownload": _LastDownload = value.ToDateTime(); break;
+                case "Storage": _Storage = Convert.ToString(value); break;
                 case "TraceId": _TraceId = Convert.ToString(value); break;
                 case "CreateUser": _CreateUser = Convert.ToString(value); break;
                 case "CreateUserID": _CreateUserID = value.ToInt(); break;
@@ -411,6 +421,9 @@ public partial class Attachment
         /// <summary>最后下载。最后一次下载的时间</summary>
         public static readonly Field LastDownload = FindByName("LastDownload");
 
+        /// <summary>存储类型。Local本地磁盘，Oss阿里云，Cos腾讯云，Qiniu七牛，EasyIO，默认Local</summary>
+        public static readonly Field Storage = FindByName("Storage");
+
         /// <summary>追踪。链路追踪，用于APM性能追踪定位，还原该事件的调用链</summary>
         public static readonly Field TraceId = FindByName("TraceId");
 
@@ -494,6 +507,9 @@ public partial class Attachment
 
         /// <summary>最后下载。最后一次下载的时间</summary>
         public const String LastDownload = "LastDownload";
+
+        /// <summary>存储类型。Local本地磁盘，Oss阿里云，Cos腾讯云，Qiniu七牛，EasyIO，默认Local</summary>
+        public const String Storage = "Storage";
 
         /// <summary>追踪。链路追踪，用于APM性能追踪定位，还原该事件的调用链</summary>
         public const String TraceId = "TraceId";
