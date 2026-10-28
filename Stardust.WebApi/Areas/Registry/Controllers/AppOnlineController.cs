@@ -10,6 +10,7 @@ using XCode.Membership;
 
 namespace Stardust.Web.Areas.Registry.Controllers;
 
+/// <summary>应用在线。应用当前在线的实例</summary>
 [RegistryArea]
 [Menu(95)]
 public class AppOnlineController : RegistryEntityController<AppOnline>

@@ -6,7 +6,8 @@ namespace StarAgent.Managers;
 
 /// <summary>发布站点到nginx</summary>
 /// <remarks>
-/// 
+/// 根据部署上下文生成或改写站点配置文件，并通知 nginx 重载。
+/// 配置文件路径与站点名由 nginx 配置目录推导，多站点场景下按站点名区分文件。
 /// </remarks>
 internal class NginxDeploy
 {

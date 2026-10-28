@@ -8,6 +8,7 @@ using Stardust.Data.Nodes;
 
 namespace Stardust.Web.Areas.Nodes.Controllers;
 
+/// <summary>节点指令。下发到节点的命令记录</summary>
 [Menu(58, false)]
 [NodesArea]
 public class NodeCommandController : NodesEntityController<NodeCommand>

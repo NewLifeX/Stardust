@@ -8,6 +8,7 @@ using XCode.Membership;
 
 namespace Stardust.Web.Areas.Monitors.Controllers;
 
+/// <summary>采样数据。按采样率保留的链路明细</summary>
 [Menu(0, false)]
 [MonitorsArea]
 public class SampleDataController : ReadOnlyEntityController<SampleData>

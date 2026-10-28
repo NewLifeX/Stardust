@@ -200,8 +200,8 @@ public partial class StarClient
             return null;
         }
 
-        /// <summary>通过 DXGI 获取各显卡信息（名称和专用显存）</summary>
-        /// <returns>GPU信息列表，格式如"NVIDIA GeForce RTX 4090(24G)"</returns>
+        // 通过 DXGI 获取各显卡信息（名称和专用显存）
+        // 返回 GPU 信息列表，格式如 "NVIDIA GeForce RTX 4090(24G)"
         static List<String> GetGpuListByDxgi()
         {
             var gpuList = new List<String>();
@@ -254,8 +254,8 @@ public partial class StarClient
             return gpuList;
         }
 
-        /// <summary>通过WMI获取GPU名称和显存（DXGI失败时的降级方案）</summary>
-        /// <returns>GPU信息列表，格式如"NVIDIA GeForce RTX 4090(24G)"</returns>
+        // 通过 WMI 获取 GPU 名称和显存（DXGI 失败时的降级方案）
+        // 返回 GPU 信息列表，格式如 "NVIDIA GeForce RTX 4090(24G)"
         static List<String> GetGpuListByWmi()
         {
             var gpuList = new List<String>();
@@ -302,8 +302,7 @@ public partial class StarClient
             return gpuList;
         }
 
-        /// <summary>通过WMI仅获取GPU名称（最终降级方案）</summary>
-        /// <returns>GPU名称列表</returns>
+        // 通过 WMI 仅获取 GPU 名称（最终降级方案）
         static List<String> GetGpuListByName()
         {
             var gpuList = new List<String>();

@@ -12,6 +12,7 @@ using Stardust.Server.Services;
 
 namespace Stardust.Web.Areas.MySql.Controllers;
 
+/// <summary>MySQL 节点。监控的 MySQL 实例</summary>
 [Menu(50)]
 [MySqlArea]
 public class MySqlNodeController : EntityController<MySqlNode>

@@ -16,6 +16,7 @@ using static Stardust.Data.Nodes.Node;
 
 namespace Stardust.Web.Areas.Nodes.Controllers;
 
+/// <summary>节点管理。所有被监控的节点</summary>
 [Menu(90)]
 [NodesArea]
 public class NodeController : NodesEntityController<Node>

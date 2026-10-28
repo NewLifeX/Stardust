@@ -12,6 +12,7 @@ using static Stardust.Data.Monitors.TraceData;
 
 namespace Stardust.Web.Areas.Monitors.Controllers;
 
+/// <summary>追踪数据。按链路分表保存的埋点明细</summary>
 [Menu(0, false)]
 [MonitorsArea]
 public class TraceDataController : WebReadOnlyEntityController<TraceData>

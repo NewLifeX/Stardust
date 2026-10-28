@@ -3,6 +3,7 @@ using Stardust.Data.Configs;
 
 namespace Stardust.Web.Areas.Configs.Controllers;
 
+/// <summary>应用规则。控制应用可访问的配置范围</summary>
 [Menu(30)]
 [ConfigsArea]
 public class AppRuleController : ConfigsEntityController<AppRule>

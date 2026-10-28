@@ -12,6 +12,7 @@ using XCode.Membership;
 
 namespace Stardust.Web.Areas.Deployment.Controllers;
 
+/// <summary>部署节点。部署集下的目标节点</summary>
 [Menu(88, false)]
 [DeploymentArea]
 public class AppDeployNodeController : DeploymentEntityController<AppDeployNode>

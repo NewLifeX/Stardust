@@ -10,6 +10,7 @@ using static Stardust.Data.Monitors.TraceDayStat;
 
 namespace Stardust.Web.Areas.Monitors.Controllers;
 
+/// <summary>追踪天统计。按天汇总的接口调用指标</summary>
 [Menu(0, false)]
 [MonitorsArea]
 public class TraceDayStatController : ReadOnlyEntityController<TraceDayStat>

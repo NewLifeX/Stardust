@@ -35,11 +35,8 @@ public class AppClientLogController : EntityController<AppClientLog>
         //ListFields.TraceUrl("TraceId");
     }
 
-    /// <summary>高级搜索。列表页查询、导出Excel、导出Json、分享页等使用</summary>
+    /// <summary>高级搜索。按应用、线程、时间范围与关键字分页查询，未指定时间时默认查当天（按时间分表）</summary>
     /// <param name="p">分页器。包含分页排序参数，以及Http请求参数</param>
-    /// <returns></returns>
-    /// <summary>高级搜索。按条件分页查询</summary>
-    /// <param name="p">分页参数</param>
     /// <returns>实体列表</returns>
     protected override IEnumerable<AppClientLog> Search(Pager p)
     {

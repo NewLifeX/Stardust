@@ -11,6 +11,7 @@ using XCode.Membership;
 
 namespace Stardust.Web.Areas.Monitors.Controllers;
 
+/// <summary>追踪项。埋点名称与统计规则</summary>
 [Menu(65, false)]
 [MonitorsArea]
 public class TraceItemController : WebEntityController<TraceItem>

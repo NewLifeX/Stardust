@@ -8,6 +8,7 @@ using static Stardust.Data.Monitors.AppMinuteStat;
 
 namespace Stardust.Web.Areas.Monitors.Controllers;
 
+/// <summary>应用分钟统计。按分钟汇总的应用性能指标</summary>
 [Menu(0, false)]
 [MonitorsArea]
 public class AppMinuteStatController : ReadOnlyEntityController<AppMinuteStat>

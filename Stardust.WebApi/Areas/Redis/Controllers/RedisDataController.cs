@@ -7,6 +7,7 @@ using static Stardust.Data.Nodes.RedisData;
 
 namespace Stardust.Web.Areas.Redis.Controllers;
 
+/// <summary>Redis 数据。浏览监控实例中的键值数据</summary>
 [Menu(40, false)]
 [RedisArea]
 public class RedisDataController : WebReadOnlyEntityController<RedisData>

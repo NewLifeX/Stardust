@@ -7,6 +7,7 @@ using XCode;
 
 namespace Stardust.Web.Areas.Monitors.Controllers;
 
+/// <summary>采样数据2。采样备份，用于链路分析与异常追踪</summary>
 [Menu(0, false)]
 [MonitorsArea]
 public class SampleData2Controller : WebReadOnlyEntityController<SampleData2>

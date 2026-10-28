@@ -6,6 +6,8 @@ using XCode;
 
 namespace Stardust.Web.Areas;
 
+/// <summary>Web 端实体控制器基类。统一处理区域与权限相关的通用逻辑</summary>
+/// <typeparam name="T">实体类型</typeparam>
 public class WebEntityController<T> : EntityController<T> where T : Entity<T>, new()
 {
     public override void OnActionExecuting(ActionExecutingContext filterContext)

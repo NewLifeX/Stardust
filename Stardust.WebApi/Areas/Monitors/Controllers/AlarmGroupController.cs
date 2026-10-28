@@ -9,6 +9,7 @@ using XCode.Membership;
 
 namespace Stardust.Web.Areas.Monitors.Controllers;
 
+/// <summary>告警组。按应用/节点分组的告警规则</summary>
 [Menu(20)]
 [MonitorsArea]
 public class AlarmGroupController : WebEntityController<AlarmGroup>

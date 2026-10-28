@@ -13,6 +13,7 @@ using XCode.Membership;
 
 namespace Stardust.Web.Areas.Configs.Controllers;
 
+/// <summary>应用配置。按应用维度维护的配置项</summary>
 [Menu(58)]
 [ConfigsArea]
 public class AppConfigController : ConfigsEntityController<AppConfig>

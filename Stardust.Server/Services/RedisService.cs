@@ -10,13 +10,19 @@ using XCode.Membership;
 
 namespace Stardust.Server.Services;
 
+/// <summary>Redis 监控服务接口。供管理页面手动触发采集</summary>
 public interface IRedisService
 {
+    /// <summary>采集单个 Redis 节点的运行信息</summary>
+    /// <param name="node">Redis 节点</param>
     void TraceNode(RedisNode node);
 
+    /// <summary>采集单个消息队列的堆积情况</summary>
+    /// <param name="queue">Redis 消息队列</param>
     void TraceQueue(RedisMessageQueue queue);
 }
 
+/// <summary>Redis 监控服务。定时采集 Redis 节点与消息队列数据，失败节点连续 5 次后才停用</summary>
 public class RedisService : IHostedService, IRedisService
 {
     /// <summary>计算周期。默认60秒</summary>
@@ -34,6 +40,9 @@ public class RedisService : IHostedService, IRedisService
         _log = log;
     }
 
+    /// <summary>启动定时器。节点采集首个周期 60 秒后开始，队列采集 65 秒后开始，错开时点避免相互拖慢</summary>
+    /// <param name="cancellationToken">取消通知</param>
+    /// <returns>已完成的任务</returns>
     public Task StartAsync(CancellationToken cancellationToken)
     {
         // 初始化定时器
@@ -43,6 +52,9 @@ public class RedisService : IHostedService, IRedisService
         return Task.CompletedTask;
     }
 
+    /// <summary>停止并释放定时器</summary>
+    /// <param name="cancellationToken">取消通知</param>
+    /// <returns>已完成的任务</returns>
     public Task StopAsync(CancellationToken cancellationToken)
     {
         _traceNode?.TryDispose();
@@ -110,6 +122,8 @@ public class RedisService : IHostedService, IRedisService
         return rds;
     }
 
+    /// <summary>采集单个 Redis 节点的运行信息，并落库保存采样数据</summary>
+    /// <param name="node">Redis 节点</param>
     public void TraceNode(RedisNode node)
     {
         using var span = _tracer?.NewSpan($"RedisService-TraceNode", node);

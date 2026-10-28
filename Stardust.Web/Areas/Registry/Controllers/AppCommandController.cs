@@ -7,6 +7,7 @@ using Stardust.Data;
 
 namespace Stardust.Web.Areas.Registry.Controllers;
 
+/// <summary>应用指令。下发到应用的命令记录</summary>
 [Menu(58, false)]
 [RegistryArea]
 public class AppCommandController : RegistryEntityController<AppCommand>

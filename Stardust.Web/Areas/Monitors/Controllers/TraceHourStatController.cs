@@ -10,6 +10,7 @@ using static Stardust.Data.Monitors.TraceHourStat;
 
 namespace Stardust.Web.Areas.Monitors.Controllers;
 
+/// <summary>追踪小时统计。按小时汇总的接口调用指标</summary>
 [Menu(0, false)]
 [MonitorsArea]
 public class TraceHourStatController : ReadOnlyEntityController<TraceHourStat>

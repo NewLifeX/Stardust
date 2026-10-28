@@ -9,6 +9,7 @@ using XCode;
 
 namespace Stardust.Web.Areas.Configs.Controllers;
 
+/// <summary>配置数据。应用已发布的配置内容</summary>
 [Menu(0, false)]
 [ConfigsArea]
 public class ConfigDataController : ConfigsEntityController<ConfigData>

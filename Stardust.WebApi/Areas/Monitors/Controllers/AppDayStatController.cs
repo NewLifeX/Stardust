@@ -13,6 +13,7 @@ using static Stardust.Data.Monitors.AppDayStat;
 
 namespace Stardust.Web.Areas.Monitors.Controllers;
 
+/// <summary>应用天统计。按天汇总的应用性能指标</summary>
 [Menu(80)]
 [MonitorsArea]
 public class AppDayStatController : WebEntityController<AppDayStat>

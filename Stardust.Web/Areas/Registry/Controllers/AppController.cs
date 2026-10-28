@@ -10,6 +10,7 @@ using XCode.Membership;
 
 namespace Stardust.Web.Areas.Registry.Controllers;
 
+/// <summary>应用管理。接入星尘的应用</summary>
 [RegistryArea]
 [Menu(99)]
 public class AppController : RegistryEntityController<App>

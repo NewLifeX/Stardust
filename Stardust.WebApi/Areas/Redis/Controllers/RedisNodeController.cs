@@ -12,6 +12,7 @@ using XCode.Membership;
 
 namespace Stardust.Web.Areas.Redis.Controllers;
 
+/// <summary>Redis 节点。监控的 Redis 实例</summary>
 [Menu(50)]
 [RedisArea]
 public class RedisNodeController : WebEntityController<RedisNode>
