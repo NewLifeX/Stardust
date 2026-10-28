@@ -764,8 +764,8 @@ public class McpService
             if (!error.IsNullOrEmpty()) throw new McpException(-32003, error);
         }
 
-        // 调用动作
-        return action.InvokeAsync(@params, context);
+        // 调用动作。必须等待动作完成，否则会把 Task 对象本身序列化返回，调用方拿不到真实结果
+        return await action.InvokeAsync(@params, context);
     }
 
     /// <summary>框架层资源授权校验。支持直接校验和间接校验</summary>
