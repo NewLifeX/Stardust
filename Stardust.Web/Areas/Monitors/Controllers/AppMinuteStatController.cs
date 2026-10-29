@@ -3,6 +3,7 @@ using NewLife.Cube;
 using NewLife.Cube.Charts;
 using NewLife.Web;
 using Stardust.Data.Monitors;
+using Stardust.Web.Areas.Monitors.Charts;
 using Stardust.Web.Services;
 using static Stardust.Data.Monitors.AppMinuteStat;
 
@@ -127,42 +128,7 @@ public class AppMinuteStatController : ReadOnlyEntityController<AppMinuteStat>
             list2 = list2.OrderBy(e => e.Errors).ThenBy(e => e.Total).ToList();
 
             // 绘制柱状图
-            var chart = new ECharts
-            {
-                Height = 800,
-            };
-            chart.SetTooltip("axis", "shadow");
-            chart.Legend = new Legend { Data = ["总数", "错误数"] };
-            chart["grid"] = new { left = "3%", right = "4%", bottom = "3%", containLabel = true };
-
-            chart.XAxis = [new XAxis { Type = "value" }];
-            chart.YAxis = [
-                new YAxis{
-                    Type = "category",
-                    AxisTick = new { show = false },
-                    Data = list2.Select(e => e.AppName).ToArray()
-                }
-            ];
-
-            //chart.Add(list2, _.Total, "bar");
-            //chart.Add(list2, _.Errors, "bar");
-            chart.Add(new Series
-            {
-                Name = "错误数",
-                Type = "bar",
-                ["stack"] = "总量",
-                ["label"] = new { show = true, position = "left" },
-                ["itemStyle"] = new { color = "rgba(255, 0, 0, 0.5)", },
-                Data = list2.Select(e => (Object)(-e.Errors)).ToArray(),
-            });
-            chart.Add(new Series
-            {
-                Name = "总数",
-                Type = "bar",
-                ["stack"] = "总量",
-                ["label"] = new { show = true },
-                Data = list2.Select(e => (Object)e.Total).ToArray(),
-            });
+            var chart = AppMinuteStatChart.BuildDashboard(list2);
 
             ViewBag.Charts = new[] { chart };
         }
