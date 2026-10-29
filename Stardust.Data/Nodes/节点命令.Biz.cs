@@ -155,6 +155,24 @@ public partial class NodeCommand : Entity<NodeCommand>
         return cmd;
     }
 
+    /// <summary>取消已过期且未完成的命令</summary>
+    /// <param name="now">当前时间</param>
+    /// <returns>处理数量</returns>
+    /// <remarks>节点离线时命令无人取走，会长期停留在“就绪”状态，需要由服务端定时清理</remarks>
+    public static Int32 CancelExpired(DateTime now)
+    {
+        var exp = _.Expire < now & _.Expire > new DateTime(2000, 1, 1) & _.Status <= CommandStatus.处理中;
+        var list = FindAll(exp, null, null, 0, 100);
+        foreach (var item in list)
+        {
+            item.Status = CommandStatus.取消;
+            item.Result = "命令已过期";
+            item.Update();
+        }
+
+        return list.Count;
+    }
+
     /// <summary>转为模型</summary>
     /// <returns></returns>
     public CommandModel ToModel()

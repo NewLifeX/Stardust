@@ -8,6 +8,7 @@ using NewLife.Remoting.Models;
 using NewLife.Security;
 using NewLife.Serialization;
 using Stardust.Data.Deployment;
+using Stardust.Data.Nodes;
 using Stardust.Deployment;
 using Stardust.Models;
 using Stardust.Server;
@@ -129,6 +130,14 @@ public class DeployService(StarFactory starFactory, ITracer tracer)
 
         app ??= deployNode.Deploy;
         if (app == null || !app.Enable) throw new Exception(L.T("The application deployment set [{1}] on node [{0}] is not enabled.", deployNode, app));
+
+        // 目标节点离线时不要下发命令。离线节点无人取走命令，记录会长期停留在“就绪”，并让流水线误以为仍在等待
+        var node = deployNode.Node;
+        var sessionTimeout = StarServerSetting.Current.SessionTimeout;
+        if (sessionTimeout <= 0) sessionTimeout = 600;
+        var online = node == null ? null : NodeOnline.FindByNodeId(node.ID);
+        if (online == null || (DateTime.Now - online.UpdateTime).TotalSeconds >= sessionTimeout)
+            throw new InvalidOperationException(L.T("Node [{0}] is offline; the deployment command was not dispatched.", node?.Name ?? deployNode.NodeName));
 
         await Task.Yield();
 

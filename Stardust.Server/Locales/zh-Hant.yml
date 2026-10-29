@@ -160,6 +160,7 @@
 "[{0}/{1}] authenticated {2}": "[{0}/{1}]鑑權成功 {2}"
 "Registered service [{0}] {1}": "註冊服務[{0}] {1}"
 "Service [{0}] went offline: {1}": "服務[{0}]下線 {1}"
+"Node [{0}] is offline; the deployment command was not dispatched.": "節點[{0}]離線，未下發部署命令"
 "[{0}] secret mismatch; allowed by [{1}] mode": "[{0}]密鑰不符，按[{1}]模式放行"
 "[{0}] the client now carries the correct secret; the convergence window is closed automatically": "[{0}]用戶端已攜帶正確密鑰，收斂窗口自動關閉"
 "Hardware information changed too much.": "硬體資訊變動過大"

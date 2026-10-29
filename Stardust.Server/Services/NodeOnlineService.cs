@@ -58,6 +58,9 @@ public class NodeOnlineService(IServiceProvider serviceProvider, StarServerSetti
                 }
             }
         }
+
+        // 清理已过期但仍未执行的命令。离线节点无人取走命令，记录会长期停留在“就绪”
+        NodeCommand.CancelExpired(DateTime.Now);
     }
 
     /// <summary>检查节点离线并发送告警。未开启离线告警或未配置Webhook时直接跳过</summary>
