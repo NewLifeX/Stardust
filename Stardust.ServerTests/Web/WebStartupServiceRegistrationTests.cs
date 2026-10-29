@@ -1,11 +1,12 @@
+using System;
+using System.IO;
 using Xunit;
 
 namespace ServerTest.Web;
 
 public class WebStartupServiceRegistrationTests
 {
-    private static String GetSourcePath(String relativePath) =>
-        Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../", relativePath));
+    private static String GetSourcePath(String relativePath) => SourceRoot.FindPath(relativePath);
 
     [Fact]
     public void Startup_Registers_HttpClientFactory_And_MySqlService()
@@ -28,3 +29,4 @@ public class WebStartupServiceRegistrationTests
         Assert.Contains("return AppClientLog.Search(threadId, appId, start, end, p[\"Q\"], p);", source);
     }
 }
+
