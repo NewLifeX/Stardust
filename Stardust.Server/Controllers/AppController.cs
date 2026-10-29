@@ -22,6 +22,17 @@ namespace Stardust.Server.Controllers;
 [Route("[controller]")]
 public class AppController(RegistryService registryService, ITokenService tokenService, DeployService deployService, AppSessionManager sessionManager, IServiceProvider serviceProvider, ITracer tracer, StarServerSetting setting) : BaseController(registryService, tokenService, serviceProvider)
 {
+    /// <summary>写日志。抑制短时间内的重复连接记录，避免客户端重连风暴冲垮历史表</summary>
+    /// <param name="action">动作名称</param>
+    /// <param name="success">是否成功</param>
+    /// <param name="message">消息内容</param>
+    public override void WriteLog(String action, Boolean success, String message)
+    {
+        if (!WebSocketHistoryFilter.TryAccept(Context?.ClientId, action, ref message)) return;
+
+        base.WriteLog(action, success, message);
+    }
+
     #region 登录注销
     [AllowAnonymous]
     [HttpPost(nameof(Login))]

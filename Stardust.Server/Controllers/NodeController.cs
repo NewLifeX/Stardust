@@ -25,6 +25,17 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
 {
     private static DateTime _oldVersion = new(2025, 8, 26);
 
+    /// <summary>写日志。抑制短时间内的重复连接记录，避免客户端重连风暴冲垮历史表</summary>
+    /// <param name="action">动作名称</param>
+    /// <param name="success">是否成功</param>
+    /// <param name="message">消息内容</param>
+    public override void WriteLog(String action, Boolean success, String message)
+    {
+        if (!WebSocketHistoryFilter.TryAccept(Context?.ClientId, action, ref message)) return;
+
+        base.WriteLog(action, success, message);
+    }
+
     #region 令牌验证
     protected override Boolean OnAuthorize(String token, DeviceContext context)
     {
