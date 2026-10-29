@@ -3,6 +3,7 @@ using NewLife;
 using NewLife.Configuration;
 using NewLife.Remoting.Models;
 using NewLife.Security;
+using Stardust.Server.Services;
 using XCode.Configuration;
 
 namespace Stardust.Server;
@@ -21,6 +22,9 @@ public enum ClearModes
 [Config("StarServer")]
 public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
 {
+    /// <summary>默认忽略错误的埋点。旧版 SDK 在未安装或未启动星尘代理的机器上探测 rpc:Info 必然失败</summary>
+    public const String DefaultIgnoreErrorItems = "rpc:Info";
+
     #region 静态
     static StarServerSetting() => Provider = new DbConfigProvider { UserId = 0, Category = "StarServer" };
     #endregion
@@ -185,6 +189,10 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     /// <summary>限流路径前缀。逗号分隔，命中则按IP限流，默认登录/令牌等认证接口</summary>
     [Description("Rate limit path prefixes. Comma-separated; matching paths are rate-limited by IP; defaults to authentication endpoints such as login/token")]
     public String RateLimitPaths { get; set; } = "/App/Login,/Node/Login,/OAuth/Token,/App/Register";
+
+    /// <summary>忽略错误的埋点。逗号分隔，支持*通配；命中埋点的错误数不计入应用错误率和告警。默认忽略旧版客户端的本地代理探测 rpc:Info，该探测在未启动本地代理时必然失败</summary>
+    [Description("Error-ignored trace items. Comma-separated, supports * wildcard; errors of matching items are excluded from application error rate and alarms. Defaults to rpc:Info, the local agent probe of legacy clients which always fails when no local agent is running")]
+    public String IgnoreErrorItems { get; set; } = DefaultIgnoreErrorItems;
 
     /// <summary>限流次数。每IP每分钟允许访问次数，默认60</summary>
     [Description("Rate limit count. Number of requests allowed per IP per minute; default 60")]

@@ -312,6 +312,9 @@ public class TraceController(ITraceStatService stat, IAppDayStatService appStat,
                 // 如果最小耗时都超过了超时设置，则全部标记为错误
                 if (isTimeout && td.MinCost >= timeout && td.Errors < td.Total) td.Errors = td.Total;
 
+                // 连通性探测等非业务埋点不计入错误数，避免旧客户端探测失败污染应用错误率与告警
+                if (td.Errors > 0 && ErrorItemFilter.IsMatch(item.Name)) td.Errors = 0;
+
                 // 处理克隆。拷贝一份入库，归属新的跟踪项，但名称不变
                 foreach (var elm in app.GetClones(item.Name, model.ClientId))
                 {
