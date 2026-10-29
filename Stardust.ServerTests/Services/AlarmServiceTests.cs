@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
+using Stardust.Data.Nodes;
 using Stardust.Server.Services;
 using Xunit;
 
@@ -39,5 +41,30 @@ public class AlarmServiceTests
 
         // 未配置阈值时不告警
         Assert.Equal(false, method.Invoke(null, [1.0, 0.0, 0.0]));
+    }
+
+    [Fact]
+    [DisplayName("连续确认：次数不足或中间出现未超限采样都不告警")]
+    public void IsSustained_RequiresConsecutiveSamples()
+    {
+        var samples = new List<NodeData>
+        {
+            new() { CpuRate = 0.95 },
+            new() { CpuRate = 0.92 },
+            new() { CpuRate = 0.91 },
+        };
+
+        Assert.True(AlarmService.IsSustained(samples, 3, e => e.CpuRate >= 0.9));
+
+        // 次数不足
+        Assert.False(AlarmService.IsSustained(samples, 4, e => e.CpuRate >= 0.9));
+        Assert.False(AlarmService.IsSustained([], 1, e => e.CpuRate >= 0.9));
+
+        // 中间出现一次回落，视为抖动
+        samples[2] = new NodeData { CpuRate = 0.5 };
+        Assert.False(AlarmService.IsSustained(samples, 3, e => e.CpuRate >= 0.9));
+
+        // 只确认最近一次时仍然成立
+        Assert.True(AlarmService.IsSustained(samples, 1, e => e.CpuRate >= 0.9));
     }
 }

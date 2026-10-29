@@ -16,6 +16,9 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
     /// <summary>计算周期。默认30秒</summary>
     public Int32 Period { get; set; } = setting.AlarmPeriod;
 
+    /// <summary>连续确认次数。连续多次采样都超过阈值才告警，低于阈值也要连续多次才恢复，避免指标抖动导致告警反复开合</summary>
+    public Int32 ConfirmTimes { get; set; } = 3;
+
     private TimerX _timer;
     private ICache _cache;
     private ITraceStatService _statService;
@@ -603,15 +606,16 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
 
         using var span = tracer?.NewSpan($"alarm:{nameof(Node)}");
 
-        // 最新数据
-        var data = NodeData.FindLast(node.ID);
+        // 最新数据。取最近若干条用于判断指标是否持续超限，避免瞬时抖动反复告警
+        var samples = NodeData.FindLast(node.ID, ConfirmTimes);
+        var data = samples.FirstOrDefault();
         if (data == null) return;
 
         // CPU告警
         if (node.AlarmCpuRate > 0)
         {
             var rate = data.CpuRate * 100;
-            if (rate >= node.AlarmCpuRate)
+            if (rate >= node.AlarmCpuRate && IsSustained(samples, ConfirmTimes, e => e.CpuRate * 100 >= node.AlarmCpuRate))
             {
                 // 一定时间内不要重复报错，除非错误翻倍
                 var error2 = _cache.Get<Double>("alarm:CpuRate:" + node.ID);
@@ -629,7 +633,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         {
             var free = data.FreeMemory > 0 ? data.FreeMemory : data.AvailableMemory;
             var rate = (node.Memory - free) * 100d / node.Memory;
-            if (rate >= node.AlarmMemoryRate)
+            if (rate >= node.AlarmMemoryRate && IsSustained(samples, ConfirmTimes, e => (node.Memory - (e.FreeMemory > 0 ? e.FreeMemory : e.AvailableMemory)) * 100d / node.Memory >= node.AlarmMemoryRate))
             {
                 // 一定时间内不要重复报错，除非错误翻倍
                 var error2 = _cache.Get<Double>("alarm:MemoryRate:" + node.ID);
@@ -646,7 +650,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         if (node.AlarmDiskRate > 0 && node.TotalSize > 0)
         {
             var rate = (node.TotalSize - data.AvailableFreeSpace) * 100d / node.TotalSize;
-            if (rate >= node.AlarmDiskRate)
+            if (rate >= node.AlarmDiskRate && IsSustained(samples, ConfirmTimes, e => (node.TotalSize - e.AvailableFreeSpace) * 100d / node.TotalSize >= node.AlarmDiskRate))
             {
                 // 一定时间内不要重复报错，除非错误翻倍
                 var error2 = _cache.Get<Double>("alarm:DiskRate:" + node.ID);
@@ -1148,39 +1152,60 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         return (null, null);
     }
 
+    /// <summary>判断最近若干次采样是否持续满足条件</summary>
+    /// <remarks>用于告警与恢复的连续确认，避免指标在阈值附近抖动导致告警反复开合</remarks>
+    /// <param name="samples">采样列表，按时间倒序</param>
+    /// <param name="need">需要的连续次数</param>
+    /// <param name="predicate">条件</param>
+    /// <returns>是否持续满足</returns>
+    public static Boolean IsSustained(IList<NodeData> samples, Int32 need, Func<NodeData, Boolean> predicate)
+    {
+        if (samples == null || samples.Count == 0 || predicate == null) return false;
+
+        var count = need > 1 ? need : 1;
+        if (samples.Count < count) return false;
+
+        for (var i = 0; i < count; i++)
+        {
+            if (samples[i] == null || !predicate(samples[i])) return false;
+        }
+
+        return true;
+    }
+
     private void CheckNodeRecovery(AlarmRecord record)
     {
         var node = Node.FindByName(record.Action);
         if (node == null) return;
 
-        var data = NodeData.FindLast(node.ID);
+        var samples = NodeData.FindLast(node.ID, ConfirmTimes);
+        var data = samples.FirstOrDefault();
         if (data == null) return;
+
+        // 节点长时间没有新数据时不再判定指标恢复，交给节点下线告警处理，避免告警卡死
+        var stale = data.CreateTime > DateTime.MinValue && data.CreateTime < DateTime.Now.AddMinutes(-10);
+        var count = ConfirmTimes > 1 ? ConfirmTimes : 1;
 
         var recovered = false;
         switch (record.Category)
         {
             case "节点cpu告警":
-                if (node.AlarmCpuRate <= 0 || data.CpuRate * 100 < node.AlarmCpuRate)
+                if (node.AlarmCpuRate <= 0 || stale)
                     recovered = true;
+                else
+                    recovered = IsSustained(samples, count, e => e.CpuRate * 100 < node.AlarmCpuRate);
                 break;
             case "节点memory告警":
-                if (node.AlarmMemoryRate <= 0 || node.Memory <= 0)
+                if (node.AlarmMemoryRate <= 0 || node.Memory <= 0 || stale)
                     recovered = true;
                 else
-                {
-                    var free = data.FreeMemory > 0 ? data.FreeMemory : data.AvailableMemory;
-                    var rate = (node.Memory - free) * 100d / node.Memory;
-                    if (rate < node.AlarmMemoryRate) recovered = true;
-                }
+                    recovered = IsSustained(samples, count, e => (node.Memory - (e.FreeMemory > 0 ? e.FreeMemory : e.AvailableMemory)) * 100d / node.Memory < node.AlarmMemoryRate);
                 break;
             case "节点disk告警":
-                if (node.AlarmDiskRate <= 0 || node.TotalSize <= 0)
+                if (node.AlarmDiskRate <= 0 || node.TotalSize <= 0 || stale)
                     recovered = true;
                 else
-                {
-                    var rate = (node.TotalSize - data.AvailableFreeSpace) * 100d / node.TotalSize;
-                    if (rate < node.AlarmDiskRate) recovered = true;
-                }
+                    recovered = IsSustained(samples, count, e => (node.TotalSize - e.AvailableFreeSpace) * 100d / node.TotalSize < node.AlarmDiskRate);
                 break;
             case "节点tcp告警":
                 if (node.AlarmTcp <= 0)

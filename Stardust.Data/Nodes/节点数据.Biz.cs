@@ -106,6 +106,17 @@ public partial class NodeData : Entity<NodeData>
 
         return FindAll(_.NodeID == nodeId, _.Id.Desc(), null, 0, 1).FirstOrDefault();
     }
+
+    /// <summary>获取最后若干条节点数据，按编号倒序，用于判断指标是否持续超限</summary>
+    /// <param name="nodeId">节点编号</param>
+    /// <param name="count">条数</param>
+    /// <returns>实体列表，最新一条在前</returns>
+    public static IList<NodeData> FindLast(Int32 nodeId, Int32 count)
+    {
+        if (nodeId <= 0 || count <= 0) return [];
+
+        return FindAll(_.NodeID == nodeId, _.Id.Desc(), null, 0, count);
+    }
     #endregion
 
     #region 高级查询
