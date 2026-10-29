@@ -188,6 +188,7 @@ public partial class TraceItem : Entity<TraceItem>
     {
         if (name.IsNullOrEmpty()) return "other";
 
+        if (IsWebSocket(name)) return "ws";
         if (name.StartsWithIgnoreCase("/")) return "api";
         if (name.StartsWithIgnoreCase("http://", "https://")) return "http";
         if (name.StartsWithIgnoreCase("redismq:")) return "mq";
@@ -196,6 +197,17 @@ public partial class TraceItem : Entity<TraceItem>
         if (p > 0) return name[..p];
 
         return "other";
+    }
+
+    /// <summary>判断是否 WebSocket 长连接端点</summary>
+    /// <remarks>长连接埋点的“耗时”是连接存活时长，需与普通接口调用分开归类，避免污染平均耗时与超时告警</remarks>
+    /// <param name="name">埋点名称</param>
+    /// <returns>是否长连接端点</returns>
+    public static Boolean IsWebSocket(String name)
+    {
+        if (name.IsNullOrEmpty()) return false;
+
+        return name.StartsWithIgnoreCase("ws:") || name.EqualIgnoreCase("/app/notify", "/node/notify");
     }
 
     /// <summary>
