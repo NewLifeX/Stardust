@@ -273,6 +273,9 @@ public partial class NodeOnline : Entity<NodeOnline>, IOnlineModel2
         online.Signal = inf.Signal;
         if (inf.UplinkSpeed > 0) online.UplinkSpeed = (Int64)inf.UplinkSpeed;
         if (inf.DownlinkSpeed > 0) online.DownlinkSpeed = (Int64)inf.DownlinkSpeed;
+        // 计数器回绕或重启会让上报速度变成负数，归零避免负速度长期停留在在线记录上
+        if (inf.UplinkSpeed < 0) online.UplinkSpeed = 0;
+        if (inf.DownlinkSpeed < 0) online.DownlinkSpeed = 0;
         if (inf.SystemLoad > 0) online.SystemLoad = inf.SystemLoad;
         if (inf.DiskIOPS > 0) online.DiskIOPS = inf.DiskIOPS;
         if (inf.DiskActiveTime > 0) online.DiskActiveTime = inf.DiskActiveTime;
@@ -311,6 +314,11 @@ public partial class NodeOnline : Entity<NodeOnline>, IOnlineModel2
         online.Data = dic.ToJson();
     }
 
+    /// <summary>修正速度值。计数器回绕或重启会让上报速度为负，统一归零</summary>
+    /// <param name="speed">上报速度，字节每秒</param>
+    /// <returns>非负速度</returns>
+    internal static Int64 FixSpeed(Double speed) => speed > 0 ? (Int64)speed : 0;
+
     private void CreateData(PingInfo inf, String ip)
     {
         var olt = this;
@@ -330,8 +338,8 @@ public partial class NodeOnline : Entity<NodeOnline>, IOnlineModel2
             Temperature = inf.Temperature,
             Battery = inf.Battery,
             Signal = inf.Signal,
-            UplinkSpeed = (Int64)inf.UplinkSpeed,
-            DownlinkSpeed = (Int64)inf.DownlinkSpeed,
+            UplinkSpeed = FixSpeed(inf.UplinkSpeed),
+            DownlinkSpeed = FixSpeed(inf.DownlinkSpeed),
             DiskIOPS = inf.DiskIOPS,
             DiskActiveTime = inf.DiskActiveTime,
             ProcessCount = inf.ProcessCount,
