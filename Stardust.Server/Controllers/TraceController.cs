@@ -315,6 +315,10 @@ public class TraceController(ITraceStatService stat, IAppDayStatService appStat,
                 // 连通性探测等非业务埋点不计入错误数，避免旧客户端探测失败污染应用错误率与告警
                 if (td.Errors > 0 && ErrorItemFilter.IsMatch(item.Name)) td.Errors = 0;
 
+                // 客户端提前断开等传输层中断不计入错误数，异常采样照常保留便于排障
+                if (td.Errors > 0 && item.ErrorSamples != null)
+                    td.Errors = ErrorSampleFilter.FixErrors(td.Errors, item.ErrorSamples.Select(e => e?.Error).ToList());
+
                 // 处理克隆。拷贝一份入库，归属新的跟踪项，但名称不变
                 foreach (var elm in app.GetClones(item.Name, model.ClientId))
                 {

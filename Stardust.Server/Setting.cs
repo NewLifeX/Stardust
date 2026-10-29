@@ -25,6 +25,11 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     /// <summary>默认忽略错误的埋点。旧版 SDK 在未安装或未启动星尘代理的机器上探测 rpc:Info 必然失败</summary>
     public const String DefaultIgnoreErrorItems = "rpc:Info";
 
+    /// <summary>默认忽略的异常关键字。客户端提前断开等传输层中断不是应用故障</summary>
+    public const String DefaultIgnoreErrorKeywords = "BadHttpRequestException,Unexpected end of request content," +
+        "The client disconnected,The request was aborted,Connection reset by peer," +
+        "An existing connection was forcibly closed,Broken pipe";
+
     #region 静态
     static StarServerSetting() => Provider = new DbConfigProvider { UserId = 0, Category = "StarServer" };
     #endregion
@@ -193,6 +198,10 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     /// <summary>忽略错误的埋点。逗号分隔，支持*通配；命中埋点的错误数不计入应用错误率和告警。默认忽略旧版客户端的本地代理探测 rpc:Info，该探测在未启动本地代理时必然失败</summary>
     [Description("Error-ignored trace items. Comma-separated, supports * wildcard; errors of matching items are excluded from application error rate and alarms. Defaults to rpc:Info, the local agent probe of legacy clients which always fails when no local agent is running")]
     public String IgnoreErrorItems { get; set; } = DefaultIgnoreErrorItems;
+
+    /// <summary>忽略的异常关键字。逗号分隔，命中即视为传输层中断（客户端提前断开等），不计入应用错误率。为空时使用默认规则</summary>
+    [Description("Ignored error keywords. Comma-separated; matching errors are treated as transport-level aborts (e.g. client disconnected) and excluded from the application error rate. Empty uses defaults")]
+    public String IgnoreErrorKeywords { get; set; } = DefaultIgnoreErrorKeywords;
 
     /// <summary>限流次数。每IP每分钟允许访问次数，默认60</summary>
     [Description("Rate limit count. Number of requests allowed per IP per minute; default 60")]
