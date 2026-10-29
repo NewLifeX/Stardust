@@ -25,6 +25,12 @@ public class AppDayStatService : IAppDayStatService
     /// </remarks>
     public Int32 BatchPeriod { get; set; } = 30;
 
+    /// <summary>长连接埋点类型。其“耗时”是连接存活时长，不是请求耗时</summary>
+    public const String WebSocketKind = "ws";
+
+    /// <summary>统计时排除长连接埋点。默认true，避免连接时长污染应用平均耗时与最大耗时</summary>
+    public Boolean ExcludeWebSocket { get; set; } = true;
+
     private TimerX _timer;
     private readonly ConcurrentBag<DateTime> _bag = [];
     private readonly ITracer _tracer;
@@ -90,7 +96,9 @@ public class AppDayStatService : IAppDayStatService
             var appId = item.Key;
             if (appId <= 0) continue;
 
-            var ds = item.ToList();
+            // WebSocket 长连接的“耗时”是连接存活时长，计入应用平均值会掩盖真实接口耗时
+            var ds = item.Where(e => !ExcludeWebSocket || e.Type != WebSocketKind).ToList();
+            if (ds.Count == 0) continue;
             var st = sts.FirstOrDefault(e => e.AppId == appId);
             if (st == null)
             {
