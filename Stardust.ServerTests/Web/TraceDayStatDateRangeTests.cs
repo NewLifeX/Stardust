@@ -10,8 +10,8 @@ namespace ServerTest.Web;
 public class TraceDayStatDateRangeTests
 {
     private static MethodInfo GetMethod() =>
-        typeof(web::Stardust.Web.Areas.Monitors.Controllers.TraceDayStatController)
-            .GetMethod("ResolveDateRange", BindingFlags.NonPublic | BindingFlags.Static);
+        typeof(web::Stardust.Web.Areas.Monitors.MonitorSearchHelper)
+            .GetMethod("ResolveDateRange", BindingFlags.Public | BindingFlags.Static);
 
     private static (DateTime Start, DateTime End) Invoke(Int32 appId, Int32 itemId, DateTime date, DateTime start, DateTime end)
     {

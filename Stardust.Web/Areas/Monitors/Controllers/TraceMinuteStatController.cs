@@ -32,7 +32,7 @@ public class TraceMinuteStatController : ReadOnlyEntityController<TraceMinuteSta
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
         var date = p["date"].ToDateTime();
-        if (start.Year < 2000 && end.Year < 2000) start = end = date;
+        MonitorSearchHelper.ResolveDateRange(appId, itemId, date, ref start, ref end);
 
         // 选了应用，没有选时间，按照统计日期升序
         if (appId >= 0 && start.Year < 2000 && p.Sort.IsNullOrEmpty())

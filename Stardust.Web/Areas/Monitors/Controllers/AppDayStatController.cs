@@ -46,6 +46,7 @@ public class AppDayStatController : MonitorsEntityController<AppDayStat>
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
+        MonitorSearchHelper.ResolveDateRange(appId, -1, default, ref start, ref end);
 
         // 默认排序
         if (appId >= 0 && start.Year < 2000 && p.Sort.IsNullOrEmpty())
