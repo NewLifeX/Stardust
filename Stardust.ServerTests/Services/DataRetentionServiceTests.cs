@@ -72,12 +72,16 @@ public class DataRetentionServiceTests
         }
     }
 
-    [Fact(DisplayName = "清理日志逐表带表名，能命中词表译文")]
-    public void DoWork_LogsPerTableFormat()
+    [Fact(DisplayName = "只有真正删掉数据的表才写日志，其余表不刷屏")]
+    public void DoWork_LogsOnlyDeletedTables()
     {
         var log = new CaptureLog();
         var old = XTrace.Log;
         XTrace.Log = log;
+
+        // 造一条超过分钟统计保留期的记录，让 AppMinuteStat 真产生删除
+        var expired = CreateMinuteStat(DateTime.Now.AddDays(-10));
+        expired.Insert();
         try
         {
             var service = new DataRetentionService(new StarServerSetting { DataRetention = 1, DataRetention2 = 2, DataRetention3 = 3 }, null);
@@ -86,18 +90,16 @@ public class DataRetentionServiceTests
         finally
         {
             XTrace.Log = old;
+            AppMinuteStat.FindByID(expired.ID)?.Delete();
         }
 
         // 词表按表名逐条提供译文，格式串里必须带表名；用 {2} 之类通用模板会在运行时命中不到译文而退回英文
-        String[] tables =
-        [
-            "NodeData", "RedisData", "AppMeter", "AppMinuteStat", "TraceMinuteStat", "TraceHourStat", "TraceDayStat",
-            "NodeHistory", "AppHistory", "AppDeployHistory", "AlarmHistory",
-        ];
-        foreach (var table in tables)
-        {
-            Assert.Contains(log.Messages, e => e.Contains($"{table} records before"));
-        }
+        Assert.Contains(log.Messages, e => e.StartsWith("Deleted ") && e.Contains("AppMinuteStat records before"));
+
+        // 没有删除数据的表不再写“共 0”日志，否则每 10 分钟刷十几行空日志
+        // 注：测试库可能缺部分表，那会走 Failed to clean 分支，这里只校验成功日志
+        Assert.DoesNotContain(log.Messages, e => e.StartsWith("Deleted ") && e.Contains("NodeData records before"));
+        Assert.DoesNotContain(log.Messages, e => e.StartsWith("Deleted ") && e.Contains("AlarmHistory records before"));
     }
 
     /// <summary>捕获日志的简易实现，用于核对清理日志的格式串</summary>

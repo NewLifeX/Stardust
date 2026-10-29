@@ -82,7 +82,9 @@ public class DataRetentionService(StarServerSetting setting, ITracer tracer) : I
         try
         {
             var rs = deleteBefore(time);
-            XTrace.WriteLine(format, time.ToFullString(), rs);
+
+            // 没有删除任何数据时不写日志：本服务每 10 分钟跑一次，全零输出会把真正的变更洗没
+            if (rs > 0) XTrace.WriteLine(format, time.ToFullString(), rs);
         }
         catch (Exception ex)
         {

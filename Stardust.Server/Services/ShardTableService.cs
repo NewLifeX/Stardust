@@ -128,8 +128,6 @@ public class ShardTableService : IHostedService
         var now = DateTime.Now;
         var startTime = now.AddDays(-days);
 
-        XTrace.WriteLine("Checking sharded tables, retaining data for {0} day(s), start time: {1}", days, startTime);
-
         var rs = 0;
         using var span = _tracer?.NewSpan("ClearDetails", $"{startTime.ToFullString()}");
         try
@@ -211,7 +209,12 @@ public class ShardTableService : IHostedService
 
         if (span != null) span.Value = rs;
 
-        XTrace.WriteLine("Data table check completed");
+        // 没有清理任何数据时不写日志：本服务每 10 分钟跑一次，全零输出只会淹没真正的清理
+        if (rs > 0)
+        {
+            XTrace.WriteLine("Checking sharded tables, retaining data for {0} day(s), start time: {1}", days, startTime);
+            XTrace.WriteLine("Data table check completed");
+        }
     }
 
     /// <summary>计算指定日序号在今天之前最近一次出现的日期，用于定位循环天表分片</summary>
