@@ -71,8 +71,8 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
             ProcessRedisNode(item);
         }
 
-        // 检查节点告警恢复
-        CheckNodeAlarmRecovery();
+        // 检查告警恢复
+        CheckAlarmRecovery();
 
         if (Period > 0) _timer.Period = Period * 1000;
     }
@@ -501,8 +501,13 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         return Environment.NewLine + $"[更多信息]({baseUrl}{relativeUrl})";
     }
 
-    /// <summary>处理环比告警。对比今日与昨日相同时段的错误率变化趋势</summary>
+    /// <summary>处理环比告警。对比上一个完整小时与昨日同一小时的调用量变化趋势</summary>
     /// <param name="app">应用跟踪器</param>
+    /// <remarks>
+    /// 整点统计在小时内持续累加，且可能延迟落盘。若直接检查当前小时，
+    /// 会把“统计还没写满”误判为调用量下滑（2026-10-29 线上告警即为此类误报）。
+    /// 这里固定使用上一个完整小时，保证今日与昨日的分子分母口径一致。
+    /// </remarks>
     private void ProcessRingRate(AppTracer app)
     {
         if (app == null || !app.Enable) return;
@@ -511,10 +516,9 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         var tis = app.TraceItems.Where(e => e.MaxRingRate > 0 || e.MinRingRate > 0).ToList();
         if (tis.Count <= 0) return;
 
-        // 最近一段时间的小时级数据
+        // 上一个完整小时
         var time = DateTime.Now;
-        var hour = time.Date.AddHours(time.Hour);
-        if (time.Minute < 5) return;
+        var hour = GetStatHour(time);
 
         using var span = tracer?.NewSpan($"alarm:RingRate", new { app.ID, app.Name, app.DisplayName, time, hour });
 
@@ -522,47 +526,48 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         foreach (var st in list)
         {
             var ti = tis.FirstOrDefault(e => e.Id == st.ItemId);
-            if (ti != null && st.RingRate > 0)
+            if (ti == null) continue;
+
+            // 昨日基数必须大于一定值，避免分母过小导致误报
+            var st2 = TraceHourStat.FindAllByStatTimeAndAppIdAndItemId(st.StatTime.AddDays(-1), st.AppId, st.ItemId).FirstOrDefault();
+            var yesterday = st2?.Total ?? 0;
+            if (yesterday <= 10) continue;
+
+            var rate = (Double)st.Total / yesterday;
+            if (!IsRingRateAlarm(rate, ti.MaxRingRate, ti.MinRingRate)) continue;
+
+            span?.AppendTag(new { hour, st.Total, yesterday, rate });
+
+            // 一定时间内不要重复报错，除非环比变化超过一倍
+            var error2 = _cache.Get<Double>("alarm:RingRate:" + ti.Id);
+            if (error2 == 0 || rate > error2 * 2 || rate < error2 / 2)
             {
-                var max = ti.MaxRingRate;
-                var min = ti.MinRingRate;
+                _cache.Set("alarm:RingRate:" + ti.Id, rate, 60 * 60);
 
-                // 昨日基数必须大于一定值，避免分母过小导致误报
-                var st2 = TraceHourStat.FindAllByStatTimeAndAppIdAndItemId(st.StatTime.AddDays(-1), st.AppId, st.ItemId).FirstOrDefault();
-                var yesterday = st2 != null ? st2.Total : (st.Total / st.RingRate);
-                if (yesterday > 10)
-                {
-                    // 根据当前小时已过去时间，折算得到新的环比率
-                    var seconds = time.Minute * 60 + time.Second;
-                    var rate = st.Total / (yesterday * seconds / 3600);
+                // 优先本地跟踪项，其次应用，最后是告警分组
+                var webhook = ti.AlarmRobot;
+                if (webhook.IsNullOrEmpty()) webhook = app.AlarmRobot;
 
-                    // 满足任意一个条件，都要告警
-                    if (max > 0 && rate >= max ||
-                        min > 0 && rate <= min)
-                    {
-                        span?.AppendTag(new { seconds, yesterday, rate });
+                var group = ti.AlarmGroup;
+                if (group.IsNullOrEmpty()) group = app.Category;
 
-                        // 一定时间内不要重复报错，除非错误翻倍
-                        var error2 = _cache.Get<Double>("alarm:RingRate:" + ti.Id);
-                        if (error2 == 0 || rate > error2 * 2 || rate < error2 / 2)
-                        {
-                            _cache.Set("alarm:RingRate:" + ti.Id, rate, 60 * 60);
-
-                            // 优先本地跟踪项，其次应用，最后是告警分组
-                            var webhook = ti.AlarmRobot;
-                            if (webhook.IsNullOrEmpty()) webhook = app.AlarmRobot;
-
-                            var group = ti.AlarmGroup;
-                            if (group.IsNullOrEmpty()) group = app.Category;
-
-                            var msg = GetMarkdown(app, st, (Int32)yesterday, rate, true);
-                            RobotHelper.SendAlarmWithRecord(group, webhook, "埋点告警", msg, "环比告警", $"{app.Name}/{ti.Name}");
-                        }
-                    }
-                }
+                var msg = GetMarkdown(app, st, (Int32)yesterday, rate, true);
+                RobotHelper.SendAlarmWithRecord(group, webhook, "埋点告警", msg, "环比告警", $"{app.Name}/{ti.Name}");
             }
         }
     }
+
+    /// <summary>获取用于环比统计的完整小时。整点统计在小时内仍在累加，必须取上一个完整小时</summary>
+    /// <param name="now">当前时间</param>
+    /// <returns>上一个完整小时的起始时间</returns>
+    private static DateTime GetStatHour(DateTime now) => now.Date.AddHours(now.Hour).AddHours(-1);
+
+    /// <summary>判断环比是否触发告警</summary>
+    /// <param name="rate">今日与昨日的比值</param>
+    /// <param name="max">最大环比，0 表示不限制</param>
+    /// <param name="min">最小环比，0 表示不限制</param>
+    /// <returns>是否告警</returns>
+    private static Boolean IsRingRateAlarm(Double rate, Double max, Double min) => max > 0 && rate >= max || min > 0 && rate <= min;
 
     private String GetMarkdown(AppTracer app, TraceHourStat st, Int32 yesterday, Double rate, Boolean includeTitle)
     {
@@ -572,8 +577,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         sb.AppendLine($">**时间：**<font color=\"blue\">{st.StatTime:yyyy-MM-dd HH:mm:ss}</font>");
         sb.AppendLine($">**今日：**<font color=\"red\">{st.Total}</font>");
         sb.AppendLine($">**昨日：**<font color=\"red\">{yesterday}</font>");
-        sb.AppendLine($">**环比：**<font color=\"red\">{st.RingRate:p2}</font>");
-        sb.AppendLine($">**折算环比：**<font color=\"red\">{rate:p2}</font>");
+        sb.AppendLine($">**环比：**<font color=\"red\">{rate:p2}</font>");
 
         var str = sb.ToString();
         if (str.Length > 1600) str = str[..1600];
@@ -951,8 +955,8 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
     #endregion
 
     #region 告警恢复
-    /// <summary>检查节点告警恢复。将已恢复正常状态的节点告警标记为已恢复</summary>
-    private void CheckNodeAlarmRecovery()
+    /// <summary>检查告警恢复。将已恢复正常状态的节点、应用、埋点与环比告警标记为已恢复</summary>
+    private void CheckAlarmRecovery()
     {
         using var span = tracer?.NewSpan("alarm:CheckRecovery");
 
@@ -982,8 +986,166 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
                 case "节点process告警":
                     CheckNodeRecovery(record);
                     break;
+                case "应用告警":
+                    CheckAppRecovery(record);
+                    break;
+                case "埋点告警":
+                case "环比告警":
+                    CheckItemRecovery(record);
+                    break;
             }
         }
+    }
+
+    /// <summary>检查应用告警恢复。连续两个统计桶均未再超过阈值时恢复</summary>
+    /// <param name="record">报警记录</param>
+    private void CheckAppRecovery(AlarmRecord record)
+    {
+        var app = AppTracer.FindByName(record.Action);
+        if (app == null || !app.Enable || app.AlarmThreshold <= 0 && app.AlarmErrorRate <= 0)
+        {
+            RecoverApp(record, app);
+            return;
+        }
+
+        var time = DateTime.Now;
+        var minute = time.Date.AddHours(time.Hour).AddMinutes(time.Minute / 5 * 5);
+        for (var i = 0; i <= 1; i++)
+        {
+            var bucket = minute.AddMinutes(-5 * i);
+            var st = _statService?.GetLiveAppMinute(app.ID, bucket) ?? AppMinuteStat.FindByAppIdAndTime(app.ID, bucket);
+            if (st == null) continue;
+
+            var errorRate = CalcErrorRate(st.Total, st.Errors);
+            if (app.AlarmThreshold > 0 && st.Errors >= app.AlarmThreshold ||
+                app.AlarmErrorRate > 0 && errorRate >= app.AlarmErrorRate) return;
+        }
+
+        RecoverApp(record, app);
+    }
+
+    /// <summary>恢复应用告警</summary>
+    /// <param name="record">报警记录</param>
+    /// <param name="app">应用跟踪器，可能为空</param>
+    private static void RecoverApp(AlarmRecord record, AppTracer app)
+    {
+        var group = app?.Category ?? app?.ProjectName;
+        var webhook = app == null ? null : RobotHelper.GetAlarm(app.Project, group, app.AlarmRobot);
+        RobotHelper.RecoverAlarm(record.Category, record.Action, group, webhook);
+    }
+
+    /// <summary>检查埋点告警或环比告警恢复</summary>
+    /// <param name="record">报警记录</param>
+    private void CheckItemRecovery(AlarmRecord record)
+    {
+        var (app, ti) = FindAppAndItem(record.Action);
+        if (app == null)
+        {
+            RobotHelper.RecoverAlarm(record.Category, record.Action, null, null);
+            return;
+        }
+
+        if (record.Category == "环比告警")
+        {
+            CheckRingRateRecovery(record, app, ti);
+            return;
+        }
+
+        // 埋点告警：阈值被取消时直接恢复
+        if (ti == null)
+        {
+            RecoverItem(record, app, null);
+            return;
+        }
+
+        var max = ti.AlarmThreshold;
+        var rate = ti.AlarmErrorRate;
+        if (max <= 0 && rate <= 0)
+        {
+            max = app.ItemAlarmThreshold;
+            rate = app.ItemAlarmErrorRate;
+        }
+        if (max <= 0 && rate <= 0)
+        {
+            RecoverItem(record, app, ti);
+            return;
+        }
+
+        var time = DateTime.Now;
+        var minute = time.Date.AddHours(time.Hour).AddMinutes(time.Minute / 5 * 5);
+        for (var i = 0; i <= 1; i++)
+        {
+            var bucket = minute.AddMinutes(-5 * i);
+            var live = _statService?.GetLiveMinute(app.ID, ti.Id, bucket);
+            var db = TraceMinuteStat.Search(app.ID, bucket, [ti.Id]).FirstOrDefault();
+            var st = SelectLatest(live, db);
+            if (st == null) continue;
+
+            var errorRate = CalcErrorRate(st.Total, st.Errors);
+            if (max > 0 && st.Errors >= max && rate > 0 && errorRate >= rate) return;
+        }
+
+        RecoverItem(record, app, ti);
+    }
+
+    /// <summary>检查环比告警恢复。上一个完整小时的环比回到阈值区间内时恢复</summary>
+    /// <param name="record">报警记录</param>
+    /// <param name="app">应用跟踪器</param>
+    /// <param name="ti">跟踪项，可能为空</param>
+    private static void CheckRingRateRecovery(AlarmRecord record, AppTracer app, TraceItem ti)
+    {
+        if (ti == null || ti.MaxRingRate <= 0 && ti.MinRingRate <= 0)
+        {
+            RecoverItem(record, app, ti);
+            return;
+        }
+
+        var hour = GetStatHour(DateTime.Now);
+        var st = TraceHourStat.FindAllByStatTimeAndAppIdAndItemId(hour, app.ID, ti.Id).FirstOrDefault();
+        var st2 = TraceHourStat.FindAllByStatTimeAndAppIdAndItemId(hour.AddDays(-1), app.ID, ti.Id).FirstOrDefault();
+
+        // 上一小时统计尚未落盘时无法判定，保持告警，避免数据延迟导致误恢复
+        if (st == null) return;
+
+        // 昨日无有效基数时无需继续告警
+        if (st2 == null || st2.Total <= 10 || !IsRingRateAlarm((Double)st.Total / st2.Total, ti.MaxRingRate, ti.MinRingRate))
+            RecoverItem(record, app, ti);
+    }
+
+    /// <summary>恢复埋点告警或环比告警</summary>
+    /// <param name="record">报警记录</param>
+    /// <param name="app">应用跟踪器</param>
+    /// <param name="ti">跟踪项，可能为空</param>
+    private static void RecoverItem(AlarmRecord record, AppTracer app, TraceItem ti)
+    {
+        var group = ti?.AlarmGroup;
+        if (group.IsNullOrEmpty()) group = app.Category;
+
+        var webhook = ti?.AlarmRobot;
+        if (webhook.IsNullOrEmpty()) webhook = app.AlarmRobot;
+        webhook = RobotHelper.GetAlarm(app.Project, group, webhook);
+
+        RobotHelper.RecoverAlarm(record.Category, record.Action, group, webhook);
+    }
+
+    /// <summary>按报警对象查找应用与跟踪项。报警对象格式为“应用名/埋点名”</summary>
+    /// <param name="action">报警对象</param>
+    /// <returns>应用与跟踪项，找不到时对应项为空</returns>
+    private static (AppTracer app, TraceItem ti) FindAppAndItem(String action)
+    {
+        if (action.IsNullOrEmpty()) return (null, null);
+
+        foreach (var app in AppTracer.FindAllWithCache())
+        {
+            var prefix = app.Name + "/";
+            if (!action.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) continue;
+
+            var name = action[prefix.Length..];
+            var ti = app.TraceItems.FirstOrDefault(e => e.Name.EqualIgnoreCase(name)) ?? TraceItem.FindByAppIdAndName(app.ID, name);
+            return (app, ti);
+        }
+
+        return (null, null);
     }
 
     private void CheckNodeRecovery(AlarmRecord record)
