@@ -86,7 +86,12 @@ public class DotNetSyncService : IHostedService
         var url = _setting.DotNetSyncUrl;
         if (url.IsNullOrEmpty()) return;
 
+        // 定时器在启动 5 秒后先跑一次；上次同步还在周期内则跳过，
+        // 避免每次重启都全量拉取官方元数据（单个大版本近 2MB）并刷一屏同步日志
+        if (!NeedSync(ReadLastSync(), DateTime.Now, period)) return;
+
         using var span = _tracer?.NewSpan(nameof(DotNetSyncService));
+        var failed = 0;
         try
         {
             // 扫描多个主版本
@@ -96,15 +101,19 @@ public class DotNetSyncService : IHostedService
                 var u = url.Replace("{major}", major + "");
                 try
                 {
-                    await SyncMajor(major + ".0", u, span);
+                    await SyncMajorWithRetry(major + ".0", u, span);
                 }
                 catch (Exception ex)
                 {
                     // 单个大版本失败（典型为弱网超时）不应中断其余版本，降级为警告，等待下个周期重试
+                    failed++;
                     span?.SetError(ex, null);
                     XTrace.Log.Warn("DotNetSyncService failed to sync {0}: {1}", major + ".0", ex.Message);
                 }
             }
+
+            // 全部成功才记录时间，个别版本失败时下次启动继续重试
+            if (failed == 0) WriteLastSync(DateTime.Now);
         }
         catch (Exception ex)
         {
@@ -118,10 +127,90 @@ public class DotNetSyncService : IHostedService
         }
     }
 
-    /// <summary>同步指定主版本的 .NET 运行时信息</summary>
+    /// <summary>判断是否需要同步。上次同步时间在周期内则跳过</summary>
+    /// <param name="lastSync">上次同步时间，从未同步过时为 <see cref="DateTime.MinValue"/></param>
+    /// <param name="now">当前时间</param>
+    /// <param name="period">同步周期，单位秒；小于等于 0 表示禁用</param>
+    /// <returns>是否需要同步</returns>
+    public static Boolean NeedSync(DateTime lastSync, DateTime now, Int32 period)
+    {
+        if (period <= 0) return false;
+        if (lastSync.Year <= 2000) return true;
+
+        return (now - lastSync).TotalSeconds >= period;
+    }
+
+    /// <summary>上次同步时间标记文件，跟随数据目录存放</summary>
+    private static String GetStampFile() => NewLife.Setting.Current.DataPath.CombinePath(".dotnetsync").GetBasePath();
+
+    /// <summary>读取上次同步时间。标记文件缺失或损坏时视为从未同步</summary>
+    private static DateTime ReadLastSync()
+    {
+        try
+        {
+            var file = GetStampFile();
+            if (!File.Exists(file)) return DateTime.MinValue;
+
+            return File.ReadAllText(file).Trim().ToDateTime();
+        }
+        catch
+        {
+            return DateTime.MinValue;
+        }
+    }
+
+    /// <summary>记录本次同步时间。写得失败不影响业务，下次启动重新同步即可</summary>
+    private static void WriteLastSync(DateTime time)
+    {
+        try
+        {
+            var file = GetStampFile();
+            file.EnsureDirectory(true);
+            File.WriteAllText(file, time.ToString("yyyy-MM-dd HH:mm:ss"));
+        }
+        catch (Exception ex)
+        {
+            XTrace.Log.Debug("Failed to write the dotNet sync stamp: {0}", ex.Message);
+        }
+    }
+
+    /// <summary>判断异常是否为数据库锁定/忙。SQLite 多进程同时写入时会短暂出现</summary>
+    /// <param name="ex">异常</param>
+    /// <returns>是否为锁定类异常</returns>
+    public static Boolean IsLocked(Exception? ex)
+    {
+        for (var e = ex; e != null; e = e.InnerException)
+        {
+            var msg = e.Message;
+            if (!msg.IsNullOrEmpty() &&
+                (msg.Contains("locked", StringComparison.OrdinalIgnoreCase) || msg.Contains("busy", StringComparison.OrdinalIgnoreCase)))
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>同步单个大版本。数据库短暂锁定时做有限次重试，避免整批同步失败</summary>
     /// <param name="versionPrefix">版本前缀，如 "6.0"</param>
     /// <param name="url">官方发布 API 地址</param>
     /// <param name="span">跟踪跨度</param>
+    private async Task SyncMajorWithRetry(String versionPrefix, String url, ISpan span)
+    {
+        for (var i = 0; ; i++)
+        {
+            try
+            {
+                await SyncMajor(versionPrefix, url, span);
+                return;
+            }
+            catch (Exception ex) when (i < 2 && IsLocked(ex))
+            {
+                // 典型场景：星尘Web与星尘服务端同时写同一个 SQLite 库，一方短时间持锁
+                await Task.Delay(1_000);
+            }
+        }
+    }
+
     private async Task SyncMajor(String versionPrefix, String url, ISpan span)
     {
         XTrace.WriteLine("DotNetSyncService.Sync {0}", url);
