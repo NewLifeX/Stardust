@@ -19,6 +19,16 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
     /// <summary>连续确认次数。连续多次采样都超过阈值才告警，低于阈值也要连续多次才恢复，避免指标抖动导致告警反复开合</summary>
     public Int32 ConfirmTimes { get; set; } = 3;
 
+    /// <summary>重复通知周期（秒）。同一告警持续存在时，每隔该时间才再次推送机器人消息，默认1800秒</summary>
+    /// <remarks>
+    /// 原实现固定5分钟，持久性故障（如进程长期未启动）一天可推送近300条，淹没有效信息。
+    /// 指标继续恶化（如翻倍）时仍会立即推送，不受本周期限制。
+    /// </remarks>
+    public Int32 RenotifyPeriod { get; set; } = DefaultRenotifyPeriod;
+
+    /// <summary>默认重复通知周期（秒）</summary>
+    public const Int32 DefaultRenotifyPeriod = 1800;
+
     private TimerX _timer;
     private ICache _cache;
     private ITraceStatService _statService;
@@ -120,7 +130,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
                 var error2 = _cache.Get<Int32>("alarm:AppTracer:" + appId);
                 if (error2 == 0 || st.Errors > error2 * 2)
                 {
-                    _cache.Set("alarm:AppTracer:" + appId, st.Errors, 5 * 60);
+                    _cache.Set("alarm:AppTracer:" + appId, st.Errors, RenotifyPeriod);
                     st.ErrorRate = errorRate;
 
                     var msg = GetMarkdown(app, st, true);
@@ -281,7 +291,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
                         var error2 = _cache.Get<Int32>("alarm:TraceMinuteStat:" + ti.Id);
                         if (error2 == 0 || st.Errors > error2 * 2)
                         {
-                            _cache.Set("alarm:TraceMinuteStat:" + ti.Id, st.Errors, 5 * 60);
+                            _cache.Set("alarm:TraceMinuteStat:" + ti.Id, st.Errors, RenotifyPeriod);
 
                             // 优先本地跟踪项，其次应用，最后是告警分组
                             var webhook = ti.AlarmRobot;
@@ -621,7 +631,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
                 var error2 = _cache.Get<Double>("alarm:CpuRate:" + node.ID);
                 if (error2 == 0 || rate > error2 * 2)
                 {
-                    _cache.Set("alarm:CpuRate:" + node.ID, rate, 5 * 60);
+                    _cache.Set("alarm:CpuRate:" + node.ID, rate, RenotifyPeriod);
 
                     SendAlarm("cpu", node, data, $"[{node.Name}]CPU告警");
                 }
@@ -639,7 +649,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
                 var error2 = _cache.Get<Double>("alarm:MemoryRate:" + node.ID);
                 if (error2 == 0 || rate > error2 * 2)
                 {
-                    _cache.Set("alarm:MemoryRate:" + node.ID, rate, 5 * 60);
+                    _cache.Set("alarm:MemoryRate:" + node.ID, rate, RenotifyPeriod);
 
                     SendAlarm("memory", node, data, $"[{node.Name}]内存告警");
                 }
@@ -656,7 +666,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
                 var error2 = _cache.Get<Double>("alarm:DiskRate:" + node.ID);
                 if (error2 == 0 || rate > error2 * 2)
                 {
-                    _cache.Set("alarm:DiskRate:" + node.ID, rate, 5 * 60);
+                    _cache.Set("alarm:DiskRate:" + node.ID, rate, RenotifyPeriod);
 
                     SendAlarm("disk", node, data, $"[{node.Name}]磁盘告警");
                 }
@@ -675,7 +685,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
                 var error2 = _cache.Get<Int32>("alarm:Tcp:" + node.ID);
                 if (error2 == 0 || tcp > error2 * 2)
                 {
-                    _cache.Set("alarm:Tcp:" + node.ID, tcp, 5 * 60);
+                    _cache.Set("alarm:Tcp:" + node.ID, tcp, RenotifyPeriod);
 
                     SendAlarm("tcp", node, data, $"[{node.Name}]Tcp告警");
                 }
@@ -700,7 +710,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
                         var error2 = _cache.Get<Int32>("alarm:Process:" + node.ID);
                         if (error2 == 0 || ps2.Count > error2)
                         {
-                            _cache.Set("alarm:Process:" + node.ID, ps2.Count, 5 * 60);
+                            _cache.Set("alarm:Process:" + node.ID, ps2.Count, RenotifyPeriod);
 
                             SendAlarm("process", node, data, $"[{node.Name}]进程守护告警", ps2.Join());
                         }
@@ -800,7 +810,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
             var error2 = _cache.Get<Double>("alarm:RedisMemory:" + node.Id);
             if (error2 == 0 || rate > error2 * 2)
             {
-                _cache.Set("alarm:RedisMemory:" + node.Id, rate, 5 * 60);
+                _cache.Set("alarm:RedisMemory:" + node.Id, rate, RenotifyPeriod);
 
                 actions.Add(sb => sb.AppendLine($">**内存告警：**<font color=\"red\">{rate / 100:p0} >= {node.AlarmMemoryRate / 100:p0}</font>"));
             }
@@ -814,7 +824,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
             var error2 = _cache.Get<Int32>("alarm:RedisConnections:" + node.Id);
             if (error2 == 0 || cs > error2 * 2)
             {
-                _cache.Set("alarm:RedisConnections:" + node.Id, cs, 5 * 60);
+                _cache.Set("alarm:RedisConnections:" + node.Id, cs, RenotifyPeriod);
 
                 actions.Add(sb => sb.AppendLine($">**连接数告警：**<font color=\"red\">{cs:n0} >= {node.AlarmConnections:n0}</font>"));
             }
@@ -828,7 +838,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
             var error2 = _cache.Get<Int32>("alarm:RedisSpeed:" + node.Id);
             if (error2 == 0 || speed > error2 * 2)
             {
-                _cache.Set("alarm:RedisSpeed:" + node.Id, speed, 5 * 60);
+                _cache.Set("alarm:RedisSpeed:" + node.Id, speed, RenotifyPeriod);
 
                 actions.Add(sb => sb.AppendLine($">**速度告警：**<font color=\"red\">{speed:n0} >= {node.AlarmSpeed:n0}</font>"));
             }
@@ -842,7 +852,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
             var error2 = _cache.Get<Double>("alarm:RedisInputKbps:" + node.Id);
             if (error2 == 0 || input > error2 * 2)
             {
-                _cache.Set("alarm:RedisInputKbps:" + node.Id, input, 5 * 60);
+                _cache.Set("alarm:RedisInputKbps:" + node.Id, input, RenotifyPeriod);
 
                 actions.Add(sb => sb.AppendLine($">**入流量告警：**<font color=\"red\">{input:n0} >= {node.AlarmInputKbps:n0}</font>"));
             }
@@ -856,7 +866,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
             var error2 = _cache.Get<Double>("alarm:RedisOutputKbps:" + node.Id);
             if (error2 == 0 || output > error2 * 2)
             {
-                _cache.Set("alarm:RedisOutputKbps:" + node.Id, output, 5 * 60);
+                _cache.Set("alarm:RedisOutputKbps:" + node.Id, output, RenotifyPeriod);
 
                 actions.Add(sb => sb.AppendLine($">**出流量告警：**<font color=\"red\">{output:n0} >= {node.AlarmOutputKbps:n0}</font>"));
             }
@@ -928,7 +938,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
                 var error2 = _cache.Get<Int32>("alarm:RedisMessageQueue:" + queue.Id);
                 if (error2 == 0 || queue.Messages > error2 * 2)
                 {
-                    _cache.Set("alarm:RedisMessageQueue:" + queue.Id, queue.Messages, 5 * 60);
+                    _cache.Set("alarm:RedisMessageQueue:" + queue.Id, queue.Messages, RenotifyPeriod);
 
                     var msg = GetMarkdown(node, queue, true);
                     RobotHelper.SendAlarmWithRecord(groupName, webhook, "消息队列告警", msg, "消息队列告警", $"{node.Name}/{queue.Name}");

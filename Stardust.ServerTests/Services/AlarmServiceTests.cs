@@ -67,4 +67,8 @@ public class AlarmServiceTests
         // 只确认最近一次时仍然成立
         Assert.True(AlarmService.IsSustained(samples, 1, e => e.CpuRate >= 0.9));
     }
+
+    [Fact]
+    [DisplayName("重复通知周期默认30分钟，持久故障不会每5分钟推送")]
+    public void RenotifyPeriod_DefaultsToThirtyMinutes() => Assert.Equal(1800, AlarmService.DefaultRenotifyPeriod);
 }
