@@ -23,3 +23,5 @@
 # 运行时消息补充词条
 "Stardust distributed extensions": "Розподілені розширення Stardust"
 "ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications.": "Бібліотека розширень ASP.NET Core для розподіленої сервісної платформи Stardust. Надає проміжне програмне забезпечення та допоміжні методи, як-от AddStardust, UseStardust, RegisterService і ConsumeService, спрощуючи реєстрацію, виявлення та інтеграцію моніторингу сервісів для застосунків Web і API."
+# 运行时消息补充词条
+"StartupFilter injected Stardust": "Stardust додано у фільтр запуску"

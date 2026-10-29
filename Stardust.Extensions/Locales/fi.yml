@@ -23,3 +23,5 @@
 # 运行时消息补充词条
 "Stardust distributed extensions": "Stardustin hajautetut laajennukset"
 "ASP.NET Core extension library for the Stardust distributed service framework. Provides middleware and helpers such as AddStardust, UseStardust, RegisterService, and ConsumeService, simplifying service registration, discovery, and monitoring integration for Web and API applications.": "ASP.NET Core -laajennuskirjasto Stardustin hajautetulle palvelukehykselle. Tarjoaa väliohjelmistoja ja apumenetelmiä, kuten AddStardust, UseStardust, RegisterService ja ConsumeService, mikä yksinkertaistaa palvelujen rekisteröintiä, löytämistä ja valvonnan integrointia Web- ja API-sovelluksille."
+# 运行时消息补充词条
+"StartupFilter injected Stardust": "Stardust lisättiin käynnistyssuodattimeen"
