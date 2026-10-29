@@ -102,26 +102,10 @@ public class StarAgentSetting : Config<StarAgentSetting>, IClientSetting
 
                 Enable = false,
             };
-            var si3 = new ServiceInfo
-            {
-                Name = "StarServer",
-                FileName = "StarServer.zip",
-                Arguments = "StarServer.dll",
-                WorkingDirectory = "../star/server",
 
-                Enable = false,
-            };
-            var si4 = new ServiceInfo
-            {
-                Name = "StarWeb",
-                FileName = "StarWeb.zip",
-                Arguments = "urls=http://*:6680",
-                WorkingDirectory = "../star/web",
-
-                Enable = false,
-            };
-
-            Services = [si, si2, si3, si4];
+            // 只放两个通用示例，不再种下 StarServer/StarWeb：
+            // 服务端恰好也有同名部署（AppDeploy），一旦启用就会被代理当成待部署应用拉下来并启动。
+            Services = [si, si2];
         }
         else
         {
