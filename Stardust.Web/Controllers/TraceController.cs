@@ -4,35 +4,34 @@ using NewLife;
 using NewLife.Cube;
 using NewLife.Web;
 using Stardust.Data.Monitors;
-using Stardust.Server;
+using Stardust.Web.Filters;
 using Stardust.Web.Models;
+using Stardust.Web.Services;
 using XCode.Membership;
 
 namespace Stardust.Web.Controllers;
 
+/// <summary>调用链查看。按追踪编号查看完整调用链与关系图</summary>
+/// <remarks>访问判定统一在 <see cref="TraceAuthorizeAttribute"/>：登录用户、分享令牌、匿名开关三者其一</remarks>
 [AllowAnonymous]
+[TraceAuthorize]
 public class TraceController : ControllerBaseX
 {
-    private readonly StarServerSetting _setting;
+    private readonly TraceShareTokenService _tokens;
 
     /// <summary>实例化</summary>
-    public TraceController(StarServerSetting setting) => _setting = setting;
+    /// <param name="tokens">分享令牌服务</param>
+    public TraceController(TraceShareTokenService tokens) => _tokens = tokens;
 
     [Route("[controller]")]
     public ActionResult Index(String id, Pager pager)
     {
-        if (!_setting.TraceAnonymous && ManageProvider.User == null)
-            return Redirect($"/Admin/User/Login?r={Uri.EscapeDataString(Request.Path + Request.QueryString)}");
-
+        id = HttpContext.Items["TraceId"] as String;
         if (id.IsNullOrEmpty()) throw new ArgumentNullException(nameof(id));
-
-        // id可能不是traceId，而是traceParent
-        var ss = id.Split('-');
-        if (ss.Length == 4) id = ss[1];
 
         var layout = pager["layout"];
 
-        var list = Search(id, pager);
+        var list = Search(id, pager, !ReadOnly);
 
         if (list.Count > 0)
         {
@@ -41,6 +40,8 @@ public class TraceController : ControllerBaseX
         }
 
         PageSetting.EnableNavbar = false;
+
+        SetAccessViewBag();
 
         var model = new TraceViewModel
         {
@@ -54,19 +55,31 @@ public class TraceController : ControllerBaseX
             return View("Index", model);
     }
 
+    /// <summary>生成分享链接。仅登录用户可用，生成后跳转到带分享令牌的地址</summary>
+    /// <param name="id">追踪编号</param>
+    /// <returns>带分享令牌的调用链地址</returns>
+    [Route("[controller]/[action]")]
+    public ActionResult Share(String id)
+    {
+        if (ManageProvider.User == null)
+            return Redirect($"/Admin/User/Login?r={Uri.EscapeDataString(Request.Path + Request.QueryString)}");
+
+        var traceId = TraceAccessPolicy.NormalizeTraceId(id);
+        if (traceId.IsNullOrEmpty()) throw new ArgumentNullException(nameof(id));
+
+        var token = _tokens.Issue(traceId);
+        if (token.IsNullOrEmpty()) return Redirect($"/trace?id={Uri.EscapeDataString(traceId)}");
+
+        return Redirect($"/trace?id={Uri.EscapeDataString(traceId)}&token={Uri.EscapeDataString(token)}&share=1");
+    }
+
     [Route("[action]")]
     public ActionResult Graph(String id, Pager pager)
     {
-        if (!_setting.TraceAnonymous && ManageProvider.User == null)
-            return Redirect($"/Admin/User/Login?r={Uri.EscapeDataString(Request.Path + Request.QueryString)}");
-
+        id = HttpContext.Items["TraceId"] as String;
         if (id.IsNullOrEmpty()) throw new ArgumentNullException(nameof(id));
 
-        // id可能不是traceId，而是traceParent
-        var ss = id.Split('-');
-        if (ss.Length == 4) id = ss[1];
-
-        var list = Search(id, pager);
+        var list = Search(id, pager, !ReadOnly);
 
         // 每个应用的第一个节点，必须以App分类展示，其它节点才可以定制化
         var appids = new List<Int32>();
@@ -226,7 +239,20 @@ public class TraceController : ControllerBaseX
         return View(model);
     }
 
-    private IList<SampleData> Search(String traceId, Pager p)
+    #region 辅助
+    /// <summary>只读访问。匿名与分享令牌均不允许写入</summary>
+    private Boolean ReadOnly => HttpContext.Items["TraceReadOnly"] as Boolean? ?? false;
+
+    /// <summary>向视图传递访问方式，用于展示只读提示</summary>
+    private void SetAccessViewBag()
+    {
+        ViewBag.AccessMode = HttpContext.Items[nameof(TraceAccessModes)] is TraceAccessModes mode ? mode : TraceAccessModes.None;
+        ViewBag.TraceExpire = HttpContext.Items["TraceExpire"] as DateTime?;
+        ViewBag.ShareHint = (Request.Query["share"] + "") == "1";
+    }
+    #endregion
+
+    private IList<SampleData> Search(String traceId, Pager p, Boolean archive)
     {
         // 指定追踪标识后，分页500
         if (!traceId.IsNullOrEmpty())
@@ -268,7 +294,7 @@ public class TraceController : ControllerBaseX
                 if (list2.Count > 0) (list as List<SampleData>).AddRange(list2);
             }
 
-            if (list.Count < p.PageSize)
+            if (archive && list.Count < p.PageSize)
             {
                 var user = ManageProvider.User;
                 foreach (var item in traceIds)
@@ -280,7 +306,7 @@ public class TraceController : ControllerBaseX
         }
 
         // 记录最后一次访问，避免TraceId过多导致字段溢出
-        if (list.Count > 0)
+        if (archive && list.Count > 0)
         {
             var ti = list[0].TraceItem;
             if (ti != null)

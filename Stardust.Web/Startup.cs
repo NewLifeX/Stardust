@@ -65,6 +65,7 @@ public class Startup
         services.AddSingleton<DeployService>();
         services.AddSingleton<PipelineService>();
         services.AddSingleton<HotAppService>();
+        services.AddSingleton<TraceShareTokenService>();
         services.AddSingleton<NewLife.Cube.Services.TokenService>();
         services.AddSingleton<McpService>();
 
