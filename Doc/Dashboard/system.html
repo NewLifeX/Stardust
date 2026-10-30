@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-scope="full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>系统级看板 · 星尘看板设计稿</title>
+  <script>
+    /* 首屏前应用主题，避免闪白/闪黑 */
+    (function () {
+      try {
+        var m = localStorage.getItem('sd-theme') || 'auto';
+        var d = m === 'auto' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : m;
+        document.documentElement.dataset.theme = d;
+        document.documentElement.dataset.themeMode = m;
+      } catch (e) { document.documentElement.dataset.theme = 'dark'; }
+    })();
+  </script>
+  <link rel="stylesheet" href="assets/tokens.css">
+  <link rel="stylesheet" href="assets/dashboard.css">
+</head>
+<body>
+<div class="sd-topband"></div>
+
+<div class="sd-app">
+  <!-- 左侧图标导航（对应 StarWeb StardustLayout 的 56px 窄导航） -->
+  <aside class="sd-rail">
+    <a class="sd-rail__brand" href="index.html" title="看板设计稿总览">✦</a>
+    <a class="sd-rail__item is-active" href="system.html" title="系统级看板">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <rect x="3" y="3" width="7" height="7" rx="1.6"/><rect x="14" y="3" width="7" height="7" rx="1.6"/>
+        <rect x="3" y="14" width="7" height="7" rx="1.6"/><rect x="14" y="14" width="7" height="7" rx="1.6"/>
+      </svg>
+      <span>系统</span>
+    </a>
+    <a class="sd-rail__item" href="project.html" title="项目看板">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <path d="M12 3l9 4.5-9 4.5-9-4.5z"/><path d="M3 12l9 4.5 9-4.5"/><path d="M3 16.5L12 21l9-4.5"/>
+      </svg>
+      <span>项目</span>
+    </a>
+    <a class="sd-rail__item" href="app.html" title="应用看板">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/>
+      </svg>
+      <span>应用</span>
+    </a>
+    <a class="sd-rail__item" href="node.html" title="节点看板">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/>
+        <circle cx="7" cy="7.5" r="1"/><circle cx="7" cy="17" r="1"/>
+      </svg>
+      <span>节点</span>
+    </a>
+    <a class="sd-rail__item" href="wallboard.html" title="大屏模式">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>
+      </svg>
+      <span>大屏</span>
+    </a>
+    <a class="sd-rail__item" href="index.html" title="设计说明">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <path d="M6 4h9l4 4v12H6z"/><path d="M15 4v4h4M9 12h6M9 16h6"/>
+      </svg>
+      <span>说明</span>
+    </a>
+  </aside>
+
+  <div class="sd-main">
+    <!-- 顶栏：品牌 / 项目上下文 / 可见范围 / 时钟与账号 -->
+    <header class="sd-topbar">
+      <a class="brand" href="index.html">
+        <span class="brand__mark">✦</span>
+        <span class="brand__text">星尘 Stardust</span>
+      </a>
+      <span class="topbar__sep"></span>
+      <button class="project-trigger" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7l8 6 8-6M4 7h16v10H4z"/></svg>
+        全部项目
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <button class="scope-badge" type="button" data-action="toggle-scope" title="点击切换演示：全量 → 受限 → 无授权">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>
+        </svg>
+        <span data-scope-label>全部 12 个项目</span>
+      </button>
+      <div class="topbar__right">
+        <div data-theme-switch></div>
+        <span class="topbar__clock" data-clock>00:00:00</span>
+        <button class="icon-btn" type="button" data-action="refresh" title="刷新">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/>
+          </svg>
+        </button>
+        <div class="avatar" title="当前账号：陈星（平台管理员）">陈</div>
+      </div>
+    </header>
+
+    <div class="sd-scroll">
+      <div class="sd-content">
+
+        <!-- 受限提示（limited / none 时由 CSS 显示） -->
+        <div class="scope-notice">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M12 3l9 4v6c0 4.6-3.4 7.4-9 8-5.6-.6-9-3.4-9-8V7z"/><path d="M12 9v4M12 16h.01"/>
+          </svg>
+          <span class="notice--limited">当前为受限数据视角：仅统计你被授权的项目，未授权项目的应用、节点与监控数据不会出现在任何卡片中。</span>
+          <span class="notice--none">当前账号未授权任何项目：所有统计卡片已隐藏，请联系管理员分配项目权限。</span>
+        </div>
+
+        <!-- 无授权整页空态 -->
+        <section class="scope-empty">
+          <div class="scope-empty__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><path d="M12 14v3"/>
+            </svg>
+          </div>
+          <h2>暂无授权项目</h2>
+          <p>你的账号还没有被加入任何项目。请联系项目管理员在「项目成员」中授权，或前往平台申请加入项目；授权后本页会自动展示你可访问的项目、应用与节点。</p>
+          <a class="btn btn--primary" href="project.html">去申请项目权限</a>
+        </section>
+
+        <!-- 作用域栏 -->
+        <section class="scope-bar">
+          <div>
+            <div class="crumbs">
+              <a href="index.html">看板总览</a><span class="sep">/</span><span>系统级</span>
+            </div>
+            <h1 class="page-title">
+              系统级看板
+              <span class="pill pill--online pill--live"><span class="dot"></span>整体运行正常</span>
+            </h1>
+            <p class="page-sub">
+              覆盖 <strong data-scope-projects>12</strong> 个项目 ·
+              <strong data-scope-value data-full="41" data-limited="13">41</strong> 个应用 ·
+              <strong data-scope-value data-full="32" data-limited="21">32</strong> 个节点 ·
+              数据每 30 秒自动刷新
+            </p>
+          </div>
+          <div class="toolbar">
+            <div class="segment" role="group" aria-label="时间范围">
+              <button type="button">1 小时</button>
+              <button type="button" class="is-active">24 小时</button>
+              <button type="button">7 天</button>
+            </div>
+            <button class="btn" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+              自动刷新
+            </button>
+            <a class="btn" href="wallboard.html">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8"/></svg>
+              投屏
+            </a>
+            <a class="btn btn--primary" href="project.html">
+              进入项目
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+          </div>
+        </section>
+
+        <!-- KPI -->
+        <section class="kpi-row">
+          <div class="sd-kpi">
+            <div class="sd-kpi__label">项目（可见范围）</div>
+            <div class="sd-kpi__value"><span data-scope-projects>12</span><span class="sd-kpi__unit">个</span></div>
+            <div class="sd-kpi__foot"><span class="pill pill--brand">可见 <span data-scope-projects>12</span></span><span><span data-scope-value data-full="12" data-limited="3">12</span> 位项目负责人</span></div>
+          </div>
+          <div class="sd-kpi sd-kpi--online">
+            <div class="sd-kpi__label">在线应用</div>
+            <div class="sd-kpi__value">
+              <span data-scope-value data-full="34" data-limited="13">34</span>
+              <span class="sd-kpi__unit">/ <span data-scope-value data-full="41" data-limited="13">41</span></span>
+            </div>
+            <div class="sd-kpi__foot"><span class="delta delta--good">▲ 2</span><span>较昨日 · 在线率 <span data-scope-value data-full="82.9" data-limited="100">82.9</span>%</span></div>
+            <div class="sd-kpi__spark" data-spark="appSpark" data-spark-color="var(--sd-color-online)"></div>
+          </div>
+          <div class="sd-kpi sd-kpi--alert">
+            <div class="sd-kpi__label">节点在线</div>
+            <div class="sd-kpi__value">
+              <span data-scope-value data-full="28" data-limited="20">28</span>
+              <span class="sd-kpi__unit">/ <span data-scope-value data-full="32" data-limited="21">32</span></span>
+            </div>
+            <div class="sd-kpi__foot"><span class="pill pill--warn">告警 <span data-scope-value data-full="2" data-limited="0">2</span></span><span class="pill pill--offline">离线 <span data-scope-value data-full="2" data-limited="1">2</span></span></div>
+            <div class="sd-kpi__spark" data-spark="nodeSpark" data-spark-color="var(--sd-color-alert)"></div>
+          </div>
+          <div class="sd-kpi">
+            <div class="sd-kpi__label">今日请求量</div>
+            <div class="sd-kpi__value"><span data-scope-value data-full="1286" data-limited="826">1286</span><span class="sd-kpi__unit">万</span></div>
+            <div class="sd-kpi__foot"><span class="delta delta--good">▲ 8.4%</span><span>较昨日</span></div>
+            <div class="sd-kpi__spark" data-spark="systemSpark"></div>
+          </div>
+          <div class="sd-kpi sd-kpi--accent">
+            <div class="sd-kpi__label">P95 耗时</div>
+            <div class="sd-kpi__value"><span data-scope-value data-full="214" data-limited="198">214</span><span class="sd-kpi__unit">ms</span></div>
+            <div class="sd-kpi__foot"><span class="delta delta--good">▼ 6 ms</span><span>较昨日</span></div>
+          </div>
+          <div class="sd-kpi sd-kpi--offline">
+            <div class="sd-kpi__label">错误率</div>
+            <div class="sd-kpi__value"><span data-scope-value data-full="0.38" data-limited="0.29">0.38</span><span class="sd-kpi__unit">%</span></div>
+            <div class="sd-kpi__foot"><span class="delta delta--bad">▲ 0.04%</span><span>活跃告警 <span data-scope-value data-full="7" data-limited="5">7</span> 条</span></div>
+            <div class="sd-kpi__spark" data-spark="errorSpark" data-spark-color="var(--sd-color-offline)"></div>
+          </div>
+        </section>
+
+        <!-- 主区 -->
+        <section class="sd-grid">
+
+          <!-- 全局吞吐与质量 -->
+          <div class="sd-card col-16 sd-card--fill">
+            <div class="sd-card__head">
+              <h2 class="sd-card__title">全局吞吐与质量</h2>
+              <div class="sd-card__actions">
+                <div class="legend">
+                  <span><i class="l-brand"></i>请求量 QPS</span>
+                  <span><i class="l-warn"></i>错误率 %</span>
+                </div>
+              </div>
+            </div>
+            <div id="systemTrend" class="chart chart--fill"></div>
+          </div>
+
+          <!-- 集群健康 -->
+          <div class="sd-card col-8">
+            <div class="sd-card__head">
+              <h2 class="sd-card__title">集群健康</h2>
+              <span class="sd-card__hint" id="healthRate">节点在线率 87.5%</span>
+            </div>
+            <div id="healthDonut" class="chart" style="height: 160px;"></div>
+            <div id="healthList" class="event-list" style="max-height: 172px;"></div>
+          </div>
+
+          <!-- 项目健康矩阵 -->
+          <div class="sd-card col-8">
+            <div class="sd-card__head">
+              <h2 class="sd-card__title">项目健康矩阵</h2>
+              <a class="link" href="project.html">查看全部</a>
+            </div>
+            <div class="table-wrap table-wrap--scroll">
+              <table class="sd-table sd-table--compact">
+                <thead>
+                  <tr>
+                    <th>项目</th>
+                    <th class="num">应用</th>
+                    <th class="num">节点</th>
+                    <th class="num">错误率</th>
+                    <th class="num">告警</th>
+                    <th>健康度</th>
+                  </tr>
+                </thead>
+                <tbody id="projectMatrix"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Top 应用 -->
+          <div class="sd-card col-8">
+            <div class="sd-card__head">
+              <h2 class="sd-card__title">Top 应用</h2>
+              <div class="segment" id="topMetric">
+                <button type="button" class="is-active" data-metric="qps">QPS</button>
+                <button type="button" data-metric="errorRate">错误率</button>
+                <button type="button" data-metric="p95">耗时</button>
+              </div>
+            </div>
+            <div id="topAppsChart" class="chart chart-md"></div>
+          </div>
+
+          <!-- 服务拓扑 -->
+          <div class="sd-card col-8">
+            <div class="sd-card__head">
+              <h2 class="sd-card__title">服务拓扑</h2>
+              <span class="sd-card__hint">节点大小 = QPS · 点击下钻</span>
+            </div>
+            <div id="systemTopology" class="chart chart-md"></div>
+          </div>
+
+          <!-- 资源分布 -->
+          <div class="sd-card col-16">
+            <div class="sd-card__head">
+              <h2 class="sd-card__title">机房资源水位</h2>
+              <div class="legend">
+                <span><i class="l-brand"></i>CPU</span>
+                <span><i class="l-accent"></i>内存</span>
+                <span><i class="l-warn"></i>磁盘</span>
+              </div>
+            </div>
+            <div id="resourceChart" class="chart chart-md"></div>
+          </div>
+
+          <!-- 实时事件 -->
+          <div class="sd-card col-8">
+            <div class="sd-card__head">
+              <h2 class="sd-card__title">实时事件</h2>
+              <span class="sd-card__hint">告警 / 部署 / 上下线</span>
+            </div>
+            <div id="eventFeed" class="event-list" style="max-height: 260px;"></div>
+          </div>
+
+        </section>
+
+        <footer class="page-foot">
+          <span>数据来源：Nodes/Node · Registry/App · Registry/AppOnline · Monitors/AppMinuteStat · Monitors/AlarmRecord</span>
+          <span>看板设计稿 v1.1 · 最后更新 <b data-clock>--:--:--</b></span>
+        </footer>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js"></script>
+<script src="assets/theme.js"></script>
+<script src="assets/mock.js"></script>
+<script src="assets/charts.js"></script>
+<script>
+(function () {
+  const fmt = SD.util.fmt;
+
+  /* 项目健康矩阵：全量 12 个项目，受限视角自动隐藏未授权项 */
+  const rows = SD.projects.map(function (p) {
+    const offline = p.nodes - p.nodesOnline;
+    const healthClass = p.health >= 95 ? 'meter--ok' : p.health >= 90 ? 'meter--warn' : 'meter--bad';
+    return '<tr class="row-link" data-project="' + p.key + '" data-visible="' + p.visible + '" onclick="location.href=\'project.html\'">' +
+      '<td class="strong">' + p.name + '</td>' +
+      '<td class="num">' + p.appsOnline + '/' + p.apps + '</td>' +
+      '<td class="num">' + p.nodesOnline + '/' + p.nodes + (offline ? ' <span class="pill pill--offline" style="padding:1px 6px">-' + offline + '</span>' : '') + '</td>' +
+      '<td class="num ' + (p.errorRate > 0.4 ? 'strong' : '') + '">' + p.errorRate.toFixed(2) + '%</td>' +
+      '<td class="num">' + (p.alerts ? '<span class="pill pill--warn">' + p.alerts + '</span>' : '<span class="muted">0</span>') + '</td>' +
+      '<td><div class="meter ' + healthClass + '" style="width:74px"><i style="width:' + p.health + '%"></i></div></td>' +
+      '</tr>';
+  }).join('');
+  document.getElementById('projectMatrix').innerHTML = rows;
+
+  /* 集群健康环：随数据范围切换 */
+  const limitedScope = SD.util.currentScope() === 'limited';
+  const healthCount = limitedScope
+    ? { online: 20, warn: 0, offline: 1 }
+    : { online: 28, warn: 2, offline: 2 };
+  const healthTotal = healthCount.online + healthCount.warn + healthCount.offline;
+  const healthRate = (healthCount.online / healthTotal * 100).toFixed(1) + '%';
+  document.getElementById('healthRate').textContent = '节点在线率 ' + healthRate;
+
+  SDCharts.donut('healthDonut', {
+    centerText: healthRate,
+    centerSub: '节点在线率',
+    data: [
+      { name: '在线', value: healthCount.online, itemStyle: { color: SDCharts.palette.online } },
+      { name: '告警', value: healthCount.warn, itemStyle: { color: SDCharts.palette.alert } },
+      { name: '离线', value: healthCount.offline, itemStyle: { color: SDCharts.palette.offline } }
+    ]
+  });
+
+  const healthItems = [
+    { level: 'bad', title: 'GZ-App-01 节点离线', meta: '电商中台 · 10.0.4.31 · 42 分钟', time: '10:42' },
+    { level: 'warn', title: 'SH-App-01 CPU 71%', meta: '电商中台 · 持续 10 分钟', time: '12:06' },
+    { level: 'warn', title: 'NJ-DB-01 磁盘 72%', meta: '电商中台 · /data 分区', time: '08:51' }
+  ];
+  document.getElementById('healthList').innerHTML = healthItems.map(function (e) {
+    return '<div class="event event--' + e.level + '">' +
+      '<div class="event__bar"></div>' +
+      '<div><div class="event__title">' + e.title + '</div><div class="event__meta">' + e.meta + '</div></div>' +
+      '<div class="event__time">' + e.time + '</div></div>';
+  }).join('');
+
+  /* 全局吞吐趋势 */
+  SDCharts.areaTrend('systemTrend', {
+    categories: SD.hours,
+    interval: 3,
+    primary: { name: '请求量', data: SD.series.systemThroughput, color: SDCharts.palette.brand, unit: 'QPS' },
+    secondary: {
+      name: '错误率', data: SD.series.systemError, color: SDCharts.palette.alert,
+      unit: '%', formatter: '{value}%'
+    }
+  });
+
+  /* Top 应用：QPS / 错误率 / 耗时切换 */
+  const metricConf = {
+    qps: { label: 'QPS', unit: '', format: function (v) { return fmt(v); } },
+    errorRate: { label: '错误率', unit: '%', format: function (v) { return v.toFixed(2) + '%'; } },
+    p95: { label: 'P95', unit: 'ms', format: function (v) { return v + 'ms'; } }
+  };
+  function renderTop(metric) {
+    const conf = metricConf[metric];
+    const items = SD.apps.slice().sort(function (a, b) { return b[metric] - a[metric]; }).slice(0, 6).map(function (a) {
+      return {
+        name: a.name,
+        value: metric === 'errorRate' ? Number(a.errorRate.toFixed(2)) : a[metric],
+        color: metric === 'errorRate' ? undefined : undefined
+      };
+    });
+    SDCharts.barH('topAppsChart', { items: items, unit: conf.unit });
+  }
+  renderTop('qps');
+  document.getElementById('topMetric').addEventListener('click', function (e) {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    this.querySelectorAll('button').forEach(function (b) { b.classList.remove('is-active'); });
+    btn.classList.add('is-active');
+    renderTop(btn.dataset.metric);
+  });
+
+  /* 服务拓扑 */
+  SDCharts.graph('systemTopology', {
+    nodes: SD.systemTopology.nodes,
+    links: SD.systemTopology.links,
+    unit: ' QPS',
+    zoom: 0.86
+  });
+
+  /* 机房资源水位 */
+  SDCharts.stackedBar('resourceChart', {
+    stacked: false,
+    barWidth: 12,
+    categories: SD.locations.map(function (l) { return l.name + ' · ' + l.nodes + ' 节点'; }),
+    series: [
+      { name: 'CPU', color: SDCharts.palette.brand, data: SD.locations.map(function (l) { return l.cpu; }) },
+      { name: '内存', color: SDCharts.palette.accent, data: SD.locations.map(function (l) { return l.memory; }) },
+      { name: '磁盘', color: SDCharts.palette.alert, data: SD.locations.map(function (l) { return l.disk; }) }
+    ]
+  });
+
+  /* 实时事件 */
+  document.getElementById('eventFeed').innerHTML = SD.events.map(function (e) {
+    return '<div class="event event--' + e.level + '">' +
+      '<div class="event__bar"></div>' +
+      '<div><div class="event__title"><b>' + e.title + '</b></div><div class="event__meta">' + e.meta + '</div></div>' +
+      '<div class="event__time">' + e.time + '</div></div>';
+  }).join('');
+})();
+</script>
+</body>
+</html>

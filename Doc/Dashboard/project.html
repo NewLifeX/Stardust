@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-scope="full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>项目看板 · 电商中台 · 星尘看板设计稿</title>
+  <script>
+    /* 首屏前应用主题，避免闪白/闪黑 */
+    (function () {
+      try {
+        var m = localStorage.getItem('sd-theme') || 'auto';
+        var d = m === 'auto' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : m;
+        document.documentElement.dataset.theme = d;
+        document.documentElement.dataset.themeMode = m;
+      } catch (e) { document.documentElement.dataset.theme = 'dark'; }
+    })();
+  </script>
+  <link rel="stylesheet" href="assets/tokens.css">
+  <link rel="stylesheet" href="assets/dashboard.css">
+</head>
+<body>
+<div class="sd-topband"></div>
+
+<div class="sd-app">
+  <aside class="sd-rail">
+    <a class="sd-rail__brand" href="index.html" title="看板设计稿总览">✦</a>
+    <a class="sd-rail__item" href="system.html" title="系统级看板">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <rect x="3" y="3" width="7" height="7" rx="1.6"/><rect x="14" y="3" width="7" height="7" rx="1.6"/>
+        <rect x="3" y="14" width="7" height="7" rx="1.6"/><rect x="14" y="14" width="7" height="7" rx="1.6"/>
+      </svg>
+      <span>系统</span>
+    </a>
+    <a class="sd-rail__item is-active" href="project.html" title="项目看板">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <path d="M12 3l9 4.5-9 4.5-9-4.5z"/><path d="M3 12l9 4.5 9-4.5"/><path d="M3 16.5L12 21l9-4.5"/>
+      </svg>
+      <span>项目</span>
+    </a>
+    <a class="sd-rail__item" href="app.html" title="应用看板">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/>
+      </svg>
+      <span>应用</span>
+    </a>
+    <a class="sd-rail__item" href="node.html" title="节点看板">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/>
+        <circle cx="7" cy="7.5" r="1"/><circle cx="7" cy="17" r="1"/>
+      </svg>
+      <span>节点</span>
+    </a>
+    <a class="sd-rail__item" href="wallboard.html" title="大屏模式">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>
+      </svg>
+      <span>大屏</span>
+    </a>
+    <a class="sd-rail__item" href="index.html" title="设计说明">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <path d="M6 4h9l4 4v12H6z"/><path d="M15 4v4h4M9 12h6M9 16h6"/>
+      </svg>
+      <span>说明</span>
+    </a>
+  </aside>
+
+  <div class="sd-main">
+    <header class="sd-topbar">
+      <a class="brand" href="index.html">
+        <span class="brand__mark">✦</span>
+        <span class="brand__text">星尘 Stardust</span>
+      </a>
+      <span class="topbar__sep"></span>
+      <button class="project-trigger" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7l8 6 8-6M4 7h16v10H4z"/></svg>
+        电商中台
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <button class="scope-badge" type="button" data-action="toggle-scope" title="点击切换演示：全量 → 受限 → 无授权">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>
+        </svg>
+        <span data-scope-label>全部 12 个项目</span>
+      </button>
+      <div class="topbar__right">
+        <div data-theme-switch></div>
+        <span class="topbar__clock" data-clock>00:00:00</span>
+        <button class="icon-btn" type="button" data-action="refresh" title="刷新">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+        </button>
+        <div class="avatar" title="当前账号：李海（项目负责人）">李</div>
+      </div>
+    </header>
+
+    <div class="sd-scroll">
+      <div class="sd-content">
+
+        <div class="scope-notice">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M12 3l9 4v6c0 4.6-3.4 7.4-9 8-5.6-.6-9-3.4-9-8V7z"/><path d="M12 9v4M12 16h.01"/>
+          </svg>
+          <span class="notice--limited">当前为受限数据视角：仅统计你被授权的项目，未授权项目的应用、节点与监控数据不会出现在任何卡片中。</span>
+          <span class="notice--none">当前账号未授权任何项目：所有统计卡片已隐藏，请联系管理员分配项目权限。</span>
+        </div>
+
+        <section class="scope-empty">
+          <div class="scope-empty__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><path d="M12 14v3"/>
+            </svg>
+          </div>
+          <h2>暂无授权项目</h2>
+          <p>你的账号还没有被加入任何项目。请联系项目管理员在「项目成员」中授权，或前往平台申请加入项目；授权后本页会自动展示你可访问的项目、应用与节点。</p>
+          <a class="btn btn--primary" href="system.html">返回系统看板</a>
+        </section>
+
+        <section class="scope-bar">
+          <div>
+            <div class="crumbs">
+              <a href="index.html">看板总览</a><span class="sep">/</span>
+              <a href="system.html">项目列表</a><span class="sep">/</span>
+              <span>电商中台</span>
+            </div>
+          </div>
+          <div class="toolbar">
+            <div class="segment" role="group" aria-label="时间范围">
+              <button type="button">1 小时</button>
+              <button type="button" class="is-active">24 小时</button>
+              <button type="button">7 天</button>
+            </div>
+            <button class="btn" type="button" data-action="refresh">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+              自动刷新
+            </button>
+            <a class="btn" href="wallboard.html">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8"/></svg>
+              投屏
+            </a>
+            <a class="btn btn--primary" href="app.html">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+              新建应用
+            </a>
+          </div>
+        </section>
+
+        <!-- 项目实体头 -->
+        <section class="entity-head">
+          <div class="entity-head__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M12 3l9 4.5-9 4.5-9-4.5z"/><path d="M3 12l9 4.5 9-4.5"/><path d="M3 16.5L12 21l9-4.5"/>
+            </svg>
+          </div>
+          <div class="entity-head__main">
+            <div class="entity-head__title">
+              电商中台
+              <span class="entity-head__code">shop</span>
+              <span class="pill pill--online pill--live"><span class="dot"></span>运行正常</span>
+            </div>
+            <div class="entity-head__meta">
+              <span class="kv">负责人 <b>李海</b></span><span class="split"></span>
+              <span class="kv">成员 <b>8</b> 人</span><span class="split"></span>
+              <span class="kv">创建于 <b>2025-03-18</b></span><span class="split"></span>
+              <span class="kv">项目 ID <b>#2</b></span><span class="split"></span>
+              <span class="kv">数据范围 <b>本项目</b></span>
+            </div>
+          </div>
+          <div class="entity-head__actions">
+            <button class="btn" type="button">编辑项目</button>
+            <button class="btn" type="button">项目成员</button>
+            <button class="btn btn--primary" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+              一键部署
+            </button>
+          </div>
+        </section>
+
+        <!-- KPI -->
+        <section class="kpi-row">
+          <div class="sd-kpi sd-kpi--online">
+            <div class="sd-kpi__label">在线应用</div>
+            <div class="sd-kpi__value" id="kpiApps">4<span class="sd-kpi__unit">/ 4</span></div>
+            <div class="sd-kpi__foot"><span class="delta delta--flat">全部在线</span><span>无异常实例</span></div>
+            <div class="sd-kpi__spark" data-spark="appSpark" data-spark-color="var(--sd-color-online)"></div>
+          </div>
+          <div class="sd-kpi sd-kpi--alert">
+            <div class="sd-kpi__label">节点在线</div>
+            <div class="sd-kpi__value">7<span class="sd-kpi__unit">/ 8</span></div>
+            <div class="sd-kpi__foot"><span class="pill pill--offline">离线 1</span><span>GZ-App-01</span></div>
+            <div class="sd-kpi__spark" data-spark="nodeSpark" data-spark-color="var(--sd-color-alert)"></div>
+          </div>
+          <div class="sd-kpi">
+            <div class="sd-kpi__label">服务实例</div>
+            <div class="sd-kpi__value" id="kpiInstances">22<span class="sd-kpi__unit">个</span></div>
+            <div class="sd-kpi__foot"><span class="delta delta--good">▲ 2</span><span>较昨日扩容</span></div>
+          </div>
+          <div class="sd-kpi">
+            <div class="sd-kpi__label">今日请求量</div>
+            <div class="sd-kpi__value" id="kpiRequests">486<span class="sd-kpi__unit">万</span></div>
+            <div class="sd-kpi__foot"><span class="delta delta--good">▲ 6.2%</span><span>较昨日</span></div>
+            <div class="sd-kpi__spark" data-spark="systemSpark"></div>
+          </div>
+          <div class="sd-kpi sd-kpi--accent">
+            <div class="sd-kpi__label">P95 耗时</div>
+            <div class="sd-kpi__value">168<span class="sd-kpi__unit">ms</span></div>
+            <div class="sd-kpi__foot"><span class="delta delta--good">▼ 4 ms</span><span>较昨日</span></div>
+          </div>
+          <div class="sd-kpi sd-kpi--offline">
+            <div class="sd-kpi__label">活跃告警</div>
+            <div class="sd-kpi__value">3<span class="sd-kpi__unit">条</span></div>
+            <div class="sd-kpi__foot"><span class="pill pill--warn">待确认 2</span><span>已恢复 1</span></div>
+            <div class="sd-kpi__spark" data-spark="errorSpark" data-spark-color="var(--sd-color-offline)"></div>
+          </div>
+        </section>
+
+        <section class="sd-grid">
+
+          <!-- 应用矩阵 -->
+          <div class="sd-card col-16">
+            <div class="sd-card__head">
+              <h2 class="sd-card__title">应用矩阵</h2>
+              <span class="sd-card__hint">点击卡片进入应用看板 · 按错误率排序</span>
+            </div>
+            <div id="appGrid" class="app-grid"></div>
+            <div id="appEmpty" class="empty" hidden>
+              <div class="empty__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9"/></svg>
+              </div>
+              <div class="empty__title">项目还没有接入应用</div>
+              <div class="empty__desc">在应用的配置文件里填入 AppId 与密钥，一行代码即可接入星尘：配置、注册发现、链路追踪与性能监控会自动生效。</div>
+              <pre class="empty__code">builder.Services.AddStardust("order-api");</pre>
+              <a class="btn btn--primary" href="app.html">创建第一个应用</a>
+            </div>
+          </div>
+
+          <!-- 节点资源 -->
+          <div class="sd-card col-8">
+            <div class="sd-card__head">
+              <h2 class="sd-card__title">节点资源</h2>
+              <a class="link" href="node.html">节点详情</a>
+            </div>
+            <div class="table-wrap">
+              <table class="sd-table">
+                <thead>
+                  <tr>
+                    <th>节点</th>
+                    <th>状态</th>
+                    <th style="width:64px">CPU</th>
+                    <th style="width:64px">内存</th>
+                    <th style="width:64px">磁盘</th>
+                  </tr>
+                </thead>
+                <tbody id="nodeRows"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 项目拓扑 -->
+          <div class="sd-card col-12">
+            <div class="sd-card__head">
+              <h2 class="sd-card__title">项目拓扑</h2>
+              <span class="sd-card__hint">项目 → 应用 → 节点 · 连线宽度 = 实例数</span>
+            </div>
+            <div id="projectTopology" class="chart chart-md"></div>
+          </div>
+
+          <!-- 最近部署 -->
+          <div class="sd-card col-6">
+            <div class="sd-card__head">
+              <h2 class="sd-card__title">最近部署</h2>
+              <a class="link" href="#">部署记录</a>
+            </div>
+            <div class="table-wrap">
+              <table class="sd-table">
+                <thead>
+                  <tr><th>应用</th><th>版本</th><th class="num">节点</th><th>耗时</th><th>状态</th></tr>
+                </thead>
+                <tbody id="deployRows"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 告警 -->
+          <div class="sd-card col-6">
+            <div class="sd-card__head">
+              <h2 class="sd-card__title">当前告警</h2>
+              <a class="link" href="#">全部告警</a>
+            </div>
+            <div id="alertFeed" class="event-list event-list--wrap" style="max-height: 214px;"></div>
+          </div>
+
+        </section>
+
+        <footer class="page-foot">
+          <span>数据来源：Platform/GalaxyProject · Registry/App · Nodes/Node · Deployment/AppDeploy · Monitors/AlarmRecord</span>
+          <span>项目看板设计稿 · <a href="project.html?state=empty">查看空态</a></span>
+        </footer>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js"></script>
+<script src="assets/theme.js"></script>
+<script src="assets/mock.js"></script>
+<script src="assets/charts.js"></script>
+<script>
+(function () {
+  const params = new URLSearchParams(location.search);
+  const emptyDemo = params.get('state') === 'empty';
+
+  /* 应用矩阵 */
+  const appList = SD.apps.filter(function (a) { return a.project === '电商中台'; })
+    .sort(function (a, b) { return b.errorRate - a.errorRate; });
+
+  document.getElementById('appGrid').innerHTML = appList.map(function (a) {
+    const statusClass = a.status === 'online' ? 'pill--online' : a.status === 'warn' ? 'pill--warn' : 'pill--offline';
+    const statusText = a.status === 'online' ? '在线' : a.status === 'warn' ? '告警' : '离线';
+    const series = SD.series[a.spark] || SD.series.orderQps;
+    return '<a class="app-card" href="app.html">' +
+      '<div class="app-card__top">' +
+        '<div><div class="app-card__name">' + a.name + '</div><div class="app-card__code">' + a.code + ' · ' + a.category + '</div></div>' +
+        '<span class="pill ' + statusClass + '"><span class="dot"></span>' + statusText + '</span>' +
+      '</div>' +
+      '<div class="app-card__stats">' +
+        '<div class="app-card__stat"><span>实例</span><b>' + a.instances + '/' + a.totalInstances + '</b></div>' +
+        '<div class="app-card__stat"><span>QPS</span><b>' + a.qps + '</b></div>' +
+        '<div class="app-card__stat"><span>错误率</span><b>' + a.errorRate.toFixed(2) + '%</b></div>' +
+      '</div>' +
+      '<div class="app-card__spark">' + SD.util.spark(series, 'var(--sd-color-brand)') + '</div>' +
+      '<div class="app-card__foot"><span>' + a.version + ' · 平均 ' + a.avgCost + 'ms</span><span>' + a.services + ' 个服务</span></div>' +
+      '</a>';
+  }).join('');
+
+  if (emptyDemo) {
+    document.getElementById('appGrid').hidden = true;
+    document.getElementById('appEmpty').hidden = false;
+    document.getElementById('kpiApps').innerHTML = '0<span class="sd-kpi__unit">/ 0</span>';
+    document.getElementById('kpiInstances').innerHTML = '0<span class="sd-kpi__unit">个</span>';
+    document.getElementById('kpiRequests').innerHTML = '0<span class="sd-kpi__unit">万</span>';
+  }
+
+  /* 节点资源列表 */
+  const nodeRows = SD.nodes.map(function (n) {
+    const status = n.status === 'online'
+      ? '<span class="pill pill--online"><span class="dot"></span>在线</span>'
+      : n.status === 'warn'
+        ? '<span class="pill pill--warn"><span class="dot"></span>告警</span>'
+        : '<span class="pill pill--offline"><span class="dot"></span>离线</span>';
+    function meter(value) {
+      if (n.status === 'offline') return '<span class="muted">—</span>';
+      const cls = value >= 80 ? 'meter--bad' : value >= 65 ? 'meter--warn' : 'meter--ok';
+      return '<div class="meter ' + cls + '" title="' + value + '%"><i style="width:' + value + '%"></i></div>';
+    }
+    return '<tr class="row-link" onclick="location.href=\'node.html\'">' +
+      '<td><div class="strong">' + n.name + '</div><div class="muted" style="font-size:10.5px">' + n.location + ' · ' + n.ip + '</div></td>' +
+      '<td>' + status + '</td>' +
+      '<td>' + meter(n.cpu) + '</td>' +
+      '<td>' + meter(n.memory) + '</td>' +
+      '<td>' + meter(n.disk) + '</td>' +
+      '</tr>';
+  }).join('');
+  document.getElementById('nodeRows').innerHTML = nodeRows;
+
+  /* 项目拓扑 */
+  SDCharts.graph('projectTopology', {
+    nodes: SD.projectTopology.nodes,
+    links: SD.projectTopology.links,
+    unit: ' 实例',
+    categories: [
+      { name: '项目', itemStyle: { color: SDCharts.palette.brand } },
+      { name: '应用', itemStyle: { color: SDCharts.palette.brand2 } },
+      { name: '节点', itemStyle: { color: SDCharts.palette.accent } }
+    ],
+    zoom: 0.86
+  });
+
+  /* 部署记录 */
+  document.getElementById('deployRows').innerHTML = SD.deployments.map(function (d) {
+    const ok = d.status === 'success';
+    return '<tr>' +
+      '<td class="strong">' + d.app + '</td>' +
+      '<td class="mono">' + d.version + '</td>' +
+      '<td class="num">' + d.nodes + '</td>' +
+      '<td class="muted">' + d.cost + '</td>' +
+      '<td><span class="pill ' + (ok ? 'pill--online' : 'pill--offline') + '">' + (ok ? '成功' : '失败') + '</span></td>' +
+      '</tr>';
+  }).join('');
+
+  /* 告警 */
+  const projectAlerts = SD.alerts.slice(0, 4);
+  document.getElementById('alertFeed').innerHTML = projectAlerts.map(function (a) {
+    return '<div class="event event--' + a.level + '">' +
+      '<div class="event__bar"></div>' +
+      '<div><div class="event__title"><b>' + a.app + '</b> ' + a.message + '</div>' +
+      '<div class="event__meta">' + a.node + ' · ' + a.status + '</div></div>' +
+      '<div class="event__time">' + a.time + '</div></div>';
+  }).join('');
+})();
+</script>
+</body>
+</html>

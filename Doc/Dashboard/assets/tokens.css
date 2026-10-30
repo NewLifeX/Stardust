@@ -1,0 +1,245 @@
+/* =============================================================================
+ * 星尘看板设计稿 · 设计令牌（与 Stardust.Web.Vue/src/design-system/tokens.css 同源）
+ * -----------------------------------------------------------------------------
+ * 原型只允许引用 --sd-* 变量着色，禁止在 HTML 内联硬编码色值。
+ * 若官方 tokens.css 升级，请同步本文件（字段名保持一致，便于实现时直接替换）。
+ * ============================================================================= */
+
+:root {
+  /* 品牌与语义色 */
+  --sd-color-brand: #6673FF;
+  --sd-color-brand-2: #8C5CF5;
+  --sd-gradient-brand: linear-gradient(135deg, #6673FF 0%, #8C5CF5 100%);
+  --sd-color-accent: #6FE3EC;
+
+  --sd-color-online: #43E8A3;
+  --sd-color-alert: #FFC208;
+  --sd-color-offline: #FF4545;
+
+  --sd-color-brand-light-3: #858FFF;
+  --sd-color-brand-light-5: #B2B9FF;
+  --sd-color-brand-light-7: #D1D5FF;
+  --sd-color-brand-light-8: #E0E3FF;
+  --sd-color-brand-light-9: #F0F1FF;
+  --sd-color-brand-dark-2: #525CCC;
+
+  --sd-color-online-light-3: #69EDB5;
+  --sd-color-online-light-9: #ECFDF6;
+  --sd-color-online-dark-2: #36BA82;
+
+  --sd-color-alert-light-3: #FFCE39;
+  --sd-color-alert-light-9: #FFF9E6;
+  --sd-color-alert-dark-2: #CC9B06;
+
+  --sd-color-offline-light-3: #FF6A6A;
+  --sd-color-offline-light-9: #FFECEC;
+  --sd-color-offline-dark-2: #CC3737;
+
+  --sd-color-accent-light-3: #8CE9F0;
+  --sd-color-accent-light-9: #F1FCFD;
+  --sd-color-accent-dark-2: #59B6BD;
+
+  /* 表面层级 */
+  --sd-bg-page: #16202A;
+  --sd-bg-surface: #1F2A33;
+  --sd-bg-elevated: #26333F;
+  --sd-bg-input: #18222C;
+  --sd-fill-light: #232C36;
+
+  /* 文本 */
+  --sd-text-primary: #E6EDF3;
+  --sd-text-regular: #C7D0DA;
+  --sd-text-secondary: #8A97A6;
+  --sd-text-placeholder: #6B7785;
+  --sd-text-disabled: #5A6675;
+
+  /* 边框 */
+  --sd-border: #3A4450;
+  --sd-border-light: #33414E;
+  --sd-border-lighter: #2D3943;
+  --sd-border-extra-light: #27323B;
+  --sd-border-dark: #47535F;
+
+  /* 字体 */
+  --sd-font-family: "Inter", "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+  --sd-font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --sd-font-xs: 12px;
+  --sd-font-sm: 13px;
+  --sd-font-base: 14px;
+  --sd-font-md: 16px;
+  --sd-font-lg: 20px;
+  --sd-font-xl: 24px;
+  --sd-font-2xl: 32px;
+  --sd-font-3xl: 40px;
+
+  --sd-weight-regular: 400;
+  --sd-weight-medium: 500;
+  --sd-weight-semibold: 600;
+  --sd-weight-bold: 700;
+
+  /* 间距 / 圆角 / 阴影 / 辉光 */
+  --sd-space-1: 4px;
+  --sd-space-2: 8px;
+  --sd-space-3: 12px;
+  --sd-space-4: 16px;
+  --sd-space-6: 24px;
+  --sd-space-8: 32px;
+  --sd-space-12: 48px;
+
+  --sd-radius-sm: 4px;
+  --sd-radius-base: 6px;
+  --sd-radius-md: 12px;
+  --sd-radius-lg: 16px;
+  --sd-radius-round: 20px;
+
+  --sd-shadow-1: 0 1px 2px rgba(102, 115, 255, .08), 0 1px 3px rgba(22, 32, 42, .40);
+  --sd-shadow-2: 0 4px 12px rgba(102, 115, 255, .10), 0 2px 4px rgba(22, 32, 42, .45);
+  --sd-shadow-3: 0 12px 32px rgba(102, 115, 255, .14), 0 6px 12px rgba(22, 32, 42, .50);
+
+  --sd-glow-accent: 0 0 6px rgba(111, 227, 236, .6), 0 0 12px rgba(111, 227, 236, .3);
+  --sd-glow-brand: 0 0 0 3px rgba(102, 115, 255, .35), 0 0 10px rgba(102, 115, 255, .4);
+  --sd-focus-ring: 0 0 0 2px rgba(111, 227, 236, .25);
+
+  --sd-band: linear-gradient(90deg, #6673FF 0%, #6FE3EC 50%, #6673FF 100%);
+  --sd-topbar-h: 60px;
+  --sd-rail-w: 60px;
+  --sd-content-max: 1680px;
+
+  /* ---------------------------------------------------------------------------
+   * 看板扩展令牌（官方 tokens.css 暂无，实现时建议合并回上游）
+   * 浅色主题在下方 [data-theme="light"] 中覆盖同名变量。
+   * ------------------------------------------------------------------------- */
+  --sd-card-gradient: linear-gradient(180deg, rgba(38, 51, 63, .82), rgba(31, 42, 51, .88));
+  --sd-card-ghost: rgba(31, 42, 51, .55);
+  --sd-panel-bg: rgba(31, 42, 51, .55);
+  --sd-app-card-bg: rgba(31, 42, 51, .58);
+  --sd-hover-bg: rgba(255, 255, 255, .03);
+  --sd-row-hover: rgba(102, 115, 255, .06);
+  --sd-focus-shadow: rgba(102, 115, 255, .16);
+
+  --sd-aurora-1: rgba(102, 115, 255, .20);
+  --sd-aurora-2: rgba(111, 227, 236, .10);
+  --sd-aurora-3: rgba(140, 92, 245, .14);
+  --sd-star-color: rgba(230, 237, 243, .55);
+  --sd-star-color-2: rgba(111, 227, 236, .45);
+  --sd-star-color-3: rgba(180, 190, 255, .35);
+  --sd-star-opacity: .5;
+
+  --sd-brand-from: #E6EDF3;
+  --sd-brand-to: #B2B9FF;
+  --sd-title-gradient: linear-gradient(120deg, #E6EDF3 10%, #8C9CFF 55%, #6FE3EC 95%);
+  --sd-link: #858FFF;
+  --sd-code-text: #8CE9F0;
+
+  --sd-thumb-bg: radial-gradient(300px 120px at 20% 0%, rgba(102, 115, 255, .22), transparent 70%), #18222C;
+  --sd-thumb-bar: rgba(230, 237, 243, .12);
+  --sd-thumb-kpi: rgba(230, 237, 243, .07);
+  --sd-thumb-chart: linear-gradient(180deg, rgba(102, 115, 255, .18), rgba(102, 115, 255, 0)), rgba(230, 237, 243, .04);
+  --sd-thumb-side: rgba(230, 237, 243, .05);
+  --sd-entity-glow: radial-gradient(600px 160px at 0% 0%, rgba(102, 115, 255, .16), transparent 70%);
+  --sd-wb-card-bg: linear-gradient(180deg, rgba(38, 51, 63, .72), rgba(22, 32, 42, .84));
+  --sd-wb-glow: 0 0 26px rgba(111, 227, 236, .22);
+  --sd-wb-dot: rgba(255, 255, 255, .14);
+  --sd-empty-icon-bg: radial-gradient(circle at 30% 20%, rgba(102, 115, 255, .28), rgba(102, 115, 255, .08));
+}
+
+/* =============================================================================
+ * 浅色主题（设计稿扩展）
+ * -----------------------------------------------------------------------------
+ * 默认跟随系统（见 assets/theme.js）；也可手动锁定。
+ * 浅色主题保持同一套 --sd-* 变量名，组件与页面无需改样式。
+ * ============================================================================= */
+
+:root[data-theme="light"] {
+  --sd-color-brand: #4F5BE8;
+  --sd-color-brand-2: #7A46E0;
+  --sd-gradient-brand: linear-gradient(135deg, #4F5BE8 0%, #7A46E0 100%);
+  --sd-color-accent: #0E8F9B;
+
+  --sd-color-online: #0B9A66;
+  --sd-color-alert: #B45309;
+  --sd-color-offline: #D92D20;
+
+  --sd-color-brand-light-3: #5C67EE;
+  --sd-color-brand-light-5: #8E97F4;
+  --sd-color-brand-light-7: #C3C8FA;
+  --sd-color-brand-light-8: #DDE0FC;
+  --sd-color-brand-light-9: #F1F2FE;
+  --sd-color-brand-dark-2: #3E49C9;
+
+  --sd-color-online-light-3: #28B07F;
+  --sd-color-online-light-9: #EAFBF3;
+  --sd-color-online-dark-2: #087A51;
+
+  --sd-color-alert-light-3: #D97706;
+  --sd-color-alert-light-9: #FFF7E6;
+  --sd-color-alert-dark-2: #8F4207;
+
+  --sd-color-offline-light-3: #E5484D;
+  --sd-color-offline-light-9: #FEF0F0;
+  --sd-color-offline-dark-2: #B42318;
+
+  --sd-color-accent-light-3: #14A6B3;
+  --sd-color-accent-light-9: #ECFCFD;
+  --sd-color-accent-dark-2: #0A6F79;
+
+  --sd-bg-page: #F2F5FA;
+  --sd-bg-surface: #FFFFFF;
+  --sd-bg-elevated: #FFFFFF;
+  --sd-bg-input: #F6F8FC;
+  --sd-fill-light: #EDF1F7;
+
+  --sd-text-primary: #16202A;
+  --sd-text-regular: #2B3A48;
+  --sd-text-secondary: #5C6B7A;
+  --sd-text-placeholder: #8A97A6;
+  --sd-text-disabled: #A7B2BE;
+
+  --sd-border: #D7E0EA;
+  --sd-border-light: #E1E8F0;
+  --sd-border-lighter: #E8EEF5;
+  --sd-border-extra-light: #EFF3F8;
+  --sd-border-dark: #C4D0DB;
+
+  --sd-shadow-1: 0 1px 2px rgba(22, 32, 42, .04), 0 1px 3px rgba(22, 32, 42, .06);
+  --sd-shadow-2: 0 4px 12px rgba(22, 32, 42, .07), 0 2px 4px rgba(22, 32, 42, .05);
+  --sd-shadow-3: 0 12px 32px rgba(22, 32, 42, .10), 0 6px 12px rgba(22, 32, 42, .06);
+
+  --sd-glow-accent: 0 0 6px rgba(14, 143, 155, .35), 0 0 12px rgba(14, 143, 155, .18);
+  --sd-glow-brand: 0 0 0 3px rgba(79, 91, 232, .18), 0 0 10px rgba(79, 91, 232, .18);
+  --sd-focus-ring: 0 0 0 2px rgba(14, 143, 155, .18);
+
+  --sd-card-gradient: linear-gradient(180deg, #FFFFFF 0%, #FBFCFE 100%);
+  --sd-card-ghost: rgba(255, 255, 255, .80);
+  --sd-panel-bg: #FFFFFF;
+  --sd-app-card-bg: #FFFFFF;
+  --sd-hover-bg: rgba(79, 91, 232, .05);
+  --sd-row-hover: rgba(79, 91, 232, .045);
+  --sd-focus-shadow: rgba(79, 91, 232, .14);
+
+  --sd-aurora-1: rgba(79, 91, 232, .10);
+  --sd-aurora-2: rgba(14, 143, 155, .06);
+  --sd-aurora-3: rgba(122, 70, 224, .08);
+  --sd-star-color: rgba(79, 91, 232, .14);
+  --sd-star-color-2: rgba(14, 143, 155, .12);
+  --sd-star-color-3: rgba(122, 70, 224, .10);
+  --sd-star-opacity: .7;
+
+  --sd-brand-from: #16202A;
+  --sd-brand-to: #4F5BE8;
+  --sd-title-gradient: linear-gradient(120deg, #16202A 10%, #4F5BE8 60%, #0E8F9B 100%);
+  --sd-link: #4350D6;
+  --sd-code-text: #0B7A84;
+
+  --sd-thumb-bg: radial-gradient(300px 120px at 20% 0%, rgba(79, 91, 232, .10), transparent 70%), #F7F9FD;
+  --sd-thumb-bar: rgba(22, 32, 42, .10);
+  --sd-thumb-kpi: rgba(22, 32, 42, .05);
+  --sd-thumb-chart: linear-gradient(180deg, rgba(79, 91, 232, .14), rgba(79, 91, 232, 0)), rgba(22, 32, 42, .03);
+  --sd-thumb-side: rgba(22, 32, 42, .04);
+  --sd-entity-glow: radial-gradient(600px 160px at 0% 0%, rgba(79, 91, 232, .08), transparent 70%);
+  --sd-wb-card-bg: linear-gradient(180deg, #FFFFFF 0%, #F7FAFE 100%);
+  --sd-wb-glow: none;
+  --sd-wb-dot: rgba(22, 32, 42, .12);
+  --sd-empty-icon-bg: radial-gradient(circle at 30% 20%, rgba(79, 91, 232, .16), rgba(79, 91, 232, .04));
+}

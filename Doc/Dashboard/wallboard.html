@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-scope="full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>大屏模式 · 星尘看板设计稿</title>
+  <script>
+    /* 首屏前应用主题，避免闪白/闪黑 */
+    (function () {
+      try {
+        var m = localStorage.getItem('sd-theme') || 'auto';
+        var d = m === 'auto' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : m;
+        document.documentElement.dataset.theme = d;
+        document.documentElement.dataset.themeMode = m;
+      } catch (e) { document.documentElement.dataset.theme = 'dark'; }
+    })();
+  </script>
+  <link rel="stylesheet" href="assets/tokens.css">
+  <link rel="stylesheet" href="assets/dashboard.css">
+</head>
+<body>
+<div class="sd-topband"></div>
+
+<div class="wb">
+  <!-- 头部 -->
+  <header class="wb-head">
+    <div class="wb-brand"><i>✦</i>星尘 Stardust</div>
+    <div class="wb-title-wrap">
+      <h1 class="wb-title">全局运行态势</h1>
+      <div class="wb-sub" id="wbViewName">STARDUST · 总览视角 · GLOBAL OVERVIEW</div>
+    </div>
+    <div class="wb-meta">
+      <span style="display:inline-flex;align-items:center;gap:10px">
+        <b data-clock>00:00:00</b>
+        <span data-theme-switch></span>
+      </span>
+      <span>可见 3 / 12 个项目 · 数据每 30 秒刷新</span>
+    </div>
+  </header>
+
+  <!-- 主体 -->
+  <main class="wb-body">
+
+    <!-- 左列 -->
+    <div class="wb-col">
+      <section class="wb-card">
+        <div class="wb-card__head">
+          <h2 class="wb-card__title">节点在线率</h2>
+          <span class="wb-pill wb-pill--ok"><span class="wb-dot"></span>健康</span>
+        </div>
+        <div class="wb-num wb-num--ok">87.5<span class="wb-unit">%</span></div>
+        <div class="wb-foot-row"><span>28 / 32 节点在线</span><span>目标 ≥ 95%</span></div>
+        <div class="wb-spark" data-spark="onlineRate" data-spark-color="var(--sd-color-online)"></div>
+        <div style="display:flex;flex-direction:column;gap:7px;margin-top:auto">
+          <div class="meter-row" style="grid-template-columns:40px 1fr 30px"><span>在线</span><div class="meter meter--ok"><i style="width:87.5%"></i></div><b>28</b></div>
+          <div class="meter-row" style="grid-template-columns:40px 1fr 30px"><span>告警</span><div class="meter meter--warn"><i style="width:6.25%"></i></div><b>2</b></div>
+          <div class="meter-row" style="grid-template-columns:40px 1fr 30px"><span>离线</span><div class="meter meter--bad"><i style="width:6.25%"></i></div><b>2</b></div>
+        </div>
+      </section>
+
+      <section class="wb-card">
+        <div class="wb-card__head">
+          <h2 class="wb-card__title">今日请求量</h2>
+          <span class="wb-card__hint">较昨日 ▲ 8.4%</span>
+        </div>
+        <div class="wb-num">1,286<span class="wb-unit">万</span></div>
+        <div class="wb-foot-row"><span>峰值 2,780 QPS</span><span>谷值 980 QPS</span></div>
+        <div class="wb-spark" data-spark="systemSpark" data-spark-color="var(--sd-color-brand)"></div>
+      </section>
+
+      <section class="wb-card">
+        <div class="wb-card__head">
+          <h2 class="wb-card__title">错误率</h2>
+          <span class="wb-pill wb-pill--warn"><span class="wb-dot"></span>7 条告警</span>
+        </div>
+        <div class="wb-num wb-num--warn">0.38<span class="wb-unit">%</span></div>
+        <div class="wb-foot-row"><span>较昨日 ▲ 0.04%</span><span>阈值 0.50%</span></div>
+        <div class="wb-spark" data-spark="errorSpark" data-spark-color="var(--sd-color-offline)"></div>
+      </section>
+    </div>
+
+    <!-- 中列 -->
+    <div class="wb-center">
+      <section class="wb-card">
+        <div class="wb-card__head">
+          <h2 class="wb-card__title" id="wbHeroTitle">全局吞吐与质量</h2>
+          <div class="wb-legend" id="wbHeroLegend">
+            <span><i style="background:var(--sd-color-brand)"></i>请求量 QPS</span>
+            <span><i style="background:var(--sd-color-alert)"></i>错误率 %</span>
+          </div>
+        </div>
+
+        <div class="wb-hero-body">
+          <!-- 视角 1：总览 -->
+          <div class="wb-pane is-active" data-pane="0">
+            <div class="wb-stats">
+              <div class="wb-stat"><span>实时 QPS</span><b>2,148<em>QPS</em></b></div>
+              <div class="wb-stat"><span>P95 耗时</span><b>214<em>ms</em></b></div>
+              <div class="wb-stat"><span>在线应用</span><b>34<em>/ 41</em></b></div>
+            </div>
+            <div id="wbTrend" class="wb-chart"></div>
+          </div>
+
+          <!-- 视角 2：项目 -->
+          <div class="wb-pane" data-pane="1">
+            <div class="wb-stats">
+              <div class="wb-stat"><span>项目总数</span><b>12<em>个</em></b></div>
+              <div class="wb-stat"><span>异常项目</span><b>2<em>个</em></b></div>
+              <div class="wb-stat"><span>今日部署</span><b>5<em>次</em></b></div>
+            </div>
+            <div id="wbProjects" class="wb-chart"></div>
+          </div>
+
+          <!-- 视角 3：节点 -->
+          <div class="wb-pane" data-pane="2">
+            <div class="wb-stats">
+              <div class="wb-stat"><span>节点总数</span><b>32<em>台</em></b></div>
+              <div class="wb-stat"><span>平均 CPU</span><b>49<em>%</em></b></div>
+              <div class="wb-stat"><span>平均内存</span><b>62<em>%</em></b></div>
+            </div>
+            <div id="wbNodes" class="wb-chart"></div>
+          </div>
+
+          <!-- 视角 4：告警 -->
+          <div class="wb-pane" data-pane="3">
+            <div class="wb-stats">
+              <div class="wb-stat"><span>活跃告警</span><b>7<em>条</em></b></div>
+              <div class="wb-stat"><span>未确认</span><b>4<em>条</em></b></div>
+              <div class="wb-stat"><span>已恢复</span><b>3<em>条</em></b></div>
+            </div>
+            <div id="wbAlerts" class="wb-chart"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 项目健康 -->
+      <section class="wb-card">
+        <div class="wb-card__head">
+          <h2 class="wb-card__title">项目健康</h2>
+          <span class="wb-card__hint">可见 3 / 12 个项目</span>
+        </div>
+        <div class="wb-list wb-list--fixed">
+          <div class="wb-row">
+            <span class="wb-pill wb-pill--ok">星尘平台</span>
+            <div class="meter meter--ok" style="height:8px"><i style="width:98%"></i></div>
+            <span>6 应用 · 8 节点 · 0.21%</span>
+          </div>
+          <div class="wb-row">
+            <span class="wb-pill wb-pill--warn">电商中台</span>
+            <div class="meter meter--warn" style="height:8px"><i style="width:92%"></i></div>
+            <span>4 应用 · 7/8 节点 · 0.42%</span>
+          </div>
+          <div class="wb-row">
+            <span class="wb-pill wb-pill--ok">物流调度</span>
+            <div class="meter meter--ok" style="height:8px"><i style="width:96%"></i></div>
+            <span>3 应用 · 5 节点 · 0.18%</span>
+          </div>
+          <div class="wb-row">
+            <span class="wb-pill">数据中台</span>
+            <div class="meter meter--ok" style="height:8px"><i style="width:99%"></i></div>
+            <span>2 应用 · 4 节点 · 0.11%</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- 右列 -->
+    <div class="wb-col">
+      <section class="wb-card">
+        <div class="wb-card__head">
+          <h2 class="wb-card__title">实时事件</h2>
+          <span class="wb-pill wb-pill--bad"><span class="wb-dot"></span>LIVE</span>
+        </div>
+        <div id="wbEvents" class="wb-list" style="gap:0"></div>
+      </section>
+
+      <section class="wb-card">
+        <div class="wb-card__head">
+          <h2 class="wb-card__title">Top 应用</h2>
+          <span class="wb-card__hint">按 QPS</span>
+        </div>
+        <div id="wbTopApps" class="wb-chart"></div>
+        <div class="wb-foot-row"><span>合计 2,148 QPS</span><span>占全站 68%</span></div>
+      </section>
+
+      <section class="wb-card">
+        <div class="wb-card__head">
+          <h2 class="wb-card__title">机房资源</h2>
+          <span class="wb-card__hint">CPU / 内存 / 磁盘</span>
+        </div>
+        <div class="wb-list wb-list--fixed">
+          <div class="wb-row"><span class="muted">南京 · 8</span><div class="meter meter--ok"><i style="width:48%"></i></div><span>CPU 48%</span></div>
+          <div class="wb-row"><span class="muted">上海 · 9</span><div class="meter meter--warn"><i style="width:56%"></i></div><span>CPU 56%</span></div>
+          <div class="wb-row"><span class="muted">广州 · 7</span><div class="meter meter--ok"><i style="width:42%"></i></div><span>CPU 42%</span></div>
+          <div class="wb-row"><span class="muted">北京 · 8</span><div class="meter meter--warn"><i style="width:51%"></i></div><span>CPU 51%</span></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- 底部 -->
+  <footer class="wb-foot">
+    <div class="wb-dots" id="wbDots">
+      <button type="button" class="is-active" data-view="0" aria-label="总览视角"></button>
+      <button type="button" data-view="1" aria-label="项目视角"></button>
+      <button type="button" data-view="2" aria-label="节点视角"></button>
+      <button type="button" data-view="3" aria-label="告警视角"></button>
+    </div>
+    <span class="wb-hint" id="wbHint">每 12 秒自动轮播 · 按空格暂停 · 点击指示条切换视角</span>
+    <span>数据来源 Nodes/Node · Registry/App · Monitors/AppMinuteStat · 最后更新 <b data-clock>--:--:--</b></span>
+  </footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js"></script>
+<script src="assets/theme.js"></script>
+<script src="assets/mock.js"></script>
+<script src="assets/charts.js"></script>
+<script>
+(function () {
+  /* 中央图表：四个视角 */
+  SDCharts.areaTrend('wbTrend', {
+    categories: SD.hours,
+    interval: 3,
+    primary: { name: '请求量', data: SD.series.systemThroughput, color: SDCharts.palette.brand, unit: 'QPS' },
+    secondary: { name: '错误率', data: SD.series.systemError, color: SDCharts.palette.alert, unit: '%', formatter: '{value}%' }
+  });
+
+  SDCharts.barH('wbProjects', {
+    items: SD.projects.slice(0, 6).map(function (p) {
+      return { name: p.name, value: p.errorRate };
+    }),
+    unit: '%'
+  });
+
+  SDCharts.stackedBar('wbNodes', {
+    stacked: false,
+    barWidth: 10,
+    categories: SD.locations.map(function (l) { return l.name; }),
+    series: [
+      { name: 'CPU', color: SDCharts.palette.brand, data: SD.locations.map(function (l) { return l.cpu; }) },
+      { name: '内存', color: SDCharts.palette.accent, data: SD.locations.map(function (l) { return l.memory; }) },
+      { name: '磁盘', color: SDCharts.palette.alert, data: SD.locations.map(function (l) { return l.disk; }) }
+    ]
+  });
+
+  SDCharts.donut('wbAlerts', {
+    centerText: '7',
+    centerSub: '活跃告警',
+    radius: ['58%', '80%'],
+    data: [
+      { name: '严重', value: 2, itemStyle: { color: '#FF4545' } },
+      { name: '警告', value: 3, itemStyle: { color: '#FFC208' } },
+      { name: '提示', value: 2, itemStyle: { color: '#6FE3EC' } }
+    ]
+  });
+
+  /* 右侧 Top 应用 */
+  SDCharts.barH('wbTopApps', {
+    items: SD.apps.slice(0, 4).map(function (a) { return { name: a.name, value: a.qps }; }),
+    unit: ''
+  });
+
+  /* 实时事件 */
+  const events = SD.events.slice(0, 7);
+  document.getElementById('wbEvents').innerHTML = events.map(function (e) {
+    const pill = e.level === 'bad' ? 'wb-pill--bad' : e.level === 'warn' ? 'wb-pill--warn' : e.level === 'ok' ? 'wb-pill--ok' : '';
+    return '<div class="wb-row">' +
+      '<span class="wb-pill ' + pill + '"><span class="wb-dot"></span>' + e.time + '</span>' +
+      '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + e.title + '</span>' +
+      '<span class="muted">' + e.meta.split(' · ')[0] + '</span>' +
+      '</div>';
+  }).join('');
+
+  /* 轮播 */
+  const panes = Array.prototype.slice.call(document.querySelectorAll('.wb-pane'));
+  const dots = Array.prototype.slice.call(document.querySelectorAll('#wbDots button'));
+  const titles = ['全局吞吐与质量', '项目健康分布', '机房资源水位', '告警分布'];
+  const legends = [
+    '<span><i style="background:var(--sd-color-brand)"></i>请求量 QPS</span><span><i style="background:var(--sd-color-alert)"></i>错误率 %</span>',
+    '<span><i style="background:var(--sd-color-brand)"></i>错误率 %</span>',
+    '<span><i style="background:var(--sd-color-brand)"></i>CPU</span><span><i style="background:var(--sd-color-accent)"></i>内存</span><span><i style="background:var(--sd-color-alert)"></i>磁盘</span>',
+    '<span><i style="background:var(--sd-color-offline)"></i>严重</span><span><i style="background:var(--sd-color-alert)"></i>警告</span><span><i style="background:var(--sd-color-accent)"></i>提示</span>'
+  ];
+  const viewNames = ['STARDUST · 总览视角 · GLOBAL OVERVIEW', 'STARDUST · 项目视角 · PROJECT HEALTH', 'STARDUST · 节点视角 · NODE RESOURCE', 'STARDUST · 告警视角 · ALERT CENTER'];
+
+  let index = 0;
+  let paused = false;
+  let timer = null;
+
+  function show(i) {
+    index = i;
+    panes.forEach(function (p, k) { p.classList.toggle('is-active', k === i); });
+    dots.forEach(function (d, k) { d.classList.toggle('is-active', k === i); });
+    document.getElementById('wbHeroTitle').textContent = titles[i];
+    document.getElementById('wbHeroLegend').innerHTML = legends[i];
+    document.getElementById('wbViewName').textContent = viewNames[i];
+    // 重启进度动画
+    const active = dots[i];
+    active.style.animation = 'none';
+    void active.offsetWidth;
+    active.style.animation = '';
+  }
+
+  function start() {
+    clearInterval(timer);
+    timer = setInterval(function () {
+      if (!paused) show((index + 1) % panes.length);
+    }, 12000);
+  }
+
+  dots.forEach(function (dot) {
+    dot.addEventListener('click', function () {
+      show(Number(dot.dataset.view));
+      start();
+    });
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.code !== 'Space') return;
+    e.preventDefault();
+    paused = !paused;
+    document.getElementById('wbDots').classList.toggle('is-paused', paused);
+    document.getElementById('wbHint').textContent = paused
+      ? '已暂停轮播 · 按空格继续 · 点击指示条切换视角'
+      : '每 12 秒自动轮播 · 按空格暂停 · 点击指示条切换视角';
+  });
+
+  show(0);
+  start();
+})();
+</script>
+</body>
+</html>

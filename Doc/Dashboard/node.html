@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-scope="full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>节点看板 · NJ-App-02 · 星尘看板设计稿</title>
+  <script>
+    /* 首屏前应用主题，避免闪白/闪黑 */
+    (function () {
+      try {
+        var m = localStorage.getItem('sd-theme') || 'auto';
+        var d = m === 'auto' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : m;
+        document.documentElement.dataset.theme = d;
+        document.documentElement.dataset.themeMode = m;
+      } catch (e) { document.documentElement.dataset.theme = 'dark'; }
+    })();
+  </script>
+  <link rel="stylesheet" href="assets/tokens.css">
+  <link rel="stylesheet" href="assets/dashboard.css">
+</head>
+<body>
+<div class="sd-topband"></div>
+
+<div class="sd-app">
+  <aside class="sd-rail">
+    <a class="sd-rail__brand" href="index.html" title="看板设计稿总览">✦</a>
+    <a class="sd-rail__item" href="system.html" title="系统级看板">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <rect x="3" y="3" width="7" height="7" rx="1.6"/><rect x="14" y="3" width="7" height="7" rx="1.6"/>
+        <rect x="3" y="14" width="7" height="7" rx="1.6"/><rect x="14" y="14" width="7" height="7" rx="1.6"/>
+      </svg>
+      <span>系统</span>
+    </a>
+    <a class="sd-rail__item" href="project.html" title="项目看板">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <path d="M12 3l9 4.5-9 4.5-9-4.5z"/><path d="M3 12l9 4.5 9-4.5"/><path d="M3 16.5L12 21l9-4.5"/>
+      </svg>
+      <span>项目</span>
+    </a>
+    <a class="sd-rail__item" href="app.html" title="应用看板">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/>
+      </svg>
+      <span>应用</span>
+    </a>
+    <a class="sd-rail__item is-active" href="node.html" title="节点看板">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/>
+        <circle cx="7" cy="7.5" r="1"/><circle cx="7" cy="17" r="1"/>
+      </svg>
+      <span>节点</span>
+    </a>
+    <a class="sd-rail__item" href="wallboard.html" title="大屏模式">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>
+      </svg>
+      <span>大屏</span>
+    </a>
+    <a class="sd-rail__item" href="index.html" title="设计说明">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <path d="M6 4h9l4 4v12H6z"/><path d="M15 4v4h4M9 12h6M9 16h6"/>
+      </svg>
+      <span>说明</span>
+    </a>
+  </aside>
+
+  <div class="sd-main">
+    <header class="sd-topbar">
+      <a class="brand" href="index.html">
+        <span class="brand__mark">✦</span>
+        <span class="brand__text">星尘 Stardust</span>
+      </a>
+      <span class="topbar__sep"></span>
+      <button class="project-trigger" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7l8 6 8-6M4 7h16v10H4z"/></svg>
+        电商中台
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <button class="scope-badge" type="button" data-action="toggle-scope" title="点击切换演示：全量 → 受限 → 无授权">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>
+        </svg>
+        <span data-scope-label>全部 12 个项目</span>
+      </button>
+      <div class="topbar__right">
+        <div data-theme-switch></div>
+        <span class="topbar__clock" data-clock>00:00:00</span>
+        <button class="icon-btn" type="button" data-action="refresh" title="刷新">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+        </button>
+        <div class="avatar" title="当前账号：李海（项目负责人）">李</div>
+      </div>
+    </header>
+
+    <div class="sd-scroll">
+      <div class="sd-content">
+
+        <div class="scope-notice">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M12 3l9 4v6c0 4.6-3.4 7.4-9 8-5.6-.6-9-3.4-9-8V7z"/><path d="M12 9v4M12 16h.01"/>
+          </svg>
+          <span class="notice--limited">当前为受限数据视角：仅统计你被授权的项目，未授权项目的应用、节点与监控数据不会出现在任何卡片中。</span>
+          <span class="notice--none">当前账号未授权任何项目：所有统计卡片已隐藏，请联系管理员分配项目权限。</span>
+        </div>
+
+        <div class="offline-banner">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M12 9v2m0 4h.01M10.3 3.9L2.4 17.4A2 2 0 0 0 4.1 20.4h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>
+          </svg>
+          <span>该节点已离线 <b>3 小时 12 分钟</b>，最后上报时间 <b>11:06:41</b>；以下为最后一次上报的快照数据，实时指标已停止更新。</span>
+          <button class="btn" type="button" style="margin-left:auto">重新检测</button>
+        </div>
+
+        <section class="scope-empty">
+          <div class="scope-empty__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><path d="M12 14v3"/>
+            </svg>
+          </div>
+          <h2>暂无授权项目</h2>
+          <p>你的账号还没有被加入任何项目，无法查看节点看板。请联系项目管理员在「项目成员」中授权。</p>
+          <a class="btn btn--primary" href="system.html">返回系统看板</a>
+        </section>
+
+        <section class="scope-bar">
+          <div>
+            <div class="crumbs">
+              <a href="index.html">看板总览</a><span class="sep">/</span>
+              <a href="project.html">电商中台</a><span class="sep">/</span>
+              <span>节点 NJ-App-02</span>
+            </div>
+          </div>
+          <div class="toolbar">
+            <div class="segment" role="group" aria-label="时间范围">
+              <button type="button">1 小时</button>
+              <button type="button" class="is-active">24 小时</button>
+              <button type="button">7 天</button>
+            </div>
+            <button class="btn" type="button" data-action="refresh">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+              自动刷新
+            </button>
+            <button class="btn" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3M13 5l-2 14"/></svg>
+              远程命令
+            </button>
+            <button class="btn btn--primary" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+              升级 Agent
+            </button>
+          </div>
+        </section>
+
+        <!-- 节点实体头 -->
+        <section class="entity-head">
+          <div class="entity-head__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/>
+              <circle cx="7" cy="7.5" r="1"/><circle cx="7" cy="17" r="1"/>
+            </svg>
+          </div>
+          <div class="entity-head__main">
+            <div class="entity-head__title">
+              NJ-App-02
+              <span class="entity-head__code">10.0.2.12</span>
+              <span class="pill pill--online pill--live" id="nodeStatus"><span class="dot"></span>在线</span>
+              <span class="badge">Linux · x64</span>
+            </div>
+            <div class="entity-head__meta">
+              <span class="kv">所属项目 <b><a href="project.html" style="color:var(--sd-link);text-decoration:none">电商中台</a></b></span><span class="split"></span>
+              <span class="kv">系统 <b>Ubuntu 22.04 LTS</b></span><span class="split"></span>
+              <span class="kv">机房 <b>南京 · 江宁 A2-14</b></span><span class="split"></span>
+              <span class="kv">运行 <b>128 天</b></span><span class="split"></span>
+              <span class="kv">Agent <b>1.21.4</b></span>
+            </div>
+          </div>
+          <div class="entity-head__actions">
+            <button class="btn" type="button">进程管理</button>
+            <button class="btn" type="button">防火墙</button>
+            <button class="btn" type="button">重启 Agent</button>
+            <button class="btn btn--primary" type="button">执行命令</button>
+          </div>
+        </section>
+
+        <!-- KPI -->
+        <section class="kpi-row">
+          <div class="sd-kpi sd-kpi--accent">
+            <div class="sd-kpi__label">CPU 使用率</div>
+            <div class="sd-kpi__value">42<span class="sd-kpi__unit">%</span></div>
+            <div class="sd-kpi__foot"><span class="delta delta--flat">8 核</span><span>负载 1.82</span></div>
+            <div class="sd-kpi__spark" data-spark="nodeSpark"></div>
+          </div>
+          <div class="sd-kpi">
+            <div class="sd-kpi__label">内存使用率</div>
+            <div class="sd-kpi__value">68<span class="sd-kpi__unit">%</span></div>
+            <div class="sd-kpi__foot"><span>10.9 GB / 16 GB</span></div>
+            <div class="sd-kpi__spark" data-spark="nodeSpark" data-spark-color="var(--sd-color-accent)"></div>
+          </div>
+          <div class="sd-kpi">
+            <div class="sd-kpi__label">磁盘使用率</div>
+            <div class="sd-kpi__value">55<span class="sd-kpi__unit">%</span></div>
+            <div class="sd-kpi__foot"><span>/data 分区 72%</span></div>
+          </div>
+          <div class="sd-kpi">
+            <div class="sd-kpi__label">系统负载</div>
+            <div class="sd-kpi__value">1.82</div>
+            <div class="sd-kpi__foot"><span class="delta delta--good">低于 8 核阈值</span></div>
+          </div>
+          <div class="sd-kpi sd-kpi--alert">
+            <div class="sd-kpi__label">温度</div>
+            <div class="sd-kpi__value">47<span class="sd-kpi__unit">°C</span></div>
+            <div class="sd-kpi__foot"><span class="delta delta--good">正常范围</span><span>阈值 75°C</span></div>
+          </div>
+          <div class="sd-kpi sd-kpi--online">
+            <div class="sd-kpi__label">网络吞吐</div>
+            <div class="sd-kpi__value">12.4<span class="sd-kpi__unit">MB/s</span></div>
+            <div class="sd-kpi__foot"><span>上行 8.6 · TCP 1,284</span></div>
+            <div class="sd-kpi__spark" data-spark="systemSpark" data-spark-color="var(--sd-color-online)"></div>
+          </div>
+        </section>
+
+        <section class="sd-grid">
+
+          <!-- 资源时序 -->
+          <div class="sd-card col-16">
+            <div class="sd-card__head">
+              <h2 class="sd-card__title">资源时序</h2>
+              <div class="legend">
+                <span><i class="l-brand"></i>CPU</span>
+                <span><i class="l-accent"></i>内存</span>
+                <span><i class="l-warn"></i>磁盘</span>
+              </div>
+            </div>
+            <div id="nodeTrend" class="chart chart-lg"></div>
+          </div>
+
+          <!-- 健康评分 -->
+          <div class="sd-card col-8">
+            <div class="sd-card__head">
+              <h2 class="sd-card__title">健康评分</h2>
+              <span class="sd-card__hint">综合 89 分 · 良好</span>
+            </div>
+            <div id="nodeRadar" class="chart chart-lg"></div>
+          </div>
+
+          <!-- 网络质量 -->
+          <div class="sd-card col-8">
+            <div class="sd-card__head">
+              <h2 class="sd-card__title">网络质量</h2>
+              <span class="sd-card__hint">近 15 分钟均值</span>
+            </div>
+            <div class="gauge-pair">
+              <div id="gaugeIntranet" style="height:118px"></div>
+              <div id="gaugeInternet" style="height:118px"></div>
+            </div>
+            <div class="code-list" style="margin-top:2px">
+              <div class="code-row"><span class="grow">网关延迟 / 丢包</span><b style="color:var(--sd-text-regular);font-weight:500">1.2 ms · 0%</b></div>
+              <div class="code-row"><span class="grow">DNS 延迟 / 丢包</span><b style="color:var(--sd-text-regular);font-weight:500">8 ms · 0.2%</b></div>
+              <div class="code-row"><span class="grow">服务器延迟 / 丢包</span><b style="color:var(--sd-text-regular);font-weight:500">24 ms · 0.5%</b></div>
+            </div>
+          </div>
+
+          <!-- 磁盘分区 -->
+          <div class="sd-card col-8">
+            <div class="sd-card__head">
+              <h2 class="sd-card__title">磁盘分区</h2>
+              <span class="sd-card__hint">/data 预计 12 天写满</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:16px;margin-top:8px">
+              <div>
+                <div class="meter-row" style="grid-template-columns:64px 1fr 76px"><span>/data</span><div class="meter meter--warn"><i style="width:72%"></i></div><b>72%</b></div>
+                <div class="muted" style="font-size:10.5px;color:var(--sd-text-secondary);margin-top:5px">360 GB / 500 GB · ext4</div>
+              </div>
+              <div>
+                <div class="meter-row" style="grid-template-columns:64px 1fr 76px"><span>/</span><div class="meter meter--ok"><i style="width:55%"></i></div><b>55%</b></div>
+                <div class="muted" style="font-size:10.5px;color:var(--sd-text-secondary);margin-top:5px">42 GB / 80 GB · ext4</div>
+              </div>
+              <div>
+                <div class="meter-row" style="grid-template-columns:64px 1fr 76px"><span>/var/log</span><div class="meter meter--ok"><i style="width:38%"></i></div><b>38%</b></div>
+                <div class="muted" style="font-size:10.5px;color:var(--sd-text-secondary);margin-top:5px">7.6 GB / 20 GB · ext4</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 进程 Top -->
+          <div class="sd-card col-8">
+            <div class="sd-card__head">
+              <h2 class="sd-card__title">进程 Top</h2>
+              <span class="sd-card__hint">按 CPU 排序</span>
+            </div>
+            <div id="processChart" class="chart chart-md"></div>
+          </div>
+
+          <!-- 已部署应用 -->
+          <div class="sd-card col-12">
+            <div class="sd-card__head">
+              <h2 class="sd-card__title">已部署应用</h2>
+              <a class="link" href="app.html">应用看板</a>
+            </div>
+            <div class="table-wrap">
+              <table class="sd-table">
+                <thead>
+                  <tr><th>应用</th><th>版本</th><th>部署时间</th><th class="num">实例端口</th><th>状态</th></tr>
+                </thead>
+                <tbody>
+                  <tr class="row-link" onclick="location.href='app.html'">
+                    <td class="strong">StarServer 服务端</td><td class="mono">v3.4.2</td><td class="muted">2026-10-27 20:18</td><td class="num">6600</td>
+                    <td><span class="pill pill--online"><span class="dot"></span>运行中</span></td>
+                  </tr>
+                  <tr class="row-link" onclick="location.href='app.html'">
+                    <td class="strong">订单服务</td><td class="mono">v2.8.1</td><td class="muted">2026-10-30 12:32</td><td class="num">5001</td>
+                    <td><span class="pill pill--online"><span class="dot"></span>运行中</span></td>
+                  </tr>
+                  <tr>
+                    <td class="strong">网关集群</td><td class="mono">v1.9.0</td><td class="muted">2026-10-06 09:40</td><td class="num">—</td>
+                    <td><span class="pill pill--muted">已停止</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="legend" style="margin-top:10px">
+              <span>磁盘 I/O：读取 42 MB/s · 写入 18 MB/s</span>
+              <span>IOPS：640</span>
+              <span>TCP：ESTABLISHED 1,284 · TIME_WAIT 86</span>
+            </div>
+          </div>
+
+          <!-- 操作历史 -->
+          <div class="sd-card col-6">
+            <div class="sd-card__head">
+              <h2 class="sd-card__title">操作历史</h2>
+              <a class="link" href="#">指令记录</a>
+            </div>
+            <ul class="timeline">
+              <li class="is-ok"><div class="tl-title">远程命令 df -h 执行成功</div><div class="tl-meta">操作人 陈星 · 输出已归档 · 3 小时前</div></li>
+              <li class="is-warn"><div class="tl-title">CPU 峰值 92% 告警</div><div class="tl-meta">持续 4 分钟 · 已自动恢复 · 1 天前</div></li>
+              <li><div class="tl-title">StarAgent 升级至 1.21.4</div><div class="tl-meta">灰度批次 batch-02 · 2 天前</div></li>
+              <li class="is-ok"><div class="tl-title">重启 StarAgent 服务</div><div class="tl-meta">操作人 李海 · 耗时 6 秒 · 5 天前</div></li>
+            </ul>
+          </div>
+
+          <!-- 节点告警 -->
+          <div class="sd-card col-6">
+            <div class="sd-card__head">
+              <h2 class="sd-card__title">节点告警</h2>
+              <a class="link" href="#">全部告警</a>
+            </div>
+            <div class="event-list event-list--wrap" style="max-height:214px">
+              <div class="event event--warn">
+                <div class="event__bar"></div>
+                <div><div class="event__title"><b>磁盘 /data 使用率 72%</b></div><div class="event__meta">超过阈值 70% · 未确认</div></div>
+                <div class="event__time">3 小时前</div>
+              </div>
+              <div class="event event--warn">
+                <div class="event__bar"></div>
+                <div><div class="event__title"><b>CPU 使用率峰值 92%</b></div><div class="event__meta">持续 4 分钟 · 已恢复</div></div>
+                <div class="event__time">1 天前</div>
+              </div>
+              <div class="event event--bad">
+                <div class="event__bar"></div>
+                <div><div class="event__title"><b>心跳抖动 2 次</b></div><div class="event__meta">上报间隔 &gt; 120s · 已自动重连</div></div>
+                <div class="event__time">昨天</div>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+        <footer class="page-foot">
+          <span>数据来源：Nodes/Node · Nodes/NodeOnline · Nodes/NodeStat · Nodes/NodeData · Deployment/AppDeployNode · Monitors/AlarmRecord</span>
+          <span>节点看板设计稿 · <a href="node.html?state=offline">查看离线态</a></span>
+        </footer>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js"></script>
+<script src="assets/theme.js"></script>
+<script src="assets/mock.js"></script>
+<script src="assets/charts.js"></script>
+<script>
+(function () {
+  const params = new URLSearchParams(location.search);
+  if (params.get('state') === 'offline') {
+    document.documentElement.dataset.nodeState = 'offline';
+    const pill = document.getElementById('nodeStatus');
+    pill.className = 'pill pill--offline';
+    pill.innerHTML = '<span class="dot"></span>离线';
+  }
+
+  /* 资源时序 */
+  SDCharts.multiLine('nodeTrend', {
+    categories: SD.hours,
+    interval: 3,
+    max: 100,
+    unit: '%',
+    series: [
+      { name: 'CPU', data: SD.series.nodeCpu, color: SDCharts.palette.brand, area: true },
+      { name: '内存', data: SD.series.nodeMemory, color: SDCharts.palette.accent },
+      { name: '磁盘', data: SD.series.nodeDisk, color: SDCharts.palette.alert }
+    ]
+  });
+
+  /* 健康雷达 */
+  SDCharts.radar('nodeRadar', {
+    indicators: [
+      { name: 'CPU', max: 100 },
+      { name: '内存', max: 100 },
+      { name: '磁盘', max: 100 },
+      { name: '网络', max: 100 },
+      { name: '温度', max: 100 },
+      { name: '稳定性', max: 100 }
+    ],
+    value: [82, 72, 65, 88, 90, 95],
+    name: '健康评分'
+  });
+
+  /* 网络质量仪表 */
+  SDCharts.gauge('gaugeIntranet', { value: 92, name: '内网评分', color: SDCharts.palette.online });
+  SDCharts.gauge('gaugeInternet', { value: 86, name: '外网评分', color: SDCharts.palette.accent });
+
+  /* 进程 Top */
+  SDCharts.barH('processChart', {
+    items: SD.nodeProcesses.map(function (p) {
+      return { name: p.name, value: p.cpu };
+    }),
+    unit: '%'
+  });
+})();
+</script>
+</body>
+</html>

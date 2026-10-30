@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-scope="full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>星尘看板设计稿 · 总览</title>
+  <script>
+    /* 首屏前应用主题，避免闪白/闪黑 */
+    (function () {
+      try {
+        var m = localStorage.getItem('sd-theme') || 'auto';
+        var d = m === 'auto' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : m;
+        document.documentElement.dataset.theme = d;
+        document.documentElement.dataset.themeMode = m;
+      } catch (e) { document.documentElement.dataset.theme = 'dark'; }
+    })();
+  </script>
+  <link rel="stylesheet" href="assets/tokens.css">
+  <link rel="stylesheet" href="assets/dashboard.css">
+</head>
+<body>
+<div class="sd-topband"></div>
+
+<div class="landing">
+  <div class="landing-wrap">
+
+    <header class="landing-hero">
+      <div class="landing-theme" data-theme-switch></div>
+      <span class="landing-kicker">STARDUST · DASHBOARD DESIGN</span>
+      <h1 class="landing-title">星尘看板设计稿</h1>
+      <p class="landing-sub">
+        为 <b>StarWeb（前后端分离版控制台）</b> 设计的分层看板体系：从系统全局，到项目、应用、单节点，
+        每一层只回答该层最关心的问题；视觉完全对齐 <b>明暗双主题的星尘设计系统</b>（<code>--sd-*</code> 令牌，
+        默认跟随系统，可手动切换），可直接映射为 Vue + Element Plus + ECharts 实现。
+      </p>
+      <div class="landing-meta">
+        <span class="pill pill--brand">5 个可交互原型</span>
+        <span class="pill pill--info">明暗双主题</span>
+        <span class="pill pill--muted">默认跟随系统</span>
+        <span class="pill pill--muted">数据为演示假数据</span>
+        <span class="pill pill--muted">MVC 控制台不再新增功能</span>
+      </div>
+    </header>
+
+    <div class="section-head">
+      <h2>看板画廊</h2>
+      <p>点击卡片打开可交互原型 · 每个页面右上角「可见范围」可切换 全量 / 受限 / 无授权 三态</p>
+    </div>
+
+    <section class="gallery">
+      <a class="gallery-card" href="system.html">
+        <div class="thumb">
+          <div class="thumb__bar"></div>
+          <div class="thumb__kpis"><i></i><i></i><i></i><i></i></div>
+          <div class="thumb__body"><div class="thumb__chart"></div><div class="thumb__side"></div></div>
+        </div>
+        <div class="gallery-card__head">
+          <div>
+            <div class="gallery-card__title">系统级看板 <span class="badge">L0</span></div>
+            <div class="gallery-card__desc">全局吞吐与质量、集群健康、项目健康矩阵、Top 应用、服务拓扑、机房水位、实时事件。</div>
+          </div>
+        </div>
+        <div class="gallery-card__foot"><span>12 项目 · 41 应用 · 32 节点</span><span class="gallery-card__go">打开原型 →</span></div>
+      </a>
+
+      <a class="gallery-card thumb--project" href="project.html">
+        <div class="thumb">
+          <div class="thumb__bar"></div>
+          <div class="thumb__kpis"><i></i><i></i><i></i><i></i></div>
+          <div class="thumb__body"><div class="thumb__chart"></div><div class="thumb__side"></div></div>
+        </div>
+        <div class="gallery-card__head">
+          <div>
+            <div class="gallery-card__title">项目看板 <span class="badge">L1</span></div>
+            <div class="gallery-card__desc">进入项目即见应用矩阵与节点资源，配合项目拓扑、最近部署与告警，一屏掌握项目全貌。</div>
+          </div>
+        </div>
+        <div class="gallery-card__foot"><span>应用 + 节点同屏</span><span class="gallery-card__go">打开原型 →</span></div>
+      </a>
+
+      <a class="gallery-card thumb--app" href="app.html">
+        <div class="thumb">
+          <div class="thumb__bar"></div>
+          <div class="thumb__kpis"><i></i><i></i><i></i><i></i></div>
+          <div class="thumb__body"><div class="thumb__chart"></div><div class="thumb__side"></div></div>
+        </div>
+        <div class="gallery-card__head">
+          <div>
+            <div class="gallery-card__title">应用看板 <span class="badge">L2</span></div>
+            <div class="gallery-card__desc">在线状态、QPS / 耗时 / 错误率趋势、实例健康、端点 Top、错误分布、依赖服务与最近变更。</div>
+          </div>
+        </div>
+        <div class="gallery-card__foot"><span>以「订单服务」为例</span><span class="gallery-card__go">打开原型 →</span></div>
+      </a>
+
+      <a class="gallery-card thumb--node" href="node.html">
+        <div class="thumb">
+          <div class="thumb__bar"></div>
+          <div class="thumb__kpis"><i></i><i></i><i></i><i></i></div>
+          <div class="thumb__body"><div class="thumb__chart"></div><div class="thumb__side"></div></div>
+        </div>
+        <div class="gallery-card__head">
+          <div>
+            <div class="gallery-card__title">节点看板 <span class="badge">L2</span></div>
+            <div class="gallery-card__desc">单节点详情：CPU / 内存 / 磁盘 / 负载 / 温度 / 网络，健康雷达、网络质量、进程 Top、已部署应用与操作历史。</div>
+          </div>
+        </div>
+        <div class="gallery-card__foot"><span>以 NJ-App-02 为例</span><span class="gallery-card__go">打开原型 →</span></div>
+      </a>
+
+      <a class="gallery-card thumb--wall" href="wallboard.html">
+        <div class="thumb">
+          <div class="thumb__bar" style="margin:0 auto;width:30%"></div>
+          <div class="thumb__kpis"><i></i><i></i><i></i><i></i></div>
+          <div class="thumb__body"><div class="thumb__side"></div><div class="thumb__chart"></div><div class="thumb__side"></div></div>
+        </div>
+        <div class="gallery-card__head">
+          <div>
+            <div class="gallery-card__title">大屏模式 <span class="badge">16:9</span></div>
+            <div class="gallery-card__desc">无导航全屏铺满，中心大图 + 四周指标卡；每 12 秒轮播总览 / 项目 / 节点 / 告警四个视角，适合投屏值守。</div>
+          </div>
+        </div>
+        <div class="gallery-card__foot"><span>1920 × 1080 / 2560 × 1440</span><span class="gallery-card__go">打开原型 →</span></div>
+      </a>
+
+      <div class="gallery-card" style="cursor:default">
+        <div class="thumb" style="display:grid;place-items:center">
+          <div style="text-align:center;color:var(--sd-text-secondary);font-size:12px;line-height:2">
+            <div style="font-size:26px;color:var(--sd-color-brand-light-3)">✦</div>
+            设计说明与实现建议<br>
+            <span style="font-size:11px">信息架构 · 组件清单 · 数据映射 · 权限契约</span>
+          </div>
+        </div>
+        <div class="gallery-card__head">
+          <div>
+            <div class="gallery-card__title">README · 设计说明</div>
+            <div class="gallery-card__desc">包含每个看板的信息架构、24 栅格布局、组件清单、现有 WebApi 数据映射、数据范围与权限方案、StarWeb 落地建议。</div>
+          </div>
+        </div>
+        <div class="gallery-card__foot"><span>Markdown</span><a class="gallery-card__go" href="README.md">查看说明 →</a></div>
+      </div>
+    </section>
+
+    <div class="section-head">
+      <h2>设计原则</h2>
+      <p>四层看板共用同一套骨架与语义色，差异只在「回答什么问题」</p>
+    </div>
+
+    <section class="principles">
+      <div class="principle">
+        <div class="principle__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>
+        </div>
+        <h3>分层下钻</h3>
+        <p>系统 → 项目 → 应用 / 节点，每层只保留上一层的入口与本层结论，点击卡片自然下钻，不迷路。</p>
+      </div>
+      <div class="principle">
+        <div class="principle__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5h16v5H4zM4 14h9v5H4zM17 14h3v5h-3z"/></svg>
+        </div>
+        <h3>一屏一主张</h3>
+        <p>顶部 KPI 先给结论，主图解释原因，右侧事件流提示变化。3 秒内能回答「现在好不好、哪里最差」。</p>
+      </div>
+      <div class="principle">
+        <div class="principle__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3l9 4v6c0 4.6-3.4 7.4-9 8-5.6-.6-9-3.4-9-8V7z"/><path d="M9 12l2 2 4-4"/></svg>
+        </div>
+        <h3>状态先行</h3>
+        <p>在线绿 / 告警黄 / 离线红三态贯穿所有卡片与图表；异常优先出现在右上角与事件流，不藏在二级页。</p>
+      </div>
+      <div class="principle">
+        <div class="principle__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+        </div>
+        <h3>权限即范围</h3>
+        <p>每个看板都标注可见项目范围；无授权时不留空图表，而是给出申请入口。服务端按项目成员过滤，前端只做呈现。</p>
+      </div>
+    </section>
+
+    <div class="section-head">
+      <h2>设计令牌</h2>
+      <p>与 Stardust.Web.Vue/src/design-system/tokens.css 同源；色块随明暗主题切换，原型禁止硬编码色值</p>
+    </div>
+
+    <section class="palette-row">
+      <span class="palette-chip"><i style="background:var(--sd-color-brand)"></i>品牌蓝</span>
+      <span class="palette-chip"><i style="background:var(--sd-color-brand-2)"></i>渐变紫</span>
+      <span class="palette-chip"><i style="background:var(--sd-color-accent)"></i>星尘青</span>
+      <span class="palette-chip"><i style="background:var(--sd-color-online)"></i>在线绿</span>
+      <span class="palette-chip"><i style="background:var(--sd-color-alert)"></i>告警黄</span>
+      <span class="palette-chip"><i style="background:var(--sd-color-offline)"></i>离线红</span>
+      <span class="palette-chip"><i style="background:var(--sd-bg-page)"></i>页面底色</span>
+      <span class="palette-chip"><i style="background:var(--sd-bg-surface)"></i>卡片表面</span>
+    </section>
+
+    <div class="section-head">
+      <h2>状态演示</h2>
+      <p>设计稿内置可切换的权限与数据状态，便于评审边界场景</p>
+    </div>
+
+    <section class="demo-links">
+      <a class="btn" href="system.html">系统看板 · 全量</a>
+      <a class="btn" href="system.html?scope=limited">系统看板 · 受限（3/12 项目）</a>
+      <a class="btn" href="system.html?scope=none">系统看板 · 无授权</a>
+      <a class="btn" href="project.html?state=empty">项目看板 · 空态</a>
+      <a class="btn" href="node.html?state=offline">节点看板 · 离线态</a>
+    </section>
+
+    <div class="section-head">
+      <h2>说明</h2>
+      <p>设计稿与现有文档、旧稿及实现目标的关系</p>
+    </div>
+
+    <section class="note">
+      <p><b>实现目标：</b>StarWeb（<code>Stardust.Web.Vue</code>，Vue 3 + Element Plus + ECharts + Tailwind）。MVC 控制台（<code>Stardust.Web</code>）不再新增看板功能，本目录仅作为设计蓝本。</p>
+      <p><b>与旧稿的关系：</b><code>Doc/Design/</code> 下是早期 Bootstrap 浅色示意稿（<a href="../Design/index.html">查看</a>），与真实 StarWeb 视觉不一致；本目录以暗色星尘设计系统为准，后续实现以这里为准。</p>
+      <p><b>数据与权限：</b>页面中的数字均为演示假数据，但字段与现有 WebApi 一一对应；权限遵循「服务端按 ProjectUser 注入可见项目范围、前端只呈现」，详见 <a href="README.md">README</a>。</p>
+      <p><b>文件：</b><code>assets/tokens.css</code>（设计令牌 · 明暗双主题）、<code>assets/dashboard.css</code>（骨架与组件）、<code>assets/theme.js</code>（主题三态与跟随系统）、<code>assets/mock.js</code>（统一假数据与三态）、<code>assets/charts.js</code>（ECharts 双调色板封装）。</p>
+    </section>
+
+    <footer class="page-foot">
+      <span>星尘 Stardust · 看板设计稿 v1.1 · 2026-10-30</span>
+      <span>NewLife 星尘分布式服务平台</span>
+    </footer>
+  </div>
+</div>
+
+<script src="assets/theme.js"></script>
+<script src="assets/mock.js"></script>
+</body>
+</html>
