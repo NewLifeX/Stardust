@@ -41,4 +41,14 @@ public class AnonymousAccessTests(StarWebAppFixture fixture)
 
         Assert.Equal(HttpStatusCode.OK, status);
     }
+
+    [Fact(DisplayName = "调用链页面默认要求登录")]
+    public async Task TracePage_RequiresLogin()
+    {
+        var status = await GetAsync("/trace?id=" + Guid.NewGuid().ToString("n"));
+
+        // 默认配置不允许匿名，未登录应跳转登录页；返回 200 说明访问判定被绕过
+        Assert.True(status is HttpStatusCode.Redirect or HttpStatusCode.Found or HttpStatusCode.Unauthorized,
+            $"/trace 对匿名用户返回 {(Int32)status}，应跳转登录");
+    }
 }

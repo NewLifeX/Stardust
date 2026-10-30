@@ -132,4 +132,43 @@ public class TracePageTests : IAsyncLifetime
         Assert.Contains("0次", body);
         Assert.Empty(errors);
     }
+
+    [Fact(DisplayName = "登录用户生成分享链接，匿名可只读查看")]
+    public async Task TracePage_ShareLink_ReadOnly()
+    {
+        var id = "not-exists-" + Guid.NewGuid().ToString("n")[..8];
+
+        // 分享入口需要登录，生成后应跳回带令牌的调用链地址
+        await _page!.GotoAsync($"/trace/share?id={id}", new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 30_000 });
+        var shareUrl = _page.Url;
+        _output.WriteLine($"share={shareUrl}");
+
+        Assert.Contains("/trace?id=", shareUrl);
+        Assert.Contains("token=", shareUrl);
+
+        // 生成链接后给分享者明确反馈，避免"点了没反应"的错觉
+        Assert.Contains("分享链接已生成", await _page.Locator("body").InnerTextAsync());
+
+        // 未登录上下文打开分享链接，应可查看且标记为只读
+        var context = await _browser!.NewContextAsync(new BrowserNewContextOptions
+        {
+            BaseURL = _fixture.BaseUrl,
+            IgnoreHTTPSErrors = true,
+            Locale = "zh-CN",
+        });
+        try
+        {
+            var page = await context.NewPageAsync();
+            var resp = await page.GotoAsync(shareUrl, new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 30_000 });
+
+            Assert.Equal(200, resp?.Status);
+
+            var body = await page.Locator("body").InnerTextAsync();
+            Assert.Contains("通过分享链接查看", body);
+        }
+        finally
+        {
+            await context.DisposeAsync();
+        }
+    }
 }
