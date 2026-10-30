@@ -49,7 +49,7 @@ public class TraceMinuteStatController : ReadOnlyEntityController<TraceMinuteSta
             p.PageSize = 24 * 60 / 5;
         }
 
-        if (appId > 0) p.RetrieveState = true;
+        if (MonitorSearchHelper.NeedState(appId)) p.RetrieveState = true;
 
         // 标记热门应用，缩短统计计算周期
         if (appId > 0) _hotApp.SetHotAppAsync(appId);

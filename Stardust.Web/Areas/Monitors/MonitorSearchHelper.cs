@@ -3,6 +3,16 @@ namespace Stardust.Web.Areas.Monitors;
 /// <summary>监控查询辅助</summary>
 public static class MonitorSearchHelper
 {
+    /// <summary>是否需要列表合计行</summary>
+    /// <remarks>
+    /// 合计行会对查询范围执行 SUM(Total/TotalCost/TotalValue)。跨应用且时间跨度大时，MySQL 的 SUM 返回 DECIMAL，
+    /// 累计值一旦超出 Int64 范围，XCode 在装回实体时抛 OverflowException，整个列表页 500。
+    /// 统计表的合计行只在选定单个应用时才有意义，因此限定应用后再开启。
+    /// </remarks>
+    /// <param name="appId">应用编号，-1表示全部</param>
+    /// <returns>是否需要合计行</returns>
+    public static Boolean NeedState(Int32 appId) => appId > 0;
+
     /// <summary>解析列表查询的时间范围</summary>
     /// <remarks>
     /// 未选择时间时，选中应用按统计时间展示趋势；列表页默认只查当天。

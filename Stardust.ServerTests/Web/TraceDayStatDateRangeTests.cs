@@ -59,4 +59,13 @@ public class TraceDayStatDateRangeTests
         Assert.Equal(from, start);
         Assert.Equal(to, end);
     }
+
+    [Fact]
+    [DisplayName("只在选定单个应用时计算合计行，避免跨应用 SUM 溢出与慢查询")]
+    public void NeedState_OnlyForSpecificApp()
+    {
+        Assert.False(web::Stardust.Web.Areas.Monitors.MonitorSearchHelper.NeedState(-1));
+        Assert.False(web::Stardust.Web.Areas.Monitors.MonitorSearchHelper.NeedState(0));
+        Assert.True(web::Stardust.Web.Areas.Monitors.MonitorSearchHelper.NeedState(1));
+    }
 }

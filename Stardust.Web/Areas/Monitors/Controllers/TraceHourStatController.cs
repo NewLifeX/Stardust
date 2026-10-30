@@ -48,7 +48,7 @@ public class TraceHourStatController : ReadOnlyEntityController<TraceHourStat>
             p.PageSize = 100;
         }
 
-        p.RetrieveState = true;
+        p.RetrieveState = MonitorSearchHelper.NeedState(appId);
 
         // 标记热门应用，缩短统计计算周期
         if (appId > 0) _hotApp.SetHotAppAsync(appId);
