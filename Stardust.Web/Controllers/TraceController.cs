@@ -33,11 +33,8 @@ public class TraceController : ControllerBaseX
 
         var list = Search(id, pager, !ReadOnly);
 
-        if (list.Count > 0)
-        {
-            var appName = list[0].AppName;
-            if (appName.IsNullOrEmpty()) ViewBag.Title = $"{appName}调用链";
-        }
+        // 有应用名时带上应用名，便于多标签页区分；无数据或未知应用时退回通用标题
+        ViewBag.Title = list.Count > 0 && !list[0].AppName.IsNullOrEmpty() ? $"{list[0].AppName}调用链" : "调用链";
 
         PageSetting.EnableNavbar = false;
 
@@ -228,11 +225,7 @@ public class TraceController : ControllerBaseX
         };
         if (model.Layout.IsNullOrEmpty()) model.Layout = "force";
 
-        if (list.Count > 0)
-        {
-            var appName = list[0].AppName;
-            if (appName.IsNullOrEmpty()) model.Title = $"{appName}关系图";
-        }
+        model.Title = list.Count > 0 && !list[0].AppName.IsNullOrEmpty() ? $"{list[0].AppName}关系图" : "关系图";
 
         PageSetting.EnableNavbar = false;
 

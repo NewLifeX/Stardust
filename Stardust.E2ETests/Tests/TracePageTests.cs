@@ -165,6 +165,9 @@ public class TracePageTests : IAsyncLifetime
 
             var body = await page.Locator("body").InnerTextAsync();
             Assert.Contains("通过分享链接查看", body);
+
+            // 浏览器标签页标题不再是空白
+            Assert.Contains("调用链", await page.TitleAsync());
         }
         finally
         {
