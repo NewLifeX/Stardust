@@ -159,9 +159,17 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     [Description("Fixed city. By default, the city is calculated automatically from the IP. When enabled, automatic calculation stops and the city is set manually")]
     public Boolean FixedCity { get; set; }
 
-    /// <summary>调用链允许匿名。允许未登录用户访问/trace调用链页面，监控数据可能含敏感信息，默认false</summary>
-    [Description("Allow anonymous trace access. Allow unauthenticated users to access the /trace trace page; monitoring data may contain sensitive information. Default false.")]
+    /// <summary>调用链允许匿名。允许未登录用户访问/trace调用链页面，仅限内网或公开演示部署；监控数据含请求参数、异常堆栈与客户端IP，默认false</summary>
+    [Description("Allow anonymous trace access. Allow unauthenticated users to access the /trace page; intended only for intranet or public demo deployments. Monitoring data includes request parameters, exception stacks and client IPs. Default false.")]
     public Boolean TraceAnonymous { get; set; } = false;
+
+    /// <summary>调用链分享有效期。登录用户生成分享链接的有效期，单位分钟，默认1440（24小时）；小于等于0表示长期有效</summary>
+    [Description("Trace share link validity in minutes for signed-in users; default 1440 (24 hours); 0 or less means permanent.")]
+    public Int32 TraceShareExpire { get; set; } = 1440;
+
+    /// <summary>调用链分享密钥。签名分享链接的HMAC密钥，为空时自动生成并持久化；轮换该密钥将使全部分享链接失效</summary>
+    [Description("Trace share secret. HMAC secret used to sign share links; auto-generated and persisted when empty. Rotating it invalidates all share links.")]
+    public String TraceShareSecret { get; set; }
 
     /// <summary>dotNet同步周期。从官网抓取.NET运行时安装包信息，0表示禁用，单位秒，默认43200（12小时）</summary>
     [Description("dotNet sync interval. Fetch .NET runtime installer info from the official site, 0 disables, unit: seconds, default 43200 (12 hours)")]
