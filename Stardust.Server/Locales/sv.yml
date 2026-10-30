@@ -207,7 +207,7 @@
 "File storage pull. Whether to actively pull new files published by other nodes. Default false.": "Hämtning från fillagring. Om nya filer som publiceras av andra noder ska hämtas aktivt. Standard false."
 "Upstream server. Reports data synchronously to the upstream server.": "Överordnad server. Rapporterar data synkront till den överordnade servern."
 "Fixed city. By default, the city is calculated automatically from the IP. When enabled, automatic calculation stops and the city is set manually": "Fast stad. Som standard beräknas staden automatiskt från IP-adressen. När det är aktiverat beräknas den inte längre automatiskt, utan staden anges manuellt"
-"Allow anonymous trace access. Allow unauthenticated users to access the /trace trace page; monitoring data may contain sensitive information. Default false.": "Tillåt anonym spårningsåtkomst. Låt utloggade användare komma åt spårningssidan /trace; övervakningsdata kan innehålla känslig information. Standard false."
+"Allow anonymous trace access. Allow unauthenticated users to access the /trace page; intended only for intranet or public demo deployments. Monitoring data includes request parameters, exception stacks and client IPs. Default false.": "Tillåt anonym spårningsåtkomst. Låt utloggade användare komma åt spårningssidan /trace; övervakningsdata kan innehålla känslig information. Standard false."
 "dotNet sync interval. Fetch .NET runtime installer info from the official site, 0 disables, unit: seconds, default 43200 (12 hours)": "dotNet-synkroniseringsintervall. Hämta .NET runtime-installationsinformation från den officiella webbplatsen, 0 inaktiverar, enhet sekunder, standard 43200 (12 timmar)"
 "dotNet sync URL. Official API URL for fetching .NET runtime versions, supports the {major} placeholder": "dotNet-synkroniseringsadress. Officiell API-adress för att hämta .NET runtime-versioner, stöder platshållaren {major}"
 "Stardust resource download base address. Base URL for StarAgent installers/scripts; defaults to the official address": "Basadress för nedladdning av Stardust-resurser. Bas-URL för StarAgent-installationsprogram/skript; standard den officiella adressen"
@@ -225,3 +225,4 @@
 "DotNetSyncService.Sync {0}": "DotNetSyncService synkroniserar {0}"
 "DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService kunde inte synkronisera {0}: {1}"
 "DotNetSyncService.Error {0}": "Fel i DotNetSyncService: {0}"
+"Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open.": "Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open."

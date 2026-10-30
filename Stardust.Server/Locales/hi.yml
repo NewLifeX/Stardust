@@ -207,7 +207,7 @@
 "File storage pull. Whether to actively pull new files published by other nodes. Default false.": "फ़ाइल संग्रहण पुल। क्या अन्य नोड्स द्वारा प्रकाशित नई फ़ाइलों को सक्रिय रूप से खींचें। डिफ़ॉल्ट false।"
 "Upstream server. Reports data synchronously to the upstream server.": "अपस्ट्रीम सर्वर। अपस्ट्रीम सर्वर को डेटा समकालिक रूप से रिपोर्ट करता है।"
 "Fixed city. By default, the city is calculated automatically from the IP. When enabled, automatic calculation stops and the city is set manually": "निश्चित शहर। डिफ़ॉल्ट रूप से शहर IP से स्वतः गणना किया जाता है। सक्षम करने पर स्वतः गणना बंद हो जाती है और शहर मैन्युअल रूप से सेट किया जाता है"
-"Allow anonymous trace access. Allow unauthenticated users to access the /trace trace page; monitoring data may contain sensitive information. Default false.": "अनाम ट्रेस एक्सेस की अनुमति दें। बिना लॉगिन किए उपयोगकर्ताओं को /trace ट्रेस पृष्ठ तक पहुँचने दें; निगरानी डेटा में संवेदनशील जानकारी हो सकती है। डिफ़ॉल्ट false।"
+"Allow anonymous trace access. Allow unauthenticated users to access the /trace page; intended only for intranet or public demo deployments. Monitoring data includes request parameters, exception stacks and client IPs. Default false.": "अनाम ट्रेस एक्सेस की अनुमति दें। बिना लॉगिन किए उपयोगकर्ताओं को /trace ट्रेस पृष्ठ तक पहुँचने दें; निगरानी डेटा में संवेदनशील जानकारी हो सकती है। डिफ़ॉल्ट false।"
 "dotNet sync interval. Fetch .NET runtime installer info from the official site, 0 disables, unit: seconds, default 43200 (12 hours)": "dotNet सिंक अंतराल। आधिकारिक साइट से .NET रनटाइम इंस्टॉलर जानकारी प्राप्त करें, 0 का अर्थ अक्षम, इकाई सेकंड, डिफ़ॉल्ट 43200 (12 घंटे)"
 "dotNet sync URL. Official API URL for fetching .NET runtime versions, supports the {major} placeholder": "dotNet सिंक पता। .NET रनटाइम संस्करण प्राप्त करने के लिए आधिकारिक API पता, {major} प्लेसहोल्डर समर्थित"
 "Stardust resource download base address. Base URL for StarAgent installers/scripts; defaults to the official address": "Stardust संसाधन डाउनलोड आधार पता। StarAgent इंस्टॉलर/स्क्रिप्ट के लिए आधार URL; डिफ़ॉल्ट आधिकारिक पता"
@@ -225,3 +225,4 @@
 "DotNetSyncService.Sync {0}": "DotNetSyncService {0} को सिंक कर रहा है"
 "DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService {0} को सिंक नहीं कर सका: {1}"
 "DotNetSyncService.Error {0}": "DotNetSyncService त्रुटि: {0}"
+"Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open.": "Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open."

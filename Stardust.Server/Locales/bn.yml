@@ -207,7 +207,7 @@
 "File storage pull. Whether to actively pull new files published by other nodes. Default false.": "ফাইল স্টোরেজ পুল। অন্য নোড দ্বারা প্রকাশিত নতুন ফাইল সক্রিয়ভাবে পুল করবেন কিনা। ডিফল্ট false।"
 "Upstream server. Reports data synchronously to the upstream server.": "আপস্ট্রিম সার্ভার। আপস্ট্রিম সার্ভারে সমকালীনভাবে ডেটা রিপোর্ট করে।"
 "Fixed city. By default, the city is calculated automatically from the IP. When enabled, automatic calculation stops and the city is set manually": "নির্দিষ্ট শহর। ডিফল্টভাবে IP থেকে শহর স্বয়ংক্রিয়ভাবে গণনা করা হয়। সক্রিয় করলে স্বয়ংক্রিয় গণনা বন্ধ হয়ে শহরটি ম্যানুয়ালি সেট করা হয়"
-"Allow anonymous trace access. Allow unauthenticated users to access the /trace trace page; monitoring data may contain sensitive information. Default false.": "বেনামী ট্রেস অ্যাক্সেসের অনুমতি দিন। লগইন না করা ব্যবহারকারীদের /trace ট্রেস পৃষ্ঠা দেখার অনুমতি দিন; মনিটরিং ডেটায় সংবেদনশীল তথ্য থাকতে পারে। ডিফল্ট false।"
+"Allow anonymous trace access. Allow unauthenticated users to access the /trace page; intended only for intranet or public demo deployments. Monitoring data includes request parameters, exception stacks and client IPs. Default false.": "বেনামী ট্রেস অ্যাক্সেসের অনুমতি দিন। লগইন না করা ব্যবহারকারীদের /trace ট্রেস পৃষ্ঠা দেখার অনুমতি দিন; মনিটরিং ডেটায় সংবেদনশীল তথ্য থাকতে পারে। ডিফল্ট false।"
 "dotNet sync interval. Fetch .NET runtime installer info from the official site, 0 disables, unit: seconds, default 43200 (12 hours)": "dotNet সিঙ্ক ব্যবধান। অফিসিয়াল সাইট থেকে .NET রানটাইম ইনস্টলার তথ্য আনুন, 0 মানে নিষ্ক্রিয়, একক সেকেন্ড, ডিফল্ট 43200 (12 ঘণ্টা)"
 "dotNet sync URL. Official API URL for fetching .NET runtime versions, supports the {major} placeholder": "dotNet সিঙ্ক ঠিকানা। .NET রানটাইম সংস্করণ আনতে অফিসিয়াল API ঠিকানা, {major} প্লেসহোল্ডার সমর্থিত"
 "Stardust resource download base address. Base URL for StarAgent installers/scripts; defaults to the official address": "Stardust রিসোর্স ডাউনলোড বেস ঠিকানা। StarAgent ইনস্টলার/স্ক্রিপ্টের বেস URL; ডিফল্ট অফিসিয়াল ঠিকানা"
@@ -225,3 +225,4 @@
 "DotNetSyncService.Sync {0}": "DotNetSyncService {0} সিঙ্ক করছে"
 "DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService {0} সিঙ্ক করতে ব্যর্থ: {1}"
 "DotNetSyncService.Error {0}": "DotNetSyncService ত্রুটি: {0}"
+"Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open.": "Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open."

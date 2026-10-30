@@ -37,7 +37,8 @@ public class AppLoginSecurityTests : StarTestBase
     public async Task Login_ExistingApp_WrongSecret_Rejected()
     {
         var name = "sec_" + Rand.NextString(8);
-        var app = new App { Name = name, Secret = "secret-abc-123", Enable = true };
+        // 显式关闭重注册，验证安全加固（默认跟随全局，全局开放时不适用本断言）
+        var app = new App { Name = name, Secret = "secret-abc-123", Enable = true, ReRegister = ReRegisterModes.Off };
         app.Insert();
         try
         {
@@ -59,7 +60,8 @@ public class AppLoginSecurityTests : StarTestBase
     public async Task Login_ExistingApp_EmptySecret_Rejected()
     {
         var name = "sec_" + Rand.NextString(8);
-        var app = new App { Name = name, Secret = "secret-abc-456", Enable = true };
+        // 显式关闭重注册，验证安全加固（默认跟随全局，全局开放时不适用本断言）
+        var app = new App { Name = name, Secret = "secret-abc-456", Enable = true, ReRegister = ReRegisterModes.Off };
         app.Insert();
         try
         {
@@ -112,17 +114,17 @@ public class AppLoginSecurityTests : StarTestBase
         }
     }
 
-    [Fact(DisplayName = "收敛窗口模式下，空密钥登录恢复旧行为并下发密钥")]
+    [Fact(DisplayName = "临时放行模式下，空密钥登录恢复旧行为并下发密钥")]
     public async Task Login_ExistingApp_AutoMode_EmptySecret_Recover()
     {
         var name = "sec_" + Rand.NextString(8);
-        var app = new App { Name = name, Secret = "secret-rec-001", Enable = true, ReRegister = ReRegisterModes.Auto };
+        var app = new App { Name = name, Secret = "secret-rec-001", Enable = true, ReRegister = ReRegisterModes.Temporary };
         app.Insert();
         try
         {
             var body = await Login(name, "");
 
-            // 收敛窗口开启时按旧逻辑放行：签发令牌并回传真实密钥，供新实例自动接入
+            // 临时放行开启时按旧逻辑放行：签发令牌并回传真实密钥，供新实例自动接入
             Assert.Contains("\"token\"", body, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("secret-rec-001", body, StringComparison.OrdinalIgnoreCase);
         }
@@ -132,17 +134,17 @@ public class AppLoginSecurityTests : StarTestBase
         }
     }
 
-    [Fact(DisplayName = "收敛窗口模式下，错误密钥登录恢复旧行为并下发密钥")]
+    [Fact(DisplayName = "临时放行模式下，错误密钥登录恢复旧行为并下发密钥")]
     public async Task Login_ExistingApp_AutoMode_WrongSecret_Recover()
     {
         var name = "sec_" + Rand.NextString(8);
-        var app = new App { Name = name, Secret = "secret-rec-002", Enable = true, ReRegister = ReRegisterModes.Auto };
+        var app = new App { Name = name, Secret = "secret-rec-002", Enable = true, ReRegister = ReRegisterModes.Temporary };
         app.Insert();
         try
         {
             var body = await Login(name, "wrong-secret");
 
-            // 收敛窗口开启时按旧逻辑放行：签发令牌并回传真实密钥
+            // 临时放行开启时按旧逻辑放行：签发令牌并回传真实密钥
             Assert.Contains("\"token\"", body, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("secret-rec-002", body, StringComparison.OrdinalIgnoreCase);
         }
@@ -152,17 +154,17 @@ public class AppLoginSecurityTests : StarTestBase
         }
     }
 
-    [Fact(DisplayName = "已存在应用默认关闭重注册，错误密钥登录仍被拒绝（回归保护）")]
+    [Fact(DisplayName = "已存在应用显式关闭重注册时，错误密钥登录被拒绝（回归保护）")]
     public async Task Login_ExistingApp_DefaultOff_Rejected()
     {
         var name = "sec_" + Rand.NextString(8);
-        var app = new App { Name = name, Secret = "secret-rec-003", Enable = true };
+        var app = new App { Name = name, Secret = "secret-rec-003", Enable = true, ReRegister = ReRegisterModes.Off };
         app.Insert();
         try
         {
             var body = await Login(name, "wrong-secret");
 
-            // 默认（ReRegister=关闭）维持安全收紧：不得泄露真实密钥，不得签发令牌
+            // 显式关闭（ReRegister=关闭）维持安全收紧：不得泄露真实密钥，不得签发令牌
             Assert.DoesNotContain("secret-rec-003", body, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("\"code\"", body, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain("\"token\"", body, StringComparison.OrdinalIgnoreCase);
@@ -173,11 +175,105 @@ public class AppLoginSecurityTests : StarTestBase
         }
     }
 
-    [Fact(DisplayName = "收敛窗口模式下，正确密钥登录成功自动关闭窗口")]
+    [Fact(DisplayName = "应用跟随全局且全局开放时，错误密钥可按开放模式领取密钥")]
+    public async Task Login_ExistingApp_DefaultGlobalOpen_WrongSecret_Allowed()
+    {
+        var name = "sec_" + Rand.NextString(8);
+        var app = new App { Name = name, Secret = "secret-inherit-open", Enable = true, ReRegister = ReRegisterModes.Default };
+        app.Insert();
+        try
+        {
+            var body = await WithGlobalReRegister(ReRegisterModes.Open, () => Login(name, "wrong-secret"));
+
+            // 全局开放：放行并回传真实密钥，应用自身配置不变（继续保持跟随全局）
+            Assert.Contains("\"token\"", body, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("secret-inherit-open", body, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(ReRegisterModes.Default, App.FindByName(name)?.ReRegister);
+        }
+        finally
+        {
+            app.Delete();
+        }
+    }
+
+    [Fact(DisplayName = "应用跟随全局且全局关闭时，错误密钥登录被拒绝")]
+    public async Task Login_ExistingApp_DefaultGlobalOff_Rejected()
+    {
+        var name = "sec_" + Rand.NextString(8);
+        var app = new App { Name = name, Secret = "secret-inherit-off", Enable = true, ReRegister = ReRegisterModes.Default };
+        app.Insert();
+        try
+        {
+            var body = await WithGlobalReRegister(ReRegisterModes.Off, () => Login(name, "wrong-secret"));
+
+            // 全局关闭：不得泄露真实密钥，不得签发令牌
+            Assert.DoesNotContain("secret-inherit-off", body, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("\"code\"", body, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("\"token\"", body, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            app.Delete();
+        }
+    }
+
+    [Fact(DisplayName = "应用显式关闭时，全局开放也不能放行错误密钥")]
+    public async Task Login_ExistingApp_ExplicitOff_GlobalOpen_Rejected()
+    {
+        var name = "sec_" + Rand.NextString(8);
+        var app = new App { Name = name, Secret = "secret-explicit-off", Enable = true, ReRegister = ReRegisterModes.Off };
+        app.Insert();
+        try
+        {
+            var body = await WithGlobalReRegister(ReRegisterModes.Open, () => Login(name, "wrong-secret"));
+
+            // 应用显式关闭优先于全局默认：仍不得放行
+            Assert.DoesNotContain("secret-explicit-off", body, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("\"token\"", body, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            app.Delete();
+        }
+    }
+
+    [Fact(DisplayName = "新应用自动注册后重注册模式默认为跟随全局")]
+    public async Task Login_NewApp_DefaultsToDefault()
+    {
+        var name = "sec_" + Rand.NextString(8);
+        try
+        {
+            var body = await Login(name, "");
+
+            Assert.Contains("\"token\"", body, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(ReRegisterModes.Default, App.FindByName(name)?.ReRegister);
+        }
+        finally
+        {
+            App.FindByName(name)?.Delete();
+        }
+    }
+
+    private static async Task<String> WithGlobalReRegister(ReRegisterModes mode, Func<Task<String>> action)
+    {
+        var set = StarServerSetting.Current;
+        var old = set.ReRegister;
+        set.ReRegister = mode;
+        try
+        {
+            return await action();
+        }
+        finally
+        {
+            set.ReRegister = old;
+        }
+    }
+
+    [Fact(DisplayName = "临时放行模式下，正确密钥登录成功自动关闭窗口")]
     public async Task Login_ExistingApp_AutoMode_CorrectSecret_AutoClose()
     {
         var name = "sec_" + Rand.NextString(8);
-        var app = new App { Name = name, Secret = "secret-ok-acc", Enable = true, ReRegister = ReRegisterModes.Auto };
+        var app = new App { Name = name, Secret = "secret-ok-acc", Enable = true, ReRegister = ReRegisterModes.Temporary };
         app.Insert();
         try
         {
@@ -186,7 +282,7 @@ public class AppLoginSecurityTests : StarTestBase
             // 正确密钥登录成功并下发令牌
             Assert.Contains("\"token\"", body, StringComparison.OrdinalIgnoreCase);
 
-            // 密钥配对成功，收敛窗口自动关闭（不再出现在窗口集合）
+            // 密钥配对成功，临时放行自动关闭（不再出现在窗口集合）
             Assert.DoesNotContain(name, App.FindAllReRegisterWindow().Select(e => e.Name));
         }
         finally

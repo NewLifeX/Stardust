@@ -89,3 +89,4 @@
 "Decoupled WebApi backend for the Stardust distributed service platform. Reuses the area controllers and business services of Stardust.Web while exposing only JSON endpoints (GetPage/GetFields/Insert/Update/Delete and custom actions of EntityController), without Razor views, MCP, or static sites, for direct use by the Stardust.Web.Vue frontend.": "Stardust 分散サービスプラットフォーム向けの分離された WebApi バックエンド。Stardust.Web のエリアコントローラーとビジネスサービスを再利用しつつ、JSON エンドポイント（GetPage/GetFields/Insert/Update/Delete および EntityController のカスタムアクション）のみを公開し、Razor ビュー、MCP、静的サイトを含まず、Stardust.Web.Vue フロントエンドから直接利用できます。"
 "Successfully deleted {0}": "{0} を削除しました"
 "Unknown tool: {0}": "不明なツール: {0}"
+"Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open.": "Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open."

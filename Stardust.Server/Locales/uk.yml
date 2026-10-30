@@ -207,7 +207,7 @@
 "File storage pull. Whether to actively pull new files published by other nodes. Default false.": "Отримання з файлового сховища. Чи активно завантажувати нові файли, опубліковані іншими вузлами. За замовчуванням false."
 "Upstream server. Reports data synchronously to the upstream server.": "Вищий сервер. Синхронно передає дані вищому серверу."
 "Fixed city. By default, the city is calculated automatically from the IP. When enabled, automatic calculation stops and the city is set manually": "Фіксоване місто. За замовчуванням місто обчислюється автоматично за IP. Після ввімкнення автоматичний розрахунок вимикається, і місто задається вручну"
-"Allow anonymous trace access. Allow unauthenticated users to access the /trace trace page; monitoring data may contain sensitive information. Default false.": "Дозволити анонімний доступ до трасування. Дозволяє неавторизованим користувачам відкривати сторінку трасування /trace; дані моніторингу можуть містити конфіденційну інформацію. За замовчуванням false."
+"Allow anonymous trace access. Allow unauthenticated users to access the /trace page; intended only for intranet or public demo deployments. Monitoring data includes request parameters, exception stacks and client IPs. Default false.": "Дозволити анонімний доступ до трасування. Дозволяє неавторизованим користувачам відкривати сторінку трасування /trace; дані моніторингу можуть містити конфіденційну інформацію. За замовчуванням false."
 "dotNet sync interval. Fetch .NET runtime installer info from the official site, 0 disables, unit: seconds, default 43200 (12 hours)": "Інтервал синхронізації dotNet. Отримання відомостей про інсталятор .NET runtime з офіційного сайту, 0 — вимкнено, одиниця — секунди, типово 43200 (12 годин)"
 "dotNet sync URL. Official API URL for fetching .NET runtime versions, supports the {major} placeholder": "Адреса синхронізації dotNet. Офіційна адреса API для отримання версій .NET runtime, підтримує заповнювач {major}"
 "Stardust resource download base address. Base URL for StarAgent installers/scripts; defaults to the official address": "Базова адреса завантаження ресурсів Stardust. Базовий URL для інсталяторів/скриптів StarAgent; за замовчуванням офіційна адреса"
@@ -225,3 +225,4 @@
 "DotNetSyncService.Sync {0}": "DotNetSyncService синхронізує {0}"
 "DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService не вдалося синхронізувати {0}: {1}"
 "DotNetSyncService.Error {0}": "Помилка DotNetSyncService: {0}"
+"Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open.": "Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open."

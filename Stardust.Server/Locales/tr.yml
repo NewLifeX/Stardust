@@ -207,7 +207,7 @@
 "File storage pull. Whether to actively pull new files published by other nodes. Default false.": "Dosya depolama çekme. Diğer düğümlerin yayımladığı yeni dosyaların etkin olarak çekilip çekilmeyeceği. Varsayılan false."
 "Upstream server. Reports data synchronously to the upstream server.": "Üst sunucu. Verileri üst sunucuya eşzamanlı olarak bildirir."
 "Fixed city. By default, the city is calculated automatically from the IP. When enabled, automatic calculation stops and the city is set manually": "Sabit şehir. Varsayılan olarak şehir IP'den otomatik hesaplanır. Etkinleştirildiğinde otomatik hesaplama durur ve şehir elle ayarlanır"
-"Allow anonymous trace access. Allow unauthenticated users to access the /trace trace page; monitoring data may contain sensitive information. Default false.": "Anonim izleme erişimine izin ver. Oturum açmamış kullanıcıların /trace izleme sayfasına erişmesine izin verir; izleme verileri hassas bilgiler içerebilir. Varsayılan false."
+"Allow anonymous trace access. Allow unauthenticated users to access the /trace page; intended only for intranet or public demo deployments. Monitoring data includes request parameters, exception stacks and client IPs. Default false.": "Anonim izleme erişimine izin ver. Oturum açmamış kullanıcıların /trace izleme sayfasına erişmesine izin verir; izleme verileri hassas bilgiler içerebilir. Varsayılan false."
 "dotNet sync interval. Fetch .NET runtime installer info from the official site, 0 disables, unit: seconds, default 43200 (12 hours)": "dotNet eşitleme aralığı. Resmi siteden .NET çalışma zamanı yükleyici bilgilerini al, 0 devre dışı bırakır, birim saniye, varsayılan 43200 (12 saat)"
 "dotNet sync URL. Official API URL for fetching .NET runtime versions, supports the {major} placeholder": "dotNet eşitleme adresi. .NET çalışma zamanı sürümlerini almak için resmi API adresi, {major} yer tutucusunu destekler"
 "Stardust resource download base address. Base URL for StarAgent installers/scripts; defaults to the official address": "Stardust kaynak indirme temel adresi. StarAgent yükleyicileri/betikleri için temel URL; varsayılan resmi adres"
@@ -225,3 +225,4 @@
 "DotNetSyncService.Sync {0}": "DotNetSyncService {0} eşitliyor"
 "DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService {0} eşitlemesi başarısız: {1}"
 "DotNetSyncService.Error {0}": "DotNetSyncService hatası: {0}"
+"Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open.": "Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open."

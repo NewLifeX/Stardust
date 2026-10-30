@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Remoting;
 using NewLife.Remoting.Extensions;
@@ -44,7 +44,7 @@ public class OAuthController(ITokenService tokenService, AppTokenService appToke
 
                 app.WriteHistory("Authorize", true, model.UserName, olt?.Version, ip, clientId);
 
-                // 收敛窗口/开放模式：随令牌下发密钥，供客户端保存后自动收敛
+                // 临时放行/开放模式：随令牌下发密钥，供客户端保存后自动收敛
                 return WithSecret(tokenModel, app);
             }
             // 刷新令牌
@@ -93,9 +93,10 @@ public class OAuthController(ITokenService tokenService, AppTokenService appToke
     /// <param name="token">令牌</param>
     /// <param name="app">应用</param>
     /// <returns>携带密钥的扩展令牌</returns>
-    private static IToken WithSecret(IToken token, App app)
+    private IToken WithSecret(IToken token, App app)
     {
-        if (app.ReRegister is not (ReRegisterModes.Auto or ReRegisterModes.Open)) return token;
+        // 跟随全局的应用按全局默认判定是否下发密钥
+        if (app.ReRegister.Resolve(setting.ReRegister) is not (ReRegisterModes.Temporary or ReRegisterModes.Open)) return token;
         if (app.Secret.IsNullOrEmpty()) return token;
 
         var model = new AppTokenModel

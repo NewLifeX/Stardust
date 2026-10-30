@@ -11,6 +11,7 @@ using NewLife.Remoting.Models;
 using NewLife.Security;
 using Stardust.Data;
 using Stardust.Data.Nodes;
+using Stardust.Models;
 using Stardust.Server;
 using Xunit;
 
@@ -52,8 +53,8 @@ public class NodeCommandSecurityTests : StarTestBase
     {
         var appName = "v2e_" + Rand.NextString(8);
 
-        // 安全治理：新建应用强制自动生成密钥，不再存在空密钥应用
-        var app = new App { Name = appName, Enable = true, AllowControlNodes = "*" };
+        // 安全治理：新建应用强制自动生成密钥，不再存在空密钥应用；显式关闭重注册，避免全局开放时错密钥重注册
+        var app = new App { Name = appName, Enable = true, AllowControlNodes = "*", ReRegister = ReRegisterModes.Off };
         app.Insert();
         try
         {

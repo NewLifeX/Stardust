@@ -13,7 +13,7 @@ using Xunit;
 
 namespace ServerTest.Controllers;
 
-/// <summary>OAuth令牌接口重注册模式测试。验证收敛窗口/开放模式放行存量错密钥应用，并在客户端携带正确密钥后收敛关窗</summary>
+/// <summary>OAuth令牌接口重注册模式测试。验证临时放行/开放模式放行存量错密钥应用，并在客户端携带正确密钥后收敛关窗</summary>
 [Collection(StarTestServerCollection.Name)]
 public class OAuthReRegisterTests : StarTestBase
 {
@@ -82,20 +82,20 @@ public class OAuthReRegisterTests : StarTestBase
         }
     }
 
-    [Fact(DisplayName = "收敛窗口错密钥放行，携带正确密钥后自动关窗")]
+    [Fact(DisplayName = "临时放行错密钥放行，携带正确密钥后自动关窗")]
     public async Task Auto_AllowThenConverge_Closed()
     {
         var name = "oar_" + Rand.NextString(8);
-        var app = new App { Name = name, Secret = "oar-auto-1", Enable = true, ReRegister = ReRegisterModes.Auto };
+        var app = new App { Name = name, Secret = "oar-auto-1", Enable = true, ReRegister = ReRegisterModes.Temporary };
         app.Insert();
         try
         {
-            // 第一次：错误密钥按收敛窗口放行，随令牌下发密钥
+            // 第一次：错误密钥按临时放行放行，随令牌下发密钥
             var body1 = await PostAsync(name, "wrong-password");
             Assert.Contains("\"secret\":\"oar-auto-1\"", body1);
-            Assert.Equal(ReRegisterModes.Auto, App.FindByName(name)?.ReRegister);
+            Assert.Equal(ReRegisterModes.Temporary, App.FindByName(name)?.ReRegister);
 
-            // 第二次：携带正确密钥，收敛窗口自动关闭，不再下发密钥
+            // 第二次：携带正确密钥，临时放行自动关闭，不再下发密钥
             var body2 = await PostAsync(name, "oar-auto-1");
             Assert.Contains("\"access_token\"", body2);
             Assert.DoesNotContain("\"secret\":", body2);
@@ -122,6 +122,60 @@ public class OAuthReRegisterTests : StarTestBase
         finally
         {
             app.Delete();
+        }
+    }
+
+    [Fact(DisplayName = "跟随全局且全局开放时，错密钥放行并下发密钥")]
+    public async Task Default_GlobalOpen_Allowed()
+    {
+        var name = "oar_" + Rand.NextString(8);
+        var app = new App { Name = name, Secret = "oar-inherit-open", Enable = true, ReRegister = ReRegisterModes.Default };
+        app.Insert();
+        try
+        {
+            var body = await WithGlobalReRegister(ReRegisterModes.Open, () => PostAsync(name, null));
+
+            // 全局开放：随令牌下发密钥，应用自身仍保持跟随全局
+            Assert.Contains("\"secret\":\"oar-inherit-open\"", body);
+            Assert.Equal(ReRegisterModes.Default, App.FindByName(name)?.ReRegister);
+        }
+        finally
+        {
+            app.Delete();
+        }
+    }
+
+    [Fact(DisplayName = "跟随全局且全局关闭时，错密钥被拒绝且不下发密钥")]
+    public async Task Default_GlobalOff_Rejected()
+    {
+        var name = "oar_" + Rand.NextString(8);
+        var app = new App { Name = name, Secret = "oar-inherit-off", Enable = true, ReRegister = ReRegisterModes.Default };
+        app.Insert();
+        try
+        {
+            var body = await WithGlobalReRegister(ReRegisterModes.Off, () => PostAsync(name, null));
+
+            Assert.Contains("非法访问应用", body);
+            Assert.DoesNotContain("oar-inherit-off", body);
+        }
+        finally
+        {
+            app.Delete();
+        }
+    }
+
+    private static async Task<String> WithGlobalReRegister(ReRegisterModes mode, Func<Task<String>> action)
+    {
+        var set = StarServerSetting.Current;
+        var old = set.ReRegister;
+        set.ReRegister = mode;
+        try
+        {
+            return await action();
+        }
+        finally
+        {
+            set.ReRegister = old;
         }
     }
 

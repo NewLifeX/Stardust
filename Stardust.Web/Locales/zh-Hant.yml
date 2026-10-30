@@ -148,3 +148,4 @@
 "追踪": "追蹤"
 "MySql监控": "MySql 監控"
 "Redis管理": "Redis 管理"
+"Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open.": "預設重註冊模式。應用「重註冊模式=預設」時統一採用該策略：開放、可信接入、臨時放行或關閉，預設開放"

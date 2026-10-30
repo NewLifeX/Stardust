@@ -2,6 +2,7 @@
 using NewLife.Remoting.Extensions.Services;
 using NewLife.Web;
 using Stardust.Data;
+using Stardust.Models;
 using Stardust.Server;
 using Stardust.Server.Services;
 using Xunit;
@@ -16,7 +17,8 @@ public class AppServiceTests
         var app = App.FindByName("test");
         if (app != null) app.Delete();
 
-        var service = new AppTokenService();
+        // 固定全局默认关闭，避免受平台设置影响；应用自动注册后默认跟随全局
+        var service = new AppTokenService(new StarServerSetting { ReRegister = ReRegisterModes.Off });
 
         // 没有自动注册
         var ex = Assert.Throws<ApiException>(() => service.Authorize("test", "xxx", false));

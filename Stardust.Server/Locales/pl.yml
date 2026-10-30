@@ -207,7 +207,7 @@
 "File storage pull. Whether to actively pull new files published by other nodes. Default false.": "Pobieranie z magazynu plików. Czy aktywnie pobierać nowe pliki publikowane przez inne węzły. Domyślnie false."
 "Upstream server. Reports data synchronously to the upstream server.": "Serwer nadrzędny. Synchronicznie raportuje dane do serwera nadrzędnego."
 "Fixed city. By default, the city is calculated automatically from the IP. When enabled, automatic calculation stops and the city is set manually": "Stałe miasto. Domyślnie miasto jest obliczane automatycznie na podstawie IP. Po włączeniu obliczanie automatyczne jest wyłączane, a miasto ustawiane ręcznie"
-"Allow anonymous trace access. Allow unauthenticated users to access the /trace trace page; monitoring data may contain sensitive information. Default false.": "Zezwalaj na anonimowy dostęp do śledzenia. Umożliwia niezalogowanym użytkownikom dostęp do strony śledzenia /trace; dane monitoringu mogą zawierać poufne informacje. Domyślnie false."
+"Allow anonymous trace access. Allow unauthenticated users to access the /trace page; intended only for intranet or public demo deployments. Monitoring data includes request parameters, exception stacks and client IPs. Default false.": "Zezwalaj na anonimowy dostęp do śledzenia. Umożliwia niezalogowanym użytkownikom dostęp do strony śledzenia /trace; dane monitoringu mogą zawierać poufne informacje. Domyślnie false."
 "dotNet sync interval. Fetch .NET runtime installer info from the official site, 0 disables, unit: seconds, default 43200 (12 hours)": "Interwał synchronizacji dotNet. Pobieraj informacje o instalatorze .NET runtime z oficjalnej witryny, 0 wyłącza, jednostka sekundy, domyślnie 43200 (12 godzin)"
 "dotNet sync URL. Official API URL for fetching .NET runtime versions, supports the {major} placeholder": "Adres synchronizacji dotNet. Oficjalny adres API do pobierania wersji środowiska .NET runtime, obsługuje symbol zastępczy {major}"
 "Stardust resource download base address. Base URL for StarAgent installers/scripts; defaults to the official address": "Bazowy adres pobierania zasobów Stardust. Bazowy URL instalatorów/skryptów StarAgent; domyślnie adres oficjalny"
@@ -225,3 +225,4 @@
 "DotNetSyncService.Sync {0}": "DotNetSyncService synchronizuje {0}"
 "DotNetSyncService failed to sync {0}: {1}": "Nie udało się zsynchronizować {0} w DotNetSyncService: {1}"
 "DotNetSyncService.Error {0}": "Błąd DotNetSyncService: {0}"
+"Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open.": "Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open."

@@ -1,4 +1,4 @@
-﻿using NewLife;
+using NewLife;
 using NewLife.Log;
 using NewLife.Security;
 using NewLife.Threading;
@@ -10,8 +10,10 @@ namespace Stardust.Server.Services;
 /// <summary>应用密钥安全服务。定期为存量空密钥应用补密钥并开启重注册窗口（自动收敛），同时兜底关闭长期无活动的重注册窗口，防止身份冒用</summary>
 /// <remarks>实例化应用密钥安全服务</remarks>
 /// <param name="tracer">跟踪器</param>
-public class AppSecurityService(ITracer tracer) : IHostedService
+/// <param name="setting">服务端设置。为空时使用当前配置</param>
+public class AppSecurityService(ITracer tracer, StarServerSetting setting = null) : IHostedService
 {
+    private readonly StarServerSetting _setting = setting ?? StarServerSetting.Current;
     private TimerX _timer;
 
     /// <summary>启动服务，初始化定时器。首跑延迟10秒（避开宿主启动与数据库初始化），之后每小时执行</summary>
@@ -61,8 +63,8 @@ public class AppSecurityService(ITracer tracer) : IHostedService
         {
             app.Secret = Rand.NextString(16);
 
-            // 补密钥后若处于关闭态则开启收敛窗口等待客户端自动收敛；可信接入/开放模式的应用保持原模式（无需窗口）
-            if (app.ReRegister == ReRegisterModes.Off) app.ReRegister = ReRegisterModes.Auto;
+            // 补密钥后若实际生效模式为关闭，则开启临时放行窗口等待客户端自动收敛；可信接入/开放模式的应用保持原模式（无需窗口）
+            if (app.ReRegister.Resolve(_setting.ReRegister) == ReRegisterModes.Off) app.ReRegister = ReRegisterModes.Temporary;
 
             app.Update();
 

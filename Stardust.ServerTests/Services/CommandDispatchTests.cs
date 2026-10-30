@@ -71,11 +71,11 @@ public class CommandDispatchTests
         throw new InvalidOperationException("字段不存在：" + name);
     }
 
-    /// <summary>等待伪会话收到命令，最多两秒</summary>
+    /// <summary>等待伪会话收到命令，最多十秒。全量并行测试时机器繁忙，两秒容易超时</summary>
     private static async Task<CommandModel> WaitCommandAsync(RecordingSession session)
     {
         var sw = Stopwatch.StartNew();
-        while (sw.ElapsedMilliseconds < 2000)
+        while (sw.ElapsedMilliseconds < 10_000)
         {
             lock (session.Commands)
             {

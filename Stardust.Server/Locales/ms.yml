@@ -207,7 +207,7 @@
 "File storage pull. Whether to actively pull new files published by other nodes. Default false.": "Tarikan storan fail. Sama ada hendak menarik fail baharu yang diterbitkan oleh nod lain secara aktif. Lalai false."
 "Upstream server. Reports data synchronously to the upstream server.": "Pelayan huluan. Melaporkan data secara segerak kepada pelayan huluan."
 "Fixed city. By default, the city is calculated automatically from the IP. When enabled, automatic calculation stops and the city is set manually": "Bandar tetap. Secara lalai bandar dikira secara automatik daripada IP. Apabila didayakan, pengiraan automatik dihentikan dan bandar ditetapkan secara manual"
-"Allow anonymous trace access. Allow unauthenticated users to access the /trace trace page; monitoring data may contain sensitive information. Default false.": "Benarkan akses jejak tanpa nama. Benarkan pengguna yang tidak log masuk mengakses halaman jejak /trace; data pemantauan mungkin mengandungi maklumat sensitif. Lalai false."
+"Allow anonymous trace access. Allow unauthenticated users to access the /trace page; intended only for intranet or public demo deployments. Monitoring data includes request parameters, exception stacks and client IPs. Default false.": "Benarkan akses jejak tanpa nama. Benarkan pengguna yang tidak log masuk mengakses halaman jejak /trace; data pemantauan mungkin mengandungi maklumat sensitif. Lalai false."
 "dotNet sync interval. Fetch .NET runtime installer info from the official site, 0 disables, unit: seconds, default 43200 (12 hours)": "Selang penyegerakan dotNet. Dapatkan maklumat pemasang .NET runtime daripada laman rasmi, 0 bermaksud dinyahdayakan, unit saat, lalai 43200 (12 jam)"
 "dotNet sync URL. Official API URL for fetching .NET runtime versions, supports the {major} placeholder": "Alamat penyegerakan dotNet. Alamat API rasmi untuk mendapatkan versi .NET runtime, menyokong pemegang tempat {major}"
 "Stardust resource download base address. Base URL for StarAgent installers/scripts; defaults to the official address": "Alamat asas muat turun sumber Stardust. URL asas untuk pemasang/skrip StarAgent; lalai alamat rasmi"
@@ -225,3 +225,4 @@
 "DotNetSyncService.Sync {0}": "DotNetSyncService menyegerakkan {0}"
 "DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService gagal menyegerakkan {0}: {1}"
 "DotNetSyncService.Error {0}": "Ralat DotNetSyncService: {0}"
+"Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open.": "Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open."

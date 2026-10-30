@@ -148,3 +148,4 @@
 "追踪": "Tracciamento"
 "MySql监控": "Monitoraggio MySql"
 "Redis管理": "Gestione Redis"
+"Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open.": "Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open."

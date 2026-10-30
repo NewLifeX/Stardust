@@ -207,7 +207,7 @@
 "File storage pull. Whether to actively pull new files published by other nodes. Default false.": "سحب تخزين الملفات. هل يتم سحب الملفات الجديدة المنشورة من العقد الأخرى بشكل نشط. الافتراضي false."
 "Upstream server. Reports data synchronously to the upstream server.": "الخادم الأعلى. يبلغ البيانات بشكل متزامن إلى الخادم الأعلى."
 "Fixed city. By default, the city is calculated automatically from the IP. When enabled, automatic calculation stops and the city is set manually": "مدينة ثابتة. افتراضيًا يتم حساب المدينة تلقائيًا من IP. عند التفعيل يتوقف الحساب التلقائي ويتم تعيين المدينة يدويًا"
-"Allow anonymous trace access. Allow unauthenticated users to access the /trace trace page; monitoring data may contain sensitive information. Default false.": "السماح بالوصول المجهول إلى التتبع. السماح للمستخدمين غير المسجلين بالوصول إلى صفحة التتبع /trace؛ قد تحتوي بيانات المراقبة على معلومات حساسة. الافتراضي false."
+"Allow anonymous trace access. Allow unauthenticated users to access the /trace page; intended only for intranet or public demo deployments. Monitoring data includes request parameters, exception stacks and client IPs. Default false.": "السماح بالوصول المجهول إلى التتبع. السماح للمستخدمين غير المسجلين بالوصول إلى صفحة التتبع /trace؛ قد تحتوي بيانات المراقبة على معلومات حساسة. الافتراضي false."
 "dotNet sync interval. Fetch .NET runtime installer info from the official site, 0 disables, unit: seconds, default 43200 (12 hours)": "فترة مزامنة dotNet. جلب معلومات حزمة تثبيت .NET runtime من الموقع الرسمي، 0 يعني التعطيل، الوحدة بالثواني، الافتراضي 43200 (12 ساعة)"
 "dotNet sync URL. Official API URL for fetching .NET runtime versions, supports the {major} placeholder": "عنوان مزامنة dotNet. عنوان API الرسمي لجلب إصدارات .NET runtime، يدعم العنصر النائب {major}"
 "Stardust resource download base address. Base URL for StarAgent installers/scripts; defaults to the official address": "عنوان أساسي لتنزيل موارد Stardust. URL أساسي لحزم/نصوص تثبيت StarAgent؛ الافتراضي العنوان الرسمي"
@@ -225,3 +225,4 @@
 "DotNetSyncService.Sync {0}": "DotNetSyncService يقوم بمزامنة {0}"
 "DotNetSyncService failed to sync {0}: {1}": "فشل DotNetSyncService في مزامنة {0}: {1}"
 "DotNetSyncService.Error {0}": "خطأ DotNetSyncService: {0}"
+"Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open.": "Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open."

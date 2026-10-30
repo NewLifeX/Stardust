@@ -1,4 +1,4 @@
-﻿using NewLife;
+using NewLife;
 using NewLife.Caching;
 using NewLife.Log;
 using NewLife.Remoting;
@@ -86,7 +86,7 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
         // 检查应用有效性
         if (!app.Enable) throw new ApiException(ApiCode.Forbidden, L.T("Application [{0}] is disabled.", app.Name));
 
-        // 安全治理：禁止空密钥应用匿名登录（认证绕过）。空密钥应用需在注册中心设置密钥，或临时开启"允许重新注册"自动收敛
+        // 安全治理：禁止空密钥应用匿名登录（认证绕过）。空密钥应用需在注册中心设置密钥，或临时开启"临时放行"自动收敛
         if (app.Secret.IsNullOrEmpty())
         {
             app.WriteHistory(L.T("Application authentication"), false, L.T("An application with an empty secret cannot log in. Set a Secret for this application in the registry or enable re-registration."), null, ip, context.ClientId);
@@ -130,16 +130,16 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
             app = App.FindByName(name);
             if (app != null)
             {
-                // 按重注册模式放行：Off=拒绝；Auto=收敛窗口；Trusted=可信接入（同项目节点/近期指纹）；Open=开放
-                var mode = app.ReRegister;
+                // 按重注册模式放行：Default=跟随全局默认；Open=开放；Trusted=可信接入（同项目节点/近期指纹）；Temporary=临时放行；Off=拒绝
+                var mode = app.ReRegister.Resolve(_setting.ReRegister);
                 if (mode == ReRegisterModes.Off || (mode == ReRegisterModes.Trusted && !IsTrustedClient(app, request)))
                     throw new ApiException(ApiCode.Forbidden, L.T("Application [{0}] already exists; reusing the old identity for dynamic registration is forbidden. Check the secret or contact the administrator. To enable automatic instance onboarding, adjust the application's re-registration mode (convergence window/trusted access/open).", name));
 
                 var model = request as AppModel;
                 var uuid = (model != null && !model.UUID.IsNullOrEmpty()) ? model.UUID : null;
                 var remark = uuid == null
-                    ? L.T("[{0}] re-registered in [{1}] mode; secret issued", app.Name, app.ReRegister)
-                    : L.T("[{0}] re-registered in [{1}] mode; secret issued, UUID={2}", app.Name, app.ReRegister, uuid);
+                    ? L.T("[{0}] re-registered in [{1}] mode; secret issued", app.Name, mode)
+                    : L.T("[{0}] re-registered in [{1}] mode; secret issued, UUID={2}", app.Name, mode, uuid);
                 app.WriteHistory(L.T("Application re-registered"), true, remark, null, context.UserHost, context.ClientId);
                 context.Device = app;
 
@@ -236,8 +236,9 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
         app.LastIP = ip;
         app.UpdateIP = ip;
 
-        // 密钥配对成功，仅收敛窗口模式（Auto）自动关闭重注册窗口，防止长期开启被冒用；可信接入/开放模式保持长期有效
-        if (app.ReRegister == ReRegisterModes.Auto && !app.Secret.IsNullOrEmpty()) app.ReRegister = ReRegisterModes.Off;
+        // 密钥配对成功，仅显式临时放行模式（Temporary）自动关闭重注册窗口，防止长期开启被冒用；可信接入/开放模式保持长期有效
+        // 跟随全局（Default）的应用不改写自身配置，窗口语义由全局默认统一控制
+        if (app.ReRegister == ReRegisterModes.Temporary && !app.Secret.IsNullOrEmpty()) app.ReRegister = ReRegisterModes.Off;
 
         app.Update();
 

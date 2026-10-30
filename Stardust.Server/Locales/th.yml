@@ -207,7 +207,7 @@
 "File storage pull. Whether to actively pull new files published by other nodes. Default false.": "การดึงไฟล์จากที่จัดเก็บไฟล์ จะดึงไฟล์ใหม่ที่โหนดอื่นเผยแพร่โดยอัตโนมัติหรือไม่ ค่าเริ่มต้น false"
 "Upstream server. Reports data synchronously to the upstream server.": "เซิร์ฟเวอร์ระดับบน รายงานข้อมูลไปยังเซิร์ฟเวอร์ระดับบนแบบซิงโครนัส"
 "Fixed city. By default, the city is calculated automatically from the IP. When enabled, automatic calculation stops and the city is set manually": "เมืองคงที่ โดยค่าเริ่มต้นจะคำนวณเมืองจาก IP โดยอัตโนมัติ เมื่อเปิดใช้งานจะหยุดคำนวณอัตโนมัติและตั้งค่าเมืองด้วยตนเอง"
-"Allow anonymous trace access. Allow unauthenticated users to access the /trace trace page; monitoring data may contain sensitive information. Default false.": "อนุญาตการเข้าถึงการติดตามแบบไม่ระบุตัวตน อนุญาตให้ผู้ใช้ที่ยังไม่เข้าสู่ระบบเข้าถึงหน้า /trace ข้อมูลการตรวจสอบอาจมีข้อมูลที่ละเอียดอ่อน ค่าเริ่มต้น false"
+"Allow anonymous trace access. Allow unauthenticated users to access the /trace page; intended only for intranet or public demo deployments. Monitoring data includes request parameters, exception stacks and client IPs. Default false.": "อนุญาตการเข้าถึงการติดตามแบบไม่ระบุตัวตน อนุญาตให้ผู้ใช้ที่ยังไม่เข้าสู่ระบบเข้าถึงหน้า /trace ข้อมูลการตรวจสอบอาจมีข้อมูลที่ละเอียดอ่อน ค่าเริ่มต้น false"
 "dotNet sync interval. Fetch .NET runtime installer info from the official site, 0 disables, unit: seconds, default 43200 (12 hours)": "ช่วงเวลาซิงค์ dotNet ดึงข้อมูลตัวติดตั้ง .NET runtime จากเว็บไซต์ทางการ 0 หมายถึงปิดใช้งาน หน่วยเป็นวินาที ค่าเริ่มต้น 43200 (12 ชั่วโมง)"
 "dotNet sync URL. Official API URL for fetching .NET runtime versions, supports the {major} placeholder": "ที่อยู่ซิงค์ dotNet ที่อยู่ API อย่างเป็นทางการสำหรับดึงเวอร์ชัน .NET runtime รองรับตัวยึดตำแหน่ง {major}"
 "Stardust resource download base address. Base URL for StarAgent installers/scripts; defaults to the official address": "ที่อยู่ฐานสำหรับดาวน์โหลดทรัพยากร Stardust URL ฐานของตัวติดตั้ง/สคริปต์ StarAgent ค่าเริ่มต้นคือที่อยู่ทางการ"
@@ -225,3 +225,4 @@
 "DotNetSyncService.Sync {0}": "DotNetSyncService กำลังซิงค์ {0}"
 "DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService ซิงค์ {0} ไม่สำเร็จ: {1}"
 "DotNetSyncService.Error {0}": "ข้อผิดพลาด DotNetSyncService: {0}"
+"Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open.": "Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open."

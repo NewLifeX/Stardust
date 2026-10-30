@@ -148,3 +148,4 @@
 "追踪": "Truy vết"
 "MySql监控": "Giám sát MySql"
 "Redis管理": "Quản lý Redis"
+"Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open.": "Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open."

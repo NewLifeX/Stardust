@@ -10,6 +10,7 @@ using NewLife.Remoting;
 using NewLife.Remoting.Models;
 using NewLife.Security;
 using Stardust.Data;
+using Stardust.Models;
 using Stardust.Server;
 using Xunit;
 
@@ -48,7 +49,8 @@ public class AgentDeploySecurityTests : StarTestBase
 
     private App CreateApp(String name, String secret, String allowControl)
     {
-        var app = new App { Name = name, Enable = true };
+        // 显式关闭重注册，验证凭据校验本身（默认跟随全局，全局开放时允许错密钥重注册）
+        var app = new App { Name = name, Enable = true, ReRegister = ReRegisterModes.Off };
         if (!secret.IsNullOrEmpty()) app.Secret = secret;
         if (!allowControl.IsNullOrEmpty()) app.AllowControlNodes = allowControl;
         app.Insert();

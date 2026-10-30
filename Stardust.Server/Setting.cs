@@ -3,6 +3,7 @@ using NewLife;
 using NewLife.Configuration;
 using NewLife.Remoting.Models;
 using NewLife.Security;
+using Stardust.Models;
 using Stardust.Server.Services;
 using XCode.Configuration;
 
@@ -70,6 +71,10 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     /// <summary>应用自动注册。允许应用客户端自动注册，默认true</summary>
     [Description("Application auto-registration. Allow app clients to register automatically; default true")]
     public Boolean AppAutoRegister { get; set; } = true;
+
+    /// <summary>默认重注册模式。应用“重注册模式=默认”时统一采用该策略，默认开放；可在应用里显式覆盖，全局设为关闭即可整体收紧</summary>
+    [Description("Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open.")]
+    public ReRegisterModes ReRegister { get; set; } = ReRegisterModes.Open;
 
     /// <summary>准入白名单。若指定，仅允许符合IP条件的节点进行注册，多个逗号隔开，支持*模糊匹配</summary>
     [Description("Admission whitelist. If specified, only nodes matching the IP conditions may register; separate multiple entries with commas; supports * wildcard matching")]

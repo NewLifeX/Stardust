@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -181,12 +181,12 @@ public partial class App
     public String AllowControlNodes { get => _AllowControlNodes; set { if (OnPropertyChanging("AllowControlNodes", value)) { _AllowControlNodes = value; OnPropertyChanged("AllowControlNodes"); } } }
 
     private Stardust.Models.ReRegisterModes _ReRegister;
-    /// <summary>重注册模式。已存在应用的空/错密钥登录策略：关闭=一律拒绝（默认安全）；收敛窗口=临时放行，首个成功登录后自动关闭（引导新实例）；可信接入=同项目受管节点或近期UUID/Macs指纹机器可自助接入；开放=仅凭应用代码即可接入（低门槛）</summary>
+    /// <summary>重注册模式。已存在应用的空/错密钥登录策略（从宽到严）：默认=跟随全局默认（平台设置，历史存量值）；开放=仅凭应用代码即可接入（低门槛）；可信接入=同项目受管节点或近期UUID/Macs指纹机器可自助接入；临时放行=首次成功登录后自动关闭（引导新实例）；关闭=一律拒绝（安全）</summary>
     [Category("安全告警")]
     [DisplayName("重注册模式")]
-    [Description("重注册模式。已存在应用的空/错密钥登录策略：关闭=一律拒绝（默认安全）；收敛窗口=临时放行，首个成功登录后自动关闭（引导新实例）；可信接入=同项目受管节点或近期UUID/Macs指纹机器可自助接入；开放=仅凭应用代码即可接入（低门槛）")]
+    [Description("重注册模式。已存在应用的空/错密钥登录策略（从宽到严）：默认=跟随全局默认（平台设置，历史存量值）；开放=仅凭应用代码即可接入（低门槛）；可信接入=同项目受管节点或近期UUID/Macs指纹机器可自助接入；临时放行=首次成功登录后自动关闭（引导新实例）；关闭=一律拒绝（安全）")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("ReRegister", "重注册模式。已存在应用的空/错密钥登录策略：关闭=一律拒绝（默认安全）；收敛窗口=临时放行，首个成功登录后自动关闭（引导新实例）；可信接入=同项目受管节点或近期UUID/Macs指纹机器可自助接入；开放=仅凭应用代码即可接入（低门槛）", "")]
+    [BindColumn("ReRegister", "重注册模式。已存在应用的空/错密钥登录策略（从宽到严）：默认=跟随全局默认（平台设置，历史存量值）；开放=仅凭应用代码即可接入（低门槛）；可信接入=同项目受管节点或近期UUID/Macs指纹机器可自助接入；临时放行=首次成功登录后自动关闭（引导新实例）；关闭=一律拒绝（安全）", "")]
     public Stardust.Models.ReRegisterModes ReRegister { get => _ReRegister; set { if (OnPropertyChanging("ReRegister", value)) { _ReRegister = value; OnPropertyChanged("ReRegister"); } } }
 
     private String _Remark;
@@ -369,7 +369,7 @@ public partial class App
     /// <param name="autoActive">自动激活。自动激活启用该应用在注册中心提供的服务，供其它消费者使用</param>
     /// <param name="singleton">单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于管理实例</param>
     /// <param name="alarmOnOffline">下线告警。节点下线时，发送告警</param>
-    /// <param name="reRegister">重注册模式。已存在应用的空/错密钥登录策略：关闭=一律拒绝（默认安全）；收敛窗口=临时放行，首个成功登录后自动关闭（引导新实例）；可信接入=同项目受管节点或近期UUID/Macs指纹机器可自助接入；开放=仅凭应用代码即可接入（低门槛）</param>
+    /// <param name="reRegister">重注册模式。已存在应用的空/错密钥登录策略（从宽到严）：默认=跟随全局默认（平台设置，历史存量值）；开放=仅凭应用代码即可接入（低门槛）；可信接入=同项目受管节点或近期UUID/Macs指纹机器可自助接入；临时放行=首次成功登录后自动关闭（引导新实例）；关闭=一律拒绝（安全）</param>
     /// <param name="enable">启用</param>
     /// <param name="start">更新时间开始</param>
     /// <param name="end">更新时间结束</param>
@@ -454,7 +454,7 @@ public partial class App
         /// <summary>节点控制。安全性设计，允许该应用发指令控制的目标节点编码或目标应用名称，多节点逗号分隔，*表示全部节点</summary>
         public static readonly Field AllowControlNodes = FindByName("AllowControlNodes");
 
-        /// <summary>重注册模式。已存在应用的空/错密钥登录策略：关闭=一律拒绝（默认安全）；收敛窗口=临时放行，首个成功登录后自动关闭（引导新实例）；可信接入=同项目受管节点或近期UUID/Macs指纹机器可自助接入；开放=仅凭应用代码即可接入（低门槛）</summary>
+        /// <summary>重注册模式。已存在应用的空/错密钥登录策略（从宽到严）：默认=跟随全局默认（平台设置，历史存量值）；开放=仅凭应用代码即可接入（低门槛）；可信接入=同项目受管节点或近期UUID/Macs指纹机器可自助接入；临时放行=首次成功登录后自动关闭（引导新实例）；关闭=一律拒绝（安全）</summary>
         public static readonly Field ReRegister = FindByName("ReRegister");
 
         /// <summary>内容</summary>
@@ -547,7 +547,7 @@ public partial class App
         /// <summary>节点控制。安全性设计，允许该应用发指令控制的目标节点编码或目标应用名称，多节点逗号分隔，*表示全部节点</summary>
         public const String AllowControlNodes = "AllowControlNodes";
 
-        /// <summary>重注册模式。已存在应用的空/错密钥登录策略：关闭=一律拒绝（默认安全）；收敛窗口=临时放行，首个成功登录后自动关闭（引导新实例）；可信接入=同项目受管节点或近期UUID/Macs指纹机器可自助接入；开放=仅凭应用代码即可接入（低门槛）</summary>
+        /// <summary>重注册模式。已存在应用的空/错密钥登录策略（从宽到严）：默认=跟随全局默认（平台设置，历史存量值）；开放=仅凭应用代码即可接入（低门槛）；可信接入=同项目受管节点或近期UUID/Macs指纹机器可自助接入；临时放行=首次成功登录后自动关闭（引导新实例）；关闭=一律拒绝（安全）</summary>
         public const String ReRegister = "ReRegister";
 
         /// <summary>内容</summary>

@@ -207,7 +207,7 @@
 "File storage pull. Whether to actively pull new files published by other nodes. Default false.": "Kéo từ kho lưu trữ tệp. Có chủ động kéo các tệp mới do nút khác phát hành hay không. Mặc định false."
 "Upstream server. Reports data synchronously to the upstream server.": "Máy chủ cấp trên. Báo cáo dữ liệu đồng bộ lên máy chủ cấp trên."
 "Fixed city. By default, the city is calculated automatically from the IP. When enabled, automatic calculation stops and the city is set manually": "Thành phố cố định. Theo mặc định, thành phố được tính tự động từ IP. Khi bật, quá trình tính tự động dừng lại và thành phố được đặt thủ công"
-"Allow anonymous trace access. Allow unauthenticated users to access the /trace trace page; monitoring data may contain sensitive information. Default false.": "Cho phép truy cập theo dõi ẩn danh. Cho phép người dùng chưa đăng nhập truy cập trang theo dõi /trace; dữ liệu giám sát có thể chứa thông tin nhạy cảm. Mặc định false."
+"Allow anonymous trace access. Allow unauthenticated users to access the /trace page; intended only for intranet or public demo deployments. Monitoring data includes request parameters, exception stacks and client IPs. Default false.": "Cho phép truy cập theo dõi ẩn danh. Cho phép người dùng chưa đăng nhập truy cập trang theo dõi /trace; dữ liệu giám sát có thể chứa thông tin nhạy cảm. Mặc định false."
 "dotNet sync interval. Fetch .NET runtime installer info from the official site, 0 disables, unit: seconds, default 43200 (12 hours)": "Khoảng thời gian đồng bộ dotNet. Lấy thông tin trình cài đặt .NET runtime từ trang chính thức, 0 là tắt, đơn vị giây, mặc định 43200 (12 giờ)"
 "dotNet sync URL. Official API URL for fetching .NET runtime versions, supports the {major} placeholder": "Địa chỉ đồng bộ dotNet. Địa chỉ API chính thức để lấy phiên bản .NET runtime, hỗ trợ trình giữ chỗ {major}"
 "Stardust resource download base address. Base URL for StarAgent installers/scripts; defaults to the official address": "Địa chỉ cơ sở tải tài nguyên Stardust. URL cơ sở cho bộ cài/script StarAgent; mặc định là địa chỉ chính thức"
@@ -225,3 +225,4 @@
 "DotNetSyncService.Sync {0}": "DotNetSyncService đang đồng bộ {0}"
 "DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService không đồng bộ được {0}: {1}"
 "DotNetSyncService.Error {0}": "Lỗi DotNetSyncService: {0}"
+"Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open.": "Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open."

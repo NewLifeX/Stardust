@@ -207,7 +207,7 @@
 "File storage pull. Whether to actively pull new files published by other nodes. Default false.": "משיכת אחסון קבצים. האם למשוך באופן אקטיבי קבצים חדשים שפורסמו על ידי צמתים אחרים. ברירת מחדל false."
 "Upstream server. Reports data synchronously to the upstream server.": "שרת על. מדווח נתונים באופן סינכרוני לשרת העל."
 "Fixed city. By default, the city is calculated automatically from the IP. When enabled, automatic calculation stops and the city is set manually": "עיר קבועה. כברירת מחדל העיר מחושבת אוטומטית לפי ה-IP. כאשר האפשרות מופעלת, החישוב האוטומטי מופסק והעיר מוגדרת ידנית"
-"Allow anonymous trace access. Allow unauthenticated users to access the /trace trace page; monitoring data may contain sensitive information. Default false.": "אפשר גישה אנונימית למעקב. מאפשר למשתמשים שאינם מחוברים לגשת לעמוד המעקב /trace; נתוני ניטור עשויים להכיל מידע רגיש. ברירת מחדל false."
+"Allow anonymous trace access. Allow unauthenticated users to access the /trace page; intended only for intranet or public demo deployments. Monitoring data includes request parameters, exception stacks and client IPs. Default false.": "אפשר גישה אנונימית למעקב. מאפשר למשתמשים שאינם מחוברים לגשת לעמוד המעקב /trace; נתוני ניטור עשויים להכיל מידע רגיש. ברירת מחדל false."
 "dotNet sync interval. Fetch .NET runtime installer info from the official site, 0 disables, unit: seconds, default 43200 (12 hours)": "מרווח סנכרון dotNet. שליפת מידע מתקין .NET runtime מהאתר הרשמי, 0 משמעו מושבת, יחידה שניות, ברירת מחדל 43200 (12 שעות)"
 "dotNet sync URL. Official API URL for fetching .NET runtime versions, supports the {major} placeholder": "כתובת סנכרון dotNet. כתובת ה-API הרשמית לשליפת גרסאות .NET runtime, תומכת במציין המקום {major}"
 "Stardust resource download base address. Base URL for StarAgent installers/scripts; defaults to the official address": "כתובת בסיס להורדת משאבי Stardust. כתובת URL בסיסית לחבילות התקנה/סקריפטים של StarAgent; ברירת מחדל הכתובת הרשמית"
@@ -225,3 +225,4 @@
 "DotNetSyncService.Sync {0}": "DotNetSyncService מסנכרן את {0}"
 "DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService נכשל בסנכרון {0}: {1}"
 "DotNetSyncService.Error {0}": "שגיאת DotNetSyncService: {0}"
+"Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open.": "Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open."

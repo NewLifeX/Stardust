@@ -1,4 +1,4 @@
-﻿using NewLife;
+using NewLife;
 using NewLife.Remoting;
 using Stardust.Data;
 using Stardust.Models;
@@ -8,6 +8,12 @@ namespace Stardust.Server.Services;
 /// <summary>应用令牌服务</summary>
 public class AppTokenService
 {
+    private readonly StarServerSetting _setting;
+
+    /// <summary>实例化应用令牌服务</summary>
+    /// <param name="setting">服务端设置。为空时使用当前配置</param>
+    public AppTokenService(StarServerSetting setting = null) => _setting = setting ?? StarServerSetting.Current;
+
     /// <summary>验证应用密码，不存在时新增。密钥不匹配（含空密钥）时按重注册模式裁决</summary>
     /// <param name="username">应用标识</param>
     /// <param name="password">应用密钥。为空或错误时按该应用的重注册模式放行或拒绝</param>
@@ -40,11 +46,11 @@ public class AppTokenService
         if (!app.Enable) throw new ApiException(ApiCode.Forbidden, L.T("Application [{0}] is disabled.", username));
 
         // 密钥校验。空密钥或错误密钥时按重注册模式裁决，与 App/Login 的 Register 保持同一套语义：
-        // 关闭=一律拒绝（默认安全）；收敛窗口=临时放行，客户端携带正确密钥后自动关闭；开放=放行；可信接入暂不支持本接口
+        // 跟随全局=按全局默认；关闭=一律拒绝；临时放行=客户端携带正确密钥后自动关闭；开放=放行；可信接入暂不支持本接口
         if (app.Secret.IsNullOrEmpty() || password != app.Secret)
         {
-            var mode = app.ReRegister;
-            if (mode is not (ReRegisterModes.Auto or ReRegisterModes.Open))
+            var mode = app.ReRegister.Resolve(_setting.ReRegister);
+            if (mode is not (ReRegisterModes.Temporary or ReRegisterModes.Open))
             {
                 // 安全纵深（V-1/V-2）：空密钥/错误密钥默认禁止，防止身份冒用与真实密钥泄露
                 if (mode == ReRegisterModes.Trusted)
@@ -54,11 +60,11 @@ public class AppTokenService
                 throw new ApiException(ApiCode.Forbidden, L.T("Illegal access to application [{0}].", username));
             }
 
-            // 收敛窗口/开放：放行，等待客户端收敛；密钥由令牌接口（OAuth/Token）随响应下发
+            // 临时放行/开放：放行，等待客户端收敛；密钥由令牌接口（OAuth/Token）随响应下发
             app.WriteHistory(L.T("Application re-registered"), true, L.T("[{0}] secret mismatch; allowed by [{1}] mode", app.Name, mode), null, ip, clientId);
         }
-        // 收敛窗口：客户端已携带正确密钥，自动关闭窗口完成收敛
-        else if (app.ReRegister == ReRegisterModes.Auto)
+        // 显式临时放行：客户端已携带正确密钥，自动关闭窗口完成收敛。跟随全局（Default）的应用由全局默认统一控制，不改写自身配置
+        else if (app.ReRegister == ReRegisterModes.Temporary)
         {
             app.WriteHistory(L.T("Application re-registered"), true, L.T("[{0}] the client now carries the correct secret; the convergence window is closed automatically", app.Name), null, ip, clientId);
             app.ReRegister = ReRegisterModes.Off;

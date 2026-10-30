@@ -89,3 +89,4 @@
 "Decoupled WebApi backend for the Stardust distributed service platform. Reuses the area controllers and business services of Stardust.Web while exposing only JSON endpoints (GetPage/GetFields/Insert/Update/Delete and custom actions of EntityController), without Razor views, MCP, or static sites, for direct use by the Stardust.Web.Vue frontend.": "星塵分散式服務平台的解耦 WebApi 後端。重用 Stardust.Web 的區域控制器與業務服務，僅暴露 JSON 介面（EntityController 的 GetPage/GetFields/Insert/Update/Delete 及自訂 Action），剝離 Razor 檢視、MCP 與靜態網站，供 Stardust.Web.Vue 前端直接對接。"
 "Successfully deleted {0}": "已刪除 {0}"
 "Unknown tool: {0}": "未知工具：{0}"
+"Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open.": "預設重註冊模式。應用「重註冊模式=預設」時統一採用該策略：開放、可信接入、臨時放行或關閉，預設開放"

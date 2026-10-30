@@ -207,7 +207,7 @@
 "File storage pull. Whether to actively pull new files published by other nodes. Default false.": "파일 저장소 가져오기. 다른 노드가 게시한 새 파일을 능동적으로 가져올지 여부. 기본 false."
 "Upstream server. Reports data synchronously to the upstream server.": "상위 서버. 데이터를 상위 서버로 동기 보고합니다."
 "Fixed city. By default, the city is calculated automatically from the IP. When enabled, automatic calculation stops and the city is set manually": "고정 도시. 기본적으로 IP에서 도시를 자동 계산합니다. 활성화하면 자동 계산을 중단하고 수동으로 설정합니다"
-"Allow anonymous trace access. Allow unauthenticated users to access the /trace trace page; monitoring data may contain sensitive information. Default false.": "익명 추적 액세스를 허용합니다. 로그인하지 않은 사용자가 /trace 추적 페이지에 액세스할 수 있도록 합니다. 모니터링 데이터에 민감한 정보가 포함될 수 있습니다. 기본값 false."
+"Allow anonymous trace access. Allow unauthenticated users to access the /trace page; intended only for intranet or public demo deployments. Monitoring data includes request parameters, exception stacks and client IPs. Default false.": "익명 추적 액세스를 허용합니다. 로그인하지 않은 사용자가 /trace 추적 페이지에 액세스할 수 있도록 합니다. 모니터링 데이터에 민감한 정보가 포함될 수 있습니다. 기본값 false."
 "dotNet sync interval. Fetch .NET runtime installer info from the official site, 0 disables, unit: seconds, default 43200 (12 hours)": "dotNet 동기화 주기. 공식 사이트에서 .NET 런타임 설치 프로그램 정보를 가져오며, 0은 비활성화, 단위는 초, 기본값 43200(12시간)"
 "dotNet sync URL. Official API URL for fetching .NET runtime versions, supports the {major} placeholder": "dotNet 동기화 주소. .NET 런타임 버전을 가져오는 공식 API 주소이며 {major} 자리 표시자를 지원합니다"
 "Stardust resource download base address. Base URL for StarAgent installers/scripts; defaults to the official address": "Stardust 리소스 다운로드 기본 주소. StarAgent 설치 프로그램/스크립트의 기본 URL입니다. 기본값은 공식 주소입니다"
@@ -225,3 +225,4 @@
 "DotNetSyncService.Sync {0}": "DotNetSyncService가 {0} 동기화 중입니다"
 "DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService가 {0} 동기화하지 못했습니다: {1}"
 "DotNetSyncService.Error {0}": "DotNetSyncService 오류: {0}"
+"Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open.": "Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open."

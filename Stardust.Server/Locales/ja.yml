@@ -207,7 +207,7 @@
 "File storage pull. Whether to actively pull new files published by other nodes. Default false.": "ファイルストレージの取得。他のノードが公開した新規ファイルを能動的に取得するか。既定 false。"
 "Upstream server. Reports data synchronously to the upstream server.": "上位サーバー。データを上位サーバーへ同期的に報告します。"
 "Fixed city. By default, the city is calculated automatically from the IP. When enabled, automatic calculation stops and the city is set manually": "固定城市。既定ではIPから都市を自動計算します。有効にすると自動計算を停止し、手動で設定します"
-"Allow anonymous trace access. Allow unauthenticated users to access the /trace trace page; monitoring data may contain sensitive information. Default false.": "匿名でトレースにアクセスすることを許可します。未ログインユーザーが/traceのトレースページにアクセスできるようにします。監視データに機密情報が含まれる場合があります。既定値false。"
+"Allow anonymous trace access. Allow unauthenticated users to access the /trace page; intended only for intranet or public demo deployments. Monitoring data includes request parameters, exception stacks and client IPs. Default false.": "匿名でトレースにアクセスすることを許可します。未ログインユーザーが/traceのトレースページにアクセスできるようにします。監視データに機密情報が含まれる場合があります。既定値false。"
 "dotNet sync interval. Fetch .NET runtime installer info from the official site, 0 disables, unit: seconds, default 43200 (12 hours)": "dotNet 同期間隔。公式サイトから .NET ランタイムインストーラー情報を取得します。0 は無効、単位は秒、既定 43200（12 時間）"
 "dotNet sync URL. Official API URL for fetching .NET runtime versions, supports the {major} placeholder": "dotNet 同期アドレス。.NET ランタイムのバージョンを取得する公式 API アドレス。{major} プレースホルダーに対応"
 "Stardust resource download base address. Base URL for StarAgent installers/scripts; defaults to the official address": "Stardust リソースのダウンロードベースアドレス。StarAgent インストーラー/スクリプトのベース URL です。既定値は公式アドレスです"
@@ -225,3 +225,4 @@
 "DotNetSyncService.Sync {0}": "DotNetSyncService が {0} を同期しています"
 "DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService による {0} の同期に失敗しました: {1}"
 "DotNetSyncService.Error {0}": "DotNetSyncService エラー: {0}"
+"Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open.": "Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open."
