@@ -1168,7 +1168,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
     /// <param name="need">需要的连续次数</param>
     /// <param name="predicate">条件</param>
     /// <returns>是否持续满足</returns>
-    public static Boolean IsSustained(IList<NodeData> samples, Int32 need, Func<NodeData, Boolean> predicate)
+    public static Boolean IsSustained<T>(IList<T> samples, Int32 need, Func<T, Boolean> predicate) where T : class
     {
         if (samples == null || samples.Count == 0 || predicate == null) return false;
 

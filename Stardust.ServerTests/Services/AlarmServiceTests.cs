@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
-using Stardust.Data.Nodes;
 using Stardust.Server.Services;
 using Xunit;
 
@@ -11,6 +10,8 @@ namespace ServerTest.Services;
 /// <summary>告警服务单元测试</summary>
 public class AlarmServiceTests
 {
+    private sealed record Sample(Double Rate);
+
     [Fact]
     [DisplayName("环比统计取上一个完整小时，避免整点未写满误报")]
     public void GetStatHour_UsesPreviousCompleteHour()
@@ -47,25 +48,25 @@ public class AlarmServiceTests
     [DisplayName("连续确认：次数不足或中间出现未超限采样都不告警")]
     public void IsSustained_RequiresConsecutiveSamples()
     {
-        var samples = new List<NodeData>
+        var samples = new List<Sample>
         {
-            new() { CpuRate = 0.95 },
-            new() { CpuRate = 0.92 },
-            new() { CpuRate = 0.91 },
+            new(0.95),
+            new(0.92),
+            new(0.91),
         };
 
-        Assert.True(AlarmService.IsSustained(samples, 3, e => e.CpuRate >= 0.9));
+        Assert.True(AlarmService.IsSustained(samples, 3, e => e.Rate >= 0.9));
 
         // 次数不足
-        Assert.False(AlarmService.IsSustained(samples, 4, e => e.CpuRate >= 0.9));
-        Assert.False(AlarmService.IsSustained([], 1, e => e.CpuRate >= 0.9));
+        Assert.False(AlarmService.IsSustained(samples, 4, e => e.Rate >= 0.9));
+        Assert.False(AlarmService.IsSustained(new List<Sample>(), 1, e => e.Rate >= 0.9));
 
         // 中间出现一次回落，视为抖动
-        samples[2] = new NodeData { CpuRate = 0.5 };
-        Assert.False(AlarmService.IsSustained(samples, 3, e => e.CpuRate >= 0.9));
+        samples[2] = new Sample(0.5);
+        Assert.False(AlarmService.IsSustained(samples, 3, e => e.Rate >= 0.9));
 
         // 只确认最近一次时仍然成立
-        Assert.True(AlarmService.IsSustained(samples, 1, e => e.CpuRate >= 0.9));
+        Assert.True(AlarmService.IsSustained(samples, 1, e => e.Rate >= 0.9));
     }
 
     [Fact]
