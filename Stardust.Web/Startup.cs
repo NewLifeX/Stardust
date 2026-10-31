@@ -22,6 +22,7 @@ using Stardust.Server;
 using Stardust.Services;
 using Stardust.Server.Services;
 using Stardust.Web.Services;
+using Stardust.Web.Filters;
 using XCode;
 using XCode.DataAccessLayer;
 using XCode.Membership;
@@ -66,6 +67,7 @@ public class Startup
         services.AddSingleton<PipelineService>();
         services.AddSingleton<HotAppService>();
         services.AddSingleton<TraceShareTokenService>();
+        services.AddSingleton<DashboardService>();
         services.AddSingleton<NewLife.Cube.Services.TokenService>();
         services.AddSingleton<McpService>();
 
@@ -157,6 +159,7 @@ public class Startup
         ThreadPoolX.QueueUserWorkItem(InitProject);
         ThreadPoolX.QueueUserWorkItem(FixAppDeployNode);
         ThreadPoolX.QueueUserWorkItem(RemoveDeadMenus);
+        ThreadPoolX.QueueUserWorkItem(EnsureDashboardMenu);
 
         // 多语言。配置了固定语言时全进程生效，否则按请求语言识别
         app.UseStardustLocalization();
@@ -170,6 +173,9 @@ public class Startup
         Usewwwroot(app, env);
 
         app.UseStardust();
+
+        // 登录成功后默认进入看板中心。魔方登录由中间件处理并固定跳转 /Admin，这里在没有明确返回地址时改写到 /
+        app.UseLoginLanding();
 
         // 缓存运行时安装文件
         var set = StarServerSetting.Current;
@@ -223,8 +229,8 @@ public class Startup
             set2.Skin = "layui";
             set2.Save();
         }
-        // 兼容旧版本默认值，登录后落地到魔方工作台（展示星尘 KPI 指标卡）
-        if (set2.StartPage.EqualIgnoreCase("/Admin/User/Info", "/Platform/GalaxyProject"))
+        // 管理后台首页保留魔方原生工作台；看板中心通过站点根路径 / 与「看板中心」菜单进入
+        if (set2.StartPage.EqualIgnoreCase("/Admin/User/Info", "/Platform/GalaxyProject", "/Dashboard/System"))
         {
             set2.StartPage = "/Admin/Index/Dashboard";
             set2.Save();
@@ -374,6 +380,27 @@ public class Startup
             XTrace.WriteLine("Remove dead menu [{0}]", menu.Url);
             menu.Delete();
         }
+    }
+
+    /// <summary>确保「看板中心」菜单存在。看板控制器位于主程序集而非区域，魔方菜单扫描不会自动生成</summary>
+    private static void EnsureDashboardMenu()
+    {
+        var menu = Menu.Find(Menu._.Url == "/Dashboard");
+        if (menu != null) return;
+
+        menu = new Menu
+        {
+            Name = "Dashboard",
+            DisplayName = "看板中心",
+            FullName = "Stardust.Web.Controllers.DashboardController",
+            Url = "/Dashboard",
+            ParentID = 0,
+            Sort = 1000,
+            Icon = "fa-th-large",
+            Visible = true,
+        };
+        menu.Insert();
+        XTrace.WriteLine("Add dashboard menu [{0}]", menu.Url);
     }
 
     private static void FixAppDeployNode()
