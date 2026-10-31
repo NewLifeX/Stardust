@@ -190,5 +190,18 @@ public static IList<TraceHourStat> FindAllByAppIdAndItemId(Int32 appId, Int32 it
     /// <param name="time"></param>
     /// <returns></returns>
     public static Int32 DeleteBefore(DateTime time) => Delete(_.StatTime < time);
+
+    /// <summary>按埋点名称分组统计指定应用的端点汇总。看板端点 Top 与错误分布使用</summary>
+    /// <param name="appId">应用编号</param>
+    /// <param name="start">开始时间</param>
+    /// <param name="end">结束时间</param>
+    /// <returns>仅填充 Name/Total/Errors/TotalCost/MaxCost 的列表</returns>
+    public static IList<TraceHourStat> SearchGroupName(Int32 appId, DateTime start, DateTime end)
+    {
+        var selects = _.Total.Sum() & _.Errors.Sum() & _.TotalCost.Sum() & _.MaxCost.Max() & _.Name;
+        var where = new WhereExpression() & _.AppId == appId & _.StatTime.Between(start, end);
+
+        return FindAll(where.GroupBy(_.Name), null, selects);
+    }
     #endregion
 }

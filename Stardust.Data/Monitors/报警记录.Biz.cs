@@ -115,5 +115,17 @@ public partial class AlarmRecord : Entity<AlarmRecord>
     /// <param name="date"></param>
     /// <returns></returns>
     public static Int32 DeleteBefore(DateTime date) => Delete(_.Id < Meta.Factory.Snow.GetId(date));
+
+    /// <summary>按告警类别分组统计指定时间段的告警数。看板大屏告警分布使用</summary>
+    /// <param name="start">开始时间</param>
+    /// <param name="end">结束时间</param>
+    /// <returns>仅填充 Category/Times/Id 的列表</returns>
+    public static IList<AlarmRecord> SearchGroupCategory(DateTime start, DateTime end)
+    {
+        var selects = _.Times.Sum() & _.Id.Count() & _.Category;
+        var where = new WhereExpression() & _.StartTime.Between(start, end);
+
+        return FindAll(where.GroupBy(_.Category), null, selects);
+    }
     #endregion
 }

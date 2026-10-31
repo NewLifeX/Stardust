@@ -200,5 +200,33 @@ public static IList<AppMinuteStat> FindAllByAppId(Int32 appId)
     /// <param name="time"></param>
     /// <returns></returns>
     public static Int32 DeleteBefore(DateTime time) => Delete(_.StatTime < time);
+
+    /// <summary>按应用分组统计指定时间段的汇总。看板 Top 应用与项目矩阵使用</summary>
+    /// <param name="start">开始时间</param>
+    /// <param name="end">结束时间</param>
+    /// <param name="appIds">应用集合。为空表示全部</param>
+    /// <returns>仅填充 AppId/Total/Errors/TotalCost/MaxCost 的列表</returns>
+    public static IList<AppMinuteStat> SearchGroupApp(DateTime start, DateTime end, Int32[] appIds)
+    {
+        var selects = _.Total.Sum() & _.Errors.Sum() & _.TotalCost.Sum() & _.MaxCost.Max() & _.AppId;
+        var where = new WhereExpression() & _.StatTime.Between(start, end);
+        if (appIds != null && appIds.Length > 0) where &= _.AppId.In(appIds);
+
+        return FindAll(where.GroupBy(_.AppId), null, selects);
+    }
+
+    /// <summary>按统计时间分组统计指定时间段的汇总。看板全局趋势使用，避免逐行拉取</summary>
+    /// <param name="start">开始时间</param>
+    /// <param name="end">结束时间</param>
+    /// <param name="appIds">应用集合。为空表示全部</param>
+    /// <returns>仅填充 StatTime/Total/Errors/TotalCost/MaxCost 的列表</returns>
+    public static IList<AppMinuteStat> SearchGroupTime(DateTime start, DateTime end, Int32[] appIds)
+    {
+        var selects = _.Total.Sum() & _.Errors.Sum() & _.TotalCost.Sum() & _.MaxCost.Max() & _.StatTime;
+        var where = new WhereExpression() & _.StatTime.Between(start, end);
+        if (appIds != null && appIds.Length > 0) where &= _.AppId.In(appIds);
+
+        return FindAll(where.GroupBy(_.StatTime), null, selects);
+    }
     #endregion
 }

@@ -133,6 +133,34 @@ public partial class AppDayStat : Entity<AppDayStat>
 
         return FindAll(exp, new PageParameter { PageSize = 1000 });
     }
+
+    /// <summary>按应用分组统计日期区间的汇总。看板应用矩阵与 Top 应用使用</summary>
+    /// <param name="start">开始日期</param>
+    /// <param name="end">结束日期</param>
+    /// <param name="appIds">应用集合。为空表示全部</param>
+    /// <returns>仅填充 AppId/Total/Errors/TotalCost/MaxCost 的列表</returns>
+    public static IList<AppDayStat> SearchGroupApp(DateTime start, DateTime end, Int32[] appIds)
+    {
+        var selects = _.Total.Sum() & _.Errors.Sum() & _.TotalCost.Sum() & _.MaxCost.Max() & _.AppId;
+        var where = new WhereExpression() & _.StatDate.Between(start, end);
+        if (appIds != null && appIds.Length > 0) where &= _.AppId.In(appIds);
+
+        return FindAll(where.GroupBy(_.AppId), null, selects);
+    }
+
+    /// <summary>按统计日期分组统计日期区间的汇总。看板 7 天趋势使用</summary>
+    /// <param name="start">开始日期</param>
+    /// <param name="end">结束日期</param>
+    /// <param name="appIds">应用集合。为空表示全部</param>
+    /// <returns>仅填充 StatDate/Total/Errors/TotalCost/MaxCost 的列表</returns>
+    public static IList<AppDayStat> SearchGroupDate(DateTime start, DateTime end, Int32[] appIds)
+    {
+        var selects = _.Total.Sum() & _.Errors.Sum() & _.TotalCost.Sum() & _.MaxCost.Max() & _.StatDate;
+        var where = new WhereExpression() & _.StatDate.Between(start, end);
+        if (appIds != null && appIds.Length > 0) where &= _.AppId.In(appIds);
+
+        return FindAll(where.GroupBy(_.StatDate), null, selects);
+    }
     #endregion
 
     #region 业务操作
