@@ -76,6 +76,23 @@ public class DashboardPageTests : IAsyncLifetime
         Assert.Equal(0, await _page.Locator(".sd-rail").CountAsync());
     }
 
+    [Fact(DisplayName = "管理后台可以打开看板中心并跳出后台框架")]
+    public async Task AdminMenu_OpensDashboard()
+    {
+        await _page!.GotoAsync("/Admin", new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 30_000 });
+
+        var link = _page.Locator("[data-url='/Dashboard']").First;
+        Assert.Equal(1, await link.CountAsync());
+
+        // 菜单默认折叠，直接派发 click 事件触发 layui 的打开逻辑
+        await link.DispatchEventAsync("click");
+        await _page.WaitForURLAsync(url => url.Contains("/Dashboard", StringComparison.OrdinalIgnoreCase), new PageWaitForURLOptions { Timeout = 30_000 });
+
+        // 跳出后台内容框架：只剩看板自己的侧栏，不再套后台外壳
+        Assert.Equal(1, await _page.Locator(".sd-rail").CountAsync());
+        Assert.Equal(0, await _page.Locator(".layui-side").CountAsync());
+    }
+
     [Fact(DisplayName = "看板菜单已注册并可进入系统级看板")]
     public async Task DashboardMenu_Registered()
     {

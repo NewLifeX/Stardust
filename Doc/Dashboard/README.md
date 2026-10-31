@@ -430,6 +430,7 @@ apps/stardust/src/views/Dashboard/
 | `/Dashboard/Data` | 数据接口 | 返回当前页 JSON，供 30 秒轮询与前端二次开发 |
 
 后台入口：看板左侧栏底部「后台」图标跳转 `/Admin`。魔方管理后台首页保持原生工作台（`Cube.StartPage` = `/Admin/Index/Dashboard`），不嵌入看板；登录成功后通过 `LoginLandingMiddleware` 把魔方固定的 `/Admin` 跳转改写为 `/`（带返回地址时不改写）。
+反向入口：后台左侧「平台管理 → 看板中心」打开 `/Dashboard`，看板页面在框架内检测到被后台嵌套时跳转到顶层，直接以整页呈现（`_Layout_Dashboard` 首屏脚本）。
 
 ### 16.2 数据来源
 

@@ -19,6 +19,12 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script>
+        /* 从管理后台菜单打开时跳出内容框架，避免看板套在后台外壳里 */
+        if (window.top !== window.self) {
+            try { window.top.location.replace(window.location.href); } catch (e) { }
+        }
+    </script>
     <title>@ViewBag.Title · 星尘看板</title>
     <script>
         /* 首屏前应用主题，避免闪白/闪黑 */

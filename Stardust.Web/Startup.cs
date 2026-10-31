@@ -383,19 +383,32 @@ public class Startup
     }
 
     /// <summary>确保「看板中心」菜单存在。看板控制器位于主程序集而非区域，魔方菜单扫描不会自动生成</summary>
+    /// <remarks>魔方后台左侧一级菜单只能作为分组展开，因此看板入口挂到「系统管理」下作为子菜单；页面会自动跳出内容框架。</remarks>
     private static void EnsureDashboardMenu()
     {
-        var menu = Menu.Find(Menu._.Url == "/Dashboard");
+        // 优先挂到「平台管理」，保证进入后台第一屏就能看到看板入口
+        var parent = Menu.Find(Menu._.Url == "/Platform") ?? Menu.Find(Menu._.Url == "/Admin");
+        if (parent == null) return;
+
+        var menu = Menu.Find(Menu._.Url == "/Dashboard" & Menu._.ParentID == parent.ID);
+        // 清理早期放在一级的看板菜单，一级节点无法直接打开页面
+        foreach (var item in Menu.FindAll(Menu._.Url == "/Dashboard" & Menu._.ParentID != parent.ID))
+        {
+            XTrace.WriteLine("Remove dead dashboard menu [{0}]", item.ID);
+            item.Delete();
+        }
+
         if (menu != null) return;
 
         menu = new Menu
         {
-            Name = "Dashboard",
+            // 系统管理下已有「Dashboard」工作台菜单，这里用独立名称避免唯一键冲突
+            Name = "DashboardPortal",
             DisplayName = "看板中心",
             FullName = "Stardust.Web.Controllers.DashboardController",
             Url = "/Dashboard",
-            ParentID = 0,
-            Sort = 1000,
+            ParentID = parent.ID,
+            Sort = -1,
             Icon = "fa-th-large",
             Visible = true,
         };
