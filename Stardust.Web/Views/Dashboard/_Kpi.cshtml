@@ -1,0 +1,17 @@
+@model KpiModel
+@using NewLife
+@using Stardust.Web.Models.Dashboard
+@{
+    var tone = Model.Tone.IsNullOrEmpty() ? "" : "sd-kpi--" + Model.Tone;
+    var deltaLevel = Model.DeltaLevel.IsNullOrEmpty() ? "flat" : Model.DeltaLevel;
+    var hasDelta = !Model.Delta.IsNullOrEmpty();
+}
+<div class="sd-kpi @tone" data-kpi="@Model.Key" data-kpi-url="@Model.Url" title="@Model.Note">
+    <div class="sd-kpi__label">@Model.Label</div>
+    <div class="sd-kpi__value"><span data-kpi-value>@Model.Value</span><span class="sd-kpi__unit" data-kpi-unit>@Model.Unit</span></div>
+    <div class="sd-kpi__foot">
+        <span class="delta delta--@deltaLevel" data-kpi-delta hidden="@(hasDelta ? null : "hidden")">@Model.Delta</span>
+        <span data-kpi-note>@Model.Note</span>
+    </div>
+    <div class="sd-kpi__spark" data-kpi-spark></div>
+</div>

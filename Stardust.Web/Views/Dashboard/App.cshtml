@@ -1,0 +1,276 @@
+@model AppDashboardModel
+@using Stardust.Web.Models.Dashboard
+@{
+    Layout = "~/Views/Shared/_Layout_Dashboard.cshtml";
+    var range = Model.Range;
+    var info = Model.Info;
+    var instances = Model.Instances;
+    var hasMeter = Model.Meter.SampleTime.Year > 2000;
+}
+<div class="scope-notice">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M12 3l9 4v6c0 4.6-3.4 7.4-9 8-5.6-.6-9-3.4-9-8V7z" /><path d="M12 9v4M12 16h.01" />
+    </svg>
+    <span class="notice--limited">当前为受限数据视角：仅显示你被授权的应用数据。</span>
+    <span class="notice--none">当前账号未授权任何项目。</span>
+</div>
+
+<section class="scope-empty">
+    <div class="scope-empty__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <rect x="4" y="10" width="16" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /><path d="M12 14v3" />
+        </svg>
+    </div>
+    <h2>暂无授权项目</h2>
+    <p>你的账号还没有被加入任何项目。请联系项目管理员在「项目成员」中授权。</p>
+    <a class="btn btn--primary" href="/Platform/ProjectUser">去申请项目权限</a>
+</section>
+
+<section class="entity-head">
+    <div class="entity-head__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+            <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z" /><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5" />
+        </svg>
+    </div>
+    <div class="entity-head__main">
+        <h1 class="entity-head__title">
+            @(info.DisplayName.IsNullOrEmpty() ? info.Name : info.DisplayName)
+            <span class="pill @(info.Online ? "pill--online pill--live" : "pill--offline")"><span class="dot"></span>@(info.Online ? "在线" : "离线")</span>
+        </h1>
+        <div class="entity-head__meta">
+            <span class="mono">@info.Name</span>
+            @if (!info.ProjectName.IsNullOrEmpty())
+            {
+                <a class="mono" href="/Dashboard/Project/@info.ProjectId">@info.ProjectName</a>
+            }
+            <span>@(info.Category.IsNullOrEmpty() ? "未分类" : info.Category)</span>
+            <span>版本 @(info.Version.IsNullOrEmpty() ? "—" : info.Version)</span>
+            <span>编译 @info.CompileText</span>
+            <span>实例 @info.Instances 个</span>
+        </div>
+    </div>
+    <div class="entity-head__actions">
+        <a class="btn" href="/Registry/App/Edit?Id=@info.Id">应用设置</a>
+        <a class="btn" href="/Monitors/TraceItem?appId=@info.Id">埋点统计</a>
+        <a class="btn btn--primary" href="/Registry/AppOnline?appId=@info.Id">在线实例</a>
+    </div>
+</section>
+
+<section class="scope-bar">
+    <div>
+        <div class="crumbs">
+            <a href="/Dashboard/System">看板总览</a><span class="sep">/</span>
+            <a href="/Dashboard/Projects">项目</a><span class="sep">/</span>
+            <a href="/Dashboard/Project/@info.ProjectId">@info.ProjectName</a><span class="sep">/</span>
+            <span>@info.Name</span>
+        </div>
+        <h1 class="page-title">应用看板</h1>
+        <p class="page-sub">在线状态、错误与慢端点 · 数据每 30 秒自动刷新</p>
+    </div>
+    <div class="toolbar">
+        <div class="segment" role="group" aria-label="时间范围">
+            <a class="btn btn--ghost @(range == "1h" ? "is-active" : "")" href="?range=1h">1 小时</a>
+            <a class="btn btn--ghost @(range == "24h" ? "is-active" : "")" href="?range=24h">24 小时</a>
+            <a class="btn btn--ghost @(range == "7d" ? "is-active" : "")" href="?range=7d">7 天</a>
+        </div>
+        <button class="btn" type="button" data-action="refresh">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-2.64-6.36" /><path d="M21 3v6h-6" /></svg>
+            自动刷新
+        </button>
+    </div>
+</section>
+
+<section class="kpi-row">
+    @foreach (var kpi in Model.Kpis)
+    {
+        <partial name="_Kpi" model="kpi" />
+    }
+</section>
+
+<section class="sd-grid">
+    <div class="sd-card col-16 sd-card--fill">
+        <div class="sd-card__head">
+            <h2 class="sd-card__title">请求量与错误率趋势</h2>
+            <div class="legend">
+                <span><i class="l-brand"></i>请求量 QPS</span>
+                <span><i class="l-warn"></i>错误率 %</span>
+            </div>
+        </div>
+        <div id="appTrend" class="chart chart--fill"></div>
+    </div>
+
+    <div class="sd-card col-8">
+        <div class="sd-card__head">
+            <h2 class="sd-card__title">实例健康</h2>
+            <span class="sd-card__hint">@instances.Online / @instances.Total 在线</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;">
+            <div id="instanceDonut" class="chart" style="height:132px;width:132px;flex:0 0 132px"></div>
+            <div style="min-width:0;flex:1">
+                <div class="muted" style="font-size:11px;margin-bottom:6px;">平均在线 @(instances.AvgUptime > 0 ? instances.AvgUptime.ToString("n1") + " 小时" : "—")</div>
+                @foreach (var v in instances.Versions)
+                {
+                    <div class="meter-row" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                        <span class="mono" style="min-width:86px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">@v.Name</span>
+                        <div class="meter" style="flex:1"><i style="width:@(Math.Round(v.Count * 100d / Math.Max(instances.Online, 1)))%"></i></div>
+                        <span style="font-size:11px;color:var(--sd-text-secondary);">@v.Count</span>
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="table-wrap table-wrap--scroll" style="margin-top:10px;">
+            <table class="sd-table sd-table--compact">
+                <thead>
+                    <tr><th>节点</th><th>版本</th><th class="num">在线</th><th class="num">CPU</th><th class="num">内存</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in instances.Rows.Take(10))
+                    {
+                        <tr class="@(row.Url != null ? "row-link" : "")" onclick="@(row.Url != null ? $"location.href='{row.Url}'" : null)">
+                            <td>
+                                <div class="strong">@(row.NodeName.IsNullOrEmpty() ? row.Client : row.NodeName)</div>
+                                <div class="muted mono">@(row.Ip.IsNullOrEmpty() ? row.Client : row.Ip)</div>
+                            </td>
+                            <td class="mono">@(row.Version.IsNullOrEmpty() ? "—" : row.Version)</td>
+                            <td class="num">@row.Uptime.ToString("n1")h</td>
+                            <td class="num">@row.Cpu.ToString("n1")%</td>
+                            <td class="num">@(row.Memory > 0 ? row.Memory + "M" : "—")</td>
+                        </tr>
+                    }
+                    @if (instances.Rows.Count == 0)
+                    {
+                        <tr><td colspan="5"><div class="empty" style="padding:16px;"><div class="empty__title">暂无在线实例</div></div></td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="sd-card col-8">
+        <div class="sd-card__head">
+            <h2 class="sd-card__title">端点 Top</h2>
+            <div class="segment" id="endpointMetric">
+                <button type="button" class="is-active" data-metric="cost">耗时</button>
+                <button type="button" data-metric="errorRate">错误率</button>
+                <button type="button" data-metric="total">调用量</button>
+            </div>
+        </div>
+        <div id="endpointChart" class="chart chart-md"></div>
+    </div>
+
+    <div class="sd-card col-8">
+        <div class="sd-card__head">
+            <h2 class="sd-card__title">错误分布</h2>
+            <span class="sd-card__hint">近 24 小时 · @Model.ErrorTotal 次</span>
+        </div>
+        <div id="errorDonut" class="chart chart-sm"></div>
+        <div class="code-list" id="errorLegend"></div>
+    </div>
+
+    <div class="sd-card col-8">
+        <div class="sd-card__head">
+            <h2 class="sd-card__title">运行时性能</h2>
+            <span class="sd-card__hint">@(hasMeter ? "采样 " + Model.Meter.SampleText : "暂无性能采样")</span>
+        </div>
+        <div class="perf-grid">
+            <div class="perf-tile"><span>CPU</span><b>@(hasMeter ? Model.Meter.Cpu.ToString("n1") : "—")<em>@(hasMeter ? "%" : "")</em></b></div>
+            <div class="perf-tile"><span>物理内存</span><b>@(hasMeter ? Model.Meter.Memory + "" : "—")<em>@(hasMeter ? "MB" : "")</em></b></div>
+            <div class="perf-tile"><span>托管堆</span><b>@(hasMeter ? Model.Meter.Heap + "" : "—")<em>@(hasMeter ? "MB" : "")</em></b></div>
+            <div class="perf-tile"><span>线程</span><b>@(hasMeter ? Model.Meter.Threads + "" : "—")</b></div>
+            <div class="perf-tile"><span>连接</span><b>@(hasMeter ? Model.Meter.Connections + "" : "—")</b></div>
+            <div class="perf-tile"><span>GC</span><b>@(hasMeter ? Model.Meter.GcCount + "" : "—")<em>@(hasMeter ? "次" : "")</em></b></div>
+        </div>
+    </div>
+
+    <div class="sd-card col-12">
+        <div class="sd-card__head">
+            <h2 class="sd-card__title">依赖服务</h2>
+            <span class="sd-card__hint">注册服务（提供者）与消费关系</span>
+        </div>
+        <div class="table-wrap table-wrap--scroll">
+            <table class="sd-table sd-table--compact">
+                <thead>
+                    <tr><th>服务</th><th>方向</th><th>地址</th><th>状态</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var dep in Model.Dependencies)
+                    {
+                        <tr>
+                            <td class="mono">@dep.Service</td>
+                            <td>@(dep.Direction == "provider" ? "提供者" : "消费者")</td>
+                            <td class="mono muted" title="@dep.Address">@(dep.Address.IsNullOrEmpty() ? "—" : (dep.Address.Length > 60 ? dep.Address[..60] + "…" : dep.Address))</td>
+                            <td>
+                                <span class="pill @(dep.Healthy ? "pill--online" : "pill--warn")"><span class="dot"></span>@(dep.Healthy ? "正常" : "异常")</span>
+                            </td>
+                        </tr>
+                    }
+                    @if (Model.Dependencies.Count == 0)
+                    {
+                        <tr><td colspan="4"><div class="empty" style="padding:16px;"><div class="empty__title">暂无注册服务</div><div class="empty__desc">应用注册服务后自动展示</div></div></td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="sd-card col-6">
+        <div class="sd-card__head">
+            <h2 class="sd-card__title">最近变更</h2>
+            <a class="link" href="/Registry/AppHistory?appId=@info.Id">全部</a>
+        </div>
+        <div class="timeline">
+            @foreach (var item in Model.Changes)
+            {
+                <div class="event event--@(item.Success ? "ok" : "bad")">
+                    <div class="event__bar"></div>
+                    <div>
+                        <div class="event__title">@item.Action</div>
+                        <div class="event__meta">@(item.Remark.IsNullOrEmpty() ? (item.Success ? "成功" : "失败") : item.Remark)</div>
+                    </div>
+                    <div class="event__time">@item.TimeText</div>
+                </div>
+            }
+            @if (Model.Changes.Count == 0)
+            {
+                <div class="empty" style="padding:24px 12px;">
+                    <div class="empty__title">暂无变更记录</div>
+                    <div class="empty__desc">应用上下线与配置变更会自动记录</div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="sd-card col-6">
+        <div class="sd-card__head">
+            <h2 class="sd-card__title">最新告警</h2>
+            <a class="link" href="/Monitors/AlarmRecord">全部</a>
+        </div>
+        <div class="event-list">
+            @foreach (var item in Model.Alarms)
+            {
+                <div class="event event--@(item.Recovered ? "ok" : "bad")">
+                    <div class="event__bar"></div>
+                    <div>
+                        <div class="event__title">@item.Category</div>
+                        <div class="event__meta">持续 @item.DurationText · 触发 @item.Times 次</div>
+                    </div>
+                    <div class="event__time">@item.StartText</div>
+                </div>
+            }
+            @if (Model.Alarms.Count == 0)
+            {
+                <div class="empty" style="padding:24px 12px;">
+                    <div class="empty__title">暂无告警</div>
+                    <div class="empty__desc">应用运行正常，未触发告警规则</div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        window.__SD_DATA__ = @Html.Raw(Json.Serialize(Model));
+    </script>
+    <script src="~/dashboard/pages/app.js"></script>
+}

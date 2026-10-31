@@ -1,0 +1,33 @@
+@using Stardust.Web.Models.Dashboard
+@{
+    var scope = ViewBag.Scope as ScopeInfo ?? new ScopeInfo();
+    var range = ViewBag.Range as String ?? "24h";
+}
+<!DOCTYPE html>
+<html lang="zh-CN" data-scope="@scope.Mode" data-page="wallboard">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>大屏模式 · 星尘看板</title>
+    <script>
+        (function () {
+            try {
+                var m = localStorage.getItem('sd-theme') || 'auto';
+                var d = m === 'auto' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : m;
+                document.documentElement.dataset.theme = d;
+                document.documentElement.dataset.themeMode = m;
+            } catch (e) { document.documentElement.dataset.theme = 'dark'; }
+        })();
+    </script>
+    <link rel="stylesheet" href="~/dashboard/tokens.css" />
+    <link rel="stylesheet" href="~/dashboard/dashboard.css" />
+</head>
+<body>
+    <div class="sd-topband"></div>
+    @RenderBody()
+
+    <script src="~/dashboard/vendor/echarts.min.js"></script>
+    <script src="~/dashboard/dashboard.js"></script>
+    @RenderSection("Scripts", false)
+</body>
+</html>

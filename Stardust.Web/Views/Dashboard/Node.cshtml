@@ -1,0 +1,282 @@
+@model NodeDashboardModel
+@using Stardust.Web.Models.Dashboard
+@{
+    Layout = "~/Views/Shared/_Layout_Dashboard.cshtml";
+    var range = Model.Range;
+    var info = Model.Info;
+}
+<div class="scope-notice">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M12 3l9 4v6c0 4.6-3.4 7.4-9 8-5.6-.6-9-3.4-9-8V7z" /><path d="M12 9v4M12 16h.01" />
+    </svg>
+    <span class="notice--limited">当前为受限数据视角：仅显示你被授权的节点数据。</span>
+    <span class="notice--none">当前账号未授权任何项目。</span>
+</div>
+
+<section class="scope-empty">
+    <div class="scope-empty__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <rect x="4" y="10" width="16" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /><path d="M12 14v3" />
+        </svg>
+    </div>
+    <h2>暂无授权项目</h2>
+    <p>你的账号还没有被加入任何项目。请联系项目管理员在「项目成员」中授权。</p>
+    <a class="btn btn--primary" href="/Platform/ProjectUser">去申请项目权限</a>
+</section>
+
+@if (!info.Online)
+{
+    <div class="offline-banner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v9M12 16h.01" /><circle cx="12" cy="12" r="9" /></svg>
+        <span>节点当前离线，离线时长 <b>@Model.OfflineText</b>，最后一次上报 <b>@info.LastActive.ToString("yyyy-MM-dd HH:mm:ss")</b>；以下为最后一次快照。</span>
+    </div>
+}
+
+<section class="entity-head">
+    <div class="entity-head__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+            <rect x="3" y="4" width="18" height="7" rx="2" /><rect x="3" y="14" width="18" height="6" rx="2" />
+            <circle cx="7" cy="7.5" r="1" /><circle cx="7" cy="17" r="1" />
+        </svg>
+    </div>
+    <div class="entity-head__main">
+        <h1 class="entity-head__title">
+            @info.Name
+            <span class="pill @(info.Online ? "pill--online pill--live" : "pill--offline")"><span class="dot"></span>@(info.Online ? "在线" : "离线")</span>
+        </h1>
+        <div class="entity-head__meta">
+            <span class="mono">@(info.Ip.IsNullOrEmpty() ? "—" : info.Ip)</span>
+            <span>@(info.OS.IsNullOrEmpty() ? "未知系统" : info.OS) @info.OSVersion</span>
+            <span>@(info.Arch.IsNullOrEmpty() ? "" : info.Arch)</span>
+            <span>机房 @(info.Location.IsNullOrEmpty() ? "未标注" : info.Location)</span>
+            <span>运行 @info.UptimeText</span>
+            <span>Agent @(info.Version.IsNullOrEmpty() ? "—" : info.Version)</span>
+            @if (!info.ProjectName.IsNullOrEmpty())
+            {
+                <a href="/Dashboard/Project/@info.ProjectId">@info.ProjectName</a>
+            }
+        </div>
+    </div>
+    <div class="entity-head__actions">
+        <a class="btn" href="/Nodes/Node/Edit?id=@info.Id">节点设置</a>
+        <a class="btn" href="/Nodes/NodeCommand?nodeId=@info.Id">下发命令</a>
+        <a class="btn btn--primary" href="/Nodes/NodeData?nodeId=@info.Id">性能数据</a>
+    </div>
+</section>
+
+<section class="scope-bar">
+    <div>
+        <div class="crumbs">
+            <a href="/Dashboard/System">看板总览</a><span class="sep">/</span>
+            <a href="/Dashboard/Nodes">节点</a><span class="sep">/</span><span>@info.Name</span>
+        </div>
+        <h1 class="page-title">节点看板</h1>
+        <p class="page-sub">资源、网络与部署态势 · 数据每 30 秒自动刷新</p>
+    </div>
+    <div class="toolbar">
+        <div class="segment" role="group" aria-label="时间范围">
+            <a class="btn btn--ghost @(range == "1h" ? "is-active" : "")" href="?range=1h">1 小时</a>
+            <a class="btn btn--ghost @(range == "24h" ? "is-active" : "")" href="?range=24h">24 小时</a>
+            <a class="btn btn--ghost @(range == "7d" ? "is-active" : "")" href="?range=7d">7 天</a>
+        </div>
+        <button class="btn" type="button" data-action="refresh">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-2.64-6.36" /><path d="M21 3v6h-6" /></svg>
+            自动刷新
+        </button>
+    </div>
+</section>
+
+<section class="kpi-row">
+    @foreach (var kpi in Model.Kpis)
+    {
+        <partial name="_Kpi" model="kpi" />
+    }
+</section>
+
+<section class="sd-grid">
+    <div class="sd-card col-16">
+        <div class="sd-card__head">
+            <h2 class="sd-card__title">资源时序</h2>
+            <div class="legend">
+                <span><i class="l-brand"></i>CPU</span>
+                <span><i class="l-accent"></i>内存</span>
+                <span><i class="l-warn"></i>磁盘</span>
+            </div>
+        </div>
+        <div id="nodeSeries" class="chart chart-md"></div>
+    </div>
+
+    <div class="sd-card col-8">
+        <div class="sd-card__head">
+            <h2 class="sd-card__title">健康评分</h2>
+            <span class="sd-card__hint">综合 @Model.Radar.Score 分 · @Model.Radar.Level</span>
+        </div>
+        <div id="nodeRadar" class="chart chart-md"></div>
+    </div>
+
+    <div class="sd-card col-8">
+        <div class="sd-card__head">
+            <h2 class="sd-card__title">网络质量</h2>
+            <span class="sd-card__hint">最近一次上报</span>
+        </div>
+        <div class="gauge-pair">
+            <div id="gaugeIntranet" style="height:118px"></div>
+            <div id="gaugeInternet" style="height:118px"></div>
+        </div>
+        <div class="code-list" style="margin-top:2px">
+            <div class="code-row"><span class="grow">网关延迟 / 丢包</span><b>@Model.Network.GatewayLatency ms · @Model.Network.GatewayLoss.ToString("n2")%</b></div>
+            <div class="code-row"><span class="grow">DNS 延迟 / 丢包</span><b>@Model.Network.DnsLatency ms · @Model.Network.DnsLoss.ToString("n2")%</b></div>
+            <div class="code-row"><span class="grow">服务器延迟 / 丢包</span><b>@Model.Network.ServerLatency ms · @Model.Network.ServerLoss.ToString("n2")%</b></div>
+        </div>
+    </div>
+
+    <div class="sd-card col-8">
+        <div class="sd-card__head">
+            <h2 class="sd-card__title">磁盘分区</h2>
+            <span class="sd-card__hint">@Model.Disks.Count 个分区</span>
+        </div>
+        @if (Model.Disks.Count > 0)
+        {
+            <div style="display:flex;flex-direction:column;gap:14px;margin-top:8px">
+                @foreach (var disk in Model.Disks.Take(6))
+                {
+                    <div>
+                        <div class="meter-row">
+                            <span class="mono">@disk.Name</span>
+                            <span class="muted">@disk.Format</span>
+                            <span class="grow"></span>
+                            <b>@disk.Usage.ToString("n1")%</b>
+                        </div>
+                        <div class="meter meter--@DashboardMath.Level(disk.Usage)"><i style="width:@(Math.Min(disk.Usage, 100))%"></i></div>
+                        <div class="muted" style="font-size:11px;margin-top:4px;">@disk.Used.ToString("n1") GB / @disk.Total.ToString("n1") GB@(disk.DaysToFull > 0 ? $" · 预计 {disk.DaysToFull} 天写满" : "")</div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty" style="padding:24px 12px;">
+                <div class="empty__title">未上报分区信息</div>
+                <div class="empty__desc">Agent 上报磁盘分区后自动展示</div>
+            </div>
+        }
+        <div class="code-list" style="margin-top:14px">
+            <div class="code-row"><span class="grow">进程数</span><b>@Model.ProcessCount</b></div>
+            <div class="code-row"><span class="grow">TCP 连接</span><b>@Model.TcpConnections</b></div>
+        </div>
+    </div>
+
+    <div class="sd-card col-8">
+        <div class="sd-card__head">
+            <h2 class="sd-card__title">进程守护</h2>
+            <span class="sd-card__hint">@Model.Processes.Count(e => e.Running) / @Model.Processes.Count 运行中</span>
+        </div>
+        @if (Model.Processes.Count > 0)
+        {
+            <div class="code-list">
+                @foreach (var item in Model.Processes.Take(10))
+                {
+                    <div class="code-row">
+                        <span class="grow mono">@item.Name</span>
+                        <span class="pill @(item.Running ? "pill--online" : "pill--offline")"><span class="dot"></span>@(item.Running ? "运行中" : "未运行")</span>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty" style="padding:24px 12px;">
+                <div class="empty__title">未配置进程守护</div>
+                <div class="empty__desc">在节点设置中填写「守护进程」，或在线上报进程列表后展示</div>
+            </div>
+        }
+    </div>
+
+    <div class="sd-card col-12">
+        <div class="sd-card__head">
+            <h2 class="sd-card__title">已部署应用</h2>
+            <span class="sd-card__hint">部署集与进程状态</span>
+        </div>
+        <div class="table-wrap table-wrap--scroll">
+            <table class="sd-table sd-table--compact">
+                <thead>
+                    <tr><th>部署集</th><th>版本</th><th class="num">端口</th><th class="num">进程</th><th>启动时间</th><th>状态</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Deploys)
+                    {
+                        <tr class="row-link" onclick="location.href='@item.Url'">
+                            <td class="strong">@item.DeployName</td>
+                            <td class="mono">@(item.Version.IsNullOrEmpty() ? "—" : item.Version)</td>
+                            <td class="num">@(item.Port > 0 ? item.Port + "" : "—")</td>
+                            <td class="num">@(item.ProcessId > 0 ? item.ProcessId + "" : "—")</td>
+                            <td>@(item.StartTime.Year > 2000 ? item.StartTime.ToString("MM-dd HH:mm") : "—")</td>
+                            <td>
+                                <span class="pill @(item.Status == "running" ? "pill--online" : "pill--muted")"><span class="dot"></span>@(item.Status == "running" ? "运行中" : "未运行")</span>
+                            </td>
+                        </tr>
+                    }
+                    @if (Model.Deploys.Count == 0)
+                    {
+                        <tr><td colspan="6"><div class="empty" style="padding:16px;"><div class="empty__title">暂无部署记录</div><div class="empty__desc">通过发布中心把应用部署到本节点后展示</div></div></td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="sd-card col-6">
+        <div class="sd-card__head">
+            <h2 class="sd-card__title">操作历史</h2>
+            <a class="link" href="/Nodes/NodeHistory?nodeId=@info.Id">全部</a>
+        </div>
+        <div class="timeline">
+            @foreach (var item in Model.History)
+            {
+                <div class="event event--@(item.Success ? "info" : "warn")">
+                    <div class="event__bar"></div>
+                    <div>
+                        <div class="event__title">@item.Action</div>
+                        <div class="event__meta">@(item.Remark.IsNullOrEmpty() ? (item.Success ? "成功" : "失败") : item.Remark)</div>
+                    </div>
+                    <div class="event__time">@item.TimeText</div>
+                </div>
+            }
+            @if (Model.History.Count == 0)
+            {
+                <div class="empty" style="padding:24px 12px;"><div class="empty__title">暂无操作记录</div></div>
+            }
+        </div>
+    </div>
+
+    <div class="sd-card col-6">
+        <div class="sd-card__head">
+            <h2 class="sd-card__title">节点告警</h2>
+            <a class="link" href="/Monitors/AlarmRecord">全部</a>
+        </div>
+        <div class="event-list">
+            @foreach (var item in Model.Alarms)
+            {
+                <div class="event event--@(item.Recovered ? "ok" : "bad")">
+                    <div class="event__bar"></div>
+                    <div>
+                        <div class="event__title">@item.Category</div>
+                        <div class="event__meta">持续 @item.DurationText · 触发 @item.Times 次</div>
+                    </div>
+                    <div class="event__time">@item.StartText</div>
+                </div>
+            }
+            @if (Model.Alarms.Count == 0)
+            {
+                <div class="empty" style="padding:24px 12px;"><div class="empty__title">暂无告警</div><div class="empty__desc">本节点运行正常</div></div>
+            }
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        window.__SD_DATA__ = @Html.Raw(Json.Serialize(Model));
+    </script>
+    <script src="~/dashboard/pages/node.js"></script>
+}

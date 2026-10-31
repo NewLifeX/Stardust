@@ -1,0 +1,230 @@
+@model SystemDashboardModel
+@using Stardust.Web.Models.Dashboard
+@{
+    Layout = "~/Views/Shared/_Layout_Dashboard.cshtml";
+
+    var scope = Model.Scope;
+    var range = Model.Range;
+    var online = Model.Health.Offline == 0 && Model.Kpis.FirstOrDefault(e => e.Key == "errorRate")?.Value.ToDouble() < 1;
+    var statusText = online ? "整体运行正常" : "存在异常项";
+    var statusClass = online ? "pill--online pill--live" : "pill--warn";
+}
+<div class="scope-notice">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M12 3l9 4v6c0 4.6-3.4 7.4-9 8-5.6-.6-9-3.4-9-8V7z" /><path d="M12 9v4M12 16h.01" />
+    </svg>
+    <span class="notice--limited">当前为受限数据视角：仅统计你被授权的项目，未授权项目的应用、节点与监控数据不会出现在任何卡片中。</span>
+    <span class="notice--none">当前账号未授权任何项目：所有统计卡片已隐藏，请联系管理员分配项目权限。</span>
+</div>
+
+<section class="scope-empty">
+    <div class="scope-empty__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <rect x="4" y="10" width="16" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /><path d="M12 14v3" />
+        </svg>
+    </div>
+    <h2>暂无授权项目</h2>
+    <p>你的账号还没有被加入任何项目。请联系项目管理员在「项目成员」中授权，或前往平台申请加入项目；授权后本页会自动展示你可访问的项目、应用与节点。</p>
+    <a class="btn btn--primary" href="/Platform/ProjectUser">去申请项目权限</a>
+</section>
+
+<section class="scope-bar">
+    <div>
+        <div class="crumbs">
+            <a href="/Dashboard/System">看板总览</a><span class="sep">/</span><span>系统级</span>
+        </div>
+        <h1 class="page-title">
+            系统级看板
+            <span class="pill @statusClass"><span class="dot"></span>@statusText</span>
+        </h1>
+        <p class="page-sub">
+            覆盖 <strong>@scope.VisibleProjects</strong> 个项目 ·
+            <strong>@Model.TotalApps</strong> 个应用 ·
+            <strong>@Model.TotalNodes</strong> 个节点 ·
+            数据每 30 秒自动刷新
+        </p>
+    </div>
+    <div class="toolbar">
+        <div class="segment" role="group" aria-label="时间范围">
+            <a class="btn btn--ghost @(range == "1h" ? "is-active" : "")" href="?range=1h">1 小时</a>
+            <a class="btn btn--ghost @(range == "24h" ? "is-active" : "")" href="?range=24h">24 小时</a>
+            <a class="btn btn--ghost @(range == "7d" ? "is-active" : "")" href="?range=7d">7 天</a>
+        </div>
+        <button class="btn" type="button" data-action="refresh" title="立即刷新">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-2.64-6.36" /><path d="M21 3v6h-6" /></svg>
+            自动刷新
+        </button>
+        <a class="btn" href="/Dashboard/Wallboard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="12" rx="2" /><path d="M8 20h8" /></svg>
+            投屏
+        </a>
+        <a class="btn btn--primary" href="/Dashboard/Projects">
+            进入项目
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+        </a>
+    </div>
+</section>
+
+<section class="kpi-row">
+    @foreach (var kpi in Model.Kpis)
+    {
+        <partial name="_Kpi" model="kpi" />
+    }
+</section>
+
+<section class="sd-grid">
+    <div class="sd-card col-16 sd-card--fill">
+        <div class="sd-card__head">
+            <h2 class="sd-card__title">全局吞吐与质量</h2>
+            <div class="sd-card__actions">
+                <div class="legend">
+                    <span><i class="l-brand"></i>请求量 QPS</span>
+                    <span><i class="l-warn"></i>错误率 %</span>
+                </div>
+            </div>
+        </div>
+        <div id="systemTrend" class="chart chart--fill"></div>
+    </div>
+
+    <div class="sd-card col-8">
+        <div class="sd-card__head">
+            <h2 class="sd-card__title">集群健康</h2>
+            <span class="sd-card__hint">节点在线率 @Model.Health.Rate.ToString("n1")%</span>
+        </div>
+        <div id="healthDonut" class="chart" style="height: 160px;"></div>
+        <div id="healthList" class="event-list" style="max-height: 172px;">
+            @foreach (var item in Model.Health.Items)
+            {
+                <a class="event event--@item.Level" href="@item.Url">
+                    <div class="event__bar"></div>
+                    <div>
+                        <div class="event__title">@item.Title</div>
+                        <div class="event__meta">@item.Meta</div>
+                    </div>
+                    <div class="event__time">@item.TimeText</div>
+                </a>
+            }
+        </div>
+    </div>
+
+    <div class="sd-card col-8">
+        <div class="sd-card__head">
+            <h2 class="sd-card__title">项目健康矩阵</h2>
+            <a class="link" href="/Dashboard/Projects">查看全部</a>
+        </div>
+        <div class="table-wrap table-wrap--scroll">
+            <table class="sd-table sd-table--compact">
+                <thead>
+                    <tr>
+                        <th>项目</th>
+                        <th class="num">应用</th>
+                        <th class="num">节点</th>
+                        <th class="num">错误率</th>
+                        <th class="num">告警</th>
+                        <th>健康度</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Projects)
+                    {
+                        var offlineNodes = item.Nodes - item.NodesOnline;
+                        var healthClass = item.Health >= 95 ? "meter--ok" : item.Health >= 90 ? "meter--warn" : "meter--bad";
+                        <tr class="row-link" onclick="location.href='@item.Url'">
+                            <td class="strong">@item.Name</td>
+                            <td class="num">@item.AppsOnline/@item.Apps</td>
+                            <td class="num">
+                                @item.NodesOnline/@item.Nodes
+                                @if (offlineNodes > 0 && offlineNodes <= 99)
+                                {
+                                    <span class="pill pill--offline" style="padding:1px 6px">-@offlineNodes</span>
+                                }
+                            </td>
+                            <td class="num @(item.ErrorRate > 0.4 ? "strong" : "")">@item.ErrorRate.ToString("n2")%</td>
+                            <td class="num">
+                                @if (item.Alarms > 0)
+                                {
+                                    <span class="pill pill--warn">@item.Alarms</span>
+                                }
+                                else
+                                {
+                                    <span class="muted">0</span>
+                                }
+                            </td>
+                            <td><div class="meter @healthClass" style="width:74px"><i style="width:@(item.Health)%"></i></div></td>
+                        </tr>
+                    }
+                    @if (Model.Projects.Count == 0)
+                    {
+                        <tr><td colspan="6"><div class="empty"><div class="empty__title">暂无可见项目</div></div></td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="sd-card col-8">
+        <div class="sd-card__head">
+            <h2 class="sd-card__title">Top 应用</h2>
+            <div class="segment" id="topMetric">
+                <button type="button" class="is-active" data-metric="qps">QPS</button>
+                <button type="button" data-metric="errorRate">错误率</button>
+                <button type="button" data-metric="cost">耗时</button>
+            </div>
+        </div>
+        <div id="topAppsChart" class="chart chart-md"></div>
+    </div>
+
+    <div class="sd-card col-8">
+        <div class="sd-card__head">
+            <h2 class="sd-card__title">项目拓扑</h2>
+            <span class="sd-card__hint">节点大小 = QPS · 点击下钻</span>
+        </div>
+        <div id="systemTopology" class="chart chart-md"></div>
+    </div>
+
+    <div class="sd-card col-16">
+        <div class="sd-card__head">
+            <h2 class="sd-card__title">资源水位（按@(Model.RegionDimension)）</h2>
+            <div class="legend">
+                <span><i class="l-brand"></i>CPU</span>
+                <span><i class="l-accent"></i>内存</span>
+                <span><i class="l-warn"></i>磁盘</span>
+            </div>
+        </div>
+        <div id="resourceChart" class="chart chart-md"></div>
+    </div>
+
+    <div class="sd-card col-8">
+        <div class="sd-card__head">
+            <h2 class="sd-card__title">实时事件</h2>
+            <span class="sd-card__hint">告警 / 部署 / 上下线</span>
+        </div>
+        <div id="eventFeed" class="event-list" style="max-height: 260px;">
+            @foreach (var item in Model.Events)
+            {
+                <a class="event event--@item.Level" href="@item.Url">
+                    <div class="event__bar"></div>
+                    <div>
+                        <div class="event__title">@item.Title</div>
+                        <div class="event__meta">@item.Meta</div>
+                    </div>
+                    <div class="event__time">@item.TimeText</div>
+                </a>
+            }
+            @if (Model.Events.Count == 0)
+            {
+                <div class="empty" style="padding:24px 12px;">
+                    <div class="empty__title">近 24 小时暂无事件</div>
+                    <div class="empty__desc">部署、上下线与告警会自动出现在这里</div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        window.__SD_DATA__ = @Html.Raw(Json.Serialize(Model));
+    </script>
+    <script src="~/dashboard/pages/system.js"></script>
+}

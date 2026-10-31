@@ -1,0 +1,251 @@
+@model ProjectDashboardModel
+@using Stardust.Web.Models.Dashboard
+@{
+    Layout = "~/Views/Shared/_Layout_Dashboard.cshtml";
+    var scope = Model.Scope;
+    var range = Model.Range;
+    var project = Model.Project;
+}
+<div class="scope-notice">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M12 3l9 4v6c0 4.6-3.4 7.4-9 8-5.6-.6-9-3.4-9-8V7z" /><path d="M12 9v4M12 16h.01" />
+    </svg>
+    <span class="notice--limited">当前为受限数据视角：仅显示你被授权的项目数据。</span>
+    <span class="notice--none">当前账号未授权任何项目。</span>
+</div>
+
+<section class="scope-empty">
+    <div class="scope-empty__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <rect x="4" y="10" width="16" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /><path d="M12 14v3" />
+        </svg>
+    </div>
+    <h2>暂无授权项目</h2>
+    <p>你的账号还没有被加入任何项目。请联系项目管理员在「项目成员」中授权。</p>
+    <a class="btn btn--primary" href="/Platform/ProjectUser">去申请项目权限</a>
+</section>
+
+<section class="entity-head">
+    <div class="entity-head__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+            <path d="M12 3l9 4.5-9 4.5-9-4.5z" /><path d="M3 12l9 4.5 9-4.5" /><path d="M3 16.5L12 21l9-4.5" />
+        </svg>
+    </div>
+    <div class="entity-head__main">
+        <h1 class="entity-head__title">
+            @project.Name
+            <span class="pill @(project.Enable ? "pill--online" : "pill--offline")">@(project.Enable ? "启用" : "停用")</span>
+        </h1>
+        <div class="entity-head__meta">
+            <span>负责人 @(project.Manager.IsNullOrEmpty() ? "—" : project.Manager)</span>
+            <span>成员 @project.Members 人</span>
+            <span>创建 @project.CreateText</span>
+            <span class="mono">ID @project.Id</span>
+            <span>@project.DataScope</span>
+        </div>
+    </div>
+    <div class="entity-head__actions">
+        <a class="btn" href="/Registry/App?projectId=@project.Id">应用列表</a>
+        <a class="btn" href="/Nodes/Node?projectId=@project.Id">节点列表</a>
+        <a class="btn btn--primary" href="/Platform/GalaxyProject/Edit?Id=@project.Id">项目设置</a>
+    </div>
+</section>
+
+<section class="scope-bar">
+    <div>
+        <div class="crumbs">
+            <a href="/Dashboard/System">看板总览</a><span class="sep">/</span>
+            <a href="/Dashboard/Projects">项目</a><span class="sep">/</span><span>@project.Name</span>
+        </div>
+        <h1 class="page-title">
+            项目看板
+            <span class="pill @(Model.Alarms.Count > 0 ? "pill--warn" : "pill--online pill--live")">
+                <span class="dot"></span>@(Model.Alarms.Count > 0 ? $"{Model.Alarms.Count} 条告警" : "运行正常")
+            </span>
+        </h1>
+        <p class="page-sub">应用与节点同屏 · 数据每 30 秒自动刷新</p>
+    </div>
+    <div class="toolbar">
+        <div class="segment" role="group" aria-label="时间范围">
+            <a class="btn btn--ghost @(range == "1h" ? "is-active" : "")" href="?range=1h">1 小时</a>
+            <a class="btn btn--ghost @(range == "24h" ? "is-active" : "")" href="?range=24h">24 小时</a>
+            <a class="btn btn--ghost @(range == "7d" ? "is-active" : "")" href="?range=7d">7 天</a>
+        </div>
+        <button class="btn" type="button" data-action="refresh">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-2.64-6.36" /><path d="M21 3v6h-6" /></svg>
+            自动刷新
+        </button>
+        <a class="btn" href="/Dashboard/Wallboard">投屏</a>
+    </div>
+</section>
+
+<section class="kpi-row">
+    @foreach (var kpi in Model.Kpis)
+    {
+        <partial name="_Kpi" model="kpi" />
+    }
+</section>
+
+<section class="sd-grid">
+    <div class="sd-card col-16">
+        <div class="sd-card__head">
+            <h2 class="sd-card__title">应用矩阵</h2>
+            <span class="sd-card__hint">点击卡片进入应用看板 · 按错误率排序</span>
+        </div>
+        @if (Model.Apps.Count > 0)
+        {
+            <div class="app-grid">
+                @foreach (var app in Model.Apps)
+                {
+                    var statusClass = app.Status == "online" ? "pill--online" : app.Status == "warn" ? "pill--warn" : "pill--offline";
+                    var statusText = app.Status == "online" ? "在线" : app.Status == "warn" ? "有错误" : "离线";
+                    <a class="app-card" href="@app.Url">
+                        <div class="app-card__top">
+                            <div>
+                                <div class="app-card__name">@app.DisplayName</div>
+                                <div class="app-card__code">@app.Name</div>
+                            </div>
+                            <span class="pill @statusClass"><span class="dot"></span>@statusText</span>
+                        </div>
+                        <div class="app-card__stats">
+                            <div class="app-card__stat"><span>实例</span><b>@app.Instances</b></div>
+                            <div class="app-card__stat"><span>QPS</span><b>@app.Qps.ToString("n1")</b></div>
+                            <div class="app-card__stat"><span>错误率</span><b>@app.ErrorRate.ToString("n2")%</b></div>
+                        </div>
+                        <div class="app-card__spark" data-app-spark="@app.Id"></div>
+                        <div class="app-card__foot">
+                            <span>@(app.Version.IsNullOrEmpty() ? "—" : app.Version) · 平均 @app.Cost ms</span>
+                            <span>@app.Qps.ToString("n1") QPS</span>
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty">
+                <div class="empty__icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z" /><path d="M12 12l8-4.5M12 12v9" /></svg>
+                </div>
+                <div class="empty__title">项目还没有接入应用</div>
+                <div class="empty__desc">在应用的配置文件里填入 AppId 与密钥，一行代码即可接入星尘：配置、注册发现、链路追踪与性能监控会自动生效。</div>
+                <pre class="empty__code">builder.Services.AddStardust("appId");</pre>
+                <a class="btn btn--primary" href="/Registry/App">创建第一个应用</a>
+            </div>
+        }
+    </div>
+
+    <div class="sd-card col-8">
+        <div class="sd-card__head">
+            <h2 class="sd-card__title">节点资源</h2>
+            <a class="link" href="/Dashboard/Nodes">节点详情</a>
+        </div>
+        @if (Model.Nodes.Count > 0)
+        {
+            <div class="table-wrap table-wrap--scroll">
+                <table class="sd-table sd-table--compact">
+                    <thead>
+                        <tr>
+                            <th>节点</th>
+                            <th>状态</th>
+                            <th style="width:64px">CPU</th>
+                            <th style="width:64px">内存</th>
+                            <th style="width:64px">磁盘</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var node in Model.Nodes)
+                        {
+                            <tr class="row-link" onclick="location.href='@node.Url'">
+                                <td>
+                                    <div class="strong">@node.Name</div>
+                                    <div class="muted mono">@(node.Ip.IsNullOrEmpty() ? "—" : node.Ip)</div>
+                                </td>
+                                <td><span class="pill pill--online"><span class="dot"></span>在线</span></td>
+                                <td><div class="meter meter--@DashboardMath.Level(node.Cpu)"><i style="width:@(Math.Min(node.Cpu, 100))%"></i></div></td>
+                                <td><div class="meter meter--@DashboardMath.Level(node.Memory)"><i style="width:@(Math.Min(node.Memory, 100))%"></i></div></td>
+                                <td><div class="meter meter--@DashboardMath.Level(node.Disk)"><i style="width:@(Math.Min(node.Disk, 100))%"></i></div></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="empty" style="padding:28px 12px;">
+                <div class="empty__title">暂无在线节点</div>
+                <div class="empty__desc">节点安装 StarAgent 并启动后自动出现在这里</div>
+            </div>
+        }
+    </div>
+
+    <div class="sd-card col-12">
+        <div class="sd-card__head">
+            <h2 class="sd-card__title">项目拓扑</h2>
+            <span class="sd-card__hint">项目 → 应用 → 节点 · 连线宽度 = 实例数</span>
+        </div>
+        <div id="projectTopology" class="chart chart-md"></div>
+    </div>
+
+    <div class="sd-card col-6">
+        <div class="sd-card__head">
+            <h2 class="sd-card__title">最近部署</h2>
+            <a class="link" href="/Deployment/AppDeployHistory">全部</a>
+        </div>
+        <div class="timeline">
+            @foreach (var item in Model.Deploys)
+            {
+                <div class="event event--@(item.Success ? "ok" : "bad")">
+                    <div class="event__bar"></div>
+                    <div>
+                        <div class="event__title">@item.App · @item.Action</div>
+                        <div class="event__meta">@(item.Version.IsNullOrEmpty() ? "—" : item.Version) @(item.Success ? "成功" : "失败")</div>
+                    </div>
+                    <div class="event__time">@item.TimeText</div>
+                </div>
+            }
+            @if (Model.Deploys.Count == 0)
+            {
+                <div class="empty" style="padding:24px 12px;">
+                    <div class="empty__title">近 7 天没有部署记录</div>
+                    <div class="empty__desc">在发布中心发起部署后会记录在这里</div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="sd-card col-6">
+        <div class="sd-card__head">
+            <h2 class="sd-card__title">当前告警</h2>
+            <a class="link" href="/Monitors/AlarmRecord">全部</a>
+        </div>
+        <div class="event-list">
+            @foreach (var item in Model.Alarms)
+            {
+                <div class="event event--@(item.Recovered ? "ok" : "bad")">
+                    <div class="event__bar"></div>
+                    <div>
+                        <div class="event__title">@item.Category · @item.Target</div>
+                        <div class="event__meta">持续 @item.DurationText · 触发 @item.Times 次</div>
+                    </div>
+                    <div class="event__time">@item.StartText</div>
+                </div>
+            }
+            @if (Model.Alarms.Count == 0)
+            {
+                <div class="empty" style="padding:24px 12px;">
+                    <div class="empty__title">暂无告警</div>
+                    <div class="empty__desc">本项目与相关应用、节点均未触发告警</div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        window.__SD_DATA__ = @Html.Raw(Json.Serialize(Model));
+    </script>
+    <script src="~/dashboard/pages/project.js"></script>
+}

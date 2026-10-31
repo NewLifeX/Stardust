@@ -1,0 +1,165 @@
+@using Stardust.Web.Models.Dashboard
+@using XCode.Membership
+@{
+    var scope = ViewBag.Scope as ScopeInfo ?? new ScopeInfo();
+    var boardPage = ViewBag.Page as String ?? "system";
+    var range = ViewBag.Range as String ?? "24h";
+    var objectId = ViewBag.ObjectId as Int32? ?? 0;
+    var user = ManageProvider.User;
+    var userName = user?.Name;
+    if (userName.IsNullOrEmpty()) userName = "未登录";
+    var avatar = userName.Substring(0, 1);
+    var projects = scope.Projects;
+    var currentProject = ViewBag.CurrentProject as ProjectOption;
+
+    var rangeText = range switch { "1h" => "1 小时", "7d" => "7 天", _ => "24 小时" };
+}
+<!DOCTYPE html>
+<html lang="zh-CN" data-scope="@scope.Mode" data-page="@boardPage" data-range="@range" data-object="@objectId">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewBag.Title · 星尘看板</title>
+    <script>
+        /* 首屏前应用主题，避免闪白/闪黑 */
+        (function () {
+            try {
+                var m = localStorage.getItem('sd-theme') || 'auto';
+                var d = m === 'auto' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : m;
+                document.documentElement.dataset.theme = d;
+                document.documentElement.dataset.themeMode = m;
+            } catch (e) { document.documentElement.dataset.theme = 'dark'; }
+        })();
+    </script>
+    <link rel="stylesheet" href="~/dashboard/tokens.css" />
+    <link rel="stylesheet" href="~/dashboard/dashboard.css" />
+    <style>
+        /* 顶栏项目切换：原生下拉保持键盘可达，外观沿用按钮令牌 */
+        .project-trigger select {
+            appearance: none;
+            border: 0;
+            background: transparent;
+            color: inherit;
+            font: inherit;
+            padding: 0 4px 0 0;
+            max-width: 180px;
+            cursor: pointer;
+            outline: none;
+        }
+        .project-trigger select option { background: var(--sd-bg-surface); color: var(--sd-text-primary); }
+        .sd-rail__item--divider { margin-top: auto; }
+    </style>
+</head>
+<body>
+    <div class="sd-topband"></div>
+
+    <div class="sd-app">
+        <aside class="sd-rail">
+            <a class="sd-rail__brand" href="/Dashboard/System" title="星尘看板">✦</a>
+            <a class="sd-rail__item @(boardPage == "system" ? "is-active" : "")" href="/Dashboard/System" title="系统级看板">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                    <rect x="3" y="3" width="7" height="7" rx="1.6" /><rect x="14" y="3" width="7" height="7" rx="1.6" />
+                    <rect x="3" y="14" width="7" height="7" rx="1.6" /><rect x="14" y="14" width="7" height="7" rx="1.6" />
+                </svg>
+                <span>系统</span>
+            </a>
+            <a class="sd-rail__item @(boardPage is "project" or "projects" ? "is-active" : "")" href="/Dashboard/Projects" title="项目看板">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                    <path d="M12 3l9 4.5-9 4.5-9-4.5z" /><path d="M3 12l9 4.5 9-4.5" /><path d="M3 16.5L12 21l9-4.5" />
+                </svg>
+                <span>项目</span>
+            </a>
+            <a class="sd-rail__item @(boardPage is "app" or "apps" ? "is-active" : "")" href="/Dashboard/Apps" title="应用看板">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                    <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z" /><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5" />
+                </svg>
+                <span>应用</span>
+            </a>
+            <a class="sd-rail__item @(boardPage is "node" or "nodes" ? "is-active" : "")" href="/Dashboard/Nodes" title="节点看板">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                    <rect x="3" y="4" width="18" height="7" rx="2" /><rect x="3" y="14" width="18" height="6" rx="2" />
+                    <circle cx="7" cy="7.5" r="1" /><circle cx="7" cy="17" r="1" />
+                </svg>
+                <span>节点</span>
+            </a>
+            <a class="sd-rail__item @(boardPage == "wallboard" ? "is-active" : "")" href="/Dashboard/Wallboard" title="大屏模式">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                    <rect x="3" y="4" width="18" height="12" rx="2" /><path d="M8 20h8M12 16v4" />
+                </svg>
+                <span>大屏</span>
+            </a>
+            <a class="sd-rail__item sd-rail__item--divider" href="/Admin" title="管理后台">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                    <path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" />
+                </svg>
+                <span>后台</span>
+            </a>
+        </aside>
+
+        <div class="sd-main">
+            <header class="sd-topbar">
+                <a class="brand" href="/Dashboard/System">
+                    <span class="brand__mark">✦</span>
+                    <span class="brand__text">星尘 Stardust</span>
+                </a>
+                <span class="topbar__sep"></span>
+                <span class="project-trigger" title="切换项目上下文">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7l8 6 8-6M4 7h16v10H4z" /></svg>
+                    <select aria-label="切换项目" onchange="if(this.value)location.href=this.value;">
+                        @if (currentProject == null)
+                        {
+                            <option value="" selected>全部项目</option>
+                        }
+                        else
+                        {
+                            <option value="/Dashboard/System">全部项目</option>
+                        }
+                        @foreach (var item in projects)
+                        {
+                            if (currentProject != null && currentProject.Id == item.Id)
+                            {
+                                <option value="@item.Url" selected>@item.Name</option>
+                            }
+                            else
+                            {
+                                <option value="@item.Url">@item.Name</option>
+                            }
+                        }
+                    </select>
+                </span>
+                <a class="scope-badge" href="/Dashboard/Projects" title="可见数据范围">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <rect x="4" y="10" width="16" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" />
+                    </svg>
+                    <span>@scope.Badge</span>
+                </a>
+                <div class="topbar__right">
+                    <div data-theme-switch></div>
+                    <span class="topbar__clock" data-clock>00:00:00</span>
+                    <button class="icon-btn" type="button" data-action="refresh" title="刷新">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 12a9 9 0 1 1-2.64-6.36" /><path d="M21 3v6h-6" />
+                        </svg>
+                    </button>
+                    <div class="avatar" title="当前账号：@userName">@avatar</div>
+                </div>
+            </header>
+
+            <div class="sd-scroll">
+                <div class="sd-content">
+                    @RenderBody()
+
+                    <footer class="page-foot">
+                        <span>数据来源：Nodes/Node · Registry/AppOnline · Monitors/AppMinuteStat · Monitors/TraceHourStat · Monitors/AlarmRecord</span>
+                        <span>@rangeText 视角 · 最后刷新 <b data-last-update>@DateTime.Now.ToString("HH:mm:ss")</b></span>
+                    </footer>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/dashboard/vendor/echarts.min.js"></script>
+    <script src="~/dashboard/dashboard.js"></script>
+    @RenderSection("Scripts", false)
+</body>
+</html>

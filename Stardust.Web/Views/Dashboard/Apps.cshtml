@@ -1,0 +1,74 @@
+@model PickerPageModel
+@using Stardust.Web.Models.Dashboard
+@{
+    Layout = "~/Views/Shared/_Layout_Dashboard.cshtml";
+}
+<div class="scope-notice">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M12 3l9 4v6c0 4.6-3.4 7.4-9 8-5.6-.6-9-3.4-9-8V7z" /><path d="M12 9v4M12 16h.01" />
+    </svg>
+    <span class="notice--limited">当前为受限数据视角：仅显示你被授权的应用。</span>
+    <span class="notice--none">当前账号未授权任何项目。</span>
+</div>
+
+<section class="scope-empty">
+    <div class="scope-empty__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <rect x="4" y="10" width="16" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /><path d="M12 14v3" />
+        </svg>
+    </div>
+    <h2>暂无授权项目</h2>
+    <p>你的账号还没有被加入任何项目。请联系项目管理员在「项目成员」中授权。</p>
+    <a class="btn btn--primary" href="/Platform/ProjectUser">去申请项目权限</a>
+</section>
+
+<section class="scope-bar">
+    <div>
+        <div class="crumbs"><a href="/Dashboard/System">看板总览</a><span class="sep">/</span><span>应用</span></div>
+        <h1 class="page-title">@Model.Title</h1>
+        <p class="page-sub">@Model.Subtitle · 共 <strong>@Model.Apps.Count</strong> 个应用</p>
+    </div>
+    <div class="toolbar">
+        <a class="btn" href="/Registry/App">应用管理</a>
+        <a class="btn btn--primary" href="/Dashboard/System">返回系统看板</a>
+    </div>
+</section>
+
+<section class="sd-card col-24">
+    <div class="sd-card__head">
+        <h2 class="sd-card__title">应用列表</h2>
+        <span class="sd-card__hint">在线优先 · 按错误率与调用量排序</span>
+    </div>
+    <div class="app-grid">
+        @foreach (var app in Model.Apps)
+        {
+            var statusClass = app.Status == "online" ? "pill--online" : "pill--warn";
+            <a class="app-card" href="@app.Url">
+                <div class="app-card__top">
+                    <div>
+                        <div class="app-card__name">@app.DisplayName</div>
+                        <div class="app-card__code">@app.Name</div>
+                    </div>
+                    <span class="pill @statusClass"><span class="dot"></span>@(app.Status == "online" ? "在线" : "离线")</span>
+                </div>
+                <div class="app-card__stats">
+                    <div class="app-card__stat"><span>实例</span><b>@app.Instances</b></div>
+                    <div class="app-card__stat"><span>QPS</span><b>@app.Qps.ToString("n1")</b></div>
+                    <div class="app-card__stat"><span>错误率</span><b>@app.ErrorRate.ToString("n2")%</b></div>
+                </div>
+                <div class="app-card__foot">
+                    <span>@(app.Version.IsNullOrEmpty() ? "—" : app.Version) · 平均 @app.Cost ms</span>
+                    <span>查看看板 →</span>
+                </div>
+            </a>
+        }
+    </div>
+    @if (Model.Apps.Count == 0)
+    {
+        <div class="empty">
+            <div class="empty__title">暂无可见应用</div>
+            <div class="empty__desc">先在应用管理中创建应用并接入星尘。</div>
+            <a class="btn btn--primary" href="/Registry/App">去创建应用</a>
+        </div>
+    }
+</section>
