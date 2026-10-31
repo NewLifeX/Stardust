@@ -20,30 +20,30 @@
         <tr>
             @if (set.EnableSelect)
             {
-                <th class="text-center" style="width:10px;"><input type="checkbox" id="chkAll" title="全选" /></th>
+                <th class="text-center" style="width:10px;"><input type="checkbox" id="chkAll" title="@L.T("全选")" /></th>
             }
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ID"))">编号</a></th>
-            <th class="text-center" style="min-width:80px;"><a href="@Html.Raw(page.GetSortUrl("StatTime"))">统计时间</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ID"))">@L.T("编号")</a></th>
+            <th class="text-center" style="min-width:80px;"><a href="@Html.Raw(page.GetSortUrl("StatTime"))">@L.T("统计时间")</a></th>
             @if (appId <= 0)
             {
-                <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("AppId"))">应用</a></th>
+                <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("AppId"))">@L.T("应用")</a></th>
             }
-            <th class="text-center" title="操作名。接口名或埋点名"><a href="@Html.Raw(page.GetSortUrl("Name"))">操作名</a></th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Total"))">总次数</a></th>
-            <th class="text-center" title="环比。今天与昨天同期相比"><a href="@Html.Raw(page.GetSortUrl("RingRate"))">环比</a></th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Errors"))">错误数</a></th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ErrorRate"))">错误率</a></th>
-            <th class="text-center" title="平均耗时。总耗时除以总次数"><a href="@Html.Raw(page.GetSortUrl("Cost"))">平均耗时</a></th>
-            <th class="text-center" title="最大耗时。单位毫秒"><a href="@Html.Raw(page.GetSortUrl("MaxCost"))">最大耗时</a></th>
-            <th class="text-center" title="最小耗时。单位毫秒"><a href="@Html.Raw(page.GetSortUrl("MinCost"))">最小耗时</a></th>
-            <th class="text-center" title="总数值。用户自定义标量"><a href="@Html.Raw(page.GetSortUrl("TotalValue"))">数值</a></th>
-            <th title="直达采样数据明细">明细</th>
-            <th title="跨多系统查看调用链">追踪</th>
-            <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("CreateTime"))">创建时间</a></th>
-            <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("UpdateTime"))">更新时间</a></th>
+            <th class="text-center" title="@L.T("操作名。接口名或埋点名")"><a href="@Html.Raw(page.GetSortUrl("Name"))">@L.T("操作名")</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Total"))">@L.T("总次数")</a></th>
+            <th class="text-center" title="@L.T("环比。今天与昨天同期相比")"><a href="@Html.Raw(page.GetSortUrl("RingRate"))">@L.T("环比")</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Errors"))">@L.T("错误数")</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ErrorRate"))">@L.T("错误率")</a></th>
+            <th class="text-center" title="@L.T("平均耗时。总耗时除以总次数")"><a href="@Html.Raw(page.GetSortUrl("Cost"))">@L.T("平均耗时")</a></th>
+            <th class="text-center" title="@L.T("最大耗时。单位毫秒")"><a href="@Html.Raw(page.GetSortUrl("MaxCost"))">@L.T("最大耗时")</a></th>
+            <th class="text-center" title="@L.T("最小耗时。单位毫秒")"><a href="@Html.Raw(page.GetSortUrl("MinCost"))">@L.T("最小耗时")</a></th>
+            <th class="text-center" title="@L.T("总数值。用户自定义标量")"><a href="@Html.Raw(page.GetSortUrl("TotalValue"))">@L.T("数值")</a></th>
+            <th title="@L.T("直达采样数据明细")">@L.T("明细")</th>
+            <th title="@L.T("跨多系统查看调用链")">@L.T("追踪")</th>
+            <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("CreateTime"))">@L.T("创建时间")</a></th>
+            <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("UpdateTime"))">@L.T("更新时间")</a></th>
             @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
             {
-                <th class="text-center">操作</th>
+                <th class="text-center">@L.T("操作")</th>
             }
         </tr>
     </thead>
@@ -70,13 +70,13 @@
                 {
                     <td>@entity.AppName</td>
                 }
-                <td style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;"><a href="@url3" title="该应用操作在最近一段时间内的监控图表">@entity.Name</a></td>
-                <td class="text-right"><a href="@url2" title="该应用操作在该日的所有监控追踪数据">@entity.Total.ToString("n0")</a></td>
+                <td style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;"><a href="@url3" title="@L.T("该应用操作在最近一段时间内的监控图表")">@entity.Name</a></td>
+                <td class="text-right"><a href="@url2" title="@L.T("该应用操作在该日的所有监控追踪数据")">@entity.Total.ToString("n0")</a></td>
                 <td class="text-right">@entity.RingRate.ToString("p2")</td>
                 <td class="text-right">
                     @if (entity.Errors > 0)
                     {
-                        <a href="@url4" title="查看具体出错的追踪数据">@entity.Errors.ToString("n0")</a>
+                        <a href="@url4" title="@L.T("查看具体出错的追踪数据")">@entity.Errors.ToString("n0")</a>
                     }
                     else
                     {
@@ -88,8 +88,8 @@
                 <td class="text-right">@entity.MaxCost.ToString("n0")</td>
                 <td class="text-right">@entity.MinCost.ToString("n0")</td>
                 <td class="text-right">@entity.TotalValue.ToString("n0")</td>
-                <td><a href="/Monitors/SampleData?appId=@entity.AppId&itemId=@entity.ItemId&&kind=hour&time=@entity.StatTime.ToString("yyyy-MM-dd HH:mm:ss")" title="直达采样数据明细">明细</a></td>
-                <td><a href="/Monitors/TraceHourStat/Trace?id=@entity.ID" title="跨多系统查看调用链">追踪</a></td>
+                <td><a href="/Monitors/SampleData?appId=@entity.AppId&itemId=@entity.ItemId&&kind=hour&time=@entity.StatTime.ToString("yyyy-MM-dd HH:mm:ss")" title="@L.T("直达采样数据明细")">@L.T("明细")</a></td>
+                <td><a href="/Monitors/TraceHourStat/Trace?id=@entity.ID" title="@L.T("跨多系统查看调用链")">@L.T("追踪")</a></td>
                 <td class="text-center">@entity.CreateTime.ToFullString("")</td>
                 <td class="text-center">@entity.UpdateTime.ToFullString("")</td>
                 @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
@@ -109,7 +109,7 @@
                 {
                     <td></td>
                 }
-                <td class="text-center">总计</td>
+                <td class="text-center">@L.T("总计")</td>
                 <td></td>
                 @if (appId <= 0)
                 {

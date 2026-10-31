@@ -27,7 +27,7 @@ public class AppDeployVersionController : DeploymentEntityController<AppDeployVe
 
         AddFormFields.RemoveCreateField();
         AddFormFields.RemoveField("Hash");
-        ListFields.TraceUrl();
+        ListFields.LocalizedTraceUrl();
 
         LogOnChange = true;
 

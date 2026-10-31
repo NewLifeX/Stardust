@@ -24,7 +24,7 @@ public class AppCommandController : RegistryEntityController<AppCommand>
             var df = ListFields.GetField("Command") as ListField;
             df.Url = "/Registry/AppCommand?appId={AppId}&command={Command}";
         }
-        ListFields.TraceUrl();
+        ListFields.LocalizedTraceUrl();
     }
 
     /// <summary>高级搜索。按条件分页查询</summary>

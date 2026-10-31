@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Stardust.Data.Deployment;
 using Stardust.Models;
 using Stardust.Web.Services;
@@ -25,7 +25,7 @@ public class AppPipelineRunController : EntityController<AppPipelineRun>
         ListFields.RemoveField("Id", "TraceId", "TriggerSource");
         ListFields.RemoveCreateField().RemoveRemarkField();
         ListFields.AddListField("Reprocess", null, "Status");
-        ListFields.TraceUrl("TraceId");
+        ListFields.LocalizedTraceUrl("TraceId");
 
         // 步骤列：跳转到该运行的步骤记录列表
         {

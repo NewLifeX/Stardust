@@ -37,17 +37,18 @@ public class LanguageMiddleware(RequestDelegate next)
 /// <summary>星尘多语言宿主扩展</summary>
 public static class StardustLocalizationExtensions
 {
-    /// <summary>启用多语言。配置了固定语言时全进程生效，否则按请求语言识别</summary>
+    /// <summary>启用多语言。核心配置固定语言时全进程生效，否则按请求语言识别</summary>
     /// <param name="app">应用构建器</param>
     /// <returns>应用构建器</returns>
     /// <remarks>
+    /// 界面语言统一由核心库基础配置 <c>Core.config</c> 的 <c>Language</c> 决定，星尘不再单独提供配置项。
     /// 请求语言识别期间，日志与配置文件注释固定为宿主语言，避免同一日志文件随请求语言混杂。
     /// 词表由各组件编译期 <c>Locales/*.yml</c> 生成，英文为源文与兜底。
     /// </remarks>
     public static IApplicationBuilder UseStardustLocalization(this IApplicationBuilder app)
     {
-        var language = StarServerSetting.Current?.Language;
-        if (!language.IsNullOrWhiteSpace() && StarLocalization.UseLanguage(language) != null) return app;
+        // 核心配置已固定语言时，全进程直接生效，不再按请求识别
+        if (Localization.ForcedLanguage != null) return app;
 
         // 界面语言跟随请求，由中间件写入 CurrentUICulture
         Localization.Culture = null;

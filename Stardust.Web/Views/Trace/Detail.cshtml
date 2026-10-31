@@ -24,15 +24,15 @@
     <table class="table table-bordered table-hover table-striped table-condensed">
         <thead>
             <tr>
-                <th class="text-center">应用</th>
-                <th class="text-center" title="操作名。接口名或埋点名"><a href="@Html.Raw(page.GetSortUrl("Name"))">操作名</a></th>
-                <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Success"))">正常</a></th>
-                <th class="text-center" title="开始时间。Unix毫秒"><a href="@Html.Raw(page.GetSortUrl("StartTime"))">开始时间</a></th>
-                <th class="text-center" title="耗时。毫秒"><a href="@Html.Raw(page.GetSortUrl("Cost"))">耗时</a></th>
-                <th class="text-center" title="数值。用户自定义标量"><a href="@Html.Raw(page.GetSortUrl("Value"))">数值</a></th>
-                <th class="text-center" title="数据标签或异常信息">内容</th>
-                <th class="text-center">节点</th>
-                <th class="text-center">操作</th>
+                <th class="text-center">@L.T("应用")</th>
+                <th class="text-center" title="@L.T("操作名。接口名或埋点名")"><a href="@Html.Raw(page.GetSortUrl("Name"))">@L.T("操作名")</a></th>
+                <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Success"))">@L.T("正常")</a></th>
+                <th class="text-center" title="@L.T("开始时间。Unix毫秒")"><a href="@Html.Raw(page.GetSortUrl("StartTime"))">@L.T("开始时间")</a></th>
+                <th class="text-center" title="@L.T("耗时。毫秒")"><a href="@Html.Raw(page.GetSortUrl("Cost"))">@L.T("耗时")</a></th>
+                <th class="text-center" title="@L.T("数值。用户自定义标量")"><a href="@Html.Raw(page.GetSortUrl("Value"))">@L.T("数值")</a></th>
+                <th class="text-center" title="@L.T("数据标签或异常信息")">@L.T("内容")</th>
+                <th class="text-center">@L.T("节点")</th>
+                <th class="text-center">@L.T("操作")</th>
             </tr>
         </thead>
         <tbody>
@@ -73,7 +73,7 @@
                     <td style="white-space: pre-wrap;word-wrap:break-word;word-break:break-all;">@msg</td>
                     <td class="text-center">@(td?.NodeName)</td>
                     <td class="text-center">
-                        <a href="/monitors/sampledata/detail/@entity.Id">查看</a>
+                        <a href="/monitors/sampledata/detail/@entity.Id">@L.T("查看")</a>
                     </td>
                 </tr>
             }

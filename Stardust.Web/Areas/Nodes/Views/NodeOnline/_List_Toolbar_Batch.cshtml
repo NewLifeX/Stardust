@@ -1,4 +1,4 @@
-﻿@using NewLife.Common;
+@using NewLife.Common;
 @using System.Collections.Generic;
 @{
     var set = ViewBag.PageSetting as PageSetting;
@@ -6,25 +6,15 @@
 }
 @if (set.EnableSelect)
 {
-    <button type="button" class="btn btn-success btn-sm" data-action="action" data-url="@Url.Action("CheckUpgrade")" data-fields="keys" disabled>
-        检查更新
-    </button>
-    <button type="button" class="btn btn-success btn-sm" data-action="action" data-url="@Url.Action("SyncTime")" data-fields="keys" disabled>
-        同步时间
-    </button>
-    <button type="button" class="btn btn-success btn-sm" data-action="action" data-url="@Url.Action("Restart")" data-fields="keys" disabled>
-        重启服务
-    </button>
-    <button type="button" class="btn btn-success btn-sm" data-action="action" data-url="@Url.Action("Reboot")" data-fields="keys" disabled>
-        重启系统
-    </button>
+    <button type="button" class="btn btn-success btn-sm" data-action="action" data-url="@Url.Action("CheckUpgrade")" data-fields="keys" disabled>@L.T("检查更新")</button>
+    <button type="button" class="btn btn-success btn-sm" data-action="action" data-url="@Url.Action("SyncTime")" data-fields="keys" disabled>@L.T("同步时间")</button>
+    <button type="button" class="btn btn-success btn-sm" data-action="action" data-url="@Url.Action("Restart")" data-fields="keys" disabled>@L.T("重启服务")</button>
+    <button type="button" class="btn btn-success btn-sm" data-action="action" data-url="@Url.Action("Reboot")" data-fields="keys" disabled>@L.T("重启系统")</button>
     <div class="form-group">
-        <label for="command" class="control-label">命令：</label>
+        <label for="command" class="control-label">@L.T("命令：")</label>
         @Html.TextBox("command", page["command"])
-        <label for="argument" class="control-label">参数：</label>
+        <label for="argument" class="control-label">@L.T("参数：")</label>
         @Html.TextBox("argument", page["argument"])
     </div>
-    <button type="button" class="btn btn-purple btn-sm" data-action="action" data-url="@Url.Action("Execute")" data-fields="keys,command,argument">
-        执行命令
-    </button>
+    <button type="button" class="btn btn-purple btn-sm" data-action="action" data-url="@Url.Action("Execute")" data-fields="keys,command,argument">@L.T("执行命令")</button>
 }

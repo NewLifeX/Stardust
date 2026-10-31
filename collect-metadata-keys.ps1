@@ -61,7 +61,7 @@ foreach ($dir in @($SourceDir | Where-Object { $_ })) {
         exit 1
     }
 
-    foreach ($file in Get-ChildItem $dirPath -Recurse -Filter *.cs -File | Where-Object { $_.FullName -notmatch '\\(obj|bin)\\' }) {
+    foreach ($file in Get-ChildItem $dirPath -Recurse -File | Where-Object { $_.Extension -in '.cs', '.cshtml' -and $_.FullName -notmatch '\\(obj|bin)\\' }) {
         $text = Get-CodeLines ([IO.File]::ReadAllText($file.FullName))
         foreach ($m in [regex]::Matches($text, $pattern)) {
             $key = $m.Groups[1].Value.Replace('\"', '"').Replace('\\', '\')
@@ -69,6 +69,11 @@ foreach ($dir in @($SourceDir | Where-Object { $_ })) {
         }
         # 控制器/服务里用属性赋值设置的列表列名、表头与表单字段名，同样属于元数据
         foreach ($m in [regex]::Matches($text, '(?:DisplayName|Header|HeaderTitle)\s*=\s*"((?:[^"\\]|\\.)*)"')) {
+            $key = $m.Groups[1].Value.Replace('\"', '"').Replace('\\', '\')
+            Add-Key $key
+        }
+        # 视图与服务中的界面文案 L.T("中文")；英文运行时消息同样会被收集，但它们已在基准词表中，不影响校验
+        foreach ($m in [regex]::Matches($text, 'L\.T\("((?:[^"\\]|\\.)*)"')) {
             $key = $m.Groups[1].Value.Replace('\"', '"').Replace('\\', '\')
             Add-Key $key
         }

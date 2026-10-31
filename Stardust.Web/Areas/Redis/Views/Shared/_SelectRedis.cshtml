@@ -21,7 +21,7 @@
     <div class="col-lg-12">
         <div class="input-group">
             <input type="hidden" name="@id" id="@id" value="@redisId" />
-            <input type="text" class="form-control" id="@(id)_select" placeholder="搜索Redis" value="@showValue">
+            <input type="text" class="form-control" id="@(id)_select" placeholder="@L.T("搜索Redis")" value="@showValue">
             <div class="input-group-btn">
                 <ul class="dropdown-menu dropdown-menu-right" role="menu"></ul>
             </div>
@@ -35,7 +35,7 @@
         $("#@(id)_select").bsSuggest({
             url: "/Redis/RedisNode/NodeSearch?key=",
             getDataMethod:"url",
-            effectiveFieldsAlias: { ID: "编号", Name: "名称", Server: "地址", Category: "类别" },
+            effectiveFieldsAlias: { ID: "@L.T("编号")", Name: "@L.T("名称")", Server: "@L.T("地址")", Category: "@L.T("类别")" },
             ignorecase: true,
             showHeader: true,
             delayUntilKeyup: true, //获取数据的方式为 firstByUrl 时，延迟到有输入/获取到焦点时才请求数据
@@ -44,10 +44,10 @@
             showBtn: false,
             keyField: "Name",
             clearable: true,
-            searchingTip: '搜索中...',
+            searchingTip: '@L.T("搜索中...")',
             allowNoKeyword: true,
             delay: 500,
-            emptyTip: '无数据',
+            emptyTip: '@L.T("无数据")',
             containerValueId: '@id',
             fnProcessData: function (result) {
                 dt = {};

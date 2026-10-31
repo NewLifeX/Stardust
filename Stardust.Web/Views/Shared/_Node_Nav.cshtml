@@ -17,16 +17,16 @@
 
     var dic = new Dictionary<String, Object>();
     dic[node.Name + ""] = "/Nodes/Node/Edit?Id=" + nodeId;
-    dic["在线"] = "/Nodes/NodeOnline?nodeId=" + nodeId;
-    dic["历史"] = "/Nodes/NodeHistory?nodeId=" + nodeId;
-    dic["命令"] = "/Nodes/NodeCommand?nodeId=" + nodeId;
-    dic["性能"] = "/Nodes/NodeData?nodeId=" + nodeId;
-    dic["框架推荐"] = "/Nodes/Node/FrameworkRecommend?id=" + nodeId;
+    dic[L.T("在线")] = "/Nodes/NodeOnline?nodeId=" + nodeId;
+    dic[L.T("历史")] = "/Nodes/NodeHistory?nodeId=" + nodeId;
+    dic[L.T("命令")] = "/Nodes/NodeCommand?nodeId=" + nodeId;
+    dic[L.T("性能")] = "/Nodes/NodeData?nodeId=" + nodeId;
+    dic[L.T("框架推荐")] = "/Nodes/Node/FrameworkRecommend?id=" + nodeId;
 
     if (node.ProductCode == "StarAgent")
     {
-        dic["应用在线"] = "/Registry/AppOnline?nodeId=" + nodeId;
-        dic["应用发布"] = "/Deployment/AppDeployNode?enable=1&nodeId=" + nodeId;
+        dic[L.T("应用在线")] = "/Registry/AppOnline?nodeId=" + nodeId;
+        dic[L.T("应用发布")] = "/Deployment/AppDeployNode?enable=1&nodeId=" + nodeId;
     }
 }
 @if (nodeId > 0)

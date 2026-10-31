@@ -42,12 +42,12 @@
 
     var dic = new Dictionary<String, Object>();
     dic[app?.Name + ""] = "/Registry/App/Edit?Id=" + appId;
-    dic["实例"] = "/Registry/AppOnline?appId=" + appId;
-    dic["历史"] = "/Registry/AppHistory?appId=" + appId;
-    dic["命令"] = "/Registry/AppCommand?appId=" + appId;
-    dic["性能"] = "/Registry/AppMeter?appId=" + appId;
-    dic["注册中心"] = "/Registry/AppService?appId=" + appId;
-    dic["服务消费"] = "/Registry/AppConsume?appId=" + appId;
+    dic[L.T("实例")] = "/Registry/AppOnline?appId=" + appId;
+    dic[L.T("历史")] = "/Registry/AppHistory?appId=" + appId;
+    dic[L.T("命令")] = "/Registry/AppCommand?appId=" + appId;
+    dic[L.T("性能")] = "/Registry/AppMeter?appId=" + appId;
+    dic[L.T("注册中心")] = "/Registry/AppService?appId=" + appId;
+    dic[L.T("服务消费")] = "/Registry/AppConsume?appId=" + appId;
 
     var config = AppConfig.FindById(configId);
     if (config == null)
@@ -55,10 +55,10 @@
         var configs = AppConfig.FindAllByAppId(appId);
         if (configs.Count == 1) config = configs[0];
     }
-    dic["配置中心"] = $"/Configs/AppConfig?appId={appId}&configId={config?.Id}";
+    dic[L.T("配置中心")] = $"/Configs/AppConfig?appId={appId}&configId={config?.Id}";
     if (config != null)
     {
-        dic["配置数据"] = $"/Configs/ConfigData?appId={appId}&configId={config.Id}";
+        dic[L.T("配置数据")] = $"/Configs/ConfigData?appId={appId}&configId={config.Id}";
     }
 
     var deploy = AppDeploy.FindById(deployId);
@@ -67,11 +67,11 @@
         var deploys = AppDeploy.FindAllByAppId(appId);
         if (deploys.Count == 1) deploy = deploys[0];
     }
-    dic["发布中心"] = $"/Deployment/AppDeploy?appId={appId}&deployId={deploy?.Id}";
+    dic[L.T("发布中心")] = $"/Deployment/AppDeploy?appId={appId}&deployId={deploy?.Id}";
     if (deploy != null)
     {
-        dic["上传新版本"] = $"/Deployment/AppDeployVersion?appId={appId}&deployId={deploy.Id}";
-        dic["部署发布"] = $"/Deployment/AppDeployNode?enable=1&appId={appId}&deployId={deploy.Id}";
+        dic[L.T("上传新版本")] = $"/Deployment/AppDeployVersion?appId={appId}&deployId={deploy.Id}";
+        dic[L.T("部署发布")] = $"/Deployment/AppDeployNode?enable=1&appId={appId}&deployId={deploy.Id}";
     }
 
     var monitor = AppTracer.FindByID(monitorId);
@@ -80,10 +80,10 @@
         var monitors = AppTracer.FindAllByAppId(appId);
         if (monitors.Count == 1) monitor = monitors[0];
     }
-    dic["监控中心"] = $"/Monitors/AppTracer?appId={appId}&monitorId={monitor?.ID}";
+    dic[L.T("监控中心")] = $"/Monitors/AppTracer?appId={appId}&monitorId={monitor?.ID}";
     if (monitor != null)
     {
-        dic["监控大屏"] = $"/Monitors/AppDayStat?appId={appId}&monitorId={monitor.ID}";
+        dic[L.T("监控大屏")] = $"/Monitors/AppDayStat?appId={appId}&monitorId={monitor.ID}";
     }
 }
 @if (appId > 0)

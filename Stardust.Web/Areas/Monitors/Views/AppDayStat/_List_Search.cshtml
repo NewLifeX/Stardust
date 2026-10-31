@@ -33,12 +33,12 @@
         <a href="appTracer?appId=@appId&monitorId=@monitorId" class="btn btn-success btn-sm">@app</a>
     </div>
     <div class="form-group">
-        @Html.ActionLink("每分钟", null, "appMinuteStat", new { appId = monitorId })
-        @Html.ActionLink("每天", null, "appDayStat", new { appId, monitorId })
+        @Html.ActionLink(L.T("每分钟"), null, "appMinuteStat", new { appId = monitorId })
+        @Html.ActionLink(L.T("每天"), null, "appDayStat", new { appId, monitorId })
     </div>
 }
 <div class="form-group">
-    <label for="monitorId" class="control-label">应用：</label>
-    @Html.ForDropDownList("monitorId", dic, page["monitorId"], "全部", true)
+    <label for="monitorId" class="control-label">@L.T("应用：")</label>
+    @Html.ForDropDownList("monitorId", dic, page["monitorId"], L.T("全部"), true)
 </div>
 @await Html.PartialAsync("_DateRange")

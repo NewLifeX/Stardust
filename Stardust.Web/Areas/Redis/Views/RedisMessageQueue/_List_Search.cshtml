@@ -9,7 +9,7 @@
 }
 @await Html.PartialAsync("_SelectRedis", "redisId")
 <div class="form-group">
-    <label for="category" class="control-label">类别：</label>
-    @Html.ForDropDownList("category", RedisMessageQueue.GetCategoryList(), page["category"], "全部", true)
+    <label for="category" class="control-label">@L.T("类别：")</label>
+    @Html.ForDropDownList("category", RedisMessageQueue.GetCategoryList(), page["category"], L.T("全部"), true)
 </div>
 @await Html.PartialAsync("_DateRange")

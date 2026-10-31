@@ -174,7 +174,6 @@
 "Version={0} Size={1:n0} Node={2}": "Wersja={0} Rozmiar={1:n0} Węzeł={2}"
 "Associated online": "Powiązano online"
 "Dynamic registration": "Rejestracja dynamiczna"
-"UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "Język interfejsu, na przykład zh-Hans, zh-Hant, en lub ja; pozostaw puste, aby hosty sieciowe wykrywały go na podstawie każdego żądania, a w pozostałych przypadkach używały języka systemowego"
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] zalogowano o {2}, ostatnia aktywność o {3}"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "Węzeł [{0}/{1}] jest bardzo podobny do istniejącego węzła [{2}]; używany jest istniejący węzeł"
 "Stardust service platform": "Platforma usług Stardust"

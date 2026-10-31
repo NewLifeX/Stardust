@@ -1,5 +1,7 @@
 # 检查运行时消息（异常、日志、控制台、界面提示、埋点标签）是否全部为英文
 # 规则：调用点字符串中不得出现 CJK 字符；注释中的中文不受限制。
+# 界面元数据（菜单名、实体字段描述、自定义视图文案）以中文为源文，经 L.T + en.yml 输出英文，
+# 此类调用在行尾标注 // ui 予以豁免。
 #
 # 用法：
 #   pwsh -File check-english-exceptions.ps1                         # Core 默认目录，失败退出码 1
@@ -57,6 +59,9 @@ foreach ($dir in $dirs) {
             }
 
             # 去掉行尾注释，避免把注释里的中文算作运行时消息
+            # 界面元数据豁免：行尾 // ui 表示中文源文由 en.yml 提供英文译文
+            if ($line -match '//\s*ui\s*$') { continue }
+
             $code = $line -replace "//.*$", ""
             # 特性参数（Description/DisplayName/Obsolete/RequiresXxx/Justification 等）属元数据，不在本检查范围
             if ($code -match "^\s*\[") { continue }

@@ -19,7 +19,7 @@ public class NodeHistoryController : NodesEntityController<NodeHistory>
         ListFields.RemoveField("ID", "ProvinceName", "Version", "CompileTime");
         ListFields.AddListField("Remark", null, "TraceId");
 
-        ListFields.TraceUrl();
+        ListFields.LocalizedTraceUrl();
 
         {
             var df = ListFields.GetField("NodeName") as ListField;

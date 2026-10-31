@@ -6,24 +6,24 @@
     var expire = ViewBag.TraceExpire as DateTime?;
 }
 <div class="text-center">
-    <a href="/trace?id=@traceId">调用链</a>
-    <a href="/trace?id=@traceId&layout=detail">日志详情</a>
-    <a href="/graph?id=@traceId">关系图</a>
-    <a href="/graph?id=@traceId&layout=circular">关系环</a>
+    <a href="/trace?id=@traceId">@L.T("调用链")</a>
+    <a href="/trace?id=@traceId&layout=detail">@L.T("日志详情")</a>
+    <a href="/graph?id=@traceId">@L.T("关系图")</a>
+    <a href="/graph?id=@traceId&layout=circular">@L.T("关系环")</a>
     @if (mode == TraceAccessModes.User)
     {
-        <a href="/trace/share?id=@traceId" title="生成只读分享链接，未登录也可查看">分享</a>
+        <a href="/trace/share?id=@traceId" title="@L.T("生成只读分享链接，未登录也可查看")">@L.T("分享")</a>
     }
 </div>
 @if (ViewBag.ShareHint == true && mode == TraceAccessModes.User)
 {
-    <div class="alert alert-success text-center">分享链接已生成，复制浏览器地址栏即可发送给他人@(expire != null ? $"（有效至 {expire:yyyy-MM-dd HH:mm}）" : "（长期有效）")</div>
+    <div class="alert alert-success text-center">@L.T("分享链接已生成，复制浏览器地址栏即可发送给他人")@(expire != null ? L.T("（有效至 {0}）", expire.Value.ToString("yyyy-MM-dd HH:mm")) : L.T("（长期有效）"))</div>
 }
 else if (mode == TraceAccessModes.Token)
 {
-    <div class="alert alert-info text-center">通过分享链接查看，只读模式@(expire != null ? $"，有效至 {expire:yyyy-MM-dd HH:mm}" : "，长期有效")</div>
+    <div class="alert alert-info text-center">@L.T("通过分享链接查看，只读模式")@(expire != null ? L.T("，有效至 {0}", expire.Value.ToString("yyyy-MM-dd HH:mm")) : L.T("，长期有效"))</div>
 }
 else if (mode == TraceAccessModes.Anonymous)
 {
-    <div class="alert alert-warning text-center">当前站点允许匿名查看调用链，只读模式</div>
+    <div class="alert alert-warning text-center">@L.T("当前站点允许匿名查看调用链，只读模式")</div>
 }

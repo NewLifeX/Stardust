@@ -174,7 +174,6 @@
 "Version={0} Size={1:n0} Node={2}": "เวอร์ชัน={0} ขนาด={1:n0} โหนด={2}"
 "Associated online": "เชื่อมโยงออนไลน์"
 "Dynamic registration": "การลงทะเบียนแบบไดนามิก"
-"UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "ภาษาของ UI เช่น zh-Hans, zh-Hant, en หรือ ja เว้นว่างเพื่อตรวจหาจากแต่ละคำขอในโฮสต์เว็บ และใช้ภาษาของระบบในกรณีอื่น"
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] เข้าสู่ระบบเมื่อ {2} ใช้งานล่าสุดเมื่อ {3}"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "โหนด [{0}/{1}] คล้ายกับโหนดที่มีอยู่ [{2}] มาก จะใช้โหนดที่มีอยู่"
 "Stardust service platform": "แพลตฟอร์มบริการ Stardust"

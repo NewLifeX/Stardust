@@ -174,7 +174,6 @@
 "Version={0} Size={1:n0} Node={2}": "Verzió={0} Méret={1:n0} Csomópont={2}"
 "Associated online": "Online társítva"
 "Dynamic registration": "Dinamikus regisztráció"
-"UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "Felhasználói felület nyelve, például zh-Hans, zh-Hant, en vagy ja; hagyja üresen, hogy webes gazdagépeknél minden kérésből felismerje, más esetben pedig a rendszer nyelvét kövesse"
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] bejelentkezett: {2}, utolsó aktivitás: {3}"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "A(z) [{0}/{1}] csomópont nagyon hasonlít a meglévő [{2}] csomópontra; a meglévő csomópont lesz használva"
 "Stardust service platform": "Stardust szolgáltatási platform"

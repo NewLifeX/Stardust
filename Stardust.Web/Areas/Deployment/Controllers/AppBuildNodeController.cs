@@ -22,7 +22,7 @@ public class AppBuildNodeController : DeploymentEntityController<AppBuildNode>
         AddFormFields.RemoveCreateField();
         ListFields.RemoveCreateField().RemoveRemarkField();
 
-        ListFields.TraceUrl("TraceId");
+        ListFields.LocalizedTraceUrl("TraceId");
 
         {
             var df = ListFields.GetField("DeployName") as ListField;

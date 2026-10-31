@@ -17,7 +17,7 @@ public class AppDeployHistoryController : DeploymentEntityController<AppDeployHi
     {
         ListFields.RemoveField("Id");
         ListFields.AddDataField("Remark", null, "TraceId");
-        ListFields.TraceUrl();
+        ListFields.LocalizedTraceUrl();
 
         {
             var df = ListFields.GetField("DeployName") as ListField;

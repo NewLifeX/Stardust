@@ -1,23 +1,21 @@
-﻿@{
+@{
     var theme = NewLife.Cube.CubeSetting.Current.Theme;
     if (String.IsNullOrEmpty(theme)) theme = "ACE";
 
     Layout = "~/Views/" + theme + "/_Layout.cshtml";
 }<div class="clearfix">
     <div class="tableTools-container">
-        <h3>全链路追踪</h3>
+        <h3>@L.T("全链路追踪")</h3>
         <div class="form-inline">
             <form action="/trace" method="get" role="form">
                 <div class="input-group">
                     <span class="input-group-addon">
                         <i class="ace-icon fa fa-check"></i>
                     </span>
-                    <input name="id" type="search" id="id" class="form-control" style="width: 600px;" placeholder="搜索TraceId（支持逗号分隔的多个TraceId）" />
+                    <input name="id" type="search" id="id" class="form-control" style="width: 600px;" placeholder="@L.T("搜索TraceId（支持逗号分隔的多个TraceId）")" />
                     <span class="input-group-btn">
                         <button type="submit" class="btn btn-purple btn-sm">
-                            <span class="ace-icon fa fa-search icon-on-right bigger-110"></span>
-                            查询
-                        </button>
+                            <span class="ace-icon fa fa-search icon-on-right bigger-110"></span>@L.T("查询")</button>
                     </span>
                 </div>
             </form>

@@ -19,7 +19,7 @@ public class NodeDataController : NodesEntityController<NodeData>
     static NodeDataController()
     {
         ListFields.RemoveField("Id", "*Latency", "*LossRate");
-        ListFields.TraceUrl();
+        ListFields.LocalizedTraceUrl();
     }
 
     /// <summary>高级搜索。按条件分页查询</summary>

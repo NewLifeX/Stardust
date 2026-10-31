@@ -24,7 +24,7 @@ public class AppHistoryController : RegistryEntityController<AppHistory>
         //    df.Url = StarHelper.BuildUrl("{TraceId}");
         //    df.DataVisible = e => e is AppHistory entity && !entity.TraceId.IsNullOrEmpty();
         //}
-        ListFields.TraceUrl();
+        ListFields.LocalizedTraceUrl();
 
         {
             var df = ListFields.GetField("AppName") as ListField;

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
@@ -61,7 +61,7 @@ public class AppOnlineController : RegistryEntityController<AppOnline>
         //    df.Url = StarHelper.BuildUrl("{TraceId}");
         //    df.DataVisible = e => e is AppOnline entity && !entity.TraceId.IsNullOrEmpty();
         //}
-        ListFields.TraceUrl();
+        ListFields.LocalizedTraceUrl();
     }
 
     public AppOnlineController(StarFactory starFactory) => _starFactory = starFactory;

@@ -42,7 +42,7 @@ public class SampleDataController : ReadOnlyEntityController<SampleData>
         //ListFields.TraceUrl();
         {
             var df = ListFields.GetField("TraceId") as ListField;
-            df.Text = "追踪";
+            df.GetValue = _ => L.T("追踪"); // ui
             df.Url = "/trace?id={TraceId}";
         }
     }

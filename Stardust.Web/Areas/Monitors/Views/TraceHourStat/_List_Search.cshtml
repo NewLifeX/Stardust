@@ -22,19 +22,19 @@
 {
     var app = AppTracer.FindByID(appId);
     <div class="form-group" style="width:160px;">
-        <a href="appDayStat?monitorId=@appId" class="btn btn-success btn-sm" title="应用最近的监控图表">@app</a>
+        <a href="appDayStat?monitorId=@appId" class="btn btn-success btn-sm" title="@L.T("应用最近的监控图表")">@app</a>
     </div>
 }
 @if (appId > 0 && itemId > 0)
 {
     <div class="form-group">
-        @Html.ActionLink("每5分钟", null, "traceMinuteStat", new { appId, itemId })
-        @Html.ActionLink("每小时", null, "traceHourStat", new { appId, itemId })
-        @Html.ActionLink("每天", null, "traceDayStat", new { appId, itemId })
+        @Html.ActionLink(L.T("每5分钟"), null, "traceMinuteStat", new { appId, itemId })
+        @Html.ActionLink(L.T("每小时"), null, "traceHourStat", new { appId, itemId })
+        @Html.ActionLink(L.T("每天"), null, "traceDayStat", new { appId, itemId })
     </div>
 }
 <div class="form-group">
-    <label for="appId" class="control-label">应用：</label>
-    @Html.ForDropDownList("appId", dic, page["appId"], "全部", true)
+    <label for="appId" class="control-label">@L.T("应用：")</label>
+    @Html.ForDropDownList("appId", dic, page["appId"], L.T("全部"), true)
 </div>
 @await Html.PartialAsync("_DateRange")

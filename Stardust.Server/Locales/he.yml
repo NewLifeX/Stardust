@@ -174,7 +174,6 @@
 "Version={0} Size={1:n0} Node={2}": "גרסה={0} גודל={1:n0} צומת={2}"
 "Associated online": "משויך ומקוון"
 "Dynamic registration": "רישום דינמי"
-"UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "שפת ממשק המשתמש, לדוגמה zh-Hans, zh-Hant, en או ja; השאירו ריק כדי לזהות מכל בקשה במארחי אינטרנט ולעקוב אחר שפת המערכת אחרת"
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] התחבר ב-{2}, פעיל לאחרונה ב-{3}"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "הצומת [{0}/{1}] דומה מאוד לצומת הקיים [{2}]; הצומת הקיים ישמש"
 "Stardust service platform": "פלטפורמת השירותים Stardust"

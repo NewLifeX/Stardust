@@ -21,7 +21,7 @@
     <label class="control-label col-xs-3 col-sm-3">@field.DisplayName</label>
     <div class="input-group col-xs-9 col-sm-9">
         <input type="hidden" name="@field.Name" id="@field.Name" value="@nodeId" />
-        <input type="text" class="form-control" id="@(field.Name)_select" placeholder="搜索节点" value="@showValue">
+        <input type="text" class="form-control" id="@(field.Name)_select" placeholder="@L.T("搜索节点")" value="@showValue">
         <div class="input-group-btn">
             <ul class="dropdown-menu dropdown-menu-right" role="menu"></ul>
         </div>
@@ -41,7 +41,7 @@
             $input.bsSuggest({
                 url: '/Nodes/Node/NodeSearch?projectId=' + projectId + '&product=StarDeploy&key=',
                 getDataMethod: 'url',
-                effectiveFieldsAlias: { id: '编号', code: '代码', name: '名称', projectName: '项目', category: '分类', ip: '地址' },
+                effectiveFieldsAlias: { id: '@L.T("编号")', code: '@L.T("代码")', name: '@L.T("名称")', projectName: '@L.T("项目")', category: '@L.T("分类")', ip: '@L.T("地址")' },
                 ignorecase: true,
                 showHeader: true,
                 delayUntilKeyup: true,
@@ -50,10 +50,10 @@
                 showBtn: false,
                 keyField: 'name',
                 clearable: true,
-                searchingTip: '搜索中...',
+                searchingTip: '@L.T("搜索中...")',
                 allowNoKeyword: true,
                 delay: 500,
-                emptyTip: '无数据',
+                emptyTip: '@L.T("无数据")',
                 containerValueId: id,
                 fnProcessData: function (result) {
                     dt = {};

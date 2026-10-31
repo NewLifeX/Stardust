@@ -27,7 +27,7 @@ public class RedisMessageQueueController : EntityController<RedisMessageQueue>
         //    df.Url = StarHelper.BuildUrl("{TraceId}");
         //    df.DataVisible = e => e is RedisMessageQueue entity && !entity.TraceId.IsNullOrEmpty();
         //}
-        ListFields.TraceUrl();
+        ListFields.LocalizedTraceUrl();
         {
             var df = ListFields.AddListField("Log", "UpdateTime");
             df.DisplayName = "审计日志";

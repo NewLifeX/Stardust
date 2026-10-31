@@ -33,10 +33,10 @@
             if (!isNew)
             {
                 <div class="@cls">
-                    <label class="control-label col-xs-3 col-sm-3">Token字符串</label>
+                    <label class="control-label col-xs-3 col-sm-3">@L.T("Token字符串")</label>
                     <div class="input-group col-xs-9 col-sm-9">
                         <input type="text" class="form-control" name="Token" value="@entity.Token" readonly style="font-family:monospace; background-color:#f5f5f5;" />
-                        <span class="input-group-addon"><span class="fa fa-lock" title="Token创建后不可修改，可点击列表页"重置Token"重新生成"></span></span>
+                        <span class="input-group-addon"><span class="fa fa-lock" title="@L.T("Token创建后不可修改，可点击列表页")"></span>@L.T("重置Token")@L.T("重新生成")</span>
                     </div>
                 </div>
             }
@@ -51,15 +51,15 @@
 
 <!-- 资源授权区域 -->
 <div class="form-group col-xs-12">
-    <h4>资源授权</h4>
-    <p class="text-muted">勾选授权该Token可访问的资源。勾选"全部"则授权该类型所有资源，无需逐个选择。</p>
+    <h4>@L.T("资源授权")</h4>
+    <p class="text-muted">@L.T("勾选授权该Token可访问的资源。勾选\"全部\"则授权该类型所有资源，无需逐个选择。")</p>
 
     <!-- 项目资源 -->
     <div class="panel panel-default">
         <div class="panel-heading">
             <label class="checkbox-inline">
                 <input type="checkbox" name="res_all_project" value="true" @(allSet.Contains(McpResourceType.Project.ToStorageName()) ? "checked" : "") />
-                <strong>授权全部项目</strong>
+                <strong>@L.T("授权全部项目")</strong>
             </label>
         </div>
         <div class="panel-body" style="max-height:200px; overflow-y:auto;" data-type="project">
@@ -78,7 +78,7 @@
         <div class="panel-heading">
             <label class="checkbox-inline">
                 <input type="checkbox" name="res_all_node" value="true" @(allSet.Contains(McpResourceType.Node.ToStorageName()) ? "checked" : "") />
-                <strong>授权全部节点</strong>
+                <strong>@L.T("授权全部节点")</strong>
             </label>
         </div>
         <div class="panel-body" style="max-height:200px; overflow-y:auto;" data-type="node">
@@ -97,7 +97,7 @@
         <div class="panel-heading">
             <label class="checkbox-inline">
                 <input type="checkbox" name="res_all_app" value="true" @(allSet.Contains(McpResourceType.App.ToStorageName()) ? "checked" : "") />
-                <strong>授权全部应用</strong>
+                <strong>@L.T("授权全部应用")</strong>
             </label>
         </div>
         <div class="panel-body" style="max-height:200px; overflow-y:auto;" data-type="app">

@@ -21,7 +21,7 @@ public class McpAuditController : EntityController<McpAudit>
         // 列表页隐藏长文本字段，保留关键审计列
         ListFields.RemoveField("Arguments", "CallerUserAgent", "ErrorMessage", "TraceId");
         ListFields.RemoveCreateField().RemoveRemarkField();
-        ListFields.TraceUrl("TraceId");
+        ListFields.LocalizedTraceUrl("TraceId");
     }
 
     /// <summary>高级搜索。列表页查询、导出Excel、导出Json、分享页等使用</summary>

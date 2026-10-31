@@ -19,7 +19,7 @@
     <div class="col-lg-12">
         <div class="input-group">
             <input type="hidden" name="@id" id="@id" value="@appId" />
-            <input type="text" class="form-control" id="@(id)_select" placeholder="搜索应用" value="@showValue">
+            <input type="text" class="form-control" id="@(id)_select" placeholder="@L.T("搜索应用")" value="@showValue">
             <div class="input-group-btn">
                 <ul class="dropdown-menu dropdown-menu-right" role="menu"></ul>
             </div>
@@ -33,7 +33,7 @@
         $("#@(id)_select").bsSuggest({
             url: "/Registry/App/AppSearch?category=@Model.Category&key=",
             getDataMethod:"url",
-            effectiveFieldsAlias: { id: "编号", name: "名称", displayName: "显示名", category: "类别" },
+            effectiveFieldsAlias: { id: "@L.T("编号")", name: "@L.T("名称")", displayName: "@L.T("显示名")", category: "@L.T("类别")" },
             ignorecase: true,
             showHeader: true,
             delayUntilKeyup: true, //获取数据的方式为 firstByUrl 时，延迟到有输入/获取到焦点时才请求数据
@@ -42,10 +42,10 @@
             showBtn: false,
             keyField: "name",
             clearable: true,
-            searchingTip: '搜索中...',
+            searchingTip: '@L.T("搜索中...")',
             allowNoKeyword: true,
             delay: 500,
-            emptyTip: '无数据',
+            emptyTip: '@L.T("无数据")',
             containerValueId: '@id',
             fnProcessData: function (result) {
                 dt = {};

@@ -39,7 +39,7 @@ public class AttachmentController : EntityController<Attachment>
         //    var df = ListFields.GetField("Kind") as ListField;
         //    df.GetValue = e => ((Int32)(e as Attachment).Kind).ToString("X4");
         //}
-        ListFields.TraceUrl("TraceId");
+        ListFields.LocalizedTraceUrl("TraceId");
     }
 
     //private readonly ITracer _tracer;

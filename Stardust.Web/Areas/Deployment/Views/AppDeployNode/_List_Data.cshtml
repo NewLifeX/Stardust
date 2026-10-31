@@ -22,30 +22,30 @@
         <tr>
             @if (set.EnableSelect && ukey != null)
             {
-                <th class="text-center" style="width:10px;"><input type="checkbox" id="chkAll" title="全选" /></th>
+                <th class="text-center" style="width:10px;"><input type="checkbox" id="chkAll" title="@L.T("全选")" /></th>
             }
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Id"))">编号</a></th>
-            <th class="text-center" title="默认为空，使用部署集上名字。可用于单节点多发布场景"><a href="@Html.Raw(page.GetSortUrl("DeployName"))">发布名</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Id"))">@L.T("编号")</a></th>
+            <th class="text-center" title="@L.T("默认为空，使用部署集上名字。可用于单节点多发布场景")"><a href="@Html.Raw(page.GetSortUrl("DeployName"))">@L.T("发布名")</a></th>
             @if (appId == 0)
             {
-                <th class="text-center" title="应用。原始应用"><a href="@Html.Raw(page.GetSortUrl("DeployId"))">应用</a></th>
+                <th class="text-center" title="@L.T("应用。原始应用")"><a href="@Html.Raw(page.GetSortUrl("DeployId"))">@L.T("应用")</a></th>
             }
             @if (nodeId == 0)
             {
-                <th class="text-center" title="节点。节点服务器"><a href="@Html.Raw(page.GetSortUrl("NodeId"))">节点</a></th>
+                <th class="text-center" title="@L.T("节点。节点服务器")"><a href="@Html.Raw(page.GetSortUrl("NodeId"))">@L.T("节点")</a></th>
             }
-            <th class="text-center" title="IP地址"><a href="@Html.Raw(page.GetSortUrl("IP"))">IP</a></th>
-            <th class="text-center" title="延迟。发布下去后，延迟执行时间，单位秒"><a href="@Html.Raw(page.GetSortUrl("Delay"))">延迟</a></th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Enable"))">启用</a></th>
-            <th class="text-center" title="进程"><a href="@Html.Raw(page.GetSortUrl("ProcessId"))">进程</a></th>
-            <th class="text-center" title="进程时间"><a href="@Html.Raw(page.GetSortUrl("StartTime"))">进程时间</a></th>
-            <th class="text-center" title="版本。客户端"><a href="@Html.Raw(page.GetSortUrl("Version"))">版本</a></th>
-            <th class="text-center" title="编译时间。客户端"><a href="@Html.Raw(page.GetSortUrl("Compile"))">编译时间</a></th>
-            <th class="text-center" title="最后活跃。最后一次上报心跳的时间"><a href="@Html.Raw(page.GetSortUrl("LastActive"))">最后活跃</a></th>
-            <th class="text-center">远程操作</th>
+            <th class="text-center" title="@L.T("IP地址")"><a href="@Html.Raw(page.GetSortUrl("IP"))">IP</a></th>
+            <th class="text-center" title="@L.T("延迟。发布下去后，延迟执行时间，单位秒")"><a href="@Html.Raw(page.GetSortUrl("Delay"))">@L.T("延迟")</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Enable"))">@L.T("启用")</a></th>
+            <th class="text-center" title="@L.T("进程")"><a href="@Html.Raw(page.GetSortUrl("ProcessId"))">@L.T("进程")</a></th>
+            <th class="text-center" title="@L.T("进程时间")"><a href="@Html.Raw(page.GetSortUrl("StartTime"))">@L.T("进程时间")</a></th>
+            <th class="text-center" title="@L.T("版本。客户端")"><a href="@Html.Raw(page.GetSortUrl("Version"))">@L.T("版本")</a></th>
+            <th class="text-center" title="@L.T("编译时间。客户端")"><a href="@Html.Raw(page.GetSortUrl("Compile"))">@L.T("编译时间")</a></th>
+            <th class="text-center" title="@L.T("最后活跃。最后一次上报心跳的时间")"><a href="@Html.Raw(page.GetSortUrl("LastActive"))">@L.T("最后活跃")</a></th>
+            <th class="text-center">@L.T("远程操作")</th>
             @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
             {
-                <th class="text-center">操作</th>
+                <th class="text-center">@L.T("操作")</th>
             }
         </tr>
     </thead>
@@ -81,19 +81,19 @@
                 <td>@entity.LastActive.ToFullString("")</td>
                 <td class="text-center">
                     <i class="glyphicon glyphicon-save" style="color: green;"></i>
-                    <a data-action="action" data-url="@Url.Action("Operate", new { act = "install", id = entity.Id })" data-confirm="危险操作！确认执行？" title="发布应用服务">发布</a>
+                    <a data-action="action" data-url="@Url.Action("Operate", new { act = "install", id = entity.Id })" data-confirm="@L.T("危险操作！确认执行？")" title="@L.T("发布应用服务")">@L.T("发布")</a>
                     &nbsp;
                     <i class="glyphicon glyphicon-play" style="color: green;"></i>
-                    <a data-action="action" data-url="@Url.Action("Operate", new { act = "start", id = entity.Id })" data-confirm="危险操作！确认执行？" title="拉起应用服务">启动</a>
+                    <a data-action="action" data-url="@Url.Action("Operate", new { act = "start", id = entity.Id })" data-confirm="@L.T("危险操作！确认执行？")" title="@L.T("拉起应用服务")">@L.T("启动")</a>
                     &nbsp;
                     <i class="glyphicon glyphicon-stop" style="color: red;"></i>
-                    <a data-action="action" data-url="@Url.Action("Operate", new { act = "stop", id = entity.Id })" data-confirm="危险操作！确认执行？" title="终止应用服务">终止</a>
+                    <a data-action="action" data-url="@Url.Action("Operate", new { act = "stop", id = entity.Id })" data-confirm="@L.T("危险操作！确认执行？")" title="@L.T("终止应用服务")">@L.T("终止")</a>
                     &nbsp;
                     <i class="glyphicon glyphicon-refresh" style="color: coral;"></i>
-                    <a data-action="action" data-url="@Url.Action("Operate", new { act = "restart", id = entity.Id })" data-confirm="危险操作！确认执行？" title="重启应用服务">重启</a>
+                    <a data-action="action" data-url="@Url.Action("Operate", new { act = "restart", id = entity.Id })" data-confirm="@L.T("危险操作！确认执行？")" title="@L.T("重启应用服务")">@L.T("重启")</a>
                     &nbsp;
                     <i class="glyphicon glyphicon-remove" style="color: red;"></i>
-                    <a data-action="action" data-url="@Url.Action("Operate", new { act = "uninstall", id = entity.Id })" data-confirm="危险操作！确认执行？" title="卸载应用服务">卸载</a>
+                    <a data-action="action" data-url="@Url.Action("Operate", new { act = "uninstall", id = entity.Id })" data-confirm="@L.T("危险操作！确认执行？")" title="@L.T("卸载应用服务")">@L.T("卸载")</a>
                 </td>
                 @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
                 {

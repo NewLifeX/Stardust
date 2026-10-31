@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
@@ -41,7 +41,7 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
             df.Target = "_blank";
         }
 
-        ListFields.TraceUrl();
+        ListFields.LocalizedTraceUrl();
     }
 
     public NodeOnlineController(StarFactory starFactory) => _starFactory = starFactory;

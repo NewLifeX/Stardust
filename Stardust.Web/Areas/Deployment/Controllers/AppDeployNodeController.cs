@@ -20,7 +20,7 @@ public class AppDeployNodeController : DeploymentEntityController<AppDeployNode>
     {
         ListFields.RemoveCreateField();
         AddFormFields.RemoveCreateField();
-        ListFields.TraceUrl();
+        ListFields.LocalizedTraceUrl();
 
         LogOnChange = true;
 

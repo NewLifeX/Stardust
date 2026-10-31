@@ -22,7 +22,7 @@ public class ConfigHistoryController : ConfigsEntityController<ConfigHistory>
         //    df.Url = StarHelper.BuildUrl("{TraceId}");
         //    df.DataVisible = e => e is ConfigHistory entity && !entity.TraceId.IsNullOrEmpty();
         //}
-        ListFields.TraceUrl();
+        ListFields.LocalizedTraceUrl();
     }
 
     /// <summary>高级搜索。按条件分页查询</summary>

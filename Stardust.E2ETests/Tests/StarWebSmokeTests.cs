@@ -82,6 +82,27 @@ public class StarWebSmokeTests : IAsyncLifetime
             $"管理后台标题应包含站点名称，实际：{title}");
     }
 
+    [Fact(DisplayName = "配置页与列表页随查询串语言切换，界面语言不再出现在平台设置")]
+    public async Task Language_SwitchesByQuery()
+    {
+        await _page!.GotoAsync("/Platform/StarServer?lang=en", new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 30_000 });
+        var enConfig = await _page.Locator("body").InnerTextAsync();
+        Assert.Contains("Service port", enConfig);
+        Assert.DoesNotContain("服务端口", enConfig);
+        // 界面语言统一由核心库基础配置提供，平台设置不再暴露该配置项
+        Assert.DoesNotContain("界面配置", enConfig);
+
+        await _page.GotoAsync("/Platform/StarServer?lang=zh-Hans", new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 30_000 });
+        var zhConfig = await _page.Locator("body").InnerTextAsync();
+        Assert.Contains("服务端口", zhConfig);
+        Assert.DoesNotContain("Service port", zhConfig);
+
+        await _page.GotoAsync("/Nodes/Node?lang=en", new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 30_000 });
+        var enNode = await _page.Locator("body").InnerTextAsync();
+        Assert.Contains("Node management", enNode);
+        Assert.DoesNotContain("节点管理", enNode);
+    }
+
     [Fact(DisplayName = "未登录访问业务页面被重定向到登录页")]
     public async Task Anonymous_RedirectedToLogin()
     {

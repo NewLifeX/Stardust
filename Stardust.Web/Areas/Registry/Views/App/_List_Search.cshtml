@@ -9,8 +9,8 @@
     var page = ViewBag.Page as Pager;
 }
 <div class="form-group">
-    <label for="category" class="control-label">类别：</label>
-    @Html.ForDropDownList("category", App.FindAllCategory(), page["category"], "全部", true)
+    <label for="category" class="control-label">@L.T("类别：")</label>
+    @Html.ForDropDownList("category", App.FindAllCategory(), page["category"], L.T("全部"), true)
 </div>
 @*@await Html.PartialAsync("_Area2", "")*@
 @await Html.PartialAsync("_DateRange")

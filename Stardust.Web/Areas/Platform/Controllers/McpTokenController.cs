@@ -24,7 +24,7 @@ public class McpTokenController : EntityController<McpToken>
         // 列表页隐藏敏感字段和自动维护字段
         ListFields.RemoveField("Token", "LastIP", "TraceId");
         ListFields.RemoveCreateField().RemoveRemarkField();
-        ListFields.TraceUrl("TraceId");
+        ListFields.LocalizedTraceUrl("TraceId");
 
         // 编辑表单移除自动维护字段
         EditFormFields.RemoveField("CallCount", "LastTime", "LastIP", "TraceId");

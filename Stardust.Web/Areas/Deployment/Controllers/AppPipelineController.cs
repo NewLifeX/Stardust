@@ -26,7 +26,7 @@ public class AppPipelineController : EntityController<AppPipeline>
         // 列表字段：去掉敏感字段
         ListFields.RemoveField("Id", "Token", "Secret", "DeployNodeIds", "TraceId");
         ListFields.RemoveCreateField().RemoveRemarkField();
-        ListFields.TraceUrl("TraceId");
+        ListFields.LocalizedTraceUrl("TraceId");
 
         // 表单字段：Token/Secret/TraceId 不展示，新建时后台自动生成
         AddFormFields.RemoveField("Token", "Secret", "TraceId");

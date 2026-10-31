@@ -9,8 +9,8 @@
 }
 @* @await Html.PartialAsync("_SelectApp", new SelectAppModel { Id = "appId", AppId = page["appId"].ToInt() }) *@
 <div class="form-group">
-    <label for="category" class="control-label">类别：</label>
-    @Html.ForDropDownList("category", AppDeploy.GetCategoryList(), page["category"], "全部", true)
+    <label for="category" class="control-label">@L.T("类别：")</label>
+    @Html.ForDropDownList("category", AppDeploy.GetCategoryList(), page["category"], L.T("全部"), true)
 </div>
 @await Html.PartialAsync("_Enable")
 @await Html.PartialAsync("_DateRange")

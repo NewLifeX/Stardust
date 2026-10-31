@@ -174,7 +174,6 @@
 "Version={0} Size={1:n0} Node={2}": "نسخه={0} اندازه={1:n0} گره={2}"
 "Associated online": "مرتبط و آنلاین"
 "Dynamic registration": "ثبت پویا"
-"UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "زبان رابط کاربری، مثلاً zh-Hans، zh-Hant، en یا ja؛ برای تشخیص از هر درخواست در میزبان‌های وب و در غیر این صورت پیروی از زبان سیستم خالی بگذارید"
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] در {2} وارد شد، آخرین فعالیت در {3}"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "گره [{0}/{1}] بسیار شبیه به گره موجود [{2}] است؛ از گره موجود استفاده می‌شود"
 "Stardust service platform": "پلتفرم سرویس Stardust"

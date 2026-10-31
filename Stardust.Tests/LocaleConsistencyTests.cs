@@ -90,15 +90,17 @@ public class LocaleConsistencyTests
         return keys;
     }
 
-    [Fact(DisplayName = "各组件均提供 31 种语言词表")]
+    [Fact(DisplayName = "各组件均提供 31 种语言词表，可另带英文元数据词表")]
     public void AllProjectsHaveAllLocales()
     {
         foreach (var project in _projects)
         {
             var dir = GetLocaleDir(project);
-            var files = Directory.GetFiles(dir, "*.yml");
+            var files = Directory.GetFiles(dir, "*.yml").Select(e => Path.GetFileName(e)).ToArray();
 
-            Assert.Equal(31, files.Length);
+            // 31 种语言词表；en.yml 仅用于中文源文的界面元数据，不是必需文件
+            Assert.Equal(31, files.Count(e => e != "en.yml"));
+            Assert.Equal(files.Length, files.Distinct().Count());
         }
     }
 
@@ -118,9 +120,13 @@ public class LocaleConsistencyTests
 
                 var locale = ReadLocale(file);
 
-                foreach (var key in baseline.Keys)
+                // en 是源文语言，只登记中文源文的元数据译文，其余消息回退英文源文
+                if (name != "en.yml")
                 {
-                    Assert.True(locale.ContainsKey(key), $"{project}/{name} 缺少键：{key}");
+                    foreach (var key in baseline.Keys)
+                    {
+                        Assert.True(locale.ContainsKey(key), $"{project}/{name} 缺少键：{key}");
+                    }
                 }
                 foreach (var key in locale.Keys)
                 {

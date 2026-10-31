@@ -1,4 +1,4 @@
-﻿@using NewLife.Common;
+@using NewLife.Common;
 @using NewLife.Web;
 @using NewLife.Cube;
 @using Stardust.Data.Nodes;
@@ -9,15 +9,11 @@
 @if (set.EnableSelect)
 {
     <div class="form-group">
-        <label for="ver" class="control-label">版本：</label>
-        @Html.ForDropDownList("ver", DotNetPackage.GetVersionList(), page["ver"], "自动（最新）", true)
-        <label for="kind" class="control-label">类型：</label>
-        @Html.ForDropDownList("kind", DotNetPackage.GetKindList(), page["kind"], "全部", true)
+        <label for="ver" class="control-label">@L.T("版本：")</label>
+        @Html.ForDropDownList("ver", DotNetPackage.GetVersionList(), page["ver"], L.T("自动（最新）"), true)
+        <label for="kind" class="control-label">@L.T("类型：")</label>
+        @Html.ForDropDownList("kind", DotNetPackage.GetKindList(), page["kind"], L.T("全部"), true)
     </div>
-    <button type="button" class="btn btn-purple btn-sm" data-action="action" data-url="@Url.Action("InstallFramework")" data-fields="keys,ver,kind">
-        安装框架
-    </button>
-    <button type="button" class="btn btn-purple btn-sm" data-action="action" data-url="@Url.Action("UninstallFramework")" data-fields="keys,ver">
-        卸载框架
-    </button>
+    <button type="button" class="btn btn-purple btn-sm" data-action="action" data-url="@Url.Action("InstallFramework")" data-fields="keys,ver,kind">@L.T("安装框架")</button>
+    <button type="button" class="btn btn-purple btn-sm" data-action="action" data-url="@Url.Action("UninstallFramework")" data-fields="keys,ver">@L.T("卸载框架")</button>
 }

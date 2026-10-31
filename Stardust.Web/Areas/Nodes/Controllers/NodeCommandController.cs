@@ -25,7 +25,7 @@ public class NodeCommandController : EntityController<NodeCommand>
             var df = ListFields.GetField("Command") as ListField;
             df.Url = "/Nodes/NodeCommand?nodeId={NodeId}&command={Command}";
         }
-        ListFields.TraceUrl();
+        ListFields.LocalizedTraceUrl();
     }
 
     public override void OnActionExecuting(ActionExecutingContext filterContext)

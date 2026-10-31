@@ -20,34 +20,34 @@
         <tr>
             @if (set.EnableSelect)
             {
-                <th class="text-center" style="width:10px;"><input type="checkbox" id="chkAll" title="全选" /></th>
+                <th class="text-center" style="width:10px;"><input type="checkbox" id="chkAll" title="@L.T("全选")" /></th>
             }
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ID"))">编号</a></th>
-            <th class="text-center" style="min-width:80px;"><a href="@Html.Raw(page.GetSortUrl("StatDate"))">统计日期</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ID"))">@L.T("编号")</a></th>
+            <th class="text-center" style="min-width:80px;"><a href="@Html.Raw(page.GetSortUrl("StatDate"))">@L.T("统计日期")</a></th>
             @if (appId <= 0)
             {
-                <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("AppId"))">应用</a></th>
+                <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("AppId"))">@L.T("应用")</a></th>
             }
-            <th class="text-center">当日监控</th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Names"))">埋点数</a></th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Total"))">总次数</a></th>
-            <th class="text-center" title="环比。今天与昨天相比"><a href="@Html.Raw(page.GetSortUrl("RingRate"))">环比</a></th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Errors"))">错误数</a></th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ErrorRate"))">错误率</a></th>
-            <th class="text-center" title="平均耗时。总耗时除以总次数"><a href="@Html.Raw(page.GetSortUrl("Cost"))">平均耗时</a></th>
-            <th class="text-center" title="最大耗时。单位毫秒"><a href="@Html.Raw(page.GetSortUrl("MaxCost"))">最大耗时</a></th>
-            <th class="text-center" title="最小耗时。单位毫秒"><a href="@Html.Raw(page.GetSortUrl("MinCost"))">最小耗时</a></th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Apis"))">接口数</a></th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Https"))">Http请求</a></th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Dbs"))">数据库</a></th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Mqs"))">消息队列</a></th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Redis"))">Redis缓存</a></th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Others"))">其它</a></th>
-            <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("CreateTime"))">创建时间</a></th>
-            <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("UpdateTime"))">更新时间</a></th>
+            <th class="text-center">@L.T("当日监控")</th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Names"))">@L.T("埋点数")</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Total"))">@L.T("总次数")</a></th>
+            <th class="text-center" title="@L.T("环比。今天与昨天相比")"><a href="@Html.Raw(page.GetSortUrl("RingRate"))">@L.T("环比")</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Errors"))">@L.T("错误数")</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ErrorRate"))">@L.T("错误率")</a></th>
+            <th class="text-center" title="@L.T("平均耗时。总耗时除以总次数")"><a href="@Html.Raw(page.GetSortUrl("Cost"))">@L.T("平均耗时")</a></th>
+            <th class="text-center" title="@L.T("最大耗时。单位毫秒")"><a href="@Html.Raw(page.GetSortUrl("MaxCost"))">@L.T("最大耗时")</a></th>
+            <th class="text-center" title="@L.T("最小耗时。单位毫秒")"><a href="@Html.Raw(page.GetSortUrl("MinCost"))">@L.T("最小耗时")</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Apis"))">@L.T("接口数")</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Https"))">@L.T("Http请求")</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Dbs"))">@L.T("数据库")</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Mqs"))">@L.T("消息队列")</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Redis"))">@L.T("Redis缓存")</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Others"))">@L.T("其它")</a></th>
+            <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("CreateTime"))">@L.T("创建时间")</a></th>
+            <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("UpdateTime"))">@L.T("更新时间")</a></th>
             @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
             {
-                <th class="text-center">操作</th>
+                <th class="text-center">@L.T("操作")</th>
             }
         </tr>
     </thead>
@@ -72,7 +72,7 @@
                 {
                     <td>@entity.AppName</td>
                 }
-                <td class="text-center"><a href="@url1" title="@(entity.AppName)监控。应用各个操作名在该日的监控数据" target="_frame">当日监控</a></td>
+                <td class="text-center"><a href="@url1" title="@L.T("@(entity.AppName)监控。应用各个操作名在该日的监控数据")" target="_frame">@L.T("当日监控")</a></td>
                 <td class="text-right">@entity.Names.ToString("n0")</td>
                 <td class="text-right">@entity.Total.ToString("n0")</td>
                 <td class="text-right">@entity.RingRate.ToString("p2")</td>
@@ -106,7 +106,7 @@
                 {
                     <td></td>
                 }
-                <td class="text-center">总计</td>
+                <td class="text-center">@L.T("总计")</td>
                 <td></td>
                 @if (appId <= 0)
                 {

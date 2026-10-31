@@ -174,7 +174,6 @@
 "Version={0} Size={1:n0} Node={2}": "Versjon={0} Størrelse={1:n0} Node={2}"
 "Associated online": "Tilknyttet online"
 "Dynamic registration": "Dynamisk registrering"
-"UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to detect from each request in web hosts and to follow the system language otherwise": "UI-språk, for eksempel zh-Hans, zh-Hant, en eller ja; la feltet stå tomt for å oppdage det per forespørsel i webverter og ellers følge systemspråket"
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] logget inn {2}, sist aktiv {3}"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "Noden [{0}/{1}] ligner i stor grad den eksisterende noden [{2}]; den eksisterende noden brukes"
 "Stardust service platform": "Stardust-tjenesteplattform"

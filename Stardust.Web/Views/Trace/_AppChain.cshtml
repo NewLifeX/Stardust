@@ -32,8 +32,8 @@
 <table class="table table-bordered table-hover table-striped table-condensed">
     <thead>
         <tr>
-            <th class="text-center">应用</th>
-            <th style="width:80%">时间轴</th>
+            <th class="text-center">@L.T("应用")</th>
+            <th style="width:80%">@L.T("时间轴")</th>
         </tr>
     </thead>
     <tbody>
@@ -54,7 +54,7 @@
             var color = "lightgreen";
             var url1 = $"/Monitors/appDayStat?monitorId={entity.AppId}";
             <tr>
-                <td class="text-center"><a href="@url1" title="应用最近的监控图表">@entity.AppName</a></td>
+                <td class="text-center"><a href="@url1" title="@L.T("应用最近的监控图表")">@entity.AppName</a></td>
                 <td title="@msg">
                     @if (left < 0.96)
                     {
