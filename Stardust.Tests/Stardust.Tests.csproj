@@ -46,6 +46,12 @@
     <Compile Include="..\Plugins\AgentExpansion\LanScan.cs" Link="AgentExpansion\LanScan.cs" />
   </ItemGroup>
 
+  <!-- 看板聚合纯函数直接链接源码测试，避免测试工程引用整个 Web 项目 -->
+  <ItemGroup>
+    <Compile Include="..\Stardust.Web\Models\Dashboard\DashboardMath.cs" Link="Dashboard\DashboardMath.cs" />
+    <Compile Include="..\Stardust.Web\Models\Dashboard\DashboardModels.cs" Link="Dashboard\DashboardModels.cs" />
+  </ItemGroup>
+
   <!-- 全局静态配置（StarSetting/TracerMiddleware）被多个测试类修改，关闭集合并行以避免互相干扰 -->
   <ItemGroup>
     <None Update="xunit.runner.json">
