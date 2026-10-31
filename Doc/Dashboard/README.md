@@ -1,10 +1,10 @@
 # 星尘看板设计稿
 
-> 版本：v1.1 · 2026-10-30（新增明暗双主题，默认跟随系统）
-> 实现目标：[StarWeb](../../Stardust.Web.Vue)（Vue 3 + Element Plus + ECharts + Tailwind）
+> 版本：v1.2 · 2026-10-31（MVC StarWeb 落地，补充实现记录与设计调整）
+> 实现目标：MVC StarWeb（`Stardust.Web`，已落地，见 §16）；Vue 版 StarWeb（`Stardust.Web.Vue`）后续按同一设计稿迁移
 > 视觉基准：[设计令牌](../../Stardust.Web.Vue/src/design-system/tokens.css) · 星尘设计系统（明暗双主题，默认跟随系统）
 
-本目录是星尘平台**分层看板**的设计蓝本，包含 5 个可交互 HTML 原型与本文档。MVC 控制台（`Stardust.Web`）不再新增看板功能，后续实现统一在 StarWeb 完成。
+本目录是星尘平台**分层看板**的设计蓝本，包含 5 个可交互 HTML 原型与本文档。MVC 控制台（`Stardust.Web`）已于 2026-10-31 完成落地，路由、数据来源与设计调整见 §16。
 
 ---
 
@@ -411,3 +411,69 @@ apps/stardust/src/views/Dashboard/
 4. ECharts 使用双调色板：监听主题变化后 `setOption` 重绘（不要像原型一样 reload）；小屏/大屏图表共用同一套主题函数；
 5. 大屏默认「跟随系统」，值守时可锁定深色；切换入口放在大屏头部，避免投屏时误触；
 6. 测试补充：三模式切换、系统主题变化、`localStorage` 持久化、图表颜色随主题重绘、浅色下对比度（WCAG AA）。
+
+## 16. MVC StarWeb 落地记录（2026-10-31）
+
+按「先能用手」的目标，看板优先在 MVC 控制台 `Stardust.Web`（StarWeb 程序集）落地，设计稿的视觉语言、卡片结构、图表语义保持不变；Vue 版后续按同一节迁移。
+
+### 16.1 路由
+
+| 路由 | 页面 | 说明 |
+|------|------|------|
+| `/` | 系统级看板 | 站点根路径即看板；登录成功后默认落地此处 |
+| `/Dashboard` | 跳转 | 默认进系统级看板 |
+| `/Dashboard/System` | 系统级看板 | 与 `/` 同一页面，菜单与面包屑使用该地址 |
+| `/Dashboard/Project/{id?}` | 项目看板 | 无 `id` 时为项目选择页 `/Dashboard/Projects` |
+| `/Dashboard/App/{id?}` | 应用看板 | 无 `id` 时为应用选择页 `/Dashboard/Apps` |
+| `/Dashboard/Node/{id?}` | 节点看板 | 无 `id` 时为节点选择页 `/Dashboard/Nodes` |
+| `/Dashboard/Wallboard` | 大屏模式 | 16:9 全屏、四视角轮播 |
+| `/Dashboard/Data` | 数据接口 | 返回当前页 JSON，供 30 秒轮询与前端二次开发 |
+
+后台入口：看板左侧栏底部「后台」图标跳转 `/Admin`。魔方管理后台首页保持原生工作台（`Cube.StartPage` = `/Admin/Index/Dashboard`），不嵌入看板；登录成功后通过 `LoginLandingMiddleware` 把魔方固定的 `/Admin` 跳转改写为 `/`（带返回地址时不改写）。
+
+### 16.2 数据来源
+
+全部来自现有实体，未新建表；缺聚合口径时在对应 Biz 文件补分组查询（`AppMinuteStat.SearchGroupApp/SearchGroupTime`、`AppDayStat.SearchGroupApp/SearchGroupDate`、`TraceHourStat.SearchGroupName`、`AlarmRecord.SearchGroupCategory`）：
+
+| 看板区块 | 数据来源 |
+|----------|----------|
+| 吞吐/错误/耗时 | `AppMinuteStat`（分钟聚合，跨应用分表合并） |
+| 项目健康矩阵、Top 应用 | `AppMinuteStat` + `App` + `AppDayStat` |
+| 实例/节点在线 | `AppOnline`、`NodeOnline`（`StardustData` 连接） |
+| 资源水位、磁盘、进程 | `NodeData` + `Node` |
+| 端点 Top、错误分布 | `TraceHourStat`（按名称/错误分组） |
+| 告警与事件 | `AlarmRecord` + `AlarmGroup`（按项目归属过滤）、`App`/`Node` 变更 |
+| 依赖拓扑 | `App` → `AppOnline` → `Node` 三级关系推导，无独立依赖表 |
+
+### 16.3 设计调整（以真实数据为准）
+
+原型中的部分指标在现有数据里没有对应字段，落地时按「有数据才画、没有就换口径」处理：
+
+| 原型 | 落地做法 | 原因 |
+|------|----------|------|
+| P95/P99 耗时 | 改为平均耗时 + 最大耗时 | `AppMinuteStat` 只有 Cost/Avg，无分位口径 |
+| 错误类型分布 | 改为错误端点分布（按接口名分组） | 无错误码/异常类型聚合表 |
+| 进程 Top | 改为「进程守护」列表（受管进程 + 状态） | 采集侧只上报受管进程 |
+| 磁盘「预计写满」 | 有历史容量时估算，无则不显示该列 | 多数环境只上报一次容量 |
+| 服务拓扑 | 改为「项目 → 应用 → 节点」部署拓扑 | 无 RPC 调用链数据 |
+| 机房维度 | 无机房字段时按项目分组 | `Node` 无机房字段 |
+| 节点健康雷达 | 用 CPU/内存/磁盘/网络/在线率合成 | 无独立评分源，按权重合成 |
+| 健康评分口径 | 使用率 50% 以内不扣分，超过后每百分点扣 2 分；温度 65℃ 起扣；稳定分从 60 起算 | 线性扣分会让正常节点（40%~60%）被判「较差」，失去参考意义 |
+| 趋势尾桶 | 剔除尚未走完的当前桶 | 当前桶只积累了几十秒数据，曲线末端会突然跌到 0，看起来像故障 |
+| 大屏迷你趋势 | 按 36 点分桶平均；节点在线率取近 24 小时每小时采样 | 原始分钟级曲线在迷你图上噪声过大 |
+| 应用「最近变更」 | 只保留发布与生命周期动作（上线/下线/注册/重启/超时等），同一动作只留最新一条 | `AppHistory` 混有 WebSocket、心跳、鉴权等运行日志，直接展示会刷屏 |
+| 错误分布 | 环形图下方补端点图例（次数 + 占比） | 原型只有图，落地后无图例无法读数 |
+
+### 16.4 数据范围（严格隔离）
+
+- 系统角色（`Role.IsSystem`）可见全部项目与未归属数据；
+- 普通用户按 `ProjectUser` 授权行过滤，所有聚合 SQL 都带项目条件；
+- 无任何授权项目时整页空态（`Mode = none`），不泄露项目名与统计；
+- 项目/应用/节点选择页同样只列出授权范围内的对象。
+
+### 16.5 实现要点
+
+- 服务端渲染 + `dashboard.js` 增强：主题三态（亮/暗/跟随系统）不刷新页面，切换后重绘 ECharts；30 秒轮询 `/Dashboard/Data` 局部刷新（401 自动回登录页）；
+- 设计令牌与卡片样式直接复用本目录的 `tokens.css` / `dashboard.css`，避免第二套视觉；
+- 数据查询统一走 `DashboardService`，带 10 秒进程内缓存，避免轮询打爆数据库；
+- 覆盖测试：`Stardust.Tests/Dashboard/DashboardMathTests.cs`（口径与算法）+ `Stardust.E2ETests/Tests/DashboardPageTests.cs`（五个页面加载与数据接口）。
