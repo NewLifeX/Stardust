@@ -47,7 +47,8 @@ struct TcpCounts
     std::uint64_t CloseWait = 0;
 };
 
-// 磁盘 IO 采样，对应心跳中的 DiskIOPS 与 DiskActiveTime（百分比）。
+// 磁盘 IO 采样，对应心跳中的 DiskIOPS 与 DiskActiveTime。
+// ActivePercent 为 0~100 的百分比，上报前由 Agent 换算成服务端使用的 0~1 比例。
 struct DiskIoSample
 {
     std::uint64_t Iops = 0;
@@ -114,6 +115,7 @@ NetTotals NetTotalsSinceStart();
 std::uint64_t ProcessCount();
 std::vector<std::string> ProcessNames();
 std::uint64_t UptimeSeconds();
+// 系统负载。Linux/macOS 为 1 分钟平均负载，Windows 为处理器队列长度（与 .NET 客户端一致）。
 double LoadAverage();
 // 统计本机 TCP 连接状态分布；不支持统计的平台返回全 0。
 TcpCounts TcpStates();

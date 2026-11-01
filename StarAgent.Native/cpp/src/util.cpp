@@ -506,4 +506,18 @@ double ComputePingScore(int latency_ms, int success, int count){
     return std::max(0.0, std::min(1.0, score));
 }
 
+double RoundTo(double value, int digits)
+{
+    if (digits <= 0) return std::round(value);
+
+    const auto factor = std::pow(10.0, digits);
+    return std::round(value * factor) / factor;
+}
+
+double PercentToRatio(double percent)
+{
+    // 先夹到 0~100 再换算，避免异常计数（例如 PDH 的 % Disk Time 会超过 100）算出大于 1 的比例
+    return RoundTo(std::max(0.0, std::min(100.0, percent)) / 100.0, 4);
+}
+
 } // namespace staragent

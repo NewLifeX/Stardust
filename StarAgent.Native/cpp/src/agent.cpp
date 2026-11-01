@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <exception>
 #include <filesystem>
 #include <stdexcept>
@@ -865,17 +866,18 @@ PingInfo Agent::BuildPingInfo()
     ping.FreeMemory = metrics.FreeMemory;
     ping.TotalSize = metrics.TotalSize;
     ping.AvailableFreeSpace = metrics.AvailableFreeSpace;
-    ping.CpuRate = metrics.CpuRate;
+    // CPU率、磁盘活动与电量在服务端都是 percent 字段（存 0~1、展示乘 100），必须转成比例再上报
+    ping.CpuRate = PercentToRatio(metrics.CpuRate);
     ping.UplinkSpeed = metrics.UplinkSpeed;
     ping.DownlinkSpeed = metrics.DownlinkSpeed;
     ping.TcpConnections = metrics.TcpConnections;
     ping.TcpTimeWait = metrics.TcpTimeWait;
     ping.TcpCloseWait = metrics.TcpCloseWait;
-    ping.Temperature = metrics.Temperature;
-    ping.Battery = metrics.Battery;
+    ping.Temperature = RoundTo(metrics.Temperature, 1);
+    ping.Battery = PercentToRatio(metrics.Battery);
     ping.Signal = metrics.Signal;
     ping.DiskIOPS = metrics.DiskIops;
-    ping.DiskActiveTime = metrics.DiskActivePercent;
+    ping.DiskActiveTime = PercentToRatio(metrics.DiskActivePercent);
     ping.Uptime = metrics.Uptime;
     ping.Delay = delay;
     ping.SystemLoad = metrics.SystemLoad;

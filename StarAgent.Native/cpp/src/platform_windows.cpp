@@ -705,7 +705,8 @@ double Temperature()
         auto kelvin = value.doubleValue;
         if (kelvin > 2700) kelvin /= 10;
         const auto celsius = kelvin > 200 ? kelvin - 273.15 : kelvin;
-        if (celsius > 0 && celsius < 150 && celsius > best) best = celsius;
+        // 计数器精度远高于实际需求，保留一位小数避免 27.850000000000023 这类浮点尾数
+        if (celsius > 0 && celsius < 150 && celsius > best) best = std::round(celsius * 10) / 10;
     }
     return best;
 }
@@ -745,7 +746,7 @@ DiskIoSample DiskIo()
             {
                 transfers = nullptr;
             }
-            if (::PdhAddEnglishCounterW(query, L"\\PhysicalDisk(_Total)\\% Disk Time", 0, &active) != ERROR_SUCCESS)
+            if (::PdhAddEnglishCounterW(query, L"\\PhysicalDisk(_Total)\\% Idle Time", 0, &active) != ERROR_SUCCESS)
             {
                 active = nullptr;
             }
@@ -771,9 +772,10 @@ DiskIoSample DiskIo()
     {
         PDH_FMT_COUNTERVALUE value{};
         if (::PdhGetFormattedCounterValue(active, PDH_FMT_DOUBLE, nullptr, &value) == ERROR_SUCCESS &&
-            value.CStatus == PDH_CSTATUS_VALID_DATA && value.doubleValue > 0)
+            value.CStatus == PDH_CSTATUS_VALID_DATA)
         {
-            result.ActivePercent = std::min(100.0, value.doubleValue);
+            // 用空闲时间反推活动时间，与 .NET 客户端一致；% Disk Time 在多磁盘/队列下会超出 100，不适合做百分比
+            result.ActivePercent = std::min(100.0, std::max(0.0, 100.0 - value.doubleValue));
         }
     }
     return result;

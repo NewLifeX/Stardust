@@ -432,7 +432,8 @@ double ReadTemperatureFile(const std::string& path)
     if (value <= 0) return 0;
     // 多数平台为毫摄氏度，少数直接给摄氏度
     const auto celsius = value > 1000 ? value / 1000.0 : value;
-    return celsius > 0 && celsius < 150 ? celsius : 0;
+    // 保留一位小数，避免上报出 27.850000000000023 这类浮点尾数
+    return celsius > 0 && celsius < 150 ? std::round(celsius * 10) / 10 : 0;
 }
 
 bool IsPhysicalDisk(const std::string& name)

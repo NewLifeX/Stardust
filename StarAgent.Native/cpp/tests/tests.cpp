@@ -152,6 +152,17 @@ void TestPingScore()
     Check(staragent::ComputePingScore(10, 1, 0) == 0, "ping score zero on empty sample");
 }
 
+void TestPercentRatio()
+{
+    // 服务端 percent 字段存 0~1、展示时乘 100，客户端必须把百分比除成比例
+    Check(staragent::PercentToRatio(24.66) == 0.2466, "cpu percent to ratio");
+    Check(staragent::PercentToRatio(100) == 1.0, "full percent to ratio");
+    Check(staragent::PercentToRatio(150) == 1.0, "percent above 100 is clamped");
+    Check(staragent::PercentToRatio(-5) == 0.0, "negative percent is clamped");
+    Check(staragent::RoundTo(27.850000000000023, 1) == 27.9, "temperature rounded to one decimal");
+    Check(staragent::RoundTo(27.24, 1) == 27.2, "temperature rounded down");
+}
+
 void TestTruncate()
 {
     std::string large(100 * 1024, 'a');
@@ -351,6 +362,7 @@ int main()
     TestPingJson();
     TestMd5();
     TestPingScore();
+    TestPercentRatio();
     TestTruncate();
     TestUrls();
     TestConfig();
