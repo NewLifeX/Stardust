@@ -159,7 +159,6 @@ public class Startup
         ThreadPoolX.QueueUserWorkItem(InitProject);
         ThreadPoolX.QueueUserWorkItem(FixAppDeployNode);
         ThreadPoolX.QueueUserWorkItem(RemoveDeadMenus);
-        ThreadPoolX.QueueUserWorkItem(EnsureDashboardMenu);
 
         // 多语言。配置了固定语言时全进程生效，否则按请求语言识别
         app.UseStardustLocalization();
@@ -190,6 +189,9 @@ public class Startup
         app.UseMiddleware<McpMiddleware>();
 
         app.UseCube(env);
+
+        // Cube 菜单扫描完成后才能定位父菜单，避免启动竞态导致看板入口丢失
+        ThreadPoolX.QueueUserWorkItem(EnsureDashboardMenu);
 
         // 注册退出事件
         if (app is IHost host)
@@ -386,8 +388,14 @@ public class Startup
     /// <remarks>魔方后台左侧一级菜单只能作为分组展开，因此看板入口挂到「系统管理」下作为子菜单；页面会自动跳出内容框架。</remarks>
     private static void EnsureDashboardMenu()
     {
-        // 优先挂到「平台管理」，保证进入后台第一屏就能看到看板入口
-        var parent = Menu.Find(Menu._.Url == "/Platform") ?? Menu.Find(Menu._.Url == "/Admin");
+        // 优先挂到「平台管理」，保证进入后台第一屏就能看到看板入口。
+        // Cube 菜单扫描可能仍在后台执行，这里最多等待 10 秒。
+        Menu parent = null;
+        for (var i = 0; i < 20 && parent == null; i++)
+        {
+            parent = Menu.Find(Menu._.Url == "/Platform") ?? Menu.Find(Menu._.Url == "/Admin");
+            if (parent == null) Thread.Sleep(500);
+        }
         if (parent == null) return;
 
         var menu = Menu.Find(Menu._.Url == "/Dashboard" & Menu._.ParentID == parent.ID);

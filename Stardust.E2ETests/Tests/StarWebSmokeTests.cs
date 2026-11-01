@@ -71,10 +71,12 @@ public class StarWebSmokeTests : IAsyncLifetime
         _playwright?.Dispose();
     }
 
-    [Fact(DisplayName = "登录后进入管理后台")]
+    [Fact(DisplayName = "登录后进入看板或管理后台")]
     public async Task Login_EntersAdmin()
     {
-        Assert.Contains("/Admin", _page!.Url, StringComparison.OrdinalIgnoreCase);
+        // 登录落地已改为看板根路径；保留 /Admin 兼容后台直达场景
+        Assert.True(_page!.Url.EndsWith("/", StringComparison.Ordinal) || _page.Url.Contains("/Admin", StringComparison.OrdinalIgnoreCase),
+            $"登录后应进入看板或管理后台，实际：{_page.Url}");
 
         // 站点标题来自程序集标题（当前为英文源文，浏览器标题未走界面语言翻译），故中英文名均视为正确
         var title = await _page.TitleAsync();
