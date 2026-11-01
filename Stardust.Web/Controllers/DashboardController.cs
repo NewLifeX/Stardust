@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
 using NewLife.Cube;
+using Stardust.Data.Monitors;
 using Stardust.Web.Models.Dashboard;
 using Stardust.Web.Services;
 using XCode.Membership;
@@ -196,6 +197,87 @@ public class DashboardController(DashboardService service) : ControllerBaseX
         return Json(model);
     }
 
+    /// <summary>确认报警。记录确认人与时间，不改变报警状态</summary>
+    /// <param name="id">报警编号</param>
+    /// <returns>JSON</returns>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Route("[controller]/Alarm/Ack")]
+    public ActionResult AckAlarm([FromForm] Int64 id)
+    {
+        var record = AlarmRecord.FindByKey(id);
+        if (record == null) return NotFound();
+        if (record.Status == AlarmStatuses.Recovered) return StatusCode(400, new { message = "报警已恢复" });
+
+        if (!CanOperateAlarm(record, out var message)) return StatusCode(403, new { message });
+
+        var user = ManageProvider.User?.Name ?? "";
+        if (!record.Ack(user)) return StatusCode(500, new { message = "确认失败" });
+
+        _service.ClearCache();
+        return Json(new { success = true, ackUser = record.AckUser, ackTime = record.AckTime.ToString("MM-dd HH:mm") });
+    }
+
+    /// <summary>静默报警。在截止时间前不发送外部通知</summary>
+    /// <param name="id">报警编号</param>
+    /// <param name="hours">静默小时数。默认 24 小时，最多 7 天</param>
+    /// <returns>JSON</returns>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Route("[controller]/Alarm/Silence")]
+    public ActionResult SilenceAlarm([FromForm] Int64 id, [FromForm] Int32 hours = 24)
+    {
+        var record = AlarmRecord.FindByKey(id);
+        if (record == null) return NotFound();
+        if (record.Status == AlarmStatuses.Recovered) return StatusCode(400, new { message = "报警已恢复" });
+
+        if (!CanOperateAlarm(record, out var message)) return StatusCode(403, new { message });
+
+        hours = Math.Clamp(hours, 1, 24 * 7);
+        if (!record.Silence(hours)) return StatusCode(500, new { message = "静默失败" });
+
+        _service.ClearCache();
+        return Json(new { success = true, hours, silenceTime = record.SilenceTime.ToString("MM-dd HH:mm") });
+    }
+
+    /// <summary>校验当前用户能否操作指定报警</summary>
+    /// <param name="record">报警记录</param>
+    /// <param name="message">失败原因</param>
+    /// <returns>是否允许</returns>
+    private Boolean CanOperateAlarm(AlarmRecord record, out String message)
+    {
+        message = null;
+
+        if (ManageProvider.User == null)
+        {
+            message = "未登录";
+            return false;
+        }
+
+        if (!HasAlarmPermission())
+        {
+            message = "没有告警操作权限";
+            return false;
+        }
+
+        var scope = ResolveScope();
+        if (!_service.CanOperateAlarm(scope, record))
+        {
+            message = "无权操作该项目的告警";
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>当前用户是否拥有告警操作权限</summary>
+    /// <returns>是否允许确认或静默</returns>
+    private static Boolean HasAlarmPermission()
+    {
+        var menu = ManageProvider.Menu?.FindByUrl("/Monitors/AlarmRecord");
+        return menu != null && ManageProvider.User is IUser user && user.Has(menu, PermissionFlags.Update);
+    }
+
     /// <summary>当前用户可见范围</summary>
     /// <returns>可见范围</returns>
     private ScopeInfo ResolveScope() => _service.ResolveScope(ManageProvider.User?.ID ?? 0);
@@ -212,6 +294,7 @@ public class DashboardController(DashboardService service) : ControllerBaseX
         ViewBag.Scope = model.Scope;
         ViewBag.ObjectId = model.Id;
         ViewBag.CurrentProject = current;
+        ViewBag.CanAlarm = HasAlarmPermission();
 
         PageSetting.EnableNavbar = false;
     }

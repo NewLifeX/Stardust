@@ -134,6 +134,7 @@ public class DashboardService
             Unit = "个",
             Note = $"共 {scope.TotalProjects} 个项目 · 负责人 {projects.Count(e => e.ManagerId > 0)} 位",
             Tone = "brand",
+            Url = DashboardLinks.Projects(),
         });
         model.Kpis.Add(new KpiModel
         {
@@ -146,6 +147,7 @@ public class DashboardService
             DeltaLevel = "flat",
             Tone = "online",
             Spark = DashboardMath.BucketAverage(model.Trend.Primary, 16),
+            Url = DashboardLinks.AppList(),
         });
         model.Kpis.Add(new KpiModel
         {
@@ -157,6 +159,7 @@ public class DashboardService
             Tone = offline > 0 ? "alert" : "online",
             Spark = DashboardMath.BucketAverage(model.Trend.Primary.Select(e => e * 0.8).ToArray(), 16),
             SparkColor = "var(--sd-color-alert)",
+            Url = DashboardLinks.Nodes(),
         });
         model.Kpis.Add(new KpiModel
         {
@@ -169,6 +172,7 @@ public class DashboardService
             Note = "较昨日",
             Tone = "brand",
             Spark = DashboardMath.BucketAverage(model.Trend.Primary, 16),
+            Url = DashboardLinks.AppMinuteStat(),
         });
         model.Kpis.Add(new KpiModel
         {
@@ -178,6 +182,7 @@ public class DashboardService
             Unit = "ms",
             Note = $"最大 {today.Values.Sum(e => e.MaxCost):n0} ms",
             Tone = "accent",
+            Url = DashboardLinks.AppMinuteStat(),
         });
         model.Kpis.Add(new KpiModel
         {
@@ -191,6 +196,7 @@ public class DashboardService
             Tone = "offline",
             Spark = DashboardMath.BucketAverage(model.Trend.ErrorRate, 16),
             SparkColor = "var(--sd-color-offline)",
+            Url = DashboardLinks.AlarmList(true),
         });
 
         // 项目健康矩阵
@@ -346,12 +352,12 @@ public class DashboardService
         var cost = total > 0 ? (Int32)(today.Values.Sum(e => e.TotalCost) / total) : 0;
         var alarms = LoadAlarms(scope, null, projectId, 200);
 
-        model.Kpis.Add(new KpiModel { Key = "apps", Label = "在线应用", Value = apps.Count(e => onlineApps.Any(o => o.AppId == e.Id)).ToString("n0"), Unit = $"/ {apps.Count:n0}", Note = $"实例 {onlineApps.Count:n0} 个", Tone = "online" });
-        model.Kpis.Add(new KpiModel { Key = "nodes", Label = "节点在线", Value = onlineNodes.Count.ToString("n0"), Unit = $"/ {totalNodes:n0}", Note = $"离线 {Math.Max(totalNodes - onlineNodes.Count, 0):n0} 台", Tone = "alert" });
-        model.Kpis.Add(new KpiModel { Key = "instances", Label = "服务实例", Value = onlineApps.Count.ToString("n0"), Unit = "个", Note = $"应用 {apps.Count:n0} 个", Tone = "brand" });
-        model.Kpis.Add(new KpiModel { Key = "requests", Label = "今日请求量", Value = DashboardMath.Abbreviate(total), Unit = "", Note = $"QPS {total / days:n1}", Tone = "brand" });
-        model.Kpis.Add(new KpiModel { Key = "cost", Label = "平均耗时", Value = cost.ToString("n0"), Unit = "ms", Note = $"最大 {today.Values.Sum(e => e.MaxCost):n0} ms", Tone = "accent" });
-        model.Kpis.Add(new KpiModel { Key = "alarms", Label = "活跃告警", Value = alarms.Count.ToString("n0"), Unit = "条", Note = $"错误率 {DashboardMath.ErrorRate(errors, total):n2}%", Tone = alarms.Count > 0 ? "offline" : "online" });
+        model.Kpis.Add(new KpiModel { Key = "apps", Label = "在线应用", Value = apps.Count(e => onlineApps.Any(o => o.AppId == e.Id)).ToString("n0"), Unit = $"/ {apps.Count:n0}", Note = $"实例 {onlineApps.Count:n0} 个", Tone = "online", Url = DashboardLinks.AppList(projectId) });
+        model.Kpis.Add(new KpiModel { Key = "nodes", Label = "节点在线", Value = onlineNodes.Count.ToString("n0"), Unit = $"/ {totalNodes:n0}", Note = $"离线 {Math.Max(totalNodes - onlineNodes.Count, 0):n0} 台", Tone = "alert", Url = DashboardLinks.NodeList(projectId) });
+        model.Kpis.Add(new KpiModel { Key = "instances", Label = "服务实例", Value = onlineApps.Count.ToString("n0"), Unit = "个", Note = $"应用 {apps.Count:n0} 个", Tone = "brand", Url = DashboardLinks.AppOnline(projectId: projectId) });
+        model.Kpis.Add(new KpiModel { Key = "requests", Label = "今日请求量", Value = DashboardMath.Abbreviate(total), Unit = "", Note = $"QPS {total / days:n1}", Tone = "brand", Url = DashboardLinks.AppMinuteStat() });
+        model.Kpis.Add(new KpiModel { Key = "cost", Label = "平均耗时", Value = cost.ToString("n0"), Unit = "ms", Note = $"最大 {today.Values.Sum(e => e.MaxCost):n0} ms", Tone = "accent", Url = DashboardLinks.AppMinuteStat() });
+        model.Kpis.Add(new KpiModel { Key = "alarms", Label = "活跃告警", Value = alarms.Count.ToString("n0"), Unit = "条", Note = $"错误率 {DashboardMath.ErrorRate(errors, total):n2}%", Tone = alarms.Count > 0 ? "offline" : "online", Url = DashboardLinks.AlarmList(true) });
 
         // 应用矩阵
         foreach (var app in apps)
@@ -481,12 +487,12 @@ public class DashboardService
         var cost = agg == null || agg.Total <= 0 ? 0 : (Int32)(agg.TotalCost / agg.Total);
         var services = AppService.FindAllByAppId(appId).Where(e => e.Enable).ToList();
 
-        model.Kpis.Add(new KpiModel { Key = "qps", Label = range.EqualIgnoreCase("7d") ? "日均 QPS" : "当前 QPS", Value = RecentRate(model.Trend.Primary, 1).ToString("n1"), Unit = "", Note = $"今日 {DashboardMath.Abbreviate(total)} 次", Tone = "brand", Spark = DashboardMath.BucketAverage(model.Trend.Primary, 16) });
-        model.Kpis.Add(new KpiModel { Key = "cost", Label = "平均耗时", Value = cost.ToString("n0"), Unit = "ms", Note = $"最大 {agg?.MaxCost ?? 0:n0} ms", Tone = "accent" });
-        model.Kpis.Add(new KpiModel { Key = "maxCost", Label = "最大耗时", Value = (agg?.MaxCost ?? 0).ToString("n0"), Unit = "ms", Note = "当日峰值", Tone = "accent" });
-        model.Kpis.Add(new KpiModel { Key = "errorRate", Label = "错误率", Value = Math.Round(DashboardMath.ErrorRate(errors, total), 2).ToString("n2"), Unit = "%", Note = $"错误 {errors:n0} 次", Tone = "offline", Spark = DashboardMath.BucketAverage(model.Trend.ErrorRate, 16), SparkColor = "var(--sd-color-offline)" });
-        model.Kpis.Add(new KpiModel { Key = "instances", Label = "在线实例", Value = online.Count.ToString("n0"), Unit = "", Note = online.Count > 0 ? $"版本 {online.FirstOrDefault()?.Version}" : "暂无在线实例", Tone = online.Count > 0 ? "online" : "offline" });
-        model.Kpis.Add(new KpiModel { Key = "services", Label = "注册服务", Value = services.Count.ToString("n0"), Unit = "个", Note = $"健康 {services.Count(e => e.Healthy):n0} 个", Tone = "brand" });
+        model.Kpis.Add(new KpiModel { Key = "qps", Label = range.EqualIgnoreCase("7d") ? "日均 QPS" : "当前 QPS", Value = RecentRate(model.Trend.Primary, 1).ToString("n1"), Unit = "", Note = $"今日 {DashboardMath.Abbreviate(total)} 次", Tone = "brand", Spark = DashboardMath.BucketAverage(model.Trend.Primary, 16), Url = DashboardLinks.AppMinuteStat(appId) });
+        model.Kpis.Add(new KpiModel { Key = "cost", Label = "平均耗时", Value = cost.ToString("n0"), Unit = "ms", Note = $"最大 {agg?.MaxCost ?? 0:n0} ms", Tone = "accent", Url = DashboardLinks.AppMinuteStat(appId) });
+        model.Kpis.Add(new KpiModel { Key = "maxCost", Label = "最大耗时", Value = (agg?.MaxCost ?? 0).ToString("n0"), Unit = "ms", Note = "当日峰值", Tone = "accent", Url = DashboardLinks.AppMinuteStat(appId) });
+        model.Kpis.Add(new KpiModel { Key = "errorRate", Label = "错误率", Value = Math.Round(DashboardMath.ErrorRate(errors, total), 2).ToString("n2"), Unit = "%", Note = $"错误 {errors:n0} 次", Tone = "offline", Spark = DashboardMath.BucketAverage(model.Trend.ErrorRate, 16), SparkColor = "var(--sd-color-offline)", Url = DashboardLinks.AlarmList(true) });
+        model.Kpis.Add(new KpiModel { Key = "instances", Label = "在线实例", Value = online.Count.ToString("n0"), Unit = "", Note = online.Count > 0 ? $"版本 {online.FirstOrDefault()?.Version}" : "暂无在线实例", Tone = online.Count > 0 ? "online" : "offline", Url = DashboardLinks.AppOnline(appId) });
+        model.Kpis.Add(new KpiModel { Key = "services", Label = "注册服务", Value = services.Count.ToString("n0"), Unit = "个", Note = $"健康 {services.Count(e => e.Healthy):n0} 个", Tone = "brand", Url = DashboardLinks.AppService(appId) });
 
         // 实例健康
         var nodeIds = online.Select(e => e.NodeId).Where(e => e > 0).Distinct().ToArray();
@@ -644,12 +650,12 @@ public class DashboardService
         model.Memory = Math.Round(memory, 1);
         model.Disk = Math.Round(disk, 1);
 
-        model.Kpis.Add(new KpiModel { Key = "cpu", Label = "CPU 使用率", Value = cpu.ToString("n0"), Unit = "%", Note = $"{node.Cpu} 核", Tone = DashboardMath.Level(cpu) == "ok" ? "online" : "alert", Spark = [] });
-        model.Kpis.Add(new KpiModel { Key = "memory", Label = "内存使用率", Value = memory.ToString("n0"), Unit = "%", Note = $"{node.Memory / 1024d:n1} GB 总量", Tone = "accent" });
-        model.Kpis.Add(new KpiModel { Key = "disk", Label = "磁盘使用率", Value = disk.ToString("n0"), Unit = "%", Note = diskTotal > 0 ? $"{diskTotal / 1024d:n1} GB 总量" : "—", Tone = DashboardMath.Level(disk) == "ok" ? "brand" : "alert" });
-        model.Kpis.Add(new KpiModel { Key = "load", Label = "系统负载", Value = load.ToString("n2"), Unit = "", Note = $"{node.Cpu} 核 · {load / Math.Max(node.Cpu, 1):n2}/核", Tone = "brand" });
-        model.Kpis.Add(new KpiModel { Key = "temperature", Label = "温度", Value = temperature > 0 ? temperature.ToString("n0") : "—", Unit = temperature > 0 ? "℃" : "", Note = temperature >= 70 ? "温度偏高" : "正常", Tone = temperature >= 70 ? "offline" : "online" });
-        model.Kpis.Add(new KpiModel { Key = "network", Label = "网络吞吐", Value = DashboardMath.Abbreviate((uplink + downlink) / 1024d / 1024 * 8), Unit = "Mbps", Note = $"↑ {DashboardMath.Abbreviate(uplink / 1024d / 1024 * 8)} · ↓ {DashboardMath.Abbreviate(downlink / 1024d / 1024 * 8)}", Tone = "online" });
+        model.Kpis.Add(new KpiModel { Key = "cpu", Label = "CPU 使用率", Value = cpu.ToString("n0"), Unit = "%", Note = $"{node.Cpu} 核", Tone = DashboardMath.Level(cpu) == "ok" ? "online" : "alert", Spark = [], Url = DashboardLinks.NodeData(node.ID) });
+        model.Kpis.Add(new KpiModel { Key = "memory", Label = "内存使用率", Value = memory.ToString("n0"), Unit = "%", Note = $"{node.Memory / 1024d:n1} GB 总量", Tone = "accent", Url = DashboardLinks.NodeData(node.ID) });
+        model.Kpis.Add(new KpiModel { Key = "disk", Label = "磁盘使用率", Value = disk.ToString("n0"), Unit = "%", Note = diskTotal > 0 ? $"{diskTotal / 1024d:n1} GB 总量" : "—", Tone = DashboardMath.Level(disk) == "ok" ? "brand" : "alert", Url = DashboardLinks.NodeData(node.ID) });
+        model.Kpis.Add(new KpiModel { Key = "load", Label = "系统负载", Value = load.ToString("n2"), Unit = "", Note = $"{node.Cpu} 核 · {load / Math.Max(node.Cpu, 1):n2}/核", Tone = "brand", Url = DashboardLinks.NodeOnline(node.ID) });
+        model.Kpis.Add(new KpiModel { Key = "temperature", Label = "温度", Value = temperature > 0 ? temperature.ToString("n0") : "—", Unit = temperature > 0 ? "℃" : "", Note = temperature >= 70 ? "温度偏高" : "正常", Tone = temperature >= 70 ? "offline" : "online", Url = DashboardLinks.NodeOnline(node.ID) });
+        model.Kpis.Add(new KpiModel { Key = "network", Label = "网络吞吐", Value = DashboardMath.Abbreviate((uplink + downlink) / 1024d / 1024 * 8), Unit = "Mbps", Note = $"↑ {DashboardMath.Abbreviate(uplink / 1024d / 1024 * 8)} · ↓ {DashboardMath.Abbreviate(downlink / 1024d / 1024 * 8)}", Tone = "online", Url = DashboardLinks.NodeOnline(node.ID) });
 
         // 时序
         model.Series = BuildNodeSeries(node, range);
@@ -834,6 +840,9 @@ public class DashboardService
     private sealed record CacheItem(Object Value, DateTime Expire);
 
     private readonly ConcurrentDictionary<String, CacheItem> _cache = new();
+
+    /// <summary>清空看板缓存。报警确认或静默后立即生效</summary>
+    public void ClearCache() => _cache.Clear();
 
     private T Cache<T>(String key, Int32 seconds, Func<T> factory) where T : class
     {
@@ -1289,6 +1298,7 @@ public class DashboardService
                 return new RegionRow
                 {
                     Name = project?.Name ?? "未分配项目",
+                    ProjectId = g.Key,
                     Nodes = g.Count(),
                     Cpu = Math.Round(g.Average(e => e.CpuRate), 1),
                     Memory = Math.Round(g.Average(MemoryRate), 1),
@@ -1350,11 +1360,47 @@ public class DashboardService
                 Times = item.Times,
                 Recovered = item.Status == AlarmStatuses.Recovered,
                 Content = item.Content,
+                AckTime = item.AckTime,
+                AckUser = item.AckUser,
+                SilenceTime = item.SilenceTime,
             });
             if (list.Count >= max) break;
         }
 
         return list;
+    }
+
+    /// <summary>判断当前用户能否操作指定报警记录</summary>
+    /// <param name="scope">可见范围</param>
+    /// <param name="record">报警记录</param>
+    /// <returns>是否允许确认或静默</returns>
+    public Boolean CanOperateAlarm(ScopeInfo scope, AlarmRecord record)
+    {
+        if (scope == null || scope.IsNone || record == null) return false;
+        if (scope.IsAdmin) return true;
+
+        var projectId = ResolveAlarmProjectId(record);
+        return projectId > 0 && scope.ProjectIds.Contains(projectId);
+    }
+
+    private static Int32 ResolveAlarmProjectId(AlarmRecord record)
+    {
+        if (record.GroupId > 0)
+        {
+            var group = AlarmGroup.FindById(record.GroupId);
+            if (group != null && group.ProjectId > 0) return group.ProjectId;
+        }
+
+        var action = record.Action;
+        if (action.IsNullOrEmpty()) return 0;
+
+        // 埋点告警的对象形如 appName/itemName，取第一段用于定位应用
+        var name = action.Split('/', '\\')[0];
+        var app = App.FindByName(name);
+        if (app != null) return app.ProjectId;
+
+        var node = Node.FindByName(name);
+        return node?.ProjectId ?? 0;
     }
 
     private static Boolean IsVisibleName(ScopeInfo scope, String action, Int32 projectId)
@@ -1379,7 +1425,20 @@ public class DashboardService
         foreach (var item in AlarmRecord.FindAll(AlarmRecord._.StartTime >= DateTime.Now.AddDays(-1), AlarmRecord._.StartTime.Desc(), null, 0, 10))
         {
             var level = item.Status == AlarmStatuses.Alarming ? "bad" : "ok";
-            list.Add(new EventItem { Time = item.StartTime, Level = level, Title = $"{item.Category} · {item.Action}", Meta = item.Content, Url = "/Monitors/AlarmRecord" });
+            list.Add(new EventItem
+            {
+                Time = item.StartTime,
+                Level = level,
+                Title = $"{item.Category} · {item.Action}",
+                Meta = item.Content,
+                Url = DashboardLinks.AlarmDetail(item.Id),
+                AlarmId = item.Id,
+                Acked = item.AckTime.Year > 2000,
+                Silenced = item.SilenceTime > DateTime.Now,
+                AckText = item.AckTime.Year > 2000 ? $"{item.AckUser} 已确认" : null,
+                SilenceTime = item.SilenceTime,
+                SilenceText = item.SilenceTime > DateTime.Now ? $"静默至 {item.SilenceTime:MM-dd HH:mm}" : null,
+            });
         }
 
         foreach (var item in AppHistory.FindAll(AppHistory._.CreateTime >= DateTime.Now.AddDays(-1), AppHistory._.CreateTime.Desc(), null, 0, 20))

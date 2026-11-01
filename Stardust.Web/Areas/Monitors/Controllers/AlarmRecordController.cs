@@ -13,6 +13,9 @@ public class AlarmRecordController : EntityController<AlarmRecord>
     static AlarmRecordController()
     {
         ListFields.RemoveCreateField();
+        ListFields.RemoveField("AckTime", "AckUser", "SilenceTime");
+        AddFormFields.RemoveField("AckTime,AckUser,SilenceTime");
+        EditFormFields.RemoveField("AckTime,AckUser,SilenceTime");
 
         {
             var df = ListFields.AddListField("History", "Creator");

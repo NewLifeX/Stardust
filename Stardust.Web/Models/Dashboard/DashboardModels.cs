@@ -241,6 +241,9 @@ public class RegionRow
     /// <summary>分组名称</summary>
     public String Name { get; set; }
 
+    /// <summary>项目编号。按项目分组时有值，按机房分组时为 0</summary>
+    public Int32 ProjectId { get; set; }
+
     /// <summary>节点数</summary>
     public Int32 Nodes { get; set; }
 
@@ -252,6 +255,9 @@ public class RegionRow
 
     /// <summary>平均磁盘使用率</summary>
     public Double Disk { get; set; }
+
+    /// <summary>下钻地址。按项目分组时进入项目节点列表，否则进入节点列表</summary>
+    public String Url => DashboardLinks.NodeList(ProjectId);
 }
 
 /// <summary>事件流条目</summary>
@@ -274,6 +280,24 @@ public class EventItem
 
     /// <summary>跳转地址</summary>
     public String Url { get; set; }
+
+    /// <summary>告警编号。仅告警事件有值，用于快捷操作</summary>
+    public Int64 AlarmId { get; set; }
+
+    /// <summary>是否已确认</summary>
+    public Boolean Acked { get; set; }
+
+    /// <summary>是否处于静默期</summary>
+    public Boolean Silenced { get; set; }
+
+    /// <summary>确认状态文本</summary>
+    public String AckText { get; set; }
+
+    /// <summary>静默截止时间</summary>
+    public DateTime SilenceTime { get; set; }
+
+    /// <summary>静默状态文本</summary>
+    public String SilenceText { get; set; }
 }
 
 /// <summary>告警条目</summary>
@@ -303,11 +327,51 @@ public class AlarmItem
     /// <summary>告警内容摘要</summary>
     public String Content { get; set; }
 
+    /// <summary>确认时间</summary>
+    public DateTime AckTime { get; set; }
+
+    /// <summary>确认人</summary>
+    public String AckUser { get; set; }
+
+    /// <summary>静默截止时间</summary>
+    public DateTime SilenceTime { get; set; }
+
+    /// <summary>是否已确认</summary>
+    public Boolean IsAcked => AckTime.Year > 2000;
+
+    /// <summary>是否处于静默期</summary>
+    public Boolean IsSilenced => SilenceTime > DateTime.Now;
+
+    /// <summary>是否允许快捷操作</summary>
+    public Boolean CanAct => !Recovered;
+
+    /// <summary>告警详情地址</summary>
+    public String Url => DashboardLinks.AlarmDetail(Id);
+
     /// <summary>持续时长文本</summary>
     public String DurationText => DashboardMath.Duration(Duration);
 
     /// <summary>开始时间文本</summary>
     public String StartText => StartTime.Year > 2000 ? StartTime.ToString("MM-dd HH:mm") : "—";
+}
+
+/// <summary>告警快捷操作视图模型</summary>
+public class AlarmActionModel
+{
+    /// <summary>告警编号</summary>
+    public Int64 Id { get; set; }
+
+    /// <summary>是否已恢复</summary>
+    public Boolean Recovered { get; set; }
+
+    /// <summary>是否已确认</summary>
+    public Boolean Acked { get; set; }
+
+    /// <summary>是否处于静默期</summary>
+    public Boolean Silenced { get; set; }
+
+    /// <summary>静默截止时间</summary>
+    public DateTime SilenceTime { get; set; }
 }
 
 /// <summary>应用卡片</summary>

@@ -112,6 +112,33 @@ public partial class AlarmRecord
     [BindColumn("Content", "内容。报警详细信息", "")]
     public String Content { get => _Content; set { if (OnPropertyChanging("Content", value)) { _Content = value; OnPropertyChanged("Content"); } } }
 
+    private DateTime _AckTime;
+    /// <summary>确认时间</summary>
+    [Category("扩展")]
+    [DisplayName("确认时间")]
+    [Description("确认时间")]
+    [DataObjectField(false, false, true, 0)]
+    [BindColumn("AckTime", "确认时间", "")]
+    public DateTime AckTime { get => _AckTime; set { if (OnPropertyChanging("AckTime", value)) { _AckTime = value; OnPropertyChanged("AckTime"); } } }
+
+    private String _AckUser;
+    /// <summary>确认人</summary>
+    [Category("扩展")]
+    [DisplayName("确认人")]
+    [Description("确认人")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("AckUser", "确认人", "")]
+    public String AckUser { get => _AckUser; set { if (OnPropertyChanging("AckUser", value)) { _AckUser = value; OnPropertyChanged("AckUser"); } } }
+
+    private DateTime _SilenceTime;
+    /// <summary>静默截止时间</summary>
+    [Category("扩展")]
+    [DisplayName("静默截止时间")]
+    [Description("静默截止时间")]
+    [DataObjectField(false, false, true, 0)]
+    [BindColumn("SilenceTime", "静默截止时间", "")]
+    public DateTime SilenceTime { get => _SilenceTime; set { if (OnPropertyChanging("SilenceTime", value)) { _SilenceTime = value; OnPropertyChanged("SilenceTime"); } } }
+
     private String _Creator;
     /// <summary>创建者。服务端节点</summary>
     [Category("扩展")]
@@ -159,6 +186,9 @@ public partial class AlarmRecord
             "Duration" => _Duration,
             "Times" => _Times,
             "Content" => _Content,
+            "AckTime" => _AckTime,
+            "AckUser" => _AckUser,
+            "SilenceTime" => _SilenceTime,
             "Creator" => _Creator,
             "CreateTime" => _CreateTime,
             "UpdateTime" => _UpdateTime,
@@ -179,6 +209,9 @@ public partial class AlarmRecord
                 case "Duration": _Duration = value.ToInt(); break;
                 case "Times": _Times = value.ToInt(); break;
                 case "Content": _Content = Convert.ToString(value); break;
+                case "AckTime": _AckTime = value.ToDateTime(); break;
+                case "AckUser": _AckUser = Convert.ToString(value); break;
+                case "SilenceTime": _SilenceTime = value.ToDateTime(); break;
                 case "Creator": _Creator = Convert.ToString(value); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
@@ -313,6 +346,15 @@ public partial class AlarmRecord
         /// <summary>内容。报警详细信息</summary>
         public static readonly Field Content = FindByName("Content");
 
+        /// <summary>确认时间</summary>
+        public static readonly Field AckTime = FindByName("AckTime");
+
+        /// <summary>确认人</summary>
+        public static readonly Field AckUser = FindByName("AckUser");
+
+        /// <summary>静默截止时间</summary>
+        public static readonly Field SilenceTime = FindByName("SilenceTime");
+
         /// <summary>创建者。服务端节点</summary>
         public static readonly Field Creator = FindByName("Creator");
 
@@ -360,6 +402,15 @@ public partial class AlarmRecord
 
         /// <summary>内容。报警详细信息</summary>
         public const String Content = "Content";
+
+        /// <summary>确认时间</summary>
+        public const String AckTime = "AckTime";
+
+        /// <summary>确认人</summary>
+        public const String AckUser = "AckUser";
+
+        /// <summary>静默截止时间</summary>
+        public const String SilenceTime = "SilenceTime";
 
         /// <summary>创建者。服务端节点</summary>
         public const String Creator = "Creator";

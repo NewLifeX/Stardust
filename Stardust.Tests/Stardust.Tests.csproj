@@ -50,6 +50,7 @@
   <ItemGroup>
     <Compile Include="..\Stardust.Web\Models\Dashboard\DashboardMath.cs" Link="Dashboard\DashboardMath.cs" />
     <Compile Include="..\Stardust.Web\Models\Dashboard\DashboardModels.cs" Link="Dashboard\DashboardModels.cs" />
+    <Compile Include="..\Stardust.Web\Models\Dashboard\DashboardLinks.cs" Link="Dashboard\DashboardLinks.cs" />
   </ItemGroup>
 
   <!-- 全局静态配置（StarSetting/TracerMiddleware）被多个测试类修改，关闭集合并行以避免互相干扰 -->

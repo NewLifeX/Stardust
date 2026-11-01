@@ -151,15 +151,16 @@ public class RobotHelper
         // 获取或创建报警记录
         var record = GetOrAddRecord(category, action, groupName);
 
-        // 更新报警记录
-        record.Times++;
+        // 更新报警记录。静默期内只更新内容与持续时长，不增加通知次数
+        var notify = record.CanNotify;
+        if (notify) record.Times++;
         record.Content = message;
         if (record.StartTime.Year > 2000)
             record.Duration = (Int32)(DateTime.Now - record.StartTime).TotalSeconds;
         record.Update();
 
         // 发送告警通知
-        SendAlarm(groupName, webhook, title, message);
+        if (notify) SendAlarm(groupName, webhook, title, message);
 
         return record;
     }

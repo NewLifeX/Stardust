@@ -385,6 +385,9 @@
         <Column Name="Duration" DataType="Int32" ItemType="TimeSpan" Description="持续时间。报警持续的秒数" />
         <Column Name="Times" DataType="Int32" Description="通知次数。累计发送报警通知的次数" />
         <Column Name="Content" DataType="String" Length="2000" Description="内容。报警详细信息" />
+        <Column Name="AckTime" DataType="DateTime" Description="确认时间" Category="扩展" />
+        <Column Name="AckUser" DataType="String" Description="确认人" Category="扩展" />
+        <Column Name="SilenceTime" DataType="DateTime" Description="静默截止时间" Category="扩展" />
         <Column Name="Creator" DataType="String" Description="创建者。服务端节点" Category="扩展" />
         <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
         <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
