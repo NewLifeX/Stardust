@@ -338,6 +338,26 @@ TcpCounts TcpStates()
     return result;
 }
 
+double Temperature()
+{
+    // macOS 温度需要 IOKit SMC 私有接口，暂不采集
+    return 0;
+}
+
+int WirelessSignal()
+{
+    // 无线信号强度暂不采集
+    return 0;
+}
+
+DiskIoSample DiskIo()
+{
+    // 磁盘 IO 速率暂不采集
+    return {};
+}
+
+std::uint64_t MaxOpenFiles() { return 0; }
+
 double LoadAverage()
 {
     double values[3] = {};

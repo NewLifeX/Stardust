@@ -108,12 +108,20 @@ void TestPingJson()
     ping.TcpConnections = 34;
     ping.TcpTimeWait = 5;
     ping.TcpCloseWait = 6;
+    ping.Temperature = 42.5;
+    ping.Signal = 66;
+    ping.DiskIOPS = 180;
+    ping.DiskActiveTime = 12.5;
 
     const auto json = staragent::ToJson(ping);
     Check(json["ProcessCount"] == 12, "ping json process count");
     Check(json["TcpConnections"] == 34, "ping json tcp connections");
     Check(json["TcpTimeWait"] == 5, "ping json tcp time wait");
     Check(json["TcpCloseWait"] == 6, "ping json tcp close wait");
+    Check(json["Temperature"] == 42.5, "ping json temperature");
+    Check(json["Signal"] == 66, "ping json signal");
+    Check(json["DiskIOPS"] == 180, "ping json disk iops");
+    Check(json["DiskActiveTime"] == 12.5, "ping json disk active time");
 }
 
 void TestTruncate()

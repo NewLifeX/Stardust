@@ -33,6 +33,11 @@
 #include <thread>
 #include <unistd.h>
 
+#if defined(__GLIBC__)
+#include <gnu/libc-version.h>
+#endif
+#include <sys/resource.h>
+
 namespace staragent::platform {
 namespace {
 
@@ -151,6 +156,7 @@ std::string LinuxDiskSerial()
         }
         auto serial = ReadTrim("/sys/block/" + name + "/device/serial");
         if (serial.empty()) serial = ReadTrim("/sys/block/" + name + "/serial");
+        if (StartsWith(serial, "0x") || StartsWith(serial, "0X")) serial.erase(0, 2);
         if (!serial.empty())
         {
             result = serial;
@@ -267,16 +273,23 @@ std::vector<DriveEntry> Drives()
     std::istringstream stream(ReadFile("/proc/mounts"));
     std::string line;
     static const std::set<std::string> ignored = {
-        "proc",       "sysfs",      "devtmpfs",  "devpts",   "cgroup",    "cgroup2", "securityfs",
-        "pstore",     "efivarfs",   "bpf",       "tracefs",  "debugfs",   "configfs", "fusectl",
-        "mqueue",     "hugetlbfs",  "ramfs",     "autofs",   "binfmt_misc", "rpc_pipefs", "nsfs"};
+        "proc",        "sysfs",     "devtmpfs", "devpts",      "cgroup",     "cgroup2",    "securityfs",
+        "pstore",      "efivarfs",  "bpf",      "tracefs",     "debugfs",    "configfs",   "fusectl",
+        "mqueue",      "hugetlbfs", "ramfs",    "autofs",      "binfmt_misc", "rpc_pipefs", "nsfs",
+        "tmpfs",       "zram",      "zram0",    "none"};
     while (std::getline(stream, line))
     {
         std::istringstream fields(line);
         std::string device, path, file_system;
         if (!(fields >> device >> path >> file_system)) continue;
         if (ignored.count(file_system) > 0) continue;
-        if (StartsWith(path, "/sys") || StartsWith(path, "/proc") || StartsWith(path, "/dev")) continue;
+        if (StartsWith(path, "/sys") || StartsWith(path, "/proc") || StartsWith(path, "/dev") ||
+            StartsWith(path, "/run"))
+        {
+            continue;
+        }
+        // 容器/嵌入式常见只读根文件系统：仅保留根挂载点，其余镜像层不参与磁盘统计
+        if ((file_system == "overlay" || file_system == "squashfs") && path != "/") continue;
         struct statvfs stats{};
         if (::statvfs(path.c_str(), &stats) != 0) continue;
         const auto total = static_cast<std::uint64_t>(stats.f_blocks) * stats.f_frsize;
@@ -356,6 +369,190 @@ std::uint64_t UptimeSeconds()
 
 namespace {
 
+std::vector<std::string> ListDir(const std::string& path)
+{
+    std::vector<std::string> names;
+    DIR* directory = ::opendir(path.c_str());
+    if (directory == nullptr) return names;
+    while (auto* entry = ::readdir(directory))
+    {
+        const std::string name = entry->d_name;
+        if (name == "." || name == "..") continue;
+        names.push_back(name);
+    }
+    ::closedir(directory);
+    std::sort(names.begin(), names.end());
+    return names;
+}
+
+std::string CpuModel()
+{
+    std::istringstream stream(ReadFile("/proc/cpuinfo", 256 * 1024));
+    std::string line;
+    std::string model;
+    std::string hardware;
+    while (std::getline(stream, line))
+    {
+        const auto position = line.find(':');
+        if (position == std::string::npos) continue;
+        const auto key = Trim(line.substr(0, position));
+        const auto value = Trim(line.substr(position + 1));
+        if (value.empty()) continue;
+        if (key == "model name" && model.empty()) model = value;
+        else if (key == "Processor" && model.empty()) model = value;
+        else if (key == "Hardware" && hardware.empty()) hardware = value;
+    }
+    return model.empty() ? hardware : model;
+}
+
+std::string DeviceTreeString(const std::string& path)
+{
+    auto value = ReadFile(path, 4096);
+    const auto end = value.find('\0');
+    if (end != std::string::npos) value.resize(end);
+    return Trim(value);
+}
+
+std::string CLibVersion()
+{
+#if defined(__GLIBC__)
+    const auto* version = ::gnu_get_libc_version();
+    if (version != nullptr) return std::string("glibc ") + version;
+#endif
+    return {};
+}
+
+double ReadTemperatureFile(const std::string& path)
+{
+    const auto text = ReadTrim(path);
+    if (text.empty()) return 0;
+    const auto value = std::strtod(text.c_str(), nullptr);
+    if (value <= 0) return 0;
+    // 多数平台为毫摄氏度，少数直接给摄氏度
+    const auto celsius = value > 1000 ? value / 1000.0 : value;
+    return celsius > 0 && celsius < 150 ? celsius : 0;
+}
+
+bool IsPhysicalDisk(const std::string& name)
+{
+    if (StartsWith(name, "loop") || StartsWith(name, "ram") || StartsWith(name, "dm-") ||
+        StartsWith(name, "md") || StartsWith(name, "sr") || StartsWith(name, "fd"))
+    {
+        return false;
+    }
+    if (StartsWith(name, "nvme") || StartsWith(name, "mmcblk")) return name.find('p') == std::string::npos;
+    if (StartsWith(name, "sd") || StartsWith(name, "vd") || StartsWith(name, "xvd") ||
+        StartsWith(name, "hd") || StartsWith(name, "ublk"))
+    {
+        const auto last = name.back();
+        return last < '0' || last > '9';
+    }
+    return false;
+}
+
+std::uint64_t g_disk_ios = 0;
+std::uint64_t g_disk_ticks = 0;
+std::int64_t g_disk_time_ms = 0;
+bool g_has_disk_sample = false;
+
+} // namespace
+
+double Temperature()
+{
+    for (const auto& name : ListDir("/sys/class/thermal"))
+    {
+        if (!StartsWith(name, "thermal_zone")) continue;
+        const auto value = ReadTemperatureFile("/sys/class/thermal/" + name + "/temp");
+        if (value > 0) return value;
+    }
+    for (const auto& name : ListDir("/sys/class/hwmon"))
+    {
+        const auto base = "/sys/class/hwmon/" + name;
+        for (const auto& file : ListDir(base))
+        {
+            if (!StartsWith(file, "temp") || !EndsWith(file, "_input")) continue;
+            const auto value = ReadTemperatureFile(base + "/" + file);
+            if (value > 0) return value;
+        }
+    }
+    return 0;
+}
+
+int WirelessSignal()
+{
+    // /proc/net/wireless：链路质量通常以 70 为满值，-1 表示未连接
+    std::istringstream stream(ReadFile("/proc/net/wireless"));
+    std::string line;
+    std::getline(stream, line);
+    std::getline(stream, line);
+    int best = 0;
+    while (std::getline(stream, line))
+    {
+        const auto colon = line.find(':');
+        if (colon == std::string::npos) continue;
+        std::istringstream fields(line.substr(colon + 1));
+        double status = 0;
+        double link = 0;
+        double level = 0;
+        if (!(fields >> status >> link >> level)) continue;
+        if (link <= 0) continue;
+        // 不同驱动满值不同：传统 wireless-extensions 为 70，cfg80211 多为 100
+        auto percent = link <= 70 ? static_cast<int>(link * 100.0 / 70.0 + 0.5) : static_cast<int>(link + 0.5);
+        if (percent > 100) percent = 100;
+        if (percent > best) best = percent;
+    }
+    return best;
+}
+
+DiskIoSample DiskIo()
+{
+    DiskIoSample result;
+    std::istringstream stream(ReadFile("/proc/diskstats", 256 * 1024));
+    std::string line;
+    std::uint64_t ios = 0;
+    std::uint64_t ticks = 0;
+    while (std::getline(stream, line))
+    {
+        std::istringstream fields(line);
+        std::vector<std::string> tokens;
+        std::string token;
+        while (fields >> token) tokens.push_back(token);
+        if (tokens.size() < 14) continue;
+        if (!IsPhysicalDisk(tokens[2])) continue;
+        ios += std::strtoull(tokens[3].c_str(), nullptr, 10);
+        ios += std::strtoull(tokens[7].c_str(), nullptr, 10);
+        ticks += std::strtoull(tokens[12].c_str(), nullptr, 10);
+    }
+
+    const auto now = SteadyMsNow();
+    std::lock_guard<std::mutex> lock(g_mutex);
+    if (g_has_disk_sample && now > g_disk_time_ms && ios >= g_disk_ios && ticks >= g_disk_ticks)
+    {
+        const auto elapsed = static_cast<double>(now - g_disk_time_ms);
+        if (elapsed > 0)
+        {
+            result.Iops = static_cast<std::uint64_t>(static_cast<double>(ios - g_disk_ios) * 1000.0 / elapsed + 0.5);
+            const auto active = static_cast<double>(ticks - g_disk_ticks) * 100.0 / elapsed;
+            result.ActivePercent = std::min(100.0, std::max(0.0, active));
+        }
+    }
+    g_disk_ios = ios;
+    g_disk_ticks = ticks;
+    g_disk_time_ms = now;
+    g_has_disk_sample = true;
+    return result;
+}
+
+std::uint64_t MaxOpenFiles()
+{
+    struct rlimit limit{};
+    if (::getrlimit(RLIMIT_NOFILE, &limit) != 0) return 0;
+    if (limit.rlim_cur == RLIM_INFINITY) return 0;
+    return static_cast<std::uint64_t>(limit.rlim_cur);
+}
+
+namespace {
+
 void CountTcpFile(const char* path, TcpCounts& result)
 {
     std::istringstream stream(ReadFile(path, 256 * 1024));
@@ -398,13 +595,36 @@ double LoadAverage()
 HardwareInfo Hardware()
 {
     HardwareInfo result;
-    result.UUID = CleanId(ReadTrim("/sys/class/dmi/id/product_uuid"));
+    // 板级标识优先取 /etc/os-release 中设备端写入的字段（与 MachineInfo 约定一致），
+    // 缺失时依次回落 DMI 与设备树，避免 ARM 板只报内核设备名而丢失厂商/整机型号。
+    result.Vendor = CleanId(ReadOsRelease("Vendor"));
+    if (result.Vendor.empty()) result.Vendor = CleanId(ReadTrim("/sys/class/dmi/id/sys_vendor"));
+    if (result.Vendor.empty()) result.Vendor = CleanId(DeviceTreeString("/proc/device-tree/vendor"));
+
+    result.Product = CleanId(ReadOsRelease("Product"));
+    if (result.Product.empty()) result.Product = CleanId(DeviceTreeString("/proc/device-tree/model"));
+    if (result.Product.empty()) result.Product = CleanId(ReadTrim("/sys/class/dmi/id/product_name"));
+    if (result.Product.empty()) result.Product = CleanId(ReadTrim("/sys/class/dmi/id/board_name"));
+
+    result.SerialNumber = CleanId(ReadOsRelease("Serial"));
+    if (result.SerialNumber.empty()) result.SerialNumber = CleanId(ReadTrim("/sys/class/dmi/id/product_serial"));
+
+    result.Board = CleanId(ReadOsRelease("Board"));
+    if (result.Board.empty()) result.Board = CleanId(ReadTrim("/sys/class/dmi/id/board_serial"));
+    if (result.Board.empty()) result.Board = CleanId(ReadTrim("/sys/class/dmi/id/board_name"));
+    if (result.Board.empty()) result.Board = CleanId(DeviceTreeString("/proc/device-tree/model"));
+
+    result.UUID = CleanId(ReadTrim("/etc/uuid"));
+    if (result.UUID.empty()) result.UUID = CleanId(ReadTrim("/sys/class/dmi/id/product_uuid"));
     result.MachineGuid = CleanId(ReadTrim("/etc/machine-id"));
     if (result.MachineGuid.empty()) result.MachineGuid = CleanId(ReadTrim("/var/lib/dbus/machine-id"));
-    result.SerialNumber = CleanId(ReadTrim("/sys/class/dmi/id/product_serial"));
-    result.Board = CleanId(ReadTrim("/sys/class/dmi/id/board_serial"));
-    if (result.Board.empty()) result.Board = CleanId(ReadTrim("/sys/class/dmi/id/board_name"));
     result.DiskID = CleanId(LinuxDiskSerial());
+
+    // 处理器：x86 取 model name，ARM 板取设备树 model，均缺失时退回整机型号
+    result.Processor = CpuModel();
+    if (result.Processor.empty()) result.Processor = CleanId(DeviceTreeString("/proc/device-tree/model"));
+    if (result.Processor.empty()) result.Processor = result.Product;
+    result.CLibVersion = CLibVersion();
 
     std::set<std::string> macs;
     struct ifaddrs* addresses = nullptr;

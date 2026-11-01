@@ -6,7 +6,7 @@ StarAgent 的非 .NET 原生实现集合，目标是以轻量二进制接入 Sta
 |------|------|----------|
 | Go | 参考实现，已通过 6 项一致性测试 | Linux x64/ARM、Windows、macOS、OpenWrt |
 | Rust | 已通过 6 项一致性测试 | Linux musl、Windows、macOS |
-| C++ | 已通过 6 项一致性测试与真实服务端登录/上线验证；Windows 本机构建验证 | Linux、Windows、macOS、OpenWrt |
+| C++ | 已通过 6 项一致性测试与真实服务端登录/上线验证；Windows 本机构建 + Linux ARM64 真机实测 | Linux、Windows、macOS、OpenWrt |
 
 > C 版暂缓：C++ 已覆盖 C 的目标平台，且内存安全与生态库更合适。仅在出现无 C++ 工具链的特定嵌入式目标时再评估。
 
@@ -14,7 +14,8 @@ StarAgent 的非 .NET 原生实现集合，目标是以轻量二进制接入 Sta
 
 - Go：`go test ./...`、`go build ./cmd/staragent`、`CGO_ENABLED=0` 交叉编译（linux/amd64、linux/arm64、linux/arm、windows/amd64、windows/arm64、darwin/amd64、darwin/arm64）
 - Rust：`cargo test`、`cargo build` 通过；Windows 本机二进制可运行
-- C++：Windows 本机 `cmake` 构建通过，`staragent_tests` 50/50 项检查通过
+- C++：Windows 本机 `cmake` 构建通过，`staragent_tests` 58/58 项检查通过
+- C++ Linux 真机：A2（HTNICE GT685X，Ubuntu 26.04 aarch64）与 A4-WiFi（Nuvoton MA35D1，aarch64）本机构建通过，登录/自动注册/心跳/常量指标上报正常，`--scenario all` 6/6 通过
 - 一致性测试：Go / Rust / C++ 三种实现均对假 StarServer 运行 `--scenario all`，各自 `6 passed, 0 failed`
 - 真实服务端：Go / Rust / C++ Agent 均在真实 Kestrel StarServer 上完成登录、自动注册、Code/Secret 持久化与在线状态验证
 - 公网 StarServer：三种实现均以 `once` 模式连接 `http://star.newlifex.com:6600`，完成登录与心跳

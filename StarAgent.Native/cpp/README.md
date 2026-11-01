@@ -5,10 +5,11 @@ StarAgent 的 C++17 原生实现，与 `spec/protocol.md`、Go/Rust 实现保持
 ## 状态
 
 - Windows（MSVC 19.51 / Visual Studio 2026，x64）：实际编译、CTest 与一致性测试通过。
+- Linux ARM64 真机（Ubuntu 26.04，A2 `HTNICE GT685X` / A4-WiFi `Nuvoton MA35D1`）：依赖目标机 `g++`/`cmake`，用 `-DFETCHCONTENT_SOURCE_DIR_IXWEBSOCKET` 指向离线源码即可构建；登录、心跳、指标上报与一致性测试 6/6 通过。
 - 一致性测试：`conformance --agent staragent.exe --scenario all` → **6 passed / 0 failed**（basic、http-fallback、dedup、expired、reconnect、events）。
-- 单元测试：`ctest -C Release` → **2/2**（`staragent_tests` 54/54 checks、`staragent --version`）。
+- 单元测试：`ctest -C Release` → **2/2**（`staragent_tests` 58/58 checks、`staragent --version`）。
 - 真实服务端：在真实 Kestrel StarServer 上完成登录、自动注册、Code/Secret 持久化与在线状态验证（`NativeAgentIntegrationTests`，`ProductCode=StarAgent-Cpp`）。
-- Linux/macOS：源码路径完整（`platform_linux.cpp`、`platform_macos.cpp`、`service_posix.cpp`），本机未完成交叉编译验证，建议在对应平台或 CI 上执行 `cmake --build` + `ctest`。
+- 小内存设备构建：`cmake --build build --target staragent --parallel 1`；`--parallel 2` 在 512MB~1GB 的板子上会被 OOM Killer 终止。
 
 ## 目录
 
@@ -24,7 +25,7 @@ cpp/
 │   ├── http_client.{hpp,cpp}   /node/* HTTP 客户端（cpp-httplib）
 │   ├── ws_client.{hpp,cpp}     /node/notify WebSocket（IXWebSocket）
 │   ├── executor.{hpp,cpp}      命令去重/过期/延迟/并发/超时/白名单
-│   ├── metrics.{hpp,cpp}       CPU/内存/磁盘/网络/进程/TCP 连接/负载指标
+│   ├── metrics.{hpp,cpp}       CPU/内存/磁盘/网络/进程/TCP 连接/温度/磁盘 IO/负载指标
 │   ├── events.{hpp,cpp}        有界事件队列与落盘
 │   ├── logging.{hpp,cpp}       按天轮转日志（保留 7 天）
 │   ├── platform.hpp            平台抽象
@@ -241,7 +242,9 @@ root 写入 `/Library/LaunchDaemons/com.newlifex.staragent.plist`；普通用户
 - **Windows 权限**：`0600` 通过 CRT `_chmod` 与数据目录隔离近似实现，无法像 POSIX 一样精确设置 ACL；建议将 `DataDir` 放在受控目录。
 - **node/restart 与 SCM**：重启会以原命令行拉起新进程；若父进程由 SCM 启动，子进程的 `--service` 在非 SCM 环境下会回退为控制台模式。生产建议同时配置 Windows 服务恢复策略，或改用服务管理器重启。
 - **Linux/macOS 验证**：实现已提供，但当前 Windows 环境未完成对应平台的编译/运行验证；建议在 CI 增加 Ubuntu 与 macOS 构建任务。
-- **指标降级**：任何单项采集失败只把该字段填 0，不跳过心跳；`Temperature`、`Battery`、`Signal` 等设备侧字段为 0，`GatewayLatency`、`DnsLatency` 等网络质量字段暂未采集。
+- **指标降级**：任何单项采集失败只把该字段填 0，不跳过心跳；`Battery`、`GatewayLatency`、`DnsLatency` 等未实现项为 0。
+- **平台采集差异**：`Temperature`、`Signal`（无线信号）、`DiskIOPS`/`DiskActiveTime`、`MaxOpenFiles` 仅在 Linux 采集（`/sys/class/thermal`、`/proc/net/wireless`、`/proc/diskstats`、`getrlimit`）；Windows/macOS 这些字段恒为 0。
+- **Linux 板级标识**：`Vendor`/`Product`/`SerialNumber`/`Board` 优先取 `/etc/os-release` 中设备端写入的字段（与 .NET `MachineInfo` 约定一致，如 `Board=A2-2026-1G`），缺失时回落 DMI 与设备树；`UUID` 优先 `/etc/uuid`。
 - **无 Android/iOS 实现**；移动端见仓库其他原生目录。
 - **状态文件**：`Code`/`Secret` 写入 `staragent.json`；`events.json` 与日志位于 `DataDir`，不会被提交到仓库。
 

@@ -576,6 +576,7 @@ NodeInfo Agent::BuildNodeInfo()
     node.Board = hardware_.Board;
     node.DiskID = hardware_.DiskID;
     node.Macs = hardware_.Macs;
+    node.MaxOpenFiles = platform::MaxOpenFiles();
     node.InstallPath = platform::ExecutableDir();
     node.Runtime = "cpp17";
     node.Framework = "cpp17";
@@ -612,6 +613,10 @@ PingInfo Agent::BuildPingInfo()
     ping.TcpConnections = metrics.TcpConnections;
     ping.TcpTimeWait = metrics.TcpTimeWait;
     ping.TcpCloseWait = metrics.TcpCloseWait;
+    ping.Temperature = metrics.Temperature;
+    ping.Signal = metrics.Signal;
+    ping.DiskIOPS = metrics.DiskIops;
+    ping.DiskActiveTime = metrics.DiskActivePercent;
     ping.Uptime = metrics.Uptime;
     ping.Delay = delay;
     ping.SystemLoad = metrics.SystemLoad;

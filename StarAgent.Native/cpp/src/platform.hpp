@@ -47,6 +47,13 @@ struct TcpCounts
     std::uint64_t CloseWait = 0;
 };
 
+// 磁盘 IO 采样，对应心跳中的 DiskIOPS 与 DiskActiveTime（百分比）。
+struct DiskIoSample
+{
+    std::uint64_t Iops = 0;
+    double ActivePercent = 0;
+};
+
 struct HardwareInfo
 {
     std::string UUID;
@@ -101,6 +108,14 @@ std::uint64_t UptimeSeconds();
 double LoadAverage();
 // 统计本机 TCP 连接状态分布；不支持统计的平台返回全 0。
 TcpCounts TcpStates();
+// 采集 CPU 温度（摄氏度）；无温度传感器时返回 0。
+double Temperature();
+// 采集无线信号强度（0~100）；有线或无无线网卡时返回 0。
+int WirelessSignal();
+// 采样磁盘 IO 速率；首次调用返回 0，之后按两次采样的间隔计算。
+DiskIoSample DiskIo();
+// 当前进程可打开文件句柄上限；平台无此概念时返回 0。
+std::uint64_t MaxOpenFiles();
 
 HardwareInfo Hardware();
 SystemInfo System();
