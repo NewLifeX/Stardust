@@ -49,7 +49,7 @@ pwsh ./StarAgent.Native/packaging/build.ps1
 - 事件上报、命令回复、指数退避重连
 - CPU/内存/磁盘/网络/进程/运行时长等基础指标
 - `bash`/`cmd`/`node/synctime`/`node/setchannel`/`node/restart`
-- systemd / launchd / Windows Service / OpenWrt procd
+- 只提供前台进程（`run`/`once`/`version`），**不提供系统服务安装（install/uninstall/start/stop/status）**；systemd / procd / launchd / 计划任务由部署侧提供模板（见 `packaging/install/`）
 - 移动端由 .NET 移动代理覆盖（`StarAgent.Mobile` / `StarAgent.Android` / `StarAgent.iOS`，不在本目录）；`ProductCode=StarAgent-Mobile`，产物在 `Bin/Agent/mobile/`，构建与冒烟见各项目下的 `pack-android.ps1`、`run-android.ps1`、`run-ios.sh`
 
 ### 系统与硬件信息
@@ -62,7 +62,7 @@ pwsh ./StarAgent.Native/packaging/build.ps1
 
 原生 Agent 的 `Runtime` / `Framework` 上报自身语言运行时（Go/Rust/C++），不枚举本机 .NET Framework 集合。
 
-首版**不包含**：进程守护、远程发布（`deploy/*`）、自身升级、Web 管理面板、插件、防火墙、DNS、截屏。
+首版**不包含**：系统服务安装卸载与启停、进程守护、远程发布（`deploy/*`）、自身升级、Web 管理面板、插件、防火墙、DNS、截屏。
 
 ## 安全默认
 

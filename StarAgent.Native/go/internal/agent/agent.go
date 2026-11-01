@@ -20,7 +20,6 @@ import (
 	"github.com/NewLifeX/Stardust/StarAgent.Native/go/internal/identity"
 	"github.com/NewLifeX/Stardust/StarAgent.Native/go/internal/metrics"
 	"github.com/NewLifeX/Stardust/StarAgent.Native/go/internal/protocol"
-	"github.com/NewLifeX/Stardust/StarAgent.Native/go/internal/service"
 )
 
 const (
@@ -157,7 +156,7 @@ func New(ctx context.Context, opts Options) (*Agent, error) {
 			agent.upgradeMu.Unlock()
 			return nil
 		},
-		Restart: service.RestartProcess,
+		Restart: RestartProcess,
 		Logger:  opts.Logger,
 	})
 

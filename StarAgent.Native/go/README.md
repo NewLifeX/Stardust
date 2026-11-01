@@ -21,22 +21,19 @@ StarAgent 原生 Go 实现，遵循 [`../spec/protocol.md`](../spec/protocol.md)
 - 安全默认 `AllowExec=false`；开启后仍受 `AllowedCommands` 白名单约束
 - 配置文件 `staragent.json` + `STARAGENT_` 环境变量覆盖；`Code`/`Secret` 原子持久化，
   权限 `0600`；日志按天滚动并保留 7 天
-- CLI：`run`、`once`、`version`、`install`、`uninstall`、`start`、`stop`、`status`
-- 服务形态：Linux systemd、OpenWrt procd、Windows 服务（`golang.org/x/sys/windows/svc`）、
-  macOS launchd
+- CLI：`run`、`once`、`version`（原生 Agent 只提供前台进程，不注册系统服务）
 
 ## 目录
 
 ```
-cmd/staragent          CLI 入口与服务检测
+cmd/staragent          CLI 入口
 internal/config        配置、环境变量覆盖、原子持久化
 internal/identity      稳定硬件标识、网络与系统信息
 internal/protocol      JSON 模型、时间格式、响应包装解析
 internal/client        HTTP 客户端、401 重登、退避、WebSocket 通知
 internal/metrics       gopsutil 指标采集与失败降级
 internal/command       命令模型执行、去重、白名单、超时与截断
-internal/agent         登录/心跳/迁移/事件/命令主循环
-internal/service       systemd / OpenWrt / launchd / Windows 服务
+internal/agent         登录/心跳/迁移/事件/命令主循环、进程自重启
 internal/logging       按天轮转日志
 ```
 
@@ -112,24 +109,31 @@ go build -ldflags "-X main.Version=1.0.2026.1017 -X 'main.BuildTime=2026-10-17 0
 ./staragent run -allow-exec
 ```
 
-## 安装为服务
+## 以守护进程方式运行
+
+原生 Agent 只提供前台进程（`staragent run`），不注册系统服务；重启策略、开机自启由部署侧托管。模板见 [`../packaging/install/`](../packaging/install/)。
 
 ### Linux（systemd）
 
-```bash
-sudo ./staragent install -server https://star.example.com:6600 \
-  -config /opt/staragent/staragent.json -dir /opt/staragent -user staragent
-sudo ./staragent status
-```
+```ini
+[Unit]
+Description=StarAgent Native
+After=network-online.target
 
-生成 `/etc/systemd/system/staragent.service`，包含 `Restart=always`、
-`KillSignal=SIGTERM`。需要 root。
+[Service]
+Type=simple
+ExecStart=/opt/staragent/staragent run -config /etc/staragent/staragent.json
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=multi-user.target
+```
 
 ### OpenWrt（procd）
 
-同一 `install` 命令在检测到 `/etc/openwrt_release` 时改为生成
-`/etc/init.d/staragent`（`start_service` / `stop_service` / `respawn`）。
-建议使用 `CGO_ENABLED=0` 构建：
+用 procd 脚本（`procd_set_param respawn`）守护；建议使用 `CGO_ENABLED=0` 构建：
 
 ```bash
 CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -trimpath -o staragent-arm ./cmd/staragent
@@ -137,22 +141,16 @@ CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -trimpath -o staragent-arm 
 
 ### macOS（launchd）
 
-`sudo ./staragent install -server ...` 写入 `/Library/LaunchDaemons/com.newlifex.staragent.plist`；
-非 root 安装写入 `~/Library/LaunchAgents/com.newlifex.staragent.plist`。
+写入 `/Library/LaunchDaemons/com.newlifex.staragent.plist`（root，`KeepAlive=true`）或
+`~/Library/LaunchAgents/com.newlifex.staragent.plist`（普通用户）。
 
 ### Windows
 
-以管理员身份执行：
+使用任务计划程序在开机时以 SYSTEM 身份拉起：
 
 ```powershell
-.\staragent.exe install -server https://star.example.com:6600 `
-  -config C:\ProgramData\StarAgent\bin\staragent.json
-.\staragent.exe start
-.\staragent.exe status
-.\staragent.exe uninstall
+schtasks /Create /TN StarAgentNative /TR "C:\Program Files\StarAgent\staragent.exe run -config C:\ProgramData\StarAgent\bin\staragent.json" /SC ONSTART /RU SYSTEM /RL HIGHEST /F
 ```
-
-服务名 `StarAgentNative`。`run` 由 SCM 启动时会自动进入服务模式。
 
 ## 交叉编译
 

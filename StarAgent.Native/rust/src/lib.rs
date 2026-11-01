@@ -13,7 +13,6 @@ pub mod logging;
 pub mod metrics;
 pub mod notify;
 pub mod protocol;
-pub mod service;
 
 use chrono::{DateTime, Utc};
 

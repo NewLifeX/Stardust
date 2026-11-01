@@ -1,6 +1,6 @@
 # StarAgent Native C++
 
-StarAgent 的 C++17 原生实现，与 `spec/protocol.md`、Go/Rust 实现保持协议对齐。支持登录/注销、心跳、令牌续期、`NewServer` 迁移、指数退避重连、HTTP 命令回复、WebSocket 通知、指标采集、内置命令、事件补报与服务安装。
+StarAgent 的 C++17 原生实现，与 `spec/protocol.md`、Go/Rust 实现保持协议对齐。支持登录/注销、心跳、令牌续期、`NewServer` 迁移、指数退避重连、HTTP 命令回复、WebSocket 通知、指标采集、内置命令、事件补报。原生 Agent 只提供前台进程，**不注册系统服务**，进程守护由部署侧负责。
 
 ## 状态
 
@@ -18,7 +18,7 @@ cpp/
 ├── CMakeLists.txt
 ├── README.md
 ├── src/
-│   ├── main.cpp                CLI：run/once/version/install/uninstall/start/stop/status
+│   ├── main.cpp                CLI：run/once/version
 │   ├── agent.{hpp,cpp}         登录、心跳、迁移、通知、命令调度、事件补报
 │   ├── config.{hpp,cpp}        staragent.json、STARAGENT_* 环境变量、原子持久化
 │   ├── protocol.{hpp,cpp}      PascalCase JSON 模型、时间格式、响应解包
@@ -32,8 +32,6 @@ cpp/
 │   ├── platform_windows.cpp    PDH / GlobalMemoryStatusEx / GetAdaptersAddresses / SMBIOS
 │   ├── platform_linux.cpp      /proc /sys /statvfs / getifaddrs
 │   ├── platform_macos.cpp      sysctl / host_statistics / vm_stat / getifaddrs
-│   ├── service_windows.cpp     Windows Service（SCM）
-│   ├── service_posix.cpp       systemd / OpenWrt procd / launchd
 │   └── output_buffer.hpp       64KB 头尾保留缓冲
 ├── tests/tests.cpp             协议、配置、事件队列、命令执行器单元测试
 └── third_party/
@@ -85,7 +83,7 @@ cmake --build StarAgent.Native/cpp/build --parallel
 ctest --test-dir StarAgent.Native/cpp/build --output-on-failure
 ```
 
-OpenWrt 交叉编译时传入目标工具链文件（`-DCMAKE_TOOLCHAIN_FILE=...`）；`service_posix.cpp` 会在目标系统检测 `/etc/rc.common` + `/sbin/procd` 并安装 procd 脚本。
+OpenWrt 交叉编译时传入目标工具链文件（`-DCMAKE_TOOLCHAIN_FILE=...`）；目标系统检测 `/etc/rc.common` + `/sbin/procd` 的 procd 脚本模板见 [`../packaging/install/staragent.init`](../packaging/install/staragent.init)。
 
 ### 离线 / 不启用 WebSocket
 
@@ -173,11 +171,9 @@ CMake 使用 `find_package(OpenSSL QUIET)`：
 staragent run        [--config path] [--server url] [--data dir] [--log-level level] [--allow-exec] [--console]
 staragent once       [--config path] [--console]
 staragent version
-staragent install    [--config path] [--server url] [--data dir] [--user user] [--log-level level] [--dir dir]
-staragent uninstall | start | stop | status
 ```
 
-`run` 为长连接模式；`once` 登录、心跳并处理本次心跳中的命令后退出，适合自检/定时任务。
+`run` 为前台常驻长连接模式；`once` 登录、心跳并处理本次心跳中的命令后退出，适合自检/定时任务。
 
 ## 持久化与日志
 
@@ -229,37 +225,46 @@ $u.Send($f,$f.Length,(New-Object Net.IPEndPoint([Net.IPAddress]::Loopback,5500))
 
 > 同一台机器上已有 .NET StarAgent 占用 5500 时，原生 Agent 会记录“bind failed”并跳过本地接口（不影响心跳与采集）。
 
-## 安装为系统服务
+## 以守护进程方式运行
 
-### Windows（管理员）
+原生 Agent 只提供前台进程（`staragent run`），不注册系统服务；重启策略、开机自启、日志重定向由部署侧托管。模板见 [`../packaging/install/`](../packaging/install/)。
+
+### Linux（systemd）
+
+```ini
+[Unit]
+Description=StarAgent Native
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/opt/staragent/staragent run --config /etc/staragent/staragent.json
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=multi-user.target
+```
+
+写入 `/etc/systemd/system/staragent.service` 后 `systemctl daemon-reload && systemctl enable --now staragent`。
+
+### OpenWrt（procd）
+
+检测到 `/etc/rc.common` 与 `/sbin/procd` 的环境使用 procd 脚本（`USE_PROCD=1`，`procd_set_param respawn`）。
+
+### Windows（任务计划程序）
+
+原生 Agent 不注册为 Windows 服务，使用任务计划程序在开机时以 SYSTEM 身份启动：
 
 ```powershell
-staragent.exe install --config C:\ProgramData\StarAgent\staragent.json --server https://star.example.com:6600
-staragent.exe start
-staragent.exe status
-staragent.exe stop
-staragent.exe uninstall
+schtasks /Create /TN StarAgentNative /TR "C:\Program Files\StarAgent\staragent.exe run --config C:\ProgramData\StarAgent\staragent.json" /SC ONSTART /RU SYSTEM /RL HIGHEST /F
 ```
-
-服务名 `StarAgentNative`；服务命令行包含 `run --config <path> --service`。安装/卸载/启动/停止需要管理员权限。
-
-### Linux（systemd，root）
-
-```bash
-sudo staragent install --config /etc/staragent/staragent.json --server https://star.example.com:6600
-sudo systemctl enable --now staragent   # install 已自动 enable
-staragent status
-```
-
-写入 `/etc/systemd/system/staragent.service`，`Restart=always`，可选 `--user` 指定运行用户。
-
-### OpenWrt（procd，root）
-
-检测到 `/etc/rc.common` 与 `/sbin/procd` 时写入 `/etc/init.d/staragent`（`USE_PROCD=1`，含 respawn），并执行 `enable`。
 
 ### macOS（launchd）
 
-root 写入 `/Library/LaunchDaemons/com.newlifex.staragent.plist`；普通用户写入 `~/Library/LaunchAgents/`。`install` 会 `launchctl load -w`，`uninstall` 会 unload 并删除 plist。
+写入 `/Library/LaunchDaemons/com.newlifex.staragent.plist`（root，`KeepAlive=true`）后 `launchctl load -w`。
 
 ## 能力边界与已知限制
 
@@ -269,7 +274,7 @@ root 写入 `/Library/LaunchDaemons/com.newlifex.staragent.plist`；普通用户
 - **TLS 依赖 OpenSSL**：未检测到 OpenSSL 的构建只能 `http/ws`；生产必须安装 OpenSSL 并重新构建。
 - **Windows 权限**：`0600` 通过 CRT `_chmod` 与数据目录隔离近似实现，无法像 POSIX 一样精确设置 ACL；建议将 `DataDir` 放在受控目录。
 - **控制台中文输出**：Windows 控制台按本地代码页（简体中文为 936/GBK）解码收到的字节，程序内部字符串是 UTF-8，直写会显示乱码。启动时把 `stdout`/`stderr` 换成专用缓冲区：输出到控制台时转宽字符走 `WriteConsoleW`（不受代码页影响，也不需要用户 `chcp 65001`），重定向到文件或管道时保持 UTF-8 字节。
-- **node/restart 与 SCM**：重启会以原命令行拉起新进程；若父进程由 SCM 启动，子进程的 `--service` 在非 SCM 环境下会回退为控制台模式。生产建议同时配置 Windows 服务恢复策略，或改用服务管理器重启。
+- **node/restart**：以原命令行拉起新进程（Windows 使用 `DETACHED_PROCESS`，POSIX 使用 `setsid`），随后当前进程退出；守护进程由部署侧（systemd/procd/计划任务/launchd）重新接管。
 - **Linux/macOS 验证**：Linux ARM64 已在 A2/A4 真机验证（构建、登录、心跳、指标、命令往返、conformance），CI `native-agents.yml` 的 `cpp-linux` 任务在 ubuntu 上做构建+单测+一致性测试；macOS 未做真机验证，建议补充 CI 构建任务。
 - **指标降级**：任何单项采集失败只把该字段填 0，不跳过心跳；无电池/无传感器的设备 `Battery`、`Temperature`、`Signal` 为 0。
 - **平台采集差异**：

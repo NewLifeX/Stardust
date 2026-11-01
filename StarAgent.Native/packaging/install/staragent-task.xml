@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<!--
+  Windows 任务计划模板：原生 Agent 不注册为 Windows 服务，由计划任务在开机时以 SYSTEM 身份拉起。
+  导入方式（管理员 PowerShell）：
+    schtasks /Create /TN StarAgentNative /XML staragent-task.xml /F
+  或直接命令行：
+    schtasks /Create /TN StarAgentNative /TR "\"C:\Program Files\StarAgent\staragent.exe\" run --config \"C:\ProgramData\StarAgent\staragent.json\"" /SC ONSTART /RU SYSTEM /RL HIGHEST /F
+-->
+<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Description>StarAgent Native（前台进程，由计划任务守护开机启动）</Description>
+  </RegistrationInfo>
+  <Triggers>
+    <BootTrigger>
+      <Enabled>true</Enabled>
+    </BootTrigger>
+  </Triggers>
+  <Principals>
+    <Principal id="Author">
+      <UserId>S-1-5-18</UserId>
+      <RunLevel>HighestAvailable</RunLevel>
+    </Principal>
+  </Principals>
+  <Settings>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <StartWhenAvailable>true</StartWhenAvailable>
+    <RestartOnFailure>
+      <Interval>PT1M</Interval>
+      <Count>999</Count>
+    </RestartOnFailure>
+    <ExecutionTimeLimit>PT0S</ExecutionTimeLimit>
+    <Enabled>true</Enabled>
+  </Settings>
+  <Actions Context="Author">
+    <Exec>
+      <Command>C:\Program Files\StarAgent\staragent.exe</Command>
+      <Arguments>run --config "C:\ProgramData\StarAgent\staragent.json"</Arguments>
+    </Exec>
+  </Actions>
+</Task>

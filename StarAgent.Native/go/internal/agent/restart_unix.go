@@ -1,6 +1,6 @@
 //go:build !windows
 
-package service
+package agent
 
 import (
 	"fmt"

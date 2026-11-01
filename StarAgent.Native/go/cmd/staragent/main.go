@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -17,7 +16,6 @@ import (
 	"github.com/NewLifeX/Stardust/StarAgent.Native/go/internal/agent"
 	"github.com/NewLifeX/Stardust/StarAgent.Native/go/internal/config"
 	"github.com/NewLifeX/Stardust/StarAgent.Native/go/internal/logging"
-	"github.com/NewLifeX/Stardust/StarAgent.Native/go/internal/service"
 )
 
 // 这两个变量可在构建时通过 -ldflags 覆盖。
@@ -40,23 +38,6 @@ func main() {
 		err = runCommand(os.Args[2:], true)
 	case "version":
 		err = versionCommand(os.Args[2:])
-	case "install":
-		err = installCommand(os.Args[2:])
-	case "uninstall":
-		err = service.Uninstall()
-	case "start":
-		err = service.Start()
-	case "stop":
-		err = service.Stop()
-	case "status":
-		var status string
-		status, err = service.Status()
-		if status != "" {
-			fmt.Print(status)
-			if !strings.HasSuffix(status, "\n") {
-				fmt.Println()
-			}
-		}
 	case "help", "-h", "--help":
 		printUsage(os.Stdout)
 	default:
@@ -133,80 +114,7 @@ func runCommand(args []string, once bool) error {
 		return instance.Once(ctx)
 	}
 
-	if service.IsWindowsService() {
-		return service.RunService(instance.Run)
-	}
-
 	return instance.Run(ctx)
-}
-
-func installCommand(args []string) error {
-	flags := flag.NewFlagSet("install", flag.ExitOnError)
-	configPath := flags.String("config", config.DefaultPath(), "配置文件路径")
-	installDir := flags.String("dir", "", "安装目录")
-	dataDir := flags.String("data", "", "数据目录")
-	user := flags.String("user", "", "服务运行用户（Linux）")
-	server := flags.String("server", "", "服务端地址（首次安装必填）")
-	logLevel := flags.String("log-level", "", "日志级别")
-	_ = flags.Parse(args)
-
-	cfgPath, err := filepath.Abs(*configPath)
-	if err != nil {
-		return err
-	}
-	if _, statErr := os.Stat(cfgPath); errors.Is(statErr, os.ErrNotExist) && *server == "" {
-		return errors.New("-server is required when config file does not exist")
-	} else if statErr == nil {
-		existing, err := config.Load(cfgPath)
-		if err != nil {
-			return err
-		}
-		if *server != "" {
-			existing.Server = *server
-		}
-		if err := existing.Validate(); err != nil {
-			return fmt.Errorf("existing config is not runnable: %w", err)
-		}
-	}
-
-	if *logLevel != "" || *server != "" || *dataDir != "" {
-		if _, statErr := os.Stat(cfgPath); statErr == nil {
-			cfg, err := config.Load(cfgPath)
-			if err != nil {
-				return err
-			}
-			if *server != "" {
-				cfg.Server = *server
-			}
-			if *dataDir != "" {
-				cfg.DataDir = *dataDir
-			}
-			if *logLevel != "" {
-				cfg.LogLevel = *logLevel
-			}
-			cfg.Normalize()
-			if err := cfg.Validate(); err != nil {
-				return err
-			}
-			if err := config.Save(cfgPath, cfg); err != nil {
-				return err
-			}
-		}
-	}
-
-	if err := service.Install(service.InstallOptions{
-		ConfigPath:  cfgPath,
-		InstallDir:  *installDir,
-		DataDir:     *dataDir,
-		ServiceUser: *user,
-		Server:      *server,
-	}); err != nil {
-		return err
-	}
-
-	fmt.Printf("StarAgent installed. config=%s\n", cfgPath)
-
-	return nil
 }
 
 func versionCommand(args []string) error {
@@ -251,14 +159,9 @@ Usage:
   staragent <command> [options]
 
 Commands:
-  run       以长连接方式运行（Linux/systemd、Windows 服务、macOS/launchd）
+  run       以前台进程方式常驻运行，登录、心跳并处理下行指令
   once      登录、心跳并处理一次命令后退出
   version   显示版本信息
-  install   安装为系统服务
-  uninstall 卸载系统服务
-  start     启动服务
-  stop      停止服务
-  status    查看服务状态
 
 Run options:
   -config string      配置文件路径（默认 %s）
@@ -267,14 +170,6 @@ Run options:
   -log-level string   覆盖 LogLevel
   -allow-exec         启用命令执行（默认关闭）
   -console            输出日志到 stderr
-
-Install options:
-  -config string      配置文件路径
-  -dir string         安装目录
-  -data string        数据目录
-  -user string        systemd 服务用户
-  -server string      首次安装时写入的服务端地址
-  -log-level string   日志级别
 
 环境变量覆盖：STARAGENT_SERVER / STARAGENT_PRODUCTCODE / STARAGENT_CODE / STARAGENT_SECRET /
 STARAGENT_PROJECT / STARAGENT_CHANNEL / STARAGENT_DATADIR / STARAGENT_LOGLEVEL /

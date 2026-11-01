@@ -1,0 +1,20 @@
+[Unit]
+Description=StarAgent Native
+Documentation=https://github.com/NewLifeX/Stardust
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# 原生 Agent 只提供前台进程，守护与重启策略由 systemd 负责
+ExecStart=/opt/staragent/staragent run --config /etc/staragent/staragent.json
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=30
+# 需要访问硬件标识（UUID/序列号）与系统目录时以 root 运行；
+# 只做指标采集时可改为专用低权限账户 + 只读数据目录。
+User=root
+
+[Install]
+WantedBy=multi-user.target

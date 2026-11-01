@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  macOS launchd 模板：写入 /Library/LaunchDaemons/com.newlifex.staragent.plist（root）
+  或 ~/Library/LaunchAgents/com.newlifex.staragent.plist（普通用户），随后 launchctl load -w <plist>。
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.newlifex.staragent</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/staragent/staragent</string>
+    <string>run</string>
+    <string>--config</string>
+    <string>/etc/staragent/staragent.json</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>/var/log/staragent.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/var/log/staragent.err.log</string>
+</dict>
+</plist>

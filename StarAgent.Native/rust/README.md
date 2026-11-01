@@ -23,15 +23,13 @@ StarAgent 的 Rust 原生实现，遵循 [`../spec/protocol.md`](../spec/protoco
   超时与 64KB 输出上限约束
 - 配置文件 `staragent.json` + `STARAGENT_` 环境变量覆盖；`Code`/`Secret` 原子持久化，
   权限 `0600`；日志按天滚动并保留 7 天
-- CLI：`run`、`once`、`version`、`install`、`uninstall`、`start`、`stop`、`status`
-- 服务形态：Linux systemd、OpenWrt procd、macOS launchd、Windows Service
-  （`windows-service`，服务名 `StarAgentNative`）
+- CLI：`run`、`once`、`version`（原生 Agent 只提供前台进程，不注册系统服务）
 
 ## 目录
 
 ```
 src/
-├── main.rs        CLI 入口、服务检测、信号处理
+├── main.rs        CLI 入口、信号处理
 ├── app.rs         配置装载、日志初始化、启动参数覆盖
 ├── config.rs      配置、环境变量、原子持久化（0600）
 ├── protocol.rs    PascalCase JSON 模型、时间格式、响应包装解析
@@ -43,7 +41,6 @@ src/
 ├── agent.rs       登录/心跳/迁移/事件/命令主循环
 ├── events.rs      有界事件队列（落盘 events.json）
 ├── logging.rs     按天轮转日志
-└── service.rs     systemd / procd / launchd / Windows 服务
 ```
 
 ## 构建
@@ -161,43 +158,46 @@ cargo build --release --target aarch64-apple-darwin
 ./staragent run --allow-exec --config /opt/staragent/staragent.json
 ```
 
-## 安装为服务
+## 以守护进程方式运行
+
+原生 Agent 只提供前台进程（`staragent run`），不注册系统服务；重启策略、开机自启由部署侧托管。模板见 [`../packaging/install/`](../packaging/install/)。
 
 ### Linux（systemd）
 
-```bash
-sudo ./staragent install --server https://star.example.com:6600 \
-  --config /opt/staragent/staragent.json --dir /opt/staragent --user staragent
-sudo ./staragent status
+```ini
+[Unit]
+Description=StarAgent Native
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/opt/staragent/staragent run --config /etc/staragent/staragent.json
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=multi-user.target
 ```
 
-生成 `/etc/systemd/system/staragent.service`，包含 `Restart=always`、
-`KillSignal=SIGTERM`，并执行 `systemctl daemon-reload` / `enable`。需要 root。
+写入 `/etc/systemd/system/staragent.service` 后 `systemctl daemon-reload && systemctl enable --now staragent`。
 
 ### OpenWrt（procd）
 
-检测到 `/etc/openwrt_release` 时，`install` 改为生成 `/etc/init.d/staragent`
-（`start_service` / `stop_service` / `procd_set_param respawn`）。建议使用 musl 静态构建。
+用 procd 脚本（`procd_set_param respawn`）守护。建议使用 musl 静态构建。
 
 ### macOS（launchd）
 
-root 安装写入 `/Library/LaunchDaemons/com.newlifex.staragent.plist`；
-普通用户写入 `~/Library/LaunchAgents/com.newlifex.staragent.plist`。
-`start` / `stop` 使用 `launchctl load -w` / `unload -w`。
+写入 `/Library/LaunchDaemons/com.newlifex.staragent.plist`（root，`KeepAlive=true`）或
+`~/Library/LaunchAgents/com.newlifex.staragent.plist`（普通用户）。
 
 ### Windows
 
-以管理员身份执行：
+使用任务计划程序在开机时以 SYSTEM 身份拉起：
 
 ```powershell
-.\staragent.exe install --server https://star.example.com:6600 `
-  --config C:\ProgramData\StarAgent\bin\staragent.json
-.\staragent.exe start
-.\staragent.exe status
-.\staragent.exe uninstall
+schtasks /Create /TN StarAgentNative /TR "C:\Program Files\StarAgent\staragent.exe run --config C:\ProgramData\StarAgent\staragent.json" /SC ONSTART /RU SYSTEM /RL HIGHEST /F
 ```
-
-服务名 `StarAgentNative`，由 SCM 启动 `run` 时自动进入服务模式
 （`windows-service` 的 `service_dispatcher`）。
 
 ## HTTPS / WSS

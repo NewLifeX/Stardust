@@ -462,14 +462,18 @@ Authorization: Bearer <Token>
 
 ## 8. 平台服务形态
 
-| 平台 | 形态 | 说明 |
-|------|------|------|
-| Linux | systemd | `Restart=always`，`KillSignal=SIGTERM`，服务用户可配置 |
-| OpenWrt | procd | `/etc/init.d/staragent`，`start_service`/`stop_service` |
-| Windows | Windows Service | 服务名 `StarAgentNative`，支持 install/uninstall/start/stop |
-| macOS | launchd | `~/Library/LaunchAgents` 或 `/Library/LaunchDaemons` |
+原生 Agent 自身**不提供**系统服务安装能力，只提供 `run` / `once` / `version` 三个子命令，`run` 即前台常驻进程。进程守护、开机自启、日志重定向由部署侧负责：
+
+| 平台 | 形态 | 守护方式 |
+|------|------|----------|
+| Linux | 前台进程 | 部署脚本生成 systemd unit（`Restart=always`、`KillSignal=SIGTERM`），或容器 `restart: always` |
+| OpenWrt | 前台进程 | 部署脚本生成 `/etc/init.d/staragent` 的 procd 脚本（`procd_set_param respawn`） |
+| Windows | 前台进程 | 任务计划程序（`-RunLevel Highest`）或 nssm 之类包装器；原生 Agent 不注册为 Windows 服务 |
+| macOS | 前台进程 | launchd plist（`/Library/LaunchDaemons` 或 `~/Library/LaunchAgents`） |
 | Android | Foreground Service | 常驻通知；受电池优化/厂商策略影响，不保证 100% 在线 |
 | iOS | 宿主 App 内 SDK | 不常驻、不执行任意 Shell、不做进程守护 |
+
+> 需要完整能力（自身升级、远程发布、进程守护、插件等）时，应安装 .NET 版 StarAgent；原生 Agent 可通过 `bootstrap` 完成该安装（见 3.8）。
 
 ---
 

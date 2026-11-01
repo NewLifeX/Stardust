@@ -5,7 +5,6 @@
 #include "logging.hpp"
 #include "platform.hpp"
 #include "protocol.hpp"
-#include "service.hpp"
 #include "util.hpp"
 
 #include <algorithm>
@@ -120,24 +119,16 @@ void PrintUsage()
     std::cout << "StarAgent Native C++ " << STARAGENT_VERSION << "\n\n"
               << "Usage:\n  staragent <command> [options]\n\n"
               << "Commands:\n"
-              << "  run       以长连接方式运行（Linux/systemd、Windows 服务、macOS/launchd）\n"
+              << "  run       以前台进程方式常驻运行，登录、心跳并处理下行指令\n"
               << "  once      登录、心跳并处理一次命令后退出\n"
-              << "  version   显示版本信息\n"
-              << "  install   安装为系统服务\n"
-              << "  uninstall 卸载系统服务\n"
-              << "  start     启动服务\n"
-              << "  stop      停止服务\n"
-              << "  status    查看服务状态\n\n"
+              << "  version   显示版本信息\n\n"
               << "Run options:\n"
               << "  --config <path>      配置文件路径（默认 staragent.json 或 STARAGENT_CONFIG）\n"
               << "  --server <url>       覆盖 Server\n"
               << "  --data <dir>         覆盖 DataDir\n"
               << "  --log-level <level>  debug/info/warn/error\n"
               << "  --allow-exec         启用 shell 命令执行（默认关闭）\n"
-              << "  --console            同时输出日志到 stderr\n"
-              << "  --service            Windows 服务模式（由服务管理器传入）\n\n"
-              << "Install options:\n"
-              << "  --config <path> --server <url> --data <dir> --user <user> --log-level <level>\n\n"
+              << "  --console            同时输出日志到 stderr\n\n"
               << "Environment: STARAGENT_SERVER, STARAGENT_PRODUCTCODE/STARAGENT_PRODUCT_CODE,\n"
               << "  STARAGENT_CODE, STARAGENT_SECRET, STARAGENT_PROJECT, STARAGENT_CHANNEL,\n"
               << "  STARAGENT_DATADIR/STARAGENT_DATA_DIR, STARAGENT_LOGLEVEL/STARAGENT_LOG_LEVEL,\n"
@@ -211,18 +202,6 @@ int RunAgent(const Arguments& arguments, bool once)
     ::SetConsoleCtrlHandler(ConsoleHandler, TRUE);
 #endif
 
-    if (!once && arguments.Has("service"))
-    {
-        const int service_result = staragent::service::RunAsService(
-            [&]() { return agent->Run(); }, [&]() { agent->RequestStop(); });
-        if (service_result >= 0)
-        {
-            logger->Close();
-            return service_result;
-        }
-        // Not started by the service manager: continue in console mode.
-    }
-
     std::atomic<bool> finished{false};
     std::thread watcher([&]() {
         while (!finished.load())
@@ -241,51 +220,6 @@ int RunAgent(const Arguments& arguments, bool once)
     if (watcher.joinable()) watcher.join();
     logger->Close();
     return result;
-}
-
-int InstallAgent(const Arguments& arguments)
-{
-    const auto config_path = arguments.Value("config", DefaultConfig());
-    Config config;
-    bool exists = false;
-    try
-    {
-        std::error_code error;
-        exists = std::filesystem::exists(config_path, error);
-        if (exists)
-        {
-            config = staragent::LoadConfig(config_path);
-        }
-        else
-        {
-            if (arguments.Value("server").empty())
-            {
-                std::cerr << "staragent: --server is required when the config file does not exist\n";
-                return 1;
-            }
-            config = staragent::DefaultConfig();
-        }
-        ApplyOverrides(config, arguments, false);
-        staragent::Validate(config);
-        staragent::SaveConfigAtomic(config_path, config);
-    }
-    catch (const std::exception& ex)
-    {
-        std::cerr << "staragent: " << ex.what() << "\n";
-        return 1;
-    }
-
-    staragent::service::InstallOptions options;
-    options.ConfigPath = std::filesystem::absolute(config_path).string();
-    options.InstallDir = arguments.Value("dir");
-    options.DataDir = config.DataDir;
-    options.ServiceUser = arguments.Value("user");
-    options.Server = config.Server;
-
-    const auto result = staragent::service::Install(options);
-    std::cout << result.Message << "\n";
-    if (result.Success) std::cout << "config=" << options.ConfigPath << "\n";
-    return result.Success ? 0 : 1;
 }
 
 void PrintVersion()
@@ -331,21 +265,6 @@ int main(int argc, char* argv[])
     }
     if (command == "run") return RunAgent(arguments, false);
     if (command == "once") return RunAgent(arguments, true);
-    if (command == "install") return InstallAgent(arguments);
-
-    if (command == "uninstall" || command == "start" || command == "stop")
-    {
-        const auto result = command == "uninstall" ? staragent::service::Uninstall()
-                            : command == "start"   ? staragent::service::Start()
-                                                    : staragent::service::Stop();
-        std::cout << result.Message << "\n";
-        return result.Success ? 0 : 1;
-    }
-    if (command == "status")
-    {
-        std::cout << staragent::service::Status() << "\n";
-        return 0;
-    }
 
     std::cerr << "unknown command \"" << command << "\"\n\n";
     PrintUsage();
