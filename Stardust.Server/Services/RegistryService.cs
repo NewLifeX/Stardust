@@ -259,7 +259,32 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
             if (!inf.UUID.IsNullOrEmpty()) online.Uuid = inf.UUID;
             if (!inf.Macs.IsNullOrEmpty()) online.Macs = inf.Macs;
 
-            online.Update();
+            try
+            {
+                online.Update();
+            }
+            catch (Exception ex) when (EntityErrorHelper.IsDuplicateKey(ex))
+            {
+                // 并发上线时 Client 唯一索引冲突：另一实例已占用该标识，转为更新已有记录
+                var online2 = AppOnline.FindBySessionId(online.Client, false);
+                if (online2 == null || online2.Id == online.Id) throw;
+
+                online2.AppId = online.AppId;
+                online2.Name = online.Name;
+                online2.Category = online.Category;
+                online2.NodeId = online.NodeId;
+                online2.Version = online.Version;
+                online2.Compile = online.Compile;
+                online2.Uuid = online.Uuid;
+                online2.Macs = online.Macs;
+                online2.IP = online.IP;
+                online2.Token = online.Token;
+                online2.TraceId = online.TraceId;
+                online2.UpdateIP = online.UpdateIP;
+                online2.Update();
+
+                context.Online = online2;
+            }
         }
 
         // 登录历史

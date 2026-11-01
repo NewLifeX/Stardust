@@ -331,15 +331,38 @@ public partial class AppTracer : Entity<AppTracer>
             }
         }
 
-        ti = new TraceItem
+        // 并发创建同一跟踪项时，唯一索引冲突会污染数据库埋点；按表加锁并二次检查，避免同进程内并发插入
+        lock (TraceItem.Meta.Table)
         {
-            AppId = ID,
-            Name = name,
-            Enable = Mode == TraceModes.All || !isApi || whiteOnApi != null && whiteOnApi.Value,
-        };
-        ti.Insert();
+            ti = TraceItem.FindByAppIdAndName(ID, name);
+            if (ti == null)
+            {
+                ti = new TraceItem
+                {
+                    AppId = ID,
+                    Name = name,
+                    Enable = Mode == TraceModes.All || !isApi || whiteOnApi != null && whiteOnApi.Value,
+                };
+                try
+                {
+                    ti.Insert();
+                }
+                catch (Exception ex) when (EntityErrorHelper.IsDuplicateKey(ex))
+                {
+                    // 其它进程已经创建，改为读取已有记录
+                    ti = TraceItem.FindByAppIdAndName(ID, name);
+                    if (ti == null) throw;
+                }
+            }
+            else if (!ti.Enable && whiteOnApi != null && whiteOnApi.Value)
+            {
+                ti.Enable = true;
+                ti.Update();
+            }
+        }
 
-        list.Add(ti);
+        dic[name] = ti;
+        if (!list.Contains(ti)) list.Add(ti);
 
         return ti;
     }

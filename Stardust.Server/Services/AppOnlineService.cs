@@ -58,10 +58,34 @@ public class AppOnlineService(ICacheProvider cacheProvider, ITracer tracer)
         var isNew = online == null;
 
         // 早期客户端没有clientId
-        online ??= AppOnline.GetOrAddClient(clientId) ?? AppOnline.GetOrAddClient(ip, token);
+        if (online == null)
+        {
+            try
+            {
+                online = AppOnline.GetOrAddClient(clientId) ?? AppOnline.GetOrAddClient(ip, token);
+            }
+            catch (Exception ex) when (EntityErrorHelper.IsDuplicateKey(ex))
+            {
+                // 多实例并发创建同一会话时，唯一索引冲突说明另一实例已经创建，直接读取已有记录
+                online = AppOnline.FindBySessionId(clientId, false) ?? AppOnline.FindByToken(token);
+                if (online == null) throw;
+            }
+        }
 
         if (online != null)
         {
+            // 同一客户端标识可能已属于另一条在线记录（应用重启、令牌复用或并发上线），
+            // 直接复用已有记录，避免把 Client 更新为重复值时触发唯一索引异常
+            if (!clientId.IsNullOrEmpty() && !String.Equals(online.Client, clientId, StringComparison.OrdinalIgnoreCase))
+            {
+                var other = AppOnline.FindBySessionId(clientId, false);
+                if (other != null && other.Id != online.Id)
+                {
+                    online = other;
+                    _cache.Set(clientId, online, 600);
+                }
+            }
+
             online.AppId = app.Id;
             online.Name = app.ToString();
             online.Category = app.Category;
