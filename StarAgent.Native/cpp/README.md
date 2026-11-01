@@ -268,6 +268,7 @@ root 写入 `/Library/LaunchDaemons/com.newlifex.staragent.plist`；普通用户
 - **WebSocket 可选**：`-DSTARAGENT_WITH_WS=OFF` 时仍可通过心跳 `Commands` 执行命令；但 `--scenario reconnect/dedup` 等 WS 场景不可用。
 - **TLS 依赖 OpenSSL**：未检测到 OpenSSL 的构建只能 `http/ws`；生产必须安装 OpenSSL 并重新构建。
 - **Windows 权限**：`0600` 通过 CRT `_chmod` 与数据目录隔离近似实现，无法像 POSIX 一样精确设置 ACL；建议将 `DataDir` 放在受控目录。
+- **控制台中文输出**：Windows 控制台按本地代码页（简体中文为 936/GBK）解码收到的字节，程序内部字符串是 UTF-8，直写会显示乱码。启动时把 `stdout`/`stderr` 换成专用缓冲区：输出到控制台时转宽字符走 `WriteConsoleW`（不受代码页影响，也不需要用户 `chcp 65001`），重定向到文件或管道时保持 UTF-8 字节。
 - **node/restart 与 SCM**：重启会以原命令行拉起新进程；若父进程由 SCM 启动，子进程的 `--service` 在非 SCM 环境下会回退为控制台模式。生产建议同时配置 Windows 服务恢复策略，或改用服务管理器重启。
 - **Linux/macOS 验证**：Linux ARM64 已在 A2/A4 真机验证（构建、登录、心跳、指标、命令往返、conformance），CI `native-agents.yml` 的 `cpp-linux` 任务在 ubuntu 上做构建+单测+一致性测试；macOS 未做真机验证，建议补充 CI 构建任务。
 - **指标降级**：任何单项采集失败只把该字段填 0，不跳过心跳；无电池/无传感器的设备 `Battery`、`Temperature`、`Signal` 为 0。

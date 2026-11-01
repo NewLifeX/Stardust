@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 #include "agent.hpp"
 #include "config.hpp"
+#include "console.hpp"
 #include "logging.hpp"
 #include "platform.hpp"
 #include "protocol.hpp"
@@ -305,6 +306,10 @@ void PrintVersion()
 
 int main(int argc, char* argv[])
 {
+    // 程序内部字符串是 UTF-8，Windows 控制台按本地代码页解码，直写会显示成乱码
+    staragent::AttachUtf8Console(std::cout, false);
+    staragent::AttachUtf8Console(std::cerr, true);
+
     const auto arguments = ParseArguments(argc, argv);
     const auto& command = arguments.Command;
 

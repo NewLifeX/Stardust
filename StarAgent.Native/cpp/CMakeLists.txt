@@ -57,6 +57,7 @@ endif()
 set(STARAGENT_SOURCES
   src/agent.cpp
   src/config.cpp
+  src/console.cpp
   src/events.cpp
   src/executor.cpp
   src/http_client.cpp
