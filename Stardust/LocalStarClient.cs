@@ -21,6 +21,7 @@ using TaskEx = System.Threading.Tasks.Task;
 namespace Stardust;
 
 /// <summary>本地星尘客户端。连接本机星尘代理StarAgent</summary>
+/// <remarks>代理返回的 JSON 字段名可能随宿主命名策略变化（PascalCase/camelCase），反序列化按不区分大小写匹配字段名</remarks>
 public class LocalStarClient
 {
     #region 属性
