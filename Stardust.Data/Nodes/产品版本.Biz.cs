@@ -60,6 +60,9 @@ public partial class ProductRelease : Entity<ProductRelease>
         // 建议先调用基类方法，基类方法会做一些统一处理
         if (!base.Valid(method)) return false;
 
+        // 通道未设置（0）时补默认 Release。GetValids 会按通道过滤，留下 0 会让版本永远不生效
+        if (method == DataMethod.Insert && (Int32)Channel <= 0) Channel = NodeChannels.Release;
+
         // 在新插入数据或者修改了指定字段时进行修正
 
         // 处理当前已登录用户信息，可以由UserInterceptor拦截器代劳
