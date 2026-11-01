@@ -293,6 +293,16 @@ public class TraceController(ITraceStatService stat, IAppDayStatService appStat,
 
                 traces.Add(td);
 
+                // 已知无害的传输层中断只保留首行和业务帧，避免长堆栈淹没监控样本；真实异常保留完整堆栈
+                var errorMessages = item.ErrorSamples?.Select(e => e?.Error ?? "").ToList();
+                if (item.ErrorSamples != null)
+                {
+                    foreach (var sample in item.ErrorSamples)
+                    {
+                        if (sample != null) sample.Error = ErrorSampleFilter.Summarize(sample.Error);
+                    }
+                }
+
                 //samples.AddRange(SampleData.Create(td, item.Samples, true));
                 samples.AddRange(SampleData.Create(td, item.ErrorSamples, false));
 
@@ -316,8 +326,8 @@ public class TraceController(ITraceStatService stat, IAppDayStatService appStat,
                 if (td.Errors > 0 && ErrorItemFilter.IsMatch(item.Name)) td.Errors = 0;
 
                 // 客户端提前断开等传输层中断不计入错误数，异常采样照常保留便于排障
-                if (td.Errors > 0 && item.ErrorSamples != null)
-                    td.Errors = ErrorSampleFilter.FixErrors(td.Errors, item.ErrorSamples.Select(e => e?.Error).ToList());
+                if (td.Errors > 0 && errorMessages != null)
+                    td.Errors = ErrorSampleFilter.FixErrors(td.Errors, errorMessages);
 
                 // 处理克隆。拷贝一份入库，归属新的跟踪项，但名称不变
                 foreach (var elm in app.GetClones(item.Name, model.ClientId))

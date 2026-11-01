@@ -26,10 +26,11 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     /// <summary>默认忽略错误的埋点。旧版 SDK 在未安装或未启动星尘代理的机器上探测 rpc:Info 必然失败</summary>
     public const String DefaultIgnoreErrorItems = "rpc:Info";
 
-    /// <summary>默认忽略的异常关键字。客户端提前断开等传输层中断不是应用故障</summary>
+    /// <summary>默认忽略的异常关键字。客户端提前断开、WebSocket 对端未完成关闭握手等传输层中断不是应用故障</summary>
     public const String DefaultIgnoreErrorKeywords = "BadHttpRequestException,Unexpected end of request content," +
         "The client disconnected,The request was aborted,Connection reset by peer," +
-        "An existing connection was forcibly closed,Broken pipe";
+        "An existing connection was forcibly closed,Broken pipe," +
+        "The remote party closed the WebSocket connection,The WebSocket connection was closed unexpectedly";
 
     #region 静态
     static StarServerSetting() => Provider = new DbConfigProvider { UserId = 0, Category = "StarServer" };
