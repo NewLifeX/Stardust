@@ -48,11 +48,22 @@ fn apply_overrides(config: &mut Config, overrides: &RunOverrides) {
     }
 }
 
-/// Runs the agent (`once` or long-running).
+/// Agent 运行模式。
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RunMode {
+    /// 常驻运行。
+    Run,
+    /// 登录、心跳、处理一次命令后退出。
+    Once,
+    /// 引导安装 .NET 运行时与完整版 StarAgent。
+    Bootstrap,
+}
+
+/// Runs the agent (`run`, `once` or `bootstrap`).
 pub async fn run(
     config_path: PathBuf,
     overrides: RunOverrides,
-    once: bool,
+    mode: RunMode,
     cancel: CancellationToken,
 ) -> Result<()> {
     let config = load_config(&config_path, &overrides)?;
@@ -70,10 +81,10 @@ pub async fn run(
     };
 
     let agent = Agent::new(config_path, config, cancel).await?;
-    if once {
-        agent.once().await
-    } else {
-        agent.run().await
+    match mode {
+        RunMode::Run => agent.run().await,
+        RunMode::Once => agent.once().await,
+        RunMode::Bootstrap => agent.bootstrap().await,
     }
 }
 

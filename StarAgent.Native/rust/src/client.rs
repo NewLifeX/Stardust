@@ -12,8 +12,8 @@ use tracing::debug;
 use url::Url;
 
 use crate::protocol::{
-    self, CommandReplyModel, EventModel, LoginInfo, LoginResponse, PingInfo, PingResponse,
-    UpgradeInfo,
+    self, BootstrapInfo, CommandReplyModel, EventModel, LoginInfo, LoginResponse, PingInfo,
+    PingResponse, UpgradeInfo,
 };
 
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
@@ -257,6 +257,26 @@ impl Client {
         {
             return Ok(None);
         }
+        Ok(Some(info))
+    }
+
+    /// `POST /node/bootstrap`. Returns `None` when the server has no package.
+    pub async fn bootstrap(&self) -> Result<Option<BootstrapInfo>> {
+        let data = self
+            .send(Method::POST, "/node/bootstrap", None, true)
+            .await
+            .context("bootstrap")?;
+        let text = String::from_utf8_lossy(&data);
+        let trimmed = text.trim();
+        if trimmed.is_empty() || trimmed == "null" {
+            return Ok(None);
+        }
+
+        let info: BootstrapInfo = protocol::parse_response(&data).context("bootstrap")?;
+        if info.agent.is_empty() {
+            return Ok(None);
+        }
+
         Ok(Some(info))
     }
 

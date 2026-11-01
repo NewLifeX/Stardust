@@ -354,6 +354,48 @@ pub struct UpgradeInfo {
     pub description: Option<String>,
 }
 
+/// 引导安装中的单个安装包。
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(rename_all = "PascalCase", default)]
+pub struct BootstrapPackage {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub kind: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub file_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source: Option<String>,
+    pub size: i64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub file_hash: Option<String>,
+}
+
+impl BootstrapPackage {
+    /// 下载地址为空表示服务端未提供该安装包。
+    pub fn is_empty(&self) -> bool {
+        self.source
+            .as_deref()
+            .map(str::trim)
+            .unwrap_or_default()
+            .is_empty()
+    }
+}
+
+/// 引导安装信息：先装 .NET 运行时，再装完整版 StarAgent。
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(rename_all = "PascalCase", default)]
+pub struct BootstrapInfo {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub server: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub code: Option<String>,
+    pub runtime: BootstrapPackage,
+    pub agent: BootstrapPackage,
+}
+
 /// Business error returned inside a 200 response envelope.
 #[derive(Debug, thiserror::Error)]
 #[error("server returned code {code}: {msg}")]

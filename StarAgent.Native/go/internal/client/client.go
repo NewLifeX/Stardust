@@ -240,6 +240,27 @@ func (c *Client) Upgrade(ctx context.Context, channel string) (*protocol.Upgrade
 	return &info, nil
 }
 
+// Bootstrap 调用 POST /node/bootstrap，返回引导安装信息。服务端未维护安装包时返回 nil。
+func (c *Client) Bootstrap(ctx context.Context) (*protocol.BootstrapInfo, error) {
+	data, err := c.send(ctx, http.MethodPost, "/node/bootstrap", nil, true)
+	if err != nil {
+		return nil, fmt.Errorf("bootstrap: %w", err)
+	}
+	if len(bytes.TrimSpace(data)) == 0 || string(bytes.TrimSpace(data)) == "null" {
+		return nil, nil
+	}
+
+	var info protocol.BootstrapInfo
+	if err := protocol.ParseResponse(data, &info); err != nil {
+		return nil, fmt.Errorf("bootstrap: %w", err)
+	}
+	if strings.TrimSpace(info.Agent.Source) == "" {
+		return nil, nil
+	}
+
+	return &info, nil
+}
+
 func (c *Client) do(ctx context.Context, method, path string, body any, out any, auth bool) error {
 	data, err := c.send(ctx, method, path, body, auth)
 	if err != nil {

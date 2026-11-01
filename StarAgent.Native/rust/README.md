@@ -23,7 +23,9 @@ StarAgent 的 Rust 原生实现，遵循 [`../spec/protocol.md`](../spec/protoco
   超时与 64KB 输出上限约束
 - 配置文件 `staragent.json` + `STARAGENT_` 环境变量覆盖；`Code`/`Secret` 原子持久化，
   权限 `0600`；日志按天滚动并保留 7 天
-- CLI：`run`、`once`、`version`（原生 Agent 只提供前台进程，不注册系统服务）
+- CLI：`run`、`once`、`bootstrap`、`version`（原生 Agent 只提供前台进程，不注册系统服务）
+- 引导安装：`bootstrap` 登录后取包，下载并安装 .NET 运行时与完整版 StarAgent
+  （解压交给系统 `tar`/`Expand-Archive`，MD5 校验）
 
 ## 目录
 

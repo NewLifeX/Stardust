@@ -21,7 +21,9 @@ StarAgent 原生 Go 实现，遵循 [`../spec/protocol.md`](../spec/protocol.md)
 - 安全默认 `AllowExec=false`；开启后仍受 `AllowedCommands` 白名单约束
 - 配置文件 `staragent.json` + `STARAGENT_` 环境变量覆盖；`Code`/`Secret` 原子持久化，
   权限 `0600`；日志按天滚动并保留 7 天
-- CLI：`run`、`once`、`version`（原生 Agent 只提供前台进程，不注册系统服务）
+- CLI：`run`、`once`、`bootstrap`、`version`（原生 Agent 只提供前台进程，不注册系统服务）
+- 引导安装：`bootstrap` 登录后取包，下载并安装 .NET 运行时与完整版 StarAgent
+  （zip/tar.gz 解压、MD5 校验、目录穿越防护）
 
 ## 目录
 

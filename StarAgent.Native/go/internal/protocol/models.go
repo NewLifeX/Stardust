@@ -160,3 +160,22 @@ type UpgradeInfo struct {
 	Force       bool   `json:"Force"`
 	Description string `json:"Description,omitempty"`
 }
+
+// BootstrapPackage 是引导安装中的单个安装包。
+type BootstrapPackage struct {
+	Version  string `json:"Version,omitempty"`
+	Kind     string `json:"Kind,omitempty"`
+	FileName string `json:"FileName,omitempty"`
+	Source   string `json:"Source,omitempty"`
+	Size     int64  `json:"Size"`
+	FileHash string `json:"FileHash,omitempty"`
+}
+
+// BootstrapInfo 是引导安装信息：先装 .NET 运行时，再装完整版 StarAgent。
+type BootstrapInfo struct {
+	Version string           `json:"Version,omitempty"`
+	Server  string           `json:"Server,omitempty"`
+	Code    string           `json:"Code,omitempty"`
+	Runtime BootstrapPackage `json:"Runtime"`
+	Agent   BootstrapPackage `json:"Agent"`
+}

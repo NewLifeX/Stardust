@@ -349,6 +349,29 @@ impl Agent {
         Ok(())
     }
 
+    /// 登录后取引导安装清单，安装 .NET 运行时与完整版 StarAgent。
+    pub async fn bootstrap(self: Arc<Self>) -> Result<()> {
+        self.login().await?;
+
+        let info = self.client.bootstrap().await?;
+        let Some(info) = info else {
+            anyhow::bail!("server returned no agent package");
+        };
+
+        let config = self.store.snapshot();
+        let version = crate::bootstrap::run(&info, &config.data_dir, &config.server).await?;
+
+        self.enqueue(
+            "info",
+            "Bootstrap",
+            &format!("installed StarAgent {version}"),
+        );
+        let shutdown = CancellationToken::new();
+        let _ = tokio::time::timeout(Duration::from_secs(10), self.flush_events(&shutdown)).await;
+
+        Ok(())
+    }
+
     async fn login(&self) -> Result<()> {
         let _guard = self.login_lock.lock().await;
         let config = self.store.snapshot();

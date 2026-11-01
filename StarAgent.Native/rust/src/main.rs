@@ -26,6 +26,8 @@ enum Commands {
     Run(RunArgs),
     /// Login, send one heartbeat, process commands and exit
     Once(RunArgs),
+    /// Install the .NET runtime and the full .NET StarAgent (requires root)
+    Bootstrap(RunArgs),
     /// Show version information
     Version,
 }
@@ -75,8 +77,9 @@ fn main() -> ExitCode {
             print_version();
             Ok(())
         }
-        Commands::Run(args) => run_agent(args, false),
-        Commands::Once(args) => run_agent(args, true),
+        Commands::Run(args) => run_agent(args, app::RunMode::Run),
+        Commands::Once(args) => run_agent(args, app::RunMode::Once),
+        Commands::Bootstrap(args) => run_agent(args, app::RunMode::Bootstrap),
     };
 
     match result {
@@ -88,7 +91,7 @@ fn main() -> ExitCode {
     }
 }
 
-fn run_agent(args: RunArgs, once: bool) -> Result<()> {
+fn run_agent(args: RunArgs, mode: app::RunMode) -> Result<()> {
     let config_path = args.config_path();
     let overrides = args.overrides();
 
@@ -101,7 +104,7 @@ fn run_agent(args: RunArgs, once: bool) -> Result<()> {
     runtime.block_on(async move {
         let cancel = CancellationToken::new();
         spawn_signal_handler(cancel.clone());
-        app::run(config_path, overrides, once, cancel).await
+        app::run(config_path, overrides, mode, cancel).await
     })
 }
 

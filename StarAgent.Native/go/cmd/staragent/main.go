@@ -33,9 +33,11 @@ func main() {
 	var err error
 	switch strings.ToLower(os.Args[1]) {
 	case "run":
-		err = runCommand(os.Args[2:], false)
+		err = runCommand(os.Args[2:], "run")
 	case "once":
-		err = runCommand(os.Args[2:], true)
+		err = runCommand(os.Args[2:], "once")
+	case "bootstrap":
+		err = runCommand(os.Args[2:], "bootstrap")
 	case "version":
 		err = versionCommand(os.Args[2:])
 	case "help", "-h", "--help":
@@ -52,18 +54,15 @@ func main() {
 	}
 }
 
-func runCommand(args []string, once bool) error {
-	name := "run"
-	if once {
-		name = "once"
-	}
+func runCommand(args []string, mode string) error {
+	name := mode
 	flags := flag.NewFlagSet(name, flag.ExitOnError)
 	configPath := flags.String("config", config.DefaultPath(), "配置文件路径")
 	server := flags.String("server", "", "覆盖服务端地址")
 	dataDir := flags.String("data", "", "覆盖数据目录")
 	logLevel := flags.String("log-level", "", "覆盖日志级别")
 	allowExec := flags.Bool("allow-exec", false, "启用 shell 命令执行")
-	console := flags.Bool("console", !once, "同时输出日志到 stderr")
+	console := flags.Bool("console", mode != "run", "同时输出日志到 stderr")
 	_ = flags.Parse(args)
 
 	cfg, err := config.Load(*configPath)
@@ -110,8 +109,11 @@ func runCommand(args []string, once bool) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	if once {
+	switch mode {
+	case "once":
 		return instance.Once(ctx)
+	case "bootstrap":
+		return instance.Bootstrap(ctx)
 	}
 
 	return instance.Run(ctx)
@@ -161,6 +163,7 @@ Usage:
 Commands:
   run       以前台进程方式常驻运行，登录、心跳并处理下行指令
   once      登录、心跳并处理一次命令后退出
+  bootstrap 登录后安装 .NET 运行时与完整版 StarAgent（需 root/管理员）
   version   显示版本信息
 
 Run options:

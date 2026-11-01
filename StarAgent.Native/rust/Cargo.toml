@@ -25,6 +25,7 @@ futures-util = { version = "0.3", features = ["sink"] }
 get_if_addrs = "0.5"
 hostname = "0.4"
 http = "1"
+md-5 = "0.10.6"
 os_info = "3"
 rand = "0.8"
 reqwest = { version = "0.12", default-features = false, features = [

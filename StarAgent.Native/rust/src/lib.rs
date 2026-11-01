@@ -4,6 +4,7 @@
 
 pub mod agent;
 pub mod app;
+pub mod bootstrap;
 pub mod client;
 pub mod command;
 pub mod config;
