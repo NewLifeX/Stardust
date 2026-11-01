@@ -2,7 +2,7 @@
 
 # 获取处理器架构
 arch=$(uname -m)
-ver="8.0.22"
+ver="8.0.33"
 prefix="aspnetcore-runtime-$ver-linux"
 source="http://x.newlifex.com"
 
@@ -30,7 +30,8 @@ elif [ $arch == "riscv64" ]; then
   gzfile="dotnet-sdk-8.0.101-linux-riscv64-gcc.tar.gz"
 	wget $source/dotnet/$gzfile
 elif [ $arch == "loongarch64" ]; then
-  gzfile="dotnet-sdk-8.0.100-linux-x64.tar.gz"
+  # LoongArch64 使用龙芯官方运行时（由 SDK 裁剪，含 ASP.NET Core）
+  gzfile="aspnetcore-runtime-8.0.33-linux-loongarch64.tar.gz"
 	wget $source/dotnet/$gzfile
 else
   gzfile="$prefix-$arch.tar.gz"
