@@ -11,6 +11,7 @@ on:
 
 # GitHub Packages 推送需要 packages: write，缺省权限会 403
 permissions:
+  id-token: write
   contents: read
   packages: write
 
@@ -37,7 +38,12 @@ jobs:
         dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out Stardust.Extensions\Stardust.Extensions.csproj
         dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out DeployAgent\DeployAgent.csproj
 
+    - name: NuGet login (OIDC)
+      id: nuget-login
+      uses: NuGet/login@v1
+      with:
+        user: NewLife
     - name: Publish
       run: |
         dotnet nuget push .\out\*.nupkg --skip-duplicate --source https://nuget.pkg.github.com/NewLifeX/index.json --api-key ${{ github.token }}
-        dotnet nuget push .\out\*.nupkg --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.nugetKey }}
+        dotnet nuget push .\out\*.nupkg --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
