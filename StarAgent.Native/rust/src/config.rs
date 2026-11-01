@@ -37,6 +37,8 @@ pub struct Config {
     pub command_timeout: i64,
     /// Verify TLS certificates. `false` is for testing only.
     pub tls_verify: bool,
+    /// 是否允许服务端下发 node/bootstrap 触发引导安装（默认关闭，与 allow_exec 同级安全策略）。
+    pub bootstrap: bool,
 }
 
 impl Default for Config {
@@ -55,6 +57,7 @@ impl Default for Config {
             allowed_commands: Vec::new(),
             command_timeout: 30,
             tls_verify: true,
+            bootstrap: false,
         }
     }
 }
@@ -169,6 +172,10 @@ impl Config {
         }
         if let Some(value) = get(&["STARAGENT_ALLOWEDCOMMANDS", "STARAGENT_ALLOWED_COMMANDS"]) {
             self.allowed_commands = split_list(&value);
+        }
+        if let Some(value) = get(&["STARAGENT_BOOTSTRAP"]) {
+            self.bootstrap =
+                parse_bool(&value).with_context(|| format!("invalid STARAGENT_BOOTSTRAP={value:?}"))?;
         }
         if let Some(value) = get(&["STARAGENT_COMMANDTIMEOUT", "STARAGENT_COMMAND_TIMEOUT"]) {
             let parsed = value

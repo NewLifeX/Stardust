@@ -163,6 +163,7 @@ CMake 使用 `find_package(OpenSSL QUIET)`：
 | TlsVerify | `STARAGENT_TLSVERIFY`、`STARAGENT_TLS_VERIFY` |
 | LocalPort | `STARAGENT_LOCALPORT`、`STARAGENT_LOCAL_PORT` |
 | AutoUpgrade | `STARAGENT_AUTOUPGRADE`、`STARAGENT_AUTO_UPGRADE` |
+| Bootstrap | `STARAGENT_BOOTSTRAP` |
 | Code / Secret / Project / Channel | `STARAGENT_CODE` / `STARAGENT_SECRET` / `STARAGENT_PROJECT` / `STARAGENT_CHANNEL` |
 
 ### CLI
@@ -194,6 +195,7 @@ staragent version
 | `node/restart` | 全平台 | 1 秒后重启自身进程 |
 | `node/reboot` / `node/shutdown` | 全平台 | 1.5 秒后重启/关机（Linux/macOS 调 `reboot`/`poweroff`，Windows 用 `shutdown.exe` 延迟 30 秒） |
 | `node/upgrade` | 全平台 | 立即检查升级，有新版时走自动升级流程 |
+| `node/bootstrap` | 全平台 | 引导安装 .NET 运行时与完整版 StarAgent；需 `Bootstrap=true`，默认关闭时回复“引导安装未启用” |
 | `deploy/*` / `framework/install` | — | 回复“不支持命令”（原生 Agent 不做远程发布与 .NET 运行时安装） |
 
 安全与限制：

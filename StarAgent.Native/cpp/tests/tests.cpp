@@ -6,11 +6,13 @@
 #include "protocol.hpp"
 #include "util.hpp"
 
+#include <atomic>
 #include <cstdlib>
 #include <cmath>
 #include <filesystem>
 #include <iostream>
 #include <string>
+#include <thread>
 
 namespace {
 
@@ -316,6 +318,34 @@ void TestExecutor()
     executor.Handle(shell, collect);
     Check(replies.size() == 4 && replies[3].Status == 3, "shell disabled by default");
     Check(replies[3].Data == "命令执行未启用", "shell disabled message");
+
+    // 引导安装默认关闭，开启后异步执行并先回复“正在引导安装”
+    staragent::CommandModel bootstrap;
+    bootstrap.Id = 104;
+    bootstrap.Command = "node/bootstrap";
+    executor.Handle(bootstrap, collect);
+    Check(replies.size() == 5 && replies[4].Status == 3, "bootstrap disabled by default");
+    Check(replies[4].Data == "引导安装未启用", "bootstrap disabled message");
+
+    staragent::ExecutorOptions boot_options;
+    boot_options.TimeoutSeconds = 1;
+    std::atomic<int> bootstrap_calls{0};
+    boot_options.Bootstrap = [&bootstrap_calls]() {
+        bootstrap_calls++;
+        return std::string();
+    };
+    staragent::Executor boot_executor(boot_options);
+    std::vector<staragent::CommandReplyModel> boot_replies;
+    staragent::CommandModel boot_command;
+    boot_command.Id = 105;
+    boot_command.Command = "node/bootstrap";
+    boot_executor.Handle(boot_command, [&](const staragent::CommandReplyModel& reply) {
+        boot_replies.push_back(reply);
+    });
+    Check(boot_replies.size() == 1 && boot_replies[0].Status == 2, "bootstrap accepted when enabled");
+    std::this_thread::sleep_for(std::chrono::milliseconds(900));
+    Check(bootstrap_calls.load() == 1, "bootstrap callback invoked");
+    boot_executor.Stop();
 
     executor.Stop();
 }

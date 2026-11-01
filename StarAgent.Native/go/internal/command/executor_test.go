@@ -152,6 +152,35 @@ func TestUnknownAndUnsupportedCommands(t *testing.T) {
 	}
 }
 
+// 引导安装默认关闭；开启后异步执行并先回复“正在引导安装”。
+func TestBootstrapCommand(t *testing.T) {
+	disabled := New(Options{})
+	replies := collectReply(t, func(reply func(protocol.CommandReplyModel)) {
+		disabled.Handle(context.Background(), protocol.CommandModel{Id: 1, Command: "node/bootstrap"}, reply)
+	})
+	if len(replies) != 1 || replies[0].Status != protocol.StatusCanceled || replies[0].Data != "引导安装未启用" {
+		t.Fatalf("disabled => %+v", replies)
+	}
+
+	called := make(chan struct{}, 1)
+	enabled := New(Options{Bootstrap: func() error {
+		called <- struct{}{}
+		return nil
+	}})
+	replies = collectReply(t, func(reply func(protocol.CommandReplyModel)) {
+		enabled.Handle(context.Background(), protocol.CommandModel{Id: 2, Command: "node/bootstrap"}, reply)
+	})
+	if len(replies) != 1 || replies[0].Status != protocol.StatusCompleted || replies[0].Data != "正在引导安装" {
+		t.Fatalf("enabled => %+v", replies)
+	}
+
+	select {
+	case <-called:
+	case <-time.After(3 * time.Second):
+		t.Fatal("bootstrap callback not invoked")
+	}
+}
+
 func TestSetChannel(t *testing.T) {
 	var channel string
 	executor := New(Options{SetChannel: func(value string) error {

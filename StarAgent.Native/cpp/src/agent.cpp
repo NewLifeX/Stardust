@@ -114,6 +114,9 @@ Agent::Agent(AgentOptions options)
         CheckUpgrade();
         return true;
     };
+    // 与 AllowExec 同级的安全策略：未显式开启时执行器回复“引导安装未启用”
+    if (options_.Configuration.Bootstrap)
+        executor_options.Bootstrap = [this]() { return InstallBootstrap(); };
     executor_options.Log = &logger_;
     executor_ = std::make_unique<Executor>(std::move(executor_options));
 
@@ -199,24 +202,25 @@ int Agent::Run()
     return failed ? 1 : 0;
 }
 
+std::string Agent::InstallBootstrap()
+{
+    const auto plan = client_.Bootstrap();
+    if (!plan) return "server returned no agent package";
+
+    Log().Info("bootstrap plan agent=" + plan->Version + " runtime=" +
+               (plan->Runtime.Empty() ? std::string("none") : plan->Runtime.Version));
+
+    Bootstrapper bootstrapper(client_, logger_, options_.Configuration);
+    return bootstrapper.Run(*plan, stopping_);
+}
+
 int Agent::Bootstrap()
 {
     try
     {
         Login();
 
-        const auto plan = client_.Bootstrap();
-        if (!plan)
-        {
-            Log().Warn("bootstrap: server returned no agent package");
-            return 3;
-        }
-
-        Log().Info("bootstrap plan agent=" + plan->Version + " runtime=" +
-                   (plan->Runtime.Empty() ? std::string("none") : plan->Runtime.Version));
-
-        Bootstrapper bootstrapper(client_, logger_, options_.Configuration);
-        const auto error = bootstrapper.Run(*plan, stopping_);
+        const auto error = InstallBootstrap();
         if (!error.empty())
         {
             Log().Error("bootstrap failed: " + error);
@@ -225,8 +229,8 @@ int Agent::Bootstrap()
             return 1;
         }
 
-        Log().Info("bootstrap completed version=" + plan->Version);
-        Enqueue("info", "Bootstrap", "installed StarAgent " + plan->Version);
+        Log().Info("bootstrap completed");
+        Enqueue("info", "Bootstrap", "installed StarAgent");
         FlushEvents();
         return 0;
     }

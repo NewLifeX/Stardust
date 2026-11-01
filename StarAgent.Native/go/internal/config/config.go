@@ -28,6 +28,8 @@ type Config struct {
 	AllowedCommands []string `json:"AllowedCommands"`
 	CommandTimeout  int      `json:"CommandTimeout"`
 	TlsVerify       bool     `json:"TlsVerify"`
+	// Bootstrap 是否允许服务端下发 node/bootstrap 触发引导安装（默认关闭，与 AllowExec 同级安全策略）
+	Bootstrap bool `json:"Bootstrap"`
 }
 
 // Default 返回默认配置。
@@ -42,6 +44,7 @@ func Default() Config {
 		AllowedCommands: []string{},
 		CommandTimeout:  30,
 		TlsVerify:       true,
+		Bootstrap:       false,
 	}
 }
 
@@ -164,6 +167,13 @@ func (c *Config) ApplyEnv(lookup func(string) (string, bool)) error {
 	}
 	if v, ok := lookup(envName("AllowedCommands")); ok {
 		c.AllowedCommands = splitList(v)
+	}
+	if v, ok := lookup(envName("Bootstrap")); ok {
+		b, err := strconv.ParseBool(strings.TrimSpace(v))
+		if err != nil {
+			return fmt.Errorf("invalid %s=%q: %w", envName("Bootstrap"), v, err)
+		}
+		c.Bootstrap = b
 	}
 	if v, ok := lookup(envName("CommandTimeout")); ok {
 		n, err := strconv.Atoi(strings.TrimSpace(v))

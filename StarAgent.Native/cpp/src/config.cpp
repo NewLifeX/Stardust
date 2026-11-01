@@ -162,6 +162,7 @@ Config DefaultConfig()
     config.TlsVerify = true;
     config.LocalPort = 5500;
     config.AutoUpgrade = true;
+    config.Bootstrap = false;
     return config;
 }
 
@@ -216,6 +217,7 @@ Config LoadConfig(const std::string& path)
         config.TlsVerify = GetBoolField(value, "TlsVerify", config.TlsVerify);
         config.LocalPort = GetIntField(value, "LocalPort", config.LocalPort);
         config.AutoUpgrade = GetBoolField(value, "AutoUpgrade", config.AutoUpgrade);
+        config.Bootstrap = GetBoolField(value, "Bootstrap", config.Bootstrap);
         config.UpgradeVersion = GetStringField(value, "UpgradeVersion", config.UpgradeVersion);
         if (value.contains("AllowedCommands") && value["AllowedCommands"].is_array())
         {
@@ -264,6 +266,7 @@ void ApplyEnvironment(Config& config)
     set_bool({"STARAGENT_ALLOWEXEC", "STARAGENT_ALLOW_EXEC"}, config.AllowExec);
     set_bool({"STARAGENT_TLSVERIFY", "STARAGENT_TLS_VERIFY"}, config.TlsVerify);
     set_bool({"STARAGENT_AUTOUPGRADE", "STARAGENT_AUTO_UPGRADE"}, config.AutoUpgrade);
+    set_bool({"STARAGENT_BOOTSTRAP"}, config.Bootstrap);
 
     const auto allowed = EnvironmentValue({"STARAGENT_ALLOWEDCOMMANDS", "STARAGENT_ALLOWED_COMMANDS"});
     if (!allowed.empty()) config.AllowedCommands = SplitCommandList(allowed);
@@ -347,6 +350,7 @@ void SaveConfigAtomic(const std::string& path, const Config& source)
     value["TlsVerify"] = config.TlsVerify;
     value["LocalPort"] = config.LocalPort;
     value["AutoUpgrade"] = config.AutoUpgrade;
+    value["Bootstrap"] = config.Bootstrap;
     if (!config.UpgradeVersion.empty()) value["UpgradeVersion"] = config.UpgradeVersion;
 
     WriteFileAtomic(path, value.dump(2) + "\n");

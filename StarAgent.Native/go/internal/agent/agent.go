@@ -142,7 +142,7 @@ func New(ctx context.Context, opts Options) (*Agent, error) {
 	// 预热 CPU/网络采样，让第一次心跳就能得到有效速率。
 	agent.metrics.Collect(collectCtx)
 
-	agent.exec = command.New(command.Options{
+	execOptions := command.Options{
 		AllowExec:       cfg.AllowExec,
 		AllowedCommands: cfg.AllowedCommands,
 		Timeout:         time.Duration(cfg.CommandTimeout) * time.Second,
@@ -158,7 +158,16 @@ func New(ctx context.Context, opts Options) (*Agent, error) {
 		},
 		Restart: RestartProcess,
 		Logger:  opts.Logger,
-	})
+	}
+	// 引导安装默认关闭，与 AllowExec 同级安全策略：未开启时执行器回复“引导安装未启用”
+	if cfg.Bootstrap {
+		execOptions.Bootstrap = func() error {
+			bootCtx, cancel := context.WithTimeout(context.Background(), time.Hour)
+			defer cancel()
+			return agent.installBootstrap(bootCtx)
+		}
+	}
+	agent.exec = command.New(execOptions)
 
 	cl.OnUnauthorized(func(ctx context.Context) error {
 		return agent.login(ctx)

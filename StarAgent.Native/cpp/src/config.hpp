@@ -27,6 +27,8 @@ struct Config
     int LocalPort = 5500;
     // 收到服务端升级通知后是否自动下载并替换自身
     bool AutoUpgrade = true;
+    // 是否允许服务端下发 node/bootstrap 触发引导安装（默认关闭，与 AllowExec 同级安全策略）
+    bool Bootstrap = false;
     // 最近一次成功应用的升级版本，避免同版本反复重启
     std::string UpgradeVersion;
 };

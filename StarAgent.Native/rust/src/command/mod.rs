@@ -50,6 +50,8 @@ pub struct ExecutorOptions {
     pub set_channel: Arc<dyn Fn(&str) -> Result<()> + Send + Sync>,
     /// Agent cancellation token.
     pub cancel: CancellationToken,
+    /// 引导安装回调；None 表示未开启（回复“引导安装未启用”）。
+    pub bootstrap: Option<Arc<dyn Fn() -> BoxFuture<'static, Result<()>> + Send + Sync>>,
 }
 
 /// Executes remote commands according to the protocol rules.
@@ -204,6 +206,7 @@ impl Executor {
             "node/synctime" => self.sync_time(command),
             "node/setchannel" => self.set_channel(command),
             "node/restart" => self.restart(),
+            "node/bootstrap" => self.bootstrap(),
             "node/reboot" | "framework/install" => unsupported(name),
             other if other.starts_with("deploy/") => unsupported(name),
             _ => unsupported(name),
@@ -368,6 +371,25 @@ impl Executor {
         reply(STATUS_COMPLETED, "正在重启")
     }
 
+    fn bootstrap(&self) -> CommandReplyModel {
+        let Some(action) = self.opts.bootstrap.clone() else {
+            return reply(STATUS_CANCELLED, "引导安装未启用");
+        };
+
+        let cancel = self.opts.cancel.clone();
+        tokio::spawn(async move {
+            tokio::select! {
+                _ = cancel.cancelled() => return,
+                _ = tokio::time::sleep(Duration::from_millis(500)) => {}
+            }
+            if let Err(error) = action().await {
+                warn!(error = %error, "bootstrap failed");
+            }
+        });
+
+        reply(STATUS_COMPLETED, "正在引导安装")
+    }
+
     fn is_allowed(&self, name: &str) -> bool {
         if self.opts.allowed_commands.is_empty() {
             return true;
@@ -471,6 +493,15 @@ fn collector() -> (ReplyFn, Arc<std::sync::Mutex<Vec<CommandReplyModel>>>) {
 
 #[cfg(test)]
 fn test_executor(allow_exec: bool, allowed_commands: Vec<String>) -> Arc<Executor> {
+    build_executor(allow_exec, allowed_commands, None)
+}
+
+#[cfg(test)]
+fn build_executor(
+    allow_exec: bool,
+    allowed_commands: Vec<String>,
+    bootstrap: Option<Arc<dyn Fn() -> BoxFuture<'static, Result<()>> + Send + Sync>>,
+) -> Arc<Executor> {
     Executor::new(ExecutorOptions {
         allow_exec,
         allowed_commands,
@@ -478,6 +509,7 @@ fn test_executor(allow_exec: bool, allowed_commands: Vec<String>) -> Arc<Executo
         server_time: Arc::new(Utc::now),
         set_channel: Arc::new(|_| Ok(())),
         cancel: CancellationToken::new(),
+        bootstrap,
     })
 }
 
@@ -565,6 +597,48 @@ mod tests {
             .as_deref()
             .unwrap_or_default()
             .contains("未启用"));
+    }
+
+    #[tokio::test]
+    async fn bootstrap_disabled_by_default() {
+        let executor = test_executor(false, Vec::new());
+        let (reply, replies) = collector();
+        let command = CommandModel {
+            id: 21,
+            command: "node/bootstrap".into(),
+            ..Default::default()
+        };
+
+        executor.handle(command, reply).await;
+        let replies = replies.lock().unwrap();
+        assert_eq!(replies[0].status, STATUS_CANCELLED);
+        assert_eq!(replies[0].data.as_deref().unwrap_or_default(), "引导安装未启用");
+    }
+
+    #[tokio::test]
+    async fn bootstrap_runs_when_enabled() {
+        let called = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let flag = called.clone();
+        let action: Arc<dyn Fn() -> BoxFuture<'static, Result<()>> + Send + Sync> = Arc::new(move || {
+            let flag = flag.clone();
+            Box::pin(async move {
+                flag.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                Ok(())
+            })
+        });
+        let executor = build_executor(false, Vec::new(), Some(action));
+        let (reply, replies) = collector();
+        let command = CommandModel {
+            id: 22,
+            command: "node/bootstrap".into(),
+            ..Default::default()
+        };
+
+        executor.handle(command, reply).await;
+        assert_eq!(replies.lock().unwrap()[0].status, STATUS_COMPLETED);
+
+        tokio::time::sleep(Duration::from_millis(1500)).await;
+        assert_eq!(called.load(std::sync::atomic::Ordering::SeqCst), 1);
     }
 
     #[tokio::test]

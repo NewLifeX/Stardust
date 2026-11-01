@@ -47,6 +47,11 @@ func (a *Agent) Bootstrap(ctx context.Context) error {
 		return err
 	}
 
+	return a.installBootstrap(ctx)
+}
+
+// installBootstrap 假定已经登录，执行取包、下载、安装与事件上报。
+func (a *Agent) installBootstrap(ctx context.Context) error {
 	info, err := a.client.Bootstrap(ctx)
 	if err != nil {
 		return err

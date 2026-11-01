@@ -36,6 +36,8 @@ type Options struct {
 	SyncTime func(time.Time) error
 	// Restart 用当前可执行文件重新拉起进程。
 	Restart func() error
+	// Bootstrap 引导安装 .NET 运行时与完整版 StarAgent，nil 表示未开启。
+	Bootstrap func() error
 	// RunShell 覆盖 shell 执行器，主要用于测试。
 	RunShell ShellRunner
 	// Now 覆盖时钟，主要用于测试。
@@ -175,6 +177,8 @@ func (e *Executor) dispatch(ctx context.Context, cmd protocol.CommandModel) prot
 		return e.setChannel(cmd)
 	case "node/restart":
 		return e.restart(cmd)
+	case "node/bootstrap":
+		return e.bootstrap(cmd)
 	case "node/reboot":
 		return unsupported(name)
 	case "framework/install":
@@ -327,6 +331,22 @@ func (e *Executor) restart(cmd protocol.CommandModel) protocol.CommandReplyModel
 	}()
 
 	return reply(protocol.StatusCompleted, "正在重启")
+}
+
+// bootstrap 引导安装 .NET 运行时与完整版 StarAgent。未开启时回复“引导安装未启用”。
+func (e *Executor) bootstrap(cmd protocol.CommandModel) protocol.CommandReplyModel {
+	if e.opts.Bootstrap == nil {
+		return reply(protocol.StatusCanceled, "引导安装未启用")
+	}
+
+	go func() {
+		time.Sleep(500 * time.Millisecond)
+		if err := e.opts.Bootstrap(); err != nil {
+			e.log().Error("bootstrap failed", "error", err)
+		}
+	}()
+
+	return reply(protocol.StatusCompleted, "正在引导安装")
 }
 
 func (e *Executor) isAllowed(name string) bool {

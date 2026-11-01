@@ -27,6 +27,8 @@ struct ExecutorOptions
     std::function<bool()> Reboot;
     std::function<bool()> Shutdown;
     std::function<bool()> Upgrade;
+    // 引导安装：返回空串表示成功，否则为错误信息
+    std::function<std::string()> Bootstrap;
     Logger* Log = nullptr;
 };
 
@@ -57,6 +59,7 @@ private:
     CommandReplyModel RestartCommand(const CommandModel& command);
     CommandReplyModel PowerCommand(const CommandModel& command, bool reboot);
     CommandReplyModel UpgradeCommand(const CommandModel& command);
+    CommandReplyModel BootstrapCommand(const CommandModel& command);
 
     bool IsDuplicate(std::int64_t id);
     bool IsAllowed(const std::string& name) const;
