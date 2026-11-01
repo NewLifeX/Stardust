@@ -175,7 +175,7 @@
         <Column Name="Version" DataType="String" Description="版本" />
         <Column Name="CompileTime" DataType="DateTime" Description="编译时间" />
         <Column Name="OSKind" DataType="Int32" Description="系统种类。主流操作系统类型，不考虑子版本" Type="Stardust.Models.OSKinds" />
-        <Column Name="SystemLoad" DataType="Double" ItemType="percent" Scale="3" Description="系统负载。Linux上的Load1，Windows上的处理器队列长度" />
+        <Column Name="SystemLoad" DataType="Double" Scale="3" Description="系统负载。Linux上的Load1，Windows上的处理器队列长度" />
         <Column Name="CpuRate" DataType="Double" ItemType="percent" Scale="3" Description="CPU率。占用率" />
         <Column Name="Memory" DataType="Int32" Description="内存。单位M" />
         <Column Name="AvailableMemory" DataType="Int32" Description="可用内存。单位M" />
@@ -254,7 +254,7 @@
         <Column Name="Id" DataType="Int64" PrimaryKey="True" DataScale="time" Description="编号" />
         <Column Name="NodeID" DataType="Int32" Description="节点" />
         <Column Name="Name" DataType="String" Master="True" Description="名称" />
-        <Column Name="SystemLoad" DataType="Double" ItemType="percent" Scale="3" Description="系统负载。Linux上的Load1，Windows上的处理器队列长度" />
+        <Column Name="SystemLoad" DataType="Double" Scale="3" Description="系统负载。Linux上的Load1，Windows上的处理器队列长度" />
         <Column Name="CpuRate" DataType="Double" ItemType="percent" Scale="3" Description="CPU率。占用率" />
         <Column Name="AvailableMemory" DataType="Int32" Description="可用内存。单位M" />
         <Column Name="FreeMemory" DataType="Int32" Description="空闲内存。Linux上空闲不一定可用，部分作为缓存，单位M" />

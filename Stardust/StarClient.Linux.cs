@@ -129,8 +129,9 @@ public partial class StarClient
 
                 // 计算活动时间百分比：io_ticks（毫秒）除以采样周期（毫秒）
                 // 如果有多块磁盘，totalIoTicks是所有磁盘中最大的io_ticks
-                var activeTime = deltaIoTicks * 100.0 / elapsed;
-                if (activeTime > 100) activeTime = 100;
+                // 活动时间换算成 0~1 的比例：服务端 percent 字段按比例存储，展示时再乘 100
+                var activeTime = deltaIoTicks * 1.0 / elapsed;
+                if (activeTime > 1) activeTime = 1;
 
                 return (iops, Math.Round(activeTime, 4));
             }

@@ -89,7 +89,8 @@ public class NodeDataController : NodesEntityController<NodeData>
                     new YAxis{ Name = "网络", Type = "value" }
                 ];
                 chart.AddDataZoom();
-                chart.AddLine(list2, _.SystemLoad, e => Math.Round(e.SystemLoad * 100), true);
+                // 系统负载是负载值/队列长度，不是百分比，不能乘 100
+                chart.AddLine(list2, _.SystemLoad, e => Math.Round(e.SystemLoad, 2), true);
                 chart.AddLine(list2, _.CpuRate, e => Math.Round(e.CpuRate * 100), true);
 
                 var series = chart.Add(list2, _.AvailableMemory, "line", e => node.Memory == 0 ? 0 : (100 - ((e.FreeMemory > 0 ? e.FreeMemory : e.AvailableMemory) * 100 / node.Memory)));

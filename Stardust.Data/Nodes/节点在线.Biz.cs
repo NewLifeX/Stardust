@@ -267,7 +267,8 @@ public partial class NodeOnline : Entity<NodeOnline>, IOnlineModel2
         if (inf.AvailableFreeSpace > 0) online.AvailableFreeSpace = (Int32)(inf.AvailableFreeSpace / 1024 / 1024);
         if (!inf.DriveInfo.IsNullOrEmpty()) online.DriveInfo = inf.DriveInfo;
         if (inf.CpuRate > 0) online.CpuRate = inf.CpuRate;
-        if (inf.Temperature > 0) online.Temperature = inf.Temperature;
+        // 温度统一保留一位小数，避免客户端上报浮点尾数（如 27.850000000000023）直接落库
+        if (inf.Temperature > 0) online.Temperature = Math.Round(inf.Temperature, 1);
         if (inf.Battery > 0) online.Battery = inf.Battery;
         /*if (inf.Signal > 0)*/
         online.Signal = inf.Signal;
@@ -335,7 +336,7 @@ public partial class NodeOnline : Entity<NodeOnline>, IOnlineModel2
             AvailableFreeSpace = olt.AvailableFreeSpace,
             CpuRate = inf.CpuRate,
             SystemLoad = inf.SystemLoad,
-            Temperature = inf.Temperature,
+            Temperature = Math.Round(inf.Temperature, 1),
             Battery = inf.Battery,
             Signal = inf.Signal,
             UplinkSpeed = FixSpeed(inf.UplinkSpeed),

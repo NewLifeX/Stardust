@@ -183,7 +183,7 @@ public partial class NodeOnline
     [DisplayName("系统负载")]
     [Description("系统负载。Linux上的Load1，Windows上的处理器队列长度")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("SystemLoad", "系统负载。Linux上的Load1，Windows上的处理器队列长度", "", ItemType = "percent", Scale = 3)]
+    [BindColumn("SystemLoad", "系统负载。Linux上的Load1，Windows上的处理器队列长度", "", Scale = 3)]
     public Double SystemLoad { get => _SystemLoad; set { if (OnPropertyChanging("SystemLoad", value)) { _SystemLoad = value; OnPropertyChanged("SystemLoad"); } } }
 
     private Double _CpuRate;
