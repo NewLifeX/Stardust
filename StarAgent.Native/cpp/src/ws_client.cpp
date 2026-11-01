@@ -17,10 +17,10 @@ namespace {
 
 constexpr int kConnectTimeoutMs = 10000;
 
-bool WaitUntil(const std::atomic<bool>& condition_true, const std::atomic<bool>& stopped, int timeout_ms)
+bool WaitUntil(const std::atomic<bool>& condition_true, const std::function<bool()>& stopped, int timeout_ms)
 {
     const auto deadline = SteadyMsNow() + timeout_ms;
-    while (!condition_true.load() && !stopped.load() && SteadyMsNow() < deadline)
+    while (!condition_true.load() && !stopped() && SteadyMsNow() < deadline)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
@@ -38,17 +38,16 @@ bool WsClient::Available() { return true; }
 
 void WsClient::Stop()
 {
-    ix::WebSocket* socket = nullptr;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        socket = socket_;
-    }
-    if (socket != nullptr) socket->stop();
+    // 只做标记，真正的 socket->stop() 由 Run() 线程执行，避免并发 join 死锁
+    stop_requested_ = true;
 }
 
 bool WsClient::Run(const Options& options, const std::atomic<bool>& stopping)
 {
     if (options.Url.empty()) return false;
+
+    stop_requested_ = false;
+    const auto should_stop = [&]() { return stopping.load() || stop_requested_.load(); };
 
     std::atomic<bool> opened{false};
     std::atomic<bool> closed{false};
@@ -126,27 +125,23 @@ bool WsClient::Run(const Options& options, const std::atomic<bool>& stopping)
     });
 
     {
-        std::lock_guard<std::mutex> lock(mutex_);
         socket_ = socket.get();
     }
 
     socket->start();
 
-    const bool connected = WaitUntil(opened, stopping, kConnectTimeoutMs);
+    const bool connected = WaitUntil(opened, should_stop, kConnectTimeoutMs);
     if (!connected)
     {
         socket->stop();
-        {
-            std::lock_guard<std::mutex> lock(mutex_);
-            socket_ = nullptr;
-        }
+        socket_ = nullptr;
         return false;
     }
 
     const auto interval_ms = std::max(1, options.PingIntervalSeconds) * 1000;
     std::thread keepalive([&]() {
         int elapsed = 0;
-        while (!stopping.load() && !closed.load())
+        while (!should_stop() && !closed.load())
         {
             constexpr int tick = 100;
             std::this_thread::sleep_for(std::chrono::milliseconds(tick));
@@ -157,29 +152,27 @@ bool WsClient::Run(const Options& options, const std::atomic<bool>& stopping)
             if (SteadyMsNow() - last_pong.load() > 3LL * interval_ms)
             {
                 logger_.Warn("notify pong timeout, closing websocket");
-                socket->stop();
+                closed = true;
                 return;
             }
             if (!send_text("Ping"))
             {
                 logger_.Warn("notify ping send failed");
-                socket->stop();
+                closed = true;
                 return;
             }
         }
     });
 
-    while (!stopping.load() && !closed.load())
+    while (!should_stop() && !closed.load())
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
 
+    // 仅此处执行一次停止，避免多线程并发 join 内部线程
     socket->stop();
     keepalive.join();
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        socket_ = nullptr;
-    }
+    socket_ = nullptr;
     return true;
 }
 

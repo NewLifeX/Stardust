@@ -45,7 +45,9 @@ public:
 
 private:
     Logger& logger_;
-    std::mutex mutex_;
+    // 只置位、不直接操作 socket：IXWebSocket::stop() 会 join 内部线程，
+    // 多线程并发调用会互等死锁，因此统一由 Run() 所在线程执行 stop()。
+    std::atomic<bool> stop_requested_{false};
     ix::WebSocket* socket_ = nullptr;
 };
 

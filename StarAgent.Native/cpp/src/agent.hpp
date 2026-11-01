@@ -14,6 +14,7 @@
 
 #include <atomic>
 #include <condition_variable>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -55,7 +56,7 @@ private:
     SessionResult RunSession(Backoff& backoff);
     void NotifyLoop(std::atomic<bool>& session_stopping);
     void QualityLoop(std::atomic<bool>& session_stopping);
-    void RefreshQuality();
+    void RefreshQuality(const std::function<bool()>& cancelled);
     void Shutdown();
     void Login();
     PingResponse Ping();

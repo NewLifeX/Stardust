@@ -303,19 +303,20 @@ void Agent::NotifyLoop(std::atomic<bool>& session_stopping)
 void Agent::QualityLoop(std::atomic<bool>& session_stopping)
 {
     // 与 .NET StarClient 一致：约 48 秒刷新一次；探测放后台，避免拖慢心跳
-    while (!stopping_.load() && !session_stopping.load())
+    const auto cancelled = [&]() { return stopping_.load() || session_stopping.load(); };
+    while (!cancelled())
     {
-        RefreshQuality();
+        RefreshQuality(cancelled);
 
         const auto deadline = SteadyMsNow() + 48LL * 1000;
-        while (!stopping_.load() && !session_stopping.load() && SteadyMsNow() < deadline)
+        while (!cancelled() && SteadyMsNow() < deadline)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
     }
 }
 
-void Agent::RefreshQuality()
+void Agent::RefreshQuality(const std::function<bool()>& cancelled)
 {
     constexpr int kTimeoutMs = 2000;
     constexpr int kCount = 5;
@@ -357,6 +358,8 @@ void Agent::RefreshQuality()
     catch (...)
     {
     }
+    // 停机时不再探测剩余目标，避免拖延退出
+    if (cancelled()) return;
     try
     {
         state.Dns = platform::PingProbe(dns, kTimeoutMs, kCount);
@@ -364,6 +367,7 @@ void Agent::RefreshQuality()
     catch (...)
     {
     }
+    if (cancelled()) return;
     try
     {
         state.Server = platform::PingProbe(server, kTimeoutMs, kCount);
