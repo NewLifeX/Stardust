@@ -432,6 +432,8 @@ apps/stardust/src/views/Dashboard/
 后台入口：看板左侧栏底部「后台」图标跳转 `/Admin`。魔方管理后台首页保持原生工作台（`Cube.StartPage` = `/Admin/Index/Dashboard`），不嵌入看板；登录成功后通过 `LoginLandingMiddleware` 把魔方固定的 `/Admin` 跳转改写为 `/`（带返回地址时不改写）。
 反向入口：后台左侧「平台管理 → 看板中心」打开 `/Dashboard`，看板页面在框架内检测到被后台嵌套时跳转到顶层，直接以整页呈现（`_Layout_Dashboard` 首屏脚本）。
 
+看板控制器位于主程序集而非区域，Cube 菜单扫描不会自动生成；`Startup.EnsureDashboardMenu` 在 `UseCube` 之后补挂「平台管理 → 看板中心」，并最多等待 10 秒以避开启动竞态。
+
 ### 16.2 数据来源
 
 全部来自现有实体，未新建表；缺聚合口径时在对应 Biz 文件补分组查询（`AppMinuteStat.SearchGroupApp/SearchGroupTime`、`AppDayStat.SearchGroupApp/SearchGroupDate`、`TraceHourStat.SearchGroupName`、`AlarmRecord.SearchGroupCategory`）：
@@ -478,3 +480,48 @@ apps/stardust/src/views/Dashboard/
 - 设计令牌与卡片样式直接复用本目录的 `tokens.css` / `dashboard.css`，避免第二套视觉；
 - 数据查询统一走 `DashboardService`，带 10 秒进程内缓存，避免轮询打爆数据库；
 - 覆盖测试：`Stardust.Tests/Dashboard/DashboardMathTests.cs`（口径与算法）+ `Stardust.E2ETests/Tests/DashboardPageTests.cs`（五个页面加载与数据接口）。
+
+### 16.6 卡片下钻与布局个性化（2026-10-31 增强）
+
+**下钻链接**：链接统一由 `DashboardLinks` 生成，避免视图硬编码。
+
+- KPI 卡：整卡可点，落到对应列表/看板；
+- 图表卡：卡片头「查看明细/全部」，图表数据项支持点击下钻；
+- 表格卡：保留行点击，新增键盘可达（`data-href` + Enter/Space）；
+- 事件流：告警 → 告警详情，应用/部署/节点事件 → 对应看板；
+- 大屏：卡片头「详情」、项目行、Top 应用、事件行均可点。
+
+链接只携带实体过滤条件，不携带看板时间范围，避免分享链接时时间窗口漂移。
+
+**布局个性化**：每张卡片有稳定 `data-card` 标识，顶栏「布局」打开右侧抽屉。
+
+| 能力 | 说明 |
+|------|------|
+| 显隐 | 按卡片勾选，KPI 与内容卡均支持 |
+| 排序 | 上下移动或拖拽，只在同一网格内排序 |
+| 宽度 | 6/8/12/16/24 栏预设，仅 ≥1360px 生效，窄屏沿用原响应式规则 |
+| 高度 | 标准/加高，图表与可滚动表格生效 |
+| 保存 | `localStorage['sd-dashboard-layout:v1:<page>:<userId>']`，按页面 + 用户隔离 |
+| 恢复 | 抽屉内「恢复默认」清除当前页面配置并刷新 |
+
+大屏不做卡片尺寸调整，提供「视角设置」：勾选参与轮播的视角、轮播间隔（12/30/60 秒），保存于 `localStorage['sd-wallboard-settings:v1']`。
+
+### 16.7 告警确认与静默（2026-10-31 增强）
+
+`AlarmRecord` 新增三个扩展字段：
+
+| 字段 | 说明 |
+|------|------|
+| `AckTime` | 确认时间 |
+| `AckUser` | 确认人 |
+| `SilenceTime` | 静默截止时间 |
+
+行为约定：
+
+- **确认**：记录确认人与时间，不改变 Alarming/Recovered 状态，不单独停止通知；
+- **静默**：静默期内不再发送该报警记录的外部通知，可选 1 小时/24 小时/7 天；报警恢复通知仍发送；
+- 静默只作用于当前报警记录；恢复后再次触发会生成新记录，需重新静默；
+- 权限：登录 + `Monitors/AlarmRecord` 的 `PermissionFlags.Update` + 看板项目范围校验；
+- 接口：`POST /Dashboard/Alarm/Ack`、`POST /Dashboard/Alarm/Silence`，带防伪令牌；
+- 通知抑制点：`RobotHelper.SendAlarmWithRecord` 发送前检查 `AlarmRecord.CanNotify`，静默时只更新内容/持续时长，不增加通知次数；
+- 测试：`Stardust.ServerTests/Monitors/AlarmLifecycleTests.cs` 覆盖字段落库、通知判定与静默抑制；`DashboardPageTests.AlarmActions_AckAndSilence` 覆盖页面确认/静默与落库。
