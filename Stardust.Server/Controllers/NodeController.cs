@@ -249,18 +249,18 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
             return null;
         }
 
-        // 为了兼容旧版本客户端，这里必须把路径处理为绝对路径
-        if (info != null && !info.Source.StartsWithIgnoreCase("http://", "https://"))
-        {
-            info.Source = new Uri(new Uri(uri), info.Source) + "";
-        }
-
-        // 安全V-11：升级包下载URL附带短时令牌
+        // 为了兼容旧版本客户端，这里必须把路径处理为绝对路径，并附加短时下载令牌（安全V-11）
         if (info != null && !info.Source.IsNullOrEmpty())
-            info.Source = downloadTokenService.AppendToken(info.Source, StarServerSetting.Current.AttachmentTokenExpire);
+            info.Source = DownloadSourceHelper.Absolutize(info.Source, uri, SignDownload);
 
         return info!;
     }
+
+    /// <summary>给下载地址附加短时令牌</summary>
+    /// <param name="source">已补全的绝对地址</param>
+    /// <returns>带令牌的地址</returns>
+    private String SignDownload(String source) =>
+        downloadTokenService.AppendToken(source, StarServerSetting.Current.AttachmentTokenExpire);
 
     /// <summary>引导安装。原生 Agent 获取 .NET 运行时与完整版 StarAgent 的安装包</summary>
     /// <remarks>原生 Agent 只做采集与指令响应；需要完整能力时调用本接口取包，自行下载安装后切换到 .NET 版。</remarks>
@@ -291,13 +291,10 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
     /// <returns>补全后的安装包</returns>
     private BootstrapPackage? Absolutize(BootstrapPackage? pkg, String baseUri)
     {
-        if (pkg == null || pkg.Source.IsNullOrEmpty()) return pkg;
-
-        if (!pkg.Source.StartsWithIgnoreCase("http://", "https://"))
-            pkg.Source = new Uri(new Uri(baseUri), pkg.Source) + "";
+        if (pkg == null) return pkg;
 
         // 安全V-11：安装包下载URL附带短时令牌
-        pkg.Source = downloadTokenService.AppendToken(pkg.Source, StarServerSetting.Current.AttachmentTokenExpire);
+        pkg.Source = DownloadSourceHelper.Absolutize(pkg.Source, baseUri, SignDownload);
 
         return pkg;
     }
