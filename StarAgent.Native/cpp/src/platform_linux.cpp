@@ -567,8 +567,7 @@ std::uint64_t MaxOpenFiles()
     return static_cast<std::uint64_t>(limit.rlim_cur);
 }
 
-ProbeResult PingProbe(const std::string& host, int timeout_ms, int count)
-{
+ProbeResult PingProbe(const std::string& host, int timeout_ms, int count){
     ProbeResult result;
     if (host.empty() || count <= 0) return result;
 
@@ -608,6 +607,14 @@ ProbeResult PingProbe(const std::string& host, int timeout_ms, int count)
     result.LossRate = std::round((1.0 - static_cast<double>(success) / count) * 1000.0) / 1000.0;
     result.Score = ComputePingScore(result.Latency, success, count);
     return result;
+}
+
+bool PowerAction(bool reboot)
+{
+    // 依赖系统 init 执行真正的重启/关机，需要有权限（通常为 root）
+    static const std::atomic<bool> never_cancelled{false};
+    const auto shell = RunShell(reboot ? "reboot" : "poweroff", 5000, never_cancelled);
+    return shell.ExitCode == 0;
 }
 
 namespace {

@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
+#include <fstream>
 #include <sstream>
 
 #include "httplib.h"
@@ -239,9 +240,75 @@ HttpClient::RawResponse HttpClient::SendOnce(const std::string& method, const st
     return RawResponse{result->status, result->body};
 }
 
-HttpClient::RawResponse HttpClient::Send(const std::string& method, const std::string& path,
-                                         const std::string& body, bool auth)
+bool HttpClient::Download(const std::string& url, const std::string& path, std::string& error)
 {
+    error.clear();
+
+    const auto scheme_end = url.find("://");
+    if (scheme_end == std::string::npos)
+    {
+        error = "invalid url: " + url;
+        return false;
+    }
+    const auto scheme = ToLower(url.substr(0, scheme_end));
+    const auto rest = url.substr(scheme_end + 3);
+    const auto slash = rest.find('/');
+    const auto authority = slash == std::string::npos ? rest : rest.substr(0, slash);
+    const auto request_path = slash == std::string::npos ? std::string("/") : rest.substr(slash);
+    if (authority.empty())
+    {
+        error = "invalid url: " + url;
+        return false;
+    }
+
+    httplib::Client client(scheme + "://" + authority);
+    if (!client.is_valid())
+    {
+        error = "invalid url or unsupported scheme (https requires an OpenSSL build): " + url;
+        return false;
+    }
+    client.set_connection_timeout(ConnectTimeoutSeconds, 0);
+    client.set_read_timeout(120, 0);
+    client.set_write_timeout(120, 0);
+    client.set_follow_location(true);
+#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+    if (scheme == "https" && !tls_verify_) client.enable_server_certificate_verification(false);
+#endif
+
+    std::ofstream stream(path, std::ios::binary | std::ios::trunc);
+    if (!stream)
+    {
+        error = "cannot write file: " + path;
+        return false;
+    }
+
+    httplib::Headers headers;
+    headers.emplace("User-Agent", std::string("StarAgent-Cpp/") + STARAGENT_VERSION);
+
+    const auto result = client.Get(
+        request_path, headers,
+        [&stream](const char* data, std::size_t length) {
+            stream.write(data, static_cast<std::streamsize>(length));
+            return static_cast<bool>(stream);
+        });
+    stream.close();
+
+    if (!result)
+    {
+        error = "download failed: " + httplib::to_string(result.error());
+        return false;
+    }
+    if (result->status != 200)
+    {
+        error = "download failed: HTTP " + std::to_string(result->status);
+        return false;
+    }
+    logger_.Debug("downloaded " + url + " -> " + path);
+    return true;
+}
+
+HttpClient::RawResponse HttpClient::Send(const std::string& method, const std::string& path,
+                                         const std::string& body, bool auth){
     auto response = SendOnce(method, path, body, auth);
     if (auth && response.Status == 401)
     {

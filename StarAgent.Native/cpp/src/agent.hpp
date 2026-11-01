@@ -6,6 +6,7 @@
 #include "events.hpp"
 #include "executor.hpp"
 #include "http_client.hpp"
+#include "local_api.hpp"
 #include "logging.hpp"
 #include "metrics.hpp"
 #include "platform.hpp"
@@ -66,6 +67,8 @@ private:
     void FlushEvents();
     void CheckUpgrade();
     void Enqueue(const std::string& type, const std::string& name, const std::string& remark);
+    std::string BuildLocalInfo();
+    bool TryUpgrade(const UpgradeInfo& info);
     NodeInfo BuildNodeInfo();
     PingInfo BuildPingInfo();
     platform::NetworkInfo NetworkSnapshot(bool force);
@@ -88,6 +91,7 @@ private:
     EventQueue events_;
     std::unique_ptr<Executor> executor_;
     WsClient ws_client_;
+    LocalApiServer local_api_;
 
     platform::HardwareInfo hardware_;
     platform::SystemInfo system_;

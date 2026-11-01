@@ -366,8 +366,7 @@ DiskIoSample DiskIo()
 
 std::uint64_t MaxOpenFiles() { return 0; }
 
-ProbeResult PingProbe(const std::string& host, int timeout_ms, int count)
-{
+ProbeResult PingProbe(const std::string& host, int timeout_ms, int count){
     ProbeResult result;
     if (host.empty() || count <= 0) return result;
 
@@ -406,6 +405,13 @@ ProbeResult PingProbe(const std::string& host, int timeout_ms, int count)
     result.LossRate = std::round((1.0 - static_cast<double>(success) / count) * 1000.0) / 1000.0;
     result.Score = ComputePingScore(result.Latency, success, count);
     return result;
+}
+
+bool PowerAction(bool reboot)
+{
+    static const std::atomic<bool> never_cancelled{false};
+    const auto shell = RunShell(reboot ? "shutdown -r now" : "shutdown -h now", 5000, never_cancelled);
+    return shell.ExitCode == 0;
 }
 
 double LoadAverage()

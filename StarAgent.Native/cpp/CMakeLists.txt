@@ -60,6 +60,7 @@ set(STARAGENT_SOURCES
   src/events.cpp
   src/executor.cpp
   src/http_client.cpp
+  src/local_api.cpp
   src/logging.cpp
   src/metrics.cpp
   src/protocol.cpp

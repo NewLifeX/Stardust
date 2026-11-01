@@ -229,7 +229,10 @@ CommandReplyModel Executor::Dispatch(const CommandModel& command)
     if (name == "node/synctime") return SyncTimeCommand(command);
     if (name == "node/setchannel") return SetChannelCommand(command);
     if (name == "node/restart") return RestartCommand(command);
-    if (name == "node/reboot" || name == "framework/install" || StartsWith(name, "deploy/"))
+    if (name == "node/reboot") return PowerCommand(command, true);
+    if (name == "node/shutdown") return PowerCommand(command, false);
+    if (name == "node/upgrade") return UpgradeCommand(command);
+    if (name == "framework/install" || StartsWith(name, "deploy/"))
     {
         return Reply(CommandStatus::Error, "不支持命令: " + command.Command);
     }
@@ -390,6 +393,43 @@ CommandReplyModel Executor::RestartCommand(const CommandModel& command)
         }
     }));
     return Reply(CommandStatus::Completed, "正在重启");
+}
+
+CommandReplyModel Executor::PowerCommand(const CommandModel& command, bool reboot)
+{
+    const auto action = reboot ? options_.Reboot : options_.Shutdown;
+    if (!action) return Reply(CommandStatus::Error, "不支持命令: " + command.Command);
+
+    TrackThread(std::thread([this, action, reboot]() {
+        if (!platform::SleepCancelable(1500, stopping_)) return;
+        try
+        {
+            if (!action()) Log().Error(reboot ? "reboot failed" : "shutdown failed");
+        }
+        catch (const std::exception& ex)
+        {
+            Log().Error(std::string("power action failed: ") + ex.what());
+        }
+    }));
+    return Reply(CommandStatus::Completed, reboot ? "正在重启" : "正在关机");
+}
+
+CommandReplyModel Executor::UpgradeCommand(const CommandModel& command)
+{
+    if (!options_.Upgrade) return Reply(CommandStatus::Error, "不支持命令: " + command.Command);
+
+    TrackThread(std::thread([this]() {
+        if (!platform::SleepCancelable(800, stopping_)) return;
+        try
+        {
+            options_.Upgrade();
+        }
+        catch (const std::exception& ex)
+        {
+            Log().Error(std::string("upgrade failed: ") + ex.what());
+        }
+    }));
+    return Reply(CommandStatus::Completed, "正在检查升级");
 }
 
 } // namespace staragent

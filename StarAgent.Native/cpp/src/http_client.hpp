@@ -57,6 +57,9 @@ public:
     void CommandReply(const CommandReplyModel& reply);
     std::optional<UpgradeInfo> Upgrade(const std::string& channel);
 
+    // 下载任意 URL 到本地文件（用于自动升级包），成功返回 true。
+    bool Download(const std::string& url, const std::string& path, std::string& error);
+
     static constexpr int RequestTimeoutSeconds = 15;
     static constexpr int ConnectTimeoutSeconds = 5;
 

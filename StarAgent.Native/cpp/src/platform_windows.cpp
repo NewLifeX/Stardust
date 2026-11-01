@@ -7,6 +7,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <iterator>
 #include <map>
@@ -833,6 +834,13 @@ ProbeResult PingProbe(const std::string& host, int timeout_ms, int count)
     result.LossRate = std::round((1.0 - static_cast<double>(success) / count) * 1000.0) / 1000.0;
     result.Score = ComputePingScore(result.Latency, success, count);
     return result;
+}
+
+bool PowerAction(bool reboot)
+{
+    // 延迟 30 秒，给命令回包与日志落盘留出时间
+    const auto command = reboot ? "shutdown.exe /r /t 30 /f" : "shutdown.exe /s /t 30 /f";
+    return std::system(command) == 0;
 }
 
 double LoadAverage()

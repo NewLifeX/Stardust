@@ -129,6 +129,8 @@ DiskIoSample DiskIo();
 std::uint64_t MaxOpenFiles();
 // 对目标主机做 ICMP 探测，用于评估网关/DNS/服务端网络质量。
 ProbeResult PingProbe(const std::string& host, int timeout_ms, int count);
+// 重启或关机本机。reboot=true 重启，false 关机；返回命令是否成功提交。
+bool PowerAction(bool reboot);
 
 HardwareInfo Hardware();
 SystemInfo System();

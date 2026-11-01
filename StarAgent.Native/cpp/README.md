@@ -7,7 +7,7 @@ StarAgent 的 C++17 原生实现，与 `spec/protocol.md`、Go/Rust 实现保持
 - Windows（MSVC 19.51 / Visual Studio 2026，x64）：实际编译、CTest 与一致性测试通过。
 - Linux ARM64 真机（Ubuntu 26.04，A2 `HTNICE GT685X` / A4-WiFi `Nuvoton MA35D1`）：依赖目标机 `g++`/`cmake`，用 `-DFETCHCONTENT_SOURCE_DIR_IXWEBSOCKET` 指向离线源码即可构建；登录、心跳、指标上报与一致性测试 6/6 通过。
 - 一致性测试：`conformance --agent staragent.exe --scenario all` → **6 passed / 0 failed**（basic、http-fallback、dedup、expired、reconnect、events）。
-- 单元测试：`ctest -C Release` → **2/2**（`staragent_tests` 67/67 checks、`staragent --version`）。
+- 单元测试：`ctest -C Release` → **2/2**（`staragent_tests` 70/70 checks、`staragent --version`）。
 - 真实服务端：在真实 Kestrel StarServer 上完成登录、自动注册、Code/Secret 持久化与在线状态验证（`NativeAgentIntegrationTests`，`ProductCode=StarAgent-Cpp`）。
 - 小内存设备构建：`cmake --build build --target staragent --parallel 1`；`--parallel 2` 在 512MB~1GB 的板子上会被 OOM Killer 终止。
 
@@ -135,7 +135,9 @@ CMake 使用 `find_package(OpenSSL QUIET)`：
   "AllowExec": false,
   "AllowedCommands": [],
   "CommandTimeout": 30,
-  "TlsVerify": true
+  "TlsVerify": true,
+  "LocalPort": 5500,
+  "AutoUpgrade": true
 }
 ```
 
@@ -144,6 +146,7 @@ CMake 使用 `find_package(OpenSSL QUIET)`：
 - `Server` 必填，scheme 仅 `http`/`https`。
 - `MetricsInterval` 5–3600 秒；`CommandTimeout` 1–300 秒。
 - `Code`/`Secret` 由登录响应写入，原子落盘并限制为 `0600`（Windows 上为 CRT 只读位 + 数据目录所有者隔离，见“已知限制”）。
+- `UpgradeVersion` 由升级流程成功后自动写入（无需手工配置），用于记录已应用的版本，避免服务端仍推送同一版本时反复替换重启。
 
 ### 环境变量
 
@@ -160,6 +163,8 @@ CMake 使用 `find_package(OpenSSL QUIET)`：
 | AllowedCommands | `STARAGENT_ALLOWEDCOMMANDS`、`STARAGENT_ALLOWED_COMMANDS` |
 | CommandTimeout | `STARAGENT_COMMANDTIMEOUT`、`STARAGENT_COMMAND_TIMEOUT` |
 | TlsVerify | `STARAGENT_TLSVERIFY`、`STARAGENT_TLS_VERIFY` |
+| LocalPort | `STARAGENT_LOCALPORT`、`STARAGENT_LOCAL_PORT` |
+| AutoUpgrade | `STARAGENT_AUTOUPGRADE`、`STARAGENT_AUTO_UPGRADE` |
 | Code / Secret / Project / Channel | `STARAGENT_CODE` / `STARAGENT_SECRET` / `STARAGENT_PROJECT` / `STARAGENT_CHANNEL` |
 
 ### CLI
@@ -189,7 +194,9 @@ staragent uninstall | start | stop | status
 | `node/synctime` | 全平台 | 可选时间字符串；无参数使用服务端时间 |
 | `node/setchannel` | 全平台 | 修改并持久化更新通道 |
 | `node/restart` | 全平台 | 1 秒后重启自身进程 |
-| `node/reboot` / `deploy/*` / `framework/install` | — | 首版回复“不支持命令” |
+| `node/reboot` / `node/shutdown` | 全平台 | 1.5 秒后重启/关机（Linux/macOS 调 `reboot`/`poweroff`，Windows 用 `shutdown.exe` 延迟 30 秒） |
+| `node/upgrade` | 全平台 | 立即检查升级，有新版时走自动升级流程 |
+| `deploy/*` / `framework/install` | — | 回复“不支持命令”（原生 Agent 不做远程发布与 .NET 运行时安装） |
 
 安全与限制：
 
@@ -200,6 +207,27 @@ staragent uninstall | start | stop | status
 - 最多 4 个命令并发；shell 命令串行执行。
 - 命令按 `Id` 去重 1 小时；`Expire` 过期回复 `Status=3`；`StartTime` 未来时先回复 `Status=1` 再延迟执行。
 - 所有回复（过期、延迟、取消、成功、失败）都携带原始 `Id`。
+
+## 本地接口与局域网发现
+
+`LocalPort`（默认 5500，`0` 关闭）上监听 UDP，线格式与 .NET StarAgent 完全一致：
+**SRMP 帧**（1 Flag + 1 sequence + 2 length + payload）+ **JsonEncoder 载荷**（`[7位长度][action][4字节长度][JSON]`）。
+
+- `Info`：返回 `AgentInfo`（`ProcessId`/`ProcessName`/`Version`/`FileName`/`Arguments`/`IP`/`Server`/`Code`/`Services`），供本机应用探测与**局域网广播发现**（`LocalStarClient.Scan()` 向 `255.255.255.255:5500` 广播 `Info` 帧）使用。
+- `Ping`：返回 `{"ServerTime": <毫秒时间戳>}`。
+- 其他 action 回复错误帧（code=404）。
+
+验证（Windows PowerShell，发一帧 `Info`）：
+
+```powershell
+$a=[Text.Encoding]::UTF8.GetBytes('Info'); $p=[byte[]](@(4)+$a)
+$f=[byte[]](@(0x01,0x01,[byte]($p.Length -band 0xFF),[byte](($p.Length -shr 8) -band 0xFF)))+$p
+$u=New-Object Net.Sockets.UdpClient; $u.Client.ReceiveTimeout=3000
+$u.Send($f,$f.Length,(New-Object Net.IPEndPoint([Net.IPAddress]::Loopback,5500))) | Out-Null
+[Text.Encoding]::UTF8.GetString($u.Receive([ref](New-Object Net.IPEndPoint([Net.IPAddress]::Any,0))))
+```
+
+> 同一台机器上已有 .NET StarAgent 占用 5500 时，原生 Agent 会记录“bind failed”并跳过本地接口（不影响心跳与采集）。
 
 ## 安装为系统服务
 
@@ -235,7 +263,7 @@ root 写入 `/Library/LaunchDaemons/com.newlifex.staragent.plist`；普通用户
 
 ## 能力边界与已知限制
 
-- **不自升级**：收到 `/node/upgrade` 非空版本时只记录日志并上报 `Upgrade` 事件，需人工更新；`cap:upgrade=false`。
+- **自动升级**：`/node/upgrade` 返回更高版本时，下载 `Source` 到 `DataDir/Update/`，按 `FileHash`（MD5）校验后把当前可执行文件改名为 `*.old`、写入新文件并重启；`AutoUpgrade=false` 时只记录事件。**仅支持单文件原生包**（裸二进制）；`.zip` 包回复“需人工升级”。下载或校验失败不再每次心跳重试，而是退避 10 分钟后再试；成功应用后把版本写入 `UpgradeVersion`，同一版本不会重复替换。
 - **deploy / framework / reboot 未实现**：按协议回复“不支持命令”。
 - **WebSocket 可选**：`-DSTARAGENT_WITH_WS=OFF` 时仍可通过心跳 `Commands` 执行命令；但 `--scenario reconnect/dedup` 等 WS 场景不可用。
 - **TLS 依赖 OpenSSL**：未检测到 OpenSSL 的构建只能 `http/ws`；生产必须安装 OpenSSL 并重新构建。

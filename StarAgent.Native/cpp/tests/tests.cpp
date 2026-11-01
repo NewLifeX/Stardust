@@ -133,6 +133,15 @@ void TestPingJson()
     Check(json["InternetScore"] == 0.88, "ping json internet score");
 }
 
+void TestMd5()
+{
+    Check(staragent::Md5Hex("") == "d41d8cd98f00b204e9800998ecf8427e", "md5 empty");
+    Check(staragent::Md5Hex("abc") == "900150983cd24fb0d6963f7d28e17f72", "md5 abc");
+    Check(staragent::Md5Hex("The quick brown fox jumps over the lazy dog") ==
+              "9e107d9d372bb6826bd81d3542a419d6",
+          "md5 quick brown fox");
+}
+
 void TestPingScore()
 {
     // 与 .NET PingMonitor 一致的指数衰减：1ms 满分，100ms ≈ 0.906
@@ -201,6 +210,15 @@ void TestConfig()
     staragent::ConfigStore store(path, loaded);
     store.Update([](staragent::Config& value) { value.Channel = "Beta"; });
     Check(staragent::LoadConfig(path).Channel == "Beta", "config store update persisted");
+
+    // 本地端口与已升级版本需要在重启后保持，否则升级会反复触发
+    store.Update([](staragent::Config& value) {
+        value.LocalPort = 5501;
+        value.UpgradeVersion = "1.0.2026.1102";
+    });
+    const auto after_upgrade = staragent::LoadConfig(path);
+    Check(after_upgrade.LocalPort == 5501, "local port persisted");
+    Check(after_upgrade.UpgradeVersion == "1.0.2026.1102", "upgrade version persisted");
 }
 
 void TestEventQueue()
@@ -331,6 +349,7 @@ int main()
     TestUnwrapResponse();
     TestPingResponse();
     TestPingJson();
+    TestMd5();
     TestPingScore();
     TestTruncate();
     TestUrls();

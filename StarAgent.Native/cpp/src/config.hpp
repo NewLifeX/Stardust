@@ -23,6 +23,12 @@ struct Config
     std::vector<std::string> AllowedCommands;
     int CommandTimeout = 30;
     bool TlsVerify = true;
+    // 本地 UDP 接口端口（局域网发现与本地 RPC），0 表示关闭
+    int LocalPort = 5500;
+    // 收到服务端升级通知后是否自动下载并替换自身
+    bool AutoUpgrade = true;
+    // 最近一次成功应用的升级版本，避免同版本反复重启
+    std::string UpgradeVersion;
 };
 
 Config DefaultConfig();

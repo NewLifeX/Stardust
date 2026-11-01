@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <fstream>
 #include <sstream>
 
 namespace staragent {
@@ -354,8 +355,146 @@ std::string ToHex(const unsigned char* data, std::size_t size)
     return result;
 }
 
-double ComputePingScore(int latency_ms, int success, int count)
+namespace {
+
+// RFC 1321 MD5，仅用于升级包完整性校验
+struct Md5Context
 {
+    std::uint32_t State[4] = {0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476};
+    std::uint64_t Count = 0;
+    unsigned char Buffer[64] = {};
+};
+
+std::uint32_t RotateLeft(std::uint32_t value, int bits) { return (value << bits) | (value >> (32 - bits)); }
+
+void Md5Transform(Md5Context& context, const unsigned char block[64])
+{
+    static const std::uint32_t K[64] = {
+        0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee, 0xf57c0faf, 0x4787c62a, 0xa8304613, 0xfd469501,
+        0x698098d8, 0x8b44f7af, 0xffff5bb1, 0x895cd7be, 0x6b901122, 0xfd987193, 0xa679438e, 0x49b40821,
+        0xf61e2562, 0xc040b340, 0x265e5a51, 0xe9b6c7aa, 0xd62f105d, 0x02441453, 0xd8a1e681, 0xe7d3fbc8,
+        0x21e1cde6, 0xc33707d6, 0xf4d50d87, 0x455a14ed, 0xa9e3e905, 0xfcefa3f8, 0x676f02d9, 0x8d2a4c8a,
+        0xfffa3942, 0x8771f681, 0x6d9d6122, 0xfde5380c, 0xa4beea44, 0x4bdecfa9, 0xf6bb4b60, 0xbebfbc70,
+        0x289b7ec6, 0xeaa127fa, 0xd4ef3085, 0x04881d05, 0xd9d4d039, 0xe6db99e5, 0x1fa27cf8, 0xc4ac5665,
+        0xf4292244, 0x432aff97, 0xab9423a7, 0xfc93a039, 0x655b59c3, 0x8f0ccc92, 0xffeff47d, 0x85845dd1,
+        0x6fa87e4f, 0xfe2ce6e0, 0xa3014314, 0x4e0811a1, 0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391};
+    static const int S[64] = {7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
+                              5, 9,  14, 20, 5, 9,  14, 20, 5, 9,  14, 20, 5, 9,  14, 20,
+                              4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,
+                              6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21};
+
+    std::uint32_t M[16];
+    for (int i = 0; i < 16; i++)
+    {
+        M[i] = static_cast<std::uint32_t>(block[i * 4]) | static_cast<std::uint32_t>(block[i * 4 + 1]) << 8 |
+               static_cast<std::uint32_t>(block[i * 4 + 2]) << 16 | static_cast<std::uint32_t>(block[i * 4 + 3]) << 24;
+    }
+
+    std::uint32_t A = context.State[0];
+    std::uint32_t B = context.State[1];
+    std::uint32_t C = context.State[2];
+    std::uint32_t D = context.State[3];
+    for (std::uint32_t i = 0; i < 64; i++)
+    {
+        std::uint32_t F = 0;
+        std::uint32_t G = 0;
+        if (i < 16)
+        {
+            F = (B & C) | (~B & D);
+            G = i;
+        }
+        else if (i < 32)
+        {
+            F = (D & B) | (~D & C);
+            G = (5 * i + 1) % 16;
+        }
+        else if (i < 48)
+        {
+            F = B ^ C ^ D;
+            G = (3 * i + 5) % 16;
+        }
+        else
+        {
+            F = C ^ (B | ~D);
+            G = (7 * i) % 16;
+        }
+        const auto temp = D;
+        D = C;
+        C = B;
+        B = B + RotateLeft(A + F + K[i] + M[G], S[i]);
+        A = temp;
+    }
+
+    context.State[0] += A;
+    context.State[1] += B;
+    context.State[2] += C;
+    context.State[3] += D;
+}
+
+void Md5Update(Md5Context& context, const unsigned char* data, std::size_t size)
+{
+    std::size_t index = static_cast<std::size_t>(context.Count % 64);
+    context.Count += size;
+    const auto part = 64 - index;
+    std::size_t offset = 0;
+    if (size >= part)
+    {
+        std::memcpy(context.Buffer + index, data, part);
+        Md5Transform(context, context.Buffer);
+        for (offset = part; offset + 63 < size; offset += 64) Md5Transform(context, data + offset);
+        index = 0;
+    }
+    std::memcpy(context.Buffer + index, data + offset, size - offset);
+}
+
+std::string Md5Finish(Md5Context& context)
+{
+    static const unsigned char padding[64] = {0x80};
+    const auto bits = context.Count * 8;
+    unsigned char length[8];
+    for (int i = 0; i < 8; i++) length[i] = static_cast<unsigned char>((bits >> (8 * i)) & 0xFF);
+
+    const auto index = static_cast<std::size_t>(context.Count % 64);
+    Md5Update(context, padding, index < 56 ? 56 - index : 120 - index);
+    Md5Update(context, length, 8);
+
+    unsigned char digest[16];
+    for (int i = 0; i < 4; i++)
+    {
+        digest[i * 4] = static_cast<unsigned char>(context.State[i] & 0xFF);
+        digest[i * 4 + 1] = static_cast<unsigned char>((context.State[i] >> 8) & 0xFF);
+        digest[i * 4 + 2] = static_cast<unsigned char>((context.State[i] >> 16) & 0xFF);
+        digest[i * 4 + 3] = static_cast<unsigned char>((context.State[i] >> 24) & 0xFF);
+    }
+    return ToHex(digest, sizeof(digest));
+}
+
+} // namespace
+
+std::string Md5Hex(const std::string& data)
+{
+    Md5Context context;
+    Md5Update(context, reinterpret_cast<const unsigned char*>(data.data()), data.size());
+    return Md5Finish(context);
+}
+
+std::string Md5File(const std::string& path)
+{
+    std::ifstream stream(path, std::ios::binary);
+    if (!stream) return {};
+    Md5Context context;
+    std::vector<char> buffer(64 * 1024);
+    while (stream)
+    {
+        stream.read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
+        const auto read = static_cast<std::size_t>(stream.gcount());
+        if (read == 0) break;
+        Md5Update(context, reinterpret_cast<const unsigned char*>(buffer.data()), read);
+    }
+    return Md5Finish(context);
+}
+
+double ComputePingScore(int latency_ms, int success, int count){
     if (count <= 0 || success <= 0) return 0;
     if (success > count) success = count;
     if (latency_ms < 0) latency_ms = 0;

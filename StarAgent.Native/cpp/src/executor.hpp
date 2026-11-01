@@ -24,6 +24,9 @@ struct ExecutorOptions
     std::function<bool(const std::string&)> SetChannel;
     std::function<bool(TimePoint)> SyncTime;
     std::function<bool()> Restart;
+    std::function<bool()> Reboot;
+    std::function<bool()> Shutdown;
+    std::function<bool()> Upgrade;
     Logger* Log = nullptr;
 };
 
@@ -52,6 +55,8 @@ private:
     CommandReplyModel SyncTimeCommand(const CommandModel& command);
     CommandReplyModel SetChannelCommand(const CommandModel& command);
     CommandReplyModel RestartCommand(const CommandModel& command);
+    CommandReplyModel PowerCommand(const CommandModel& command, bool reboot);
+    CommandReplyModel UpgradeCommand(const CommandModel& command);
 
     bool IsDuplicate(std::int64_t id);
     bool IsAllowed(const std::string& name) const;
