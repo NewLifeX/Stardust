@@ -265,17 +265,19 @@ StarAgent 的 Web 面板在回环地址（默认 `127.0.0.1`）上启用 `SO_REU
 - WebSocket 命令通道 + HTTP 心跳命令降级
 - 事件上报、命令回复
 - CPU/内存/磁盘/网络/进程/运行时长/负载等基础指标
-- `bash`/`cmd`/`node/synctime`/`node/setchannel`/`node/restart`
-- systemd / launchd / Windows Service / OpenWrt procd
+- `bash`/`cmd`/`node/synctime`/`node/setchannel`/`node/restart`/`node/bootstrap`
+- 只提供前台进程（`run`/`once`/`bootstrap`/`version`），**不注册系统服务**；systemd / procd / launchd / 计划任务由部署侧提供模板（`StarAgent.Native/packaging/install/`）
+- 引导安装：登录后调 `POST /node/bootstrap` 取包，安装 .NET 运行时与完整版 StarAgent（CLI `bootstrap` 或 `Bootstrap=true` 时由 `node/bootstrap` 命令触发）
 - 系统/硬件信息（Windows 已对齐）：OS 名称版本与种类、全部 IPv4、网关+MAC、DNS、时区、DPI、分辨率、C 运行时、CPU/内存/磁盘、产品名/制造商/处理器/GPU、UUID/MachineGuid/序列号/主板/磁盘序列号/物理网卡 MAC；Linux/macOS 先覆盖基础字段，产品名/GPU 等按平台能力逐步补齐
 
 原生 Agent 的 `Runtime` / `Framework` 上报自身语言运行时，不枚举本机 .NET Framework 集合；这是与标准 .NET Agent 的有意差异。
 
-首版**不包含**：进程守护、远程发布（`deploy/*`）、自身升级、Web 管理面板、插件、防火墙、DNS、截屏。`deploy/*`、`framework/install`、`node/reboot` 统一回复“不支持”。
+首版**不包含**：系统服务安装卸载与启停、进程守护、远程发布（`deploy/*`）、自身升级、Web 管理面板、插件、防火墙、DNS、截屏。`deploy/*`、`framework/install`、`node/reboot` 统一回复“不支持”。
 
 ### 7.3 安全默认
 
 - `AllowExec=false`：`bash`/`cmd` 一律拒绝。
+- `Bootstrap=false`：`node/bootstrap` 回复取消（引导安装未启用），避免平台一次性推错节点就改动系统安装。
 - 显式开启后仍受 `AllowedCommands` 白名单、命令超时（默认 30s、上限 300s）、输出截断（64KB）约束。
 - 生产环境必须校验 TLS 证书；日志不输出 Secret/Token。
 - 遵循 [SVR-8-远程命令执行安全](SVR-8-远程命令执行安全.md)。
