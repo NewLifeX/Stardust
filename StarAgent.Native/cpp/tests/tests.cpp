@@ -7,6 +7,7 @@
 #include "util.hpp"
 
 #include <cstdlib>
+#include <cmath>
 #include <filesystem>
 #include <iostream>
 #include <string>
@@ -112,6 +113,10 @@ void TestPingJson()
     ping.Signal = 66;
     ping.DiskIOPS = 180;
     ping.DiskActiveTime = 12.5;
+    ping.GatewayLatency = 3;
+    ping.GatewayLossRate = 0.2;
+    ping.IntranetScore = 0.91;
+    ping.InternetScore = 0.88;
 
     const auto json = staragent::ToJson(ping);
     Check(json["ProcessCount"] == 12, "ping json process count");
@@ -122,6 +127,20 @@ void TestPingJson()
     Check(json["Signal"] == 66, "ping json signal");
     Check(json["DiskIOPS"] == 180, "ping json disk iops");
     Check(json["DiskActiveTime"] == 12.5, "ping json disk active time");
+    Check(json["GatewayLatency"] == 3, "ping json gateway latency");
+    Check(json["GatewayLossRate"] == 0.2, "ping json gateway loss");
+    Check(json["IntranetScore"] == 0.91, "ping json intranet score");
+    Check(json["InternetScore"] == 0.88, "ping json internet score");
+}
+
+void TestPingScore()
+{
+    // 与 .NET PingMonitor 一致的指数衰减：1ms 满分，100ms ≈ 0.906
+    Check(std::abs(staragent::ComputePingScore(1, 5, 5) - 1.0) < 0.001, "ping score full at 1ms");
+    Check(std::abs(staragent::ComputePingScore(100, 5, 5) - 0.906) < 0.002, "ping score decay at 100ms");
+    Check(std::abs(staragent::ComputePingScore(10, 3, 5) - 0.595) < 0.002, "ping score applies loss rate");
+    Check(staragent::ComputePingScore(10, 0, 5) == 0, "ping score zero on full loss");
+    Check(staragent::ComputePingScore(10, 1, 0) == 0, "ping score zero on empty sample");
 }
 
 void TestTruncate()
@@ -312,6 +331,7 @@ int main()
     TestUnwrapResponse();
     TestPingResponse();
     TestPingJson();
+    TestPingScore();
     TestTruncate();
     TestUrls();
     TestConfig();

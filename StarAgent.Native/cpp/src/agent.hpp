@@ -54,6 +54,8 @@ private:
 
     SessionResult RunSession(Backoff& backoff);
     void NotifyLoop(std::atomic<bool>& session_stopping);
+    void QualityLoop(std::atomic<bool>& session_stopping);
+    void RefreshQuality();
     void Shutdown();
     void Login();
     PingResponse Ping();
@@ -108,6 +110,17 @@ private:
 
     std::mutex upgrade_mutex_;
     std::int64_t last_upgrade_ms_ = 0;
+
+    // 网络质量：后台线程定期探测网关/DNS/服务端，心跳复用结果
+    struct QualityState
+    {
+        platform::ProbeResult Gateway;
+        platform::ProbeResult Dns;
+        platform::ProbeResult Server;
+        std::int64_t AtMs = 0;
+    };
+    std::mutex quality_mutex_;
+    QualityState quality_;
 
     std::vector<std::string> restart_arguments_;
 };

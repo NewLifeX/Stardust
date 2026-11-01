@@ -14,7 +14,7 @@ StarAgent 的非 .NET 原生实现集合，目标是以轻量二进制接入 Sta
 
 - Go：`go test ./...`、`go build ./cmd/staragent`、`CGO_ENABLED=0` 交叉编译（linux/amd64、linux/arm64、linux/arm、windows/amd64、windows/arm64、darwin/amd64、darwin/arm64）
 - Rust：`cargo test`、`cargo build` 通过；Windows 本机二进制可运行
-- C++：Windows 本机 `cmake` 构建通过，`staragent_tests` 58/58 项检查通过
+- C++：Windows 本机 `cmake` 构建通过，`staragent_tests` 67/67 项检查通过
 - C++ Linux 真机：A2（HTNICE GT685X，Ubuntu 26.04 aarch64）与 A4-WiFi（Nuvoton MA35D1，aarch64）本机构建通过，登录/自动注册/心跳/常量指标上报正常，`--scenario all` 6/6 通过
 - 一致性测试：Go / Rust / C++ 三种实现均对假 StarServer 运行 `--scenario all`，各自 `6 passed, 0 failed`
 - 真实服务端：Go / Rust / C++ Agent 均在真实 Kestrel StarServer 上完成登录、自动注册、Code/Secret 持久化与在线状态验证

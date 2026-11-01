@@ -54,6 +54,15 @@ struct DiskIoSample
     double ActivePercent = 0;
 };
 
+// ICMP 探测结果，对应心跳中的网络质量字段。
+struct ProbeResult
+{
+    bool Valid = false;
+    int Latency = 0;     // 平均延迟（毫秒）
+    double LossRate = 0; // 丢包率 0~1
+    double Score = 0;    // 综合评分 0~1
+};
+
 struct HardwareInfo
 {
     std::string UUID;
@@ -116,6 +125,8 @@ int WirelessSignal();
 DiskIoSample DiskIo();
 // 当前进程可打开文件句柄上限；平台无此概念时返回 0。
 std::uint64_t MaxOpenFiles();
+// 对目标主机做 ICMP 探测，用于评估网关/DNS/服务端网络质量。
+ProbeResult PingProbe(const std::string& host, int timeout_ms, int count);
 
 HardwareInfo Hardware();
 SystemInfo System();

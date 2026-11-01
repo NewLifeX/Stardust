@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <ctime>
@@ -351,6 +352,19 @@ std::string ToHex(const unsigned char* data, std::size_t size)
         result.push_back(hex[data[i] & 0x0F]);
     }
     return result;
+}
+
+double ComputePingScore(int latency_ms, int success, int count)
+{
+    if (count <= 0 || success <= 0) return 0;
+    if (success > count) success = count;
+    if (latency_ms < 0) latency_ms = 0;
+
+    // 与 .NET PingMonitor 一致：1ms 阈值，λ=0.001
+    const auto latency_score = std::exp(-0.001 * static_cast<double>(latency_ms - 1));
+    const auto success_rate = static_cast<double>(success) / static_cast<double>(count);
+    const auto score = std::round(success_rate * latency_score * 1000.0) / 1000.0;
+    return std::max(0.0, std::min(1.0, score));
 }
 
 } // namespace staragent

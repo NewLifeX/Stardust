@@ -185,11 +185,13 @@ Agent::SessionResult Agent::RunSession(Backoff& backoff)
 
     std::atomic<bool> session_stopping{false};
     std::thread notify_thread([this, &session_stopping]() { NotifyLoop(session_stopping); });
+    std::thread quality_thread([this, &session_stopping]() { QualityLoop(session_stopping); });
 
     auto stop_notify = [&]() {
         session_stopping = true;
         ws_client_.Stop();
         if (notify_thread.joinable()) notify_thread.join();
+        if (quality_thread.joinable()) quality_thread.join();
     };
 
     struct NotifyGuard
@@ -298,10 +300,96 @@ void Agent::NotifyLoop(std::atomic<bool>& session_stopping)
     }
 }
 
+void Agent::QualityLoop(std::atomic<bool>& session_stopping)
+{
+    // 与 .NET StarClient 一致：约 48 秒刷新一次；探测放后台，避免拖慢心跳
+    while (!stopping_.load() && !session_stopping.load())
+    {
+        RefreshQuality();
+
+        const auto deadline = SteadyMsNow() + 48LL * 1000;
+        while (!stopping_.load() && !session_stopping.load() && SteadyMsNow() < deadline)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+    }
+}
+
+void Agent::RefreshQuality()
+{
+    constexpr int kTimeoutMs = 2000;
+    constexpr int kCount = 5;
+
+    const auto network = NetworkSnapshot(false);
+
+    auto gateway = network.Gateway;
+    const auto slash = gateway.find('/');
+    if (slash != std::string::npos) gateway = gateway.substr(0, slash);
+
+    auto dns = network.Dns;
+    const auto comma = dns.find(',');
+    if (comma != std::string::npos) dns = dns.substr(0, comma);
+    dns = Trim(dns);
+    // 本地回环 DNS 无意义，改用公共 DNS 评估外网质量
+    if (dns.empty() || StartsWith(dns, "127.")) dns = "223.5.5.5";
+
+    auto server = client_.BaseUrl();
+    const auto scheme = server.find("://");
+    if (scheme != std::string::npos) server = server.substr(scheme + 3);
+    const auto path = server.find('/');
+    if (path != std::string::npos) server = server.substr(0, path);
+    if (StartsWith(server, "["))
+    {
+        const auto bracket = server.find(']');
+        if (bracket != std::string::npos) server = server.substr(1, bracket - 1);
+    }
+    else
+    {
+        const auto colon = server.find(':');
+        if (colon != std::string::npos) server = server.substr(0, colon);
+    }
+
+    QualityState state;
+    try
+    {
+        state.Gateway = platform::PingProbe(gateway, kTimeoutMs, kCount);
+    }
+    catch (...)
+    {
+    }
+    try
+    {
+        state.Dns = platform::PingProbe(dns, kTimeoutMs, kCount);
+    }
+    catch (...)
+    {
+    }
+    try
+    {
+        state.Server = platform::PingProbe(server, kTimeoutMs, kCount);
+    }
+    catch (...)
+    {
+    }
+    state.AtMs = SteadyMsNow();
+
+    {
+        std::lock_guard<std::mutex> lock(quality_mutex_);
+        quality_ = state;
+    }
+
+    if (state.Gateway.Valid || state.Dns.Valid || state.Server.Valid)
+    {
+        Log().Debug("network quality gateway=" + std::to_string(state.Gateway.Latency) + "ms/" +
+                    std::to_string(state.Gateway.Score) + " dns=" + std::to_string(state.Dns.Latency) + "ms/" +
+                    std::to_string(state.Dns.Score) + " server=" + std::to_string(state.Server.Latency) + "ms/" +
+                    std::to_string(state.Server.Score));
+    }
+}
+
 void Agent::Shutdown()
 {
     if (shutdown_done_.exchange(true)) return;
-
     if (executor_) executor_->Stop();
     {
         std::lock_guard<std::mutex> lock(command_threads_mutex_);
@@ -620,7 +708,35 @@ PingInfo Agent::BuildPingInfo()
     ping.Uptime = metrics.Uptime;
     ping.Delay = delay;
     ping.SystemLoad = metrics.SystemLoad;
-    ping.ServerLatency = static_cast<std::uint64_t>(delay);
+
+    // 网络质量取后台探测缓存；未探测到时服务端延迟回退到本次 HTTP 往返
+    QualityState quality;
+    {
+        std::lock_guard<std::mutex> lock(quality_mutex_);
+        quality = quality_;
+    }
+    if (quality.Gateway.Valid)
+    {
+        ping.GatewayLatency = static_cast<std::uint64_t>(std::max(0, quality.Gateway.Latency));
+        ping.GatewayLossRate = quality.Gateway.LossRate;
+        ping.IntranetScore = quality.Gateway.Score;
+    }
+    if (quality.Dns.Valid)
+    {
+        ping.DnsLatency = static_cast<std::uint64_t>(std::max(0, quality.Dns.Latency));
+        ping.DnsLossRate = quality.Dns.LossRate;
+    }
+    if (quality.Server.Valid)
+    {
+        ping.ServerLatency = static_cast<std::uint64_t>(std::max(0, quality.Server.Latency));
+        ping.ServerLossRate = quality.Server.LossRate;
+    }
+    else
+    {
+        ping.ServerLatency = static_cast<std::uint64_t>(delay);
+    }
+    ping.InternetScore = quality.Dns.Score * 0.3 + quality.Server.Score * 0.7;
+
     return ping;
 }
 

@@ -7,7 +7,7 @@ StarAgent 的 C++17 原生实现，与 `spec/protocol.md`、Go/Rust 实现保持
 - Windows（MSVC 19.51 / Visual Studio 2026，x64）：实际编译、CTest 与一致性测试通过。
 - Linux ARM64 真机（Ubuntu 26.04，A2 `HTNICE GT685X` / A4-WiFi `Nuvoton MA35D1`）：依赖目标机 `g++`/`cmake`，用 `-DFETCHCONTENT_SOURCE_DIR_IXWEBSOCKET` 指向离线源码即可构建；登录、心跳、指标上报与一致性测试 6/6 通过。
 - 一致性测试：`conformance --agent staragent.exe --scenario all` → **6 passed / 0 failed**（basic、http-fallback、dedup、expired、reconnect、events）。
-- 单元测试：`ctest -C Release` → **2/2**（`staragent_tests` 58/58 checks、`staragent --version`）。
+- 单元测试：`ctest -C Release` → **2/2**（`staragent_tests` 67/67 checks、`staragent --version`）。
 - 真实服务端：在真实 Kestrel StarServer 上完成登录、自动注册、Code/Secret 持久化与在线状态验证（`NativeAgentIntegrationTests`，`ProductCode=StarAgent-Cpp`）。
 - 小内存设备构建：`cmake --build build --target staragent --parallel 1`；`--parallel 2` 在 512MB~1GB 的板子上会被 OOM Killer 终止。
 
@@ -243,7 +243,8 @@ root 写入 `/Library/LaunchDaemons/com.newlifex.staragent.plist`；普通用户
 - **node/restart 与 SCM**：重启会以原命令行拉起新进程；若父进程由 SCM 启动，子进程的 `--service` 在非 SCM 环境下会回退为控制台模式。生产建议同时配置 Windows 服务恢复策略，或改用服务管理器重启。
 - **Linux/macOS 验证**：实现已提供，但当前 Windows 环境未完成对应平台的编译/运行验证；建议在 CI 增加 Ubuntu 与 macOS 构建任务。
 - **指标降级**：任何单项采集失败只把该字段填 0，不跳过心跳；`Battery`、`GatewayLatency`、`DnsLatency` 等未实现项为 0。
-- **平台采集差异**：`Temperature`、`Signal`（无线信号）、`DiskIOPS`/`DiskActiveTime`、`MaxOpenFiles` 仅在 Linux 采集（`/sys/class/thermal`、`/proc/net/wireless`、`/proc/diskstats`、`getrlimit`）；Windows/macOS 这些字段恒为 0。
+- **平台采集差异**：`Temperature`、`Signal`（无线信号）、`DiskIOPS`/`DiskActiveTime`、`MaxOpenFiles` 仅在 Linux 采集（`/sys/class/thermal`、`/proc/net/wireless`、`/proc/diskstats`、`getrlimit`）；Windows 通过 PDH 采集 `DiskIOPS`/`DiskActiveTime`，温度/信号仍为 0；macOS 这些字段恒为 0。
+- **网络质量**：后台线程每 48 秒对网关、DNS、服务端各做 5 次 ICMP 探测（Windows 用 `IcmpSendEcho`，Linux/macOS 调 `ping`），心跳上报 `GatewayLatency`/`DnsLatency`/`ServerLatency`、丢包率与 `IntranetScore`/`InternetScore`（评分算法与 .NET `PingMonitor` 一致：`成功率 × exp(-0.001×(延迟-1))`）；本地回环 DNS 改用 `223.5.5.5`。
 - **Linux 板级标识**：`Vendor`/`Product`/`SerialNumber`/`Board` 优先取 `/etc/os-release` 中设备端写入的字段（与 .NET `MachineInfo` 约定一致，如 `Board=A2-2026-1G`），缺失时回落 DMI 与设备树；`UUID` 优先 `/etc/uuid`。
 - **无 Android/iOS 实现**；移动端见仓库其他原生目录。
 - **状态文件**：`Code`/`Secret` 写入 `staragent.json`；`events.json` 与日志位于 `DataDir`，不会被提交到仓库。

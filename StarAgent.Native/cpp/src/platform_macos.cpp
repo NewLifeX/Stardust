@@ -7,8 +7,10 @@
 
 #include <algorithm>
 #include <arpa/inet.h>
+#include <cctype>
 #include <cerrno>
 #include <chrono>
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -357,6 +359,48 @@ DiskIoSample DiskIo()
 }
 
 std::uint64_t MaxOpenFiles() { return 0; }
+
+ProbeResult PingProbe(const std::string& host, int timeout_ms, int count)
+{
+    ProbeResult result;
+    if (host.empty() || count <= 0) return result;
+
+    static const std::atomic<bool> never_cancelled{false};
+    const auto timeout_sec = std::max(1, (timeout_ms + 999) / 1000);
+    const auto command = "ping -c " + std::to_string(count) + " -t " + std::to_string(timeout_sec) + " " + host;
+    const auto shell = RunShell(command, (count + 2) * 1000 + 2000, never_cancelled);
+    if (shell.Output.empty()) return result;
+
+    int success = 0;
+    double total = 0;
+    std::size_t position = 0;
+    while ((position = shell.Output.find("time=", position)) != std::string::npos)
+    {
+        position += 5;
+        auto end = position;
+        while (end < shell.Output.size() &&
+               (std::isdigit(static_cast<unsigned char>(shell.Output[end])) || shell.Output[end] == '.'))
+        {
+            end++;
+        }
+        if (end > position)
+        {
+            success++;
+            total += std::strtod(shell.Output.substr(position, end - position).c_str(), nullptr);
+        }
+    }
+
+    result.Valid = true;
+    if (success == 0)
+    {
+        result.LossRate = 1;
+        return result;
+    }
+    result.Latency = static_cast<int>(std::lround(total / success));
+    result.LossRate = std::round((1.0 - static_cast<double>(success) / count) * 1000.0) / 1000.0;
+    result.Score = ComputePingScore(result.Latency, success, count);
+    return result;
+}
 
 double LoadAverage()
 {

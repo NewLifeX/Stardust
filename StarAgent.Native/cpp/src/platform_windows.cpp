@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <iterator>
@@ -36,6 +37,7 @@
 #include <tlhelp32.h>
 #include <winioctl.h>
 #include <ws2tcpip.h>
+#include <icmpapi.h>
 
 namespace staragent::platform {
 namespace {
@@ -668,11 +670,114 @@ int WirelessSignal()
 
 DiskIoSample DiskIo()
 {
-    // 磁盘 IO 速率暂不采集
-    return {};
+    // PDH 物理磁盘计数器：IOPS 与磁盘忙时占比（_Total 平均）
+    static std::mutex mutex;
+    static PDH_HQUERY query = nullptr;
+    static PDH_HCOUNTER transfers = nullptr;
+    static PDH_HCOUNTER active = nullptr;
+    static bool initialized = false;
+
+    std::lock_guard<std::mutex> lock(mutex);
+    if (!initialized)
+    {
+        initialized = true;
+        if (::PdhOpenQueryW(nullptr, 0, &query) == ERROR_SUCCESS)
+        {
+            if (::PdhAddEnglishCounterW(query, L"\\PhysicalDisk(_Total)\\Disk Transfers/sec", 0, &transfers) !=
+                ERROR_SUCCESS)
+            {
+                transfers = nullptr;
+            }
+            if (::PdhAddEnglishCounterW(query, L"\\PhysicalDisk(_Total)\\% Disk Time", 0, &active) != ERROR_SUCCESS)
+            {
+                active = nullptr;
+            }
+            // 首次采集只用于建立基线，不返回数据
+            ::PdhCollectQueryData(query);
+        }
+        return {};
+    }
+    if (query == nullptr) return {};
+    if (::PdhCollectQueryData(query) != ERROR_SUCCESS) return {};
+
+    DiskIoSample result;
+    if (transfers != nullptr)
+    {
+        PDH_FMT_COUNTERVALUE value{};
+        if (::PdhGetFormattedCounterValue(transfers, PDH_FMT_DOUBLE, nullptr, &value) == ERROR_SUCCESS &&
+            value.CStatus == PDH_CSTATUS_VALID_DATA && value.doubleValue > 0)
+        {
+            result.Iops = static_cast<std::uint64_t>(value.doubleValue + 0.5);
+        }
+    }
+    if (active != nullptr)
+    {
+        PDH_FMT_COUNTERVALUE value{};
+        if (::PdhGetFormattedCounterValue(active, PDH_FMT_DOUBLE, nullptr, &value) == ERROR_SUCCESS &&
+            value.CStatus == PDH_CSTATUS_VALID_DATA && value.doubleValue > 0)
+        {
+            result.ActivePercent = std::min(100.0, value.doubleValue);
+        }
+    }
+    return result;
 }
 
 std::uint64_t MaxOpenFiles() { return 0; }
+
+ProbeResult PingProbe(const std::string& host, int timeout_ms, int count)
+{
+    ProbeResult result;
+    if (host.empty() || count <= 0) return result;
+
+    IN_ADDR address{};
+    if (::inet_pton(AF_INET, host.c_str(), &address) != 1)
+    {
+        addrinfo hints{};
+        hints.ai_family = AF_INET;
+        hints.ai_socktype = SOCK_STREAM;
+        addrinfo* info = nullptr;
+        if (::getaddrinfo(host.c_str(), nullptr, &hints, &info) != 0 || info == nullptr) return result;
+        address = reinterpret_cast<const sockaddr_in*>(info->ai_addr)->sin_addr;
+        ::freeaddrinfo(info);
+    }
+
+    HANDLE handle = ::IcmpCreateFile();
+    if (handle == INVALID_HANDLE_VALUE) return result;
+
+    // 复用缓冲：ICMP_ECHO_REPLY 后可跟回显数据
+    std::vector<char> reply(sizeof(ICMP_ECHO_REPLY) + 64);
+    const char payload[] = "staragent-ping";
+    int success = 0;
+    double total = 0;
+    for (int i = 0; i < count; i++)
+    {
+        const DWORD sent = ::IcmpSendEcho(handle, address.S_un.S_addr, const_cast<char*>(payload),
+                                          static_cast<WORD>(sizeof(payload)), nullptr, reply.data(),
+                                          static_cast<DWORD>(reply.size()), static_cast<DWORD>(timeout_ms));
+        if (sent > 0)
+        {
+            const auto* echo = reinterpret_cast<const ICMP_ECHO_REPLY*>(reply.data());
+            if (echo->Status == IP_SUCCESS)
+            {
+                success++;
+                total += echo->RoundTripTime;
+            }
+        }
+        if (i + 1 < count) std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
+    ::IcmpCloseHandle(handle);
+
+    result.Valid = true;
+    if (success == 0)
+    {
+        result.LossRate = 1;
+        return result;
+    }
+    result.Latency = static_cast<int>(std::lround(total / success));
+    result.LossRate = std::round((1.0 - static_cast<double>(success) / count) * 1000.0) / 1000.0;
+    result.Score = ComputePingScore(result.Latency, success, count);
+    return result;
+}
 
 double LoadAverage()
 {
