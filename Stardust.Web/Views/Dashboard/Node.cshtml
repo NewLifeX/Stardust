@@ -94,30 +94,33 @@
 </section>
 
 <section class="sd-grid">
-    <div class="sd-card col-16">
+    <div class="sd-card col-16" data-card="node-series" data-card-title="资源时序" data-default-size="16">
         <div class="sd-card__head">
             <h2 class="sd-card__title">资源时序</h2>
-            <div class="legend">
-                <span><i class="l-brand"></i>CPU</span>
-                <span><i class="l-accent"></i>内存</span>
-                <span><i class="l-warn"></i>磁盘</span>
+            <div class="sd-card__actions">
+                <div class="legend">
+                    <span><i class="l-brand"></i>CPU</span>
+                    <span><i class="l-accent"></i>内存</span>
+                    <span><i class="l-warn"></i>磁盘</span>
+                </div>
+                <a class="link" href="@DashboardLinks.NodeData(info.Id)">性能明细</a>
             </div>
         </div>
         <div id="nodeSeries" class="chart chart-md"></div>
     </div>
 
-    <div class="sd-card col-8">
+    <div class="sd-card col-8" data-card="node-radar" data-card-title="健康评分" data-default-size="8">
         <div class="sd-card__head">
             <h2 class="sd-card__title">健康评分</h2>
-            <span class="sd-card__hint">综合 @Model.Radar.Score 分 · @Model.Radar.Level</span>
+            <a class="link" href="@DashboardLinks.NodeDetail(info.Id)">节点详情</a>
         </div>
         <div id="nodeRadar" class="chart chart-md"></div>
     </div>
 
-    <div class="sd-card col-8">
+    <div class="sd-card col-8" data-card="node-network" data-card-title="网络质量" data-default-size="8">
         <div class="sd-card__head">
             <h2 class="sd-card__title">网络质量</h2>
-            <span class="sd-card__hint">最近一次上报</span>
+            <a class="link" href="@DashboardLinks.NodeOnline(info.Id)">在线明细</a>
         </div>
         <div class="gauge-pair">
             <div id="gaugeIntranet" style="height:118px"></div>
@@ -130,10 +133,10 @@
         </div>
     </div>
 
-    <div class="sd-card col-8">
+    <div class="sd-card col-8" data-card="node-disks" data-card-title="磁盘分区" data-default-size="8">
         <div class="sd-card__head">
             <h2 class="sd-card__title">磁盘分区</h2>
-            <span class="sd-card__hint">@Model.Disks.Count 个分区</span>
+            <a class="link" href="@DashboardLinks.NodeData(info.Id)">性能明细</a>
         </div>
         @if (Model.Disks.Count > 0)
         {
@@ -166,10 +169,10 @@
         </div>
     </div>
 
-    <div class="sd-card col-8">
+    <div class="sd-card col-8" data-card="node-processes" data-card-title="进程守护" data-default-size="8">
         <div class="sd-card__head">
             <h2 class="sd-card__title">进程守护</h2>
-            <span class="sd-card__hint">@Model.Processes.Count(e => e.Running) / @Model.Processes.Count 运行中</span>
+            <a class="link" href="@DashboardLinks.NodeOnline(info.Id)">在线明细</a>
         </div>
         @if (Model.Processes.Count > 0)
         {
@@ -192,10 +195,10 @@
         }
     </div>
 
-    <div class="sd-card col-12">
+    <div class="sd-card col-12" data-card="node-deploys" data-card-title="已部署应用" data-default-size="12">
         <div class="sd-card__head">
             <h2 class="sd-card__title">已部署应用</h2>
-            <span class="sd-card__hint">部署集与进程状态</span>
+            <a class="link" href="@DashboardLinks.DeployNodes(nodeId: info.Id)">部署节点</a>
         </div>
         <div class="table-wrap table-wrap--scroll">
             <table class="sd-table sd-table--compact">
@@ -225,10 +228,10 @@
         </div>
     </div>
 
-    <div class="sd-card col-6">
+    <div class="sd-card col-6" data-card="node-history" data-card-title="操作历史" data-default-size="6">
         <div class="sd-card__head">
             <h2 class="sd-card__title">操作历史</h2>
-            <a class="link" href="/Nodes/NodeHistory?nodeId=@info.Id">全部</a>
+            <a class="link" href="@DashboardLinks.NodeHistory(info.Id)">全部</a>
         </div>
         <div class="timeline">
             @foreach (var item in Model.History)

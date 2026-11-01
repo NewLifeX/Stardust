@@ -15,7 +15,7 @@
     var rangeText = range switch { "1h" => "1 小时", "7d" => "7 天", _ => "24 小时" };
 }
 <!DOCTYPE html>
-<html lang="zh-CN" data-scope="@scope.Mode" data-page="@boardPage" data-range="@range" data-object="@objectId">
+<html lang="zh-CN" data-scope="@scope.Mode" data-page="@boardPage" data-range="@range" data-object="@objectId" data-user="@(ManageProvider.User?.ID ?? 0)">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -57,6 +57,7 @@
     </style>
 </head>
 <body>
+    @Html.AntiForgeryToken()
     <div class="sd-topband"></div>
 
     <div class="sd-app">
@@ -142,6 +143,12 @@
                 <div class="topbar__right">
                     <div data-theme-switch></div>
                     <span class="topbar__clock" data-clock>00:00:00</span>
+                    <button class="icon-btn" type="button" data-action="layout" title="调整布局" aria-label="调整布局">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+                            <path d="M4 7h10M18 7h2M4 17h2M10 17h10" />
+                            <circle cx="16" cy="7" r="2" /><circle cx="8" cy="17" r="2" />
+                        </svg>
+                    </button>
                     <button class="icon-btn" type="button" data-action="refresh" title="刷新">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M21 12a9 9 0 1 1-2.64-6.36" /><path d="M21 3v6h-6" />
@@ -166,6 +173,7 @@
 
     <script src="~/dashboard/vendor/echarts.min.js"></script>
     <script src="~/dashboard/dashboard.js"></script>
+    <script src="~/dashboard/dashboard-layout.js"></script>
     @RenderSection("Scripts", false)
 </body>
 </html>

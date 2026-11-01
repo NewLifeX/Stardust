@@ -6,6 +6,17 @@
 
   function p() { return SDCharts.palette; }
 
+  function appId() {
+    return data.id || (data.info && data.info.id) || 0;
+  }
+
+  function traceUrl(name, errorsOnly) {
+    var url = '/Monitors/TraceData?appId=' + appId();
+    if (name) url += '&name=' + encodeURIComponent(name);
+    if (errorsOnly) url += '&minError=1';
+    return url;
+  }
+
   function empty(el, title, desc) {
     if (!el) return;
     el.innerHTML = '<div class="empty" style="padding:24px 12px;"><div class="empty__title">' + title + '</div><div class="empty__desc">' + (desc || '') + '</div></div>';
@@ -29,8 +40,8 @@
       centerSize: 18,
       radius: ['62%', '84%'],
       data: [
-        { name: '在线', value: ins.online || 0, itemStyle: { color: p().online } },
-        { name: '离线', value: Math.max((ins.total || 0) - (ins.online || 0), 0), itemStyle: { color: p().offline } }
+        { name: '在线', value: ins.online || 0, itemStyle: { color: p().online }, url: '/Registry/AppOnline?appId=' + appId() },
+        { name: '离线', value: Math.max((ins.total || 0) - (ins.online || 0), 0), itemStyle: { color: p().offline }, url: '/Registry/AppOnline?appId=' + appId() }
       ]
     });
   }
@@ -52,7 +63,13 @@
         : function (v) { return SD.compact(v) + ' 次'; };
 
     SDCharts.barH('endpointChart', {
-      items: top.map(function (e) { return { name: e.name, value: e[metric] }; }),
+      items: top.map(function (e) {
+        return {
+          name: e.name,
+          value: e[metric],
+          url: '/Monitors/TraceHourStat?appId=' + appId() + '&name=' + encodeURIComponent(e.name)
+        };
+      }),
       format: format
     });
   }
@@ -74,7 +91,7 @@
       centerSub: '错误次数',
       centerSize: 20,
       data: list.map(function (e, i) {
-        return { name: e.name, value: e.errors, itemStyle: { color: colors[i % colors.length] } };
+        return { name: e.name, value: e.errors, itemStyle: { color: colors[i % colors.length] }, url: traceUrl(e.name, true) };
       })
     });
 
@@ -83,7 +100,7 @@
         var percent = total > 0 ? (e.errors / total * 100).toFixed(1) : '0.0';
         return '<div class="code-row">' +
           '<i style="width:8px;height:8px;border-radius:2px;background:' + colors[i % colors.length] + '"></i>' +
-          '<span class="grow" title="' + e.name + '">' + e.name + '</span>' +
+          '<a class="grow" href="' + traceUrl(e.name, true) + '" title="' + e.name + '" style="color:inherit;text-decoration:none">' + e.name + '</a>' +
           '<b style="color:var(--sd-text-regular);font-weight:500">' + SD.fixed(e.errors, 0) + '</b>' +
           '<span style="width:38px;text-align:right">' + percent + '%</span>' +
           '</div>';

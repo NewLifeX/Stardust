@@ -5,8 +5,9 @@
     var tone = Model.Tone.IsNullOrEmpty() ? "" : "sd-kpi--" + Model.Tone;
     var deltaLevel = Model.DeltaLevel.IsNullOrEmpty() ? "flat" : Model.DeltaLevel;
     var hasDelta = !Model.Delta.IsNullOrEmpty();
+    var isLink = !Model.Url.IsNullOrEmpty();
 }
-<div class="sd-kpi @tone" data-kpi="@Model.Key" data-kpi-url="@Model.Url" title="@Model.Note">
+<div class="sd-kpi @tone @(isLink ? "sd-kpi--link" : "")" data-kpi="@Model.Key" data-kpi-url="@Model.Url" data-card="@($"{ViewBag.Page}-kpi-{Model.Key}")" data-card-title="@Model.Label" title="@Model.Note" role="@(isLink ? "link" : null)" tabindex="@(isLink ? "0" : null)" aria-label="@(isLink ? Model.Label : null)">
     <div class="sd-kpi__label">@Model.Label</div>
     <div class="sd-kpi__value"><span data-kpi-value>@Model.Value</span><span class="sd-kpi__unit" data-kpi-unit>@Model.Unit</span></div>
     <div class="sd-kpi__foot">

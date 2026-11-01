@@ -22,9 +22,9 @@
       centerText: (h.rate || 0).toFixed(1) + '%',
       centerSub: '节点在线率',
       data: [
-        { name: '在线', value: h.online || 0, itemStyle: { color: p().online } },
-        { name: '告警', value: h.warn || 0, itemStyle: { color: p().alert } },
-        { name: '离线', value: h.offline || 0, itemStyle: { color: p().offline } }
+        { name: '在线', value: h.online || 0, itemStyle: { color: p().online }, url: '/Nodes/NodeOnline' },
+        { name: '告警', value: h.warn || 0, itemStyle: { color: p().alert }, url: '/Nodes/NodeOnline' },
+        { name: '离线', value: h.offline || 0, itemStyle: { color: p().offline }, url: '/Nodes/Node' }
       ]
     });
   }
@@ -43,7 +43,7 @@
     }[metric];
 
     SDCharts.barH('topAppsChart', {
-      items: items.map(function (a) { return { name: a.name, value: a[metric] }; }),
+      items: items.map(function (a) { return { name: a.name, value: a[metric], url: a.url }; }),
       unit: conf.unit,
       format: conf.format
     });
@@ -82,6 +82,7 @@
       stacked: false,
       barWidth: 12,
       categories: rows.map(function (r) { return r.name + ' · ' + r.nodes + ' 节点'; }),
+      urls: rows.map(function (r) { return r.url; }),
       series: [
         { name: 'CPU', color: p().brand, data: rows.map(function (r) { return r.cpu; }) },
         { name: '内存', color: p().accent, data: rows.map(function (r) { return r.memory; }) },

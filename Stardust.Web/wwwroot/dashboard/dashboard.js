@@ -362,7 +362,7 @@
     var p = t.p;
     var items = o.items || [];
     var max = Math.max.apply(null, items.map(function (i) { return i.value; }).concat([1]));
-    return init(id, {
+    var chart = init(id, {
       animationDuration: 600,
       grid: { left: 4, right: 46, top: 6, bottom: 2, containLabel: true },
       tooltip: Object.assign({}, t.tooltip, {
@@ -386,6 +386,7 @@
         data: items.map(function (i) {
           return {
             value: i.value,
+            url: i.url,
             itemStyle: {
               color: i.color || gradient(p.brand, p.barTop, p.barBottom),
               borderRadius: [0, 4, 4, 0]
@@ -404,6 +405,15 @@
         }
       }]
     });
+
+    if (chart && (o.onClick || items.some(function (i) { return i.url; }))) {
+      chart.on('click', function (params) {
+        var item = items[params.dataIndex];
+        if (item && item.url) location.href = item.url;
+        else if (o.onClick) o.onClick(params);
+      });
+    }
+    return chart;
   }
 
   /** 环形占比（集群健康 / 错误分布） */
@@ -411,7 +421,7 @@
     var o = opts || {};
     var t = styles();
     var p = t.p;
-    return init(id, {
+    var chart = init(id, {
       animationDuration: 800,
       tooltip: Object.assign({}, t.tooltip, { trigger: 'item', formatter: '{b}：{c}' }),
       title: {
@@ -431,9 +441,20 @@
         itemStyle: { borderColor: p.surface, borderWidth: 3 },
         label: { show: false },
         labelLine: { show: false },
-        data: o.data
+        data: (o.data || []).map(function (item) {
+          return Object.assign({}, item, { url: item.url });
+        })
       }]
     });
+
+    if (chart && (o.onClick || (o.data || []).some(function (item) { return item.url; }))) {
+      chart.on('click', function (params) {
+        var item = (o.data || [])[params.dataIndex];
+        if (item && item.url) location.href = item.url;
+        else if (o.onClick) o.onClick(params);
+      });
+    }
+    return chart;
   }
 
   /** 多线趋势（节点资源） */
@@ -586,7 +607,7 @@
     var o = opts || {};
     var t = styles();
     var p = t.p;
-    return init(id, {
+    var chart = init(id, {
       animationDuration: 700,
       grid: { left: 4, right: 8, top: 18, bottom: 2, containLabel: true },
       tooltip: t.tooltip,
@@ -618,6 +639,14 @@
         };
       })
     });
+
+    if (chart && o.urls && o.urls.length) {
+      chart.on('click', function (params) {
+        var url = o.urls[params.dataIndex];
+        if (url) location.href = url;
+      });
+    }
+    return chart;
   }
 
   /** 仪表盘（网络质量评分） */
@@ -657,11 +686,13 @@
     });
   }
 
-  window.addEventListener('resize', function () {
+  function resizeAll() {
     charts.forEach(function (c) {
       if (c && !c.isDisposed()) c.resize();
     });
-  });
+  }
+
+  window.addEventListener('resize', resizeAll);
 
   /* ============================== 渲染注册 ============================== */
 
@@ -804,6 +835,21 @@
     return { load: load, pause: pause, resume: resume };
   }
 
+  /** 把内联 onclick 的行链接转成可键盘访问的 data-href */
+  function enhanceRowLinks() {
+    document.querySelectorAll('.row-link[onclick]').forEach(function (el) {
+      if (el.dataset.href) return;
+      var code = el.getAttribute('onclick') || '';
+      var match = code.match(/location\.href\s*=\s*['"]([^'"]+)['"]/);
+      if (!match) return;
+
+      el.dataset.href = match[1];
+      el.removeAttribute('onclick');
+      el.setAttribute('tabindex', '0');
+      el.setAttribute('role', 'link');
+    });
+  }
+
   function bindShell() {
     startClock();
     renderThemeSwitches();
@@ -813,11 +859,35 @@
     });
 
     document.addEventListener('click', function (e) {
-      var el = e.target.closest('[data-kpi-url]');
-      if (el && el.dataset.kpiUrl) location.href = el.dataset.kpiUrl;
+      var kpi = e.target.closest('[data-kpi-url]');
+      if (kpi && kpi.dataset.kpiUrl) {
+        location.href = kpi.dataset.kpiUrl;
+        return;
+      }
+
+      var row = e.target.closest('[data-href]');
+      if (row && !e.target.closest('a,button,input,select,textarea')) location.href = row.dataset.href;
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+
+      var kpi = e.target.closest('[data-kpi-url]');
+      if (kpi && kpi.dataset.kpiUrl) {
+        e.preventDefault();
+        location.href = kpi.dataset.kpiUrl;
+        return;
+      }
+
+      var row = e.target.closest('[data-href]');
+      if (row && e.target === row) {
+        e.preventDefault();
+        location.href = row.dataset.href;
+      }
     });
 
     document.addEventListener('DOMContentLoaded', function () {
+      enhanceRowLinks();
       renderThemeSwitches();
       rerender();
     });
@@ -849,7 +919,8 @@
     rerender: rerender,
     applyKpis: applyKpis,
     sparkInto: sparkInto,
-    poll: poll
+    poll: poll,
+    enhanceRowLinks: enhanceRowLinks
   };
 
   window.SDCharts = {
@@ -862,7 +933,8 @@
     stackedBar: stackedBar,
     gauge: gauge,
     init: init,
-    gradient: gradient
+    gradient: gradient,
+    resizeAll: resizeAll
   };
 
   Object.defineProperty(window.SDCharts, 'palette', { get: palette, enumerable: true });

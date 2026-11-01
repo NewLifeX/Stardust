@@ -21,6 +21,7 @@
                 <span data-theme-switch></span>
             </span>
             <span>@scope.Badge · 数据每 30 秒刷新 · <a href="/Dashboard/System" style="color:inherit;text-decoration:underline">返回看板</a></span>
+            <button type="button" class="wb-settings-btn" data-action="wallboard-settings">视角设置</button>
         </div>
     </header>
 
@@ -29,6 +30,7 @@
             <section class="wb-card">
                 <div class="wb-card__head">
                     <h2 class="wb-card__title">节点在线率</h2>
+                    <a class="wb-link" href="@DashboardLinks.NodeOnline()">详情</a>
                     <span class="wb-pill @(nodesOk ? "wb-pill--ok" : "wb-pill--warn")"><span class="wb-dot"></span>@(nodesOk ? "健康" : "关注")</span>
                 </div>
                 <div class="wb-num @(nodesOk ? "wb-num--ok" : "wb-num--warn")">@Model.NodeOnlineRate.ToString("n1")<span class="wb-unit">%</span></div>
@@ -44,6 +46,7 @@
             <section class="wb-card">
                 <div class="wb-card__head">
                     <h2 class="wb-card__title">今日请求量</h2>
+                    <a class="wb-link" href="@DashboardLinks.AppMinuteStat()">详情</a>
                     <span class="wb-card__hint">实时 @Model.CurrentQps.ToString("n0") QPS</span>
                 </div>
                 <div class="wb-num">@DashboardMath.Abbreviate(Model.TodayRequests)</div>
@@ -54,6 +57,7 @@
             <section class="wb-card">
                 <div class="wb-card__head">
                     <h2 class="wb-card__title">错误率</h2>
+                    <a class="wb-link" href="@DashboardLinks.AlarmList(true)">详情</a>
                     <span class="wb-pill @(Model.Alarms > 0 ? "wb-pill--warn" : "wb-pill--ok")"><span class="wb-dot"></span>@Model.Alarms 条告警</span>
                 </div>
                 <div class="wb-num @(errorOk ? "wb-num--ok" : "wb-num--warn")">@Model.ErrorRate.ToString("n2")<span class="wb-unit">%</span></div>
@@ -66,6 +70,7 @@
             <section class="wb-card">
                 <div class="wb-card__head">
                     <h2 class="wb-card__title" id="wbHeroTitle">全局吞吐与质量</h2>
+                    <a class="wb-link" href="@DashboardLinks.AppMinuteStat()">详情</a>
                     <div class="wb-legend" id="wbHeroLegend">
                         <span><i style="background:var(--sd-color-brand)"></i>请求量 QPS</span>
                         <span><i style="background:var(--sd-color-alert)"></i>错误率 %</span>
@@ -114,6 +119,7 @@
             <section class="wb-card">
                 <div class="wb-card__head">
                     <h2 class="wb-card__title">项目健康</h2>
+                    <a class="wb-link" href="@DashboardLinks.Projects()">详情</a>
                     <span class="wb-card__hint">@scope.Badge</span>
                 </div>
                 <div class="wb-list wb-list--fixed">
@@ -121,11 +127,11 @@
                     {
                         var tone = DashboardMath.HealthTone(item.Health);
                         var pillClass = tone == "ok" ? "wb-pill--ok" : tone == "warn" ? "wb-pill--warn" : "wb-pill--bad";
-                        <div class="wb-row">
+                        <a class="wb-row" href="@item.Url" style="text-decoration:none;color:inherit">
                             <span class="wb-pill @pillClass">@item.Name</span>
                             <div class="meter meter--@tone" style="height:8px"><i style="width:@(item.Health)%"></i></div>
                             <span>@item.Apps 应用 · @item.NodesOnline/@item.Nodes 节点 · @item.ErrorRate.ToString("n2")%</span>
-                        </div>
+                        </a>
                     }
                     @if (Model.Projects.Count == 0)
                     {
@@ -139,15 +145,16 @@
             <section class="wb-card">
                 <div class="wb-card__head">
                     <h2 class="wb-card__title">实时事件</h2>
+                    <a class="wb-link" href="@DashboardLinks.AlarmList()">详情</a>
                     <span class="wb-pill wb-pill--bad"><span class="wb-dot"></span>LIVE</span>
                 </div>
                 <div id="wbEvents" class="wb-list" style="gap:0">
                     @foreach (var item in Model.Events.Take(6))
                     {
-                        <div class="wb-row" style="grid-template-columns:1fr auto;">
+                        <a class="wb-row" href="@item.Url" style="grid-template-columns:1fr auto;text-decoration:none;color:inherit">
                             <span class="muted" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">@item.Title</span>
                             <span>@item.TimeText</span>
-                        </div>
+                        </a>
                     }
                     @if (Model.Events.Count == 0)
                     {
@@ -159,6 +166,7 @@
             <section class="wb-card">
                 <div class="wb-card__head">
                     <h2 class="wb-card__title">Top 应用</h2>
+                    <a class="wb-link" href="@DashboardLinks.Apps()">详情</a>
                     <span class="wb-card__hint">按 QPS</span>
                 </div>
                 <div id="wbTopApps" class="wb-chart"></div>
@@ -167,16 +175,17 @@
             <section class="wb-card">
                 <div class="wb-card__head">
                     <h2 class="wb-card__title">资源水位</h2>
+                    <a class="wb-link" href="@DashboardLinks.NodeList()">详情</a>
                     <span class="wb-card__hint">按@(Model.RegionDimension)</span>
                 </div>
                 <div class="wb-list wb-list--fixed">
                     @foreach (var row in Model.Regions.Take(4))
                     {
-                        <div class="wb-row">
+                        <a class="wb-row" href="@row.Url" style="text-decoration:none;color:inherit">
                             <span class="muted">@row.Name · @row.Nodes</span>
                             <div class="meter meter--@DashboardMath.Level(row.Cpu)"><i style="width:@(Math.Min(row.Cpu, 100))%"></i></div>
                             <span>CPU @row.Cpu.ToString("n0")%</span>
-                        </div>
+                        </a>
                     }
                     @if (Model.Regions.Count == 0)
                     {

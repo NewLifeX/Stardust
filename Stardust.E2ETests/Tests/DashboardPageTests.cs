@@ -160,6 +160,92 @@ public class DashboardPageTests : IAsyncLifetime
         public String? Mode { get; set; }
     }
 
+    [Fact(DisplayName = "看板卡片均提供有效下钻链接")]
+    public async Task Cards_HaveDrilldownLinks()
+    {
+        await _page!.GotoAsync("/Dashboard/System", new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 30_000 });
+        await _page.WaitForFunctionAsync("() => !!window.SD", null, new PageWaitForFunctionOptions { Timeout = 15_000 });
+
+        var cards = _page.Locator("[data-card]");
+        var count = await cards.CountAsync();
+        Assert.True(count >= 12, $"系统看板卡片数量异常：{count}");
+
+        for (var i = 0; i < count; i++)
+        {
+            var card = cards.Nth(i);
+            var id = await card.GetAttributeAsync("data-card");
+            var anchors = card.Locator("a[href]");
+            var link = await anchors.CountAsync() > 0 ? await anchors.First.GetAttributeAsync("href") : null;
+            if (String.IsNullOrWhiteSpace(link)) link = await card.GetAttributeAsync("data-kpi-url");
+
+            Assert.False(String.IsNullOrWhiteSpace(link), $"卡片 {id} 缺少下钻链接");
+            Assert.StartsWith("/", link);
+        }
+    }
+
+    [Fact(DisplayName = "布局调整可持久化并可恢复默认")]
+    public async Task Layout_ChangesPersistAndReset()
+    {
+        await _page!.GotoAsync("/Dashboard/System", new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 30_000 });
+        await _page.WaitForFunctionAsync("() => !!window.SD && !!window.SD.layout", null, new PageWaitForFunctionOptions { Timeout = 15_000 });
+        await _page.EvaluateAsync(@"() => {
+            Object.keys(localStorage)
+                .filter(k => k.indexOf('sd-dashboard-layout:') === 0)
+                .forEach(k => localStorage.removeItem(k));
+        }");
+        await _page.ReloadAsync(new PageReloadOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 30_000 });
+
+        var card = _page.Locator("[data-card=\"system-top-apps\"]");
+        Assert.True(await card.IsVisibleAsync());
+
+        await _page.ClickAsync("[data-action=\"layout\"]");
+        var row = _page.Locator("[data-layout-id=\"system-top-apps\"]");
+        await row.Locator("[data-layout-size]").SelectOptionAsync("24");
+        await row.Locator("[data-layout-visible]").UncheckAsync();
+        await _page.ClickAsync(".sd-layout__foot [data-layout-close]");
+
+        await _page.ReloadAsync(new PageReloadOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 30_000 });
+        await _page.WaitForFunctionAsync("() => !!window.SD && !!window.SD.layout", null, new PageWaitForFunctionOptions { Timeout = 15_000 });
+        Assert.False(await card.IsVisibleAsync());
+        Assert.Equal("24", await card.GetAttributeAsync("data-size"));
+
+        await _page.ClickAsync("[data-action=\"layout\"]");
+        await _page.ClickAsync("[data-layout-reset]");
+        await _page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+        await _page.WaitForFunctionAsync("() => !!window.SD && !!window.SD.layout", null, new PageWaitForFunctionOptions { Timeout = 15_000 });
+        Assert.True(await card.IsVisibleAsync());
+    }
+
+    [Fact(DisplayName = "大屏视角设置可持久化")]
+    public async Task WallboardSettings_Persist()
+    {
+        await _page!.GotoAsync("/Dashboard/Wallboard", new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 30_000 });
+        await _page.WaitForFunctionAsync("() => !!window.SD", null, new PageWaitForFunctionOptions { Timeout = 15_000 });
+        await _page.EvaluateAsync("() => localStorage.removeItem('sd-wallboard-settings:v1')");
+        await _page.ReloadAsync(new PageReloadOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 30_000 });
+
+        await _page.ClickAsync("[data-action=\"wallboard-settings\"]");
+        var panel = _page.Locator("#wbSettings");
+        await panel.WaitForAsync(new LocatorWaitForOptions { Timeout = 10_000 });
+        await panel.Locator("[data-wb-view=\"1\"]").UncheckAsync();
+        await panel.Locator("[data-wb-interval]").SelectOptionAsync("30000");
+        await panel.Locator(".wb-settings__foot [data-wb-close]").ClickAsync();
+
+        await _page.ReloadAsync(new PageReloadOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 30_000 });
+        await _page.WaitForFunctionAsync("() => !!window.SD", null, new PageWaitForFunctionOptions { Timeout = 15_000 });
+
+        Assert.False(await _page.Locator("#wbDots button[data-view=\"1\"]").IsVisibleAsync());
+
+        await _page.ClickAsync("[data-action=\"wallboard-settings\"]");
+        panel = _page.Locator("#wbSettings");
+        await panel.WaitForAsync(new LocatorWaitForOptions { Timeout = 10_000 });
+        Assert.False(await panel.Locator("[data-wb-view=\"1\"]").IsCheckedAsync());
+        Assert.Equal("30000", await panel.Locator("[data-wb-interval]").InputValueAsync());
+
+        await panel.Locator(".wb-settings__foot [data-wb-close]").ClickAsync();
+        await _page.EvaluateAsync("() => localStorage.removeItem('sd-wallboard-settings:v1')");
+    }
+
     [Fact(DisplayName = "主题三态切换生效且不刷新页面")]
     public async Task ThemeSwitch_AppliesWithoutReload()
     {
