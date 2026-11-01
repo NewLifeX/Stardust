@@ -241,7 +241,7 @@ root 写入 `/Library/LaunchDaemons/com.newlifex.staragent.plist`；普通用户
 - **TLS 依赖 OpenSSL**：未检测到 OpenSSL 的构建只能 `http/ws`；生产必须安装 OpenSSL 并重新构建。
 - **Windows 权限**：`0600` 通过 CRT `_chmod` 与数据目录隔离近似实现，无法像 POSIX 一样精确设置 ACL；建议将 `DataDir` 放在受控目录。
 - **node/restart 与 SCM**：重启会以原命令行拉起新进程；若父进程由 SCM 启动，子进程的 `--service` 在非 SCM 环境下会回退为控制台模式。生产建议同时配置 Windows 服务恢复策略，或改用服务管理器重启。
-- **Linux/macOS 验证**：Linux ARM64 已在 A2/A4 真机验证（构建、登录、心跳、指标、命令往返、conformance）；macOS 未做真机验证，建议在 CI 增加 macOS 构建任务。
+- **Linux/macOS 验证**：Linux ARM64 已在 A2/A4 真机验证（构建、登录、心跳、指标、命令往返、conformance），CI `native-agents.yml` 的 `cpp-linux` 任务在 ubuntu 上做构建+单测+一致性测试；macOS 未做真机验证，建议补充 CI 构建任务。
 - **指标降级**：任何单项采集失败只把该字段填 0，不跳过心跳；无电池/无传感器的设备 `Battery`、`Temperature`、`Signal` 为 0。
 - **平台采集差异**：
   - 温度：Linux 读 `/sys/class/thermal`/`hwmon`；Windows 读 PDH 计数器 `Thermal Zone Information(*)\Temperature`（开尔文换算摄氏度，无热区为 0）；macOS 为 0。
