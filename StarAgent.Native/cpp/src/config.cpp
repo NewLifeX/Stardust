@@ -295,7 +295,11 @@ void Validate(const Config& config)
 {
     if (config.Server.empty())
     {
-        throw std::runtime_error("Server is required (configure staragent.json or STARAGENT_SERVER)");
+        throw std::runtime_error(
+            "未配置 Server，请任选一种方式指定：\n"
+            "  staragent run --server http://127.0.0.1:6600\n"
+            "  设置环境变量 STARAGENT_SERVER=http://127.0.0.1:6600\n"
+            "  在 staragent.json 中写入 {\"Server\": \"http://127.0.0.1:6600\"}");
     }
     const auto scheme_end = config.Server.find("://");
     if (scheme_end == std::string::npos)
