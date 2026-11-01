@@ -1294,15 +1294,4 @@ bool RestartSelf(const std::vector<std::string>& arguments)
     return true;
 }
 
-bool SleepCancelable(int milliseconds, const std::atomic<bool>& cancelled)
-{
-    const auto deadline = SteadyMsNow() + milliseconds;
-    while (!cancelled.load() && SteadyMsNow() < deadline)
-    {
-        const auto remaining = deadline - SteadyMsNow();
-        std::this_thread::sleep_for(std::chrono::milliseconds(std::min<std::int64_t>(50, std::max<std::int64_t>(1, remaining))));
-    }
-    return !cancelled.load();
-}
-
 } // namespace staragent::platform

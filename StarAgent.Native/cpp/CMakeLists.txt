@@ -67,14 +67,15 @@ set(STARAGENT_SOURCES
   src/protocol.cpp
   src/util.cpp
   src/ws_client.cpp
+  src/platform_common.cpp
 )
 
 if(WIN32)
   list(APPEND STARAGENT_SOURCES src/platform_windows.cpp)
 elseif(APPLE)
-  list(APPEND STARAGENT_SOURCES src/platform_macos.cpp)
+  list(APPEND STARAGENT_SOURCES src/platform_macos.cpp src/platform_posix.cpp)
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-  list(APPEND STARAGENT_SOURCES src/platform_linux.cpp)
+  list(APPEND STARAGENT_SOURCES src/platform_linux.cpp src/platform_posix.cpp)
 else()
   message(FATAL_ERROR "Unsupported platform ${CMAKE_SYSTEM_NAME}: Windows, Linux (including OpenWrt) and macOS are supported.")
 endif()
