@@ -159,6 +159,7 @@ StarAgent 基于 NewLife.Agent 内置的 `AgentWebPanel` 框架，提供了轻�
 - **API**：`StarAgent.WebPanel.StarApi`
 - **前端**：嵌入式 `index.html` SPA（单页应用）
 - **监听端口**：默认 5500（`staragent.config` 中 `LocalPort`，启动时覆盖 `agent.config` 的 `WebPort`）
+- **本地 UDP API**：同一端口承载本机 UDP RPC 与局域网广播搜索（`Api/Info`），固定使用 PascalCase 字段名（如 `LocalIP`、`FileVersion`），不受面板全局 camelCase 策略影响，供码神工具 ApiServer 搜索与本地命令行解析
 
 ### 6.2 面板功能
 

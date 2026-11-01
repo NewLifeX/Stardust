@@ -600,13 +600,7 @@ internal class MyService : ServiceBase, IServiceProvider
         try
         {
             // 仅 Udp，局域网广播搜索 + 本地进程 UDP RPC；Tcp 由 HttpServer（Web 面板）接管
-            var svr = new ApiServer(new NetUri(NetType.Udp, IPAddress.Any.ToString(), port))
-            {
-                ReuseAddress = true,
-                Tracer = _factory?.Tracer,
-                Log = XTrace.Log,
-                EncoderLog = XTrace.Log,
-            };
+            var svr = LocalApiServer.CreateServer(new NetUri(NetType.Udp, IPAddress.Any.ToString(), port), _factory?.Tracer, XTrace.Log);
             svr.Register(new StarService
             {
                 Provider = this,
