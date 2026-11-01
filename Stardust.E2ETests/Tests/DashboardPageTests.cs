@@ -1,4 +1,5 @@
 using System.Net;
+using Microsoft.Data.Sqlite;
 using Microsoft.Playwright;
 using Stardust.E2ETests.Fixtures;
 using Xunit;
@@ -214,6 +215,61 @@ public class DashboardPageTests : IAsyncLifetime
         await _page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
         await _page.WaitForFunctionAsync("() => !!window.SD && !!window.SD.layout", null, new PageWaitForFunctionOptions { Timeout = 15_000 });
         Assert.True(await card.IsVisibleAsync());
+    }
+
+    [Fact(DisplayName = "告警卡片可确认与静默")]
+    public async Task AlarmActions_AckAndSilence()
+    {
+        var dataDir = Path.GetDirectoryName(_fixture.MembershipDb);
+        Assert.False(String.IsNullOrEmpty(dataDir));
+
+        var dbFile = Path.Combine(dataDir!, "Stardust.db");
+        Assert.True(File.Exists(dbFile), $"未找到星尘数据库：{dbFile}");
+
+        var id = DateTime.UtcNow.Ticks;
+        var category = "看板E2E告警";
+        var action = "E2E对象";
+
+        using (var conn = new SqliteConnection($"Data Source={dbFile};Mode=ReadWrite;Default Timeout=30"))
+        {
+            conn.Open();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = @"insert into AlarmRecord (Id, Name, GroupId, Category, Action, Status, StartTime, Duration, Times, Content, AckTime, AckUser, SilenceTime, Creator, CreateTime, UpdateTime)
+values (@id, @name, 0, @category, @action, 1, @start, 0, 0, @content, null, null, null, 'e2e', @start, @start)";
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@name", $"{category}-{action}");
+            cmd.Parameters.AddWithValue("@category", category);
+            cmd.Parameters.AddWithValue("@action", action);
+            cmd.Parameters.AddWithValue("@start", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            cmd.Parameters.AddWithValue("@content", "E2E 确认与静默测试");
+            cmd.ExecuteNonQuery();
+        }
+
+        // 登录跳转已经加载过默认 24h 看板并写入缓存，这里用 1h 避免命中最新的旧缓存
+        await _page!.GotoAsync("/Dashboard/System?range=1h", new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 30_000 });
+        await _page.WaitForFunctionAsync("() => !!window.SD", null, new PageWaitForFunctionOptions { Timeout = 15_000 });
+
+        var actions = _page.Locator($"[data-alarm-actions=\"{id}\"]");
+        await actions.WaitForAsync(new LocatorWaitForOptions { Timeout = 15_000 });
+
+        await actions.Locator("[data-alarm-action=\"ack\"]").ClickAsync();
+        await _page.WaitForTimeoutAsync(600);
+        Assert.Contains("已确认", await actions.InnerTextAsync());
+
+        await actions.Locator("[data-alarm-action=\"silence\"]").ClickAsync();
+        await _page.WaitForTimeoutAsync(600);
+        Assert.Contains("静默至", await actions.InnerTextAsync());
+
+        using var verify = new SqliteConnection($"Data Source={dbFile};Mode=ReadOnly;Default Timeout=30");
+        verify.Open();
+        using var read = verify.CreateCommand();
+        read.CommandText = "select AckUser, AckTime, SilenceTime from AlarmRecord where Id=@id";
+        read.Parameters.AddWithValue("@id", id);
+        using var reader = read.ExecuteReader();
+        Assert.True(reader.Read());
+        Assert.Equal(_fixture.UserName, reader.GetString(0));
+        Assert.False(reader.IsDBNull(1));
+        Assert.False(reader.IsDBNull(2));
     }
 
     [Fact(DisplayName = "大屏视角设置可持久化")]

@@ -252,19 +252,22 @@
         </div>
     </div>
 
-    <div class="sd-card col-6">
+    <div class="sd-card col-6" data-card="node-alarms" data-card-title="节点告警" data-default-size="6">
         <div class="sd-card__head">
             <h2 class="sd-card__title">节点告警</h2>
-            <a class="link" href="/Monitors/AlarmRecord">全部</a>
+            <a class="link" href="@DashboardLinks.AlarmList(true)">全部</a>
         </div>
         <div class="event-list">
             @foreach (var item in Model.Alarms)
             {
                 <div class="event event--@(item.Recovered ? "ok" : "bad")">
                     <div class="event__bar"></div>
-                    <div>
-                        <div class="event__title">@item.Category</div>
-                        <div class="event__meta">持续 @item.DurationText · 触发 @item.Times 次</div>
+                    <div class="event__body">
+                        <a class="event__title-link" href="@item.Url">
+                            <div class="event__title">@item.Category</div>
+                            <div class="event__meta">持续 @item.DurationText · 触发 @item.Times 次</div>
+                        </a>
+                        <partial name="_AlarmActions" model="new AlarmActionModel { Id = item.Id, Recovered = item.Recovered, Acked = item.IsAcked, Silenced = item.IsSilenced, SilenceTime = item.SilenceTime }" />
                     </div>
                     <div class="event__time">@item.StartText</div>
                 </div>

@@ -209,14 +209,32 @@
         <div id="eventFeed" class="event-list" style="max-height: 260px;">
             @foreach (var item in Model.Events)
             {
-                <a class="event event--@item.Level" href="@item.Url">
-                    <div class="event__bar"></div>
-                    <div>
-                        <div class="event__title">@item.Title</div>
-                        <div class="event__meta">@item.Meta</div>
+                if (item.AlarmId > 0)
+                {
+                    var recovered = item.Level == "ok";
+                    <div class="event event--@item.Level">
+                        <div class="event__bar"></div>
+                        <div class="event__body">
+                            <a class="event__title-link" href="@item.Url">
+                                <div class="event__title">@item.Title</div>
+                                <div class="event__meta">@item.Meta</div>
+                            </a>
+                            <partial name="_AlarmActions" model="new AlarmActionModel { Id = item.AlarmId, Recovered = recovered, Acked = item.Acked, Silenced = item.Silenced, SilenceTime = item.SilenceTime }" />
+                        </div>
+                        <div class="event__time">@item.TimeText</div>
                     </div>
-                    <div class="event__time">@item.TimeText</div>
-                </a>
+                }
+                else
+                {
+                    <a class="event event--@item.Level" href="@item.Url">
+                        <div class="event__bar"></div>
+                        <div class="event__body">
+                            <div class="event__title">@item.Title</div>
+                            <div class="event__meta">@item.Meta</div>
+                        </div>
+                        <div class="event__time">@item.TimeText</div>
+                    </a>
+                }
             }
             @if (Model.Events.Count == 0)
             {

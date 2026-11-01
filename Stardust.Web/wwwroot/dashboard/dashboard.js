@@ -850,9 +850,83 @@
     });
   }
 
+  function updateAlarmActions(row, action, res) {
+    if (!row) return;
+
+    var link = row.querySelector('.alarm-actions__link');
+    var state = document.createElement('span');
+    state.className = 'alarm-actions__state';
+
+    if (action === 'ack') {
+      var ack = row.querySelector('[data-alarm-action="ack"]');
+      if (ack) ack.remove();
+      state.textContent = (res && res.ackUser ? res.ackUser + ' ' : '') + '已确认';
+    } else {
+      var select = row.querySelector('[data-alarm-hours]');
+      if (select) select.remove();
+      var silence = row.querySelector('[data-alarm-action="silence"]');
+      if (silence) silence.remove();
+      state.textContent = '静默至 ' + ((res && res.silenceTime) || '');
+    }
+
+    row.insertBefore(state, link || null);
+  }
+
+  function bindAlarmActions() {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-alarm-action]');
+      if (!btn) return;
+
+      var action = btn.dataset.alarmAction;
+      var id = btn.dataset.alarmId;
+      if (!id) return;
+
+      var row = btn.closest('[data-alarm-actions]');
+      var hours = 24;
+      if (action === 'silence' && row) {
+        var select = row.querySelector('[data-alarm-hours]');
+        if (select) hours = Number(select.value) || 24;
+      }
+
+      var body = 'id=' + encodeURIComponent(id);
+      if (action === 'silence') body += '&hours=' + encodeURIComponent(hours);
+
+      var token = document.querySelector('input[name="__RequestVerificationToken"]');
+      btn.disabled = true;
+
+      fetch(action === 'ack' ? '/Dashboard/Alarm/Ack' : '/Dashboard/Alarm/Silence', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+          'RequestVerificationToken': token ? token.value : ''
+        },
+        body: body
+      }).then(function (r) {
+        if (r.status === 401) {
+          location.reload();
+          throw new Error('登录已过期');
+        }
+        if (!r.ok) {
+          return r.json().catch(function () { return {}; }).then(function (x) {
+            throw new Error(x.message || ('HTTP ' + r.status));
+          });
+        }
+        return r.json();
+      }).then(function (res) {
+        updateAlarmActions(row, action, res);
+      }).catch(function (err) {
+        btn.disabled = false;
+        if (window.alert) alert(err.message || '操作失败');
+      });
+    });
+  }
+
   function bindShell() {
     startClock();
     renderThemeSwitches();
+    bindAlarmActions();
 
     document.querySelectorAll('[data-action="refresh"]').forEach(function (btn) {
       btn.addEventListener('click', function () { location.reload(); });

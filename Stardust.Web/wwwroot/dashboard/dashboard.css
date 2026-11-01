@@ -905,6 +905,44 @@ a { color: inherit; }
   text-decoration: none;
 }
 
+.alarm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 10.5px;
+}
+
+.alarm-actions__state { color: var(--sd-color-online); }
+
+.alarm-actions__btn,
+.alarm-actions__select {
+  height: 21px;
+  padding: 0 7px;
+  border: 1px solid var(--sd-border-lighter);
+  border-radius: 5px;
+  background: var(--sd-bg-surface);
+  color: var(--sd-text-regular);
+  font-size: 10.5px;
+}
+
+.alarm-actions__btn { cursor: pointer; }
+.alarm-actions__btn:hover { border-color: var(--sd-color-brand); color: var(--sd-color-brand); }
+.alarm-actions__btn:disabled { opacity: .5; cursor: default; }
+
+.alarm-actions__select {
+  padding: 0 3px;
+  cursor: pointer;
+}
+
+.alarm-actions__link {
+  color: var(--sd-color-brand);
+  text-decoration: none;
+}
+
+.alarm-actions__link:hover { text-decoration: underline; }
+
 .event-list--wrap .event__title {
   white-space: normal;
   line-height: 1.45;

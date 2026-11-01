@@ -1,0 +1,37 @@
+@model AlarmActionModel
+@using Stardust.Web.Models.Dashboard
+@if (Model.Id > 0)
+{
+    <div class="alarm-actions" data-alarm-actions="@Model.Id">
+        @if (Model.Recovered)
+        {
+            <span class="alarm-actions__state">已恢复</span>
+        }
+        else
+        {
+            @if (Model.Acked)
+            {
+                <span class="alarm-actions__state">已确认</span>
+            }
+            else if (ViewBag.CanAlarm == true)
+            {
+                <button type="button" class="alarm-actions__btn" data-alarm-action="ack" data-alarm-id="@Model.Id">确认</button>
+            }
+
+            @if (Model.Silenced)
+            {
+                <span class="alarm-actions__state">静默至 @Model.SilenceTime.ToString("MM-dd HH:mm")</span>
+            }
+            else if (ViewBag.CanAlarm == true)
+            {
+                <select class="alarm-actions__select" data-alarm-hours aria-label="静默时长">
+                    <option value="1">1 小时</option>
+                    <option value="24" selected>24 小时</option>
+                    <option value="168">7 天</option>
+                </select>
+                <button type="button" class="alarm-actions__btn" data-alarm-action="silence" data-alarm-id="@Model.Id">静默</button>
+            }
+        }
+        <a class="alarm-actions__link" href="@DashboardLinks.AlarmDetail(Model.Id)">详情</a>
+    </div>
+}
