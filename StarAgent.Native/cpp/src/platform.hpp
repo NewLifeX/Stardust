@@ -39,6 +39,14 @@ struct NetTotals
     std::uint64_t Received = 0;
 };
 
+// TCP 连接状态计数，对应心跳中的 TcpConnections/TcpTimeWait/TcpCloseWait。
+struct TcpCounts
+{
+    std::uint64_t Established = 0;
+    std::uint64_t TimeWait = 0;
+    std::uint64_t CloseWait = 0;
+};
+
 struct HardwareInfo
 {
     std::string UUID;
@@ -91,6 +99,8 @@ std::uint64_t ProcessCount();
 std::vector<std::string> ProcessNames();
 std::uint64_t UptimeSeconds();
 double LoadAverage();
+// 统计本机 TCP 连接状态分布；不支持统计的平台返回全 0。
+TcpCounts TcpStates();
 
 HardwareInfo Hardware();
 SystemInfo System();

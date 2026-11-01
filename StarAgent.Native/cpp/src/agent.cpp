@@ -609,6 +609,9 @@ PingInfo Agent::BuildPingInfo()
     ping.CpuRate = metrics.CpuRate;
     ping.UplinkSpeed = metrics.UplinkSpeed;
     ping.DownlinkSpeed = metrics.DownlinkSpeed;
+    ping.TcpConnections = metrics.TcpConnections;
+    ping.TcpTimeWait = metrics.TcpTimeWait;
+    ping.TcpCloseWait = metrics.TcpCloseWait;
     ping.Uptime = metrics.Uptime;
     ping.Delay = delay;
     ping.SystemLoad = metrics.SystemLoad;

@@ -354,6 +354,41 @@ std::uint64_t UptimeSeconds()
     return static_cast<std::uint64_t>(std::strtod(text.c_str(), nullptr));
 }
 
+namespace {
+
+void CountTcpFile(const char* path, TcpCounts& result)
+{
+    std::istringstream stream(ReadFile(path, 256 * 1024));
+    std::string line;
+    std::getline(stream, line); // 表头
+    while (std::getline(stream, line))
+    {
+        std::istringstream fields(line);
+        std::string sl, local, remote, state;
+        if (!(fields >> sl >> local >> remote >> state)) continue;
+
+        // st 为十六进制：01 ESTABLISHED、06 TIME_WAIT、08 CLOSE_WAIT
+        const auto value = static_cast<unsigned>(std::strtoul(state.c_str(), nullptr, 16));
+        switch (value)
+        {
+        case 0x01: result.Established++; break;
+        case 0x06: result.TimeWait++; break;
+        case 0x08: result.CloseWait++; break;
+        default: break;
+        }
+    }
+}
+
+} // namespace
+
+TcpCounts TcpStates()
+{
+    TcpCounts result;
+    CountTcpFile("/proc/net/tcp", result);
+    CountTcpFile("/proc/net/tcp6", result);
+    return result;
+}
+
 double LoadAverage()
 {
     const auto text = ReadTrim("/proc/loadavg");

@@ -6,7 +6,7 @@ StarAgent 的 C++17 原生实现，与 `spec/protocol.md`、Go/Rust 实现保持
 
 - Windows（MSVC 19.51 / Visual Studio 2026，x64）：实际编译、CTest 与一致性测试通过。
 - 一致性测试：`conformance --agent staragent.exe --scenario all` → **6 passed / 0 failed**（basic、http-fallback、dedup、expired、reconnect、events）。
-- 单元测试：`ctest -C Release` → **2/2**（`staragent_tests` 50/50 checks、`staragent --version`）。
+- 单元测试：`ctest -C Release` → **2/2**（`staragent_tests` 54/54 checks、`staragent --version`）。
 - 真实服务端：在真实 Kestrel StarServer 上完成登录、自动注册、Code/Secret 持久化与在线状态验证（`NativeAgentIntegrationTests`，`ProductCode=StarAgent-Cpp`）。
 - Linux/macOS：源码路径完整（`platform_linux.cpp`、`platform_macos.cpp`、`service_posix.cpp`），本机未完成交叉编译验证，建议在对应平台或 CI 上执行 `cmake --build` + `ctest`。
 
@@ -24,7 +24,7 @@ cpp/
 │   ├── http_client.{hpp,cpp}   /node/* HTTP 客户端（cpp-httplib）
 │   ├── ws_client.{hpp,cpp}     /node/notify WebSocket（IXWebSocket）
 │   ├── executor.{hpp,cpp}      命令去重/过期/延迟/并发/超时/白名单
-│   ├── metrics.{hpp,cpp}       CPU/内存/磁盘/网络/进程/负载指标
+│   ├── metrics.{hpp,cpp}       CPU/内存/磁盘/网络/进程/TCP 连接/负载指标
 │   ├── events.{hpp,cpp}        有界事件队列与落盘
 │   ├── logging.{hpp,cpp}       按天轮转日志（保留 7 天）
 │   ├── platform.hpp            平台抽象
@@ -241,7 +241,7 @@ root 写入 `/Library/LaunchDaemons/com.newlifex.staragent.plist`；普通用户
 - **Windows 权限**：`0600` 通过 CRT `_chmod` 与数据目录隔离近似实现，无法像 POSIX 一样精确设置 ACL；建议将 `DataDir` 放在受控目录。
 - **node/restart 与 SCM**：重启会以原命令行拉起新进程；若父进程由 SCM 启动，子进程的 `--service` 在非 SCM 环境下会回退为控制台模式。生产建议同时配置 Windows 服务恢复策略，或改用服务管理器重启。
 - **Linux/macOS 验证**：实现已提供，但当前 Windows 环境未完成对应平台的编译/运行验证；建议在 CI 增加 Ubuntu 与 macOS 构建任务。
-- **指标降级**：任何单项采集失败只把该字段填 0，不跳过心跳；`Temperature`、`Battery`、`Tcp*` 等未采集字段为 0。
+- **指标降级**：任何单项采集失败只把该字段填 0，不跳过心跳；`Temperature`、`Battery`、`Signal` 等设备侧字段为 0，`GatewayLatency`、`DnsLatency` 等网络质量字段暂未采集。
 - **无 Android/iOS 实现**；移动端见仓库其他原生目录。
 - **状态文件**：`Code`/`Secret` 写入 `staragent.json`；`events.json` 与日志位于 `DataDir`，不会被提交到仓库。
 

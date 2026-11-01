@@ -32,6 +32,7 @@
 #include <netioapi.h>
 #include <pdh.h>
 #include <pdhmsg.h>
+#include <tcpmib.h>
 #include <tlhelp32.h>
 #include <winioctl.h>
 #include <ws2tcpip.h>
@@ -611,6 +612,47 @@ std::vector<std::string> ProcessNames()
 }
 
 std::uint64_t UptimeSeconds() { return ::GetTickCount64() / 1000; }
+
+TcpCounts TcpStates()
+{
+    TcpCounts result;
+    auto count = [&result](DWORD state) {
+        switch (state)
+        {
+        case MIB_TCP_STATE_ESTAB: result.Established++; break;
+        case MIB_TCP_STATE_TIME_WAIT: result.TimeWait++; break;
+        case MIB_TCP_STATE_CLOSE_WAIT: result.CloseWait++; break;
+        default: break;
+        }
+    };
+
+    // IPv4 连接
+    DWORD size = 0;
+    ::GetExtendedTcpTable(nullptr, &size, FALSE, AF_INET, TCP_TABLE_OWNER_PID_ALL, 0);
+    if (size > 0)
+    {
+        std::vector<std::uint8_t> buffer(size);
+        auto* table = reinterpret_cast<MIB_TCPTABLE_OWNER_PID*>(buffer.data());
+        if (::GetExtendedTcpTable(table, &size, FALSE, AF_INET, TCP_TABLE_OWNER_PID_ALL, 0) == NO_ERROR)
+        {
+            for (DWORD i = 0; i < table->dwNumEntries; i++) count(table->table[i].dwState);
+        }
+    }
+
+    // IPv6 连接，与 .NET 代理的 GetActiveTcpConnections 口径保持一致
+    size = 0;
+    ::GetExtendedTcpTable(nullptr, &size, FALSE, AF_INET6, TCP_TABLE_OWNER_PID_ALL, 0);
+    if (size > 0)
+    {
+        std::vector<std::uint8_t> buffer(size);
+        auto* table = reinterpret_cast<MIB_TCP6TABLE_OWNER_PID*>(buffer.data());
+        if (::GetExtendedTcpTable(table, &size, FALSE, AF_INET6, TCP_TABLE_OWNER_PID_ALL, 0) == NO_ERROR)
+        {
+            for (DWORD i = 0; i < table->dwNumEntries; i++) count(table->table[i].dwState);
+        }
+    }
+    return result;
+}
 
 double LoadAverage()
 {

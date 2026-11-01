@@ -21,6 +21,9 @@ struct MetricsSnapshot
     std::uint64_t DownlinkSpeed = 0;
     std::uint64_t ProcessCount = 0;
     std::string Processes;
+    std::uint64_t TcpConnections = 0;
+    std::uint64_t TcpTimeWait = 0;
+    std::uint64_t TcpCloseWait = 0;
     std::uint64_t Uptime = 0;
     double SystemLoad = 0;
 };

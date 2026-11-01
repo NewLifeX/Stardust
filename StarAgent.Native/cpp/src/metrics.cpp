@@ -142,6 +142,17 @@ MetricsSnapshot MetricsCollector::Collect()
 
     try
     {
+        const auto tcp = platform::TcpStates();
+        snapshot.TcpConnections = tcp.Established;
+        snapshot.TcpTimeWait = tcp.TimeWait;
+        snapshot.TcpCloseWait = tcp.CloseWait;
+    }
+    catch (...)
+    {
+    }
+
+    try
+    {
         snapshot.Uptime = platform::UptimeSeconds();
     }
     catch (...)

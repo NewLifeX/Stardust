@@ -101,6 +101,21 @@ void TestPingResponse()
     Check(response.Commands[0].Expire.IsSet(), "ping command expire");
 }
 
+void TestPingJson()
+{
+    staragent::PingInfo ping;
+    ping.ProcessCount = 12;
+    ping.TcpConnections = 34;
+    ping.TcpTimeWait = 5;
+    ping.TcpCloseWait = 6;
+
+    const auto json = staragent::ToJson(ping);
+    Check(json["ProcessCount"] == 12, "ping json process count");
+    Check(json["TcpConnections"] == 34, "ping json tcp connections");
+    Check(json["TcpTimeWait"] == 5, "ping json tcp time wait");
+    Check(json["TcpCloseWait"] == 6, "ping json tcp close wait");
+}
+
 void TestTruncate()
 {
     std::string large(100 * 1024, 'a');
@@ -288,6 +303,7 @@ int main()
     TestProtocolTime();
     TestUnwrapResponse();
     TestPingResponse();
+    TestPingJson();
     TestTruncate();
     TestUrls();
     TestConfig();

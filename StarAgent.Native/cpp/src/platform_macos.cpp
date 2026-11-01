@@ -313,6 +313,31 @@ std::uint64_t UptimeSeconds()
     return now > boot.tv_sec ? static_cast<std::uint64_t>(now - boot.tv_sec) : 0;
 }
 
+TcpCounts TcpStates()
+{
+    // macOS 没有 /proc/net/tcp，借助 netstat 统计各状态连接数
+    TcpCounts result;
+    static const std::atomic<bool> never_cancelled{false};
+    const auto shell = RunShell("netstat -an -p tcp", 5000, never_cancelled);
+    std::istringstream stream(shell.Output);
+    std::string line;
+    while (std::getline(stream, line))
+    {
+        const auto text = Trim(line);
+        if (text.empty()) continue;
+        const auto space = text.find_last_of(" \t");
+        if (space == std::string::npos) continue;
+        const auto state = text.substr(space + 1);
+        if (state == "ESTABLISHED")
+            result.Established++;
+        else if (state == "TIME_WAIT")
+            result.TimeWait++;
+        else if (state == "CLOSE_WAIT")
+            result.CloseWait++;
+    }
+    return result;
+}
+
 double LoadAverage()
 {
     double values[3] = {};
