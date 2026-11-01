@@ -162,6 +162,15 @@ MetricsSnapshot MetricsCollector::Collect()
 
     try
     {
+        const auto value = platform::BatteryPercent();
+        if (value > 0) snapshot.Battery = value;
+    }
+    catch (...)
+    {
+    }
+
+    try
+    {
         snapshot.Signal = platform::WirelessSignal();
     }
     catch (...)

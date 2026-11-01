@@ -119,6 +119,8 @@ double LoadAverage();
 TcpCounts TcpStates();
 // 采集 CPU 温度（摄氏度）；无温度传感器时返回 0。
 double Temperature();
+// 采集电池电量百分比（0~100）；无电池或未知时返回 0。
+double BatteryPercent();
 // 采集无线信号强度（0~100）；有线或无无线网卡时返回 0。
 int WirelessSignal();
 // 采样磁盘 IO 速率；首次调用返回 0，之后按两次采样的间隔计算。

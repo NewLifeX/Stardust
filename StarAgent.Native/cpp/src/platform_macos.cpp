@@ -346,6 +346,12 @@ double Temperature()
     return 0;
 }
 
+double BatteryPercent()
+{
+    // macOS 电量需要 IOKit AppleSmartBattery，暂不采集
+    return 0;
+}
+
 int WirelessSignal()
 {
     // 无线信号强度暂不采集

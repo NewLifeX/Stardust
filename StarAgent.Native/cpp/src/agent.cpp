@@ -706,6 +706,7 @@ PingInfo Agent::BuildPingInfo()
     ping.TcpTimeWait = metrics.TcpTimeWait;
     ping.TcpCloseWait = metrics.TcpCloseWait;
     ping.Temperature = metrics.Temperature;
+    ping.Battery = metrics.Battery;
     ping.Signal = metrics.Signal;
     ping.DiskIOPS = metrics.DiskIops;
     ping.DiskActiveTime = metrics.DiskActivePercent;

@@ -658,8 +658,64 @@ TcpCounts TcpStates()
 
 double Temperature()
 {
-    // Windows 温度需要 WMI ACPI 查询，开销大且多数桌面机不提供，暂不采集
-    return 0;
+    // 性能计数器 "Thermal Zone Information" 提供 ACPI 温度，单位开尔文
+    static std::mutex mutex;
+    static PDH_HQUERY query = nullptr;
+    static PDH_HCOUNTER counter = nullptr;
+    static bool initialized = false;
+
+    std::lock_guard<std::mutex> lock(mutex);
+    if (!initialized)
+    {
+        initialized = true;
+        if (::PdhOpenQueryW(nullptr, 0, &query) == ERROR_SUCCESS)
+        {
+            if (::PdhAddEnglishCounterW(query, L"\\Thermal Zone Information(*)\\Temperature", 0, &counter) !=
+                ERROR_SUCCESS)
+            {
+                counter = nullptr;
+            }
+            // 首次采集建立基线
+            ::PdhCollectQueryData(query);
+        }
+        return 0;
+    }
+    if (query == nullptr || counter == nullptr) return 0;
+    if (::PdhCollectQueryData(query) != ERROR_SUCCESS) return 0;
+
+    DWORD size = 0;
+    DWORD count = 0;
+    if (::PdhGetFormattedCounterArrayW(counter, PDH_FMT_DOUBLE, &size, &count, nullptr) != PDH_MORE_DATA || size == 0)
+    {
+        return 0;
+    }
+    std::vector<std::uint8_t> buffer(size);
+    auto* items = reinterpret_cast<PDH_FMT_COUNTERVALUE_ITEM_W*>(buffer.data());
+    if (::PdhGetFormattedCounterArrayW(counter, PDH_FMT_DOUBLE, &size, &count, items) != ERROR_SUCCESS) return 0;
+
+    double best = 0;
+    for (DWORD i = 0; i < count; i++)
+    {
+        const auto& value = items[i].FmtValue;
+        if (value.CStatus != PDH_CSTATUS_VALID_DATA && value.CStatus != PDH_CSTATUS_NEW_DATA) continue;
+        if (value.doubleValue <= 0) continue;
+
+        // 兼容开尔文与"十分之一开尔文"两种上报口径
+        auto kelvin = value.doubleValue;
+        if (kelvin > 2700) kelvin /= 10;
+        const auto celsius = kelvin > 200 ? kelvin - 273.15 : kelvin;
+        if (celsius > 0 && celsius < 150 && celsius > best) best = celsius;
+    }
+    return best;
+}
+
+double BatteryPercent()
+{
+    SYSTEM_POWER_STATUS status{};
+    if (!::GetSystemPowerStatus(&status)) return 0;
+    if (status.BatteryFlag == 128) return 0; // 无电池
+    if (status.BatteryLifePercent == 255) return 0; // 未知
+    return status.BatteryLifePercent;
 }
 
 int WirelessSignal()

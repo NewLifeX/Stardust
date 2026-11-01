@@ -25,6 +25,7 @@ struct MetricsSnapshot
     std::uint64_t TcpTimeWait = 0;
     std::uint64_t TcpCloseWait = 0;
     double Temperature = 0;
+    double Battery = 0;
     int Signal = 0;
     std::uint64_t DiskIops = 0;
     double DiskActivePercent = 0;

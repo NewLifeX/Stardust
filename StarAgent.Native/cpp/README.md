@@ -241,9 +241,14 @@ root 写入 `/Library/LaunchDaemons/com.newlifex.staragent.plist`；普通用户
 - **TLS 依赖 OpenSSL**：未检测到 OpenSSL 的构建只能 `http/ws`；生产必须安装 OpenSSL 并重新构建。
 - **Windows 权限**：`0600` 通过 CRT `_chmod` 与数据目录隔离近似实现，无法像 POSIX 一样精确设置 ACL；建议将 `DataDir` 放在受控目录。
 - **node/restart 与 SCM**：重启会以原命令行拉起新进程；若父进程由 SCM 启动，子进程的 `--service` 在非 SCM 环境下会回退为控制台模式。生产建议同时配置 Windows 服务恢复策略，或改用服务管理器重启。
-- **Linux/macOS 验证**：实现已提供，但当前 Windows 环境未完成对应平台的编译/运行验证；建议在 CI 增加 Ubuntu 与 macOS 构建任务。
-- **指标降级**：任何单项采集失败只把该字段填 0，不跳过心跳；`Battery`、`GatewayLatency`、`DnsLatency` 等未实现项为 0。
-- **平台采集差异**：`Temperature`、`Signal`（无线信号）、`DiskIOPS`/`DiskActiveTime`、`MaxOpenFiles` 仅在 Linux 采集（`/sys/class/thermal`、`/proc/net/wireless`、`/proc/diskstats`、`getrlimit`）；Windows 通过 PDH 采集 `DiskIOPS`/`DiskActiveTime`，温度/信号仍为 0；macOS 这些字段恒为 0。
+- **Linux/macOS 验证**：Linux ARM64 已在 A2/A4 真机验证（构建、登录、心跳、指标、命令往返、conformance）；macOS 未做真机验证，建议在 CI 增加 macOS 构建任务。
+- **指标降级**：任何单项采集失败只把该字段填 0，不跳过心跳；无电池/无传感器的设备 `Battery`、`Temperature`、`Signal` 为 0。
+- **平台采集差异**：
+  - 温度：Linux 读 `/sys/class/thermal`/`hwmon`；Windows 读 PDH 计数器 `Thermal Zone Information(*)\Temperature`（开尔文换算摄氏度，无热区为 0）；macOS 为 0。
+  - 电量：Windows 用 `GetSystemPowerStatus`，Linux 读 `/sys/class/power_supply/BAT*/capacity`；macOS 为 0。
+  - 无线信号：仅 Linux（`/proc/net/wireless`，兼容 70/100 两种满值）；Windows/macOS 为 0。
+  - 磁盘 IO：Linux 用 `/proc/diskstats`，Windows 用 PDH `PhysicalDisk(_Total)`；macOS 为 0。
+  - `MaxOpenFiles`：仅 Linux（`getrlimit`）。
 - **网络质量**：后台线程每 48 秒对网关、DNS、服务端各做 5 次 ICMP 探测（Windows 用 `IcmpSendEcho`，Linux/macOS 调 `ping`），心跳上报 `GatewayLatency`/`DnsLatency`/`ServerLatency`、丢包率与 `IntranetScore`/`InternetScore`（评分算法与 .NET `PingMonitor` 一致：`成功率 × exp(-0.001×(延迟-1))`）；本地回环 DNS 改用 `223.5.5.5`。
 - **Linux 板级标识**：`Vendor`/`Product`/`SerialNumber`/`Board` 优先取 `/etc/os-release` 中设备端写入的字段（与 .NET `MachineInfo` 约定一致，如 `Board=A2-2026-1G`），缺失时回落 DMI 与设备树；`UUID` 优先 `/etc/uuid`。
 - **无 Android/iOS 实现**；移动端见仓库其他原生目录。

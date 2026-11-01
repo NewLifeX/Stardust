@@ -480,6 +480,20 @@ double Temperature()
     return 0;
 }
 
+double BatteryPercent()
+{
+    // /sys/class/power_supply/BAT*/capacity 为 0~100 的整数百分比
+    for (const auto& name : ListDir("/sys/class/power_supply"))
+    {
+        if (!StartsWith(name, "BAT")) continue;
+        const auto text = ReadTrim("/sys/class/power_supply/" + name + "/capacity");
+        if (text.empty()) continue;
+        const auto value = std::strtod(text.c_str(), nullptr);
+        if (value > 0 && value <= 100) return value;
+    }
+    return 0;
+}
+
 int WirelessSignal()
 {
     // /proc/net/wireless：链路质量通常以 70 为满值，-1 表示未连接
