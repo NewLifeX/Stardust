@@ -121,6 +121,7 @@ void PrintUsage()
               << "Commands:\n"
               << "  run       以前台进程方式常驻运行，登录、心跳并处理下行指令\n"
               << "  once      登录、心跳并处理一次命令后退出\n"
+              << "  bootstrap 登录后安装 .NET 运行时与完整版 StarAgent（需 root/管理员）\n"
               << "  version   显示版本信息\n\n"
               << "Run options:\n"
               << "  --config <path>      配置文件路径（默认 staragent.json 或 STARAGENT_CONFIG）\n"
@@ -147,7 +148,7 @@ void ApplyOverrides(Config& config, const Arguments& arguments, bool allow_exec_
     staragent::Normalize(config);
 }
 
-int RunAgent(const Arguments& arguments, bool once)
+int RunAgent(const Arguments& arguments, bool once, bool bootstrap = false)
 {
     const auto config_path = arguments.Value("config", DefaultConfig());
     Config config;
@@ -163,7 +164,7 @@ int RunAgent(const Arguments& arguments, bool once)
         return 1;
     }
 
-    const bool console = once ? arguments.Has("console") : !arguments.Has("no-console");
+    const bool console = (once || bootstrap) ? arguments.Has("console") : !arguments.Has("no-console");
     std::unique_ptr<Logger> logger;
     try
     {
@@ -215,7 +216,7 @@ int RunAgent(const Arguments& arguments, bool once)
         }
     });
 
-    const int result = once ? agent->Once() : agent->Run();
+    const int result = bootstrap ? agent->Bootstrap() : (once ? agent->Once() : agent->Run());
     finished = true;
     if (watcher.joinable()) watcher.join();
     logger->Close();
@@ -265,6 +266,7 @@ int main(int argc, char* argv[])
     }
     if (command == "run") return RunAgent(arguments, false);
     if (command == "once") return RunAgent(arguments, true);
+    if (command == "bootstrap") return RunAgent(arguments, false, true);
 
     std::cerr << "unknown command \"" << command << "\"\n\n";
     PrintUsage();

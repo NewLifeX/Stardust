@@ -193,6 +193,29 @@ struct UpgradeInfo
     std::string Description;
 };
 
+// 引导安装的单个安装包
+struct BootstrapPackage
+{
+    std::string Version;
+    std::string Kind;
+    std::string FileName;
+    std::string Source;
+    std::int64_t Size = 0;
+    std::string FileHash;
+
+    bool Empty() const { return Source.empty(); }
+};
+
+// 引导安装信息：先装 .NET 运行时，再装完整版 StarAgent
+struct BootstrapInfo
+{
+    std::string Version;
+    std::string Server;
+    std::string Code;
+    BootstrapPackage Runtime;
+    BootstrapPackage Agent;
+};
+
 Json ToJson(const NodeInfo& value);
 Json ToJson(const LoginInfo& value);
 Json ToJson(const PingInfo& value);
@@ -203,6 +226,7 @@ LoginResponse ParseLoginResponse(const Json& value);
 PingResponse ParsePingResponse(const Json& value);
 CommandModel ParseCommand(const Json& value);
 UpgradeInfo ParseUpgradeInfo(const Json& value);
+BootstrapInfo ParseBootstrapInfo(const Json& value);
 int ParseEventCount(const Json& value);
 
 // Parses a bare response or an ApiFilter wrapper ({"code":0,"data":...}).

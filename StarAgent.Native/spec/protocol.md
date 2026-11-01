@@ -256,6 +256,44 @@ Authorization: Bearer <Token>
 
 首版原生 Agent **不执行自升级**：收到非空响应时记录日志并上报事件 `Upgrade`（内容为可用版本），由运维手动更新。服务端必须按 `ProductCode` 过滤，避免把 .NET 包发给原生 Agent。
 
+### 3.4.1 引导安装 `POST /node/bootstrap`
+
+原生 Agent 只做采集与指令响应；需要完整能力（自身升级、远程发布、插件、进程守护）时，由运维在节点上执行 `staragent bootstrap`，客户端登录后调用本接口取包并安装 .NET 版 StarAgent。
+
+- 响应为 `BootstrapModel` 或空（服务端未维护安装包时返回空）：
+
+```json
+{
+  "Version": "3.6.2026.0104",
+  "Server": "https://star.example.com:6600",
+  "Code": "节点编码",
+  "Runtime": {
+    "Version": "10.0.9",
+    "Kind": "runtime",
+    "FileName": "dotnet-runtime-10.0.9-linux-arm64.tar.gz",
+    "Source": "https://.../dotnet-runtime-10.0.9-linux-arm64.tar.gz?token=xxx",
+    "Size": 35600000,
+    "FileHash": "md5 或 sha512"
+  },
+  "Agent": {
+    "Version": "3.6.2026.0104",
+    "FileName": "staragent100.tar.gz",
+    "Source": "https://.../staragent100.tar.gz?token=xxx",
+    "Size": 12345678,
+    "FileHash": "md5"
+  }
+}
+```
+
+约定：
+
+- `Source` 由服务端补全为绝对地址，并附加短时下载令牌；客户端不得自行拼接路径。
+- `Runtime` 为空表示该平台无需安装运行时（例如使用自包含发布包），此时直接安装 `Agent`。
+- 安装需 `root`/管理员权限；Linux 安装到 `/opt/staragent` 与 `/usr/share/dotnet`，Windows 安装到 `C:\Program Files\StarAgent`。
+- 安装命令固定为 `dotnet StarAgent.dll -install -server <Server>`（.NET 版自己的服务安装，与原生 Agent 无关）；原生 Agent 不注册系统服务。
+- 安装成功后原生 Agent 记录并通过事件上报 `Bootstrap`（内容为已安装版本），由运维停用原生产物。
+
+
 ### 3.5 事件上报 `POST /node/postevents`
 
 请求体为数组：
@@ -421,7 +459,8 @@ Authorization: Bearer <Token>
 
 - `agent:go` / `agent:rust` / `agent:cpp`
 - `cap:exec`（是否支持命令执行）
-- `cap:upgrade=false`（首版固定 false）
+- `cap:bootstrap=true`（支持引导安装 .NET 版 StarAgent）
+- `cap:upgrade=false`（首版固定 false，不执行自升级）
 - `cap:deploy=false`
 - `os:linux` / `os:windows` / `os:macos` / `os:android` / `os:ios`
 

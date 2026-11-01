@@ -241,5 +241,41 @@ public partial class ProductRelease : Entity<ProductRelease>
 
         return null;
     }
+
+    /// <summary>按指定产品编码匹配节点的安装包，忽略节点自身产品编码</summary>
+    /// <remarks>用于原生 Agent 引导安装完整版 StarAgent：节点产品编码是 StarAgent-Go/Rust/Cpp，不能直接匹配 StarAgent 的发行包。</remarks>
+    /// <param name="node">节点</param>
+    /// <param name="productCode">目标产品编码</param>
+    /// <returns>匹配到的版本与安装包，无匹配时两者均为null</returns>
+    public static (ProductRelease? Release, ProductPackage? Package) MatchProduct(Node node, String productCode)
+    {
+        if (node == null || productCode.IsNullOrEmpty()) return (null, null);
+
+        var releases = Meta.Cache.FindAll(e => e.Enable && productCode.EqualIgnoreCase(e.ProductCode))
+            .OrderByDescending(e => e.Id)
+            .ToList();
+        if (releases.Count == 0) return (null, null);
+
+        var osKind = GetOSKind(node.OSKind);
+        if (!Enum.TryParse<CpuArch>(node.Architecture, true, out var arch)) arch = CpuArch.Any;
+
+        foreach (var release in releases)
+        {
+            var packages = ProductPackage.FindAllByReleaseId(release.Id);
+            if (packages == null || packages.Count == 0) continue;
+
+            // 精确匹配系统与架构优先，0表示通用
+            var pkg = packages
+                .Where(e => e.OSKind == OSKind.Any || e.OSKind == osKind)
+                .Where(e => e.Architecture == CpuArch.Any || e.Architecture == arch)
+                .OrderByDescending(e => osKind != OSKind.Any && e.OSKind == osKind)
+                .ThenByDescending(e => arch != CpuArch.Any && e.Architecture == arch)
+                .ToList()
+                .FirstOrDefault();
+            if (pkg != null) return (release, pkg);
+        }
+
+        return (null, null);
+    }
     #endregion
 }

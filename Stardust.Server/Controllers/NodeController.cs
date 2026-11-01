@@ -261,6 +261,46 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
 
         return info!;
     }
+
+    /// <summary>引导安装。原生 Agent 获取 .NET 运行时与完整版 StarAgent 的安装包</summary>
+    /// <remarks>原生 Agent 只做采集与指令响应；需要完整能力时调用本接口取包，自行下载安装后切换到 .NET 版。</remarks>
+    /// <returns>引导安装信息；非原生 Agent 或服务端未维护安装包时返回null</returns>
+    [HttpGet(nameof(Bootstrap))]
+    [HttpPost(nameof(Bootstrap))]
+    public BootstrapModel? Bootstrap()
+    {
+        var node = Context.Device as Node;
+        var info = nodeService.GetBootstrap(node);
+        if (info == null) return null;
+
+        // 基础路径
+        var uri = Request.GetRawUrl().ToString();
+        var p = uri.IndexOf('/', "https://".Length);
+        if (p > 0) uri = uri[..p];
+
+        info.Server = uri;
+        info.Runtime = Absolutize(info.Runtime, uri);
+        info.Agent = Absolutize(info.Agent, uri);
+
+        return info;
+    }
+
+    /// <summary>把安装包相对路径补全为绝对地址，并附加短时下载令牌</summary>
+    /// <param name="pkg">安装包</param>
+    /// <param name="baseUri">服务端基础地址</param>
+    /// <returns>补全后的安装包</returns>
+    private BootstrapPackage? Absolutize(BootstrapPackage? pkg, String baseUri)
+    {
+        if (pkg == null || pkg.Source.IsNullOrEmpty()) return pkg;
+
+        if (!pkg.Source.StartsWithIgnoreCase("http://", "https://"))
+            pkg.Source = new Uri(new Uri(baseUri), pkg.Source) + "";
+
+        // 安全V-11：安装包下载URL附带短时令牌
+        pkg.Source = downloadTokenService.AppendToken(pkg.Source, StarServerSetting.Current.AttachmentTokenExpire);
+
+        return pkg;
+    }
     #endregion
 
     #region 事件上报

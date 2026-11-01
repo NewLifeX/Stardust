@@ -45,6 +45,9 @@ public:
 
     int Run();
     int Once();
+    // 登录后向服务端取引导安装清单，安装 .NET 运行时与完整版 StarAgent。
+    // 返回 0 表示安装完成，非 0 为失败。
+    int Bootstrap();
     void RequestStop();
 
 private:

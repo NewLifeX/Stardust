@@ -170,10 +170,12 @@ CMake 使用 `find_package(OpenSSL QUIET)`：
 ```text
 staragent run        [--config path] [--server url] [--data dir] [--log-level level] [--allow-exec] [--console]
 staragent once       [--config path] [--console]
+staragent bootstrap  [--config path] [--console]
 staragent version
 ```
 
-`run` 为前台常驻长连接模式；`once` 登录、心跳并处理本次心跳中的命令后退出，适合自检/定时任务。
+`run` 为前台常驻长连接模式；`once` 登录、心跳并处理本次心跳中的命令后退出，适合自检/定时任务；
+`bootstrap` 登录后向服务端取包，安装 .NET 运行时与完整版 StarAgent（需 root/管理员）。
 
 ## 持久化与日志
 

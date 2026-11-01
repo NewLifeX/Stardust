@@ -286,6 +286,38 @@ UpgradeInfo ParseUpgradeInfo(const Json& value)
     return result;
 }
 
+BootstrapPackage ParseBootstrapPackage(const Json& value)
+{
+    BootstrapPackage result;
+    if (!value.is_object()) return result;
+
+    result.Version = GetString(value, "Version");
+    result.Kind = GetString(value, "Kind");
+    result.FileName = GetString(value, "FileName");
+    result.Source = GetString(value, "Source");
+    result.Size = GetInt64(value, "Size");
+    result.FileHash = GetString(value, "FileHash");
+    return result;
+}
+
+BootstrapInfo ParseBootstrapInfo(const Json& value)
+{
+    BootstrapInfo result;
+    if (!value.is_object()) return result;
+
+    result.Version = GetString(value, "Version");
+    result.Server = GetString(value, "Server");
+    result.Code = GetString(value, "Code");
+
+    const auto* runtime = FindCi(value, "Runtime");
+    if (runtime != nullptr) result.Runtime = ParseBootstrapPackage(*runtime);
+
+    const auto* agent = FindCi(value, "Agent");
+    if (agent != nullptr) result.Agent = ParseBootstrapPackage(*agent);
+
+    return result;
+}
+
 int ParseEventCount(const Json& value)
 {
     if (value.is_number_integer()) return static_cast<int>(value.get<std::int64_t>());

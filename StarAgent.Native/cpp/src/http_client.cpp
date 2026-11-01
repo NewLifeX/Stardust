@@ -423,4 +423,19 @@ std::optional<UpgradeInfo> HttpClient::Upgrade(const std::string& channel)
     return info;
 }
 
+std::optional<BootstrapInfo> HttpClient::Bootstrap()
+{
+    const auto path = PathWithPrefix(url_, "/node/bootstrap");
+    const auto response = Send("POST", path, "", true);
+    EnsureSuccess(response, "bootstrap");
+
+    const auto trimmed = Trim(response.Body);
+    if (trimmed.empty() || trimmed == "null") return std::nullopt;
+
+    const auto value = Decode(response, "bootstrap");
+    auto info = ParseBootstrapInfo(value);
+    if (info.Agent.Empty()) return std::nullopt;
+    return info;
+}
+
 } // namespace staragent

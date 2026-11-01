@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 #include "agent.hpp"
 
+#include "bootstrap.hpp"
 #include "util.hpp"
 
 #include <algorithm>
@@ -196,6 +197,44 @@ int Agent::Run()
     Shutdown();
     local_api_.Stop();
     return failed ? 1 : 0;
+}
+
+int Agent::Bootstrap()
+{
+    try
+    {
+        Login();
+
+        const auto plan = client_.Bootstrap();
+        if (!plan)
+        {
+            Log().Warn("bootstrap: server returned no agent package");
+            return 3;
+        }
+
+        Log().Info("bootstrap plan agent=" + plan->Version + " runtime=" +
+                   (plan->Runtime.Empty() ? std::string("none") : plan->Runtime.Version));
+
+        Bootstrapper bootstrapper(client_, logger_, options_.Configuration);
+        const auto error = bootstrapper.Run(*plan, stopping_);
+        if (!error.empty())
+        {
+            Log().Error("bootstrap failed: " + error);
+            Enqueue("error", "Bootstrap", error);
+            FlushEvents();
+            return 1;
+        }
+
+        Log().Info("bootstrap completed version=" + plan->Version);
+        Enqueue("info", "Bootstrap", "installed StarAgent " + plan->Version);
+        FlushEvents();
+        return 0;
+    }
+    catch (const std::exception& ex)
+    {
+        Log().Error(std::string("bootstrap failed: ") + ex.what());
+        return 1;
+    }
 }
 
 int Agent::Once()
@@ -947,6 +986,7 @@ std::vector<std::string> Agent::Plugins() const
     return {"agent:cpp",
             std::string("cap:exec:") + (store_.Snapshot().AllowExec ? "true" : "false"),
             std::string("cap:upgrade:") + (store_.Snapshot().AutoUpgrade ? "true" : "false"),
+            "cap:bootstrap=true",
             "cap:deploy=false",
             "os:" + OsTag()};
 }
