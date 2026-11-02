@@ -42,4 +42,38 @@ public class HomeSummary
 
     /// <summary>今日错误率。0~1</summary>
     public Double ErrorRate { get; set; }
+
+    /// <summary>近7天调用趋势。按峰值归一化到 0~100，只表达形状，不暴露绝对值</summary>
+    public Double[] Trend { get; set; } = [];
+}
+
+/// <summary>首页概览的原始统计。参与缓存，不直接下发给客户端</summary>
+public class HomeStatus
+{
+    /// <summary>统计时间</summary>
+    public DateTime Time { get; set; }
+
+    /// <summary>在线节点数</summary>
+    public Int32 NodeOnline { get; set; }
+
+    /// <summary>节点总数</summary>
+    public Int32 NodeTotal { get; set; }
+
+    /// <summary>在线应用数</summary>
+    public Int32 AppOnline { get; set; }
+
+    /// <summary>应用总数</summary>
+    public Int32 AppTotal { get; set; }
+
+    /// <summary>今日调用量</summary>
+    public Int64 TodayCall { get; set; }
+
+    /// <summary>昨日调用量</summary>
+    public Int64 YesterdayCall { get; set; }
+
+    /// <summary>今日错误数</summary>
+    public Int64 TodayError { get; set; }
+
+    /// <summary>近7天调用量，从旧到新</summary>
+    public Int64[] Trend { get; set; } = [];
 }

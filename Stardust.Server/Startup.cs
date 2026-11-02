@@ -103,6 +103,7 @@ public class Startup
         services.AddSingleton<GatewayService>();
         services.AddSingleton<DownloadTokenService>();
         services.AddSingleton<InstallService>();
+        services.AddSingleton<HomeService>();
         services.AddSingleton<BrowserTokenService>();
 
         services.AddSingleton<NodeSessionManager>();

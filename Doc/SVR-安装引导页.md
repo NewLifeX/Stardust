@@ -33,7 +33,7 @@ StarServer 根路径 `/` 是**平台门户**：上方展示节点/应用在线�
 | 接口 | 说明 |
 |------|------|
 | `GET /` | 安装引导页。`Accept: application/json` 或 `?format=json` 时返回清单 |
-| `GET /home/summary` | 平台概览：在线/总节点、在线/总应用、今日调用与错误、版本、运行时长 |
+| `GET /home/summary` | 平台概览：在线/总节点、在线/总应用、今日与昨日调用、错误率、版本、运行时长、近7天趋势 |
 | `GET /install` | 安装清单 JSON：`server`、`versions[]`、`runtimes[]`、`mirror[]` |
 | `GET /install.sh?os=linux&arch=x64&runtime=10&version=` | bash 脚本，含服务端地址、包地址与校验 |
 | `GET /install.ps1?os=windows&arch=x64` | PowerShell 脚本 |
@@ -89,6 +89,8 @@ StarServer 根路径 `/` 是**平台门户**：上方展示节点/应用在线�
 
 - 页面与清单匿名：引导安装发生在节点注册之前，没有令牌可用；只暴露公开的安装包元数据。
 - **规模数据默认量级化**：`HomeSummaryMode=Magnitude` 时只展示 `1,200+`、`1,287 万+` 这类数量级，配合同比趋势与错误率，足以体现平台在跑而不泄露精确运营数据；公网部署建议保持默认，内网可改 `Exact`，完全不想展示则设 `Hidden`（服务端也不会读取与返回统计）。
+- **趋势曲线只给形状**：近 7 天调用量在服务端按峰值归一化到 0~100 后下发，页面只能画出走势，拿不到任何一天的绝对值。
+- **概览缓存 30 秒**：公开页面刷新频率高，缓存既降低数据库压力，也避免访客通过连续刷新反推实时数据。
 - 下载入口只放行"启用版本下的安装包编号"，不开放附件表任意下载。
 - 令牌短时（`AttachmentTokenExpire`，默认 600 秒）且不落库，每次访问现场签发。
 - 脚本对 `server` 参数做字符校验，防止注入。
@@ -99,7 +101,7 @@ StarServer 根路径 `/` 是**平台门户**：上方展示节点/应用在线�
 |------|------|
 | `InstallServiceTests` | 清单组装、通道过滤、镜像兜底、令牌签发、停用版本拒绝、脚本内容、非法地址拒绝、页面资源可读 |
 | `InstallServiceBootstrapTests` | 引导安装：原生返回组包、.NET 版返回空、缺包返回空、精确系统架构优先 |
-| `InstallEndpointTests` | `/` 返回页面、`/install` 清单、`/home/summary` 概览、`/install.sh` 可执行、下载 302 携带令牌、未知包 404 |
+| `InstallEndpointTests` | `/` 返回页面、`/install` 清单、`/home/summary` 概览（含 7 天趋势）、`/install.sh` 可执行、下载 302 携带令牌、未知包 404 |
 
 ## 10. 与 StarWeb 的关系
 

@@ -89,6 +89,19 @@
         text-decoration: none; transition: .18s;
     }
     .hero-link:hover { background: rgba(148, 163, 184, .16); color: #e0e7ff; }
+
+    /* 趋势曲线 */
+    .trend {
+        grid-column: 1 / -1; display: grid; grid-template-columns: 170px 1fr; gap: 18px; align-items: center;
+        border-top: 1px solid rgba(148, 163, 184, .14); padding-top: 16px; margin-top: 4px;
+    }
+    .trend-head { font-size: 11.5px; color: #8fa0b8; line-height: 1.5; }
+    .trend-head b { display: block; color: #dbe6f6; font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+    .spark { width: 100%; height: 58px; display: block; overflow: visible; }
+    #sparkLine { stroke-dasharray: 700; stroke-dashoffset: 700; transition: stroke-dashoffset .95s ease; }
+    #sparkLine.on { stroke-dashoffset: 0; }
+    #sparkDot { opacity: 0; transition: opacity .3s ease .8s; }
+    #sparkDot.on { opacity: 1; }
     .server-chip {
         display: inline-flex; align-items: center; gap: 8px;
         font-family: var(--mono); font-size: 13px; color: #e2e8f0;
@@ -235,6 +248,19 @@
 
     footer { text-align: center; color: #94a3b8; font-size: 12px; padding-top: 34px; }
 
+    /* 支持平台 */
+    .platforms { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; padding: 16px 24px; }
+    .plat-title { font-size: 12px; letter-spacing: .08em; color: var(--muted); text-transform: uppercase; }
+    .plat-list { display: flex; gap: 18px; flex-wrap: wrap; }
+    .plat { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .dot.win { background: #0ea5e9; }
+    .dot.linux { background: #f59e0b; }
+    .dot.mac { background: #94a3b8; }
+    .dot.android { background: #22c55e; }
+    .dot.ios { background: #a78bfa; }
+    .dot.web { background: #cbd5e1; }
+
     :focus-visible { outline: 2px solid rgba(99, 102, 241, .55); outline-offset: 2px; border-radius: 8px; }
 
     @media (max-width: 900px) {
@@ -303,6 +329,24 @@
                 <span class="tip" id="copyTip"></span>
             </div>
             <div class="auto-hint" id="autoHint"></div>
+        </div>
+
+        <div class="trend" id="trendBlock" hidden>
+            <div class="trend-head">
+                <b data-i18n="trendTitle">近 7 天调用趋势</b>
+                <span data-i18n="trendHint">仅展示形状</span>
+            </div>
+            <svg viewBox="0 0 300 64" preserveAspectRatio="none" class="spark" aria-hidden="true">
+                <defs>
+                    <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#7dd3fc" stop-opacity=".34" />
+                        <stop offset="100%" stop-color="#7dd3fc" stop-opacity="0" />
+                    </linearGradient>
+                </defs>
+                <path id="sparkArea" fill="url(#sparkFill)"></path>
+                <path id="sparkLine" fill="none" stroke="#7dd3fc" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path>
+                <circle id="sparkDot" r="3" fill="#e0f2fe"></circle>
+            </svg>
         </div>
     </section>
 
@@ -397,6 +441,18 @@
         </div>
     </section>
 
+    <section class="card platforms">
+        <span class="plat-title" data-i18n="platforms">支持平台</span>
+        <div class="plat-list">
+            <span class="plat"><i class="dot win"></i>Windows</span>
+            <span class="plat"><i class="dot linux"></i>Linux</span>
+            <span class="plat"><i class="dot mac"></i>macOS</span>
+            <span class="plat"><i class="dot android"></i>Android</span>
+            <span class="plat"><i class="dot ios"></i>iOS</span>
+            <span class="plat"><i class="dot web"></i>x64 / arm64 / loongarch64</span>
+        </div>
+    </section>
+
     <footer><span data-i18n="footer">StarServer 安装引导</span><span id="updateTime"></span></footer>
 </div>
 
@@ -413,6 +469,9 @@ const I18N = {
         vsYesterday: "较昨日",
         today: "今日",
         stTotal: "总计",
+        trendTitle: "近 7 天调用趋势",
+        trendHint: "仅展示形状",
+        platforms: "支持平台",
         console: "管理控制台",
         modConfig: "配置中心",
         modReg: "注册发现",
@@ -456,6 +515,9 @@ const I18N = {
         vsYesterday: "vs yesterday",
         today: "today",
         stTotal: "total",
+        trendTitle: "Calls in last 7 days",
+        trendHint: "Shape only",
+        platforms: "Platforms",
         console: "Console",
         modConfig: "Config center",
         modReg: "Registry",
@@ -741,6 +803,7 @@ let summary = null;
 
 /** 量级化展示：只保留数量级，避免泄露精确运营数据 */
 function magnitude(value) {
+    value = Math.max(0, Math.round(value || 0));
     if (!value) return "0";
     if (value < 1000) return fmt(value);
     if (value < 10000) return fmt(Math.floor(value / 100) * 100) + "+";
@@ -758,6 +821,45 @@ function percent(value) {
     return ((value || 0) * 100).toFixed(2) + "%";
 }
 
+/** 数字滚动动画。formatter 负责把中间值格式化为最终展示文本 */
+function animateNumber(el, value, formatter, duration) {
+    const to = Number(value) || 0;
+    const span = duration || 700;
+    const start = performance.now();
+    function tick(now) {
+        const p = Math.min(1, (now - start) / span);
+        const eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = formatter(Math.round(to * eased));
+        if (p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+}
+
+/** 绘制近7天趋势曲线。数据已归一化为 0~100，不包含绝对量 */
+function renderTrend(values) {
+    const block = $("trendBlock");
+    if (!values || values.length < 2) { block.hidden = true; return; }
+    block.hidden = false;
+
+    const w = 300, h = 64, pad = 4;
+    const step = (w - pad * 2) / (values.length - 1);
+    const pts = values.map((v, i) => [pad + i * step, h - pad - (Math.max(0, Math.min(100, v)) / 100) * (h - pad * 2)]);
+    const line = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
+    const last = pts[pts.length - 1];
+    const area = line + " L" + last[0].toFixed(1) + " " + (h - pad) + " L" + pts[0][0].toFixed(1) + " " + (h - pad) + " Z";
+
+    $("sparkLine").setAttribute("d", line);
+    $("sparkArea").setAttribute("d", area);
+    $("sparkDot").setAttribute("cx", last[0].toFixed(1));
+    $("sparkDot").setAttribute("cy", last[1].toFixed(1));
+
+    const svgLine = $("sparkLine");
+    const dot = $("sparkDot");
+    svgLine.classList.remove("on");
+    dot.classList.remove("on");
+    setTimeout(() => { svgLine.classList.add("on"); dot.classList.add("on"); }, 40);
+}
+
 function renderSummary() {
     if (!summary) return;
 
@@ -768,17 +870,18 @@ function renderSummary() {
 
     const show = mode === "exact" ? fmt : magnitude;
     if (showStats) {
-        $("stNodeOnline").textContent = show(summary.nodeOnline);
+        animateNumber($("stNodeOnline"), summary.nodeOnline, show);
         $("stNodeSub").textContent = summary.nodeTotal > 0 ? t("stTotal") + " " + show(summary.nodeTotal) : "-";
-        $("stAppOnline").textContent = show(summary.appOnline);
+        animateNumber($("stAppOnline"), summary.appOnline, show);
         $("stAppSub").textContent = summary.appTotal > 0 ? t("stTotal") + " " + show(summary.appTotal) : "-";
-        $("stTodayCall").textContent = show(summary.todayCall);
+        animateNumber($("stTodayCall"), summary.todayCall, show);
         $("stCallSub").textContent = summary.yesterdayCall > 0
             ? t("vsYesterday") + " " + (((summary.todayCall - summary.yesterdayCall) / summary.yesterdayCall * 100).toFixed(1)) + "%"
             : t("today");
-        $("stTodayError").textContent = show(summary.todayError);
+        animateNumber($("stTodayError"), summary.todayError, show);
         $("stErrorSub").textContent = t("errorRate") + " " + percent(summary.errorRate);
     }
+    renderTrend(showStats ? summary.trend : null);
 
     $("versionChip").textContent = summary.version ? "v" + summary.version : "-";
     $("uptimeChip").textContent = summary.uptime > 0 ? t("uptime") + " " + uptimeText(summary.uptime) : "-";

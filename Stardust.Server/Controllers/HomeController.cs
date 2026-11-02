@@ -2,9 +2,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
-using Stardust.Data;
-using Stardust.Data.Monitors;
-using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Services;
 
@@ -18,14 +15,17 @@ public class HomeController : ControllerBase
 {
     private readonly StarServerSetting _setting;
     private readonly InstallService _installService;
+    private readonly HomeService _homeService;
 
     /// <summary>实例化</summary>
     /// <param name="setting">服务端配置</param>
     /// <param name="installService">安装引导服务</param>
-    public HomeController(StarServerSetting setting, InstallService installService)
+    /// <param name="homeService">首页概览服务</param>
+    public HomeController(StarServerSetting setting, InstallService installService, HomeService homeService)
     {
         _setting = setting;
         _installService = installService;
+        _homeService = homeService;
     }
 
     /// <summary>首页。默认返回安装引导页，Accept 或 format 指定 json 时返回安装清单</summary>
@@ -56,34 +56,8 @@ public class HomeController : ControllerBase
     [HttpGet("/home/summary")]
     public HomeSummary Summary()
     {
-        var mode = _setting.HomeSummaryMode;
-        var model = new HomeSummary
-        {
-            Server = InstallService.GetServerUrl(Request, _setting),
-            WebUrl = FirstWebUrl(),
-            Version = typeof(HomeController).Assembly.GetName().Version + "",
-            Mode = mode.ToString().ToLower(),
-        };
-
-        // 不展示模式下不读取统计，避免把规模数据发送到浏览器
-        if (mode == HomeSummaryModes.Hidden) return model;
-
-        var today = AppDayStat.Search(DateTime.Today, null);
-        var total = today.Sum(e => (Int64)e.Total);
-        var errors = today.Sum(e => (Int64)e.Errors);
-        var yesterday = AppDayStat.Search(DateTime.Today.AddDays(-1), null);
-
-        model.Uptime = Environment.TickCount64 / 1000;
-        model.NodeOnline = NodeOnline.Meta.Count;
-        model.NodeTotal = Node.Meta.Count;
-        model.AppOnline = AppOnline.Meta.Count;
-        model.AppTotal = App.Meta.Count;
-        model.TodayCall = total;
-        model.YesterdayCall = yesterday.Sum(e => (Int64)e.Total);
-        model.TodayError = errors;
-        model.ErrorRate = total > 0 ? (Double)errors / total : 0;
-
-        return model;
+        var server = InstallService.GetServerUrl(Request, _setting);
+        return _homeService.GetSummary(server, FirstWebUrl());
     }
 
     /// <summary>取第一个可用的管理控制台地址</summary>

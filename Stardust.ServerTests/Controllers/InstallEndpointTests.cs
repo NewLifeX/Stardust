@@ -74,6 +74,7 @@ public class InstallEndpointTests : StarTestBase
         Assert.True(root.GetProperty("nodeTotal").GetInt32() >= 0);
         Assert.True(root.GetProperty("appTotal").GetInt32() >= 0);
         Assert.InRange(root.GetProperty("errorRate").GetDouble(), 0, 1);
+        Assert.Equal(7, root.GetProperty("trend").GetArrayLength());
     }
 
     [Fact]
