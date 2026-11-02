@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { toUrl } from '@/utils/routeLink';
 /**
  * Deployment/AppDeploy/Index — 应用部署集列表（自定义迁移页）
  *
@@ -33,10 +34,10 @@ const api = usePageApi('Deployment', 'AppDeploy');
  */
 const LINK_FIELD_NAMES = new Set(['NodeManage', 'BuildNode', 'Version', 'History']);
 const LINK_URL: Record<string, (row: Row) => string> = {
-  NodeManage: (row) => `#/Deployment/AppDeployNode?deployId=${row.Id}`,
-  BuildNode: (row) => `#/Deployment/AppBuildNode?deployId=${row.Id}`,
-  Version: (row) => `#/Deployment/AppDeployVersion?deployId=${row.Id}`,
-  History: (row) => `#/Deployment/AppDeployHistory?deployId=${row.Id}`,
+  NodeManage: (row) => toUrl('/Deployment/AppDeployNode', { deployId: row.Id }),
+  BuildNode: (row) => toUrl('/Deployment/AppBuildNode', { deployId: row.Id }),
+  Version: (row) => toUrl('/Deployment/AppDeployVersion', { deployId: row.Id }),
+  History: (row) => toUrl('/Deployment/AppDeployHistory', { deployId: row.Id }),
 };
 
 interface BackendField {

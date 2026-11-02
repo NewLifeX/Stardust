@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { toUrl } from '@/utils/routeLink';
 /**
  * Redis/RedisNode/Index — Redis 节点列表（自定义迁移页）
  *
  * MVC 源 RedisNodeController.cs + _List_Search.cshtml 还原：
- *  - [Menu(50)] 可见页，路由由 MenuTree 注册，直接访问 #/Redis/RedisNode
+ *  - [Menu(50)] 可见页，路由由 MenuTree 注册，直接访问 /Redis/RedisNode
  *  - 标准列：地址、端口、数据库、最大内存、已用内存、客户端、命令、连接数、状态等
  *    （WebHook、Alarm 系列、UpdateUser 系列、Remark 已在后端 ListFields 移除），由后端 GetPage 元数据提供
  *  - 自定义 url 跳转列（自建，AutoPage 不渲染）：
@@ -141,16 +142,16 @@ function cellText(row: Row, key: string): string {
 
 // 自建链接列
 function projectUrl(row: Row): string {
-  return `#/Platform/GalaxyProject?projectId=${row.ProjectId}`;
+  return toUrl('/Platform/GalaxyProject', { projectId: row.ProjectId });
 }
 function monitorUrl(row: Row): string {
-  return `#/Redis/RedisData?redisId=${row.Id}`;
+  return toUrl('/Redis/RedisData', { redisId: row.Id });
 }
 function queueUrl(row: Row): string {
-  return `#/Redis/RedisMessageQueue?redisId=${row.Id}`;
+  return toUrl('/Redis/RedisMessageQueue', { redisId: row.Id });
 }
 function auditLogUrl(row: Row): string {
-  return `#/Admin/Log?category=${encodeURIComponent('Redis节点')}&linkId=${row.Id}`;
+  return toUrl('/Admin/Log', { category: 'Redis节点', linkId: row.Id });
 }
 
 // 自定义 Action Refresh：GET /Redis/RedisNode/Refresh?id=<行Id>

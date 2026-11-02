@@ -3,7 +3,7 @@
  * Agent/Index — 星尘代理 StarAgent 下载安装静态展示页（自定义迁移页）
  *
  * MVC 源 AgentController.cs + Agent/Index.cshtml 还原：
- *  - 根 Area 的 AgentController，[Route("[controller]")] → 路由 #/Agent
+ *  - 根 Area 的 AgentController，[Route("[controller]")] → 路由 /Agent
  *  - [AllowAnonymous]，纯展示 + JS 探测本机 Agent
  *  - 内容：StarAgent 介绍、下载链接、安装命令、本机探测状态
  *

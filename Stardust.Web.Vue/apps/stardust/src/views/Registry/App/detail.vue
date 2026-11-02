@@ -2,7 +2,7 @@
 /**
  * Registry/App/Detail — 应用详情（自定义迁移页）
  *
- * 路由：#/Registry/App/Detail/{id}
+ * 路由：/Registry/App/Detail/{id}
  *  - usePageApi('Registry','App').getDetail(id) 读取单条应用记录
  *  - el-descriptions 展示应用字段
  */

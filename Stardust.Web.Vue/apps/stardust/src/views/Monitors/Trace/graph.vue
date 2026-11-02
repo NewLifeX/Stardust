@@ -3,10 +3,10 @@
  * Monitors/Trace/Graph — 调用链关系图（自定义迁移页，Monitors Area 隐藏页兜底）
  *
  * 与 Trace/Graph 内容一致（复用同一个通用图解析组件 TraceGraph）。
- * 路由：#/Monitors/Trace/Graph?traceId=<id>
+ * 路由：/Monitors/Trace/Graph?traceId=<id>
  * 复用通用组件 TraceGraph（props traceId，内部拉 SampleData + 解析 nodes/links/categories + ECharts）。
  *
- * 路由兜底：#/Monitors/Trace/Graph 为隐藏三级路由，须在 src/main.ts 中
+ * 路由兜底：/Monitors/Trace/Graph 为隐藏三级路由，须在 src/main.ts 中
  * addRoute('/Monitors/Trace/Graph', ...) 指向本页（import.meta.glob 只扫描各目录下的 index.vue，
  * 本页文件名为 graph.vue，不会被 catch-all 命中，必须手动 addRoute）。
  */

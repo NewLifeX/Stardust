@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { toUrl } from '@/utils/routeLink';
 /**
  * Deployment/AppPipeline/Index — 流水线列表（自定义迁移页）
  *
@@ -7,7 +8,7 @@
  *           项目 ProjectName / 分支 Branch / 编译节点 BuildNodeId / 自动部署 AutoDeploy /
  *           启用 Enable / 流水线历史 History(链接列) / 更新者 UpdateUserId / 更新时间 UpdateTime /
  *           更新地址 UpdateIP（Id/Token/Secret/DeployNodeIds/TraceId 已隐藏）
- *  - 「流水线历史」列：每行一个链接 -> 跳 #/Deployment/AppPipelineRun?pipelineId=<行Id>
+ *  - 「流水线历史」列：每行一个链接 -> 跳 /Deployment/AppPipelineRun?pipelineId=<行Id>
  *    （Url 字段，后端 df.Url = "/Deployment/AppPipelineRun?pipelineId={Id}"，AutoPage 不渲染，自建）
  *  - 「复制WebHook」操作：GET /Deployment/AppPipeline/CopyWebhook?id=<行Id>
  *    -> res.data 写入 navigator.clipboard -> ElMessage 成功提示
@@ -78,9 +79,9 @@ function cellText(row: Row, key: string): string {
   return String(v);
 }
 
-/** 「流水线历史」链接：#/Deployment/AppPipelineRun?pipelineId=<行Id> */
+/** 「流水线历史」链接：/Deployment/AppPipelineRun?pipelineId=<行Id> */
 function historyUrl(row: Row): string {
-  return `#/Deployment/AppPipelineRun?pipelineId=${row.Id}`;
+  return toUrl('/Deployment/AppPipelineRun', { pipelineId: row.Id });
 }
 
 function buildParams(): Record<string, unknown> {

@@ -1,15 +1,16 @@
 <script setup lang="ts">
+import { toUrl } from '@/utils/routeLink';
 /**
  * Monitors/AppTracer/Index — 应用跟踪器列表（自定义迁移页）
  *
- * 后端 AppTracerController [Menu(90)] 可见页，路由由菜单自动注册，直接访问 #/Monitors/AppTracer。
+ * 后端 AppTracerController [Menu(90)] 可见页，路由由菜单自动注册，直接访问 /Monitors/AppTracer。
  * 对应 MVC 源 AppTracerController.cs / _List_Data.cshtml：
  *  - 自建 el-table 还原后端列表字段（标准列来自 GetPage 元数据，过滤掉后端自定义 url 跳转字段）
- *  - 自定义链接列（AutoPage 不渲染 Url 链接列，跳转按 MVC 源 #/... 自建）：
- *      每日监控  → #/Monitors/AppDaystat?monitorId={ID}
- *      埋点      → #/Monitors/TraceItem?appId={ID}        （原 ItemCount 字段）
- *      项目      → #/Platform/GalaxyProject?projectId={ProjectId} （原 ProjectName 字段）
- *      审计日志  → #/Admin/Log?category=应用跟踪器&linkId={ID}
+ *  - 自定义链接列（AutoPage 不渲染 Url 链接列，跳转按 MVC 源 /... 自建）：
+ *      每日监控  → /Monitors/AppDaystat?monitorId={ID}
+ *      埋点      → /Monitors/TraceItem?appId={ID}        （原 ItemCount 字段）
+ *      项目      → /Platform/GalaxyProject?projectId={ProjectId} （原 ProjectName 字段）
+ *      审计日志  → /Admin/Log?category=应用跟踪器&linkId={ID}
  *  - 批量工具栏（选中后可见）：Fix / FixOldData 修正 Action
  *      GET /Monitors/AppTracer/Fix        （相对无前缀路径，request 自动拼 baseURL）
  *      GET /Monitors/AppTracer/FixOldData
@@ -158,16 +159,16 @@ function cellText(row: Row, key: string): string {
 
 // 自建链接列
 function dayMonitorUrl(row: Row): string {
-  return `#/Monitors/AppDaystat?monitorId=${row.ID}`;
+  return toUrl('/Monitors/AppDaystat', { monitorId: row.ID });
 }
 function itemUrl(row: Row): string {
-  return `#/Monitors/TraceItem?appId=${row.ID}`;
+  return toUrl('/Monitors/TraceItem', { appId: row.ID });
 }
 function projectUrl(row: Row): string {
-  return `#/Platform/GalaxyProject?projectId=${row.ProjectId}`;
+  return toUrl('/Platform/GalaxyProject', { projectId: row.ProjectId });
 }
 function auditLogUrl(row: Row): string {
-  return `#/Admin/Log?category=${encodeURIComponent('应用跟踪器')}&linkId=${row.ID}`;
+  return toUrl('/Admin/Log', { category: '应用跟踪器', linkId: row.ID });
 }
 
 // 批量选择

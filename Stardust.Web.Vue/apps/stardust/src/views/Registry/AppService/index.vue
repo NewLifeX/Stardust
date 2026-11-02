@@ -3,7 +3,7 @@
  * Registry/AppService/Index — 应用服务 / 消费端（自定义迁移页）
  *
  * 后端 AppServiceController 继承自 EntityController<AppService>，[Menu(0,false)]，路由由 MenuTree 注册，
- * 直接访问 #/Registry/AppService。本页对齐 MVC 源 AppServiceController.cs：
+ * 直接访问 /Registry/AppService。本页对齐 MVC 源 AppServiceController.cs：
  *  - 标准列表列来自后端 GetPage 元数据的 list 字段（保留完整顺序，含独立链接列，不合并）
  *  - 后端定制的三列独立链接（MVC ListFields 构造）：
  *      ServiceName → /Registry/Service?name={ServiceName}        （_blank）

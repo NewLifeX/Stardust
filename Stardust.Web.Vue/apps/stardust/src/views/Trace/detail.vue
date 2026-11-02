@@ -3,10 +3,10 @@
  * Trace/Detail — 追踪明细（自定义迁移页，根 Area 隐藏页兜底）
  *
  * MVC 源 TraceController.Index（layout=detail）→ 详细表格展示该 traceId 的每条采样。
- * 路由：#/Trace/<traceId>?layout=detail 或 #/Trace/Detail?id=<traceId>
+ * 路由：/Trace/<traceId>?layout=detail 或 /Trace/Detail?id=<traceId>
  * 复用 SampleData 列表，纯表格（el-table）：操作名/耗时/开始-结束/节点/状态/Tag。
  *
- * 路由兜底：#/Trace/Detail 为隐藏三级路由，须在 src/main.ts 中 addRoute('/Trace/Detail', ...)。
+ * 路由兜底：/Trace/Detail 为隐藏三级路由，须在 src/main.ts 中 addRoute('/Trace/Detail', ...)。
  */
 import { ref, onMounted, watch, computed } from 'vue';
 import { useRoute } from 'vue-router';

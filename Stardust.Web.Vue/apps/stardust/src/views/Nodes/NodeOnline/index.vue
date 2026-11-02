@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { toUrl } from '@/utils/routeLink';
 /**
  * Nodes/NodeOnline/Index — 在线节点列表（命令面板，自定义迁移页）
  *
  * 后端 NodeOnlineController 继承自 EntityController<NodeOnline>，[Menu(80)] 可见页，
- * 路由由 MenuTree 注册，直接访问 #/Nodes/NodeOnline。本页在其之上扩展自定义逻辑
+ * 路由由 MenuTree 注册，直接访问 /Nodes/NodeOnline。本页在其之上扩展自定义逻辑
  * （对应 MVC 源 NodeOnlineController.cs / _List_Search.cshtml / _List_Toolbar_Batch.cshtml）：
  *  - 后端自定义 url 跳转字段（AutoPage 不渲染 Url 链接列，需自建）：
  *      Name     DisplayName="{Name}"  Url="/Nodes/Node/Detail?Id={NodeID}"  → 节点详情
@@ -150,10 +151,10 @@ function cellText(row: Row, key: string): string {
 
 // 自建链接列
 function nodeDetailUrl(row: Row): string {
-  return `#/Nodes/Node/Detail?Id=${row.NodeID ?? ''}`;
+  return toUrl('/Nodes/Node/Detail', { Id: row.NodeID ?? '' });
 }
 function traceUrl(row: Row): string {
-  return `#/Monitors/Trace/Detail?Id=${row.TraceId ?? ''}`;
+  return toUrl('/Monitors/Trace/Detail', { Id: row.TraceId ?? '' });
 }
 
 // 批量选择

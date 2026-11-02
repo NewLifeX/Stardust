@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { toUrl } from '@/utils/routeLink';
 /**
  * Monitors/TraceData/Index — 调用链采样监控列表（自定义迁移页）
  *
@@ -106,13 +107,13 @@ function cellText(row: Row, key: string): string {
 
 /** 链接列 URL */
 function appUrl(row: Row): string {
-  return `#/Monitors/TraceData?appId=${row.AppId}`;
+  return toUrl('/Monitors/TraceData', { appId: row.AppId });
 }
 function clientUrl(row: Row): string {
-  return `#/Monitors/TraceData?appId=${row.AppId}&clientId=${row.ClientId}&itemId=${row.ItemId}`;
+  return toUrl('/Monitors/TraceData', { appId: row.AppId, clientId: row.ClientId, itemId: row.ItemId });
 }
 function nameUrl(row: Row): string {
-  return `#/Monitors/TraceData?appId=${row.AppId}&itemId=${row.ItemId}`;
+  return toUrl('/Monitors/TraceData', { appId: row.AppId, itemId: row.ItemId });
 }
 function nodeUrl(row: Row): string {
   return `/Nodes/Node?Id=${row.NodeId}`;
@@ -120,7 +121,7 @@ function nodeUrl(row: Row): string {
 /** 采样数据明细链接（MVC 总数/正常/异常列均跳转 SampleData，dataid 取 LinkId 优先） */
 function sampleUrl(row: Row, success?: 0 | 1): string {
   const dataId = row.LinkId != null && row.LinkId > 0 ? row.LinkId : row.Id;
-  let url = `#/Monitors/SampleData?dataid=${dataId}`;
+  let url = toUrl('/Monitors/SampleData', { dataid: dataId });
   if (success != null) url += `&success=${success}`;
   return url;
 }

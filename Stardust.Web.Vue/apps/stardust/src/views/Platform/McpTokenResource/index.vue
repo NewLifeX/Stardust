@@ -3,7 +3,7 @@
  * Platform/McpTokenResource/Index — MCP 令牌资源授权列表（自定义迁移页）
  *
  * MVC 源 McpTokenResourceController.cs + 实体 McpTokenResource.cs 还原：
- *  - [Menu(20, true)] 可见页，路由由 MenuTree 注册，直接访问 #/Platform/McpTokenResource
+ *  - [Menu(20, true)] 可见页，路由由 MenuTree 注册，直接访问 /Platform/McpTokenResource
  *  - 控制器 ListFields.RemoveField("Remark","CreateIP") + RemoveCreateField
  *    → 列表列（由后端 GetPage 元数据提供）：
  *        编号 / 令牌(TokenId) / 资源类型 / 资源编号 / 全部资源 / 启用 / 授权时间

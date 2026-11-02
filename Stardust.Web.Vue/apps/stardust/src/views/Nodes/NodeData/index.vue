@@ -3,7 +3,7 @@
  * Nodes/NodeData/Index — 节点性能时序数据（自定义迁移页 + ECharts 曲线）
  *
  * MVC 源：隐藏页 [Menu(60,false)]，原 cshtml 用 ECharts 渲染节点性能时序曲线，后端迁移时已删除绘图。
- * 前端自建视图兜底（框架 DefaultEntity 已支持无菜单时按视图目录兜底），#/Nodes/NodeData 可访问。
+ * 前端自建视图兜底（框架 DefaultEntity 已支持无菜单时按视图目录兜底），/Nodes/NodeData 可访问。
  *
  * 数据：GET /Nodes/NodeData（GetPage，后端 Search 支持 nodeId/dtStart/dtEnd，默认按 Id 降序），
  *       行数据即图表数据源。字段见 Stardust.Data.Nodes.NodeData：

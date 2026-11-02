@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { toUrl } from '@/utils/routeLink';
 /**
  * Nodes/NodeCommand/Index — 节点命令列表（自定义迁移页）
  *
@@ -224,7 +225,7 @@ onMounted(async () => {
                 v-if="c.name === 'traceId' && row.traceId"
                 type="info"
                 :underline="false"
-                :href="`#/Monitors/Trace/Detail?Id=${row.traceId}`"
+                :href="toUrl('/Monitors/Trace/Detail', { Id: row.traceId })"
                 target="_blank"
               >
                 {{ row.traceId }}

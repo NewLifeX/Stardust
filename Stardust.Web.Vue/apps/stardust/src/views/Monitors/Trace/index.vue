@@ -5,7 +5,7 @@
  * MVC 源 Index.cshtml 还原：
  *  - 标题「全链路追踪」
  *  - 一个搜索输入框（placeholder「搜索TraceId（支持逗号分隔的多个TraceId）」）+ 查询按钮
- *  - 点击查询/回车 → router.push 跳转到详情页路由 #/Trace/<traceId>
+ *  - 点击查询/回车 → router.push 跳转到详情页路由 /Trace/<traceId>
  *    （详情页 Trace/Detail 待迁移，本次只负责跳转；跳转后可能暂为占位，不影响本搜索页）
  *
  * 纯前端交互页，不调后端列表接口；核心：搜索框输入 + 跳转。

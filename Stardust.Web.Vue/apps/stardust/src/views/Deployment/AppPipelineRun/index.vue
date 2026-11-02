@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { toUrl } from '@/utils/routeLink';
 /**
  * Deployment/AppPipelineRun/Index — 流水线运行记录列表（自定义迁移页）
  *
@@ -6,7 +7,7 @@
  *  - 列表列：运行编号(隐藏)/流水线 PipelineId(PipelineName)/状态 Status/分支 Branch/
  *           提交 CommitId/开始时间/结束时间/耗时 Cost/创建时间 CreateTime 等
  *           （Id/TraceId/TriggerSource 已隐藏）
- *  - 「步骤」链接列：每行 -> #/Deployment/AppPipelineStep?runId=<行Id>
+ *  - 「步骤」链接列：每行 -> /Deployment/AppPipelineStep?runId=<行Id>
  *    （Url 字段，后端 df.Url = "/Deployment/AppPipelineStep?runId={Id}"，AutoPage 不渲染，自建）
  *  - 「重跑」操作列：confirm -> GET /Deployment/AppPipelineRun/Reprocess?id=<行Id>
  *    -> ElMessage(成功/失败) -> 刷新列表
@@ -25,7 +26,7 @@ import { usePageApi } from '@newlifex/cube-vue/core/composables/useCubeApi';
 const route = useRoute();
 const api = usePageApi('Deployment', 'AppPipelineRun');
 
-/** 隐藏页 Detail 兜底：三级路由 #/Deployment/AppPipelineRun/<id> 命中 index.vue 时渲染详情组件 */
+/** 隐藏页 Detail 兜底：三级路由 /Deployment/AppPipelineRun/<id> 命中 index.vue 时渲染详情组件 */
 const AppPipelineRunDetail = defineAsyncComponent(() => import('./detail.vue'));
 
 /** 当前是否处于详情模式（三级路由 id） */
@@ -140,9 +141,9 @@ function cellText(row: Row, key: string): string {
   return String(v);
 }
 
-/** 「步骤」链接：#/Deployment/AppPipelineStep?runId=<行Id> */
+/** 「步骤」链接：/Deployment/AppPipelineStep?runId=<行Id> */
 function stepsUrl(row: Row): string {
-  return `#/Deployment/AppPipelineStep?runId=${row.Id}`;
+  return toUrl('/Deployment/AppPipelineStep', { runId: row.Id });
 }
 
 function buildParams(): Record<string, unknown> {

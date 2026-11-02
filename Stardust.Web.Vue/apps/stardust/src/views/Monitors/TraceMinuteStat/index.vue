@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { toUrl, go } from '@/utils/routeLink';
 /**
  * Monitors/TraceMinuteStat/Index — 每5分钟追踪统计（自定义迁移页 + ECharts 双图表）
  *
@@ -100,13 +101,13 @@ function cellText(row: Row, key: string): string {
 }
 
 function detailUrl(row: Row): string {
-  return `#/Monitors/SampleData?appId=${row.AppId}&itemId=${row.ItemId}&kind=minute&time=${formatTime(row.StatTime)}`;
+  return toUrl('/Monitors/SampleData', { appId: row.AppId, itemId: row.ItemId, kind: 'minute', time: formatTime(row.StatTime) });
 }
 function nameUrl(row: Row): string {
-  return `#/Monitors/TraceMinuteStat?appId=${row.AppId}&itemId=${row.ItemId}`;
+  return toUrl('/Monitors/TraceMinuteStat', { appId: row.AppId, itemId: row.ItemId });
 }
 function totalUrl(row: Row): string {
-  return `#/Monitors/traceData?appId=${row.AppId}&itemId=${row.ItemId}&kind=minute&time=${formatTime(row.StatTime)}`;
+  return toUrl('/Monitors/traceData', { appId: row.AppId, itemId: row.ItemId, kind: 'minute', time: formatTime(row.StatTime) });
 }
 
 function rowClassName({ row }: { row: Row }): string {
@@ -217,7 +218,7 @@ async function onTrace(row: Row) {
     const traceId = res?.data?.traceId ?? res?.traceId;
     if (traceId != null) {
       ElNotification.success({ title: '追踪', message: `traceId: ${traceId}` });
-      window.location.hash = `#/trace?id=${traceId}`;
+      go('/Trace', { id: traceId });
     } else if (res && (res.code === 0 || res.code === 1 || res.success)) {
       ElNotification.success({ title: '追踪', message: res.message || '成功' });
     } else {
@@ -371,7 +372,7 @@ onMounted(async () => {
                 v-if="c.name === 'AppName' && showAppCol && row.AppId != null"
                 type="primary"
                 :underline="false"
-                :href="`#/Monitors/TraceMinuteStat?appId=${row.AppId}`"
+                :href="toUrl('/Monitors/TraceMinuteStat', { appId: row.AppId })"
                 target="_self"
               >
                 {{ cellText(row, c.name) }}

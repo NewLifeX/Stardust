@@ -3,7 +3,7 @@
  * Platform/McpToken/Index — MCP 令牌列表（自定义迁移页）
  *
  * MVC 源 McpTokenController.cs + _Form_Body.cshtml 还原：
- *  - [Menu(30, true)] 可见页，路由由 MenuTree 注册，直接访问 #/Platform/McpToken
+ *  - [Menu(30, true)] 可见页，路由由 MenuTree 注册，直接访问 /Platform/McpToken
  *  - 控制器 ListFields.RemoveField("Token","LastIP","TraceId") + RemoveCreateField/RemoveRemarkField
  *    → 列表列：编号 / 名称 / 启用 / 过期时间 / 最后调用时间 / 调用次数 等（由后端 GetPage 元数据提供）
  *  - 自定义操作列 Reset（DataAction="action"）：

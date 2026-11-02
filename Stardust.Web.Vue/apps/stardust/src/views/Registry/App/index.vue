@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { toUrl, openInNewTab } from '@/utils/routeLink';
 /**
  * Registry/App/Index — 应用列表（自定义迁移页）
  *
  * 后端 AppController 继承自 EntityController<App>，[Menu(99)] 可见页，路由由 MenuTree 注册，
- * 直接访问 #/Registry/App。本页在其之上扩展自定义逻辑（对应 MVC 源 AppController.cs /
+ * 直接访问 /Registry/App。本页在其之上扩展自定义逻辑（对应 MVC 源 AppController.cs /
  * _List_Search.cshtml / _List_Toolbar_Batch.cshtml）：
  *  - 自定义 url 跳转列：Name→详情、ProjectName→项目、AppLog→应用日志、Log→审计日志（后端 url 字段，自建）
  *  - 自定义搜索栏：类别下拉(category，来自 App.FindAllCategory()) + 日期范围(dtStart/dtEnd)
@@ -151,16 +152,16 @@ function cellText(row: Row, key: string): string {
 
 // 自建链接列
 function detailUrl(row: Row): string {
-  return `#/Registry/App/Detail?id=${row.Id}`;
+  return toUrl('/Registry/App/Detail', { id: row.Id });
 }
 function projectUrl(row: Row): string {
-  return `#/Platform/GalaxyProject?projectId=${row.ProjectId}`;
+  return toUrl('/Platform/GalaxyProject', { projectId: row.ProjectId });
 }
 function appLogUrl(row: Row): string {
-  return `#/Registry/AppLog?appId=${row.Id}`;
+  return toUrl('/Registry/AppLog', { appId: row.Id });
 }
 function auditLogUrl(row: Row): string {
-  return `#/Admin/Log?category=${encodeURIComponent('应用系统')}&linkId=${row.Id}`;
+  return toUrl('/Admin/Log', { category: '应用系统', linkId: row.Id });
 }
 
 // 批量选择
@@ -222,7 +223,7 @@ async function querySearchAsync(query: string, cb: (items: { value: string; id: 
 
 function onSearchSelect(item: { value: string; id: number }) {
   if (item?.id != null) {
-    window.open(`#/Registry/App/Detail?id=${item.id}`, '_blank');
+    openInNewTab('/Registry/App/Detail', { id: item.id });
   }
 }
 

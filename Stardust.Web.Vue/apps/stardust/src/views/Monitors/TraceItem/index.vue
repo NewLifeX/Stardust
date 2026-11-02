@@ -1,14 +1,15 @@
 <script setup lang="ts">
+import { toUrl } from '@/utils/routeLink';
 /**
  * Monitors/TraceItem/Index — 埋点（跟踪项）列表（自定义迁移页）
  *
  * 后端 TraceItemController [Menu(65, false)] 隐藏页，菜单不注册路由，
- * 靠框架 DefaultEntity 的 catch-all + hasMatchingCustomView 自定义视图兜底，可访问 #/Monitors/TraceItem。
+ * 靠框架 DefaultEntity 的 catch-all + hasMatchingCustomView 自定义视图兜底，可访问 /Monitors/TraceItem。
  * 对应 MVC 源 TraceItemController.cs / _List_Data.cshtml：
  *  - 自建 el-table 还原后端列表字段（标准列来自 GetPage 元数据，过滤掉后端自定义 url 跳转字段）
- *  - 自定义链接列（AutoPage 不渲染 Url 链接列，跳转按 MVC 源 #/... 自建）：
- *      每日监控 → #/Monitors/TraceDayStat?appId={AppId}&itemId={Id}（紧贴"操作名"列之后）
- *      审计日志 → #/Admin/Log?category=跟踪项&linkId={Id}（末列）
+ *  - 自定义链接列（AutoPage 不渲染 Url 链接列，跳转按 MVC 源 /... 自建）：
+ *      每日监控 → /Monitors/TraceDayStat?appId={AppId}&itemId={Id}（紧贴"操作名"列之后）
+ *      审计日志 → /Admin/Log?category=跟踪项&linkId={Id}（末列）
  *  - 批量工具栏（选中后可见）：Fix / FixDisplay 修正显示名 Action
  *      GET /Monitors/TraceItem/Fix
  *      GET /Monitors/TraceItem/FixDisplay
@@ -132,10 +133,10 @@ function cellText(row: Row, key: string): string {
 
 // 自建链接列
 function dayMonitorUrl(row: Row): string {
-  return `#/Monitors/TraceDayStat?appId=${row.AppId}&itemId=${row.Id}`;
+  return toUrl('/Monitors/TraceDayStat', { appId: row.AppId, itemId: row.Id });
 }
 function auditLogUrl(row: Row): string {
-  return `#/Admin/Log?category=${encodeURIComponent('跟踪项')}&linkId=${row.Id}`;
+  return toUrl('/Admin/Log', { category: '跟踪项', linkId: row.Id });
 }
 
 // 批量选择

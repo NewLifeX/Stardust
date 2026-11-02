@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import { toUrl } from '@/utils/routeLink';
 /**
  * Nodes/NodeStat/Index — 节点统计（自定义迁移页 + ECharts 曲线）
  *
- * MVC 源：可见页 [Menu(60)]，路由自动注册，#/Nodes/NodeStat 可访问。
+ * MVC 源：可见页 [Menu(60)]，路由自动注册，/Nodes/NodeStat 可访问。
  * 原 cshtml 用 ECharts 渲染节点数量/在线率等趋势，后端迁移时已删除绘图。
  * 前端自建视图兜底（框架 DefaultEntity 按视图目录兜底），复用通用 EChart 组件。
  *
@@ -310,7 +311,7 @@ onMounted(async () => {
                 v-if="c.name === 'nodes'"
                 type="primary"
                 :underline="false"
-                :href="`#/Nodes/NodeStat?category=${encodeURIComponent(row.Category ?? '')}&dtStart=${formatDate(row.StatDate)}&dtEnd=${formatDate(row.StatDate)}`"
+                :href="toUrl('/Nodes/NodeStat', { category: row.Category ?? '', dtStart: formatDate(row.StatDate), dtEnd: formatDate(row.StatDate) })"
                 target="_blank"
               >
                 明细

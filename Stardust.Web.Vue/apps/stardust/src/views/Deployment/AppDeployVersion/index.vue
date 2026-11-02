@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { toUrl } from '@/utils/routeLink';
 /**
  * Deployment/AppDeployVersion/Index — 应用版本列表（自定义迁移页）
  *
  * MVC 源 _Form_File.cshtml + 控制器 ListFields 还原：
- *  - 列表列：编号 Id / 发布集 DeployName（**可点击链接** -> #/Deployment/AppDeploy?deployId=<DeployId>）
+ *  - 列表列：编号 Id / 发布集 DeployName（**可点击链接** -> /Deployment/AppDeploy?deployId=<DeployId>）
  *            / 版本 Version / 大小 Size / 哈希 Hash / 启用 Enable / 文件 Url（列表显示「下载」链接）/ 创建时间 等
  *  - 隐藏页兜底：[Menu(80,false)] 隐藏页，框架不会注册路由，靠 DefaultEntity 视图兜底渲染本自定义页
  *  - 「使用版本」操作列：每行一个按钮 -> confirm -> GET /Deployment/AppDeployVersion/UseVersion?Id=<行Id>
@@ -92,7 +93,7 @@ function formatSize(bytes: number): string {
 }
 
 function deployNameUrl(row: Row): string {
-  return `#/Deployment/AppDeploy?deployId=${row.DeployId ?? row.Id}`;
+  return toUrl('/Deployment/AppDeploy', { deployId: row.DeployId ?? row.Id });
 }
 
 function buildParams(): Record<string, unknown> {

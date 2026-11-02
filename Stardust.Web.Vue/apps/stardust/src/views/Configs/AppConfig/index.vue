@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { toUrl } from '@/utils/routeLink';
 /**
  * Configs/AppConfig/Index — 应用配置列表（自定义迁移页）
  *
@@ -153,16 +154,16 @@ function canPublish(row: Row): boolean {
 }
 
 function configDataUrl(row: Row): string {
-  return `#/Configs/ConfigData?configId=${row.Id}`;
+  return toUrl('/Configs/ConfigData', { configId: row.Id });
 }
 function historyUrl(row: Row): string {
-  return `#/Configs/ConfigHistory?configId=${row.Id}`;
+  return toUrl('/Configs/ConfigHistory', { configId: row.Id });
 }
 function previewUrl(row: Row): string {
   return `/config/getall?appId=${encodeURIComponent(row.Name ?? '')}&secret=${encodeURIComponent(row.AppSecret ?? '')}`;
 }
 function auditLogUrl(row: Row): string {
-  return `#/Admin/Log?category=${encodeURIComponent('应用配置')}&linkId=${row.Id}`;
+  return toUrl('/Admin/Log', { category: '应用配置', linkId: row.Id });
 }
 
 async function onPublish(row: Row) {

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { toUrl } from '@/utils/routeLink';
 /**
  * Monitors/AppMinuteStat/Index — 应用分钟级统计（自定义迁移页 + ECharts 双图表）
  *
@@ -98,7 +99,7 @@ function cellText(row: Row, key: string): string {
 
 /** 总次数链接到 traceData（与 MVC 一致） */
 function totalUrl(row: Row): string {
-  return `#/Monitors/traceData?appId=${row.AppId}&kind=minute&time=${formatTime(row.StatTime)}`;
+  return toUrl('/Monitors/traceData', { appId: row.AppId, kind: 'minute', time: formatTime(row.StatTime) });
 }
 
 /** 行着色（MVC: ErrorRate>=0.01 danger / >=0.001 warning） */
@@ -343,7 +344,7 @@ watch(rows, () => {}, { deep: true });
                 v-if="c.name === 'AppName' && row.AppId != null"
                 type="primary"
                 :underline="false"
-                :href="`#/Monitors/AppDayStat?monitorId=${row.AppId}`"
+                :href="toUrl('/Monitors/AppDayStat', { monitorId: row.AppId })"
                 target="_self"
               >
                 {{ cellText(row, c.name) }}

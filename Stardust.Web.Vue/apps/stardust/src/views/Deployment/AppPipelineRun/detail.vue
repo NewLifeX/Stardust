@@ -1,16 +1,17 @@
 <script setup lang="ts">
+import { toUrl } from '@/utils/routeLink';
 /**
  * Deployment/AppPipelineRun/Detail — 流水线运行详情（隐藏页自定义视图）
  *
  * 控制器 [Menu(40,false)] 不在 MenuTree，框架 DefaultEntity 兜底：
- * 当 URL 形如 #/Deployment/AppPipelineRun/<id> 且无菜单匹配时，
+ * 当 URL 形如 /Deployment/AppPipelineRun/<id> 且无菜单匹配时，
  * 尝试渲染本视图。
  *
  * 自定义逻辑还原：
  *  - 调 usePageApi('Deployment','AppPipelineRun').getDetail(id) 读取单条运行记录
  *  - el-descriptions 展示：编号/流水线/状态/开始结束时间/耗时/触发源/错误信息/创建时间等
  *  - 状态轮询：当 Status 为「运行中」0/1/2/3 时，每 4s getDetail 刷新直到结束
- *  - 返回列表链接 -> #/Deployment/AppPipelineRun
+ *  - 返回列表链接 -> /Deployment/AppPipelineRun
  */
 import { ref, computed, onMounted, onUnmounted, watchEffect } from 'vue';
 import { useRoute } from 'vue-router';
@@ -173,7 +174,7 @@ watchEffect(() => {
       <div class="detail-toolbar">
         <a
           class="el-link el-link--primary"
-          href="#/Deployment/AppPipelineRun"
+          :href="toUrl('/Deployment/AppPipelineRun')"
         >
           <el-icon><ArrowLeft /></el-icon>
           <span>返回列表</span>

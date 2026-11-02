@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { toUrl } from '@/utils/routeLink';
 /**
  * Registry/Service/Index — 消费服务注册（自定义迁移页）
  *
  * 后端 ServiceController 继承自 EntityController<Service>，[Menu(40)] 可见页，路由由 MenuTree 注册，
- * 直接访问 #/Registry/Service。本页对接后端 GetPage 元数据（list 字段），逐列渲染对齐 MVC 呈现：
+ * 直接访问 /Registry/Service。本页对接后端 GetPage 元数据（list 字段），逐列渲染对齐 MVC 呈现：
  *  - 列集合（顺序、显示名均来自后端 GetPage list 元数据，列名权威=实体 DisplayName）：
  *      Id(编号) → ProjectName(项目) → Name(名称) → DisplayName(显示名) → Category(类别)
  *      → Enable(启用) → Extranet(外网) → Singleton(单例) → UseScope(作用域)
@@ -131,10 +132,10 @@ function cellText(row: Row, key: string): string {
 
 // 独立链接列：后端 url 模板 /Registry/AppService?serviceId={Id} / /Registry/AppConsume?serviceId={Id}
 function providersUrl(row: Row): string {
-  return `#/Registry/AppService?serviceId=${row.Id}`;
+  return toUrl('/Registry/AppService', { serviceId: row.Id });
 }
 function consumersUrl(row: Row): string {
-  return `#/Registry/AppConsume?serviceId=${row.Id}`;
+  return toUrl('/Registry/AppConsume', { serviceId: row.Id });
 }
 
 // 批量选择

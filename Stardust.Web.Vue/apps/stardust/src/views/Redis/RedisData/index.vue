@@ -3,7 +3,7 @@
  * Redis/RedisData/Index — Redis 性能时序数据（自定义迁移页 + ECharts 曲线）
  *
  * MVC 源：隐藏页 [Menu(40,false)]，原 cshtml 用 ECharts 渲染 Redis 性能时序曲线，后端迁移时已删除绘图。
- * 前端自建视图兜底（框架 DefaultEntity 已支持无菜单时按视图目录兜底），#/Redis/RedisData 可访问。
+ * 前端自建视图兜底（框架 DefaultEntity 已支持无菜单时按视图目录兜底），/Redis/RedisData 可访问。
  *
  * 数据：GET /Redis/RedisData（GetPage，后端 Search 支持 redisId/dtStart/dtEnd），
  *       行数据即图表数据源。字段见 Stardust.Data.Nodes.RedisData：
@@ -189,7 +189,7 @@ function onPageChange(p: number) {
 }
 
 onMounted(async () => {
-  // 从 hash 读取 redisId（来自 RedisNode 监控列跳转：#/Redis/RedisData?redisId={Id}）
+  // 从 hash 读取 redisId（来自 RedisNode 监控列跳转：/Redis/RedisData?redisId={Id}）
   const m = location.hash.match(/[?&]redisId=(\d+)/);
   if (m) redisIdFilter.value = Number(m[1]);
   await fetchList();

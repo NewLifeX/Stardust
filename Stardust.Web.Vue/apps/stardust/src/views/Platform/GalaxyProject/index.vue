@@ -1,4 +1,5 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
+import { openInNewTab } from '@/utils/routeLink';
 import { reactive, ref, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { usePageApi } from '@newlifex/cube-vue/core/composables/useCubeApi';
@@ -21,7 +22,7 @@ async function onMountedAsync() {
 onMounted(onMountedAsync);
 
 function navigateTo(row: any) {
-  window.open(`/#/Platform/GalaxyProject?projectId=${row.Id}`, '_blank');
+  openInNewTab('/Platform/GalaxyProject', { projectId: row.Id });
 }
 
 // ---- 新建 / 编辑项目 ----
@@ -157,6 +158,34 @@ function closeModal() {
         width="90"
         align="center"
       />
+      <!-- §17.1 项目页补充列：环境 / 服务数 / 成员数（后端暂无对应字段与接口，显示待接入，不造假数据） -->
+      <el-table-column
+        label="环境"
+        width="100"
+        align="center"
+      >
+        <template #default>
+          <span class="text-[var(--el-text-color-placeholder)]">—（待接入）</span>
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="服务数"
+        width="90"
+        align="center"
+      >
+        <template #default>
+          <span class="text-[var(--el-text-color-placeholder)]">—（待接入）</span>
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="成员数"
+        width="90"
+        align="center"
+      >
+        <template #default>
+          <span class="text-[var(--el-text-color-placeholder)]">—（待接入）</span>
+        </template>
+      </el-table-column>
       <el-table-column
         prop="Sort"
         label="排序"
@@ -267,3 +296,4 @@ function closeModal() {
 
 <style lang="scss" scoped>
 </style>
+

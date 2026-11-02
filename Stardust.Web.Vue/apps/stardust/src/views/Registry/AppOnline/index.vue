@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { toUrl } from '@/utils/routeLink';
 /**
  * Registry/AppOnline/Index — 应用在线实例列表（自定义迁移页）
  *
  * 后端 AppOnlineController 继承自 EntityController<AppOnline>，[Menu(95)] 可见页，
- * 路由由 MenuTree 注册，直接访问 #/Registry/AppOnline。本页在其之上扩展自定义逻辑
+ * 路由由 MenuTree 注册，直接访问 /Registry/AppOnline。本页在其之上扩展自定义逻辑
  * （对应 MVC 源 AppOnlineController.cs / _List_Search.cshtml / _List_Toolbar_Batch.cshtml）：
  *  - 后端自定义 url 跳转字段（AutoPage 不渲染 Url 链接列，需自建）：
  *      AppName   DisplayName="{AppName}"  Url="/Registry/App/Detail?id={AppId}"        → 应用详情
@@ -166,21 +167,21 @@ function linkLabel(name: string): string {
 
 // 自建链接列
 function appDetailUrl(row: Row): string {
-  return `#/Registry/App/Detail?id=${row.AppId ?? ''}`;
+  return toUrl('/Registry/App/Detail', { id: row.AppId ?? '' });
 }
 function nodeUrl(row: Row): string {
-  return `#/Nodes/Node?Id=${row.NodeId ?? ''}`;
+  return toUrl('/Nodes/Node', { Id: row.NodeId ?? '' });
 }
 function meterUrl(row: Row): string {
-  return `#/Registry/AppMeter?appId=${row.AppId ?? ''}&clientId=${row.Client ?? ''}`;
+  return toUrl('/Registry/AppMeter', { appId: row.AppId ?? '', clientId: row.Client ?? '' });
 }
 function historyUrl(row: Row): string {
-  return `#/Registry/AppHistory?appId=${row.AppId ?? ''}&client=${row.Client ?? ''}`;
+  return toUrl('/Registry/AppHistory', { appId: row.AppId ?? '', client: row.Client ?? '' });
 }
 
 // 跟踪链接列（MVC ListFields.TraceUrl() 生成 TraceId 跟踪跳转；WebApi 端 TraceUrl 仅取字段无 Url，需自建）
 function traceUrl(row: Row): string {
-  return `#/Monitors/Trace/Detail?Id=${row.TraceId ?? ''}`;
+  return toUrl('/Monitors/Trace/Detail', { Id: row.TraceId ?? '' });
 }
 
 // 批量选择

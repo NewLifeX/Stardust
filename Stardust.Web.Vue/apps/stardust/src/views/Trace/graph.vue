@@ -3,10 +3,10 @@
  * Trace/Graph — 调用链关系图（自定义迁移页，根 Area 隐藏页兜底）
  *
  * MVC 源 TraceController.Graph → ECharts graph 关系图。
- * 路由：#/Trace/Graph?traceId=<id> 或 #/Trace/<id>/graph
+ * 路由：/Trace/Graph?traceId=<id> 或 /Trace/<id>/graph
  * 复用通用组件 TraceGraph（props traceId，内部拉 SampleData + 解析 nodes/links/categories + ECharts）。
  *
- * 路由兜底：#/Trace/Graph 为隐藏二级路由，须在 src/main.ts 中 addRoute('/Trace/Graph', ...) 指向本页。
+ * 路由兜底：/Trace/Graph 为隐藏二级路由，须在 src/main.ts 中 addRoute('/Trace/Graph', ...) 指向本页。
  */
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { toUrl } from '@/utils/routeLink';
 /**
  * Registry/AppHistory/Index — 应用历史列表（自定义迁移页）
  *
@@ -150,16 +151,16 @@ function cellText(row: Row, key: string): string {
 
 // 自建链接列（对齐 MVC 后端 Url 配置；WebApi 端 TraceUrl 仅取字段无 Url，需自建）
 function appUrl(row: Row): string {
-  return `#/Registry/App?Id=${row.AppId}`;
+  return toUrl('/Registry/App', { Id: row.AppId });
 }
 function clientUrl(row: Row): string {
-  return `#/Registry/AppHistory?appId=${row.AppId}&client=${row.Client}`;
+  return toUrl('/Registry/AppHistory', { appId: row.AppId, client: row.Client });
 }
 function actionUrl(row: Row): string {
-  return `#/Registry/AppHistory?appId=${row.AppId}&action=${row.Action}`;
+  return toUrl('/Registry/AppHistory', { appId: row.AppId, action: row.Action });
 }
 function traceUrl(row: Row): string {
-  return `#/Monitors/Trace/Detail?Id=${row.TraceId ?? ''}`;
+  return toUrl('/Monitors/Trace/Detail', { Id: row.TraceId ?? '' });
 }
 
 function handleSearch() {

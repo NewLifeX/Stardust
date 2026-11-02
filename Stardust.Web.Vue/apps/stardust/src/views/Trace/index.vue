@@ -3,13 +3,13 @@
  * Trace/Index — 调用链树（自定义迁移页，根 Area 隐藏页兜底）
  *
  * MVC 源 TraceController.Index（layout != detail）→ 调用链树。
- * 路由：#/Trace/<traceId>（traceId 取 route.params.id 或 route.query.id）
- * 也支持 #/Trace/<traceId>?layout=detail 切换到追踪明细（纯表格）。
+ * 路由：/Trace/<traceId>（traceId 取 route.params.id 或 route.query.id）
+ * 也支持 /Trace/<traceId>?layout=detail 切换到追踪明细（纯表格）。
  *
  * - 调用链树：复用通用组件 TraceTree（props traceId，内部拉 SampleData + 构建树）
- * - 追踪明细（layout=detail）：复用 Trace/Detail 逻辑，路由 #/Trace/Detail?id= 或本页切换
+ * - 追踪明细（layout=detail）：复用 Trace/Detail 逻辑，路由 /Trace/Detail?id= 或本页切换
  *
- * 路由兜底：#/Trace/<id> 为隐藏三级路由，须在 src/main.ts 中 addRoute('/Trace/:id', ...)
+ * 路由兜底：/Trace/<id> 为隐藏三级路由，须在 src/main.ts 中 addRoute('/Trace/:id', ...)
  * 指向本 index.vue（参考 Doc/待迁移页面.md 第 3.6 节「隐藏页三级路由」经验）。
  */
 import { computed } from 'vue';

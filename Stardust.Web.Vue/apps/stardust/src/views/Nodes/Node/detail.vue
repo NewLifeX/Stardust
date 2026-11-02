@@ -2,7 +2,7 @@
 /**
  * Nodes/Node/Detail — 节点详情（自定义迁移页）
  *
- * 路由：#/Nodes/Node/Detail/{id}
+ * 路由：/Nodes/Node/Detail/{id}
  *  - usePageApi('Nodes','Node').getDetail(id) 读取单条节点记录
  *  - el-descriptions 展示节点字段
  *  - 额外列出该节点部署的应用（AppDeployNode?nodeId），实现「节点列出部署的应用」

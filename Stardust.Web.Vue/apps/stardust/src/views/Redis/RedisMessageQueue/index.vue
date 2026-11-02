@@ -1,10 +1,11 @@
 <script setup lang="ts">
+import { toUrl } from '@/utils/routeLink';
 /**
  * Redis/RedisMessageQueue/Index — Redis 消息队列（自定义迁移页）
  *
  * MVC 源 RedisMessageQueueController.cs + _List_Search.cshtml 还原：
- *  - [Menu(30,false)] 隐藏页，displayName "Redis消息队列"，路由由 MenuTree 注册，可访问 #/Redis/RedisMessageQueue
- *    （RedisNode 监控列的 队列 跳转即指向 #/Redis/RedisMessageQueue?redisId={Id}）
+ *  - [Menu(30,false)] 隐藏页，displayName "Redis消息队列"，路由由 MenuTree 注册，可访问 /Redis/RedisMessageQueue
+ *    （RedisNode 监控列的 队列 跳转即指向 /Redis/RedisMessageQueue?redisId={Id}）
  *  - 标准列表列（来自后端 GetPage list 元数据，顺序即对 MVC ListFields）：
  *      编号 / Redis节点(RedisName) / 名称 / 分类 / 库 / 主题 / 类型 / 消费组 /
  *      消费者 / 总消费 / 消息数 / 最大积压 / 启用 / 最早消费 / 最后活跃 /
@@ -12,7 +13,7 @@
  *    （WebHook、ConsumerInfo、创建系列、更新系列除 UpdateTime 已在后端 ListFields 移除）
  *    RedisName 为后端 mapField=RedisId 的扩展列（Redis节点名称）。
  *  - 独立链接列（自建，不进入自动表格列）：
- *      TraceId → 追踪：有值时显示，跳转星尘链路（降级 #/Monitors/Trace?id={TraceId}，target=_blank）
+ *      TraceId → 追踪：有值时显示，跳转星尘链路（降级 /Monitors/Trace?id={TraceId}，target=_blank）
  *      Log     → 审计日志：/Admin/Log?category=Redis消息队列&linkId={Id}  (target=_frame)
  *  - 搜索（_List_Search）：节点编号(redisId) + 类别下拉(category, RedisMessageQueue.GetCategoryList()) + 日期范围(dtStart/dtEnd)
  *    后端 Search 支持 redisId/category/dtStart/dtEnd；类别下拉前端从列表聚合（同 RedisNode 做法）。
@@ -152,11 +153,11 @@ function cellText(row: Row, key: string): string {
 
 // 独立链接列：追踪（降级到监控中心链路查询页）
 function traceUrl(row: Row): string {
-  return `#/Monitors/Trace?id=${row.TraceId}`;
+  return toUrl('/Monitors/Trace', { id: row.TraceId });
 }
 // 独立链接列：审计日志（_frame 内嵌）
 function auditLogUrl(row: Row): string {
-  return `#/Admin/Log?category=${encodeURIComponent('Redis消息队列')}&linkId=${row.Id}`;
+  return toUrl('/Admin/Log', { category: 'Redis消息队列', linkId: row.Id });
 }
 
 function handleSearch() {
@@ -182,7 +183,7 @@ const hasActiveFilter = computed(
 
 onMounted(async () => {
   console.log('[Redis/RedisMessageQueue] custom view mounted');
-  // 从 hash 读取 redisId（来自 RedisNode 监控列跳转：#/Redis/RedisMessageQueue?redisId={Id}）
+  // 从 hash 读取 redisId（来自 RedisNode 监控列跳转：/Redis/RedisMessageQueue?redisId={Id}）
   const m = location.hash.match(/[?&]redisId=(\d+)/);
   if (m) redisIdFilter.value = Number(m[1]);
   await fetchMeta();

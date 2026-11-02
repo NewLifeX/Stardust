@@ -3,7 +3,7 @@
  * Nodes/NodeFramework/Index — 节点框架管理（命令面板，自定义迁移页）
  *
  * 后端 NodeFrameworkController 继承自 NodesEntityController<Node>，[Menu(70)] 可见页，
- * 路由由 MenuTree 注册，直接访问 #/Nodes/NodeFramework。本页在其之上扩展自定义逻辑
+ * 路由由 MenuTree 注册，直接访问 /Nodes/NodeFramework。本页在其之上扩展自定义逻辑
  * （对应 MVC 源 NodeFrameworkController.cs / _List_Search.cshtml / _List_Toolbar_Batch.cshtml）：
  *  - 列表列：后端 GetPage 元数据（Node 实体字段），自建 el-table 还原
  *      （NodeFramework 控制器无自定义 Url 跳转字段，无需自建链接列，直接渲染元数据列）

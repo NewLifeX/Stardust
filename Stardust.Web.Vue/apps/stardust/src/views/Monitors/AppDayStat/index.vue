@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { toUrl } from '@/utils/routeLink';
 /**
  * Monitors/AppDayStat/Index — 应用日统计（自定义迁移页 + ECharts 双图表）
  *
@@ -9,7 +10,7 @@
  *      平均耗时 Cost / 最大耗时 MaxCost / 最小耗时 MinCost /
  *      接口数 Apis / Http请求 Https / 数据库 Dbs / 消息队列 Mqs / Redis缓存 Redis / 其它 Others /
  *      创建时间 CreateTime / 更新时间 UpdateTime
- *  - 「当日监控」独立链接列：#/Monitors/TraceDayStat?appId=&date=（MVC 独立列，不依赖 TraceUrl）。
+ *  - 「当日监控」独立链接列：/Monitors/TraceDayStat?appId=&date=（MVC 独立列，不依赖 TraceUrl）。
  *  - 分项列 Apis/Https/Dbs/Mqs/Redis/Others 在 MVC 中均链接到当日监控并带 type 参数，已还原为链接列。
  *  - 行着色 ErrorRate 阈值；总计行聚合（RingRate/ErrorRate/Cost/MaxCost/MinCost 均值，其余求和）。
  *  - 图表（控制器 Search 权威）：双图
@@ -124,7 +125,7 @@ function cellText(row: Row, key: string): string {
 
 /** 当日监控链接列 URL */
 function dayMonitorUrl(row: Row): string {
-  return `#/Monitors/TraceDayStat?appId=${row.AppId}&date=${formatDate(row.StatDate)}`;
+  return toUrl('/Monitors/TraceDayStat', { appId: row.AppId, date: formatDate(row.StatDate) });
 }
 /** 分项列链接（带 type 参数） */
 function typeDetailUrl(row: Row, key: string): string {
@@ -411,7 +412,7 @@ onMounted(async () => {
                 v-if="c.name === 'AppName' && showAppCol && row.AppId != null"
                 type="primary"
                 :underline="false"
-                :href="`#/Monitors/AppDayStat?appId=${row.AppId}`"
+                :href="toUrl('/Monitors/AppDayStat', { appId: row.AppId })"
                 target="_self"
               >
                 {{ cellText(row, c.name) }}

@@ -3,7 +3,7 @@
  * Registry/AppConsume/Index — 应用消费列表（自定义迁移页）
  *
  * 后端 AppConsumeController 继承自 EntityController<AppConsume>，[Menu(0, false)] 隐藏菜单页，
- * 路由由 MenuTree 注册，直接访问 #/Registry/AppConsume（通常由外部带 appId / client 跳转进入）。
+ * 路由由 MenuTree 注册，直接访问 /Registry/AppConsume（通常由外部带 appId / client 跳转进入）。
  * 本页对应 MVC 源 AppConsumeController.cs / _List.cshtml：
  *  - 后端静态构造函数移除 ServiceId，并对以下字段设置独立链接列（独立跳转，不合并）：
  *      ServiceName  DisplayName="{ServiceName}"  Url="/Registry/Service?name={ServiceName}"        Target="_blank"

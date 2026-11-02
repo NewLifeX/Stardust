@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { toUrl } from '@/utils/routeLink';
 /**
  * Nodes/NodeHistory/Index — 节点历史列表（自定义迁移页）
  *
@@ -280,7 +281,7 @@ onMounted(async () => {
                 v-if="c.name === 'nodeName' && row.nodeId != null"
                 type="primary"
                 :underline="false"
-                :href="`#/Nodes/Node?Id=${row.nodeId}`"
+                :href="toUrl('/Nodes/Node', { Id: row.nodeId })"
                 target="_blank"
               >
                 {{ row.nodeName || row.nodeId }}

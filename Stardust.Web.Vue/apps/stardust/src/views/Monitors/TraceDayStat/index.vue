@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { toUrl, go } from '@/utils/routeLink';
 /**
  * Monitors/TraceDayStat/Index — 每日追踪统计（自定义迁移页 + ECharts 双图表）
  *
@@ -10,8 +11,8 @@
  *      错误率 ErrorRate / 平均耗时 Cost / 最大耗时 MaxCost / 最小耗时 MinCost / 数值 TotalValue /
  *      明细(链接列) / 追踪(链接列) / 创建时间 CreateTime / 更新时间 UpdateTime
  *  - 链接列独立自建（MVC 独立「明细/追踪」列，不依赖控制器 TraceUrl）：
- *      明细 -> #/Monitors/SampleData?appId=&itemId=&date=
- *      追踪 -> /Monitors/TraceDayStat/Trace?id=  (GET 后端返回 {traceId}，再跳 #/trace?id=)
+ *      明细 -> /Monitors/SampleData?appId=&itemId=&date=
+ *      追踪 -> /Monitors/TraceDayStat/Trace?id=  (GET 后端返回 {traceId}，再跳 /trace?id=)
  *  - 行着色：ErrorRate >=0.01 danger / >=0.001 warning（MVC tr class）。
  *  - 总计行：MVC 自定义 footer，聚合 Total/RingRate/Errors/ErrorRate/Cost/MaxCost/MinCost/TotalValue
  *            （RingRate/ErrorRate 取均值）。前端 el-table show-summary + summary-method 还原。
@@ -118,19 +119,19 @@ function cellText(row: Row, key: string): string {
 
 /** 链接列 URL */
 function detailUrl(row: Row): string {
-  return `#/Monitors/SampleData?appId=${row.AppId}&itemId=${row.ItemId}&date=${formatDate(row.StatDate)}`;
+  return toUrl('/Monitors/SampleData', { appId: row.AppId, itemId: row.ItemId, date: formatDate(row.StatDate) });
 }
 function nameUrl(row: Row): string {
-  return `#/Monitors/TraceDayStat?appId=${row.AppId}&itemId=${row.ItemId}`;
+  return toUrl('/Monitors/TraceDayStat', { appId: row.AppId, itemId: row.ItemId });
 }
 function totalUrl(row: Row): string {
-  return `#/Monitors/traceData?appId=${row.AppId}&itemId=${row.ItemId}&date=${formatDate(row.StatDate)}`;
+  return toUrl('/Monitors/traceData', { appId: row.AppId, itemId: row.ItemId, date: formatDate(row.StatDate) });
 }
 function traceUrl(row: Row): string {
-  return `#/Monitors/TraceDayStat/Trace?id=${row.ID}`;
+  return toUrl('/Monitors/TraceDayStat/Trace', { id: row.ID });
 }
 function typeUrl(row: Row): string {
-  return `#/Monitors/TraceDayStat?appId=${row.AppId}&type=${row.Type}&date=${formatDate(row.StatDate)}`;
+  return toUrl('/Monitors/TraceDayStat', { appId: row.AppId, type: row.Type, date: formatDate(row.StatDate) });
 }
 
 /** 行着色（MVC: ErrorRate>=0.01 danger / >=0.001 warning） */
@@ -252,7 +253,7 @@ async function fetchList() {
   }
 }
 
-/** 追踪：GET /Monitors/TraceDayStat/Trace?id= -> 返回 {traceId} -> 跳 #/trace?id= */
+/** 追踪：GET /Monitors/TraceDayStat/Trace?id= -> 返回 {traceId} -> 跳 /trace?id= */
 async function onTrace(row: Row) {
   if (row.ID == null) return;
   try {
@@ -264,7 +265,7 @@ async function onTrace(row: Row) {
     const traceId = res?.data?.traceId ?? res?.traceId;
     if (traceId != null) {
       ElNotification.success({ title: '追踪', message: `traceId: ${traceId}` });
-      window.location.hash = `#/trace?id=${traceId}`;
+      go('/Trace', { id: traceId });
     } else if (res && (res.code === 0 || res.code === 1 || res.success)) {
       ElNotification.success({ title: '追踪', message: res.message || '成功' });
     } else {
@@ -426,7 +427,7 @@ onMounted(async () => {
                 v-if="c.name === 'AppName' && showAppCol && row.AppId != null"
                 type="primary"
                 :underline="false"
-                :href="`#/Monitors/TraceDayStat?appId=${row.AppId}`"
+                :href="toUrl('/Monitors/TraceDayStat', { appId: row.AppId })"
                 target="_self"
               >
                 {{ cellText(row, c.name) }}

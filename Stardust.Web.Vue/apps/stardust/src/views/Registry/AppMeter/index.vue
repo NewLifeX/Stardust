@@ -3,7 +3,7 @@
  * Registry/AppMeter/Index — 应用性能（自定义迁移页 + ECharts 曲线）
  *
  * MVC 源：隐藏页 [Menu(0,false)]，原 cshtml 用 ECharts 渲染 CPU/内存/线程/句柄等性能时序曲线，后端迁移时已删除绘图。
- * 前端自建视图兜底（框架 DefaultEntity 已支持无菜单时按视图目录兜底），#/Registry/AppMeter 可访问。
+ * 前端自建视图兜底（框架 DefaultEntity 已支持无菜单时按视图目录兜底），/Registry/AppMeter 可访问。
  *
  * 数据：GET /Registry/AppMeter（GetPage，后端 Search 按 Id 降序，appId 指定时 PageSize 调整到近24小时），
  *       行数据即图表数据源。字段见 Stardust.Data.AppMeter（应用性能.cs）：

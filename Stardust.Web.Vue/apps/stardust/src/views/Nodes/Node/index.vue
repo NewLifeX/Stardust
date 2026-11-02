@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { toUrl } from '@/utils/routeLink';
 /**
  * Nodes/Node/Index — 节点列表（自定义迁移页）
  *
@@ -6,8 +7,8 @@
  *  - 列表列：ID/ProjectName/Name/Code/Category/ProductCode/CityName/Enable/Version/
  *           OSKind/Runtime/Framework/IP/OS/MachineName/Cpu/Memory/TotalSize/Logins/
  *           LastActive/OnlineTime/UpdateTime/UpdateIP
- *    - Name → 链接 #/Nodes/Node/Detail?id=<ID>（Url 字段，自建）
- *    - ProjectName → 链接 #/Platform/GalaxyProject?projectId=<ProjectId>（Url 字段，自建）
+ *    - Name → 链接 /Nodes/Node/Detail?id=<ID>（Url 字段，自建）
+ *    - ProjectName → 链接 /Platform/GalaxyProject?projectId=<ProjectId>（Url 字段，自建）
  *    - Log → 链接 /Admin/Log?category=节点&linkId=<ID>（Url 字段，自建）
  *  - 批量工具栏：选中行后启用「启用告警/重置告警/修复」按钮
  *    -> GET /Nodes/Node/<Action>?keys=<选中id 逗号串>（后端读 SelectKeys）
@@ -173,13 +174,13 @@ function cellText(row: Row, key: string): string {
 
 /** 链接目标 */
 function detailUrl(row: Row): string {
-  return `#/Nodes/Node/Detail?id=${row.Id}`;
+  return toUrl('/Nodes/Node/Detail', { id: row.Id });
 }
 function projectUrl(row: Row): string {
-  return `#/Platform/GalaxyProject?projectId=${row.ProjectId}`;
+  return toUrl('/Platform/GalaxyProject', { projectId: row.ProjectId });
 }
 function logUrl(row: Row): string {
-  return `#/Admin/Log?category=节点&linkId=${row.Id}`;
+  return toUrl('/Admin/Log', { category: '节点', linkId: row.Id });
 }
 
 function buildParams(): Record<string, unknown> {
