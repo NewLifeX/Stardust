@@ -4,6 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>星尘 Stardust · 服务端</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='%2310b981'%3E%3Cpath d='M50 50C37 43 33 27 50 16C67 27 63 43 50 50Z'/%3E%3Cpath d='M50 50C37 43 33 27 50 16C67 27 63 43 50 50Z' transform='rotate(90 50 50)'/%3E%3Cpath d='M50 50C37 43 33 27 50 16C67 27 63 43 50 50Z' transform='rotate(180 50 50)'/%3E%3Cpath d='M50 50C37 43 33 27 50 16C67 27 63 43 50 50Z' transform='rotate(270 50 50)'/%3E%3C/g%3E%3C/svg%3E" />
 <style>
     :root {
         --ink: #0b1220;
@@ -38,11 +39,11 @@
     .topbar { display: flex; align-items: center; justify-content: space-between; padding: 6px 2px 22px; }
     .brand { display: flex; align-items: center; gap: 12px; }
     .brand .mark {
-        width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center;
-        background: linear-gradient(140deg, var(--brand), var(--brand-2));
-        color: #fff; font-weight: 700; font-size: 16px;
-        box-shadow: 0 8px 18px -10px rgba(79, 70, 229, .9);
+        width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center;
+        background: linear-gradient(150deg, #ffffff, #e7f7ef);
+        box-shadow: 0 10px 22px -12px rgba(16, 185, 129, .85), inset 0 0 0 1px rgba(16, 185, 129, .16);
     }
+    .brand .mark svg { width: 30px; height: 30px; display: block; }
     .brand b { display: block; font-size: 15px; letter-spacing: -.01em; }
     .brand small { display: block; color: var(--muted); font-size: 12px; font-weight: 400; }
     .ghost {
@@ -92,8 +93,8 @@
 
     /* 趋势曲线 */
     .trend {
-        grid-column: 1 / -1; display: grid; grid-template-columns: 170px 1fr; gap: 18px; align-items: center;
-        border-top: 1px solid rgba(148, 163, 184, .14); padding-top: 16px; margin-top: 4px;
+        grid-column: 1 / -1; display: grid; grid-template-columns: max-content 1fr; gap: 22px; align-items: center;
+        border-top: 1px solid rgba(148, 163, 184, .14); padding-top: 18px; margin-top: 6px;
     }
     .trend-head { font-size: 11.5px; color: #8fa0b8; line-height: 1.5; }
     .trend-head b { display: block; color: #dbe6f6; font-size: 13px; font-weight: 600; margin-bottom: 2px; }
@@ -263,6 +264,13 @@
 
     :focus-visible { outline: 2px solid rgba(99, 102, 241, .55); outline-offset: 2px; border-radius: 8px; }
 
+    /* 尊重系统“减少动效”设置 */
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { animation: none !important; transition: none !important; }
+        #sparkLine { stroke-dashoffset: 0; }
+        #sparkDot { opacity: 1; }
+    }
+
     @media (max-width: 900px) {
         .hero { grid-template-columns: 1fr; padding: 30px 22px; gap: 28px; }
         .hero h1 { font-size: 29px; }
@@ -275,7 +283,23 @@
 <div class="page">
     <div class="topbar">
         <div class="brand">
-            <div class="mark">星</div>
+            <div class="mark" aria-hidden="true">
+                <svg viewBox="0 0 100 100">
+                    <defs>
+                        <linearGradient id="cloverLeaf" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stop-color="#34d399" />
+                            <stop offset="100%" stop-color="#059669" />
+                        </linearGradient>
+                    </defs>
+                    <g fill="url(#cloverLeaf)">
+                        <path d="M50 44C40 39 34 27 46 16C48 13 50 17 50 20C50 17 52 13 54 16C66 27 60 39 50 44Z" />
+                        <path d="M50 44C40 39 34 27 46 16C48 13 50 17 50 20C50 17 52 13 54 16C66 27 60 39 50 44Z" transform="rotate(90 50 50)" />
+                        <path d="M50 44C40 39 34 27 46 16C48 13 50 17 50 20C50 17 52 13 54 16C66 27 60 39 50 44Z" transform="rotate(180 50 50)" />
+                        <path d="M50 44C40 39 34 27 46 16C48 13 50 17 50 20C50 17 52 13 54 16C66 27 60 39 50 44Z" transform="rotate(270 50 50)" />
+                    </g>
+                    <path d="M50 52C50 63 52 69 57 74" fill="none" stroke="#059669" stroke-width="4" stroke-linecap="round" />
+                </svg>
+            </div>
             <div><b>星尘 Stardust</b><small data-i18n="brandSub">分布式服务与监控平台</small></div>
         </div>
         <button class="ghost" id="langBtn">English</button>
@@ -553,6 +577,7 @@ const I18N = {
 };
 
 let lang = (navigator.language || "zh").toLowerCase().startsWith("zh") ? "zh" : "en";
+const reducedMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 let manifest = null;
 let os = "linux";
 let arch = "x64";
@@ -824,6 +849,8 @@ function percent(value) {
 /** 数字滚动动画。formatter 负责把中间值格式化为最终展示文本 */
 function animateNumber(el, value, formatter, duration) {
     const to = Number(value) || 0;
+    if (reducedMotion) { el.textContent = formatter(to); return; }
+
     const span = duration || 700;
     const start = performance.now();
     function tick(now) {
@@ -855,6 +882,8 @@ function renderTrend(values) {
 
     const svgLine = $("sparkLine");
     const dot = $("sparkDot");
+    if (reducedMotion) { svgLine.classList.add("on"); dot.classList.add("on"); return; }
+
     svgLine.classList.remove("on");
     dot.classList.remove("on");
     setTimeout(() => { svgLine.classList.add("on"); dot.classList.add("on"); }, 40);
