@@ -182,12 +182,12 @@ public partial class AppDeploy
     public String ProjectPath { get => _ProjectPath; set { if (OnPropertyChanging("ProjectPath", value)) { _ProjectPath = value; OnPropertyChanged("ProjectPath"); } } }
 
     private Stardust.Models.ProjectKinds _ProjectKind;
-    /// <summary>项目类型。默认dotnet</summary>
+    /// <summary>项目类型。默认dotnet。当选择自定义时，项目路径设置所要运行的bash脚本位置，执行脚本完成构建</summary>
     [Category("编译参数")]
     [DisplayName("项目类型")]
-    [Description("项目类型。默认dotnet")]
+    [Description("项目类型。默认dotnet。当选择自定义时，项目路径设置所要运行的bash脚本位置，执行脚本完成构建")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("ProjectKind", "项目类型。默认dotnet", "", DefaultValue = "1")]
+    [BindColumn("ProjectKind", "项目类型。默认dotnet。当选择自定义时，项目路径设置所要运行的bash脚本位置，执行脚本完成构建", "", DefaultValue = "1")]
     public Stardust.Models.ProjectKinds ProjectKind { get => _ProjectKind; set { if (OnPropertyChanging("ProjectKind", value)) { _ProjectKind = value; OnPropertyChanged("ProjectKind"); } } }
 
     private String _BuildArgs;
@@ -501,7 +501,7 @@ public partial class AppDeploy
     /// <param name="projectId">项目。资源归属的团队</param>
     /// <param name="multiVersion">多版本。支持多运行时版本，此时只认可部署版本中符合运行时要求的最新可用版本</param>
     /// <param name="autoPublish">自动发布。应用版本后自动发布到启用节点，加快发布速度</param>
-    /// <param name="projectKind">项目类型。默认dotnet</param>
+    /// <param name="projectKind">项目类型。默认dotnet。当选择自定义时，项目路径设置所要运行的bash脚本位置，执行脚本完成构建</param>
     /// <param name="priority">优先级。表示应用程序中任务或操作的优先级级别</param>
     /// <param name="mode">工作模式。Standard(10)/Shadow(11)/Hosted(12)/Task(13)</param>
     /// <param name="allowMultiple">允许多实例。同一应用可在本机运行多份进程，健康检查时将不会按进程名匹配</param>
@@ -595,7 +595,7 @@ public partial class AppDeploy
         /// <summary>项目路径。需要编译的项目路径，相对于代码库根目录</summary>
         public static readonly Field ProjectPath = FindByName("ProjectPath");
 
-        /// <summary>项目类型。默认dotnet</summary>
+        /// <summary>项目类型。默认dotnet。当选择自定义时，项目路径设置所要运行的bash脚本位置，执行脚本完成构建</summary>
         public static readonly Field ProjectKind = FindByName("ProjectKind");
 
         /// <summary>编译参数。编译项目时所需参数</summary>
@@ -724,7 +724,7 @@ public partial class AppDeploy
         /// <summary>项目路径。需要编译的项目路径，相对于代码库根目录</summary>
         public const String ProjectPath = "ProjectPath";
 
-        /// <summary>项目类型。默认dotnet</summary>
+        /// <summary>项目类型。默认dotnet。当选择自定义时，项目路径设置所要运行的bash脚本位置，执行脚本完成构建</summary>
         public const String ProjectKind = "ProjectKind";
 
         /// <summary>编译参数。编译项目时所需参数</summary>

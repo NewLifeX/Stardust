@@ -62,7 +62,7 @@
         <Column Name="RepoPassword" DataType="String" Length="200" Description="仓库密码。HTTPS 克隆时的密码，AES 加密存储（密钥派生自 TokenSecret），回显为 5 个 *" Category="编译参数" />
         <Column Name="Branch" DataType="String" DefaultValue="master" Description="分支。默认main" Category="编译参数" />
         <Column Name="ProjectPath" DataType="String" Description="项目路径。需要编译的项目路径，相对于代码库根目录" Category="编译参数" />
-        <Column Name="ProjectKind" DataType="Int32" DefaultValue="1" Description="项目类型。默认dotnet" Type="Stardust.Models.ProjectKinds" Category="编译参数" />
+        <Column Name="ProjectKind" DataType="Int32" DefaultValue="1" Description="项目类型。默认dotnet。当选择自定义时，项目路径设置所要运行的bash脚本位置，执行脚本完成构建" Type="Stardust.Models.ProjectKinds" Category="编译参数" />
         <Column Name="BuildArgs" DataType="String" Length="200" Description="编译参数。编译项目时所需参数" Category="编译参数" />
         <Column Name="PackageFilters" DataType="String" Description="打包过滤器。需要打包哪些文件，支持通配符，多项分号隔开" Category="编译参数" />
         <Column Name="FileName" DataType="String" Description="文件。应用启动文件，可直接使用zip包" Category="发布参数" />
