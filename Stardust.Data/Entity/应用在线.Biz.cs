@@ -295,9 +295,19 @@ public partial class AppOnline : Entity<AppOnline>, IOnlineModel2
                 if (app.Version.IsNullOrEmpty())
                     app.Version = info.Version;
                 // 比较版本，只要最新版。要求30天内未登录，此时可能是借助埋点数据上传来更新版本信息，并没有登录动作
-                else if (app.Compile.AddDays(30) < DateTime.Now &&
-                    new Version(info.Version) > new Version(app.Version))
-                    app.Version = info.Version;
+                // 版本串可能无法被 System.Version 解析（如 SemVer 预发布串 10.0.13-servicing.26504.104、超4段等，常见于构建工具进程上报），
+                // 此前裸 new Version 在此抛出「Version string portion was too short or too long」致心跳 500，且脏串入库后该应用所有心跳持续失败。
+                // 故双端 TryParse：都能解析才数值比大小；任一失败退化为「字符串不相等即采纳上报值」，顺带修复库中被污染的版本串
+                else if (app.Compile.AddDays(30) < DateTime.Now && app.Version != info.Version)
+                {
+                    if (System.Version.TryParse(info.Version, out var v1) &&
+                        System.Version.TryParse(app.Version, out var v2))
+                    {
+                        if (v1 > v2) app.Version = info.Version;
+                    }
+                    else
+                        app.Version = info.Version;
+                }
 
                 if (Version.IsNullOrEmpty()) Version = info.Version;
             }
