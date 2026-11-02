@@ -385,7 +385,7 @@
                 </thead>
                 <tbody id="agentTable"></tbody>
             </table>
-            <div class="empty" id="agentEmpty" hidden data-i18n="empty">该版本暂未发布安装包</div>
+            <div class="empty" id="agentEmpty" hidden data-i18n="emptyAgent">该版本暂未发布安装包，可先用下方公共镜像</div>
         </div>
     </section>
 
@@ -419,7 +419,7 @@
         <div class="empty" id="runtimeEmpty" hidden data-i18n="empty">该版本暂未发布安装包</div>
     </details>
 
-    <details class="mirror">
+    <details class="mirror" id="mirrorBox">
         <summary data-i18n="mirror">公共镜像（服务端未维护安装包时兜底）</summary>
         <div class="card" style="margin-top:12px">
             <div class="table-wrap" style="margin-top:0">
@@ -514,7 +514,7 @@ const I18N = {
         mirror: "公共镜像（服务端未维护安装包时兜底）",
         colOS: "平台", colArch: "架构", colRuntime: "运行时", colFile: "文件",
         colSize: "大小", colAction: "下载",
-        download: "下载", empty: "该版本暂未发布安装包", suggest: "推荐",
+        download: "下载", empty: "该版本暂未发布安装包", emptyAgent: "该版本暂未发布安装包，可先用下方公共镜像", suggest: "推荐",
         footer: "StarServer 安装引导",
         note1t: "需要管理员权限",
         note1: "脚本会安装 .NET 运行时与 StarAgent 系统服务，Linux 用 sudo、Windows 用管理员 PowerShell。",
@@ -563,7 +563,7 @@ const I18N = {
         mirror: "Public mirror (fallback when nothing is published here)",
         colOS: "Platform", colArch: "Arch", colRuntime: "Runtime", colFile: "File",
         colSize: "Size", colAction: "Download",
-        download: "Download", empty: "No package published for this version", suggest: "Latest",
+        download: "Download", empty: "No package published for this version", emptyAgent: "No packages for this version yet — use the public mirror below", suggest: "Latest",
         footer: "StarServer install guide",
         note1t: "Administrator required",
         note1: "The script installs the .NET runtime and the StarAgent service. Use sudo on Linux or an elevated PowerShell on Windows.",
@@ -780,8 +780,11 @@ function render() {
     $("nativeCard").hidden = native.length === 0;
     if (native.length > 0) fill("nativeTable", null, native, false);
 
-    renderTiles(manifest.runtimes);
+    renderTiles((manifest.runtimes || []).filter(matchOS));
     fill("mirrorTable", null, (manifest.mirror || []).filter(matchOS), false);
+
+    // 当前版本没有安装包时，把公共镜像展开放在眼前，避免用户在这里卡住
+    $("mirrorBox").open = agent.length === 0;
 
     // 服务端未维护任何发布版本时，直接展开公共镜像，避免用户面对空表
     const mirrorBox = document.querySelector("details.mirror");
