@@ -19,19 +19,22 @@ public class AgentController : ControllerBaseX
     public AgentController(StarServerSetting setting) => _setting = setting;
 
     /// <summary>代理安装页面</summary>
-    /// <returns></returns>
+    /// <returns>配置了 StarServer 安装页地址时跳转，否则返回本站页面</returns>
     [Route("[controller]")]
     public ActionResult Index()
     {
-        // 判断客户端是否要求JSON格式
-        var accept = Request.Headers["Accept"].FirstOrDefault();
-        if (accept != null && accept.Contains("application/json"))
-            return Json(GetAgentData());
+        // 清单以 StarServer 安装引导页为准，配置了地址后本站只做跳转，避免维护第二份清单。
+        // JSON 请求保持原样，兼容仍在调用旧接口的客户端
+        var target = _setting.AgentServerUrl;
+        if (!target.IsNullOrEmpty() && !IsJsonRequest())
+        {
+            target = target.TrimEnd('/');
+            var current = $"{Request.Scheme}://{Request.Host}";
+            if (!target.EqualIgnoreCase(current)) return Redirect(target + "/");
+        }
 
-        // 支持format=json查询参数
-        var format = Request.Query["format"].FirstOrDefault();
-        if (format.EqualIgnoreCase("json"))
-            return Json(GetAgentData());
+        // 判断客户端是否要求JSON格式
+        if (IsJsonRequest()) return Json(GetAgentData());
 
         ViewBag.Title = "星尘代理安装";
         ViewBag.AgentBase = DownloadBase();
@@ -40,6 +43,16 @@ public class AgentController : ControllerBaseX
         PageSetting.EnableNavbar = false;
 
         return View();
+    }
+
+    /// <summary>判断当前请求是否要求JSON格式</summary>
+    /// <returns>JSON请求返回true</returns>
+    private Boolean IsJsonRequest()
+    {
+        var accept = Request.Headers["Accept"].FirstOrDefault();
+        if (accept != null && accept.Contains("application/json")) return true;
+
+        return Request.Query["format"].FirstOrDefault().EqualIgnoreCase("json");
     }
 
     /// <summary>StarAgent等资源下载基础地址，保证以/结尾</summary>

@@ -92,7 +92,14 @@
 | `InstallServiceTests` | 清单组装、通道过滤、镜像兜底、令牌签发、停用版本拒绝、脚本内容、非法地址拒绝、页面资源可读 |
 | `InstallEndpointTests` | `/` 返回页面、`/install` 清单、`/install.sh` 可执行、下载 302 携带令牌、未知包 404 |
 
-## 10. 后续
+## 10. 与 StarWeb 的关系
 
-- StarWeb `/Agent` 目前仍保留原页面，确认后再改为跳转到本页（配置 `AgentServerUrl`）。
+- StarWeb `/Agent` 仍是旧页面（清单硬编码），**配置 `AgentServerUrl` 后自动 302 到 StarServer 安装页**，不再维护两份清单；
+  未配置时保留原页面，避免旧部署突然失效。
+- `/Agent?format=json` 与 `Accept: application/json` 保持旧接口不变，兼容存量客户端。
+- `Stardust.Web.Vue` 下的 `views/Agent/index.vue` 未注册路由，属孤立页面，本期不动。
+
+## 11. 后续
+
 - 原生 Agent 的 `node/bootstrap` 与安装清单可进一步共用同一套包选择逻辑。
+- 页面若需要在 StarWeb 域名下直接展示（而不是跳转），可把 `install.html` 作为静态资源同样挂过去。
