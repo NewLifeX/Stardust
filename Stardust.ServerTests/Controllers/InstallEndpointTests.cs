@@ -79,6 +79,20 @@ public class InstallEndpointTests : StarTestBase
 
     [Fact]
     [Trait("Category", "Install")]
+    public async Task Leaf_ReturnsPngIcon()
+    {
+        var client = _server.CreateClient();
+
+        var resp = await client.GetAsync("/install/leaf.png");
+        Assert.True(resp.IsSuccessStatusCode, "品牌图标应可访问");
+        Assert.Equal("image/png", resp.Content.Headers.ContentType?.MediaType);
+
+        var bytes = await resp.Content.ReadAsByteArrayAsync();
+        Assert.True(bytes.Length > 1000, "图标应嵌入程序集并可读取");
+    }
+
+    [Fact]
+    [Trait("Category", "Install")]
     public async Task Root_ReturnsInstallPage()
     {
         var client = _server.CreateClient();

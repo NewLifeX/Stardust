@@ -38,6 +38,7 @@ StarServer 根路径 `/` 是**平台门户**：上方展示节点/应用在线�
 | `GET /install.sh?os=linux&arch=x64&runtime=10&version=` | bash 脚本，含服务端地址、包地址与校验 |
 | `GET /install.ps1?os=windows&arch=x64` | PowerShell 脚本 |
 | `GET /install/download/{kind}/{id}` | `kind` 取 `agent`/`runtime`，只放行启用版本下的安装包，现场签发短时令牌后 302 |
+| `GET /install/leaf.png`、`GET /favicon.ico` | 品牌四叶草图标（嵌入资源 `Resources/leaf.png`，缓存一天） |
 
 **清单中的下载地址**：本站包是相对地址 `/install/download/...`，客户端按 `server` 补全；公共镜像包是绝对地址。
 
@@ -107,6 +108,8 @@ StarServer 根路径 `/` 是**平台门户**：上方展示节点/应用在线�
 
 - StarWeb `/Agent` 仍是旧页面（清单硬编码），**配置 `AgentServerUrl` 后自动 302 到 StarServer 安装页**，不再维护两份清单；
   未配置时保留原页面，避免旧部署突然失效。
+- **统计卡跳转**：配置了 `WebUrl` 时，在线节点/在线应用/今日调用三张卡分别链到 StarWeb 的 `Nodes/NodeOnline`、`Registry/AppOnline`、`Monitors/AppDayStat`；未配置则保持纯展示。
+- **运行时区默认折叠**：显示包数量徽标，点开才展开磁贴，避免页面过长；服务端未维护任何发布版本时，公共镜像自动展开。
 - `/Agent?format=json` 与 `Accept: application/json` 保持旧接口不变，兼容存量客户端。
 - `Stardust.Web.Vue` 下的 `views/Agent/index.vue` 未注册路由，属孤立页面，本期不动。
 

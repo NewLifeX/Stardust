@@ -438,6 +438,7 @@ fi
 
         return list
             .OrderBy(e => e.OS)
+            .ThenByDescending(e => MajorOf(e.Version).ToInt(-1))
             .ThenByDescending(e => e.Version)
             .ToList();
     }

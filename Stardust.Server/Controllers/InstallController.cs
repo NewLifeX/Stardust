@@ -81,6 +81,20 @@ public class InstallController : ControllerBase
         }
     }
 
+    /// <summary>品牌图标。四叶草标识，供首页与站点图标使用</summary>
+    /// <returns>PNG 图片</returns>
+    [HttpGet("/install/leaf.png")]
+    [HttpGet("/favicon.ico")]
+    public ActionResult Leaf()
+    {
+        var stream = typeof(InstallController).Assembly.GetManifestResourceStream("leaf.png");
+        if (stream == null) return NotFound();
+
+        // 图标几乎不变，允许浏览器长时间缓存
+        Response.Headers.CacheControl = "public,max-age=86400";
+        return File(stream, "image/png");
+    }
+
     /// <summary>安装包下载。现场签发短时令牌后重定向到实际地址</summary>
     /// <param name="kind">包类型。agent/runtime</param>
     /// <param name="id">包编号</param>

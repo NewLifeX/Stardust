@@ -51,6 +51,7 @@
     <EmbeddedResource Include="Resources\install.html" LogicalName="install.html" />
     <EmbeddedResource Include="Resources\install-linux.tpl" LogicalName="install-linux.tpl" />
     <EmbeddedResource Include="Resources\install-windows.tpl" LogicalName="install-windows.tpl" />
+    <EmbeddedResource Include="Resources\leaf.png" LogicalName="leaf.png" />
   </ItemGroup>
 
 </Project>

@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>星尘 Stardust · 服务端</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='%2310b981'%3E%3Cpath d='M50 50C37 43 33 27 50 16C67 27 63 43 50 50Z'/%3E%3Cpath d='M50 50C37 43 33 27 50 16C67 27 63 43 50 50Z' transform='rotate(90 50 50)'/%3E%3Cpath d='M50 50C37 43 33 27 50 16C67 27 63 43 50 50Z' transform='rotate(180 50 50)'/%3E%3Cpath d='M50 50C37 43 33 27 50 16C67 27 63 43 50 50Z' transform='rotate(270 50 50)'/%3E%3C/g%3E%3C/svg%3E" />
+<link rel="icon" type="image/png" href="/install/leaf.png" />
 <style>
     :root {
         --ink: #0b1220;
@@ -39,11 +39,11 @@
     .topbar { display: flex; align-items: center; justify-content: space-between; padding: 6px 2px 22px; }
     .brand { display: flex; align-items: center; gap: 12px; }
     .brand .mark {
-        width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center;
-        background: linear-gradient(150deg, #ffffff, #e7f7ef);
-        box-shadow: 0 10px 22px -12px rgba(16, 185, 129, .85), inset 0 0 0 1px rgba(16, 185, 129, .16);
+        width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center;
+        background: #ffffff; overflow: hidden;
+        box-shadow: 0 10px 22px -12px rgba(16, 185, 129, .55), inset 0 0 0 1px rgba(16, 185, 129, .12);
     }
-    .brand .mark svg { width: 30px; height: 30px; display: block; }
+    .brand .mark img { width: 32px; height: 32px; display: block; object-fit: contain; }
     .brand b { display: block; font-size: 15px; letter-spacing: -.01em; }
     .brand small { display: block; color: var(--muted); font-size: 12px; font-weight: 400; }
     .ghost {
@@ -62,7 +62,7 @@
             linear-gradient(140deg, #070b16 0%, #101a30 48%, #0d1729 100%);
         padding: 44px 40px 40px;
         box-shadow: 0 40px 80px -60px rgba(6, 10, 22, .95);
-        display: grid; grid-template-columns: .9fr 1.1fr; gap: 36px; align-items: center;
+        display: grid; grid-template-columns: .9fr 1.1fr; gap: 26px 36px; align-items: center;
     }
     .hero::after {
         content: ""; position: absolute; inset: 0; pointer-events: none;
@@ -116,19 +116,25 @@
     .server-chip button:hover { background: rgba(147, 197, 253, .16); }
 
     /* 平台统计 */
-    .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 22px; }
-    .stat {
-        padding: 10px 14px; border-radius: 14px; min-width: 0;
-        background: rgba(148, 163, 184, .09); border: 1px solid rgba(148, 163, 184, .16);
+    .stats {
+        grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px; margin: 4px 0 0;
     }
+    @media (max-width: 900px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .stat {
+        padding: 9px 12px; border-radius: 12px; min-width: 0; display: block;
+        background: rgba(148, 163, 184, .09); border: 1px solid rgba(148, 163, 184, .16);
+        color: inherit; text-decoration: none;
+    }
+    .stat[href] { cursor: pointer; }
+    .stat[href]:hover { background: rgba(148, 163, 184, .16); border-color: rgba(148, 163, 184, .3); }
     .stat b {
-        display: block; font-size: 21px; line-height: 1.3; letter-spacing: -.02em;
+        display: block; font-size: 20px; line-height: 1.3; letter-spacing: -.02em;
         font-variant-numeric: tabular-nums; color: #f1f5fd;
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .stat span { display: block; font-size: 11.5px; color: #8fa0b8; letter-spacing: .04em; }
     .stat small { display: block; font-size: 11px; color: #7d8ca4; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .stat { transition: .18s; }
     .stat:hover { background: rgba(148, 163, 184, .14); border-color: rgba(148, 163, 184, .26); }
 
     .cmd { background: rgba(6, 10, 20, .62); border: 1px solid rgba(148, 163, 184, .18); border-radius: 16px; padding: 18px 20px; backdrop-filter: blur(8px); display: flex; flex-direction: column; justify-content: flex-start; gap: 12px; }
@@ -236,6 +242,12 @@
     .note b { display: block; font-size: 13.5px; margin-bottom: 2px; }
     .note span { font-size: 12.5px; color: var(--muted); line-height: 1.6; }
 
+    /* 运行时折叠区 */
+    .runtime-box summary { list-style: none; cursor: pointer; }
+    .runtime-box summary::-webkit-details-marker { display: none; }
+    .runtime-box summary::after { content: "▾"; color: var(--muted); transition: .2s; }
+    .runtime-box[open] summary::after { transform: rotate(180deg); }
+
     details.mirror { margin-top: 22px; }
     details.mirror summary {
         cursor: pointer; list-style: none; color: var(--muted); font-size: 13px;
@@ -283,23 +295,7 @@
 <div class="page">
     <div class="topbar">
         <div class="brand">
-            <div class="mark" aria-hidden="true">
-                <svg viewBox="0 0 100 100">
-                    <defs>
-                        <linearGradient id="cloverLeaf" x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0%" stop-color="#34d399" />
-                            <stop offset="100%" stop-color="#059669" />
-                        </linearGradient>
-                    </defs>
-                    <g fill="url(#cloverLeaf)">
-                        <path d="M50 44C40 39 34 27 46 16C48 13 50 17 50 20C50 17 52 13 54 16C66 27 60 39 50 44Z" />
-                        <path d="M50 44C40 39 34 27 46 16C48 13 50 17 50 20C50 17 52 13 54 16C66 27 60 39 50 44Z" transform="rotate(90 50 50)" />
-                        <path d="M50 44C40 39 34 27 46 16C48 13 50 17 50 20C50 17 52 13 54 16C66 27 60 39 50 44Z" transform="rotate(180 50 50)" />
-                        <path d="M50 44C40 39 34 27 46 16C48 13 50 17 50 20C50 17 52 13 54 16C66 27 60 39 50 44Z" transform="rotate(270 50 50)" />
-                    </g>
-                    <path d="M50 52C50 63 52 69 57 74" fill="none" stroke="#059669" stroke-width="4" stroke-linecap="round" />
-                </svg>
-            </div>
+            <div class="mark"><img src="/install/leaf.png" alt="" /></div>
             <div><b>星尘 Stardust</b><small data-i18n="brandSub">分布式服务与监控平台</small></div>
         </div>
         <button class="ghost" id="langBtn">English</button>
@@ -316,12 +312,6 @@
                 <span class="chip" data-i18n="modDeploy">远程部署</span>
                 <span class="chip" data-i18n="modTrace">链路监控</span>
                 <span class="chip" data-i18n="modLog">日志中心</span>
-            </div>
-            <div class="stats" id="statsBlock" hidden>
-                <div class="stat"><b id="stNodeOnline">-</b><span data-i18n="stNode">在线节点</span><small id="stNodeSub">-</small></div>
-                <div class="stat"><b id="stAppOnline">-</b><span data-i18n="stApp">在线应用</span><small id="stAppSub">-</small></div>
-                <div class="stat"><b id="stTodayCall">-</b><span data-i18n="stCall">今日调用</span><small id="stCallSub">-</small></div>
-                <div class="stat"><b id="stTodayError">-</b><span data-i18n="stError">今日错误</span><small id="stErrorSub">-</small></div>
             </div>
             <div class="server-row">
                 <span class="label" data-i18n="server">服务端</span>
@@ -353,6 +343,13 @@
                 <span class="tip" id="copyTip"></span>
             </div>
             <div class="auto-hint" id="autoHint"></div>
+        </div>
+
+        <div class="stats" id="statsBlock" hidden>
+            <a class="stat" data-path="/Nodes/NodeOnline"><b id="stNodeOnline">-</b><span data-i18n="stNode">在线节点</span><small id="stNodeSub">-</small></a>
+            <a class="stat" data-path="/Registry/AppOnline"><b id="stAppOnline">-</b><span data-i18n="stApp">在线应用</span><small id="stAppSub">-</small></a>
+            <a class="stat" data-path="/Monitors/AppDayStat"><b id="stTodayCall">-</b><span data-i18n="stCall">今日调用</span><small id="stCallSub">-</small></a>
+            <a class="stat" data-path="/Monitors/AppDayStat"><b id="stTodayError">-</b><span data-i18n="stError">今日错误</span><small id="stErrorSub">-</small></a>
         </div>
 
         <div class="trend" id="trendBlock" hidden>
@@ -420,13 +417,14 @@
         </div>
     </section>
 
-    <section class="card">
-        <div class="card-head">
+    <details class="card runtime-box" id="runtimeBox">
+        <summary class="card-head">
             <h2><span class="sub" data-i18n="runtime">.NET 运行时</span><span class="sub" data-i18n="runtimeHint">缺少运行时的机器先装这个</span></h2>
-        </div>
+            <span class="pill grey" id="runtimeCount">-</span>
+        </summary>
         <div class="tiles" id="runtimeTiles"></div>
         <div class="empty" id="runtimeEmpty" hidden data-i18n="empty">该版本暂未发布安装包</div>
-    </section>
+    </details>
 
     <details class="mirror">
         <summary data-i18n="mirror">公共镜像（服务端未维护安装包时兜底）</summary>
@@ -435,10 +433,11 @@
                 <table>
                     <thead>
                         <tr>
-                            <th data-i18n="colRuntime">运行时</th>
                             <th data-i18n="colOS">平台</th>
                             <th data-i18n="colArch">架构</th>
+                            <th data-i18n="colRuntime">运行时</th>
                             <th data-i18n="colFile">文件</th>
+                            <th class="num" data-i18n="colSize">大小</th>
                             <th data-i18n="colAction">下载</th>
                         </tr>
                     </thead>
@@ -492,6 +491,7 @@ const I18N = {
         onlineRate: "在线率",
         vsYesterday: "较昨日",
         today: "今日",
+        yesterday: "昨日",
         stTotal: "总计",
         trendTitle: "近 7 天调用趋势",
         trendHint: "仅展示形状",
@@ -516,6 +516,7 @@ const I18N = {
         nativeHint: "Go / Rust / C++ 轻量版本",
         runtime: ".NET 运行时",
         runtimeHint: "缺少运行时的机器先装这个",
+        items: "个安装包",
         mirror: "公共镜像（服务端未维护安装包时兜底）",
         colOS: "平台", colArch: "架构", colRuntime: "运行时", colFile: "文件",
         colSize: "大小", colAction: "下载",
@@ -538,6 +539,7 @@ const I18N = {
         onlineRate: "online",
         vsYesterday: "vs yesterday",
         today: "today",
+        yesterday: "yesterday",
         stTotal: "total",
         trendTitle: "Calls in last 7 days",
         trendHint: "Shape only",
@@ -562,6 +564,7 @@ const I18N = {
         nativeHint: "Go / Rust / C++ builds",
         runtime: ".NET runtime",
         runtimeHint: "Install first when the runtime is missing",
+        items: "packages",
         mirror: "Public mirror (fallback when nothing is published here)",
         colOS: "Platform", colArch: "Arch", colRuntime: "Runtime", colFile: "File",
         colSize: "Size", colAction: "Download",
@@ -660,6 +663,7 @@ function fill(tbodyId, emptyId, list, withVersion) {
 function renderTiles(list) {
     const box = $("runtimeTiles");
     box.innerHTML = "";
+    $("runtimeCount").textContent = (list || []).length + " " + t("items");
     (list || []).forEach(pkg => {
         const tile = document.createElement("div");
         tile.className = "tile";
@@ -669,10 +673,12 @@ function renderTiles(list) {
         const ver = document.createElement("b");
         ver.textContent = pkg.version || "-";
         head.appendChild(ver);
-        const badge = document.createElement("span");
-        badge.className = "pill grey";
-        badge.textContent = sizeText(pkg.size);
-        head.appendChild(badge);
+        if (pkg.size > 0) {
+            const badge = document.createElement("span");
+            badge.className = "pill grey";
+            badge.textContent = sizeText(pkg.size);
+            head.appendChild(badge);
+        }
         tile.appendChild(head);
 
         const meta = document.createElement("div");
@@ -772,6 +778,10 @@ function render() {
 
     renderTiles(manifest.runtimes);
     fill("mirrorTable", null, manifest.mirror, false);
+
+    // 服务端未维护任何发布版本时，直接展开公共镜像，避免用户面对空表
+    const mirrorBox = document.querySelector("details.mirror");
+    if (mirrorBox) mirrorBox.open = (manifest.versions || []).length === 0;
 
     renderCommand();
 }
@@ -904,9 +914,9 @@ function renderSummary() {
         animateNumber($("stAppOnline"), summary.appOnline, show);
         $("stAppSub").textContent = summary.appTotal > 0 ? t("stTotal") + " " + show(summary.appTotal) : "-";
         animateNumber($("stTodayCall"), summary.todayCall, show);
-        $("stCallSub").textContent = summary.yesterdayCall > 0
+        $("stCallSub").textContent = summary.todayCall > 0 && summary.yesterdayCall > 0
             ? t("vsYesterday") + " " + (((summary.todayCall - summary.yesterdayCall) / summary.yesterdayCall * 100).toFixed(1)) + "%"
-            : t("today");
+            : (summary.yesterdayCall > 0 ? t("yesterday") + " " + show(summary.yesterdayCall) : t("today"));
         animateNumber($("stTodayError"), summary.todayError, show);
         $("stErrorSub").textContent = t("errorRate") + " " + percent(summary.errorRate);
     }
@@ -915,6 +925,18 @@ function renderSummary() {
     $("versionChip").textContent = summary.version ? "v" + summary.version : "-";
     $("uptimeChip").textContent = summary.uptime > 0 ? t("uptime") + " " + uptimeText(summary.uptime) : "-";
     if (summary.server && (!manifest || !manifest.server)) $("server").textContent = summary.server;
+
+    // 统计卡跳转到控制台对应列表，未配置控制台地址时保持纯展示
+    document.querySelectorAll(".stat").forEach(el => {
+        const path = el.dataset.path;
+        if (summary.webUrl && path) {
+            el.href = summary.webUrl.replace(/\/+$/, "") + path;
+            el.target = "_blank";
+            el.rel = "noopener";
+        } else {
+            el.removeAttribute("href");
+        }
+    });
 
     if (summary.webUrl) {
         const btn = $("consoleBtn");
