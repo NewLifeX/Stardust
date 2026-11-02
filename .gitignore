@@ -89,3 +89,4 @@ TODO.md
 .workbuddy/
 docs/Stardust-设计重构方案.md
 memory/
+.env.*.local

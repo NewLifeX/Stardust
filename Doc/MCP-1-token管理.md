@@ -20,7 +20,7 @@ MCP 使用独立的**资源授权 Token 体系**，每份 Token 显式绑定可�
 |---|---|---|
 | Id | Int32 | 主键 |
 | Name | String(50) | Token 名称，如"运维助手-小明" |
-| Token | String(64) | Token 字符串，格式 `sdmcp_` + 32 位 Base62，创建后不可修改 |
+| Token | String(64) | API Key 字符串，新建为 `sk-mcp-` + 48 位字母数字（类似 OpenAI `sk-*`）；历史 `sdmcp_*` 仍有效，创建后不可修改 |
 | Enable | Boolean | 启用状态，false 时所有调用返回 `-32001` |
 | ExpireTime | DateTime? | 过期时间，null 表示永不过期 |
 | LastTime | DateTime? | 最后调用时间 |
@@ -51,7 +51,8 @@ stateDiagram-v2
 
 ### 2.3 安全要求
 
-- **Token 格式**：`sdmcp_` 前缀 + 32 位 Base62 随机字符（大小写字母+数字）
+- **Token 格式（新建）**：`sk-mcp-` + 48 位 `[A-Za-z0-9]` 随机秘密段（无标点/符号，便于复制进 Cursor、环境变量）
+- **兼容**：已签发的 `sdmcp_*` 旧令牌继续可用；重置/新建走新格式
 - **恒定时间比较**：Token 校验使用 `SafeEquals` 方法，防时序攻击
 - **日志脱敏**：Token 字符串不在日志中明文打印
 - **列表页隐藏**：Web 管理列表页隐藏 Token 字段，仅创建/重置时显示一次
@@ -85,7 +86,9 @@ stateDiagram-v2
 
 ### 3.3 Web 管理界面
 
-Token 表单页面（`/Platform/McpToken/_Form_Body.cshtml`）提供三类资源的勾选界面：
+**新控制台（StardustLayout2，推荐）**：治理 → **AI / MCP** 的逐步操作（发 Token、资源白名单 Drawer、EnableMcp、审计等）见 **`Doc/MCP-5-控制台用户旅程与交互评估.md` §12**。
+
+**旧 Razor 表单**（`/Platform/McpToken/_Form_Body.cshtml`）仍提供三类资源的勾选界面：
 
 ```
 ┌─────────────────────────────────────────────┐
@@ -125,7 +128,7 @@ Token 表单页面（`/Platform/McpToken/_Form_Body.cshtml`）提供三类资源
 ### 4.1 McpTokenController 关键逻辑
 
 - **列表页**：`ListFields.RemoveField("Token")` — 隐藏 Token 字符串
-- **新建**：自动生成 Token 字符串（`sdmcp_` + 32 位 Base62）
+- **新建**：自动生成 API Key（`McpToken.GenerateToken()` → `sk-mcp-` + 48 位字母数字）
 - **编辑**：Token 字符串不可修改；同步 `McpTokenResource` 资源授权
 - **重置**：生成新 Token 字符串，旧 Token 立即失效，资源授权关系保留
 - **删除**：级联删除 `McpTokenResource` 关联记录（`McpAudit` 保留）
