@@ -48,7 +48,7 @@ StarServer 根路径 `/` 是**平台门户**：上方展示节点/应用在线�
 |------|------|
 | `ProductRelease`（ProductCode=StarAgent、Enable、Channel） | 发布版本，新到旧 |
 | `ProductPackage`（ReleaseId、OSKind、CpuArch、TargetRuntime） | 各平台安装包；`TargetRuntime` 为 `go`/`rust`/`cpp` 时归入原生 Agent |
-| `DotNetPackage`（Kind=runtime） | .NET 运行时安装包；白名单 net10/net8/net45 × Windows/Linux × x64/arm64，每个平台架构只留最近 3 个主版本，不下发 mips |
+| `DotNetPackage`（Kind=runtime） | .NET 运行时安装包；只下发常用组合 win-x64 / linux-x64 / linux-arm64 / linux-arm（主版本 10/8/4），每个组合只留最近 3 个主版本，不下发 mips |
 | `AgentDownloadBaseUrl` | 公共镜像兜底，仅在服务端未维护对应包时使用 |
 
 清单缓存 60 秒（`ICacheProvider.Cache`），因此后台发布后最迟约一分钟可见。

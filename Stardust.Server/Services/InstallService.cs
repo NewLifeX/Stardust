@@ -481,11 +481,14 @@ fi
     /// <summary>页面展示的运行时主版本白名单。只保留常用的 10/8/4，避免列表过长与流量浪费</summary>
     private static readonly String[] RuntimeMajors = ["10", "8", "4"];
 
-    /// <summary>页面展示的运行时系统白名单</summary>
-    private static readonly OSKind[] RuntimeOSs = [OSKind.Windows, OSKind.Linux];
-
-    /// <summary>页面展示的运行时架构白名单。常用 win-x64 / linux-x64 / linux-arm64</summary>
-    private static readonly CpuArch[] RuntimeArchs = [CpuArch.X64, CpuArch.Arm64];
+    /// <summary>页面展示的运行时系统架构白名单。常用 win-x64 / linux-x64 / linux-arm64 / linux-arm</summary>
+    private static readonly (OSKind OS, CpuArch Arch)[] RuntimeTargets =
+    [
+        (OSKind.Windows, CpuArch.X64),
+        (OSKind.Linux, CpuArch.X64),
+        (OSKind.Linux, CpuArch.Arm64),
+        (OSKind.Linux, CpuArch.Arm),
+    ];
 
     /// <summary>页面展示的运行时清单。每个系统架构只保留白名单内主版本的最新包</summary>
     /// <returns>运行时安装包</returns>
@@ -494,8 +497,8 @@ fi
         var list = new List<InstallPackage>();
 
         var packages = QueryRuntimes(200)
-            .Where(e => RuntimeOSs.Contains(e.OSKind) && RuntimeArchs.Contains(e.Architecture))
             .Where(e => RuntimeMajors.Contains(MajorOf(e.Version)))
+            .Where(e => RuntimeTargets.Contains((e.OSKind, e.Architecture)))
             .GroupBy(e => new { e.OSKind, e.Architecture });
 
         foreach (var group in packages)

@@ -165,6 +165,20 @@ public class InstallServiceTests
         Assert.Contains(manifest.Runtimes, e => e.Version == "10.0.9" && e.Kind == "runtime");
     }
 
+    /// <summary>运行时只下发常用组合：win-x64 / linux-x64 / linux-arm64 / linux-arm。</summary>
+    [Fact]
+    [Trait("Category", "Install")]
+    public void Manifest_RuntimesLimitedToCommonTargets()
+    {
+        using var isolation = new CatalogIsolation();
+
+        var (service, _) = CreateService();
+        var manifest = service.GetManifest(BaseUri);
+
+        var targets = manifest.Runtimes.Select(e => e.OS + "/" + e.Arch).Distinct().ToList();
+        Assert.All(targets, e => Assert.Contains(e, new[] { "Windows/X64", "Linux/X64", "Linux/Arm64", "Linux/Arm" }));
+    }
+
     /// <summary>后台没有任何安装包时，公共镜像兜底必须仍然可用，保证页面开箱不为空。</summary>
     [Fact]
     [Trait("Category", "Install")]
