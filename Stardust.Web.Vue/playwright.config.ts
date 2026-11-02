@@ -3,6 +3,7 @@ import { dirname } from 'node:path';
 import { defineConfig, devices } from './e2e/fixtures';
 
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5188';
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:6681';
 const STORAGE_STATE = 'e2e/.auth/user.json';
 
 // 确保登录态存储目录存在
@@ -27,7 +28,7 @@ export default defineConfig({
     video: 'retain-on-failure',
   },
   projects: [
-    // 登录态准备：真实 UI 以 admin/admin 登录，写入 storageState 供后续用例复用
+    // 登录态准备：调后端 /Auth/Login（直连）+ 注入 token，写入 storageState 供后续用例复用
     { name: 'setup', testMatch: /auth\.setup\.ts/ },
     {
       name: 'chromium',
@@ -38,13 +39,23 @@ export default defineConfig({
       },
     },
   ],
-  // 自动拉起前端开发服务器（Vite 5188，经代理连真实后端 6680）；
-  // 若 5188 已在运行则不复用，确保每次启动都用最新依赖（api-core 修复需重优化）。
-  // vite.config 中已设 optimizeDeps.force=true，启动时自动重优化依赖。
-  webServer: {
-    command: 'pnpm dev',
-    url: BASE_URL,
-    reuseExistingServer: true,
-    timeout: 120_000,
-  },
+  // 两个 webServer：
+  //   1) 后端（StarWebApi，6681）—— 已在运行则直接复用；未运行由脚本自动拉起
+  //   2) 前端（Vite，5188）—— 前端**直连后端**，已无代理，故必须保证后端先就绪
+  // 探活 URL 选 /api/Registry/App：未登录返回 401，Playwright 视为「已就绪」。
+  webServer: [
+    {
+      command: 'node scripts/ensure-backend.mjs',
+      url: `${BACKEND_URL}/api/Registry/App`,
+      reuseExistingServer: true,
+      timeout: 120_000,
+      stdout: 'pipe',
+    },
+    {
+      command: 'pnpm dev',
+      url: BASE_URL,
+      reuseExistingServer: true,
+      timeout: 120_000,
+    },
+  ],
 });

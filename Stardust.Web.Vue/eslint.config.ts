@@ -32,6 +32,7 @@ export default tseslint.config(
       'e2e-report',
       'e2e/**/.cache',
       // 调试/临时残留脚本（非项目源码，跳过 lint）
+      '.temp',
       '**/_*.mjs',
       '**/_*.cjs',
       '**/_*.js',
@@ -55,6 +56,19 @@ export default tseslint.config(
         parser: tseslint.parser,
         ecmaVersion: 'latest',
         sourceType: 'module',
+      },
+    },
+  },
+  {
+    // 纯 JS 脚本（scripts/*.mjs、构建辅助脚本）同样需要 Node 全局变量，
+    // 否则 js.configs.recommended 会把 process 判为 no-undef。
+    files: ['**/*.{js,mjs,cjs}'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        ...browserGlobals,
+        ...nodeGlobals,
       },
     },
   },
