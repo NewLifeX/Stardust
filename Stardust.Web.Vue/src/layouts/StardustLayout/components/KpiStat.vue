@@ -1,7 +1,9 @@
 <script setup lang="ts">
 /**
- * KPI 指标卡 KpiStat（盒装卡片 + 大号彩色数值 + 图标 + 下方标签）
- * 样式纪律：颜色一律 --el-* 令牌，禁止自定义 CSS 变量与硬编码色值。
+ * KPI 指标卡 KpiStat
+ * 设计真源：design-handoff/README §5 字阶（KPI 值 26–28 / 700）+ Primitives Card
+ *   数值 28px/700 等宽数字 · 标签 12px fg-3 · 图标块 36px 圆角 8
+ * 样式纪律：颜色一律取自设计令牌，禁止硬编码色值。
  */
 import { computed } from 'vue'
 import GlassCard from './GlassCard.vue'
@@ -22,7 +24,7 @@ const valueColor = computed(() => {
     case 'success': return 'var(--el-color-success)'
     case 'warning': return 'var(--el-color-warning)'
     case 'danger': return 'var(--el-color-danger)'
-    default: return 'var(--el-text-color-primary)'
+    default: return 'var(--fg-1)'
   }
 })
 
@@ -32,30 +34,35 @@ const iconBg = computed(() => {
     case 'success': return 'var(--el-color-success-light-9)'
     case 'warning': return 'var(--el-color-warning-light-9)'
     case 'danger': return 'var(--el-color-danger-light-9)'
-    default: return 'var(--el-fill-color-light)'
+    default: return 'var(--surface-2)'
   }
 })
 </script>
 
 <template>
-  <GlassCard class="flex items-center justify-between gap-3 px-4 py-3 transition-shadow hover:shadow-[var(--el-box-shadow)]">
+  <GlassCard class="flex items-center justify-between gap-3 px-4 py-3">
     <div class="flex min-w-0 flex-col justify-center gap-1">
       <div class="flex items-baseline gap-1">
         <span
           data-spec="kpi-value"
-          class="text-[30px] font-bold tabular-nums leading-none"
+          class="font-bold leading-none tabular-nums"
+          style="font-size: 28px"
           :style="{ color: valueColor }"
         >{{ value }}</span>
         <span
           v-if="unit"
-          class="text-xs text-[var(--el-text-color-regular)]"
+          class="text-xs"
+          style="color: var(--fg-3)"
         >{{ unit }}</span>
       </div>
-      <span class="text-xs text-[var(--el-text-color-regular)]">{{ label }}</span>
+      <span
+        class="text-xs"
+        style="color: var(--fg-3)"
+      >{{ label }}</span>
     </div>
     <div
       v-if="icon"
-      class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+      class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)]"
       :style="{ backgroundColor: iconBg }"
     >
       <svg
@@ -63,7 +70,7 @@ const iconBg = computed(() => {
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
-        stroke-width="1.7"
+        stroke-width="1.5"
         stroke-linecap="round"
         stroke-linejoin="round"
         :style="{ color: valueColor }"

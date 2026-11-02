@@ -1,11 +1,14 @@
 <script setup lang="ts">
 /**
  * 玻璃卡片 GlassCard
- * 样式纪律（cube-vue 技能红线）：颜色一律 --el-* 令牌，摆放用 Tailwind 工具类，禁止自定义 CSS 变量与硬编码色值。
+ * 设计真源：design-handoff/ui_kits/console/Primitives.jsx 的 Card
+ *   background surface-1 · border border-1 · radius-lg(10) · padding 16 · elev-1
+ * variant:
+ *   default 标准玻璃；ghost 更透明，适合铺在大面积星云背景上
+ * 样式纪律：颜色与圆角一律取自设计令牌，禁止自定义变量与硬编码色值。
  */
 withDefaults(defineProps<{
   title?: string
-  /** 玻璃卡片变体：default 标准玻璃；ghost 更通透，适合铺在大面积星云背景上 */
   variant?: 'default' | 'ghost'
 }>(), {
   variant: 'default',
@@ -15,19 +18,27 @@ withDefaults(defineProps<{
 <template>
   <div
     data-spec="card"
-    class="backdrop-blur border border-[var(--el-border-color)] rounded-xl p-4"
-    :class="[
-      variant === 'ghost'
-        ? 'bg-[var(--el-bg-color)]/55'
-        : 'bg-[var(--el-bg-color)]/80',
-    ]"
+    class="backdrop-blur rounded-[var(--radius-lg)] border p-4"
+    :style="{
+      borderColor: 'var(--border-1)',
+      background: variant === 'ghost'
+        ? 'color-mix(in srgb, var(--surface-1) 55%, transparent)'
+        : 'color-mix(in srgb, var(--surface-1) 80%, transparent)',
+      boxShadow: 'var(--elev-1)',
+    }"
   >
     <div
       v-if="title"
-      class="flex items-center gap-2 mb-3"
+      class="mb-3 flex items-center gap-2"
     >
-      <span class="w-1 h-4 bg-[var(--el-color-primary)] rounded-full" />
-      <span class="text-sm tracking-wide text-[var(--el-text-color-primary)] font-medium">{{ title }}</span>
+      <span
+        class="h-4 w-1 rounded-full"
+        style="background: var(--brand-500)"
+      />
+      <span
+        class="text-[13px] font-semibold tracking-wide"
+        style="color: var(--fg-1)"
+      >{{ title }}</span>
     </div>
     <slot />
   </div>

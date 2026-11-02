@@ -1,26 +1,39 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { request } from '@newlifex/cube-vue/core/utils/request';
-import GlassCard from '@/layouts/StardustLayout/components/GlassCard.vue';
+import { stardustContext } from '@/stores/stardustContext';
 import StatusPill from '@/layouts/StardustLayout/components/StatusPill.vue';
 import KpiStat from '@/layouts/StardustLayout/components/KpiStat.vue';
+import FilterChips from '@/layouts/StardustLayout/components/FilterChips.vue';
+import EmptyState from '@/layouts/StardustLayout/components/EmptyState.vue';
 import {
-  mapNodes, aggregateStats, filterNodes, statusBorder, statusLabel, statusColor, overviewInfo,
+  mapNodes, aggregateStats, filterNodes, clusterOptions, statusColor, overviewInfo,
   rings, historyRows, commandRows, perfRows, frameworkRows, appOnlineRows, appDeployRows,
   serviceRows, drawerTabs, bannerFor, pillStyleFor, commandPill, servicePill, lineSegs, buildOnlineIndex,
   type NodeView, type NodeRow, type AppOnlineRow, type PerfPoint,
 } from './nodes.model';
 
+const router = useRouter();
 const list = ref<NodeView[]>([]); const filter = ref('全部'); const keyword = ref('');
+/** P2-2: 集群/分类筛选 */
+const clusterFilter = ref('全部');
 const current = ref<NodeView | null>(null); const drawerVisible = ref(false); const activeTab = ref('overview');
 const onlineRows = ref<AppOnlineRow[]>([]); const perfData = ref<PerfPoint[]>([]); const perfLoading = ref(false);
 const stats = computed(() => aggregateStats(list.value));
-const filtered = computed(() => filterNodes(list.value, filter.value, keyword.value));
+const filtered = computed(() => filterNodes(list.value, filter.value, keyword.value, clusterFilter.value));
+const clusters = computed(() => clusterOptions(list.value));
 const detail = computed<NodeRow>(() => current.value?.raw ?? {});
 const banner = computed(() => bannerFor(current.value?.status ?? 'offline'));
 const hasPerf = computed(() => perfData.value.some((p) => p.cpu != null || p.memory != null));
 
 function showDetail(row: NodeView) { current.value = row; drawerVisible.value = true; activeTab.value = 'overview'; loadPerf(row.name); }
+/** P1-3: 跳转节点完整详情页 */
+function goNodeDetail(id: number | undefined) {
+  if (id == null) return;
+  drawerVisible.value = false;
+  void router.push(`/Nodes/Node/Detail?id=${id}`);
+}
 async function loadPerf(name: string) {
   if (!name) { perfData.value = []; return; }
   perfLoading.value = true;
@@ -43,6 +56,23 @@ async function load() {
 }
 
 onMounted(load);
+
+/** 方案 §5.3：项目 / 环境切换后自动刷新当前页（清理失效的局部筛选：关闭详情抽屉、重置过滤条件） */
+watch(
+  () => stardustContext.revision,
+  () => {
+    drawerVisible.value = false;
+    current.value = null;
+    filter.value = '全部';
+    keyword.value = '';
+    clusterFilter.value = '全部';
+    void load();
+  },
+);
+
+/** A6：空态图标（Lucide 线性 path，stroke 1.5，内联 SVG） */
+const ICON_SERVER = 'M4 4h16v6H4zM4 14h16v6H4z';
+
 </script>
 
 <template>
@@ -74,12 +104,12 @@ onMounted(load);
         accent="primary"
       />
       <KpiStat
-        label="在线"
-        :value="stats.online"
+        label="运行"
+        :value="stats.running"
         accent="success"
       />
       <KpiStat
-        label="告警"
+        label="异常"
         :value="stats.alarm"
         accent="warning"
       />
@@ -90,81 +120,119 @@ onMounted(load);
       />
     </div>
 
-    <!-- 过滤 -->
-    <div class="flex items-center gap-2">
-      <button
-        v-for="f in ['全部', '在线', '告警', '离线']"
-        :key="f"
-        class="rounded-[18px] px-3.5 py-[7px] text-[13px] transition"
-        data-spec="chip"
-        :class="filter === f ? 'bg-[var(--el-color-primary)] text-white' : 'text-[var(--el-text-color-regular)] hover:bg-[var(--el-bg-color-overlay)]'"
-        @click="filter = f"
+    <!-- 状态筛选 chips + 集群分类筛选（§9.2） -->
+    <div class="flex items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <FilterChips
+          v-model="filter"
+          :options="[{ value: '全部', label: '全部', count: stats.total }, { value: '运行', label: '运行', count: stats.running }, { value: '异常', label: '异常', count: stats.alarm }, { value: '离线', label: '离线', count: stats.offline }]"
+        />
+      </div>
+      <!-- P2-2: 集群/分类下拉筛选 -->
+      <el-select
+        v-model="clusterFilter"
+        size="small"
+        class="w-40"
+        placeholder="集群分类"
       >
-        {{ f }} {{ f === '全部' ? stats.total : f === '在线' ? stats.online : f === '告警' ? stats.alarm : stats.offline }}
-      </button>
+        <el-option
+          v-for="c in clusters"
+          :key="c"
+          :label="c"
+          :value="c"
+        />
+      </el-select>
     </div>
 
-    <!-- 卡片网格 -->
-    <div class="grid grid-cols-3 gap-4">
-      <GlassCard
-        v-for="row in filtered"
-        :key="row.id"
-        class="relative cursor-pointer border-l-4 p-4 transition hover:-translate-y-0.5 hover:bg-[var(--el-bg-color-overlay)]/60"
-        :class="statusBorder[row.status]"
-        @click="showDetail(row)"
+    <!-- 节点表格（§22.3 表格优先：节点/IP/状态/CPU/内存/应用数；点击行打开详情抽屉） -->
+    <div class="flex flex-col gap-3">
+      <el-table
+        :data="filtered"
+        data-spec="ntable"
+        class="sd-node-table"
+        @row-click="(row: NodeView) => showDetail(row)"
       >
-        <div class="flex items-start justify-between">
-          <div>
-            <div
-              data-spec="ncard-name"
-              class="text-[15px] font-semibold text-[var(--el-text-color-primary)]"
-            >
-              {{ row.name }}
+        <el-table-column
+          label="节点"
+          min-width="220"
+        >
+          <template #default="{ row }">
+            <div class="flex items-center gap-2.5">
+              <span
+                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[13px] font-semibold"
+                style="background: color-mix(in srgb, var(--el-color-primary) 15%, transparent); color: var(--el-color-primary)"
+              >
+                {{ String(row.name || 'N').charAt(0) }}
+              </span>
+              <div class="min-w-0">
+                <div class="truncate text-[14px] font-semibold text-[var(--el-text-color-primary)]">
+                  {{ row.name }}
+                </div>
+                <div class="truncate text-xs text-[var(--el-text-color-placeholder)]">
+                  {{ row.cluster }}
+                </div>
+              </div>
             </div>
-            <div class="mt-0.5 text-xs text-[var(--el-text-color-placeholder)]">
-              {{ row.ip }}
-            </div>
-            <div class="mt-1 text-[10px] text-[var(--el-text-color-placeholder)]">
-              {{ row.cluster }}
-            </div>
-          </div>
-          <StatusPill :status="statusLabel[row.status]" />
-        </div>
-        <div class="mt-4 flex items-center gap-6 text-xs">
-          <div>
-            <div class="text-[10px] text-[var(--el-text-color-placeholder)]">
-              CPU
-            </div>
-            <div
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="IP"
+          min-width="130"
+        >
+          <template #default="{ row }">
+            <span class="font-mono text-xs text-[var(--el-text-color-regular)]">{{ row.ip }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="状态"
+          width="96"
+        >
+          <template #default="{ row }">
+            <StatusPill :status="row.status" />
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="CPU"
+          width="90"
+          align="right"
+        >
+          <template #default="{ row }">
+            <span
               class="font-medium tabular-nums"
               :style="{ color: statusColor(row.status) }"
-            >
-              {{ row.cpu != null ? row.cpu + '%' : '—' }}
-            </div>
-          </div>
-          <div>
-            <div class="text-[10px] text-[var(--el-text-color-placeholder)]">
-              内存
-            </div>
-            <div
+            >{{ row.cpu != null ? row.cpu + '%' : '—' }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="内存"
+          width="90"
+          align="right"
+        >
+          <template #default="{ row }">
+            <span
               class="font-medium tabular-nums"
               :style="{ color: statusColor(row.status) }"
-            >
-              {{ row.memory != null ? row.memory + '%' : '—' }}
-            </div>
-          </div>
-          <div>
-            <div class="text-[10px] text-[var(--el-text-color-placeholder)]">
-              服务
-            </div>
-            <div class="font-medium tabular-nums text-[var(--el-text-color-primary)]">
-              {{ row.services }}
-            </div>
-          </div>
-        </div>
-      </GlassCard>
+            >{{ row.memory != null ? row.memory + '%' : '—' }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="应用数"
+          width="90"
+          align="right"
+        >
+          <template #default="{ row }">
+            <span class="tabular-nums text-[var(--el-text-color-primary)]">{{ row.services }}</span>
+          </template>
+        </el-table-column>
+        <template #empty>
+          <EmptyState
+            :icon="ICON_SERVER"
+            title="当前项目暂无节点"
+            hint="可切换项目，或部署 StarAgent 后自动接入"
+          />
+        </template>
+      </el-table>
     </div>
-
     <!-- 节点详情抽屉 -->
     <el-drawer
       v-model="drawerVisible"
@@ -174,8 +242,38 @@ onMounted(load);
       class="stardust-drawer"
       destroy-on-close
     >
+      <template #header>
+        <div class="flex min-w-0 flex-1 items-center justify-between gap-3">
+          <div class="flex min-w-0 flex-col">
+            <span class="truncate text-lg font-bold text-[var(--el-text-color-primary)]">
+              {{ current?.name || '节点详情' }}
+            </span>
+            <span
+              v-if="current?.cluster"
+              class="truncate text-xs text-[var(--el-text-color-secondary)]"
+            >
+              {{ current.cluster }}
+            </span>
+          </div>
+          <div class="flex shrink-0 items-center gap-2">
+            <button
+              class="rounded-lg border border-[var(--el-border-color)] px-2.5 py-1.5 text-xs text-[var(--el-text-color-regular)] transition-colors hover:border-[var(--el-color-primary)] hover:text-[var(--el-color-primary)]"
+              @click="goNodeDetail(current?.id)"
+            >
+              查看完整详情 →
+            </button>
+            <button
+              class="sd-close"
+              aria-label="关闭"
+              @click="drawerVisible = false"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      </template>
       <div class="flex flex-col gap-4 p-5">
-        <!-- ① 状态横幅三态（规格 03 §5：12% 底 / 30% 边 / 同色字；替掉 StatusPill 行） -->
+        <!-- ① 状态横幅七态（规格 03 §5：12% 底 / 30% 边 / 同色字；替掉 StatusPill 行） -->
         <div
           v-if="current"
           class="flex items-center justify-between rounded-lg px-3.5 py-2.5 text-xs"
@@ -472,3 +570,36 @@ onMounted(load);
     </el-drawer>
   </div>
 </template>
+
+<style scoped>
+.stardust-drawer :deep(.el-drawer__header) {
+  margin-bottom: 0;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--el-border-color-light);
+}
+.stardust-drawer :deep(.el-drawer__body) {
+  padding: 20px;
+  background: color-mix(in srgb, var(--el-bg-color) 92%, transparent);
+}
+.stardust-drawer :deep(.el-drawer__close-btn) {
+  display: none;
+}
+.sd-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--el-text-color-regular);
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.sd-close:hover {
+  background: var(--el-fill-color-light);
+  color: var(--el-text-color-primary);
+}
+</style>

@@ -9,9 +9,16 @@
  *
  * 样式纪律（cube-vue 技能红线）：颜色一律 --el-* 令牌，布局尺寸用 Tailwind，禁止自定义 CSS 变量与硬编码色值。
  */
+import { computed } from 'vue';
+import { useRoute } from 'vue-router';
 import StarfieldBg from './starfield/StarfieldBg.vue';
 import TopBar from './TopBar.vue';
 import SideBar from './SideBar.vue';
+import RightPanel from './components/RightPanel.vue';
+
+const route = useRoute();
+/** 右侧实时数据面板：默认全控制台可见；自带右栏的页面（如配置中心）用 meta.rightPanel=false 关闭 */
+const showRightPanel = computed(() => route.meta?.rightPanel !== false);
 </script>
 
 <template>
@@ -32,12 +39,16 @@ import SideBar from './SideBar.vue';
         <!-- 左侧栏：固定宽 72px，不收缩 -->
         <SideBar />
 
-        <!-- 右侧主内容区：页面经框架 RootLayout 以默认插槽注入（不可用 router-view） -->
-        <main class="min-h-0 flex-1 p-6">
+        <!-- 右侧主内容区：页面经框架 RootLayout 以默认插槽注入（不可用 router-view）。
+             cosmic-content 为布局对外契约类名（e2e helpers / 旧页面均依赖此主容器标识） -->
+        <main class="cosmic-content min-h-0 flex-1 p-6">
           <div class="mx-auto max-w-[1600px]">
             <slot />
           </div>
         </main>
+
+        <!-- 右侧全局实时数据面板（设计稿 RightPanel.jsx） -->
+        <RightPanel v-if="showRightPanel" />
       </div>
     </div>
   </div>
