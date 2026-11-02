@@ -25,6 +25,7 @@ func Definitions() []Definition {
 		{Name: "http-fallback", Description: "commands delivered in the ping response when WebSocket is unavailable", Run: runHTTPFallback},
 		{Name: "dedup", Description: "a duplicated command Id is executed and replied only once", Run: runDedup},
 		{Name: "expired", Description: "an expired command is replied with Status=3 (cancelled)", Run: runExpired},
+		{Name: "bootstrap-disabled", Description: "node/bootstrap is rejected with Status=3 when Bootstrap is off", Run: runBootstrapDisabled},
 		{Name: "reconnect", Description: "WebSocket disconnect is followed by reconnect and command delivery", Run: runReconnect},
 		{Name: "events", Description: "failed event uploads are retried until accepted", Run: runEvents},
 	}
@@ -272,6 +273,36 @@ func runExpired(ctx context.Context, e *Env) error {
 	}
 	if replies[0].Reply.Data == "" {
 		return fmt.Errorf("expired command reply did not include Data")
+	}
+
+	return nil
+}
+
+// runBootstrapDisabled 验证引导安装默认关闭：平台下发 node/bootstrap 时必须拒绝，
+// 避免未经确认就改动系统安装（与 AllowExec 同级的安全默认）。
+func runBootstrapDisabled(ctx context.Context, e *Env) error {
+	if err := e.StartAgent(); err != nil {
+		return fmt.Errorf("start agent: %w", err)
+	}
+	if _, err := e.WaitFor("login and websocket", func(s *fakeserver.State) bool {
+		return len(s.Logins) >= 1 && s.WSConnections >= 1
+	}); err != nil {
+		return err
+	}
+
+	const commandId int64 = 5001
+	if err := e.Command(protocol.CommandModel{Id: commandId, Command: "node/bootstrap"}, "ws"); err != nil {
+		return fmt.Errorf("enqueue bootstrap command: %w", err)
+	}
+	_, replies, err := e.WaitForReply(commandId, 1)
+	if err != nil {
+		return err
+	}
+	if replies[0].Reply.Status != protocol.StatusCancelled {
+		return fmt.Errorf("bootstrap reply status=%d, want %d (cancelled by default)", replies[0].Reply.Status, protocol.StatusCancelled)
+	}
+	if !strings.Contains(replies[0].Reply.Data, "引导安装未启用") {
+		return fmt.Errorf("bootstrap reply data=%q, want 引导安装未启用", replies[0].Reply.Data)
 	}
 
 	return nil

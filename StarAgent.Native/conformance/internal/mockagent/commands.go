@@ -135,6 +135,9 @@ func (h *commandHandler) execute(cmd protocol.CommandModel) (int, string) {
 		return protocol.StatusCompleted, "mock: 更新通道已设置"
 	case "node/restart":
 		return protocol.StatusCompleted, "mock: 已忽略重启"
+	case "node/bootstrap":
+		// 引导安装默认关闭：与真实 Agent 一致，未启用时回复取消
+		return protocol.StatusCancelled, "引导安装未启用"
 	case "bash", "cmd":
 		if !h.allowExec {
 			return protocol.StatusCancelled, "命令执行未启用"

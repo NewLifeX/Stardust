@@ -85,6 +85,7 @@ runner 会在 Agent 进程环境中继承当前环境，并额外设置：
 | 命令执行 | basic | `node/synctime` 回复 `Status=2` 且 `Data` 非空 |
 | 去重 | dedup | 相同 `Id` 只回复一次 |
 | 过期 | expired | `Expire` 早于当前时间时回复 `Status=3` |
+| 引导安装默认关闭 | bootstrap-disabled | `node/bootstrap` 回复 `Status=3` 且 `Data` 含“引导安装未启用” |
 | 断线重连 | reconnect | 服务端强制断开后重新连接 WS 并恢复心跳/命令 |
 | HTTP 降级 | http-fallback | WS 不可用时，执行心跳响应 `Commands` 中的命令 |
 | 事件补报 | events | 上报失败后重试；**至少产生一个事件**（如 `Startup`） |
@@ -99,6 +100,7 @@ runner 会在 Agent 进程环境中继承当前环境，并额外设置：
 | `http-fallback` | 禁用 WS 后，命令经 `PingResponse.Commands` 下发并回复 |
 | `dedup` | 同一命令 `Id` 投递两次，只执行/回复一次（1.5 秒观察窗口） |
 | `expired` | `Expire` 已过期的命令回复 `Status=3` |
+| `bootstrap-disabled` | 未开启 `Bootstrap` 时下发 `node/bootstrap` 回复 `Status=3`（不改动系统安装） |
 | `reconnect` | `/control/kick` 断开 WS 后 Agent 自动重连，连接数与心跳恢复，命令仍可送达 |
 | `events` | 前两次 `/node/postevents` 返回 500，Agent 退避重试直至成功 |
 
