@@ -118,28 +118,63 @@ namespace Stardust.Data
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
         public static IList<AppClientLog> Search(Int32 appId, String clientId, Int32 threadId, DateTime start, DateTime end, String key, PageParameter page)
-        {
-            //if (appId <= 0) throw new ArgumentNullException(nameof(appId));
-            //if (start.Year < 2000) throw new ArgumentNullException(nameof(start));
-            //if (end.Year < 2000) throw new ArgumentNullException(nameof(end));
-            if (appId <= 0 || start.Year < 2000) return new List<AppClientLog>();
+            => Search(appId, clientId, threadId, start, end, key, null, page);
 
-            // 分表
-            //using var split = Meta.CreateSplit($"AppLog_{start:yyyyMMdd}", $"AppLog_{appId}");
-            //using var split = Meta.AutoSplit(new AppLog { AppId = appId, CreateTime = start });
+        /// <summary>高级查询（含日志级别过滤）</summary>
+        /// <param name="appId">应用</param>
+        /// <param name="clientId">客户端</param>
+        /// <param name="threadId">线程</param>
+        /// <param name="start">开始时间</param>
+        /// <param name="end">结束时间</param>
+        /// <param name="key">关键字</param>
+        /// <param name="kind">日志级别（Info/Warn/Error/Fatal），空=不过滤</param>
+        /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+        /// <returns>实体列表</returns>
+        public static IList<AppClientLog> Search(Int32 appId, String clientId, Int32 threadId, DateTime start, DateTime end, String key, String kind, PageParameter page)
+        {
+            if (appId <= 0 || start.Year < 2000) return new List<AppClientLog>();
 
             var exp = new WhereExpression();
 
-            //// 按天分表，只有具体时间才过滤
-            //if (start == start.Date) start = DateTime.MinValue;
+            // 分表实体（按月分库 StardustData_yyyyMM + 按天分表 AppClientLog_dd）：
+            // 必须带 Id 时间窗，TimeShardPolicy 才能定位分库/分表；无时间条件会打到不存在的基础表
             exp &= _.Id.Between(start, end, Meta.Factory.Snow);
 
             if (appId >= 0) exp &= _.AppId == appId;
             if (!clientId.IsNullOrEmpty()) exp &= _.ClientId == clientId;
             if (threadId > 0) exp &= _.ThreadId == threadId;
+            if (!kind.IsNullOrEmpty()) exp &= _.Kind == kind;
             if (!key.IsNullOrEmpty()) exp &= _.Message.Contains(key) | _.ClientId == key;
 
             return FindAll(exp, page);
+        }
+
+        /// <summary>分表感知安全查询（带时间窗），缺表环境返回空列表而非抛异常。
+        /// 分表数据只落分表（写入时自动创建），基础表不存在；全新环境首次查询可能得到「表不存在」错误。</summary>
+        /// <param name="note">空数据原因说明；正常查询时为 null</param>
+        public static IList<AppClientLog> SearchSafe(Int32 appId, DateTime start, DateTime end, String key, String kind, PageParameter page, out String note)
+        {
+            note = null;
+            try
+            {
+                return Search(appId, null, 0, start, end, key, kind, page);
+            }
+            catch (Exception ex) when (IsTableMissing(ex))
+            {
+                note = "日志分表尚未创建（该应用在时间窗内没有上报过客户端日志）";
+                return new List<AppClientLog>();
+            }
+        }
+
+        /// <summary>判断异常是否为「分表/分库尚不存在」（兼容 SqlServer/SQLite/MySql/PgSql 等缺表话术）。</summary>
+        public static Boolean IsTableMissing(Exception ex)
+        {
+            var msg = ex?.Message ?? "";
+            return msg.Contains("Invalid object name")   // SqlServer：基础表/分表未创建
+                || msg.Contains("Cannot open database")  // SqlServer：分库未创建
+                || msg.Contains("no such table")         // SQLite
+                || msg.Contains("doesn't exist")         // MySql
+                || msg.Contains("does not exist");       // PostgreSql/Oracle
         }
 
         // Select Count(Id) as Id,Category From AppLog Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20

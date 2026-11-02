@@ -419,26 +419,32 @@ public static class McpTestDataInitializer
         }
 
         // --- 应用日志（app_logs） ---
-        // AppClientLog 是分表实体（TimeShardPolicy），但 StarDataHelper.SplitSqliteTables 未为它建分库，
-        // 服务端 SQLite 库中也从未建过主表（app_logs 工具因此失败）。这里直接裸 SQL 幂等建主表 + 写入，
-        // 与服务端共享同一 StardustData.db，服务端 app_logs 即可正常读取。
+        // AppClientLog 是分表实体（TimeShardPolicy：按月分库 StardustData_yyyyMM + 按天分表 AppClientLog_dd），
+        // 没有基础表（旧方案裸 SQL 建基础表已被废弃——MCP 工具现走带时间窗的分表感知查询）。
+        // 这里用实体 Insert 幂等造一条（XCode 自动创建分库/分表，落在本测试进程数据目录，与服务端共享），
+        // 服务端 app_logs / app_health 即可正常读到。
         {
-            var dal4 = DAL.Create("StardustData");
             var msg = Prefix + "hello";
-            try
+            var start = DateTime.Now.AddHours(-1);
+            var end = DateTime.Now.AddMinutes(1);
+            var existed = AppClientLog.Search(AppId, null, 0, start, end, msg, null,
+                new NewLife.Data.PageParameter { PageIndex = 1, PageSize = 1 }).Count > 0;
+            if (!existed)
             {
-                dal4.Execute("CREATE TABLE IF NOT EXISTS AppClientLog (Id INTEGER PRIMARY KEY AUTOINCREMENT, AppId INTEGER NOT NULL, ClientId TEXT, Time TEXT, ThreadId TEXT, Kind TEXT, Name TEXT, Message TEXT, CreateTime DATETIME, CreateIP TEXT)");
-                var cnt = dal4.ExecuteScalar<Int32>($"Select Count(*) From AppClientLog Where AppId={AppId} And Message='{msg}'");
-                if (cnt == 0)
+                var now = DateTime.Now.AddMinutes(-5);
+                new AppClientLog
                 {
-                    var now = DateTime.Now.AddMinutes(-5).ToString("yyyy-MM-dd HH:mm:ss");
-                    dal4.Execute($"Insert Into AppClientLog (AppId,ClientId,Time,Kind,Message,CreateTime) Values({AppId},'mcp-test','{now}','Info','{msg}','{now}')");
-                    output?.WriteLine("✅ 新建应用日志（裸 SQL 建主表+写入）");
-                }
-            }
-            catch (Exception ex)
-            {
-                output?.WriteLine($"⚠️ AppClientLog 裸 SQL 处理失败（不影响其他初始化）：{ex.Message}");
+                    AppId = AppId,
+                    ClientId = "mcp-test",
+                    Time = now.ToString("yyyy-MM-dd HH:mm:ss"),
+                    ThreadId = "1",
+                    Kind = "Info",
+                    Name = "mcp-test",
+                    Message = msg,
+                    CreateTime = now,
+                    CreateIP = "127.0.0.1",
+                }.Insert();
+                output?.WriteLine("✅ 新建应用日志（分表实体 Insert，自动建分库/分表）");
             }
         }
     }
