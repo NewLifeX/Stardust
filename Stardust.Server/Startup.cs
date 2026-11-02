@@ -102,6 +102,7 @@ public class Startup
         services.AddSingleton<AgentDeployService>();
         services.AddSingleton<GatewayService>();
         services.AddSingleton<DownloadTokenService>();
+        services.AddSingleton<InstallService>();
         services.AddSingleton<BrowserTokenService>();
 
         services.AddSingleton<NodeSessionManager>();

@@ -3,6 +3,7 @@ using NewLife;
 using NewLife.Configuration;
 using NewLife.Remoting.Models;
 using NewLife.Security;
+using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Services;
 using XCode.Configuration;
@@ -184,6 +185,19 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     /// <summary>星尘资源下载基础地址。StarAgent安装包/一键脚本等资源的基础URL，.NET运行时脚本位于其同级dotnet/目录，默认官方地址</summary>
     [Description("Stardust resource download base address. Base URL for StarAgent installers/scripts; defaults to the official address")]
     public String AgentDownloadBaseUrl { get; set; } = "https://x.newlifex.com/star/";
+
+    /// <summary>安装引导服务端地址。安装页面与安装脚本告诉 StarAgent 连接的服务端地址，如 https://star.example.com:6600；为空时取请求地址</summary>
+    /// <remarks>反向代理或端口映射导致外部地址与请求地址不一致时必须显式配置</remarks>
+    [Description("Agent server address used by the install page and install scripts, e.g. https://star.example.com:6600. Empty means the request address.")]
+    public String AgentServerUrl { get; set; } = "";
+
+    /// <summary>启用安装引导页。启用后根路径返回安装引导页面，默认true</summary>
+    [Description("Enable the install guide page at the root path. Default true.")]
+    public Boolean EnableInstallPage { get; set; } = true;
+
+    /// <summary>安装引导默认通道。页面与脚本默认展示的产品版本通道，默认Release</summary>
+    [Description("Default release channel for the install guide page and scripts. Default Release.")]
+    public NodeChannels InstallChannel { get; set; } = NodeChannels.Release;
 
     ///// <summary>新服务器。节点自动迁移到新的服务器地址</summary>
     //[Description("新服务器。节点自动迁移到新的服务器地址")]

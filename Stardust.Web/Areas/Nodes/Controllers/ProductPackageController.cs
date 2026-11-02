@@ -8,6 +8,7 @@ using NewLife.Log;
 using NewLife.Web;
 using XCode.Membership;
 using static Stardust.Data.Nodes.ProductPackage;
+using Attachment = NewLife.Cube.Entity.Attachment;
 
 namespace Stardust.Web.Areas.Nodes.Controllers;
 
@@ -63,5 +64,22 @@ public class ProductPackageController : EntityController<ProductPackage>
         var end = p["dtEnd"].ToDateTime();
 
         return ProductPackage.Search(releaseId, start, end, p["Q"], p);
+    }
+
+    /// <summary>上传文件后自动计算哈希和大小</summary>
+    /// <remarks>与 dotNet 安装包保持一致，数据库里只保存相对地址，安装引导页按需补全并加签</remarks>
+    protected override async Task<Attachment> SaveFile(ProductPackage entity, IFormFile file, String uploadPath, String fileName)
+    {
+        var att = await base.SaveFile(entity, file, uploadPath, fileName);
+        if (att != null)
+        {
+            entity.FileHash = att.Hash;
+            entity.Size = att.Size;
+            entity.Source = $"/cube/file?id={att.Id}{att.Extension}";
+            entity.Update();
+        }
+
+        // 返回 null 阻止 Cube 用物理路径覆盖 Source 字段
+        return null;
     }
 }
