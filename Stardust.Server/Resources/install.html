@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>安装 StarAgent · 星尘</title>
+<title>星尘 Stardust · 服务端</title>
 <style>
     :root {
         --ink: #0b1220;
@@ -61,7 +61,7 @@
             linear-gradient(140deg, #070b16 0%, #101a30 48%, #0d1729 100%);
         padding: 44px 40px 40px;
         box-shadow: 0 40px 80px -60px rgba(6, 10, 22, .95);
-        display: grid; grid-template-columns: .9fr 1.1fr; gap: 36px; align-items: center;
+        display: grid; grid-template-columns: .9fr 1.1fr; gap: 36px; align-items: stretch;
     }
     .hero::after {
         content: ""; position: absolute; inset: 0; pointer-events: none;
@@ -81,8 +81,7 @@
         font-size: 12px; color: #cbd5e1; border: 1px solid rgba(148, 163, 184, .24);
         background: rgba(148, 163, 184, .10); padding: 3px 10px; border-radius: 999px;
     }
-    .server-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .server-row .label { font-size: 11.5px; color: #8fa0b8; letter-spacing: .04em; }
+    .server-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }    .server-row .label { font-size: 11.5px; color: #8fa0b8; letter-spacing: .04em; }
     .server-chip {
         display: inline-flex; align-items: center; gap: 8px;
         font-family: var(--mono); font-size: 13px; color: #e2e8f0;
@@ -95,7 +94,21 @@
     }
     .server-chip button:hover { background: rgba(147, 197, 253, .16); }
 
-    .cmd { background: rgba(6, 10, 20, .62); border: 1px solid rgba(148, 163, 184, .18); border-radius: 16px; padding: 16px 18px; backdrop-filter: blur(8px); }
+    /* 平台统计 */
+    .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 22px; }
+    .stat {
+        padding: 10px 14px; border-radius: 14px; min-width: 0;
+        background: rgba(148, 163, 184, .09); border: 1px solid rgba(148, 163, 184, .16);
+    }
+    .stat b {
+        display: block; font-size: 21px; line-height: 1.3; letter-spacing: -.02em;
+        font-variant-numeric: tabular-nums; color: #f1f5fd;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .stat span { display: block; font-size: 11.5px; color: #8fa0b8; letter-spacing: .04em; }
+    .stat small { display: block; font-size: 11px; color: #7d8ca4; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .cmd { background: rgba(6, 10, 20, .62); border: 1px solid rgba(148, 163, 184, .18); border-radius: 16px; padding: 18px 20px; backdrop-filter: blur(8px); display: flex; flex-direction: column; justify-content: space-between; gap: 10px; }
     .tabs { display: inline-flex; padding: 3px; gap: 2px; border-radius: 10px; background: rgba(148, 163, 184, .13); }
     .tabs button {
         appearance: none; border: none; cursor: pointer; font-size: 12px; color: #a8b6cb;
@@ -222,25 +235,27 @@
     <div class="topbar">
         <div class="brand">
             <div class="mark">星</div>
-            <div><b>星尘 StarAgent</b><small data-i18n="brandSub">节点代理安装</small></div>
+            <div><b>星尘 Stardust</b><small data-i18n="brandSub">分布式服务与监控平台</small></div>
         </div>
         <button class="ghost" id="langBtn">English</button>
     </div>
 
     <section class="hero">
         <div>
-            <div class="eyebrow">Stardust Agent</div>
-            <h1 data-i18n="title">安装 <em>StarAgent</em></h1>
-            <p class="lead" data-i18n="lead">给服务器装上一个轻量代理：采集状态、执行指令、托管应用。选择平台下载安装包，或直接复制一条命令。</p>
-            <div class="chips">
-                <span class="chip">Windows</span>
-                <span class="chip">Linux</span>
-                <span class="chip">x64 / arm64</span>
-                <span class="chip" data-i18n="chipAuto">自动识别本机</span>
+            <div class="eyebrow">Stardust Platform</div>
+            <h1>星尘 <em>Stardust</em></h1>
+            <p class="lead" data-i18n="lead">分布式配置、注册发现、远程部署、性能监控与日志中心。节点与应用在这里统一接入。</p>
+            <div class="stats">
+                <div class="stat"><b id="stNodeOnline">-</b><span data-i18n="stNode">在线节点</span><small><i id="stNodeTotal">-</i> <span data-i18n="stTotal">总计</span></small></div>
+                <div class="stat"><b id="stAppOnline">-</b><span data-i18n="stApp">在线应用</span><small><i id="stAppTotal">-</i> <span data-i18n="stTotal">总计</span></small></div>
+                <div class="stat"><b id="stTodayCall">-</b><span data-i18n="stCall">今日调用</span><small id="stCallHint">-</small></div>
+                <div class="stat"><b id="stTodayError">-</b><span data-i18n="stError">今日错误</span><small id="stErrorRate">-</small></div>
             </div>
             <div class="server-row">
                 <span class="label" data-i18n="server">服务端</span>
                 <span class="server-chip"><span id="server">-</span><button id="copyServer" data-i18n="copy">复制</button></span>
+                <span class="chip" id="versionChip">-</span>
+                <span class="chip" id="uptimeChip">-</span>
             </div>
         </div>
 
@@ -270,7 +285,7 @@
 
     <section class="card">
         <div class="card-head">
-            <h2><span class="sub" data-i18n="packages">安装包</span></h2>
+            <h2><span class="sub" data-i18n="packages">安装包</span><span class="sub" data-i18n="packagesHint">StarAgent 客户端</span></h2>
             <div class="tools">
                 <select class="select" id="versionSel"></select>
             </div>
@@ -365,10 +380,16 @@
 <script>
 const I18N = {
     zh: {
-        brandSub: "节点代理安装",
-        title: "安装 StarAgent",
-        lead: "给服务器装上一个轻量代理：采集状态、执行指令、托管应用。选择平台下载安装包，或直接复制一条命令。",
-        chipAuto: "自动识别本机",
+        brandSub: "分布式服务与监控平台",
+        lead: "分布式配置、注册发现、远程部署、性能监控与日志中心。节点与应用在这里统一接入。",
+        stNode: "在线节点",
+        stApp: "在线应用",
+        stCall: "今日调用",
+        stError: "今日错误",
+        stTotal: "总计",
+        errorRate: "错误率",
+        uptime: "已稳定运行",
+        packagesHint: "StarAgent 客户端",
         server: "服务端",
         command: "一键安装",
         copy: "复制",
@@ -393,10 +414,16 @@ const I18N = {
         note3: "完整版支持平台下发升级包，原生版本可通过引导安装切换到完整版。",
     },
     en: {
-        brandSub: "Node agent installation",
-        title: "Install StarAgent",
-        lead: "A lightweight agent for servers: collects metrics, runs commands, hosts applications. Download a package or copy one command.",
-        chipAuto: "Auto-detected",
+        brandSub: "Distributed services & monitoring",
+        lead: "Config center, service registry, remote deployment, tracing and log center. Nodes and applications register here.",
+        stNode: "Nodes online",
+        stApp: "Apps online",
+        stCall: "Calls today",
+        stError: "Errors today",
+        stTotal: "total",
+        errorRate: "error rate",
+        uptime: "Uptime",
+        packagesHint: "StarAgent client",
         server: "Server",
         command: "One-line install",
         copy: "Copy",
@@ -436,6 +463,7 @@ function applyLang() {
     document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t(el.dataset.i18n); });
     $("langBtn").textContent = lang === "zh" ? "English" : "中文";
     renderAutoHint();
+    renderSummary();
     render();
 }
 
@@ -648,6 +676,51 @@ async function load() {
     render();
 }
 
+function fmt(value) {
+    if (value == null) return "-";
+    return Number(value).toLocaleString(lang === "zh" ? "zh-CN" : "en-US");
+}
+
+function uptimeText(seconds) {
+    if (!seconds || seconds < 0) return "-";
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    if (lang === "zh") {
+        if (days > 0) return days + " 天 " + hours + " 小时";
+        if (hours > 0) return hours + " 小时 " + minutes + " 分";
+        return minutes + " 分钟";
+    }
+    if (days > 0) return days + "d " + hours + "h";
+    if (hours > 0) return hours + "h " + minutes + "m";
+    return minutes + "m";
+}
+
+let summary = null;
+
+function renderSummary() {
+    if (!summary) return;
+    $("stNodeOnline").textContent = fmt(summary.nodeOnline);
+    $("stNodeTotal").textContent = fmt(summary.nodeTotal);
+    $("stAppOnline").textContent = fmt(summary.appOnline);
+    $("stAppTotal").textContent = fmt(summary.appTotal);
+    $("stTodayCall").textContent = fmt(summary.todayCall);
+    $("stTodayError").textContent = fmt(summary.todayError);
+    $("stCallHint").textContent = summary.todayCall > 0 ? "" : "-";
+    $("stErrorRate").textContent = t("errorRate") + " " + ((summary.errorRate || 0) * 100).toFixed(2) + "%";
+    $("versionChip").textContent = summary.version ? "v" + summary.version : "-";
+    $("uptimeChip").textContent = t("uptime") + " " + uptimeText(summary.uptime);
+    if (summary.server && (!manifest || !manifest.server)) $("server").textContent = summary.server;
+}
+
+async function loadSummary() {
+    try {
+        const resp = await fetch("home/summary", { headers: { "Accept": "application/json" } });
+        summary = await resp.json();
+        renderSummary();
+    } catch { /* 概览失败不影响安装引导 */ }
+}
+
 document.querySelectorAll("#osTabs button").forEach(btn => {
     btn.addEventListener("click", () => {
         os = btn.dataset.os;
@@ -693,6 +766,7 @@ $("copyServer").addEventListener("click", () => {
 });
 
 applyLang();
+loadSummary();
 detectPlatform().then(load).catch(err => { $("command").textContent = String(err); });
 </script>
 </body>

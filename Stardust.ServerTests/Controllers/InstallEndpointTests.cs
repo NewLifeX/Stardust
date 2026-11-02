@@ -60,6 +60,23 @@ public class InstallEndpointTests : StarTestBase
 
     [Fact]
     [Trait("Category", "Install")]
+    public async Task Summary_ReturnsPlatformCounts()
+    {
+        var client = _server.CreateClient();
+
+        var text = await client.GetStringAsync("/home/summary");
+        using var doc = JsonDocument.Parse(text);
+        var root = doc.RootElement;
+
+        Assert.False(root.GetProperty("server").GetString().IsNullOrEmpty());
+        Assert.False(root.GetProperty("version").GetString().IsNullOrEmpty());
+        Assert.True(root.GetProperty("nodeTotal").GetInt32() >= 0);
+        Assert.True(root.GetProperty("appTotal").GetInt32() >= 0);
+        Assert.InRange(root.GetProperty("errorRate").GetDouble(), 0, 1);
+    }
+
+    [Fact]
+    [Trait("Category", "Install")]
     public async Task Root_ReturnsInstallPage()
     {
         var client = _server.CreateClient();

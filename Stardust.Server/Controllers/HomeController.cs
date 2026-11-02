@@ -2,6 +2,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
+using Stardust.Data;
+using Stardust.Data.Monitors;
+using Stardust.Data.Nodes;
+using Stardust.Models;
 using Stardust.Server.Services;
 
 namespace Stardust.Server.Controllers;
@@ -45,6 +49,30 @@ public class HomeController : ControllerBase
         if (html.IsNullOrEmpty()) return LegacyHome();
 
         return Content(html, "text/html; charset=utf-8", Encoding.UTF8);
+    }
+
+    /// <summary>平台概览。节点、应用与今日调用统计，供首页展示</summary>
+    /// <returns>概览数据</returns>
+    [HttpGet("/home/summary")]
+    public HomeSummary Summary()
+    {
+        var today = AppDayStat.Search(DateTime.Today, null);
+        var total = today.Sum(e => (Int64)e.Total);
+        var errors = today.Sum(e => (Int64)e.Errors);
+
+        return new HomeSummary
+        {
+            Server = InstallService.GetServerUrl(Request, _setting),
+            Version = typeof(HomeController).Assembly.GetName().Version + "",
+            Uptime = Environment.TickCount64 / 1000,
+            NodeOnline = NodeOnline.Meta.Count,
+            NodeTotal = Node.Meta.Count,
+            AppOnline = AppOnline.Meta.Count,
+            AppTotal = App.Meta.Count,
+            TodayCall = total,
+            TodayError = errors,
+            ErrorRate = total > 0 ? (Double)errors / total : 0,
+        };
     }
 
     /// <summary>旧版首页行为：跳转到 StarWeb 的代理安装页</summary>

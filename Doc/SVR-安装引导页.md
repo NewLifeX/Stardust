@@ -5,8 +5,8 @@
 
 ## 1. 目标
 
-安装引导页回答三个问题：装到哪个服务端、装哪个版本、怎么装。
-放在 **StarServer 根路径 `/`**，因为"安装目标地址"就是 StarServer 自身，页面与安装参数天然一致，只部署服务端的环境也能安装。
+StarServer 根路径 `/` 是**平台门户**：上方展示节点/应用在线情况与今日调用统计，下方是 StarAgent 安装引导。
+因为“安装目标地址”就是 StarServer 自身，页面与安装参数天然一致，只部署服务端的环境也能安装。
 
 页面只读、匿名可访问；包的上传与管理仍在 StarWeb 后台完成。
 
@@ -33,6 +33,7 @@
 | 接口 | 说明 |
 |------|------|
 | `GET /` | 安装引导页。`Accept: application/json` 或 `?format=json` 时返回清单 |
+| `GET /home/summary` | 平台概览：在线/总节点、在线/总应用、今日调用与错误、版本、运行时长 |
 | `GET /install` | 安装清单 JSON：`server`、`versions[]`、`runtimes[]`、`mirror[]` |
 | `GET /install.sh?os=linux&arch=x64&runtime=10&version=` | bash 脚本，含服务端地址、包地址与校验 |
 | `GET /install.ps1?os=windows&arch=x64` | PowerShell 脚本 |
@@ -96,7 +97,7 @@
 |------|------|
 | `InstallServiceTests` | 清单组装、通道过滤、镜像兜底、令牌签发、停用版本拒绝、脚本内容、非法地址拒绝、页面资源可读 |
 | `InstallServiceBootstrapTests` | 引导安装：原生返回组包、.NET 版返回空、缺包返回空、精确系统架构优先 |
-| `InstallEndpointTests` | `/` 返回页面、`/install` 清单、`/install.sh` 可执行、下载 302 携带令牌、未知包 404 |
+| `InstallEndpointTests` | `/` 返回页面、`/install` 清单、`/home/summary` 概览、`/install.sh` 可执行、下载 302 携带令牌、未知包 404 |
 
 ## 10. 与 StarWeb 的关系
 
