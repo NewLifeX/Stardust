@@ -7,7 +7,21 @@ import type { Verb } from './hotkeys.logic.ts';
 import type { PaletteConfig } from './ui.store.ts';
 
 /** 应用工作台页签（原型 openApp 的第二个参数） */
-export type AppTab = 'overview' | 'trace' | 'logs' | 'config' | 'instances' | 'versions' | 'nodes' | 'history' | 'pipeline';
+export type AppTab =
+  | 'overview'
+  | 'trace'
+  | 'logs'
+  | 'config'
+  | 'instances'
+  | 'appHistory'
+  | 'commands'
+  | 'meter'
+  | 'services'
+  | 'consume'
+  | 'versions'
+  | 'nodes'
+  | 'history'
+  | 'pipeline';
 
 /** 面板只关心的应用字段；真实数据在接线层映射成它 */
 export interface PaletteApp {

@@ -4,9 +4,9 @@ import { describe, it, expect } from 'vitest';
 import { DEFAULT_TAB, WORKBENCH_TABS, resolveTab, tabLabel, tabSection } from './workbench.logic';
 
 describe('WORKBENCH_TABS · 页签清单', () => {
-  it('九个页签：原型的五个在前，部署的四个在后', () => {
+  it('十四个页签：原型五个、注册侧五个、部署四个', () => {
     expect(WORKBENCH_TABS.map((t) => `${t.key}:${t.label}`).join('|')).toBe(
-      'overview:概览|trace:调用链|logs:日志|config:配置|instances:实例|versions:版本|nodes:节点|history:部署历史|pipeline:流水线',
+      'overview:概览|trace:调用链|logs:日志|config:配置|instances:实例|appHistory:应用历史|commands:命令|meter:性能|services:注册|consume:消费|versions:版本|nodes:节点|history:部署历史|pipeline:流水线',
     );
   });
 
@@ -69,11 +69,14 @@ describe('tabSection · 页签对应哪一块部署内容', () => {
     expect(tabSection(key)).toBe(key);
   });
 
-  it.each(['overview', 'trace', 'logs', 'config', 'instances'] as const)('%s 不是部署页签：返回 null', (key) => {
-    expect(tabSection(key)).toBeNull();
-  });
+  it.each(['overview', 'trace', 'logs', 'config', 'instances', 'appHistory', 'commands', 'meter', 'services', 'consume'] as const)(
+    '%s 不是部署页签：返回 null',
+    (key) => {
+      expect(tabSection(key)).toBeNull();
+    },
+  );
 
-  it('九个页签都有明确结果（部署内容名或 null），不会返回 undefined', () => {
+  it('每个页签都有明确结果（部署内容名或 null），不会返回 undefined', () => {
     for (const t of WORKBENCH_TABS) {
       expect(tabSection(t.key)).not.toBeUndefined();
     }

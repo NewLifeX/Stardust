@@ -26,6 +26,7 @@ import { stories as traceListStories } from '../src/layouts/StardustLayout2/Trac
 import { stories as appLogStories } from '../src/layouts/StardustLayout2/AppLog.story';
 import { stories as appConfigTableStories } from '../src/layouts/StardustLayout2/AppConfigTable.story';
 import { stories as appInstancesStories } from '../src/layouts/StardustLayout2/AppInstances.story';
+import { stories as appObserveStories } from '../src/layouts/StardustLayout2/AppObserve.story';
 import { stories as changesListStories } from '../src/layouts/StardustLayout2/ChangesList.story';
 import { stories as registryTabStories } from '../src/layouts/StardustLayout2/RegistryTab.story';
 import { stories as gatewayTabStories } from '../src/layouts/StardustLayout2/GatewayTab.story';
@@ -68,6 +69,7 @@ export const stories: Array<{
   ...appLogStories,
   ...appConfigTableStories,
   ...appInstancesStories,
+  ...appObserveStories,
   ...changesListStories,
   ...registryTabStories,
   ...gatewayTabStories,

@@ -1,6 +1,7 @@
 ﻿<script setup lang="ts">
 /**
- * 应用工作台（/app/:tab/:id），对照原型 page-apps.jsx 的 PageApp：面包屑、头像、标题、Tag、两个快捷按钮、九页签。
+ * 应用工作台（/app/:tab/:id），对照原型 page-apps.jsx 的 PageApp：面包屑、头像、标题、Tag、两个快捷按钮。
+ * 页签：原型五个 + 注册侧五个（应用历史/命令/性能/注册/消费）+ 部署四个。
  * 页签切换只改路由的 :tab，不换页面，页头与数据保持不动（「上下文贯穿」）。
  * 取数：复用 appsModel.fetchAppList，按路由 :id 找应用；不用 fetchAppDetail（一次 5 个请求，多数是各页签才要的）。
  * 部署面板 ShipPanel：版本、节点、部署历史、流水线四个页签各渲染一块，由 tabSection 决定；概览页签传 overview（版本条加需关注事项，按钮跳页签）；调用链、日志、配置、实例接口与原型对照确认后在后续停点实现，先显示「待接入」。
@@ -17,6 +18,7 @@ import TraceList from '@/layouts/StardustLayout2/TraceList.vue';
 import AppLog from '@/layouts/StardustLayout2/AppLog.vue';
 import AppConfigTable from '@/layouts/StardustLayout2/AppConfigTable.vue';
 import AppInstances from '@/layouts/StardustLayout2/AppInstances.vue';
+import AppObserve from '@/layouts/StardustLayout2/AppObserve.vue';
 import Btn from '@/layouts/StardustLayout2/Btn.vue';
 import Card from '@/layouts/StardustLayout2/Card.vue';
 import KIcon from '@/layouts/StardustLayout2/KIcon.vue';
@@ -26,6 +28,7 @@ import { avatarTone, categoryOf } from '@/layouts/StardustLayout2/apps.logic';
 import { appPath, parseAppId, type AppTab } from '@/layouts/StardustLayout2/palette.items';
 import { findAppById, resolveWorkbenchView, statusTone } from '@/layouts/StardustLayout2/appWorkbench.logic';
 import { WORKBENCH_TABS, resolveTab, tabLabel, tabSection } from '@/layouts/StardustLayout2/workbench.logic';
+import { observeQueryToRoute, toObserveQuery, type ObserveKind, type ObserveQuery } from '@/layouts/StardustLayout2/appObserve.logic';
 import { stardustContext } from '@/stores/stardustContext';
 import { useContextReload } from '@/layouts/StardustLayout2/useContextReload';
 
@@ -46,6 +49,9 @@ const view = computed(() => resolveWorkbenchView({ id: id.value, load: load.valu
 const name = computed(() => row.value?.name ?? '');
 const title = computed(() => row.value?.displayName || name.value);
 const items = computed(() => WORKBENCH_TABS.map((t) => ({ key: t.key, label: tabLabel(t.key, row.value?.instances) })));
+const OBSERVE: readonly ObserveKind[] = ['appHistory', 'commands', 'meter', 'services', 'consume'];
+const observeKind = computed(() => (OBSERVE.includes(tab.value as ObserveKind) ? (tab.value as ObserveKind) : null));
+const observeQuery = computed(() => toObserveQuery(route.query as Record<string, unknown>));
 
 async function loadApps(isStale: () => boolean): Promise<void> {
   load.value = 'loading';
@@ -62,8 +68,17 @@ async function loadApps(isStale: () => boolean): Promise<void> {
   }
 }
 
-function go(key: AppTab): void {
-  if (id.value !== null) void router.push(appPath(id.value, key));
+function go(key: AppTab, query: Record<string, string> = {}): void {
+  if (id.value !== null) void router.push({ path: appPath(id.value, key), query });
+}
+
+function onObserveQuery(q: ObserveQuery): void {
+  if (observeKind.value) go(observeKind.value, observeQueryToRoute(q));
+}
+
+function onInstanceDrill(payload: { tab: 'appHistory' | 'meter'; client: string }): void {
+  if (payload.tab === 'meter') go('meter', payload.client ? { clientId: payload.client } : {});
+  else go('appHistory', payload.client ? { client: payload.client } : {});
 }
 
 // 上下文（项目、环境）就绪后首轮取数，之后切换项目或环境自动重取
@@ -224,6 +239,14 @@ const { reload } = useContextReload(loadApps, stardustContext);
       <AppInstances
         v-else-if="tab === 'instances' && row.id !== undefined"
         :app-id="Number(row.id)"
+        @drill="onInstanceDrill"
+      />
+      <AppObserve
+        v-else-if="observeKind && row.id !== undefined"
+        :app-id="Number(row.id)"
+        :kind="observeKind"
+        :query="observeQuery"
+        @query="onObserveQuery"
       />
       <Card
         v-else

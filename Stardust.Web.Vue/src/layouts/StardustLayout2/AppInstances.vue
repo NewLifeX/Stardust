@@ -36,6 +36,8 @@ const emit = defineEmits<{
   restart: [row: InstanceRow];
   /** 终端：只发事件，实际调用不在本页签 */
   terminal: [row: InstanceRow];
+  /** 打开应用历史（client）或性能（clientId） */
+  drill: [payload: { tab: 'appHistory' | 'meter'; client: string }];
 }>();
 
 function req(): Req {
@@ -153,7 +155,7 @@ watch(
           <th :class="TH">
             版本
           </th>
-          <th :class="[TH, 'w-[120px]']">
+          <th :class="[TH, 'w-[220px]']">
             操作
           </th>
         </tr>
@@ -190,27 +192,44 @@ watch(
             {{ r.version || '—' }}
           </td>
           <td :class="TD">
-            <!-- hover 才浮出操作按钮；只发事件，不实现调用 -->
             <div
-              class="flex items-center gap-1 opacity-0 transition-opacity duration-[120ms] group-hover:opacity-100"
+              class="flex items-center gap-1"
               @click.stop
             >
               <Btn
                 size="sm"
                 variant="ghost"
-                data-spec="app-instances-restart"
-                @click="emit('restart', r)"
+                data-spec="app-instances-history"
+                @click="emit('drill', { tab: 'appHistory', client: r.client })"
               >
-                重启
+                历史
               </Btn>
               <Btn
                 size="sm"
                 variant="ghost"
-                data-spec="app-instances-terminal"
-                @click="emit('terminal', r)"
+                data-spec="app-instances-meter"
+                @click="emit('drill', { tab: 'meter', client: r.client })"
               >
-                终端
+                性能
               </Btn>
+              <span class="inline-flex items-center gap-1 opacity-0 transition-opacity duration-[120ms] group-hover:opacity-100">
+                <Btn
+                  size="sm"
+                  variant="ghost"
+                  data-spec="app-instances-restart"
+                  @click="emit('restart', r)"
+                >
+                  重启
+                </Btn>
+                <Btn
+                  size="sm"
+                  variant="ghost"
+                  data-spec="app-instances-terminal"
+                  @click="emit('terminal', r)"
+                >
+                  终端
+                </Btn>
+              </span>
             </div>
           </td>
         </tr>
