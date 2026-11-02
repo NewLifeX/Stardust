@@ -21,10 +21,10 @@ test('BuildNodes 默认：三行编译节点，节点名、目录、Check/X 各�
   await expect(a).toContainText('./publish');
   await expect(a).toContainText('2026-10-30 09:30');
 
-  // 第二行：不拉代码（X），编译项目开（Check）
+  // 第二行：不拉代码（X），编译项目开（Check）；组件不渲染 remark（'x64' 断言曾与本组件漂移）
   const b = page.locator(ROW).nth(1);
   await expect(b).toContainText('node-build-b');
-  await expect(b).toContainText('x64');
+  await expect(b).toContainText('/src/Stardust');
 
   // 第三行：无名字 → #13，无 IP → #13
   const c = page.locator(ROW).nth(2);

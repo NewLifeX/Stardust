@@ -243,11 +243,22 @@ export function shortId(id: string, len = 16): string {
 
 // ---------- 取数（request 注入；失败返回 null） ----------
 
-/** GET /Monitors/SampleData?appId=：该应用今日采样片段 */
+/** 本地日期字符串 YYYY-MM-DD。后端 SampleDataController.Search 的应用下钻分支要求 time 参数：
+ *  不传时 time=MinValue → Meta.CreateShard 抛「分表策略要求指定时间」，整页假失败（2026-11-02 浏览器实证）。 */
+export function localDateStr(d = new Date()): string {
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+/** GET /Monitors/SampleData?appId=&time=：该应用当日采样片段（分表下钻，time 必传） */
 export async function fetchAppSamples(request: Req, appId: number, pageSize = 100): Promise<Span[] | null> {
   if (!appId || appId <= 0) return [];
   try {
-    const res = await request({ url: '/Monitors/SampleData', method: 'GET', params: { appId, PageSize: pageSize } });
+    const res = await request({
+      url: '/Monitors/SampleData',
+      method: 'GET',
+      params: { appId, time: localDateStr(), PageSize: pageSize },
+    });
     return toSpans(listOf(res));
   } catch {
     return null;

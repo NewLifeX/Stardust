@@ -39,8 +39,18 @@ test('连接指引卡：端点与 Bearer 可见', async ({ page }) => {
 });
 
 // ===== 服务器管理（G-A） =====
+// 注意：服务器区块是「高级」折叠区（serversSectionOpen 默认 false，PLT-2 起），用例先点开再断言。
+test('服务器区块默认折叠：开关与提示可见，无表格行', async ({ page }) => {
+  await openStory(page, 'McpTab/Data');
+  await expect(page.locator('[data-spec="mcp-server-section-toggle"]')).toBeVisible();
+  await expect(page.locator('[data-spec="mcp-server-section-toggle"]')).toContainText('2 个 · 高级');
+  await expect(page.getByText('登记外部 MCP 端点时使用')).toBeVisible();
+  await expect(page.locator('[data-spec="mcp-server-row"]')).toHaveCount(0);
+});
+
 test('服务器表：渲染 2 行与操作按钮', async ({ page }) => {
   await openStory(page, 'McpTab/Data');
+  await page.locator('[data-spec="mcp-server-section-toggle"]').click();
   await expect(page.locator('[data-spec="mcp-server-row"]')).toHaveCount(2);
   await expect(page.locator('[data-spec="mcp-server-create"]')).toBeVisible();
   const first = page.locator('[data-spec="mcp-server-row"]').first();
@@ -53,6 +63,7 @@ test('服务器表：渲染 2 行与操作按钮', async ({ page }) => {
 
 test('服务器 Drawer：点新增打开表单', async ({ page }) => {
   await openStory(page, 'McpTab/Data');
+  await page.locator('[data-spec="mcp-server-section-toggle"]').click();
   await page.locator('[data-spec="mcp-server-create"]').click();
   await expect(page.locator('[data-spec="mcp-server-form-name"]')).toBeVisible();
 });

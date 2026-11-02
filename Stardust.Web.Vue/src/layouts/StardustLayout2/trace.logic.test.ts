@@ -122,10 +122,11 @@ describe('shortId', () => {
 });
 
 describe('fetchTraceSummaries / fetchTraceSpans：取数（request 注入）', () => {
-  it('按 appId 取采样片段并聚合成列表', async () => {
+  it('按 appId 取采样片段并聚合成列表，携带 time 参数（分表下钻必传）', async () => {
     const req = fakeRequest((url, params) => {
       expect(url).toBe('/Monitors/SampleData');
       expect(params.appId).toBe(32);
+      expect(String(params.time)).toMatch(/^\d{4}-\d{2}-\d{2}$/);
       return [
         { traceId: 't1', spanId: 's1', name: 'GET /x', success: true, startTime: 1000, endTime: 1200, cost: 200 },
         { traceId: 't1', spanId: 's2', parentId: 's1', name: 'db', success: true, startTime: 1050, endTime: 1150, cost: 100 },
