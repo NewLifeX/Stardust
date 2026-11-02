@@ -61,3 +61,31 @@ SDK/Java/.mvn/
 # 测试结果（dotnet test 的 trx、E2E 巡检报告与失败截图）
 /TestResults/
 /.tmp
+node_modules/
+.forgeself/
+.codegraph/
+e2e-report/
+.playwright-mcp/
+.trash/
+Stardust.Web.Vue/e2e/.auth/user.json
+Stardust.Web.Vue/test-results/
+Stardust.Web.Vue/**/*.txt
+Stardust.Web.Vue/e2e/screenshots/
+*.out
+*.err
+_*.mjs
+_*.cjs
+_*.spec.ts
+_*.png
+_*.json
+*.png
+TODO.md
+
+# 设计交接包（本地参考，不纳入版本控制）
+/design-handoff/
+.pnpm-store/
+.codebuddy/
+.agents/skills/stardust-prototype-to-vue/SKILL.md
+.workbuddy/
+docs/Stardust-设计重构方案.md
+memory/
