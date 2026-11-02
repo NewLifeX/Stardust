@@ -4,7 +4,22 @@
 //  - /Registry/AppOnline 在线实例（nodeName 派生在线集合；同 nodeName 行数 = 该节点服务数）
 // 节点详情抽屉 9 Tab 纯函数与类型见文件末尾（规格：Doc/design-spec/03-节点页.md §5）
 
-export type NodeStatus = 'online' | 'warn' | 'offline'
+/** 七态状态体系（§20.1）：运行/异常/离线/维护/部署中/发布失败/未知 */
+export type NodeStatus = 'running' | 'error' | 'offline' | 'maintenance' | 'deploying' | 'publishFailed' | 'unknown'
+
+/** 旧三态 → 新七态映射（向后兼容：后端返回 online/warn/offline 时归一化） */
+export function normalizeNodeStatus(raw: string | undefined | null): NodeStatus {
+  switch (raw) {
+    case 'online':
+      return 'running'
+    case 'warn':
+      return 'error'
+    case 'offline':
+      return 'offline'
+    default:
+      return 'unknown'
+  }
+}
 
 export interface NodeRow {
   id?: number
@@ -51,11 +66,11 @@ export function isNodeAlarm(row: NodeRow): boolean {
   return !!row.alarmCpuRate && (row.cpu ?? 0) > row.alarmCpuRate
 }
 
-/** 状态优先级：离线 > 告警 > 在线 */
+/** 状态优先级：离线 > 异常 > 运行 */
 export function deriveNodeStatus(row: NodeRow, onlineNames: Set<string>, now: number): NodeStatus {
   if (!isNodeOnline(row, onlineNames, now)) return 'offline'
-  if (isNodeAlarm(row)) return 'warn'
-  return 'online'
+  if (isNodeAlarm(row)) return 'error'
+  return 'running'
 }
 
 /** 原始行 → 视图模型（字段大小写归一、状态派生、服务数挂载） */
@@ -81,32 +96,48 @@ export function mapNodes(
   })
 }
 
-/** KPI 聚合：总数 / 在线 / 告警 / 离线 */
+/** KPI 聚合：总数 / 运行 / 异常 / 离线 */
 export function aggregateStats(rows: NodeView[]) {
   const total = rows.length
-  const online = rows.filter((r) => r.status === 'online').length
-  const alarm = rows.filter((r) => r.status === 'warn').length
+  const running = rows.filter((r) => r.status === 'running').length
+  const alarm = rows.filter((r) => r.status === 'error' || r.status === 'publishFailed' || r.status === 'deploying').length
   const offline = rows.filter((r) => r.status === 'offline').length
-  return { total, online, alarm, offline }
+  return { total, running, alarm, offline }
 }
 
-/** 状态 → 卡片左边框 Tailwind 类 */
+/** 状态 → 卡片左边框 Tailwind 类（七态） */
 export const statusBorder: Record<NodeStatus, string> = {
-  online: 'border-l-[var(--el-color-success)]',
-  warn: 'border-l-[var(--el-color-warning)]',
+  running: 'border-l-[var(--el-color-success)]',
+  error: 'border-l-[var(--el-color-danger)]',
   offline: 'border-l-[var(--el-color-danger)]',
+  maintenance: 'border-l-[var(--el-color-info)]',
+  deploying: 'border-l-[var(--el-color-primary)]',
+  publishFailed: 'border-l-[var(--el-color-danger)]',
+  unknown: 'border-l-[var(--el-color-info)]',
 }
 
-/** 状态 → 颜色令牌 */
+/** 状态 → 颜色令牌（七态） */
 export function statusColor(s: NodeStatus): string {
-  return s === 'online' ? 'var(--el-color-success)' : s === 'warn' ? 'var(--el-color-warning)' : 'var(--el-color-danger)'
+  switch (s) {
+    case 'running': return 'var(--el-color-success)'
+    case 'error': return 'var(--el-color-danger)'
+    case 'offline': return 'var(--el-color-danger)'
+    case 'maintenance': return 'var(--el-color-info)'
+    case 'deploying': return 'var(--el-color-primary)'
+    case 'publishFailed': return 'var(--el-color-danger)'
+    default: return 'var(--el-color-info)'
+  }
 }
 
-/** 状态 → 中文标签 */
-export const statusLabel: Record<NodeStatus, '在线' | '告警' | '离线'> = {
-  online: '在线',
-  warn: '告警',
+/** 状态 → 中文标签（七态） */
+export const statusLabel: Record<NodeStatus, string> = {
+  running: '运行',
+  error: '异常',
   offline: '离线',
+  maintenance: '维护',
+  deploying: '部署中',
+  publishFailed: '发布失败',
+  unknown: '未知',
 }
 
 /** 节点服务 JSON 解析（容错纯函数） */
@@ -119,15 +150,25 @@ export function parseServices(raw: unknown): Record<string, unknown>[] {
   }
 }
 
-/** 状态筛选 + 关键字过滤（名称/IP） */
-export function filterNodes(rows: NodeView[], filter: string, keyword: string): NodeView[] {
+/** 状态筛选 + 关键字过滤（名称/IP）+ 集群筛选 */
+export function filterNodes(rows: NodeView[], filter: string, keyword: string, cluster?: string): NodeView[] {
   let arr = rows
-  if (filter === '在线') arr = arr.filter((r) => r.status === 'online')
-  if (filter === '告警') arr = arr.filter((r) => r.status === 'warn')
+  if (filter === '运行') arr = arr.filter((r) => r.status === 'running')
+  if (filter === '异常') arr = arr.filter((r) => r.status === 'error' || r.status === 'publishFailed' || r.status === 'deploying')
   if (filter === '离线') arr = arr.filter((r) => r.status === 'offline')
+  if (cluster && cluster !== '全部') arr = arr.filter((r) => r.cluster === cluster)
   const k = keyword.trim().toLowerCase()
   if (k) arr = arr.filter((r) => r.name.toLowerCase().includes(k) || r.ip.toLowerCase().includes(k))
   return arr
+}
+
+/** 从节点列表去重提取集群分类选项（P2-2） */
+export function clusterOptions(rows: NodeView[]): string[] {
+  const set = new Set<string>()
+  for (const r of rows) {
+    if (r.cluster) set.add(r.cluster)
+  }
+  return ['全部', ...Array.from(set).sort()]
 }
 
 // ============ 节点详情抽屉（9 Tab）纯函数与类型 ============
@@ -396,20 +437,25 @@ export const drawerTabs: Array<{ name: string; label: string }> = [
   { name: 'services', label: '服务' },
 ]
 
-/** 状态横幅三态：12% 底 / 30% 边 / 同色字；text 为横幅文案 */
+/** 状态横幅七态：12% 底 / 30% 边 / 同色字；text 为横幅文案 */
 export function bannerFor(status: NodeStatus): { style: Record<string, string>; text: string } {
   const color = statusColor(status)
+  const textMap: Record<NodeStatus, string> = {
+    running: '● 运行 · 心跳正常',
+    error: '▲ 异常 · CPU 超阈 · 需关注',
+    offline: '■ 离线 · 心跳丢失',
+    maintenance: '⏸ 维护 · 暂停服务',
+    deploying: '⏺ 部署中 · 正在发布',
+    publishFailed: '● 发布失败 · 需重试',
+    unknown: '? 未知 · 状态待确认',
+  }
   return {
     style: {
       color,
       backgroundColor: `color-mix(in srgb, ${color} 12%, transparent)`,
       border: `1px solid color-mix(in srgb, ${color} 30%, transparent)`,
     },
-    text: status === 'online'
-      ? '● 在线 · 心跳正常'
-      : status === 'warn'
-        ? '▲ 告警 · CPU 超阈 · 需关注'
-        : '■ 离线 · 心跳丢失',
+    text: textMap[status],
   }
 }
 

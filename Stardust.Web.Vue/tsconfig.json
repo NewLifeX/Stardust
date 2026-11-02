@@ -1,9 +1,16 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    // 与 vite.config.ts 的 build.target 保持一致（es2022）。
+    // Cube web 源码经 paths 别名进入本 program，其 core/components/AreaSelect 使用
+    // Array.prototype.at，ES2020 lib 下会 TS2550；上调到 ES2022 以对齐框架自身 lib。
+    "target": "ES2022",
     "useDefineForClassFields": true,
     "module": "ESNext",
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "skipLibCheck": true,
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
@@ -20,16 +27,33 @@
     "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
     "paths": {
-      "@/*": ["./src/*"],
+      "@/*": [
+        "./src/*"
+      ],
       // 指向 Cube web 框架真实源码：类型检查解析到同一份源码，业务可获真实类型。
       // 运行时 Vite alias 见 vite.config.ts。
-      "@newlifex/cube-vue": ["../Cube/NewLife.Cube.Vue/web/core/plugin/index.ts"],
-      "@newlifex/cube-vue/*": ["../Cube/NewLife.Cube.Vue/web/*"],
+      "@newlifex/cube-vue": [
+        "../Cube/NewLife.Cube.Vue/web/core/plugin/index.ts"
+      ],
+      "@newlifex/cube-vue/*": [
+        "../Cube/NewLife.Cube.Vue/web/*"
+      ],
       // Cube 内部封装 vue-json-editor（其 node_modules 含 .d.vue.ts 但未随 package.json
       // "exports" 暴露，TS bundler 解析会 TS7016），单独接管到本地声明。
-      "vue-json-editor": ["./src/types/vue-json-editor.d.ts"]
+      "vue-json-editor": [
+        "./src/types/vue-json-editor.d.ts"
+      ]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue"
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ]
 }

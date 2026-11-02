@@ -1,4 +1,4 @@
-/* =============================================================================
+﻿/* =============================================================================
  * 星尘 Stardust · Tailwind 主题配置 (布局用 Tailwind，组件用 Element Plus)
  * -----------------------------------------------------------------------------
  * 作用: 把设计令牌 (tokens.css 的 --sd-*) 注入 Tailwind 主题，使布局工具类
@@ -75,6 +75,21 @@ export default {
         1: 'var(--sd-shadow-1)',
         2: 'var(--sd-shadow-2)',
         3: 'var(--sd-shadow-3)',
+      },
+
+      /* ---- 动效: 对照原型 kit.css 的 @keyframes x-fade / x-pop ----
+       * 时长与缓动取自 colors_and_type.css 的 --dur-short / --dur-medium / --ease-out，
+       * Tailwind 没有对应项，写字面量。减弱动效在使用处加 motion-reduce:animate-none。 */
+      keyframes: {
+        'x-fade': { from: { opacity: '0' }, to: { opacity: '1' } },
+        'x-pop': {
+          from: { transform: 'translateY(6px)', opacity: '0' },
+          to: { transform: 'none', opacity: '1' },
+        },
+      },
+      animation: {
+        'x-fade': 'x-fade 200ms cubic-bezier(0.16, 1, 0.3, 1)',
+        'x-pop': 'x-pop 320ms cubic-bezier(0.16, 1, 0.3, 1)',
       },
 
       /* ---- 尺寸常量 ---- */

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 240" fill="none">
+  <defs>
+    <radialGradient id="node-glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(200 120) scale(180)">
+      <stop offset="0" stop-color="#9C88FF" stop-opacity="0.25"/>
+      <stop offset="1" stop-color="#0B0F1A" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="400" height="240" fill="url(#node-glow)"/>
+  <!-- edges -->
+  <g stroke="#4FC3F7" stroke-width="0.8" opacity="0.5">
+    <line x1="200" y1="120" x2="80" y2="60"/>
+    <line x1="200" y1="120" x2="320" y2="60"/>
+    <line x1="200" y1="120" x2="80" y2="180"/>
+    <line x1="200" y1="120" x2="320" y2="180"/>
+    <line x1="200" y1="120" x2="200" y2="30"/>
+    <line x1="200" y1="120" x2="200" y2="210"/>
+    <line x1="80" y1="60" x2="200" y2="30"/>
+    <line x1="320" y1="60" x2="200" y2="30"/>
+    <line x1="80" y1="180" x2="200" y2="210"/>
+    <line x1="320" y1="180" x2="200" y2="210"/>
+  </g>
+  <!-- nodes -->
+  <g fill="#9C88FF">
+    <circle cx="200" cy="120" r="6"/>
+    <circle cx="80" cy="60" r="4"/>
+    <circle cx="320" cy="60" r="4"/>
+    <circle cx="80" cy="180" r="4"/>
+    <circle cx="320" cy="180" r="4"/>
+    <circle cx="200" cy="30" r="3"/>
+    <circle cx="200" cy="210" r="3"/>
+  </g>
+  <circle cx="200" cy="120" r="10" fill="none" stroke="#9C88FF" stroke-width="1" opacity="0.6"/>
+</svg>

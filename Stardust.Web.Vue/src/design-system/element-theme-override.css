@@ -1,4 +1,4 @@
-/* =============================================================================
+﻿/* =============================================================================
  * 星尘 Stardust 控制台 · Element Plus 主题覆盖 (Theme Override)
  * -----------------------------------------------------------------------------
  * 目标: 用设计令牌 (tokens.css 的 --sd-*) 覆盖 Element Plus 的 --el-* 变量。
@@ -113,7 +113,7 @@ html.dark {
 /* -----------------------------------------------------------------------------
  * 组件级微调（少数无法仅靠变量覆盖的观感，仍引用令牌，不硬编码）
  * --------------------------------------------------------------------------- */
-html.dark {
+:root, html.dark {
   /* 抽屉 / 对话框 表面统一为 elevated，并带蓝调阴影 */
   .el-drawer { background-color: var(--sd-bg-elevated); box-shadow: var(--sd-shadow-3); }
   .el-dialog { background-color: var(--sd-bg-elevated); box-shadow: var(--sd-shadow-3); }
@@ -190,7 +190,7 @@ html.dark {
  * 交互规范（design-spec §8：无界星图交互语言）——全局一致
  * 全部引用令牌，不硬编码。聚焦/悬浮/过渡在控制台内统一，向原型对齐。
  * --------------------------------------------------------------------------- */
-html.dark {
+:root, html.dark {
   /* §8.1 焦点态：键盘可达元素统一青色焦点环 + 辉光，保证可见性与品牌一致 */
   a:focus-visible,
   button:focus-visible,
@@ -235,4 +235,39 @@ html.dark {
 
   /* §8.5 选中文本用星尘青淡染，呼应主题 */
   ::selection { background: color-mix(in srgb, var(--sd-color-accent) 30%, transparent); color: var(--sd-text-primary); }
+}
+
+/* =============================================================================
+ * StardustLayout2 · Toast（useToast.ts 传入的 customClass: sd-toast）
+ * 对照原型 kit.css 的 .x-toasts / .x-toast；颜色只用 --el-*，对照表见计划文档 10.19 A。
+ * 已知偏差：多条堆叠间距固定 16px（P-52）；按 Esc 会关掉 toast（P-53）。
+ * ============================================================================= */
+.el-notification.sd-toast {
+  --el-notification-width: auto;
+  --el-notification-padding: 10px 14px;
+  --el-notification-radius: 8px;
+  --el-notification-shadow: var(--el-box-shadow);
+  --el-notification-border-color: var(--el-border-color);
+  --el-notification-content-font-size: 12.5px;
+  --el-notification-content-color: var(--el-text-color-primary);
+  --el-notification-group-margin-left: 0px;
+  --el-notification-group-margin-right: 0px;
+  max-width: 420px;
+  align-items: center;
+  background-color: var(--el-fill-color-light);
+  pointer-events: none;
+  transition: opacity 320ms cubic-bezier(0.16, 1, 0.3, 1),
+              transform 320ms cubic-bezier(0.16, 1, 0.3, 1),
+              bottom 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.el-notification.sd-toast.left { left: 20px; }
+.el-notification-fade-enter-from.sd-toast.left { left: 20px; opacity: 0; transform: translateY(6px); }
+.el-notification.sd-toast .el-notification__title:empty { display: none; }
+.el-notification.sd-toast .el-notification__content { line-height: 1.55; }
+.el-notification.sd-toast .sd-toast__body { display: inline-flex; align-items: center; gap: 8px; }
+.el-notification.sd-toast--ok { border-left: 2px solid var(--el-color-success); }
+.el-notification.sd-toast--err { border-left: 2px solid var(--el-color-danger); }
+.el-notification.sd-toast--warn { border-left: 2px solid var(--el-color-warning); }
+@media (prefers-reduced-motion: reduce) {
+  .el-notification.sd-toast { transition-duration: 1ms; }
 }

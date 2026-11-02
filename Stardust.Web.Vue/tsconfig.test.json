@@ -1,0 +1,28 @@
+{
+  // 测试相关**脚本**源码的类型检查配置（vitest 单测 + CT gallery + Playwright CT 用例）。
+  //
+  // 为什么独立一份 tsconfig？
+  //   主 tsconfig.json 只 include src/**，不含 apps/**、ct/** 与 *.test.ts / *.ct.spec.ts，
+  //   导致测试代码里的类型错误（如 it.each 元组推断）到运行期才暴露。
+  //   本配置把测试脚本纳入 vue-tsc 的检查范围，让类型错误在 `pnpm run type-check` 阶段就被拦住。
+  //
+  // 为什么只 include 脚本、不 include .vue？
+  //   apps/** 下的 .vue 含模板内 TS 表达式（`as FieldMeta & {...}`），需要 vue-tsc 的模板解析；
+  //   而这些页面组件由主 tsconfig.json 之外的 AutoPage 流程维护，不属于测试基建范畴，
+  //   纳入本配置只会引入与测试无关的模板解析噪音。
+  "extends": "./tsconfig.json",
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.tsx",
+    "apps/**/*.ts",
+    "apps/**/*.d.ts",
+    "apps/**/*.tsx",
+    "ct/**/*.ts",
+    "vitest.config.unit.ts",
+    "playwright-ct.config.ts"
+  ],
+  "compilerOptions": {
+    "types": ["node", "jsdom", "vitest/globals"]
+  }
+}

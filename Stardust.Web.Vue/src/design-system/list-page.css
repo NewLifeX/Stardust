@@ -1,0 +1,123 @@
+/* =============================================================================
+ * 星尘控制台 · 列表页统一层 (list-page.css)  —— A6
+ * -----------------------------------------------------------------------------
+ * 设计真源：design-handoff/design2/README.md
+ *   · 表格/仪表盘数字：font-variant-numeric: tabular-nums
+ *   · 行 hover：无位移阴影，靠底色提亮；本阶段按方案 A6 追加「平移 2px + 品牌 40% 描边」
+ *   · 圆角阶：卡片 10 / 大卡 16 / 按钮输入 8 / chip 999
+ *   · 留白：8pt 阶（4/8/12/16/24/32/48/64/96）
+ *
+ * 本文件只做「Element Plus 表格与列表容器」的全局统一，业务样式仍在各页 scoped 内。
+ * 业务代码零硬编码色值 —— 本文件同样只引用令牌。
+ *
+ * 导入位置（src/main.ts）：element-theme-override.css 之后、styles/global.css 之前。
+ * =========================================================================== */
+
+/* ------------------------------------------------------------------ 表格 --- */
+/* 行 hover：底色提亮 + 左侧品牌描边（40%）+ 内容平移 2px（A6 约定） */
+.el-table .el-table__body tr.el-table__row > td {
+  transition: background var(--dur-micro) var(--ease-out),
+    border-color var(--dur-micro) var(--ease-out);
+}
+.el-table .el-table__body tr.el-table__row:hover > td.el-table__cell {
+  background: var(--surface-3) !important;
+}
+.el-table .el-table__body tr.el-table__row:hover > td.el-table__cell:first-child {
+  box-shadow: inset 2px 0 0 0 var(--sd-brand-border, color-mix(in srgb, var(--brand-500) 40%, transparent));
+}
+.el-table .el-table__body tr.el-table__row:hover .cell {
+  transform: translateX(2px);
+  transition: transform var(--dur-micro) var(--ease-out);
+}
+
+/* 当前选中行：品牌底 10%（对齐 ConfigCenter 选中文件行） */
+.el-table .el-table__body tr.el-table__row.is-current > td.el-table__cell {
+  background: color-mix(in srgb, var(--brand-500) 10%, transparent) !important;
+}
+
+/* 表头：fg-3 · 微字距 · 不再加粗成块 */
+.el-table th.el-table__cell {
+  background: transparent !important;
+  color: var(--fg-3) !important;
+}
+
+/* 空态：Element 内建空态让位给 <EmptyState>（本层只收敛内边距） */
+.el-table .el-table__empty-block {
+  min-height: 160px;
+}
+
+/* -------------------------------------------------------------- 列表容器 --- */
+/* 通用列表行（非表格：用于 QuickList / 文件树一类自绘列表） */
+.sd-list-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border-1);
+  cursor: pointer;
+  transition: background var(--dur-micro) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out);
+}
+.sd-list-row:hover {
+  background: var(--surface-2);
+  transform: translateX(2px);
+  box-shadow: inset 2px 0 0 0 color-mix(in srgb, var(--brand-500) 40%, transparent);
+}
+.sd-list-row.is-active {
+  background: color-mix(in srgb, var(--brand-500) 10%, transparent);
+  box-shadow: inset 2px 0 0 0 var(--brand-500);
+}
+
+/* ------------------------------------------------------------ 页面节奏 --- */
+/* A6 统一留白：页面主体纵向节奏 16px，卡片网格 12px */
+.sd-page-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.sd-page-grid {
+  display: grid;
+  gap: var(--space-3);
+}
+
+/* KPI 条：等分网格，随断点折行 */
+.sd-kpi-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-3);
+}
+
+/* 工具条：标题 + 筛选 chips + 右侧刷新点 */
+.sd-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.sd-toolbar__spacer {
+  flex: 1;
+}
+
+/* --------------------------------------------------- 旧内联 chip 统一 --- */
+/* 未换用 <FilterChips> 的页面（网关/用户/角色/服务/发布/可观测）仍用内联按钮：
+ * 几何（圆角/内边距/字号/描边）用高优先级强制统一；
+ * 配色用 :where() 保持零优先级，使「激活态」的 Tailwind 背景色（品牌底）继续生效。 */
+button[data-spec="chip"]:not(.sd-chip),
+button[class*="rounded-[18px]"]:not(.sd-chip) {
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-1);
+  padding: 4px 11px;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+:where(button[data-spec="chip"]:not(.sd-chip), button[class*="rounded-[18px]"]:not(.sd-chip)) {
+  background: var(--surface-2);
+  color: var(--fg-2);
+  transition: background var(--dur-micro) var(--ease-out),
+    border-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out);
+}
+:where(button[data-spec="chip"]:not(.sd-chip):hover, button[class*="rounded-[18px]"]:not(.sd-chip):hover) {
+  border-color: var(--border-2);
+}

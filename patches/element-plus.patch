@@ -1,0 +1,13 @@
+diff --git a/es/components/table/src/table/defaults.d.ts b/es/components/table/src/table/defaults.d.ts
+index ef364b3e1b4aac554d65439658aa64b949f6ded0..e92fd2f5eca73c526fd7d3640fc7f4c067836592 100644
+--- a/es/components/table/src/table/defaults.d.ts
++++ b/es/components/table/src/table/defaults.d.ts
+@@ -8,7 +8,7 @@ import TableLayout from "../table-layout.js";
+ import { CSSProperties, ComponentInternalInstance, PropType, Ref, StyleValue, VNode } from "vue";
+ 
+ //#region ../../packages/components/table/src/table/defaults.d.ts
+-type DefaultRow = Record<PropertyKey, any>;
++type DefaultRow = any;
+ interface TableRefs {
+   tableWrapper: HTMLElement;
+   headerWrapper: HTMLElement;

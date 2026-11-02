@@ -1,0 +1,432 @@
+/* =============================================================================
+ * 星尘 Stardust 控制台 · 设计交接包权威令牌层  (tokens.stardust.css)
+ * -----------------------------------------------------------------------------
+ * 来源：design-handoff/colors_and_type.css
+ *       design-handoff/design2/README.md §Design Tokens
+ *       （设计交接包 2026-09-27 · High-fidelity）
+ *
+ * 作用：把交接包的基础令牌 / 语义令牌移植进工程，并把上一版 --sd-* 令牌
+ *       （星尘蓝 #6673FF / 页底 #16202A）整体重定向到交接包取值
+ *       （星尘紫 oklch(0.62 0.19 285) / 页底 #0B0F1A）。
+ *
+ * 为什么"改一处就全站生效"：
+ *       element-theme-override.css 里的 --el-* 全部写成 var(--sd-*)，
+ *       CSS 自定义属性惰性求值 —— 本文件晚于 tokens.css 载入即可整体覆盖。
+ *
+ * 导入顺序（Stardust.Web.Vue/src/main.ts）：
+ *       element-plus/dist/index.css
+ *         → design-system/tokens.css
+ *         → design-system/tokens.stardust.css   ← 本文件
+ *         → design-system/element-theme-override.css
+ *
+ * 回滚：从 main.ts 摘掉本文件的一行 import 即可恢复到星尘蓝旧牌。
+ * 纪律：业务代码零硬编码色值；改色只改本文件。
+ * ============================================================================= */
+
+/* ------------------------------------------------------------------ 字体 --- */
+@font-face {
+  font-family: 'Inter';
+  src: url('../assets/fonts/Inter-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('../assets/fonts/Inter-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('../assets/fonts/Inter-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('../assets/fonts/Inter-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('../assets/fonts/JetBrainsMono-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('../assets/fonts/JetBrainsMono-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: dark;
+
+  /* =======================================================================
+   * 1. 基础色板 —— 中性灰（冷调 hue 240, chroma 0.01）
+   * ===================================================================== */
+  --gray-50:  oklch(0.98 0.005 240);
+  --gray-100: oklch(0.94 0.008 240);
+  --gray-200: oklch(0.86 0.010 240);
+  --gray-300: oklch(0.74 0.012 240);
+  --gray-400: oklch(0.60 0.014 240);
+  --gray-500: oklch(0.48 0.016 240);
+  --gray-600: oklch(0.36 0.016 240);
+  --gray-700: oklch(0.26 0.016 240);
+  --gray-800: oklch(0.18 0.015 240);
+  --gray-900: oklch(0.12 0.014 240);
+  --gray-950: oklch(0.08 0.012 240);
+
+  /* =======================================================================
+   * 2. 品牌 —— 星尘紫 Stardust Purple
+   * ===================================================================== */
+  --brand-50:  oklch(0.96 0.03 285);
+  --brand-100: oklch(0.90 0.06 285);
+  --brand-200: oklch(0.82 0.10 285);
+  --brand-300: oklch(0.74 0.14 285);   /* 激活态文字 / 图标 */
+  --brand-400: oklch(0.68 0.17 285);   /* hover */
+  --brand-500: oklch(0.62 0.19 285);   /* PRIMARY */
+  --brand-600: oklch(0.54 0.18 285);
+  --brand-700: oklch(0.44 0.15 285);
+  --brand-800: oklch(0.34 0.11 285);
+  --brand-900: oklch(0.24 0.07 285);
+
+  /* 品牌渐变（README §Brand Gradient，四stop 全光谱） */
+  --sd-gradient-brand: linear-gradient(120deg, #B49CFF 0%, #8B7CFF 32%, #5BB8FF 70%, #7EE8FA 100%);
+  /* 顶栏光带（旧 --sd-band 语义保留，取值对齐品牌渐变） */
+  --sd-band: linear-gradient(90deg, #B49CFF 0%, #5BB8FF 50%, #7EE8FA 100%);
+
+  /* =======================================================================
+   * 3. 强调 —— 信号青 Signal Cyan（数据流 / 焦点 / 高亮）
+   * ===================================================================== */
+  --cyan-300: oklch(0.85 0.10 210);
+  --cyan-400: oklch(0.80 0.12 210);
+  --cyan-500: oklch(0.75 0.14 210);
+  --cyan-600: oklch(0.66 0.14 210);
+
+  /* =======================================================================
+   * 4. 语义色（chroma ~0.14）
+   * ===================================================================== */
+  --success-500: oklch(0.72 0.14 155);   /* 在线 / 成功 */
+  --success-700: oklch(0.52 0.13 155);
+  --warning-500: oklch(0.78 0.14 75);    /* 告警 / 警告 */
+  --warning-700: oklch(0.60 0.14 75);
+  --danger-500:  oklch(0.66 0.19 25);    /* 离线 / 危险 */
+  --danger-700:  oklch(0.50 0.18 25);
+  --info-500:    var(--cyan-500);
+  --info-700:    var(--cyan-600);
+
+  /* =======================================================================
+   * 5. 间距 —— 8pt 阶
+   * ===================================================================== */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+
+  /* =======================================================================
+   * 6. 圆角
+   * ===================================================================== */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;      /* 按钮 / 输入 */
+  --radius-lg: 10px;     /* 卡片 */
+  --radius-xl: 12px;     /* 代码块 */
+  --radius-2xl: 16px;    /* 大卡 / 玻璃面板 */
+  --radius-pill: 999px;  /* chip / 徽章 */
+
+  /* =======================================================================
+   * 7. 阴影 —— 亮底用外投影；暗底用内高光造层次（不用外投影）
+   * ===================================================================== */
+  --shadow-sm: 0 2px 4px rgba(11, 15, 26, 0.04), 0 1px 2px rgba(11, 15, 26, 0.06);
+  --shadow-md: 0 8px 24px rgba(11, 15, 26, 0.08), 0 2px 6px rgba(11, 15, 26, 0.06);
+  --shadow-lg: 0 24px 48px rgba(11, 15, 26, 0.12), 0 8px 16px rgba(11, 15, 26, 0.08);
+  --shadow-glow: 0 0 24px oklch(0.62 0.19 285 / 0.35);
+
+  --elev-1: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --elev-2: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 8px 24px rgba(0, 0, 0, 0.4);
+
+  /* =======================================================================
+   * 8. 动效 —— 全长站统一缓动 + 时长阶
+   * ===================================================================== */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-micro: 120ms;
+  --dur-short: 200ms;
+  --dur-medium: 320ms;
+  --dur-long: 480ms;
+
+  /* =======================================================================
+   * 9. 语义表面与前景（暗色为准）
+   * ===================================================================== */
+  --bg: #0B0F1A;                          /* 应用底：深空 */
+  --surface-1: oklch(0.14 0.015 240);     /* 卡片 */
+  --surface-2: oklch(0.18 0.016 240);     /* 悬浮层 */
+  --surface-3: oklch(0.22 0.016 240);     /* hover */
+  --overlay: rgba(11, 15, 26, 0.72);
+
+  --fg-1: oklch(0.98 0.005 240);          /* 主文本 */
+  --fg-2: oklch(0.78 0.010 240);          /* 次文本 */
+  --fg-3: oklch(0.58 0.014 240);          /* 三级 / 说明 */
+  --fg-4: oklch(0.42 0.014 240);          /* 禁用 */
+
+  --border-1: rgba(255, 255, 255, 0.08);
+  --border-2: rgba(255, 255, 255, 0.14);
+  --border-strong: rgba(255, 255, 255, 0.24);
+
+  --font-sans: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+
+  /* 字号角色（交接包 §Type roles）——新增，供逐屏迁移使用 */
+  --text-display-size: 64px;   --text-display-weight: 700;  --text-display-lh: 1.05;  --text-display-ls: -0.03em;
+  --text-h1-size:      40px;   --text-h1-weight:      600;  --text-h1-lh:      1.15;  --text-h1-ls:      -0.02em;
+  --text-h2-size:      28px;   --text-h2-weight:      600;  --text-h2-lh:      1.25;  --text-h2-ls:      -0.015em;
+  --text-h3-size:      20px;   --text-h3-weight:      600;  --text-h3-lh:      1.35;  --text-h3-ls:      -0.01em;
+  --text-h4-size:      16px;   --text-h4-weight:      500;  --text-h4-lh:      1.40;
+  --text-body-size:    15px;   --text-body-weight:    400;  --text-body-lh:    1.60;
+  --text-small-size:   13px;   --text-small-weight:   400;  --text-small-lh:   1.50;
+  --text-micro-size:   11px;   --text-micro-weight:   500;  --text-micro-lh:   1.40;  --text-micro-ls:   0.04em;
+  --text-mono-size:    13px;   --text-mono-lh:        1.55;
+
+  /* =======================================================================
+   * 10. 布局尺寸（对齐交接包原型：MiniSidebar 68 / StarTopBar 56）
+   * ===================================================================== */
+  --sd-topbar-h: 56px;
+  --sd-sidebar-w: 68px;
+  --sd-content-max: 1600px;
+
+  /* =======================================================================
+   * 11. 上一版 --sd-* 令牌别名桥
+   *     既有业务代码 / tailwind.config.js / element-theme-override.css
+   *     全部改写此处指向的值，无需改动业务文件。
+   * ===================================================================== */
+  /* 品牌与语义色 */
+  --sd-color-brand:      var(--brand-500);
+  --sd-color-brand-2:    var(--brand-600);
+  --sd-color-accent:     var(--cyan-500);
+  --sd-color-online:     var(--success-500);
+  --sd-color-alert:      var(--warning-500);
+  --sd-color-offline:    var(--danger-500);
+
+  /* 语义色浅阶（Element 药丸/Tag 底），按 color-mix 从新语义色派生 */
+  --sd-color-brand-light-3:   color-mix(in oklab, var(--brand-500) 80%, #ffffff);
+  --sd-color-brand-light-5:   color-mix(in oklab, var(--brand-500) 50%, #ffffff);
+  --sd-color-brand-light-7:   color-mix(in oklab, var(--brand-500) 30%, #ffffff);
+  --sd-color-brand-light-8:   color-mix(in oklab, var(--brand-500) 20%, #ffffff);
+  --sd-color-brand-light-9:   color-mix(in oklab, var(--brand-500) 10%, #ffffff);
+  --sd-color-brand-dark-2:    color-mix(in oklab, var(--brand-500) 80%, #000000);
+
+  --sd-color-online-light-3:  color-mix(in oklab, var(--success-500) 80%, #ffffff);
+  --sd-color-online-light-5:  color-mix(in oklab, var(--success-500) 50%, #ffffff);
+  --sd-color-online-light-7:  color-mix(in oklab, var(--success-500) 30%, #ffffff);
+  --sd-color-online-light-8:  color-mix(in oklab, var(--success-500) 20%, #ffffff);
+  --sd-color-online-light-9:  color-mix(in oklab, var(--success-500) 10%, #ffffff);
+  --sd-color-online-dark-2:   color-mix(in oklab, var(--success-500) 80%, #000000);
+
+  --sd-color-alert-light-3:   color-mix(in oklab, var(--warning-500) 80%, #ffffff);
+  --sd-color-alert-light-5:   color-mix(in oklab, var(--warning-500) 50%, #ffffff);
+  --sd-color-alert-light-7:   color-mix(in oklab, var(--warning-500) 30%, #ffffff);
+  --sd-color-alert-light-8:   color-mix(in oklab, var(--warning-500) 20%, #ffffff);
+  --sd-color-alert-light-9:   color-mix(in oklab, var(--warning-500) 10%, #ffffff);
+  --sd-color-alert-dark-2:    color-mix(in oklab, var(--warning-500) 80%, #000000);
+
+  --sd-color-offline-light-3: color-mix(in oklab, var(--danger-500) 80%, #ffffff);
+  --sd-color-offline-light-5: color-mix(in oklab, var(--danger-500) 50%, #ffffff);
+  --sd-color-offline-light-7: color-mix(in oklab, var(--danger-500) 30%, #ffffff);
+  --sd-color-offline-light-8: color-mix(in oklab, var(--danger-500) 20%, #ffffff);
+  --sd-color-offline-light-9: color-mix(in oklab, var(--danger-500) 10%, #ffffff);
+  --sd-color-offline-dark-2:  color-mix(in oklab, var(--danger-500) 80%, #000000);
+
+  --sd-color-accent-light-3:  color-mix(in oklab, var(--cyan-500) 80%, #ffffff);
+  --sd-color-accent-light-5:  color-mix(in oklab, var(--cyan-500) 50%, #ffffff);
+  --sd-color-accent-light-7:  color-mix(in oklab, var(--cyan-500) 30%, #ffffff);
+  --sd-color-accent-light-8:  color-mix(in oklab, var(--cyan-500) 20%, #ffffff);
+  --sd-color-accent-light-9:  color-mix(in oklab, var(--cyan-500) 10%, #ffffff);
+  --sd-color-accent-dark-2:   color-mix(in oklab, var(--cyan-500) 80%, #000000);
+
+  /* 表面层级 */
+  --sd-bg-page:     var(--bg);
+  --sd-bg-surface:  var(--surface-1);
+  --sd-bg-elevated: var(--surface-2);
+  --sd-bg-input:    var(--gray-900);
+  --sd-fill-light:  var(--surface-3);
+
+  /* 文本 */
+  --sd-text-primary:     var(--fg-1);
+  --sd-text-regular:     var(--fg-2);
+  --sd-text-secondary:   var(--fg-3);
+  --sd-text-placeholder: var(--fg-4);
+  --sd-text-disabled:    var(--fg-4);
+
+  /* 边框（交接包只定义 3 档，旧令牌的 4 档归并到 3 档） */
+  --sd-border:             var(--border-2);
+  --sd-border-light:       var(--border-1);
+  --sd-border-lighter:     var(--border-1);
+  --sd-border-extra-light: var(--border-1);
+  --sd-border-dark:        var(--border-strong);
+
+  /* 字体栈 */
+  --sd-font-family: var(--font-sans);
+  --sd-font-mono:   var(--font-mono);
+
+  /* 圆角（对齐交接包阶） */
+  --sd-radius-sm:    4px;
+  --sd-radius-base:  6px;
+  --sd-radius-md:    8px;
+  --sd-radius-lg:    10px;
+  --sd-radius-round: 999px;
+  --sd-radius-full:  999px;
+
+  /* 阴影（暗底以内高光为准，不用外投影） */
+  --sd-shadow-1: var(--elev-1);
+  --sd-shadow-2: var(--elev-2);
+  --sd-shadow-3: var(--shadow-lg);
+
+  /* 辉光 / 焦点环 */
+  --sd-glow-brand:  var(--shadow-glow);
+  --sd-glow-accent: 0 0 6px oklch(0.75 0.14 210 / 0.6), 0 0 12px oklch(0.75 0.14 210 / 0.3);
+  --sd-focus-ring:  0 0 0 2px oklch(0.75 0.14 210 / 0.25);
+  /* --- 星空层图形色（design-handoff StarField.jsx）--------------------------------
+   * 星云四层径向渐变 + 两团 wisp 椭圆，原为 StarfieldBg.vue 内联字面值，
+   * 上收至令牌层以满足「业务/组件代码零硬编码色值」纪律。 */
+  --sd-nebula-1: oklch(0.35 0.18 285 / 0.35);
+  --sd-nebula-2: oklch(0.42 0.14 210 / 0.28);
+  --sd-nebula-3: oklch(0.30 0.16 305 / 0.22);
+  --sd-nebula-4: oklch(0.40 0.10 240 / 0.18);
+  --sd-wisp-a:   #B49CFF;
+  --sd-wisp-b:   #4FC3F7;
+  /* 星点层强度（浅色主题压暗，见下方 [data-theme='light']） */
+  --sd-star-opacity: 1;
+  /* --- 登录页专用（design-handoff LoginPage.jsx）---------------------------------
+   * 主按钮双 stop 品牌紫渐变 / 3px 品牌聚焦环 / 按钮外光晕 / 轨道核心球光。
+   * 业务代码只引用变量，色值仅存在于本令牌层。 */
+  --sd-gradient-btn: linear-gradient(120deg, #8B7CFF 0%, #6D5FE0 100%);
+  --sd-brand-ring:   0 0 0 3px oklch(0.62 0.19 285 / 0.2);
+  --sd-glow-btn:     0 8px 24px oklch(0.62 0.19 285 / 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  --sd-glow-core:    0 0 40px oklch(0.62 0.19 285 / 0.55), inset 0 0 24px oklch(0.62 0.19 285 / 0.4);
+
+
+  /* 动效 */
+  --sd-ease-out:    var(--ease-out);
+  --sd-ease-in-out: var(--ease-in-out);
+  --sd-dur-micro:   var(--dur-micro);
+  --sd-dur-short:   var(--dur-short);
+  --sd-dur-medium:  var(--dur-medium);
+  --sd-dur-long:    var(--dur-long);
+
+  /* 注意：--sd-font-xs…3xl 与 --sd-space-* 本阶段刻意不动，
+   * 避免一次性全站字号 / 间距漂移；逐屏迁移时改用 §9 的字号角色令牌。 */
+}
+
+/* ===========================================================================
+ * 亮色主题（交接包 [data-theme='light']）
+ * 工程当前固定暗色（main.ts 强制 html.dark），此处保留占位以便后续双主题走查。
+ * ========================================================================= */
+[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #F8F9FB;
+  --surface-1: #ffffff;
+  --surface-2: oklch(0.98 0.005 240);
+  --surface-3: oklch(0.95 0.006 240);
+  --overlay: rgba(11, 15, 26, 0.48);
+
+  --fg-1: oklch(0.14 0.014 240);
+  --fg-2: oklch(0.36 0.014 240);
+  --fg-3: oklch(0.52 0.014 240);
+  --fg-4: oklch(0.68 0.012 240);
+
+  --border-1: rgba(11, 15, 26, 0.08);
+  --border-2: rgba(11, 15, 26, 0.14);
+  --border-strong: rgba(11, 15, 26, 0.24);
+
+  --elev-1: 0 1px 2px rgba(11, 15, 26, 0.04);
+  --elev-2: 0 8px 24px rgba(11, 15, 26, 0.08);
+  /* 品牌前景色（设计稿 --brand-fg） */
+  --brand-fg: #ffffff;
+
+  /* 星空层压暗：设计稿 app.css [data-theme='light'] .star-hero .stars → ×0.15 */
+  --sd-star-opacity: 0.15;
+  --sd-nebula-1: oklch(0.62 0.19 285 / 0.10);
+  --sd-nebula-2: oklch(0.75 0.14 210 / 0.08);
+  --sd-nebula-3: oklch(0.62 0.16 305 / 0.06);
+  --sd-nebula-4: oklch(0.70 0.10 240 / 0.05);
+}
+
+/* ===========================================================================
+ * 字阶角色工具类（前缀 .sd- 避免与全局标签选择器冲突）
+ * 用法：<h1 class="sd-h1">…</h1>；逐屏迁移，不整站强加。
+ * ========================================================================= */
+.sd-display {
+  font-family: var(--font-sans);
+  font-size: var(--text-display-size);
+  font-weight: var(--text-display-weight);
+  line-height: var(--text-display-lh);
+  letter-spacing: var(--text-display-ls);
+  color: var(--fg-1);
+}
+.sd-h1 {
+  font-size: var(--text-h1-size);
+  font-weight: var(--text-h1-weight);
+  line-height: var(--text-h1-lh);
+  letter-spacing: var(--text-h1-ls);
+  color: var(--fg-1);
+}
+.sd-h2 {
+  font-size: var(--text-h2-size);
+  font-weight: var(--text-h2-weight);
+  line-height: var(--text-h2-lh);
+  letter-spacing: var(--text-h2-ls);
+  color: var(--fg-1);
+}
+.sd-h3 {
+  font-size: var(--text-h3-size);
+  font-weight: var(--text-h3-weight);
+  line-height: var(--text-h3-lh);
+  letter-spacing: var(--text-h3-ls);
+  color: var(--fg-1);
+}
+.sd-h4 {
+  font-size: var(--text-h4-size);
+  font-weight: var(--text-h4-weight);
+  line-height: var(--text-h4-lh);
+  color: var(--fg-1);
+}
+.sd-body {
+  font-size: var(--text-body-size);
+  font-weight: var(--text-body-weight);
+  line-height: var(--text-body-lh);
+  color: var(--fg-2);
+}
+.sd-small {
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-lh);
+  color: var(--fg-3);
+}
+.sd-micro {
+  font-size: var(--text-micro-size);
+  font-weight: var(--text-micro-weight);
+  line-height: var(--text-micro-lh);
+  letter-spacing: var(--text-micro-ls);
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+.sd-mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-mono-size);
+  line-height: var(--text-mono-lh);
+  font-variant-numeric: tabular-nums;
+}

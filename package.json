@@ -5,13 +5,25 @@
   "description": "星尘前端工作区，聚合魔方 Cube 前端公共模块与星尘 Web 应用",
   "packageManager": "pnpm@9.15.0",
   "scripts": {
-    "build:packages": "pnpm -r --filter @cube/api-core --filter @cube/page-utils --filter @cube/field-mapping --filter @cube/auth-logic --filter @cube/page-logic build",
+    "//build:packages": "Cube 包实际名为 @newlifex/*（非 @cube/*），故按目录过滤，改名也不会失效。",
+    "build:packages": "pnpm -r --filter \"./Cube/packages/*\" build",
     "dev": "pnpm --filter stardust-web-vue dev",
     "dev:api": "dotnet run --project Stardust.WebApi/Stardust.WebApi.csproj --urls http://localhost:6681",
-    "build": "pnpm --filter stardust-web-vue build",
+    "//build": "先重建 Cube 工作区包（dist 为 git 忽略产物），再由 vue-tsc/vite 消费，避免 dist 陈旧导致类型与运行时异常。",
+    "build": "pnpm run build:packages && pnpm --filter stardust-web-vue build",
     "preview": "pnpm --filter stardust-web-vue preview",
-    "check": "pnpm --filter stardust-web-vue run check",
-    "e2e": "pnpm --filter stardust-web-vue run test:e2e"
+    "check": "pnpm run build:packages && pnpm --filter stardust-web-vue run check",
+    "e2e": "pnpm --filter stardust-web-vue run test:e2e",
+    "//test:unit": "Vitest 单元/组件测试（详见 Doc/DEV-07-前端测试规范.md）",
+    "test:unit": "pnpm --filter stardust-web-vue run test:unit",
+    "//test:ct": "Playwright CT 视觉回归（自建 Gallery 模式，独立端口 5190）",
+    "test:ct": "pnpm --filter stardust-web-vue run test:ct",
+    "test:coverage": "pnpm --filter stardust-web-vue run test:coverage"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "pnpm": {
+    "patchedDependencies": {
+      "element-plus": "patches/element-plus.patch"
+    }
+  }
 }
