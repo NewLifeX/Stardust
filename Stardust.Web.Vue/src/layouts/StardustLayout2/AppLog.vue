@@ -1,9 +1,10 @@
 <script setup lang="ts">
 /**
- * AppLog：应用工作台「日志」页签（2026-10-29）。
+ * AppLog：应用工作台「日志」页签（2026-10-29；F17 2026-11-03 改服务端过滤）。
  * 自包含：只收 appId，内部处理 loading / error / empty 三态，取数经 deps 注入（默认接真实接口）。
- * 数据口径：GET /Registry/AppClientLog?dtStart=&dtEnd=（服务端只支持时间窗+关键字，
- * 不支持 appId/Level 过滤）→ 前端本地按 AppId 过滤、按级别 chip 过滤。
+ * 数据口径：GET /Registry/AppClientLog?appId=&kind=&dtStart=&dtEnd=（BE-1 ⑤：appId 分表感知必填、
+ * kind 精确匹配 Info/Warn/Error/Fatal、默认当天 00:00 起、SearchSafe 缺表兜底）。
+ * 级别 chip 切换=重发服务端请求（kind 精确匹配，Kind 为空/其它值只在「全部」可见——如实展示）。
  * 实时：未暂停时按 intervalMs 轮询；用户在底部附近才跟随滚动，避免打断向上翻看。
  */
 import { nextTick, onScopeDispose, ref, watch } from 'vue';
@@ -12,12 +13,12 @@ import Btn from './Btn.vue';
 import Card from './Card.vue';
 import Chip from './Chip.vue';
 import KIcon from './KIcon.vue';
-import { fetchAppLogs, filterLogsByLevel, LOG_LEVEL_CHIPS, todayRange } from './appLog.logic.ts';
+import { fetchAppLogs, LOG_LEVEL_CHIPS, todayRange } from './appLog.logic.ts';
 import type { LogLevel, LogRange, LogRow } from './appLog.logic.ts';
 import type { Req } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
 
 export interface LogDeps {
-  fetchLogs: (request: Req, appId: number, range: LogRange, pageSize: number) => Promise<LogRow[] | null>;
+  fetchLogs: (request: Req, appId: number, range: LogRange, kind: 'all' | LogLevel, pageSize: number) => Promise<LogRow[] | null>;
   /** 轮询间隔毫秒；0 表示不轮询（story/CT 用） */
   intervalMs?: number;
 }
@@ -36,8 +37,6 @@ const level = ref<'all' | LogLevel>('all');
 const paused = ref(false);
 const busy = ref(false);
 
-const visible = ref<LogRow[]>([]);
-
 const box = ref<HTMLElement | null>(null);
 const range: LogRange = todayRange();
 let timer: ReturnType<typeof setTimeout> | undefined;
@@ -48,7 +47,7 @@ async function load(silent = false): Promise<void> {
   if (!silent) loading.value = true;
   busy.value = true;
   const fn = props.deps?.fetchLogs ?? fetchAppLogs;
-  const res = await fn(realRequest, props.appId, range, 200);
+  const res = await fn(realRequest, props.appId, range, level.value, 200);
   if (token !== loadToken) return;
   busy.value = false;
   loading.value = false;
@@ -58,7 +57,6 @@ async function load(silent = false): Promise<void> {
   }
   loadError.value = false;
   rows.value = res;
-  visible.value = filterLogsByLevel(res, level.value);
   await nextTick();
   await tailToBottom();
 }
@@ -80,8 +78,9 @@ function schedulePoll(): void {
   }, interval);
 }
 
-watch(level, (lv) => {
-  visible.value = filterLogsByLevel(rows.value, lv);
+// F17：级别 chip=服务端 kind 过滤 → 切换时重发请求（不再本地过滤）
+watch(level, () => {
+  void load();
 });
 
 watch(() => props.appId, () => {
@@ -170,14 +169,14 @@ function levelStyle(l: LogLevel | ''): Record<string, string> {
         日志加载失败，请点「恢复实时」重试
       </div>
       <div
-        v-else-if="!visible.length"
+        v-else-if="!rows.length"
         class="text-[var(--el-text-color-secondary)]"
         data-spec="log-empty"
       >
-        该应用今天没有日志记录
+        {{ level === 'all' ? '该应用今天没有日志记录' : `该应用今天没有 ${level.toUpperCase()} 级别日志` }}
       </div>
       <div
-        v-for="r in visible"
+        v-for="r in rows"
         :key="r.id"
         class="flex gap-[10px] whitespace-pre-wrap break-all"
         data-spec="log-row"

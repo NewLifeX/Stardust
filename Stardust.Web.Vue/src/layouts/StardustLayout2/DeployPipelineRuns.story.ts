@@ -1,4 +1,4 @@
-﻿import DeployPipelineRuns from './DeployPipelineRuns.vue';
+import DeployPipelineRuns from './DeployPipelineRuns.vue';
 import type { PipelineView, StageItem } from './deployPipeline.styles.ts';
 import type { NodeResult, ShipRunRow } from './ship.logic.ts';
 
@@ -52,11 +52,29 @@ const ITEMS: NodeResult[] = [
 
 const VIEW: PipelineView = { items: ITEMS, allSkipped: false, note: '运行 #7 按节点的部署步骤' };
 
-const BASE = { runRows: RUNS, selectedRunId: 7, stages: STAGES, view: VIEW };
+const BASE = {
+  runRows: RUNS,
+  selectedRunId: 7,
+  stages: STAGES,
+  view: VIEW,
+  rollbackDisabled: false,
+  rollbackTitle: '回滚到上一个版本 v1.4.1',
+  rollingBack: false,
+};
 
 export const stories = [
-  // 测试状态：选中运行 #7，四段进度、八个节点格子、图例、三条运行记录
+  // 测试状态：选中运行 #7，四段进度、八个节点格子、图例、三条运行记录；一键回滚可点（F09）
   { id: 'DeployPipelineRuns/Default', component: DeployPipelineRuns, props: { ...BASE } },
+
+  // 测试状态：回滚请求进行中（F09）：按钮禁用、旋转、文案「回滚中…」（AGENTS.md §11）
+  { id: 'DeployPipelineRuns/RollingBack', component: DeployPipelineRuns, props: { ...BASE, rollingBack: true } },
+
+  // 测试状态：没有可回滚的候选版本：按钮置灰，title 写原因
+  {
+    id: 'DeployPipelineRuns/NoRollback',
+    component: DeployPipelineRuns,
+    props: { ...BASE, rollbackDisabled: true, rollbackTitle: '没有可回滚的版本（需要除当前生效版本之外的可用版本）' },
+  },
 
   // 测试状态：没有选中任何运行：不显示四段进度和状态标签，所有行都不高亮
   {
@@ -81,6 +99,6 @@ export const stories = [
   {
     id: 'DeployPipelineRuns/Empty',
     component: DeployPipelineRuns,
-    props: { runRows: [], selectedRunId: null, stages: [], view: { items: [], allSkipped: false, note: '' } },
+    props: { runRows: [], selectedRunId: null, stages: [], view: { items: [], allSkipped: false, note: '' }, rollbackDisabled: true, rollbackTitle: '没有可回滚的版本（需要除当前生效版本之外的可用版本）', rollingBack: false },
   },
 ];

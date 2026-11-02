@@ -1,10 +1,12 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 /**
- * DeployPipelineRuns：发布页「流水线运行 · 按节点的部署结果」，对应 ShipPanel 原模板的最后一块（2026-10-28 拆分）。
- * 纯 UI：只收 props、只发 select(runId)；取步骤的请求在 useDeployData，stages 与 view 由容器算好传入。
+ * DeployPipelineRuns：发布页「流水线运行 · 按节点的部署结果」，对应 ShipPanel 原模板的最后一块（2026-10-28 拆分；task-4 F09 扩展）。
+ * 纯 UI：只收 props、只发 select(runId)/rollback；取步骤的请求在 useDeployData，stages 与 view 由容器算好传入。
+ * F09 一键回滚：头部按钮，候选版本挑选与 Guard 确认在容器（rollbackCandidates + rollbackNotice）。
  * 格子、四段进度的样式常量在 deployPipeline.styles.ts；图例与选中行都由传入的数据在本组件内推出。
  */
 import { computed } from 'vue';
+import Btn from './Btn.vue';
 import Card from './Card.vue';
 import KIcon from './KIcon.vue';
 import Tag from './Tag.vue';
@@ -20,9 +22,14 @@ const props = defineProps<{
   /** 四段进度；没有选中运行时为空数组，不显示 */
   stages: StageItem[];
   view: PipelineView | null;
+  /** 有可回滚的候选版本才可点；没有候选或 busy 时置灰并在 title 说明 */
+  rollbackDisabled: boolean;
+  rollbackTitle: string;
+  /** 回滚请求进行中 */
+  rollingBack: boolean;
 }>();
 
-const emit = defineEmits<{ select: [runId: number] }>();
+const emit = defineEmits<{ select: [runId: number]; rollback: [] }>();
 
 const selectedRow = computed(() => props.runRows.find((r) => r.id === props.selectedRunId));
 
@@ -36,15 +43,36 @@ const legend = computed(() => {
 
 <template>
   <Card data-spec="ship-pipeline">
-    <h3 :class="H3">
-      流水线运行 · 按节点的部署结果
-      <Tag
-        v-if="selectedRow"
-        :tone="selectedRow.tone"
+    <div class="flex flex-wrap items-center gap-3">
+      <h3 :class="H3">
+        流水线运行 · 按节点的部署结果
+        <Tag
+          v-if="selectedRow"
+          :tone="selectedRow.tone"
+        >
+          {{ selectedRow.statusLabel }}
+        </Tag>
+      </h3>
+      <span class="flex-1" />
+      <Btn
+        size="sm"
+        variant="default"
+        :disabled="rollbackDisabled || rollingBack"
+        :title="rollbackTitle"
+        data-spec="ship-rollback"
+        @click="emit('rollback')"
       >
-        {{ selectedRow.statusLabel }}
-      </Tag>
-    </h3>
+        <template #icon>
+          <span :class="rollingBack ? 'inline-flex animate-spin' : 'inline-flex'">
+            <KIcon
+              name="Rotate"
+              :size="12"
+            />
+          </span>
+        </template>
+        {{ rollingBack ? '回滚中…' : '一键回滚' }}
+      </Btn>
+    </div>
 
     <div
       v-if="stages.length"
@@ -112,15 +140,6 @@ const legend = computed(() => {
         />{{ label }}
       </span>
       <span class="flex-1" />
-      <span
-        class="inline-flex items-center gap-1"
-        title="后端没有回滚接口；回滚可以直接在版本列表里应用旧版本"
-      >
-        <KIcon
-          name="Rotate"
-          :size="11"
-        />一键回滚 <Tag>待接入</Tag>
-      </span>
     </div>
 
     <div class="-mx-[18px] -mb-4 mt-4 overflow-hidden rounded-b-[inherit] border-t border-[var(--el-border-color-light)]">

@@ -1,7 +1,7 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 /**
  * 应用工作台（/app/:tab/:id），对照原型 page-apps.jsx 的 PageApp：面包屑、头像、标题、Tag、两个快捷按钮。
- * 页签：原型五个 + 注册侧五个（应用历史/命令/性能/注册/消费）+ 部署四个。
+ * 页签：原型五个 + 注册侧五个（应用历史/命令/性能/注册/消费）+ 监控两个（F01/F02）+ 部署四个。
  * 页签切换只改路由的 :tab，不换页面，页头与数据保持不动（「上下文贯穿」）。
  * 取数：复用 appsModel.fetchAppList，按路由 :id 找应用；不用 fetchAppDetail（一次 5 个请求，多数是各页签才要的）。
  * 部署面板 ShipPanel：版本、节点、部署历史、流水线四个页签各渲染一块，由 tabSection 决定；概览页签传 overview（版本条加需关注事项，按钮跳页签）；调用链、日志、配置、实例接口与原型对照确认后在后续停点实现，先显示「待接入」。
@@ -17,8 +17,11 @@ import AppTabs from '@/layouts/StardustLayout2/AppTabs.vue';
 import TraceList from '@/layouts/StardustLayout2/TraceList.vue';
 import AppLog from '@/layouts/StardustLayout2/AppLog.vue';
 import AppConfigTable from '@/layouts/StardustLayout2/AppConfigTable.vue';
+import AppDepsPanel from '@/layouts/StardustLayout2/AppDepsPanel.vue';
 import AppInstances from '@/layouts/StardustLayout2/AppInstances.vue';
 import AppObserve from '@/layouts/StardustLayout2/AppObserve.vue';
+import AppTracerTab from '@/layouts/StardustLayout2/AppTracerTab.vue';
+import DayStatTab from '@/layouts/StardustLayout2/DayStatTab.vue';
 import Btn from '@/layouts/StardustLayout2/Btn.vue';
 import Card from '@/layouts/StardustLayout2/Card.vue';
 import KIcon from '@/layouts/StardustLayout2/KIcon.vue';
@@ -232,10 +235,18 @@ const { reload } = useContextReload(loadApps, stardustContext);
         v-else-if="tab === 'logs' && row.id !== undefined"
         :app-id="Number(row.id)"
       />
-      <AppConfigTable
+      <template
         v-else-if="tab === 'config' && row.id !== undefined"
-        :app-id="Number(row.id)"
-      />
+      >
+        <AppConfigTable
+          :app-id="Number(row.id)"
+        />
+        <!-- F15：上下游依赖（AppQuote 双向查询；CRUD 在 /configs） -->
+        <AppDepsPanel
+          :app-id="Number(row.id)"
+          @manage="router.push('/configs')"
+        />
+      </template>
       <AppInstances
         v-else-if="tab === 'instances' && row.id !== undefined"
         :app-id="Number(row.id)"
@@ -247,6 +258,16 @@ const { reload } = useContextReload(loadApps, stardustContext);
         :kind="observeKind"
         :query="observeQuery"
         @query="onObserveQuery"
+      />
+      <AppTracerTab
+        v-else-if="tab === 'tracer' && row.id !== undefined"
+        :app-id="Number(row.id)"
+        :app-name="name"
+      />
+      <DayStatTab
+        v-else-if="tab === 'daystat' && row.id !== undefined"
+        :app-id="Number(row.id)"
+        :app-name="name"
       />
       <Card
         v-else

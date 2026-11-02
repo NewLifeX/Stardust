@@ -1,5 +1,6 @@
-import { createApp, h, reactive, type App } from 'vue';
+import { createApp, defineComponent, h, reactive, type App } from 'vue';
 import ElementPlus from 'element-plus';
+import { createMemoryHistory, createRouter } from 'vue-router';
 import 'element-plus/dist/index.css';
 // 星尘设计系统：与 src/main.ts 保持同源，CT 截图必须反映真实令牌，
 // 否则基线与线上不一致（颜色/间距全错）。
@@ -55,6 +56,20 @@ gw.mountStory = (id: string, props?: Record<string, unknown>) => {
     render: () => h(s.component as never, currentProps as never),
   });
   currentApp.use(ElementPlus);
+  // F14 深链后部分组件（AppObserve/DeployHistory 的 TraceId 列、TraceDetail）用 RouterLink/useRoute；
+  // gallery 没有真实路由会因 inject(routerKey) 解构 undefined 直接崩。
+  // 统一装一个 memory 路由（根路径 + 兜底），RouterLink 渲染成普通 <a>，视觉无差异。
+  currentApp.use(
+    createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/', component: defineComponent({ render: () => null }) },
+        // TraceDetail 的深链语义在 gallery 里也要成立（输入框查询会 push /trace/<ids>）
+        { path: '/trace/:traceId?', component: defineComponent({ render: () => null }) },
+        { path: '/:pathMatch(.*)*', component: defineComponent({ render: () => null }) },
+      ],
+    }),
+  );
   currentApp.mount(mountEl);
 };
 

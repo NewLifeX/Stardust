@@ -1,4 +1,4 @@
-﻿// src/main.ts
+// src/main.ts
 import { initApp } from '@newlifex/cube-vue/core/initApp';
 import { registerLayout } from '@newlifex/cube-vue/core/composables/useLayout';
 import type { ConfigRoute } from '@newlifex/cube-vue/core/typings';
@@ -19,7 +19,7 @@ import './styles/global.css';
 import StardustLayout from './layouts/StardustLayout/index.vue';
 import './layouts/StardustLayout/variables.css';
 import StardustLayout2 from './layouts/StardustLayout2/index.vue';
-import { consoleRoutes } from './layouts/StardustLayout2/routes';
+import { consoleRoutes, legacyTraceRedirect } from './layouts/StardustLayout2/routes';
 import { initTheme } from './design-system/theme';
 
 // 主题初始化：默认暗色，localStorage['stardust-theme'] 可切浅色（设计稿 [data-theme='light']）
@@ -28,7 +28,9 @@ initTheme();
 // 调用链可视化隐藏页（根 Area / Monitors Area），catch-all 仅扫 **/index.vue，
 // 且三级路由 /Trace/:id 不会被菜单注册，故手动声明兜底（参考 Doc/待迁移页面.md §3.6）。
 // 注意：main.ts 位于 src/ 下，apps 目录与 src 同级，故相对路径为 ../apps/...
-import TraceIndex from '../apps/stardust/src/views/Trace/index.vue';
+// F14-1：旧 /Trace/<id> 整页（Trace/index.vue，pageSize=10000 单值直传）已被契约页
+// /trace/:traceId?（Console/TraceDetail.vue）取代——/Trace/:id 重定向到契约页，
+// 旧深链（Monitors/Trace/index.vue 的 push、书签）全部落到新页；/Trace/Detail、/Trace/Graph 保留。
 import TraceDetail from '../apps/stardust/src/views/Trace/detail.vue';
 import TraceGraph from '../apps/stardust/src/views/Trace/graph.vue';
 import MonitorsTraceGraph from '../apps/stardust/src/views/Monitors/Trace/graph.vue';
@@ -111,13 +113,10 @@ const externalRoutes: ConfigRoute[] = [
   },
 
   // —— 调用链可视化隐藏页兜底（§3.6：三级路由不被菜单注册，graph.vue 不被 glob 命中）——
-  // Trace/Index：/Trace/<traceId>（调用链树 + layout=detail 追踪明细），复用 index.vue
-  {
-    path: '/Trace/:id',
-    name: 'TraceIndex',
-    component: TraceIndex,
-    meta: { auth: true, title: '调用链' },
-  },
+  // F14-1：/Trace/<traceId> 旧页（Trace/index.vue）退役 → 命名路由跳转到契约页 /trace/:traceId
+  //（Console/TraceDetail.vue，单值瀑布 + 逗号多值并列 + 诊断框已覆盖旧页能力）。
+  // 必须 redirect 到 name='ConsoleTrace'（方案 A）：路径重定向会被本记录（必选段打分压过可选段）再次命中 → 无限递归白屏。
+  legacyTraceRedirect,
   // Trace/Detail：/Trace/Detail?id=<traceId>
   {
     path: '/Trace/Detail',

@@ -45,3 +45,21 @@ test('无趋势数据时不渲染 sparkline', async ({ page }) => {
   await openStory(page, 'AppRow/Empty');
   await expect(page.locator('[data-spec="app-row-trend"]')).toHaveCount(0);
 });
+
+// F12-1：hover 操作条「编辑」按钮发 edit 事件（Apps.vue 用它开 AppFormDrawer 编辑态）
+test('F12-1 悬浮操作条出现「编辑」按钮，点击发 edit 事件', async ({ page }) => {
+  await openStory(page, 'AppRow/EditEmit');
+  await page.evaluate(() => {
+    (window as unknown as { __appRowEvents?: string[] }).__appRowEvents = [];
+  });
+  const row = page.locator(ROW);
+  // 操作条默认隐藏，hover 浮出
+  await expect(row.locator('[data-spec="app-row-edit"]')).toBeHidden();
+  await row.hover();
+  const edit = row.locator('[data-spec="app-row-edit"]');
+  await expect(edit).toBeVisible();
+  await expect(edit).toHaveText('编辑');
+  await edit.click();
+  const ev = await page.evaluate(() => (window as unknown as { __appRowEvents?: string[] }).__appRowEvents);
+  expect(ev).toEqual(['edit:OrderService']);
+});

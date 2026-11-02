@@ -2,7 +2,8 @@
 /**
  * BuildNodes：编译节点表格（纯 UI）。
  * 对应后端 AppBuildNode：在节点上拉取源代码、编译项目、打包输出、上传应用包。
- * 只收 props、只发 operate(row, act)；二次确认（openGuard）与真正下发在容器里。
+ * 只收 props、只发 operate(row, act)/create/edit/remove；二次确认（openGuard）与真正下发在容器里。
+ * F08：新增节点按钮 + 每行「编辑 / 删除」，busy 时禁用（AGENTS.md §11）。
  */
 import Btn from './Btn.vue';
 import Card from './Card.vue';
@@ -19,7 +20,12 @@ defineProps<{
   busyKey: string;
 }>();
 
-const emit = defineEmits<{ operate: [row: BuildNodeRow, act: BuildNodeAct] }>();
+const emit = defineEmits<{
+  operate: [row: BuildNodeRow, act: BuildNodeAct];
+  create: [];
+  edit: [row: BuildNodeRow];
+  remove: [row: BuildNodeRow];
+}>();
 
 function checkClass(v: boolean): string {
   return v ? 'text-[var(--el-color-success)]' : 'text-[var(--el-text-color-placeholder)]';
@@ -32,10 +38,29 @@ function checkClass(v: boolean): string {
     data-spec="ship-build-nodes"
   >
     <div class="px-[18px] pb-2 pt-4">
-      <h3 :class="H3">
-        编译节点
-        <span class="text-[11.5px] font-normal text-[var(--el-text-color-secondary)]">在节点上拉取源代码、编译项目、打包并上传应用包</span>
-      </h3>
+      <div class="flex flex-wrap items-center gap-3">
+        <h3 :class="H3">
+          编译节点
+          <span class="text-[11.5px] font-normal text-[var(--el-text-color-secondary)]">在节点上拉取源代码、编译项目、打包并上传应用包</span>
+        </h3>
+        <span class="flex-1" />
+        <Btn
+          size="sm"
+          variant="primary"
+          :disabled="!!busyKey"
+          data-spec="build-node-create"
+          title="把一台物理节点配置为本部署集的编译节点"
+          @click="emit('create')"
+        >
+          <template #icon>
+            <KIcon
+              name="Plus"
+              :size="12"
+            />
+          </template>
+          新增编译节点
+        </Btn>
+      </div>
     </div>
     <table class="w-full border-collapse">
       <thead>
@@ -137,7 +162,7 @@ function checkClass(v: boolean): string {
             {{ fmtBuildTime(r.updateTime) }}
           </td>
           <td :class="[TD, 'text-right']">
-            <div class="inline-flex flex-wrap justify-end gap-[5px]">
+            <div class="inline-flex flex-wrap items-center justify-end gap-[5px]">
               <Btn
                 v-for="a in BUILD_NODE_ACTIONS"
                 :key="a.act"
@@ -148,6 +173,24 @@ function checkClass(v: boolean): string {
               >
                 {{ busyKey === `${r.id}:${a.act}` ? '处理中…' : a.label }}
               </Btn>
+              <button
+                type="button"
+                data-spec="build-node-edit"
+                class="ml-1 text-[12px] text-[var(--el-color-primary)] hover:underline disabled:pointer-events-none disabled:opacity-40"
+                :disabled="!!busyKey"
+                @click="emit('edit', r)"
+              >
+                编辑
+              </button>
+              <button
+                type="button"
+                data-spec="build-node-remove"
+                class="text-[12px] text-[var(--el-color-danger)] hover:underline disabled:pointer-events-none disabled:opacity-40"
+                :disabled="!!busyKey"
+                @click="emit('remove', r)"
+              >
+                {{ busyKey === `bnode-del:${r.id}` ? '删除中…' : '删除' }}
+              </button>
             </div>
           </td>
         </tr>

@@ -42,6 +42,19 @@ import { stories as alarmsListStories } from '../src/layouts/StardustLayout2/Ala
 import { stories as mcpTokenFormStories } from '../src/layouts/StardustLayout2/McpTokenForm.story';
 import { stories as mcpTokenResourcePanelStories } from '../src/layouts/StardustLayout2/McpTokenResourcePanel.story';
 import { stories as mcpServerFormStories } from '../src/layouts/StardustLayout2/McpServerForm.story';
+import { stories as appTracerTabStories } from '../src/layouts/StardustLayout2/AppTracerTab.story';
+import { stories as dayStatTabStories } from '../src/layouts/StardustLayout2/DayStatTab.story';
+import { stories as nodeFormDrawerStories } from '../src/layouts/StardustLayout2/NodeFormDrawer.story';
+import { stories as deployEditDrawerStories } from '../src/layouts/StardustLayout2/DeployEditDrawer.story';
+import { stories as configItemDrawerStories } from '../src/layouts/StardustLayout2/ConfigItemDrawer.story';
+import { stories as appRuleDrawerStories } from '../src/layouts/StardustLayout2/AppRuleDrawer.story';
+import { stories as appRuleTableStories } from '../src/layouts/StardustLayout2/AppRuleTable.story';
+import { stories as appFormDrawerStories } from '../src/layouts/StardustLayout2/AppFormDrawer.story';
+import { stories as serviceDetailDrawerStories } from '../src/layouts/StardustLayout2/ServiceDetailDrawer.story';
+import { stories as appQuoteTableStories } from '../src/layouts/StardustLayout2/AppQuoteTable.story';
+import { stories as appQuoteDrawerStories } from '../src/layouts/StardustLayout2/AppQuoteDrawer.story';
+import { stories as appDepsPanelStories } from '../src/layouts/StardustLayout2/AppDepsPanel.story';
+import { stories as traceDetailStories } from '../src/layouts/StardustLayout2/TraceDetail.story';
 
 export const stories: Array<{
   id: string;
@@ -85,4 +98,17 @@ export const stories: Array<{
   ...mcpTokenFormStories,
   ...mcpTokenResourcePanelStories,
   ...mcpServerFormStories,
+  ...appTracerTabStories,
+  ...dayStatTabStories,
+  ...nodeFormDrawerStories,
+  ...deployEditDrawerStories,
+  ...configItemDrawerStories,
+  ...appRuleDrawerStories,
+  ...appRuleTableStories,
+  ...appFormDrawerStories,
+  ...serviceDetailDrawerStories,
+  ...appQuoteTableStories,
+  ...appQuoteDrawerStories,
+  ...appDepsPanelStories,
+  ...traceDetailStories,
 ];

@@ -4,8 +4,10 @@ import { describe, expect, it } from 'vitest';
 import {
   buildTraceList,
   buildWaterfall,
+  fetchTraceSpansMulti,
   fetchTraceSummaries,
   fetchTraceSpans,
+  parseTraceIds,
   shortId,
   summarizeTrace,
   toSpans,
@@ -164,5 +166,48 @@ describe('fetchTraceSummaries / fetchTraceSpans：取数（request 注入）', (
     });
     expect(await fetchTraceSummaries(req, 0)).toEqual([]);
     expect(called).toBe(0);
+  });
+});
+
+describe('F14 parseTraceIds：多值输入拆分（逗号/分号/空白，去空去重，上限 5）', () => {
+  it('逗号+空格混合拆分并去重保序', () => {
+    expect(parseTraceIds('405, 369299,,405;77')).toEqual(['405', '369299', '77']);
+  });
+
+  it('换行/制表符也算分隔；超 5 个截断', () => {
+    expect(parseTraceIds('a\nb\tc')).toEqual(['a', 'b', 'c']);
+    expect(parseTraceIds('1,2,3,4,5,6,7,8')).toHaveLength(5);
+  });
+
+  it('空串/纯分隔符返回空数组', () => {
+    expect(parseTraceIds('')).toEqual([]);
+    expect(parseTraceIds(' , ; ')).toEqual([]);
+  });
+});
+
+describe('F14 fetchTraceSpansMulti：多值并行拉取（单条失败不拖垮其它）', () => {
+  it('每个 traceId 独立请求，Map 按 id 收结果', async () => {
+    const seen: string[] = [];
+    const req = fakeRequest((url, params) => {
+      expect(url).toBe('/Monitors/SampleData');
+      seen.push(String(params.traceId));
+      if (params.traceId === 'bad') throw new Error('net');
+      return [{ id: 1, traceId: params.traceId, spanId: 's1', parentId: '', name: 'op', startTime: 1000, endTime: 1500, success: true }];
+    });
+    const m = await fetchTraceSpansMulti(req, ['t1', 'bad', 't2']);
+    expect(seen.sort()).toEqual(['bad', 't1', 't2']);
+    expect(m.get('t1')).not.toBeNull();
+    expect(m.get('bad')).toBeNull();
+    expect(m.get('t2')?.[0].traceId).toBe('t2');
+  });
+
+  it('空 ids 返回空 Map（不发请求）', async () => {
+    let calls = 0;
+    const req = fakeRequest(() => {
+      calls++;
+      return [];
+    });
+    expect((await fetchTraceSpansMulti(req, [])).size).toBe(0);
+    expect(calls).toBe(0);
   });
 });

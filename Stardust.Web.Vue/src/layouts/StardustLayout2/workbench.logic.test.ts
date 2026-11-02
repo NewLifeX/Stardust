@@ -1,13 +1,20 @@
-﻿// 应用工作台纯逻辑单测（Vitest）
+// 应用工作台纯逻辑单测（Vitest）
 // 2026-10-29 停点 19：页签 6 变 9，「发布」页签取消，部署相关内容拆成版本、节点、部署历史、流水线四个页签。
 import { describe, it, expect } from 'vitest';
 import { DEFAULT_TAB, WORKBENCH_TABS, resolveTab, tabLabel, tabSection } from './workbench.logic';
 
 describe('WORKBENCH_TABS · 页签清单', () => {
-  it('十四个页签：原型五个、注册侧五个、部署四个', () => {
+  it('十六个页签：原型五个、注册侧五个、监控两个、部署四个', () => {
     expect(WORKBENCH_TABS.map((t) => `${t.key}:${t.label}`).join('|')).toBe(
-      'overview:概览|trace:调用链|logs:日志|config:配置|instances:实例|appHistory:应用历史|commands:命令|meter:性能|services:注册|consume:消费|versions:版本|nodes:节点|history:部署历史|pipeline:流水线',
+      'overview:概览|trace:调用链|logs:日志|config:配置|instances:实例|appHistory:应用历史|commands:命令|meter:性能|services:注册|consume:消费|tracer:监控中心|daystat:监控大屏|versions:版本|nodes:节点|history:部署历史|pipeline:流水线',
     );
+  });
+
+  it('监控两页签插在消费与版本之间', () => {
+    const keys = WORKBENCH_TABS.map((t) => t.key);
+    expect(keys.indexOf('consume')).toBeLessThan(keys.indexOf('tracer'));
+    expect(keys.indexOf('tracer')).toBeLessThan(keys.indexOf('daystat'));
+    expect(keys.indexOf('daystat')).toBeLessThan(keys.indexOf('versions'));
   });
 
   it('「发布」页签已取消', () => {
@@ -69,7 +76,7 @@ describe('tabSection · 页签对应哪一块部署内容', () => {
     expect(tabSection(key)).toBe(key);
   });
 
-  it.each(['overview', 'trace', 'logs', 'config', 'instances', 'appHistory', 'commands', 'meter', 'services', 'consume'] as const)(
+  it.each(['overview', 'trace', 'logs', 'config', 'instances', 'appHistory', 'commands', 'meter', 'services', 'consume', 'tracer', 'daystat'] as const)(
     '%s 不是部署页签：返回 null',
     (key) => {
       expect(tabSection(key)).toBeNull();

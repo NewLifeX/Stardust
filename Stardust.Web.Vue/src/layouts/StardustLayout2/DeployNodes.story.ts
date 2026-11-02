@@ -1,4 +1,4 @@
-﻿import DeployNodes from './DeployNodes.vue';
+import DeployNodes from './DeployNodes.vue';
 import type { ShipNode } from './ship.logic.ts';
 
 const NODES: ShipNode[] = [
@@ -22,13 +22,16 @@ const BASE = {
 };
 
 export const stories = [
-  // 测试状态：三个节点（一致、不一致、已停用），每行五个操作按钮
+  // 测试状态：三个节点（一致、不一致、已停用），每行五个操作按钮 + 编辑/删除；批量栏隐藏（未勾选）
   { id: 'DeployNodes/Default', component: DeployNodes, props: { ...BASE } },
 
   // 测试状态：正在重启 node-b（行 id 12）：该按钮写「下发中…」，所有操作按钮禁用
   { id: 'DeployNodes/Busy', component: DeployNodes, props: { ...BASE, busyKey: '12:restart' } },
 
-  // 测试状态：没有节点
+  // 测试状态：批量删除进行中（F07）：批量栏按钮写「下发中…」，行内按钮全禁用
+  { id: 'DeployNodes/BatchBusy', component: DeployNodes, props: { ...BASE, busyKey: 'batch:uninstall' } },
+
+  // 测试状态：没有节点：空态引导去「新增节点」
   { id: 'DeployNodes/Empty', component: DeployNodes, props: { ...BASE, nodes: [], versionTags: {} } },
 
   // 测试状态：节点加载失败（不能显示成「暂无节点」）

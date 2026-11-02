@@ -6,15 +6,21 @@
  * GET /Registry/AppOnline?appId=；发布 POST /Configs/AppConfig/Publish?configId=，
  * 回滚 POST /Configs/ConfigHistory/Rollback?id=。
  *
- * 现实约束（后端没有对应入口，标待接入而不造数据）：
- *  - 就地编辑：草稿写入接口未在本层验证（旧配置中心同样把「保存草稿」标为待接入），Value 列只读展示；
- *  - 放弃草稿：后端没有丢弃草稿的接口，按钮禁用并注明；
- *  - 推送进度卡：Publish 只返回通知的应用数，没有逐实例确认进度。
+ * F10 就地编辑（ConfigDataController 源码语义，2026-11-03 回读验证）：
+ *  - 行内「编辑」开 ConfigItemDrawer：已发布行改 Key/Scope/Value 会被后端 400 拒绝 → Drawer 里只读，
+ *    改动写 NewValue 草稿（Enable 翻转转 NewStatus）；未发布行（新增，Version==0）可直接改；
+ *  - 「新增配置项」POST /Configs/ConfigData（OnInsert 自动分配 NewVersion，走待发布）；
+ *  - 行内「删除」DELETE /Configs/ConfigData/{id}：未发布真删、已发布改标 [[Deleted]]（发布后生效）；
+ *  - 「同步应用」POST /Configs/AppConfig/SyncApp（把注册表应用同步成 AppConfig，全局动作）。
+ * 现实约束（后端没有对应入口，标待接入而不造数据）：放弃草稿（没有丢弃草稿的接口）、推送进度卡
+ * （Publish 只返回通知的应用数）。
  */
 import { computed, ref, watch } from 'vue';
 import { request } from '@newlifex/cube-vue/core/utils/request';
 import type { Req } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
 import {
+  createConfigItem,
+  deleteConfigItem,
   fetchConfigApp,
   fetchConfigHistory,
   fetchConfigItems,
@@ -22,8 +28,11 @@ import {
   filterPending,
   publishConfig,
   rollbackHistory,
+  saveConfigItem,
+  syncAppConfig,
 } from './appConfig.logic';
-import type { ConfigApp, ConfigHistoryItem, ConfigItem } from './appConfig.logic.ts';
+import type { ConfigApp, ConfigHistoryItem, ConfigItem, ConfigItemForm } from './appConfig.logic.ts';
+import ConfigItemDrawer from './ConfigItemDrawer.vue';
 import { openGuard } from './ui.store.ts';
 import { toast } from './useToast.ts';
 import { useManualRefresh } from './useManualRefresh.ts';
@@ -50,9 +59,15 @@ const config = ref<ConfigApp | null>(null);
 const items = ref<ConfigItem[]>([]);
 const history = ref<ConfigHistoryItem[]>([]);
 const onlineCount = ref(0);
-/** 正在进行的操作：'publish' 或 `rollback:<id>`；非空时相关按钮禁用 */
+/** 正在进行的操作：'publish' | 'sync' | `rollback:<id>` | `item:<id>`；非空时相关按钮禁用 */
 const busy = ref<string | null>(null);
 const diffOpen = ref(false);
+
+/** F10 配置项编辑 Drawer */
+const itemDrawerOpen = ref(false);
+/** null=新增；否则编辑（published 决定字段读写） */
+const itemEditing = ref<(ConfigItemForm & { published: boolean }) | null>(null);
+const itemEditId = ref(0);
 
 const pending = computed(() => filterPending(items.value));
 const hasDraft = computed(() => !!config.value && config.value.nextVersion > config.value.version);
@@ -146,6 +161,87 @@ function onRollback(h: ConfigHistoryItem): void {
     }
   });
 }
+
+// ---------- F10 配置项就地编辑 ----------
+
+/** 新增配置项：POST 建 Key/Scope/Value，走待发布草稿 */
+function askCreateItem(): void {
+  if (busy.value) return;
+  itemEditId.value = 0;
+  itemEditing.value = { key: '', scope: '', value: '', newValue: '', enable: true, remark: '', published: false };
+  itemDrawerOpen.value = true;
+}
+
+/** 编辑配置项：已发布行 Key/Scope/Value 只读（后端拒绝），改动写 NewValue 草稿 */
+function askEditItem(it: ConfigItem): void {
+  if (busy.value || it.state === 'deleted') return;
+  itemEditId.value = it.id;
+  itemEditing.value = {
+    key: it.key,
+    scope: it.scope,
+    value: it.value,
+    newValue: it.newValue,
+    enable: it.enable,
+    remark: '',
+    published: it.state !== 'added',
+  };
+  itemDrawerOpen.value = true;
+}
+
+async function onItemSubmit(form: ConfigItemForm): Promise<void> {
+  if (busy.value) return;
+  busy.value = 'item';
+  try {
+    const r = itemEditId.value > 0
+      ? await saveConfigItem(
+          req(),
+          { id: itemEditId.value, published: itemEditing.value?.published ?? false, enable: form.enable },
+          form,
+        )
+      : await createConfigItem(req(), config.value?.id ?? 0, form);
+    toast(r.message, r.ok ? 'ok' : 'err');
+    if (r.ok) {
+      itemDrawerOpen.value = false;
+      await refresh();
+    }
+  } finally {
+    busy.value = null;
+  }
+}
+
+/** 删除配置项：未发布真删；已发布后端改标待删除（发布后生效） */
+function askDeleteItem(it: ConfigItem): void {
+  if (busy.value || it.state === 'deleted') return;
+  const isPub = it.state !== 'added';
+  openGuard(
+    isPub
+      ? `确认删除配置项「${it.key}」？已发布的键不会被立即移除，会先标记待删除，发布后生效。`
+      : `确认删除配置项「${it.key}」？尚未发布，将直接移除。`,
+    async () => {
+      busy.value = `item:${it.id}`;
+      try {
+        const r = await deleteConfigItem(req(), it.id);
+        toast(r.message, r.ok ? 'ok' : 'err');
+        if (r.ok) await refresh();
+      } finally {
+        busy.value = null;
+      }
+    },
+  );
+}
+
+/** 同步应用：把注册表应用同步成 AppConfig（全局动作，返回「成功同步N个应用！」） */
+async function onSync(): Promise<void> {
+  if (busy.value) return;
+  busy.value = 'sync';
+  try {
+    const r = await syncAppConfig(req());
+    toast(r.message, r.ok ? 'ok' : 'err');
+    if (r.ok) await refresh();
+  } finally {
+    busy.value = null;
+  }
+}
 </script>
 
 <template>
@@ -156,11 +252,34 @@ function onRollback(h: ConfigHistoryItem): void {
         <span class="text-[11.5px] font-normal text-[var(--el-text-color-secondary)]">
           {{ config ? `版本 v${config.version}${hasDraft ? `，草稿 v${config.nextVersion}` : ''}` : '—' }}
         </span>
-        <Tag tone="default">
-          后端暂不支持草稿编辑，发布即生效
-        </Tag>
       </h3>
       <span class="flex-1" />
+      <Btn
+        size="sm"
+        variant="default"
+        :disabled="!!busy || refreshing"
+        :aria-busy="busy === 'sync'"
+        data-spec="app-config-sync"
+        title="把注册表应用同步成应用配置（全局动作）"
+        @click="onSync"
+      >
+        {{ busy === 'sync' ? '同步中…' : '同步应用' }}
+      </Btn>
+      <Btn
+        size="sm"
+        variant="default"
+        :disabled="!!busy || refreshing"
+        data-spec="app-config-create"
+        @click="askCreateItem"
+      >
+        <template #icon>
+          <KIcon
+            name="Plus"
+            :size="12"
+          />
+        </template>
+        新增配置项
+      </Btn>
       <Btn
         size="sm"
         :disabled="!!busy || refreshing"
@@ -204,14 +323,17 @@ function onRollback(h: ConfigHistoryItem): void {
         <table class="w-full border-collapse">
           <thead>
             <tr>
-              <th :class="[TH, 'w-[34%]']">
+              <th :class="[TH, 'w-[30%]']">
                 Key
               </th>
               <th :class="TH">
                 Value
               </th>
-              <th :class="[TH, 'w-[84px]']">
+              <th :class="[TH, 'w-[80px]']">
                 状态
+              </th>
+              <th :class="[TH, 'w-[120px] text-right']">
+                操作
               </th>
             </tr>
           </thead>
@@ -244,14 +366,38 @@ function onRollback(h: ConfigHistoryItem): void {
                   {{ STATE_TAG[it.state].text }}
                 </Tag>
               </td>
+              <td :class="[TD, 'text-right whitespace-nowrap']">
+                <Btn
+                  size="sm"
+                  variant="ghost"
+                  :disabled="!!busy || it.state === 'deleted'"
+                  :title="it.state === 'deleted' ? '待删除的键不可编辑' : (it.state !== 'added' ? '已发布：名称/作用域/生效值只读，改动写入草稿' : '未发布：可直接修改')"
+                  data-spec="app-config-edit"
+                  @click="askEditItem(it)"
+                >
+                  编辑
+                </Btn>
+                <Btn
+                  size="sm"
+                  variant="ghost"
+                  :disabled="!!busy || it.state === 'deleted'"
+                  :aria-busy="busy === `item:${it.id}`"
+                  class="!text-[var(--el-color-danger)]"
+                  :title="it.state !== 'added' ? '已发布：先标记待删除，发布后生效' : '未发布：直接移除'"
+                  data-spec="app-config-remove"
+                  @click="askDeleteItem(it)"
+                >
+                  {{ busy === `item:${it.id}` ? '删除中…' : '删除' }}
+                </Btn>
+              </td>
             </tr>
             <tr v-if="!items.length">
               <td
-                colspan="3"
+                colspan="4"
                 class="p-5 text-[12.5px] text-[var(--el-text-color-secondary)]"
                 data-spec="app-config-empty"
               >
-                该应用还没有配置项
+                该应用还没有配置项，点「新增配置项」创建
               </td>
             </tr>
           </tbody>
@@ -373,5 +519,16 @@ function onRollback(h: ConfigHistoryItem): void {
         </div>
       </aside>
     </div>
+
+    <!-- F10 配置项新增/编辑 Drawer（应用配置尚未加载时不可打开） -->
+    <ConfigItemDrawer
+      :open="itemDrawerOpen && !!config"
+      :initial="itemEditing"
+      :title="itemEditId > 0 ? `编辑配置项 · ${itemEditing?.key || ''}` : '新增配置项'"
+      :sub="`应用配置：${config?.name || '—'}`"
+      :busy="busy === 'item'"
+      @close="itemDrawerOpen = false"
+      @submit="onItemSubmit"
+    />
   </Card>
 </template>

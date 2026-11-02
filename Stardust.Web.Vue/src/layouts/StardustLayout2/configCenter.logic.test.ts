@@ -1,17 +1,31 @@
 // 跨应用配置中心纯逻辑单测（Vitest）。2026-10-30。
 import { describe, it, expect } from 'vitest';
 import {
+  appQuoteBody,
   buildAppMap,
+  buildKeyCounts,
   countPendingItems,
   countUsedKeys,
+  createAppQuote,
+  createAppRule,
+  deleteAppQuote,
+  deleteAppRule,
   diffConfigValues,
   fetchAllConfigs,
+  fetchAppQuotes,
+  fetchAppRules,
   fetchConfigDetail,
   filterRows,
   pendingDiff,
+  saveAppQuote,
+  saveAppRule,
+  toAppQuoteRows,
+  toAppRuleRows,
   toConfigCenterRows,
   toDetailHistory,
   toDetailItems,
+  validateAppQuoteForm,
+  validateAppRuleForm,
 } from './configCenter.logic';
 import type { ConfigCenterRow } from './configCenter.logic';
 import type { Req } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
@@ -233,5 +247,215 @@ describe('toDetailHistory · 保留全部动作', () => {
     ]);
     expect(h.map((x) => x.action)).toEqual(['Publish', 'Update', 'Insert']);
     expect(h[0].version).toBe(2);
+  });
+});
+
+// ==================== F10 /configs「Key 数」修复 ====================
+
+describe('buildKeyCounts · ConfigData 行数计 Key 数', () => {
+  it('按 configId 分组计数，[[Deleted]] 不计', () => {
+    const m = buildKeyCounts([
+      { ConfigId: 9, NewStatus: '' },
+      { ConfigId: 9, NewStatus: '' },
+      { ConfigId: 9, NewStatus: '[[Deleted]]' },
+      { ConfigId: 8, NewStatus: '' },
+      { ConfigId: 0 },
+    ]);
+    expect(m.get(9)).toBe(2);
+    expect(m.get(8)).toBe(1);
+    expect(m.size).toBe(2);
+  });
+});
+
+describe('fetchAllConfigs · Key 数取 ConfigData 行数（F10 修复）', () => {
+  it('多拉一枪 /Configs/ConfigData 全量，按 configId 计数并覆盖 UsedKeys', async () => {
+    const req = routingStub({
+      '/Registry/App': () => ({ data: [{ Id: 101, DisplayName: '订单服务' }] }),
+      '/Configs/AppConfig': () => ({ data: [{ Id: 9, AppId: 101, Name: 'OrderApi', Version: 1, NextVersion: 2, UsedKeys: 'a,b,c' }] }),
+      '/Configs/ConfigData': () => ({ data: [{ ConfigId: 9 }, { ConfigId: 9 }, { ConfigId: 9, NewStatus: '[[Deleted]]' }, { ConfigId: 8 }] }),
+    });
+    const r = await fetchAllConfigs(req, 7);
+    expect(r.error).toBe('');
+    expect(r.rows[0].keyCount).toBe(2); // 3 行里 1 行待删除 → 2，而非 UsedKeys 的 3
+  });
+
+  it('ConfigData 拉取失败时回退 UsedKeys 计数', async () => {
+    const req = routingStub({
+      '/Registry/App': () => ({ data: [] }),
+      '/Configs/AppConfig': () => ({ data: [{ Id: 9, AppId: 1, Name: 'X', Version: 1, NextVersion: 1, UsedKeys: 'a,b' }] }),
+      '/Configs/ConfigData': () => { throw new Error('boom'); },
+    });
+    const r = await fetchAllConfigs(req, 7);
+    expect(r.error).toBe('');
+    expect(r.rows[0].keyCount).toBe(2);
+  });
+});
+
+// ==================== F11 应用规则（AppRule） ====================
+
+describe('F11 toAppRuleRows / validateAppRuleForm', () => {
+  it('行归一 + 按优先级倒序', () => {
+    const rows = toAppRuleRows([
+      { Id: 1, Rule: 'IP=10.*', Result: 'Scope=prod', Priority: 1, Enable: true, UpdateTime: '2026-11-03T10:00:00' },
+      { Id: 2, Rule: 'IP=172.*', Result: 'Scope=dev', Priority: 9, Enable: false, Remark: '测试段' },
+    ]);
+    expect(rows.map((r) => r.id)).toEqual([2, 1]);
+    expect(rows[0]).toMatchObject({ rule: 'IP=172.*', result: 'Scope=dev', priority: 9, enable: false, remark: '测试段' });
+    expect(rows[1].updateTimeText).toBe('2026-11-03 10:00');
+  });
+
+  it('校验：Rule/Result 必填，Priority 非负数字', () => {
+    expect(validateAppRuleForm({ rule: '', result: 'a', priority: 0, enable: true, remark: '' })).toContain('规则表达式必填');
+    expect(validateAppRuleForm({ rule: 'a', result: '', priority: 0, enable: true, remark: '' })).toContain('命中结果必填');
+    expect(validateAppRuleForm({ rule: 'a', result: 'b', priority: -1, enable: true, remark: '' })).toContain('优先级');
+    expect(validateAppRuleForm({ rule: 'a', result: 'b', priority: 0, enable: true, remark: '' })).toBe('');
+  });
+});
+
+describe('F11 AppRule CRUD', () => {
+  it('fetchAppRules：GET /Configs/AppRule，失败返回 null', async () => {
+    const req = routingStub({ '/Configs/AppRule': () => ({ data: [{ Id: 1, Rule: 'a', Result: 'b', Priority: 0, Enable: true }] }) });
+    const rows = await fetchAppRules(req);
+    expect(rows).toHaveLength(1);
+    const bad: Req = async () => {
+      throw new Error('x');
+    };
+    expect(await fetchAppRules(bad)).toBeNull();
+  });
+
+  it('createAppRule：POST body 含 Rule/Result/Priority/Enable/Remark', async () => {
+    const calls: unknown[] = [];
+    const req: Req = async (opt) => {
+      calls.push(opt);
+      return { code: 0, message: '操作成功' } as Awaited<ReturnType<Req>>;
+    };
+    const r = await createAppRule(req, { rule: ' IP=10.* ', result: 'Scope=dev', priority: 5, enable: true, remark: '' });
+    expect(r.ok).toBe(true);
+    expect(calls[0]).toMatchObject({ url: '/Configs/AppRule', method: 'POST' });
+    expect((calls[0] as { data: Record<string, unknown> }).data).toEqual({ Rule: 'IP=10.*', Result: 'Scope=dev', Priority: 5, Enable: true, Remark: '' });
+  });
+
+  it('saveAppRule：PUT /{id} 部分更新；缺 id 不发请求', async () => {
+    const calls: unknown[] = [];
+    const req: Req = async (opt) => {
+      calls.push(opt);
+      return { code: 0 } as Awaited<ReturnType<Req>>;
+    };
+    const r = await saveAppRule(req, 3, { rule: 'a', result: 'b', priority: 1, enable: false, remark: 'r' });
+    expect(r.ok).toBe(true);
+    expect(calls[0]).toMatchObject({ url: '/Configs/AppRule/3', method: 'PUT' });
+    const noId = stubNoCall();
+    expect((await saveAppRule(noId.req, 0, { rule: 'a', result: 'b', priority: 0, enable: true, remark: '' })).ok).toBe(false);
+    expect(noId.calls).toHaveLength(0);
+  });
+
+  it('deleteAppRule：DELETE /{id}；失败透传消息', async () => {
+    const calls: unknown[] = [];
+    const req: Req = async (opt) => {
+      calls.push(opt);
+      return { code: 0, message: '操作成功' } as Awaited<ReturnType<Req>>;
+    };
+    expect((await deleteAppRule(req, 4)).ok).toBe(true);
+    expect(calls[0]).toEqual({ url: '/Configs/AppRule/4', method: 'DELETE' });
+    const bad = routingStub({});
+    const r = await deleteAppRule(bad as Req, 4);
+    expect(r.ok).toBe(false);
+  });
+});
+
+/** 无调用记录桩：断言「不发请求」用 */
+function stubNoCall(): { req: Req; calls: unknown[] } {
+  const calls: unknown[] = [];
+  const req: Req = async (opt) => {
+    calls.push(opt);
+    return { code: 0 } as Awaited<ReturnType<Req>>;
+  };
+  return { req, calls };
+}
+
+describe('F15 toAppQuoteRows · AppQuote 归一 + id→应用名映射', () => {
+  const nameOf = (id: number) => (id === 7 ? 'OrderService' : id === 9 ? 'StarWeb' : '#' + id);
+
+  it('AppId/TargetAppId/Kind/Enable 归一，应用名按映射（缺名退化 #id）', () => {
+    const rows = toAppQuoteRows(
+      [
+        { Id: 2, AppId: 7, TargetAppId: 9, Kind: 1, Enable: true },
+        { Id: 1, AppId: 7, TargetAppId: 99, Kind: 0, Enable: false },
+        { id: 3, appId: 0, targetAppId: 7, kind: 2, enable: true },
+      ],
+      nameOf,
+    );
+    expect(rows).toHaveLength(3);
+    expect(rows[0]).toMatchObject({ id: 1, appName: 'OrderService', targetName: '#99', kind: 0, enable: false });
+    expect(rows[2]).toMatchObject({ appName: '—', targetName: 'OrderService' });
+  });
+});
+
+describe('F15 validateAppQuoteForm / appQuoteBody', () => {
+  it('未选应用/自依赖/负类型给出视线内错误', () => {
+    expect(validateAppQuoteForm({ appId: 0, targetAppId: 9, kind: 0, enable: true })).toContain('依赖方');
+    expect(validateAppQuoteForm({ appId: 7, targetAppId: 0, kind: 0, enable: true })).toContain('被依赖');
+    expect(validateAppQuoteForm({ appId: 7, targetAppId: 7, kind: 0, enable: true })).toContain('自身');
+    expect(validateAppQuoteForm({ appId: 7, targetAppId: 9, kind: -1, enable: true })).toContain('依赖类型');
+    expect(validateAppQuoteForm({ appId: 7, targetAppId: 9, kind: 0, enable: true })).toBe('');
+  });
+
+  it('body 为 PascalCase 全字段（Enable 真布尔，F13-1 同规）', () => {
+    expect(appQuoteBody({ appId: 7, targetAppId: 9, kind: 1, enable: true })).toEqual({
+      AppId: 7, TargetAppId: 9, Kind: 1, Enable: true,
+    });
+    expect(typeof appQuoteBody({ appId: 7, targetAppId: 9, kind: 1, enable: false }).Enable).toBe('boolean');
+  });
+});
+
+describe('F15 AppQuote CRUD · 路由与请求体', () => {
+  it('fetchAppQuotes：GET /Configs/AppQuote，appId/targetAppId 过滤进 params', async () => {
+    const calls: unknown[] = [];
+    const req = routingStub({
+      '/Configs/AppQuote': (opt) => {
+        calls.push(opt);
+        return { data: [{ Id: 2, AppId: 7, TargetAppId: 9, Kind: 1, Enable: true }] };
+      },
+    });
+    const rows = await fetchAppQuotes(req, { appId: 7 });
+    expect(rows).toHaveLength(1);
+    expect(rows?.[0]).toMatchObject({ id: 2, appId: 7, targetAppId: 9, enable: true });
+    expect((calls[0] as { params: Record<string, unknown> }).params.appId).toBe(7);
+    await fetchAppQuotes(req, { targetAppId: 9 });
+    expect((calls[1] as { params: Record<string, unknown> }).params.targetAppId).toBe(9);
+  });
+
+  it('create/save 走 POST 与 PUT /{id}（PascalCase 体）；delete 走 DELETE /{id}', async () => {
+    const calls: unknown[] = [];
+    const req = routingStub({
+      '/Configs/AppQuote': (opt) => {
+        calls.push(opt);
+        return { code: 0, data: 5 };
+      },
+      '/Configs/AppQuote/2': (opt) => {
+        calls.push(opt);
+        return { code: 0 };
+      },
+    });
+    const form = { appId: 7, targetAppId: 9, kind: 1, enable: true };
+    const c = await createAppQuote(req, form);
+    expect(c.ok).toBe(true);
+    expect((calls[0] as { method: string }).method).toBe('POST');
+    const s = await saveAppQuote(req, 2, form);
+    expect(s.ok).toBe(true);
+    expect((calls[1] as { method: string }).method).toBe('PUT');
+    const d = await deleteAppQuote(req, 2);
+    expect(d.ok).toBe(true);
+    expect((calls[2] as { method: string }).method).toBe('DELETE');
+  });
+
+  it('save/delete 缺 id 不发请求；取数失败返回 null', async () => {
+    const req = routingStub({});
+    expect((await saveAppQuote(req, 0, { appId: 7, targetAppId: 9, kind: 0, enable: true })).ok).toBe(false);
+    expect((await deleteAppQuote(req, 0)).ok).toBe(false);
+    const bad: Req = async () => {
+      throw new Error('net');
+    };
+    expect(await fetchAppQuotes(bad, { appId: 7 })).toBeNull();
   });
 });

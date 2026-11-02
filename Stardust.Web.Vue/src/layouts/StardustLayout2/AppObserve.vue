@@ -5,6 +5,7 @@
  * 性能曲线只在当前结果能确定唯一实例时绘制内存和 CPU 走势。
  */
 import { computed, ref, watch } from 'vue';
+import { RouterLink } from 'vue-router';
 import { request } from '@newlifex/cube-vue/core/utils/request';
 import type { Req } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
 import Btn from './Btn.vue';
@@ -435,7 +436,17 @@ function enableText(v: boolean | null): string {
                 {{ r.creator || '—' }}
               </td>
               <td :class="[TD, 'font-mono text-[11px] text-[var(--el-text-color-secondary)]']">
-                {{ r.traceId || '—' }}
+                <RouterLink
+                  v-if="r.traceId"
+                  :to="`/trace/${r.traceId}`"
+                  class="text-[var(--el-color-primary)] hover:underline"
+                  data-spec="observe-trace-link"
+                >
+                  {{ r.traceId }}
+                </RouterLink>
+                <template v-else>
+                  —
+                </template>
               </td>
             </tr>
           </tbody>
@@ -515,7 +526,17 @@ function enableText(v: boolean | null): string {
                 {{ r.result || '—' }}
               </td>
               <td :class="[TD, 'font-mono text-[11px] text-[var(--el-text-color-secondary)]']">
-                {{ r.traceId || '—' }}
+                <RouterLink
+                  v-if="r.traceId"
+                  :to="`/trace/${r.traceId}`"
+                  class="text-[var(--el-color-primary)] hover:underline"
+                  data-spec="observe-trace-link"
+                >
+                  {{ r.traceId }}
+                </RouterLink>
+                <template v-else>
+                  —
+                </template>
               </td>
             </tr>
           </tbody>

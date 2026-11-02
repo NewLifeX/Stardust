@@ -1,5 +1,5 @@
 // 应用页纯逻辑单测（Vitest）
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   deriveAppStatus,
   aggregateKpis,
@@ -14,7 +14,9 @@ import {
   runStatusStyle,
   normalizeRunStatus,
   servicesGroups,
+  updatePipeline,
   type AppListItem,
+  type PipelineRow,
 } from './appsModel';
 
 describe('deriveAppStatus · 应用运行态推导', () => {
@@ -360,5 +362,40 @@ describe('servicesGroups · 服务提供/消费分组', () => {
     const empty = servicesGroups([]);
     expect(empty.provide).toHaveLength(0);
     expect(empty.consume).toHaveLength(0);
+  });
+});
+
+describe('updatePipeline · 编辑流水线（PUT /{id} 部分更新）', () => {
+  const row: PipelineRow = { id: 9, name: 'build-main', deployId: 4 };
+
+  function stub() {
+    // request 封装返回 Cube JSON 体本身：{code, message, data}
+    return vi.fn(async (_o: unknown) => ({ code: 0, data: null, message: '操作成功' }));
+  }
+
+  it('主键在路径、body 只含表单字段（不含 Id/Name/DeployId）', async () => {
+    const req = stub();
+    const r = await updatePipeline(req as never, row, { branch: 'dev', buildNodeId: 3, autoDeploy: true, enable: false });
+    expect(r.ok).toBe(true);
+    expect(req).toHaveBeenCalledTimes(1);
+    const opts = req.mock.calls[0][0] as { url: string; method: string; data: Record<string, unknown> };
+    expect(opts.url).toBe('/Deployment/AppPipeline/9');
+    expect(opts.method).toBe('PUT');
+    expect(opts.data).toEqual({ Branch: 'dev', BuildNodeId: 3, AutoDeploy: true, Enable: false });
+  });
+
+  it('缺少 id 时直接失败，不发请求', async () => {
+    const req = stub();
+    const r = await updatePipeline(req as never, { name: 'x' }, { enable: true });
+    expect(r.ok).toBe(false);
+    expect(r.message).toContain('流水线编号');
+    expect(req).not.toHaveBeenCalled();
+  });
+
+  it('后端 code!=0 时透传失败文案', async () => {
+    const req = vi.fn(async (_o: unknown) => ({ code: 500, message: '流水线不存在' }));
+    const r = await updatePipeline(req as never, row, { enable: true });
+    expect(r.ok).toBe(false);
+    expect(r.message).toBe('流水线不存在');
   });
 });

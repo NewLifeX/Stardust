@@ -854,15 +854,14 @@ export interface PipelineEditForm {
   enable?: boolean
 }
 
-/** 编辑流水线：PUT /Deployment/AppPipeline（Cube 实体更新端点为 [HttpPut] 集合路由，已实测） */
+/** 编辑流水线：PUT /Deployment/AppPipeline/{id}（Cube 更新端点主键在路径，body 部分更新只提交表单字段；
+ *  2026-11-03 lead 用 .temp/route_probe.py 实测：PUT 集合+Id-in-body 404，PUT /{id} 200 且未提交字段保留） */
 export async function updatePipeline(request: Req, pipeline: PipelineRow, form: PipelineEditForm): Promise<{ ok: boolean; message: string }> {
+  if (!pipeline.id) return { ok: false, message: '缺少流水线编号，无法保存' }
   const res = await request({
-    url: '/Deployment/AppPipeline',
+    url: `/Deployment/AppPipeline/${pipeline.id}`,
     method: 'PUT',
     data: {
-      Id: pipeline.id,
-      Name: pipeline.name,
-      DeployId: pipeline.deployId,
       Branch: form.branch ?? '',
       BuildNodeId: Number(form.buildNodeId ?? 0),
       AutoDeploy: Boolean(form.autoDeploy),

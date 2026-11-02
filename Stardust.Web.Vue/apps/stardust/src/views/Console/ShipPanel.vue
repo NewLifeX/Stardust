@@ -1,15 +1,15 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 /**
  * ShipPanel：部署内容容器，/ship 页（不传 section，纵向显示全部）与应用工作台的版本、节点、部署历史、流水线四个页签（传 section，只渲染一块）共用。
  * 概览页签（传 overview）：只渲染版本条与「需关注事项」（buildAttention 算出，点按钮发 go(tab)），不渲染四个操作块。
  * 2026-10-28 起退化为容器：取数、刷新、操作反馈、应用版本、节点操作、选中运行都在 useDeployData（有单测），
  * 展示拆成五个只收 props 的组件（各有 story 与 CT）：
- *  1. DeployVersionBar    当前生效版本与刷新按钮
- *  2. DeployVersionList   版本列表，可「应用此版本」（UseVersion）
- *  3. DeployNodes         部署节点，对单个节点安装、启动、重启、停止、卸载（Operate）
+ *  1. DeployVersionBar    当前生效版本与刷新按钮（F06：编辑发布集 / 同步应用入口）
+ *  2. DeployVersionList   版本列表，可「应用此版本」（UseVersion）；F05 上传新版本
+ *  3. DeployNodes         部署节点，单个/批量远程操作（F07），新增/编辑/删除
  *  4. DeployHistory       部署历史（AppDeployHistory，只是下发记录，不是节点执行结果）
- *  5. DeployPipelineRuns  流水线运行与按节点的部署结果
- * 容器只做三件事：把状态算成 props 传下去、在点击后用 openGuard 做二次确认、保留加载中/失败/没有部署集/操作反馈四块。
+ *  5. DeployPipelineRuns  流水线运行与按节点的部署结果（F09：5s 轮询在 useDeployData，一键回滚入口）
+ * 容器只做：把状态算成 props 传下去、点击后用 openGuard 做二次确认、管理 F06/F07/F08 的抽屉表单与取数回填。
  */
 import { computed, ref, watch } from 'vue';
 import { request } from '@newlifex/cube-vue/core/utils/request';
@@ -19,11 +19,13 @@ import Btn from '@/layouts/StardustLayout2/Btn.vue';
 import Card from '@/layouts/StardustLayout2/Card.vue';
 import KIcon from '@/layouts/StardustLayout2/KIcon.vue';
 import BuildNodes from '@/layouts/StardustLayout2/BuildNodes.vue';
+import DeployEditDrawer from '@/layouts/StardustLayout2/DeployEditDrawer.vue';
 import DeployHistory from '@/layouts/StardustLayout2/DeployHistory.vue';
 import DeployNodes from '@/layouts/StardustLayout2/DeployNodes.vue';
 import DeployPipelineRuns from '@/layouts/StardustLayout2/DeployPipelineRuns.vue';
 import DeployVersionBar from '@/layouts/StardustLayout2/DeployVersionBar.vue';
 import DeployVersionList from '@/layouts/StardustLayout2/DeployVersionList.vue';
+import NodeFormDrawer from '@/layouts/StardustLayout2/NodeFormDrawer.vue';
 import AttentionList from '@/layouts/StardustLayout2/AttentionList.vue';
 import { openGuard } from '@/layouts/StardustLayout2/ui.store';
 import type { DeploySection } from '@/layouts/StardustLayout2/workbench.logic';
@@ -45,6 +47,15 @@ import {
 import type { NodeActionInfo, Notice, ShipNode, VersionOption } from '@/layouts/StardustLayout2/ship.logic';
 import { fetchBuildNodes, runBuildUpload, runPackageUpload } from '@/layouts/StardustLayout2/buildNodes.logic';
 import type { BuildNodeAct, BuildNodeRow } from '@/layouts/StardustLayout2/buildNodes.logic';
+import {
+  fetchBuildNodeDetail,
+  fetchDeployDetail,
+  fetchDeployNodeDetail,
+  fetchNodeOptions,
+  rollbackCandidates,
+  rollbackNotice,
+} from '@/layouts/StardustLayout2/deploy.logic';
+import type { BuildNodeForm, DeployEditModel, DeployNodeForm, NodeOption } from '@/layouts/StardustLayout2/deploy.logic';
 
 // section：只渲染哪一块（versions / nodes / history / pipeline）；不传表示纵向显示全部（/ship 整页用，停点 20 随该页一起去掉）
 // overview：概览页签，只渲染版本条与需关注事项；instances 是在线实例数，由页面传入（未知不传）
@@ -79,6 +90,14 @@ const {
   applyVersion,
   operate,
   selectRun,
+  saveDeployEdit,
+  syncApp,
+  batchOperate,
+  uploadNewVersion,
+  saveNode,
+  removeNode,
+  saveBuildNode,
+  removeBuildNode,
 } = useDeployData({
   appId: () => props.appId,
   appName: () => props.appName,
@@ -114,6 +133,164 @@ function askOperate(n: ShipNode, a: NodeActionInfo): void {
   if (busyKey.value) return;
   const notice = operateNotice(a, n);
   openGuard(`${n.name} · ${a.label}。${notice.text}`, () => operate(n, a.act));
+}
+
+// ---------- F07 批量远程操作：二次确认写明对象与后果 ----------
+
+function askBatch(a: NodeActionInfo, ids: number[]): void {
+  if (busyKey.value || ids.length === 0) return;
+  const names = nodes.value.filter((n) => ids.includes(n.id)).map((n) => n.name);
+  const who = names.length > 3 ? `${names.slice(0, 3).join('、')} 等 ${names.length} 个节点` : names.join('、');
+  const notice = a.danger
+    ? `「${a.label}」会让这些节点上的应用${a.act === 'uninstall' ? '卸载' : '停止运行'}，且会停用节点；请确认没有正在服务的使用者。`
+    : `将对 ${who} 批量下发「${a.label}」，命令发出后不等节点回包，是否生效请看节点版本与部署历史。`;
+  openGuard(`批量 ${a.label} · ${who}。${notice}`, () => batchOperate(a.act, ids, names));
+}
+
+// ---------- F06 部署集编辑 Drawer + 同步应用 ----------
+
+const deployDrawer = ref<{ open: boolean; loading: boolean; model: DeployEditModel | null }>({ open: false, loading: false, model: null });
+const deploySaving = computed(() => busyKey.value === 'deploy-save');
+const syncing = computed(() => busyKey.value === 'deploy-sync');
+
+async function askEditDeploy(): Promise<void> {
+  const id = deploy.value?.id ?? 0;
+  if (!id || busyKey.value) return;
+  deployDrawer.value = { open: true, loading: true, model: null };
+  const m = await fetchDeployDetail(request, id);
+  if (!deployDrawer.value.open) return;
+  if (!m) {
+    deployDrawer.value = { open: false, loading: false, model: null };
+    toast('部署集详情加载失败，请稍后重试', 'err');
+    return;
+  }
+  deployDrawer.value.model = m;
+  deployDrawer.value.loading = false;
+}
+
+function onDeploySubmit(m: DeployEditModel): void {
+  void saveDeployEdit(m).then((ok) => {
+    if (ok) deployDrawer.value.open = false;
+  });
+}
+
+function onSync(): void {
+  if (busyKey.value) return;
+  // SyncApp 是从应用注册表补齐部署集（幂等、无删除），不需要危险确认；进行中状态在版本条按钮上
+  void syncApp();
+}
+
+// ---------- F07/F08 节点表单 Drawer（部署 / 编译共用 NodeFormDrawer） ----------
+
+type NodeKind = 'deploy' | 'build';
+const nodeOptions = ref<NodeOption[]>([]);
+const nodeOptionsLoading = ref(false);
+const nodeDrawer = ref<{
+  open: boolean;
+  kind: NodeKind;
+  id: number;
+  title: string;
+  sub: string;
+  initial: DeployNodeForm | BuildNodeForm | null;
+  loading: boolean;
+}>({ open: false, kind: 'deploy', id: 0, title: '', sub: '', initial: null, loading: false });
+const nodeSaving = computed(() => busyKey.value.startsWith('node') || busyKey.value.startsWith('bnode'));
+
+async function loadNodeOptions(): Promise<void> {
+  if (nodeOptions.value.length || nodeOptionsLoading.value) return;
+  nodeOptionsLoading.value = true;
+  const list = await fetchNodeOptions(request);
+  nodeOptionsLoading.value = false;
+  if (list === null) {
+    toast('物理节点列表加载失败，无法选择节点', 'err');
+    return;
+  }
+  nodeOptions.value = list;
+}
+
+async function askCreateNode(kind: NodeKind): Promise<void> {
+  if (busyKey.value) return;
+  nodeDrawer.value = {
+    open: true, kind, id: 0,
+    title: kind === 'deploy' ? '新增部署节点' : '新增编译节点',
+    sub: `部署集 ${props.appName}`,
+    initial: null, loading: false,
+  };
+  void loadNodeOptions();
+}
+
+async function askEditNode(n: ShipNode): Promise<void> {
+  if (busyKey.value) return;
+  nodeDrawer.value = { open: true, kind: 'deploy', id: n.id, title: `编辑部署节点 · ${n.name}`, sub: `IP ${n.ip || '—'} · 编号 ${n.id}`, initial: null, loading: true };
+  void loadNodeOptions();
+  const m = await fetchDeployNodeDetail(request, n.id);
+  if (!nodeDrawer.value.open || nodeDrawer.value.id !== n.id) return;
+  if (!m) {
+    nodeDrawer.value.open = false;
+    toast(`部署节点「${n.name}」详情加载失败，请稍后重试`, 'err');
+    return;
+  }
+  nodeDrawer.value.initial = m;
+  nodeDrawer.value.loading = false;
+}
+
+async function askEditBuildNode(r: BuildNodeRow): Promise<void> {
+  if (busyKey.value) return;
+  nodeDrawer.value = { open: true, kind: 'build', id: r.id, title: `编辑编译节点 · ${r.nodeName}`, sub: `IP ${r.nodeIp || '—'} · 编号 ${r.id}`, initial: null, loading: true };
+  void loadNodeOptions();
+  const m = await fetchBuildNodeDetail(request, r.id);
+  if (!nodeDrawer.value.open || nodeDrawer.value.id !== r.id) return;
+  if (!m) {
+    nodeDrawer.value.open = false;
+    toast(`编译节点「${r.nodeName}」详情加载失败，请稍后重试`, 'err');
+    return;
+  }
+  nodeDrawer.value.initial = m;
+  nodeDrawer.value.loading = false;
+}
+
+function onNodeSubmit(form: DeployNodeForm | BuildNodeForm): void {
+  const id = nodeDrawer.value.id || undefined;
+  const call = nodeDrawer.value.kind === 'deploy'
+    ? saveNode(form as DeployNodeForm, id)
+    : saveBuildNode(form as BuildNodeForm, id);
+  void call.then((ok) => {
+    if (ok) nodeDrawer.value.open = false;
+  });
+}
+
+function askRemoveNode(n: ShipNode): void {
+  if (busyKey.value) return;
+  openGuard(`删除部署节点 ${n.name}（${n.ip || '—'}）。只把节点移出本部署集，不影响节点上的其它部署；正在运行的应用不会被停止。确认？`, () => removeNode(n.id, n.name));
+}
+
+function askRemoveBuildNode(r: BuildNodeRow): void {
+  if (busyKey.value) return;
+  openGuard(`删除编译节点 ${r.nodeName}（${r.nodeIp || '—'}）。删除后该节点不再参与本部署集的编译打包；确认？`, () => removeBuildNode(r.id, r.nodeName));
+}
+
+// ---------- F05 上传新版本 ----------
+
+function onUpload(file: File): void {
+  if (busyKey.value) return;
+  void uploadNewVersion(file);
+}
+
+// ---------- F09 一键回滚：候选版本 + Guard 说明 ----------
+
+const rollbackList = computed(() => rollbackCandidates(versions.value, deploy.value?.version ?? ''));
+const rollbackBusy = computed(() => busyKey.value.startsWith('ver:'));
+const rollbackDisabled = computed(() => rollbackBusy.value || rollbackList.value.length === 0);
+const rollbackTitle = computed(() => {
+  if (rollbackList.value.length === 0) return '没有可回滚的版本（需要除当前生效版本之外的可用版本）';
+  return `回滚到上一个版本 ${rollbackList.value[0].version}`;
+});
+
+function askRollback(): void {
+  if (rollbackDisabled.value) return;
+  const target = rollbackList.value[0];
+  const notice = rollbackNotice(target, !!deploy.value?.autoPublish, enabledNodes.value.length);
+  openGuard(`${props.appName} 一键回滚。${notice}`, () => applyVersion(target as VersionOption));
 }
 
 // ---------- 编译节点（子 tab） ----------
@@ -291,7 +468,10 @@ const attention = computed(() =>
         :nodes-failed="nodesFailed"
         :refreshing="refreshing"
         :busy="!!busyKey"
+        :syncing="syncing"
         @refresh="onRefresh"
+        @edit="askEditDeploy"
+        @sync="onSync"
       />
 
       <div
@@ -306,7 +486,9 @@ const attention = computed(() =>
             :versions-failed="versionsFailed"
             :notice="versionNotice"
             :busy-key="busyKey"
+            :uploading="busyKey === 'upload'"
             @apply="askApply"
+            @upload="onUpload"
           />
         </div>
 
@@ -349,6 +531,10 @@ const attention = computed(() =>
             :busy-key="busyKey"
             :version-tags="versionTags"
             @operate="askOperate"
+            @batch="askBatch"
+            @create="askCreateNode('deploy')"
+            @edit="askEditNode"
+            @remove="askRemoveNode"
           />
           <BuildNodes
             v-else
@@ -356,6 +542,9 @@ const attention = computed(() =>
             :failed="buildFailed"
             :busy-key="buildBusyKey"
             @operate="askBuildOperate"
+            @create="askCreateNode('build')"
+            @edit="askEditBuildNode"
+            @remove="askRemoveBuildNode"
           />
         </div>
 
@@ -372,11 +561,38 @@ const attention = computed(() =>
             :selected-run-id="selectedRunId"
             :stages="stages"
             :view="view"
+            :rollback-disabled="rollbackDisabled"
+            :rollback-title="rollbackTitle"
+            :rolling-back="rollbackBusy"
             @select="selectRun"
+            @rollback="askRollback"
           />
         </div>
       </div>
     </template>
+
+    <!-- F06 部署集编辑抽屉 -->
+    <DeployEditDrawer
+      :open="deployDrawer.open"
+      :initial="deployDrawer.model"
+      :busy="deploySaving || deployDrawer.loading"
+      @close="deployDrawer.open = false"
+      @submit="onDeploySubmit"
+    />
+
+    <!-- F07/F08 部署节点 / 编译节点表单抽屉 -->
+    <NodeFormDrawer
+      :open="nodeDrawer.open"
+      :kind="nodeDrawer.kind"
+      :initial="nodeDrawer.initial"
+      :title="nodeDrawer.title"
+      :sub="nodeDrawer.sub"
+      :node-options="nodeOptions"
+      :nodes-loading="nodeOptionsLoading"
+      :busy="nodeSaving || nodeDrawer.loading"
+      @close="nodeDrawer.open = false"
+      @submit="onNodeSubmit"
+    />
 
     <!-- 概览：版本条之后是需关注事项；加载中不显示，加载失败时照常显示（部署相关项为待接入，实例数不依赖部署集） -->
     <AttentionList

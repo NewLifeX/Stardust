@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 最小化 Vitest 配置（仅用于单元 / 组件测试）
  *
  * 为什么不用项目根 vite.config.ts？
@@ -100,23 +100,26 @@ export default defineConfig({
         'src/layouts/StardustLayout2/CommandPalette/usePaletteState.ts',
         'src/layouts/StardustLayout2/ship.logic.ts',
         'src/layouts/StardustLayout2/projectMember.logic.ts',
+        'src/layouts/StardustLayout2/appTracer.logic.ts',
+        'src/layouts/StardustLayout2/daystat.logic.ts',
+        'src/layouts/StardustLayout2/deploy.logic.ts',
+        'src/layouts/StardustLayout2/appConfig.logic.ts',
+        'src/layouts/StardustLayout2/configCenter.logic.ts',
+        'src/layouts/StardustLayout2/apps.logic.ts',
+        'src/layouts/StardustLayout2/mesh.logic.ts',
+        'src/layouts/StardustLayout2/appInstances.logic.ts',
         'src/stores/contextParams.logic.ts',
         'apps/stardust/src/views/Stardust/appsModel.ts',
         'apps/stardust/src/views/Stardust/nodes.model.ts',
       ],
       thresholds: {
-        // 门槛 = 当前真实基线（statements 50.75 / branches 37.34 / functions 62.76 / lines 50.17），
+        // 门槛 = 当前真实基线（纳入 appConfig/configCenter/apps/mesh/appInstances.logic 后 2026-11-03 实测：
+        // statements 80.31 / branches 67.65 / functions 87.15 / lines 82.15），
         // 略留余量但卡住「覆盖率倒退」。
-        //
-        // 为什么不是 Cube web 侧的 80/75/80/80？
-        //   本项目的 appsModel.ts（28%）、nodes.model.ts（33%）是历史遗留的大文件，
-        //   虽有测试但远未覆盖全部导出函数；而 StardustLayout2 下的纯逻辑模块已达 100%/98.57%。
-        //   直接照搬 80 门槛会让 test:coverage 一跑就红，失去门禁意义。
-        //   现状 → 目标 80 的补测计划记入 TODO.md，逐步提升并同步上调门槛。
-        statements: 50,
-        branches: 37,
-        functions: 62,
-        lines: 50,
+        statements: 80,
+        branches: 67,
+        functions: 87,
+        lines: 82,
       },
       exclude: [
         'node_modules/',

@@ -33,3 +33,11 @@ test('请求失败时显示失败，不伪装成空表', async ({ page }) => {
   await openStory(page, 'AppObserve/Failed');
   await expect(page.locator('[data-spec="observe-failed"]')).toContainText('注册加载失败');
 });
+
+test('F14 深链：历史 TraceId 是到 /trace/:id 的链接，无值仍是 —', async ({ page }) => {
+  await openStory(page, 'AppObserve/History');
+  const links = page.locator('[data-spec="observe-trace-link"]');
+  await expect(links).toHaveCount(1);
+  await expect(links.first()).toHaveAttribute('href', '/trace/abc');
+  await expect(links.first()).toHaveText('abc');
+});

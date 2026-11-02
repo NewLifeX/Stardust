@@ -8,14 +8,21 @@
 //  - 回滚：POST /Configs/ConfigHistory/Rollback?id=    （仅 Action=Publish 的历史可回滚）
 // 在线实例数：GET /Registry/AppOnline?appId=
 //
-// 后端草稿模型（ConfigData 实体）：Value 是生效值，NewValue 是草稿值；Version 是生效版本，
-// NewVersion 是草稿版本；NewStatus 为 [[Deleted]] 表示待删除。AppConfig.Version < NextVersion
-// 即有待发布。取数失败返回 null/0，由页面显示「加载失败」，不造数据。
+// 后端草稿模型（ConfigData 实体 + ConfigDataController.OnUpdate/OnDelete，2026-11-03 回读源码）：
+// Value 是生效值，NewValue 是草稿值；Version 是生效版本，NewVersion 是草稿版本；
+// NewStatus 为 [[Deleted]] 表示待删除。AppConfig.Version < NextVersion 即有待发布。取数失败返回 null/0，
+// 由页面显示「加载失败」，不造数据。
 //
-// 未接入（后端没有对应入口或未在本层验证）：就地编辑写草稿（旧配置中心也把「保存草稿」标为
-// 待接入）、放弃草稿（后端没有丢弃草稿的接口）、推送进度（Publish 只返回通知的应用数）。
+// 写入语义（源码 ConfigDataController.OnUpdate/OnDelete）：
+//  - 已发布行（Version>0）：PUT 改 Key/Scope/Value 会被后端拒绝（400 文案），只能写 NewValue 草稿
+//    （后端自动 AcquireNewVersion）；Enable 翻转会转成 NewStatus 启用/禁用草稿——因此 body 里
+//    Enable 只在值变化时才提交，避免无谓的 NewStatus 变更；
+//  - 未发布行（Version==0）：Key/Scope/Value 可直接改；
+//  - DELETE：未发布真删；已发布不删行，改标 NewStatus=[[Deleted]]（发布后生效）。
+// 放弃草稿（后端没有丢弃草稿的接口）、推送进度（Publish 只返回通知的应用数）仍标待接入。
 import { okRes } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
-import type { Req } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
+import type { Req, ReqOptions } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
+import { requestFailText } from './deploy.logic.ts';
 
 type Rec = Record<string, unknown>;
 
@@ -70,6 +77,8 @@ export interface ConfigItem {
   value: string;
   /** 草稿值（NewValue），无草稿时与 value 相同 */
   newValue: string;
+  /** 启用状态（Enable；已发布行的启用变更走 NewStatus 草稿） */
+  enable: boolean;
   state: ConfigItemState;
   /** 有待发布改动（newVersion > 生效版本） */
   pending: boolean;
@@ -149,6 +158,7 @@ export function toConfigItems(rows: Rec[], publishedVersion: number): ConfigItem
       value,
       // 草稿值：有待发布改动且是新增行时，生效值为空，草稿值在 NewValue
       newValue: str(pick(r, 'NewValue', 'newValue')),
+      enable: bool(pick(r, 'Enable', 'enable')),
       state,
       pending: state !== 'published',
     };
@@ -231,5 +241,111 @@ export async function rollbackHistory(request: Req, historyId: number): Promise<
     return { ok: r.ok, message: r.ok ? r.message || '已回滚' : r.message || '回滚失败，请到配置中心核对' };
   } catch (e) {
     return { ok: false, message: e instanceof Error && e.message ? e.message : '请求失败' };
+  }
+}
+
+// ---------- F10 配置项就地编辑（ConfigData CRUD + SyncApp） ----------
+
+/** 配置项编辑表单。published 行的 Key/Scope 只读、Value 只读，改动写进 NewValue */
+export interface ConfigItemForm {
+  key: string;
+  scope: string;
+  /** 未发布行的直接值；已发布行只读展示 */
+  value: string;
+  /** 已发布行的草稿值 */
+  newValue: string;
+  enable: boolean;
+  remark: string;
+}
+
+export interface ConfigItemEditTarget {
+  id: number;
+  /** 该行是否已发布（Version>0） */
+  published: boolean;
+  enable: boolean;
+}
+
+/** 表单校验：Key 必填；已发布行的 Key/Scope 不可改（后端也会拒绝，这里前置拦） */
+export function validateConfigItemForm(m: ConfigItemForm, published: boolean, original?: { key: string; scope: string }): string {
+  if (!m.key.trim()) return '配置项名称（Key）必填';
+  if (published && original && (m.key.trim() !== original.key || m.scope.trim() !== original.scope)) {
+    return '已发布的配置项不能修改名称与作用域，请新增一条配置';
+  }
+  return '';
+}
+
+/** PUT body 按发布态分支（源码语义：已发布只动草稿字段，Enable 变化才提交） */
+export function configItemPutBody(m: ConfigItemForm, published: boolean, originalEnable: boolean): Record<string, unknown> {
+  if (published) {
+    const body: Record<string, unknown> = { NewValue: m.newValue, Remark: m.remark };
+    if (m.enable !== originalEnable) body.Enable = m.enable;
+    return body;
+  }
+  return { Key: m.key.trim(), Scope: m.scope.trim(), Value: m.value, Enable: m.enable, Remark: m.remark };
+}
+
+/** 保存配置项：PUT /Configs/ConfigData/{id}（部分更新，主键在路径） */
+export async function saveConfigItem(
+  request: Req,
+  target: ConfigItemEditTarget,
+  m: ConfigItemForm,
+): Promise<{ ok: boolean; message: string }> {
+  if (!target.id || target.id <= 0) return { ok: false, message: '缺少配置项编号' };
+  try {
+    const res = await request({
+      url: `/Configs/ConfigData/${target.id}`,
+      method: 'PUT',
+      data: configItemPutBody(m, target.published, target.enable),
+    } as ReqOptions & { data: Record<string, unknown> });
+    const r = okRes(res);
+    return { ok: r.ok, message: r.ok ? '配置项已保存' : r.message || '配置项保存失败' };
+  } catch (e) {
+    return { ok: false, message: requestFailText(e, '配置项保存失败') };
+  }
+}
+
+/** 新增配置项：POST /Configs/ConfigData（ConfigId 必带；后端 OnInsert 自动分配 NewVersion） */
+export async function createConfigItem(
+  request: Req,
+  configId: number,
+  m: ConfigItemForm,
+): Promise<{ ok: boolean; message: string }> {
+  if (!configId || configId <= 0) return { ok: false, message: '缺少应用配置编号' };
+  try {
+    const res = await request({
+      url: '/Configs/ConfigData',
+      method: 'POST',
+      data: { ConfigId: configId, Key: m.key.trim(), Scope: m.scope.trim(), Value: m.value, Enable: m.enable, Remark: m.remark },
+    } as ReqOptions & { data: Record<string, unknown> });
+    const r = okRes(res);
+    return { ok: r.ok, message: r.ok ? '配置项已新增' : r.message || '配置项新增失败' };
+  } catch (e) {
+    return { ok: false, message: requestFailText(e, '配置项新增失败') };
+  }
+}
+
+/**
+ * 删除配置项：DELETE /Configs/ConfigData/{id}。
+ * 未发布（Version==0）真删；已发布后端改标 [[Deleted]]（前端文案按 isPublished 区分说明）。
+ */
+export async function deleteConfigItem(request: Req, id: number): Promise<{ ok: boolean; message: string }> {
+  if (!id || id <= 0) return { ok: false, message: '缺少配置项编号' };
+  try {
+    const res = await request({ url: `/Configs/ConfigData/${id}`, method: 'DELETE' });
+    const r = okRes(res);
+    return { ok: r.ok, message: r.ok ? '配置项已删除' : r.message || '配置项删除失败' };
+  } catch (e) {
+    return { ok: false, message: requestFailText(e, '配置项删除失败') };
+  }
+}
+
+/** 同步应用：POST /Configs/AppConfig/SyncApp（把注册表应用同步成 AppConfig，全局动作） */
+export async function syncAppConfig(request: Req): Promise<{ ok: boolean; message: string }> {
+  try {
+    const res = await request({ url: '/Configs/AppConfig/SyncApp', method: 'POST' });
+    const r = okRes(res);
+    return { ok: r.ok, message: r.ok ? r.message || '同步完成' : r.message || '同步失败' };
+  } catch (e) {
+    return { ok: false, message: requestFailText(e, '同步失败') };
   }
 }

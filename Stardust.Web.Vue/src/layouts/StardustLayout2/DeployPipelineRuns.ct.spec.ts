@@ -1,4 +1,4 @@
-﻿import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 const GALLERY = process.env.CT_BASE_URL || 'http://127.0.0.1:5190/';
 
@@ -18,7 +18,8 @@ test('DeployPipelineRuns 默认：选中运行的状态标签、说明、运行�
   await expect(page.locator('[data-spec="ship-pipeline"] h3')).toContainText('成功');
   await expect(page.locator('[data-spec="ship-pipeline"]')).toContainText('运行 #7 按节点的部署步骤');
   await expect(page.locator('[data-spec="ship-pipeline"]')).toContainText('一键回滚');
-  await expect(page.locator('[data-spec="ship-pipeline"]')).toContainText('待接入');
+  // F09：回滚已是真实按钮，旧「待接入」占位不再出现
+  await expect(page.locator('[data-spec="ship-pipeline"]')).not.toContainText('待接入');
   await expect(page.locator('[data-spec="ship-allskipped"]')).toHaveCount(0);
 
   await expect(page.locator(RUN)).toHaveCount(3);
@@ -31,6 +32,25 @@ test('DeployPipelineRuns 默认：选中运行的状态标签、说明、运行�
   await expect(first).toContainText('成功');
   await expect(page.locator(RUN).nth(1)).toContainText('失败');
   await expect(page.locator(RUN).nth(2)).toContainText('已取消');
+});
+
+// F09：一键回滚是头部真实按钮：可点、title 带候选版本；置灰时 title 写原因；回滚中禁用旋转
+test('DeployPipelineRuns 一键回滚按钮：可点、置灰原因、回滚中状态', async ({ page }) => {
+  const BTN = '[data-spec="ship-rollback"]';
+  await openStory(page, 'DeployPipelineRuns/Default');
+  const btn = page.locator(BTN);
+  await expect(btn).toBeEnabled();
+  await expect(btn).toContainText('一键回滚');
+  await expect(btn).toHaveAttribute('title', '回滚到上一个版本 v1.4.1');
+
+  await openStory(page, 'DeployPipelineRuns/NoRollback');
+  await expect(btn).toBeDisabled();
+  await expect(btn).toHaveAttribute('title', '没有可回滚的版本（需要除当前生效版本之外的可用版本）');
+
+  await openStory(page, 'DeployPipelineRuns/RollingBack');
+  await expect(btn).toBeDisabled();
+  await expect(btn).toContainText('回滚中…');
+  await expect(btn.locator('.animate-spin')).toHaveCount(1);
 });
 
 test('DeployPipelineRuns 四段进度：已完成显示对勾，进行中、未开始显示序号', async ({ page }) => {

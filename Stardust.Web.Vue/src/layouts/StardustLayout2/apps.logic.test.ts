@@ -1,19 +1,27 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
   ALL_CATEGORY,
   NO_CATEGORY,
+  appCreateBody,
+  appUpdateBody,
   avatarTone,
   buildStatusByApp,
   categoryOf,
+  createApp,
+  deleteApp,
   dotToneOf,
   filterByCategory,
   formatErrorRate,
   isErrorRateHigh,
   listCategories,
   rowSubtitle,
+  saveApp,
+  setAppEnable,
   sparklinePath,
   trendPointsByApp,
+  validateAppForm,
 } from './apps.logic';
+import type { Req } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
 
 const metric = (errorRate: number) => ({ qps: 1, errorRate, p99: 10 });
 
@@ -240,5 +248,102 @@ describe('sparklinePath', () => {
     const path = sparklinePath([0, 100], 60, 20);
     // 第一个点 y=18（底部），第二个 y=2（顶部）
     expect(path).toBe('M0.0,18.0 L60.0,2.0');
+  });
+});
+
+// ==================== F12 应用 CRUD（/Registry/App） ====================
+
+describe('F12 validateAppForm / body 构造', () => {
+  it('Name 必填、建议小写、创建态禁空格', () => {
+    const base = { name: '', displayName: '', category: '', enable: true, period: 60, secret: '', remark: '' };
+    expect(validateAppForm(base, true)).toContain('必填');
+    expect(validateAppForm({ ...base, name: 'Star.Web' }, true)).toContain('小写');
+    expect(validateAppForm({ ...base, name: 'a b' }, true)).toContain('空格');
+    expect(validateAppForm({ ...base, name: 'star.web' }, true)).toBe('');
+  });
+
+  it('编辑态 Name 只读不改（不校验大小写拦截重复）', () => {
+    const base = { name: 'Star.Web', displayName: '', category: '', enable: true, period: 60, secret: '', remark: '' };
+    expect(validateAppForm(base, false)).toBe('');
+  });
+
+  it('create body：Secret 有值才带，ProjectId 有效才带', () => {
+    const m = { name: 'star.web ', displayName: ' 星尘 ', category: 'IoT', enable: false, period: 30, secret: '', remark: 'r' };
+    expect(appCreateBody(m, null)).toEqual({ Name: 'star.web', DisplayName: '星尘', Category: 'IoT', Enable: false, Period: 30, Remark: 'r' });
+    expect(appCreateBody(m, 7)).toMatchObject({ ProjectId: 7 });
+    expect(appCreateBody({ ...m, secret: 's3cret' }, 0)).toMatchObject({ Secret: 's3cret' });
+  });
+
+  it('update body：不含 Name；Secret 留空不提交', () => {
+    const m = { name: 'star.web', displayName: '星尘', category: '', enable: true, period: 60, secret: '', remark: '' };
+    const body = appUpdateBody(m) as Record<string, unknown>;
+    expect(body).not.toHaveProperty('Name');
+    expect(body).not.toHaveProperty('Secret');
+    expect(appUpdateBody({ ...m, secret: 'new' })).toMatchObject({ Secret: 'new' });
+  });
+});
+
+describe('F12 App CRUD 请求', () => {
+  const m = { name: 'star.web', displayName: '星尘', category: '', enable: true, period: 60, secret: '', remark: '' };
+  const caller = async (opt: unknown) => opt as Awaited<ReturnType<Req>>;
+
+  it('createApp：POST /Registry/App，成功带回 data.id', async () => {
+    const calls: unknown[] = [];
+    const req: Req = async (opt) => {
+      calls.push(opt);
+      return { code: 0, data: { Id: 42 } } as Awaited<ReturnType<Req>>;
+    };
+    const r = await createApp(req, m, 3);
+    expect(r).toMatchObject({ ok: true, id: 42 });
+    expect(calls[0]).toMatchObject({ url: '/Registry/App', method: 'POST' });
+  });
+
+  it('saveApp：PUT /{id} 部分更新 body 无 Name', async () => {
+    const calls: unknown[] = [];
+    const req: Req = async (opt) => {
+      calls.push(opt);
+      return { code: 0 } as Awaited<ReturnType<Req>>;
+    };
+    expect((await saveApp(req, 9, m)).ok).toBe(true);
+    expect(calls[0]).toMatchObject({ url: '/Registry/App/9', method: 'PUT' });
+    expect((calls[0] as { data: Record<string, unknown> }).data).not.toHaveProperty('Name');
+  });
+
+  it('setAppEnable：PUT /{id} 只提交 Enable', async () => {
+    const calls: unknown[] = [];
+    const req: Req = async (opt) => {
+      calls.push(opt);
+      return { code: 0, message: '操作成功' } as Awaited<ReturnType<Req>>;
+    };
+    expect((await setAppEnable(req, 9, false)).message).toBe('已停用');
+    expect(calls[0]).toEqual({ url: '/Registry/App/9', method: 'PUT', data: { Enable: false } });
+  });
+
+  it('deleteApp：DELETE /{id}；缺 id 不发请求', async () => {
+    const calls: unknown[] = [];
+    const req: Req = async (opt) => {
+      calls.push(opt);
+      return { code: 0 } as Awaited<ReturnType<Req>>;
+    };
+    expect((await deleteApp(req, 5)).ok).toBe(true);
+    expect(calls[0]).toEqual({ url: '/Registry/App/5', method: 'DELETE' });
+    const empty = async () => {
+      throw new Error('stub: 多余的请求');
+    };
+    expect((await deleteApp(empty as Req, 0)).ok).toBe(false);
+  });
+
+  it('失败 code 非 0 透传消息；网络异常透传 e.message（404 走「接口部署中」）', async () => {
+    const bad: Req = async () => ({ code: 500, message: '名称已存在' } as Awaited<ReturnType<Req>>);
+    expect(await createApp(bad, m, null)).toMatchObject({ ok: false, message: '名称已存在' });
+    const err: Req = async () => {
+      throw new Error('boom');
+    };
+    expect((await saveApp(err, 9, m)).message).toContain('boom');
+    const e404 = Object.assign(new Error('Request failed with status code 404'), { status: 404 });
+    const e404req: Req = async () => {
+      throw e404;
+    };
+    expect((await deleteApp(e404req, 5)).message).toContain('接口部署中');
   });
 });

@@ -1,4 +1,4 @@
-﻿// 发布数据组合函数单测（Vitest）：取数函数、request、时钟全部注入，不 mock 模块。
+// 发布数据组合函数单测（Vitest）：取数函数、request、时钟全部注入，不 mock 模块。
 import { describe, it, expect, vi } from 'vitest';
 import { effectScope, nextTick, ref } from 'vue';
 import { useDeployData } from './useDeployData.ts';
@@ -34,6 +34,16 @@ function baseDeps(): DeployDeps {
     fetchRunSteps: async () => [] as StepRow[],
     useVersion: async () => ({ ok: true, message: '已下发部署命令' }),
     operateNode: async (_r, _act, n) => ({ ok: true, message: `${n.name}：已下发` }),
+    saveDeploy: async () => ({ ok: true, message: '部署集已保存' }),
+    syncAppDeploy: async () => ({ ok: true, message: '成功同步[0]个应用！' }),
+    batchOperateNodes: async (_r, act, ids) => ({ ok: true, message: `批量执行[${act}]操作（${ids.length}）` }),
+    uploadVersion: async () => ({ ok: true, message: '上传成功', version: '20261103-120001' }),
+    createDeployNode: async () => ({ ok: true, message: '部署节点已添加' }),
+    updateDeployNode: async () => ({ ok: true, message: '部署节点已保存' }),
+    deleteDeployNode: async () => ({ ok: true, message: '部署节点已删除' }),
+    createBuildNode: async () => ({ ok: true, message: '编译节点已添加' }),
+    updateBuildNode: async () => ({ ok: true, message: '编译节点已保存' }),
+    deleteBuildNode: async () => ({ ok: true, message: '编译节点已删除' }),
   };
 }
 
@@ -367,5 +377,144 @@ describe('useDeployData · 销毁', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe('useDeployData · F09 运行轮询', () => {
+  function runWith(status: number): RunHistoryRow {
+    return { id: 99, status: String(status) };
+  }
+
+  it('有进行中的运行：pollMs 后静默重取，轮询链持续到无活跃运行', async () => {
+    vi.useFakeTimers();
+    try {
+      const fetchDeploy = vi.fn<DeployDeps['fetchDeploy']>(async (_r, appId) => ({ status: 'ok', deploy: dep(appId) }));
+      // 第一轮运行是 Deploying(3)，之后两轮切到 Success(4)
+      let round = 0;
+      const fetchRunHistory = vi.fn<DeployDeps['fetchRunHistory']>(async () => {
+        round++;
+        return [runWith(round <= 2 ? 3 : 4)];
+      });
+      setup({ fetchDeploy, fetchRunHistory });
+      await settle();
+      const first = fetchDeploy.mock.calls.length;
+      await vi.advanceTimersByTimeAsync(5000);
+      expect(fetchDeploy.mock.calls.length).toBeGreaterThan(first);
+      const second = fetchDeploy.mock.calls.length;
+      await vi.advanceTimersByTimeAsync(5000);
+      expect(fetchDeploy.mock.calls.length).toBeGreaterThan(second);
+      // 第三轮已是终态：再等也不再取
+      const third = fetchDeploy.mock.calls.length;
+      await vi.advanceTimersByTimeAsync(12000);
+      expect(fetchDeploy.mock.calls.length).toBe(third);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('没有活跃运行：不轮询', async () => {
+    vi.useFakeTimers();
+    try {
+      const fetchDeploy = vi.fn<DeployDeps['fetchDeploy']>(async (_r, appId) => ({ status: 'ok', deploy: dep(appId) }));
+      setup({ fetchDeploy, fetchRunHistory: async () => [runWith(4)] });
+      await settle();
+      const n = fetchDeploy.mock.calls.length;
+      await vi.advanceTimersByTimeAsync(12000);
+      expect(fetchDeploy.mock.calls.length).toBe(n);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('scope 停止后轮询取消', async () => {
+    vi.useFakeTimers();
+    try {
+      const fetchDeploy = vi.fn<DeployDeps['fetchDeploy']>(async (_r, appId) => ({ status: 'ok', deploy: dep(appId) }));
+      const s = setup({ fetchDeploy, fetchRunHistory: async () => [runWith(3)] });
+      await settle();
+      s.scope.stop();
+      const n = fetchDeploy.mock.calls.length;
+      await vi.advanceTimersByTimeAsync(12000);
+      expect(fetchDeploy.mock.calls.length).toBe(n);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe('useDeployData · F06/F07/F08 新操作', () => {
+  it('saveDeployEdit：busy + 成功反馈，返回 true', async () => {
+    const saveDeploy = vi.fn<DeployDeps['saveDeploy']>(async () => ({ ok: true, message: '部署集已保存' }));
+    const s = setup({ saveDeploy });
+    await settle();
+    const ok = await s.d.saveDeployEdit({ name: 'x', category: '', enable: true, packageName: '', autoPublish: false, multiVersion: false, repository: '', repoUserName: '', repoPassword: '', branch: '', projectPath: '', buildArgs: '', packageFilters: '', remark: '' });
+    expect(ok).toBe(true);
+    expect(s.d.busyKey.value).toBe('');
+    expect(saveDeploy.mock.calls[0][1]).toBe(10); // dep() 里 id = appId*10
+    expect(s.toasts.at(-1)?.ok).toBe(true);
+  });
+
+  it('syncApp：调 syncAppDeploy 并反馈后端文案', async () => {
+    const syncAppDeploy = vi.fn<DeployDeps['syncAppDeploy']>(async () => ({ ok: true, message: '成功同步[3]个应用！' }));
+    const s = setup({ syncAppDeploy });
+    await settle();
+    await s.d.syncApp();
+    expect(syncAppDeploy).toHaveBeenCalledTimes(1);
+    expect(s.toasts.at(-1)?.text).toContain('成功同步[3]个应用');
+  });
+
+  it('batchOperate：keys 走勾选 ids，反馈带节点名', async () => {
+    const batchOperateNodes = vi.fn<DeployDeps['batchOperateNodes']>(async (_r, _act, ids) => ({ ok: true, message: `批量执行 ${ids.length}` }));
+    const s = setup({ batchOperateNodes });
+    await settle();
+    await s.d.batchOperate('restart', [3, 5], ['n1', 'n2']);
+    expect(batchOperateNodes.mock.calls[0][2]).toEqual([3, 5]);
+    expect(s.toasts.at(-1)?.text).toContain('n1、n2');
+  });
+
+  it('batchOperate：空勾选不发请求', async () => {
+    const batchOperateNodes = vi.fn<DeployDeps['batchOperateNodes']>(async () => ({ ok: true, message: '' }));
+    const s = setup({ batchOperateNodes });
+    await settle();
+    await s.d.batchOperate('stop', [], []);
+    expect(batchOperateNodes).not.toHaveBeenCalled();
+  });
+
+  it('uploadNewVersion：busy 上传中，成功反馈带版本号', async () => {
+    const uploadVersion = vi.fn<DeployDeps['uploadVersion']>(async () => ({ ok: true, message: '上传成功', version: '20261103-120001' }));
+    const s = setup({ uploadVersion });
+    await settle();
+    const file = new File([new Uint8Array([1])], 'star.zip');
+    const ok = await s.d.uploadNewVersion(file);
+    expect(ok).toBe(true);
+    expect(uploadVersion.mock.calls[0][2]).toBe(file);
+    expect(s.toasts.at(-1)?.text).toContain('20261103-120001');
+  });
+
+  it('saveNode：id 空走新增，带 id 走更新；removeNode 走删除', async () => {
+    const createDeployNode = vi.fn<DeployDeps['createDeployNode']>(async () => ({ ok: true, message: '部署节点已添加' }));
+    const updateDeployNode = vi.fn<DeployDeps['updateDeployNode']>(async () => ({ ok: true, message: '部署节点已保存' }));
+    const deleteDeployNode = vi.fn<DeployDeps['deleteDeployNode']>(async () => ({ ok: true, message: '部署节点已删除' }));
+    const s = setup({ createDeployNode, updateDeployNode, deleteDeployNode });
+    await settle();
+    const m = { nodeId: 2, enable: true, port: 0, fileName: '', arguments: '', workingDirectory: '', userName: '', environments: '', maxMemory: 0, delay: 0, healthCheck: '', remark: '' };
+    expect(await s.d.saveNode(m)).toBe(true);
+    expect(createDeployNode).toHaveBeenCalledTimes(1);
+    expect(await s.d.saveNode(m, 12)).toBe(true);
+    expect(updateDeployNode.mock.calls[0][1]).toBe(12);
+    await s.d.removeNode(12, 'n1');
+    expect(deleteDeployNode.mock.calls[0][1]).toBe(12);
+  });
+
+  it('saveBuildNode / removeBuildNode 走编译节点 CRUD', async () => {
+    const createBuildNode = vi.fn<DeployDeps['createBuildNode']>(async () => ({ ok: true, message: '编译节点已添加' }));
+    const deleteBuildNode = vi.fn<DeployDeps['deleteBuildNode']>(async () => ({ ok: true, message: '编译节点已删除' }));
+    const s = setup({ createBuildNode, deleteBuildNode });
+    await settle();
+    const m = { nodeId: 2, enable: true, sourcePath: 'D:/src', pullCode: true, buildProject: true, packageOutput: true, uploadPackage: true, outputPath: '', remark: '' };
+    expect(await s.d.saveBuildNode(m)).toBe(true);
+    expect(createBuildNode).toHaveBeenCalledTimes(1);
+    await s.d.removeBuildNode(4, 'bn');
+    expect(deleteBuildNode.mock.calls[0][1]).toBe(4);
   });
 });

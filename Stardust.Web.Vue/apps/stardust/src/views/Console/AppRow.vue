@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 /**
  * AppRow：应用列表行，对照原型 kit-ui.jsx 的 AppRow 与 kit.css 的 .x-arow（高 52、悬停浮出快捷操作条）。
  * 纯展示：点击整行发出 open('overview')，快捷按钮发出 open('versions' | 'config' | 'logs')。
@@ -22,8 +22,16 @@ import {
 } from '@/layouts/StardustLayout2/apps.logic';
 import type { AppTab } from '@/layouts/StardustLayout2/palette.items';
 
-const props = defineProps<{ row: AppAggRow }>();
-const emit = defineEmits<{ open: [tab: AppTab] }>();
+const props = withDefaults(
+  defineProps<{
+    row: AppAggRow;
+    /** F12 批量操作：显示行首勾选框 */
+    selectable?: boolean;
+    selected?: boolean;
+  }>(),
+  { selectable: false, selected: false },
+);
+const emit = defineEmits<{ open: [tab: AppTab]; toggle: [id: number]; edit: [row: AppAggRow] }>();
 
 const name = computed(() => props.row.name ?? '');
 const title = computed(() => props.row.displayName || name.value);
@@ -51,6 +59,16 @@ const trendPath = computed(() => sparklinePath((props.row.trend ?? []).map((p) =
     @click="emit('open', 'overview')"
     @keydown.enter.self="emit('open', 'overview')"
   >
+    <input
+      v-if="props.selectable"
+      type="checkbox"
+      :checked="props.selected"
+      data-spec="app-row-check"
+      :aria-label="`选择应用 ${name}`"
+      class="h-[14px] w-[14px] flex-none accent-[var(--el-color-primary)]"
+      @click.stop
+      @change="props.row.id !== undefined && emit('toggle', props.row.id)"
+    >
     <span
       class="grid h-[26px] w-[26px] flex-none place-items-center rounded-[6px] text-[12px] font-semibold text-[var(--el-color-white)]"
       :style="{ background: avatarTone(name) }"
@@ -135,6 +153,15 @@ const trendPath = computed(() => sparklinePath((props.row.trend ?? []).map((p) =
         @click="emit('open', 'logs')"
       >
         日志
+      </Btn>
+      <!-- F12-1：编辑应用入口（AppFormDrawer 编辑态，Name 只读、Secret 留空=不修改） -->
+      <Btn
+        size="sm"
+        variant="ghost"
+        data-spec="app-row-edit"
+        @click="emit('edit', props.row)"
+      >
+        编辑
       </Btn>
     </span>
   </div>

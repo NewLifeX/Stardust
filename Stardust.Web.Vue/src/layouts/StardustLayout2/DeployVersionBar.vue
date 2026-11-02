@@ -1,8 +1,8 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 /**
  * DeployVersionBar：发布页「当前生效版本」条，对应 ShipPanel 原模板的第 1 块（2026-10-28 拆分）。
- * 纯 UI：只收 props、只发 refresh；取数与刷新状态机在 useDeployData，节点统计由 deployView.logic 的 nodeStats 算好传入。
- * 刷新按钮遵守 AGENTS.md §11：刷新中或有操作进行中时禁用，刷新中图标旋转、文案变「刷新中…」。
+ * 纯 UI：只收 props、只发 refresh/edit/sync；取数与刷新状态机在 useDeployData，节点统计由 deployView.logic 的 nodeStats 算好传入。
+ * 刷新/同步按钮遵守 AGENTS.md §11：操作中禁用，刷新中图标旋转、文案变「刷新中…」。
  */
 import Btn from './Btn.vue';
 import Card from './Card.vue';
@@ -22,9 +22,11 @@ defineProps<{
   refreshing: boolean;
   /** 有节点操作或应用版本在进行：刷新按钮同样禁用 */
   busy: boolean;
+  /** 同步应用请求进行中（busyKey === 'deploy-sync'） */
+  syncing: boolean;
 }>();
 
-const emit = defineEmits<{ refresh: [] }>();
+const emit = defineEmits<{ refresh: []; edit: []; sync: [] }>();
 </script>
 
 <template>
@@ -79,7 +81,7 @@ const emit = defineEmits<{ refresh: [] }>();
       </div>
       <Btn
         size="sm"
-        :disabled="busy || refreshing"
+        :disabled="busy || refreshing || syncing"
         :aria-busy="refreshing"
         data-spec="ship-refresh"
         @click="emit('refresh')"
@@ -93,6 +95,33 @@ const emit = defineEmits<{ refresh: [] }>();
           </span>
         </template>
         {{ refreshing ? '刷新中…' : '刷新' }}
+      </Btn>
+      <Btn
+        size="sm"
+        :disabled="busy || refreshing || syncing"
+        data-spec="ship-deploy-edit"
+        title="修改部署集名称、类别、应用包名与仓库"
+        @click="emit('edit')"
+      >
+        编辑发布集
+      </Btn>
+      <Btn
+        size="sm"
+        :disabled="busy || refreshing || syncing"
+        :aria-busy="syncing"
+        data-spec="ship-sync-app"
+        title="从应用注册表同步全部部署集（后端 AppDeploy/SyncApp）"
+        @click="emit('sync')"
+      >
+        <template #icon>
+          <span :class="syncing ? 'inline-flex animate-spin' : 'inline-flex'">
+            <KIcon
+              name="Refresh"
+              :size="12"
+            />
+          </span>
+        </template>
+        {{ syncing ? '同步中…' : '同步应用' }}
       </Btn>
     </div>
   </Card>

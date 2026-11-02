@@ -2,7 +2,7 @@
 // 对照原型 page-apps.jsx 的 PageApp：前五个页签照抄；2026-10-29 停点 19 起「发布」取消，部署内容拆成版本、节点、部署历史、流水线四个页签。
 import type { AppTab } from './palette.items.ts';
 
-/** 页签清单：概览到实例沿用原型；其后是注册侧五页签（对齐 MVC _App_Nav）；再后是部署四页签。history 仍是部署历史。 */
+/** 页签清单：概览到实例沿用原型；其后是注册侧五页签（对齐 MVC _App_Nav）；再后是监控两个页签（F01/F02）与部署四页签。history 仍是部署历史。 */
 export const WORKBENCH_TABS: ReadonlyArray<{ key: AppTab; label: string }> = [
   { key: 'overview', label: '概览' },
   { key: 'trace', label: '调用链' },
@@ -14,6 +14,8 @@ export const WORKBENCH_TABS: ReadonlyArray<{ key: AppTab; label: string }> = [
   { key: 'meter', label: '性能' },
   { key: 'services', label: '注册' },
   { key: 'consume', label: '消费' },
+  { key: 'tracer', label: '监控中心' },
+  { key: 'daystat', label: '监控大屏' },
   { key: 'versions', label: '版本' },
   { key: 'nodes', label: '节点' },
   { key: 'history', label: '部署历史' },

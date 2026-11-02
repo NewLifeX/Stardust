@@ -40,6 +40,23 @@ test('BuildNodes 每行两个操作按钮，文案固定，空闲时都可点', 
   await expect(row.locator('[data-spec="build-op-Package-Upload"]')).toBeEnabled();
 });
 
+// F08：新增编译节点入口 + 每行编辑/删除；删除进行中该行写「删除中…」且全禁用
+test('BuildNodes 新增/编辑/删除入口；删除进行中禁用并写「删除中…」', async ({ page }) => {
+  await openStory(page, 'BuildNodes/Default');
+  await expect(page.locator('[data-spec="build-node-create"]')).toBeEnabled();
+  const row = page.locator(ROW).nth(0);
+  await expect(row.locator('[data-spec="build-node-edit"]')).toBeEnabled();
+  await expect(row.locator('[data-spec="build-node-remove"]')).toBeEnabled();
+
+  await openStory(page, 'BuildNodes/Removing');
+  await expect(page.locator(ROW).nth(1).locator('[data-spec="build-node-remove"]')).toHaveText('删除中…');
+  await expect(page.locator('[data-spec="build-node-create"]')).toBeDisabled();
+  for (let r = 0; r < 3; r++) {
+    await expect(page.locator(ROW).nth(r).locator('[data-spec="build-node-edit"]')).toBeDisabled();
+    await expect(page.locator(ROW).nth(r).locator('[data-spec="build-node-remove"]')).toBeDisabled();
+  }
+});
+
 test('BuildNodes 处理中：对应按钮写「处理中…」，所有按钮禁用', async ({ page }) => {
   await openStory(page, 'BuildNodes/Busy');
   await expect(page.locator(ROW).nth(0).locator('[data-spec="build-op-Build-Upload"]')).toHaveText('处理中…');

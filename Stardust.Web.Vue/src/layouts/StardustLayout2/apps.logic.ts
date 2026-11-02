@@ -1,9 +1,10 @@
-﻿// 应用列表页的纯逻辑（无 Vue 依赖，便于单测）。对照原型 page-apps.jsx 的 PageApps 与 kit-ui.jsx 的 AppRow。
+// 应用列表页的纯逻辑（无 Vue 依赖，便于单测）。对照原型 page-apps.jsx 的 PageApps 与 kit-ui.jsx 的 AppRow。
 // 取数、状态派生都复用 appsModel.ts（fetchAppList / toAggRows），这里只做展示层的归一：
 // 分类 chip、行副标题、错误率文字、状态点语气、头像色。
 import type { AppAggRow, AppMetric, AppStatus, Req } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
 import { normalizeRunStatus } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
 import { buildDeployMap, buildPipelineMap } from './changes.logic';
+import { requestFailText } from './deploy.logic.ts';
 
 type Rec = Record<string, unknown>;
 
@@ -216,4 +217,115 @@ export function sparklinePath(values: number[], width = 60, height = 20): string
       return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
     })
     .join(' ');
+}
+
+// ==================== F12 应用 CRUD（/Registry/App，PUT 主键在路径部分更新） ====================
+
+/** 应用表单。Secret 列表隐藏、表单可见；编辑时留空=不修改 */
+export interface AppForm {
+  name: string;
+  displayName: string;
+  category: string;
+  enable: boolean;
+  /** 客户端轮询间隔（秒） */
+  period: number;
+  secret: string;
+  remark: string;
+}
+
+export function validateAppForm(m: AppForm, isCreate: boolean): string {
+  if (!m.name.trim()) return '应用名必填（接入端要用它来注册）';
+  // 编辑态 Name 只读不回传，仅创建态校验格式
+  if (isCreate) {
+    if (m.name.trim() !== m.name.trim().toLowerCase()) return '应用名建议全小写（服务注册与配置中心按名称匹配）';
+    if (/\s/.test(m.name.trim())) return '应用名不能包含空格';
+  }
+  if (!Number.isFinite(m.period) || m.period < 0) return '轮询间隔必须是不小于 0 的秒数';
+  return '';
+}
+
+/** 新增 body（POST /Registry/App，返回 data 含新 id）；ProjectId 由全局拦截器注入时可不传 */
+export function appCreateBody(m: AppForm, projectId?: number | null): Record<string, unknown> {
+  const body: Record<string, unknown> = {
+    Name: m.name.trim(),
+    DisplayName: m.displayName.trim(),
+    Category: m.category.trim(),
+    Enable: m.enable,
+    Period: m.period,
+    Remark: m.remark,
+  };
+  if (m.secret.trim()) body.Secret = m.secret.trim();
+  if (projectId != null && projectId > 0) body.ProjectId = projectId;
+  return body;
+}
+
+/** 编辑 body（PUT /Registry/App/{id} 部分更新）：Secret 留空=不修改，不提交 */
+export function appUpdateBody(m: AppForm): Record<string, unknown> {
+  const body: Record<string, unknown> = {
+    DisplayName: m.displayName.trim(),
+    Category: m.category.trim(),
+    Enable: m.enable,
+    Period: m.period,
+    Remark: m.remark,
+  };
+  if (m.secret.trim()) body.Secret = m.secret.trim();
+  return body;
+}
+
+function errOf(e: unknown, fallback: string): { ok: false; message: string } {
+  // 404/405 →「接口部署中」，其余透传 e.message（与 appConfig/mesh/deploy 各 logic 一致）
+  return { ok: false, message: requestFailText(e, fallback) };
+}
+
+/** 新建应用：POST /Registry/App → data.id */
+export async function createApp(request: Req, m: AppForm, projectId?: number | null): Promise<{ ok: boolean; message: string; id?: number }> {
+  try {
+    const res = await request({ url: '/Registry/App', method: 'POST', data: appCreateBody(m, projectId) } as Parameters<Req>[0] & { data: Record<string, unknown> });
+    const r = res as { code?: number; message?: string; data?: unknown };
+    const ok = r.code === 0 || r.code === 200 || r.code === 1;
+    const d = (r.data ?? {}) as Record<string, unknown>;
+    const id = Number(d.Id ?? d.id ?? 0) || undefined;
+    return { ok, message: ok ? `应用「${m.name.trim()}」已创建` : r.message || '应用创建失败', id };
+  } catch (e) {
+    return errOf(e, '应用创建失败');
+  }
+}
+
+/** 保存应用：PUT /Registry/App/{id}（部分更新） */
+export async function saveApp(request: Req, id: number, m: AppForm): Promise<{ ok: boolean; message: string }> {
+  if (!id || id <= 0) return { ok: false, message: '缺少应用编号' };
+  try {
+    const res = await request({ url: `/Registry/App/${id}`, method: 'PUT', data: appUpdateBody(m) } as Parameters<Req>[0] & { data: Record<string, unknown> });
+    const r = res as { code?: number; message?: string };
+    const ok = r.code === 0 || r.code === 200 || r.code === 1;
+    return { ok, message: ok ? '应用已保存' : r.message || '应用保存失败' };
+  } catch (e) {
+    return errOf(e, '应用保存失败');
+  }
+}
+
+/** 启用/停用应用：PUT /Registry/App/{id} 只提交 Enable（部分更新，未提交字段不动） */
+export async function setAppEnable(request: Req, id: number, enable: boolean): Promise<{ ok: boolean; message: string }> {
+  if (!id || id <= 0) return { ok: false, message: '缺少应用编号' };
+  try {
+    const res = await request({ url: `/Registry/App/${id}`, method: 'PUT', data: { Enable: enable } } as Parameters<Req>[0] & { data: Record<string, unknown> });
+    const r = res as { code?: number; message?: string };
+    const ok = r.code === 0 || r.code === 200 || r.code === 1;
+    return { ok, message: ok ? (enable ? '已启用' : '已停用') : r.message || '操作失败' };
+  } catch (e) {
+    return errOf(e, '操作失败');
+  }
+}
+
+/** 删除应用：DELETE /Registry/App/{id}（不可恢复；接入端再用同名注册会被当成新应用） */
+export async function deleteApp(request: Req, id: number): Promise<{ ok: boolean; message: string }> {
+  if (!id || id <= 0) return { ok: false, message: '缺少应用编号' };
+  try {
+    const res = await request({ url: `/Registry/App/${id}`, method: 'DELETE' });
+    const r = res as { code?: number; message?: string };
+    const ok = r.code === 0 || r.code === 200 || r.code === 1;
+    return { ok, message: ok ? '应用已删除' : r.message || '应用删除失败' };
+  } catch (e) {
+    return errOf(e, '应用删除失败');
+  }
 }

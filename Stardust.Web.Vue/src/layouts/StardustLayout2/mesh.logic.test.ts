@@ -4,6 +4,12 @@ import { describe, it, expect } from 'vitest';
 import {
   toRegistryRows,
   fetchRegistry,
+  fetchServiceDetail,
+  saveService,
+  servicePutBody,
+  toServiceEditModel,
+  toServiceMembers,
+  validateServiceEdit,
   buildClusterMap,
   certDomainMatches,
   matchCert,
@@ -350,5 +356,100 @@ describe('成员管理 · toMembers 归一与项目信息', () => {
     expect(plat.members[1].name).toBe('#202');
     expect(plat.projectInfo?.name).toBe('prod');
     expect(plat.projectInfo?.environment).toBe('生产');
+  });
+});
+
+// ==================== F13 服务详情（Service + 提供者/消费者 + 编辑） ====================
+
+describe('F13 toServiceMembers / toServiceEditModel', () => {
+  it('提供者行：Client 兜底 #AppId，带健康与版本', () => {
+    const rows = toServiceMembers([
+      { Id: 1, Client: 'StarWeb', Address: 'http://10.0.0.1:8080', Enable: true, Healthy: true, Version: 'v1.2', UpdateTime: '2026-11-03T10:00:00' },
+      { Id: 2, AppId: 9, Address: '', Enable: false },
+    ], 'provider');
+    expect(rows[0]).toMatchObject({ client: 'StarWeb', address: 'http://10.0.0.1:8080', enable: true, healthy: true, version: 'v1.2' });
+    expect(rows[1].client).toBe('#9');
+    expect(rows[1].healthy).toBe(false); // provider 行缺 Healthy 归一为 false
+    expect(rows[0].updateTimeText).toBe('2026-11-03 10:00');
+  });
+
+  it('消费者行没有健康/版本字段', () => {
+    const rows = toServiceMembers([{ Id: 3, Client: 'Iot', Address: 'x', Enable: true }], 'consumer');
+    expect(rows[0]).not.toHaveProperty('healthy');
+    expect(rows[0]).not.toHaveProperty('version');
+  });
+
+  it('编辑表单归一大小写；UseScope 是布尔（F13-1）', () => {
+    // F13-1：后端实体的 UseScope 是 Boolean；字符串 "prod"/"false" 一律归一为布尔
+    const m = toServiceEditModel({ DisplayName: '网关', Category: 'Web', Enable: true, Extranet: false, Singleton: true, UseScope: true, Address: 'tcp://x', HealthCheck: true, Remark: 'r' });
+    expect(m).toEqual({ displayName: '网关', category: 'Web', enable: true, extranet: false, singleton: true, useScope: true, address: 'tcp://x', healthCheck: true, remark: 'r' });
+    // 字符串形态（历史数据/JSON）也归一为布尔，不透传字符串
+    const m2 = toServiceEditModel({ DisplayName: 'x', UseScope: 'false' });
+    expect(m2.useScope).toBe(false);
+    const m3 = toServiceEditModel({ DisplayName: 'x', UseScope: 'true' });
+    expect(m3.useScope).toBe(true);
+  });
+
+  it('PUT body 全字段且布尔字段全为 Boolean 类型（F13-1 回归）；显示名必填校验', () => {
+    const m = toServiceEditModel({ DisplayName: ' 网关 ', Category: 'Web', Enable: true, Extranet: false, Singleton: false, UseScope: true, Address: 'tcp://x ', HealthCheck: true, Remark: '' });
+    const body = servicePutBody(m);
+    expect(body).toEqual({ DisplayName: '网关', Category: 'Web', Enable: true, Extranet: false, Singleton: false, UseScope: true, Address: 'tcp://x', HealthCheck: true, Remark: '' });
+    // F13-1：Enable/Extranet/Singleton/UseScope/HealthCheck 必须全是 boolean，不得是字符串
+    for (const k of ['Enable', 'Extranet', 'Singleton', 'UseScope', 'HealthCheck']) {
+      expect(typeof body[k]).toBe('boolean');
+    }
+    expect(validateServiceEdit(m)).toBe('');
+    expect(validateServiceEdit({ ...m, displayName: ' ' })).toContain('必填');
+  });
+});
+
+describe('F13 fetchServiceDetail / saveService', () => {
+  const mk = () => {
+    const calls: unknown[] = [];
+    const req: Req = async (opt) => {
+      calls.push(opt);
+      const url = String(opt.url ?? '');
+      if (url === '/Registry/Service/7') return { code: 0, data: { Id: 7, Name: 'Star.Web', DisplayName: '星尘' } } as Awaited<ReturnType<Req>>;
+      if (url === '/Registry/AppService') return { code: 0, data: [{ Id: 1, Client: 'StarWeb', Address: 'a', Enable: true, Healthy: true }] } as Awaited<ReturnType<Req>>;
+      if (url === '/Registry/AppConsume') return { code: 0, data: [{ Id: 2, Client: 'Iot', Address: 'b', Enable: false }] } as Awaited<ReturnType<Req>>;
+      throw new Error(`stub: ${url}`);
+    };
+    return { req, calls };
+  };
+
+  it('三请求并行：详情+提供者+消费者，serviceId 随 params', async () => {
+    const { req, calls } = mk();
+    const d = await fetchServiceDetail(req, 7);
+    expect(d?.id).toBe(7);
+    expect(d?.name).toBe('Star.Web');
+    expect(d?.service?.displayName).toBe('星尘');
+    expect(d?.providers).toHaveLength(1);
+    expect(d?.consumers).toHaveLength(1);
+    expect(calls[1]).toMatchObject({ url: '/Registry/AppService', params: { serviceId: 7 } });
+    expect(calls[2]).toMatchObject({ url: '/Registry/AppConsume', params: { serviceId: 7 } });
+  });
+
+  it('serviceId<=0 / 整体失败 → null', async () => {
+    const { req } = mk();
+    expect(await fetchServiceDetail(req, 0)).toBeNull();
+    const bad: Req = async () => {
+      throw new Error('x');
+    };
+    expect(await fetchServiceDetail(bad, 7)).toBeNull();
+  });
+
+  it('saveService：PUT /Registry/Service/{id}，成功/失败/缺 id', async () => {
+    const calls: unknown[] = [];
+    const req: Req = async (opt) => {
+      calls.push(opt);
+      return { code: 0, message: '操作成功' } as Awaited<ReturnType<Req>>;
+    };
+    const m = toServiceEditModel({ DisplayName: 'x' });
+    expect((await saveService(req, 7, m)).ok).toBe(true);
+    expect(calls[0]).toMatchObject({ url: '/Registry/Service/7', method: 'PUT' });
+    const noId = async () => {
+      throw new Error('stub');
+    };
+    expect((await saveService(noId as Req, 0, m)).ok).toBe(false);
   });
 });

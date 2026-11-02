@@ -1,10 +1,11 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 /**
  * DeployHistory：发布页「部署历史」，对应 ShipPanel 原模板的第 4 块（2026-10-28 拆分）。
  * 纯展示：只收 props、不发事件。按节点筛选（historyNode）和点行展开（openHistoryId）是纯展示状态，留在本组件内。
  * history 为 null 表示加载失败，与「暂无记录」分开显示。
  */
 import { computed, ref } from 'vue';
+import { RouterLink } from 'vue-router';
 import Card from './Card.vue';
 import Tag from './Tag.vue';
 import { H3, SELECT, TD, TH } from './deployView.styles.ts';
@@ -118,7 +119,19 @@ function toggle(id: number): void {
                 {{ h.remark || '（无备注）' }}
               </div>
               <div class="mt-1 font-mono text-[11px] text-[var(--el-text-color-secondary)]">
-                动作 {{ h.action || '—' }} · TraceId {{ h.traceId || '—' }} · 来源 {{ h.ip || '—' }}
+                动作 {{ h.action || '—' }} · TraceId
+                <RouterLink
+                  v-if="h.traceId"
+                  :to="`/trace/${h.traceId}`"
+                  class="text-[var(--el-color-primary)] hover:underline"
+                  data-spec="deploy-trace-link"
+                >
+                  {{ h.traceId }}
+                </RouterLink>
+                <template v-else>
+                  —
+                </template>
+                · 来源 {{ h.ip || '—' }}
               </div>
             </td>
           </tr>

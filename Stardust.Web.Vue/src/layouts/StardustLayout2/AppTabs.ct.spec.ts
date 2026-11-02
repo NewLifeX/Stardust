@@ -1,4 +1,4 @@
-﻿import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 const GALLERY = process.env.CT_BASE_URL || 'http://127.0.0.1:5190/';
 
@@ -10,12 +10,13 @@ async function openStory(page: Page, id: string) {
 
 const TAB = '[data-spec="app-tab"]';
 
-// 语义断言：十四个页签（原型五个、注册侧五个、部署四个），「实例」带数字
-test('AppTabs 十四个页签，顺序固定，实例带数字', async ({ page }) => {
+// 语义断言：十六个页签（原型五个、注册侧五个、监控两个、部署四个），「实例」带数字
+test('AppTabs 十六个页签，顺序固定，实例带数字', async ({ page }) => {
   await openStory(page, 'AppTabs/Overview');
   await expect(page.locator(TAB)).toHaveText([
     '概览', '调用链', '日志', '配置', '实例 3',
     '应用历史', '命令', '性能', '注册', '消费',
+    '监控中心', '监控大屏',
     '版本', '节点', '部署历史', '流水线',
   ]);
 });

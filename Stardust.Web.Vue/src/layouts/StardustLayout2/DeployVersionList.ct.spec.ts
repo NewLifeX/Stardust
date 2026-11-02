@@ -1,4 +1,4 @@
-﻿import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 const GALLERY = process.env.CT_BASE_URL || 'http://127.0.0.1:5190/';
 
@@ -20,6 +20,12 @@ test('DeployVersionList 默认：三种行状态与按钮文案各不相同，�
   await expect(page.locator(NOTICE)).toHaveCount(0);
   await expect(page.locator(TOGGLE)).toHaveCount(0);
 
+  // F05：上传新版本入口在视线内，隐藏的 file input 存在但不可见
+  const upload = page.locator('[data-spec="ship-upload"]');
+  await expect(upload).toBeEnabled();
+  await expect(upload).toContainText('上传新版本');
+  await expect(page.locator('[data-spec="ship-upload-input"]')).toBeHidden();
+
   // 当前生效：按钮禁用，文案「当前版本」
   const current = page.locator(ROW).nth(0).locator(APPLY);
   await expect(current).toBeDisabled();
@@ -37,6 +43,16 @@ test('DeployVersionList 默认：三种行状态与按钮文案各不相同，�
   await expect(off).toBeDisabled();
   await expect(page.locator(ROW).nth(2)).toContainText('不可用 · 没有文件地址');
   await expect(off).toHaveAttribute('title', '没有文件地址');
+});
+
+// AGENTS.md §11：上传进行中必须禁用、旋转、文案变化，且应用按钮同时禁用
+test('DeployVersionList 上传中：上传按钮禁用旋转写「上传中…」，应用按钮同步禁用', async ({ page }) => {
+  await openStory(page, 'DeployVersionList/Uploading');
+  const upload = page.locator('[data-spec="ship-upload"]');
+  await expect(upload).toBeDisabled();
+  await expect(upload).toContainText('上传中…');
+  await expect(upload.locator('.animate-spin')).toHaveCount(1);
+  await expect(page.locator(ROW).nth(1).locator(APPLY)).toBeDisabled();
 });
 
 test('DeployVersionList 超过 8 个版本：默认 8 行，可展开与收起', async ({ page }) => {

@@ -94,4 +94,15 @@ export const stories = [
       }),
     },
   },
+
+  // F12-1 编辑入口：hover 操作条「编辑」按钮发 edit 事件，进 window.__appRowEvents（CT 断言用）
+  {
+    id: 'AppRow/EditEmit',
+    component: AppRow,
+    props: {
+      row: makeRow(),
+      selectable: true,
+      onEdit: (row: AppAggRow) => (window as unknown as { __appRowEvents?: string[] }).__appRowEvents?.push(`edit:${row.name}`),
+    },
+  },
 ];

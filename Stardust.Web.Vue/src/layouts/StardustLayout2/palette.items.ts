@@ -18,6 +18,8 @@ export type AppTab =
   | 'meter'
   | 'services'
   | 'consume'
+  | 'tracer'
+  | 'daystat'
   | 'versions'
   | 'nodes'
   | 'history'

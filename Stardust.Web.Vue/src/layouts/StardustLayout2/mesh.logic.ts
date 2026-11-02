@@ -15,6 +15,7 @@
 // （全局拦截器也会注入，这里显式传以便单测断言）。每个 tab 的取数独立 try/catch，失败只回 error，
 // 由该 tab 自己显示错误+重试，不拖垮整页。
 import type { Req } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
+import { okRes } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
 
 type Rec = Record<string, unknown>;
 
@@ -111,6 +112,127 @@ export async function fetchRegistry(request: Req, projectId?: number | null): Pr
     return { rows: toRegistryRows(listOf(res)), error: '' };
   } catch (e) {
     return { rows: [], error: errText(e, '注册中心加载失败') };
+  }
+}
+
+// ==================== F13 服务详情 Drawer（提供者/消费者/Service 编辑） ====================
+
+/** 服务提供者/消费者行（AppService 与 AppConsume 共有字段；Healthy/Version 仅提供者有） */
+export interface ServiceMemberRow {
+  id: number;
+  /** 应用名（AppService.Client） */
+  client: string;
+  address: string;
+  enable: boolean;
+  /** 仅提供者：健康状态 */
+  healthy?: boolean;
+  /** 仅提供者：客户端版本 */
+  version?: string;
+  updateTimeText: string;
+}
+
+export function toServiceMembers(rows: Rec[], kind: 'provider' | 'consumer'): ServiceMemberRow[] {
+  return rows.map((r) => ({
+    id: num(pick(r, 'Id', 'id')),
+    client: str(pick(r, 'Client', 'client')) || `#${num(pick(r, 'AppId', 'appId'))}`,
+    address: str(pick(r, 'Address', 'address')),
+    enable: bool(pick(r, 'Enable', 'enable')),
+    ...(kind === 'provider'
+      ? { healthy: bool(pick(r, 'Healthy', 'healthy')), version: str(pick(r, 'Version', 'version')) }
+      : {}),
+    updateTimeText: fmtTime(toMs(pick(r, 'UpdateTime', 'updateTime'))),
+  }));
+}
+
+/** Service 编辑表单（Name 主键语义不改；Secret 列表隐藏、编辑不回显） */
+export interface ServiceEditModel {
+  displayName: string;
+  category: string;
+  enable: boolean;
+  extranet: boolean;
+  singleton: boolean;
+  /** 实体上是 Boolean（服务信息.cs UseScope），不是字符串 */
+  useScope: boolean;
+  address: string;
+  healthCheck: boolean;
+  remark: string;
+}
+
+/** Service 详情行 → 编辑表单 */
+export function toServiceEditModel(r: Rec): ServiceEditModel {
+  return {
+    displayName: str(pick(r, 'DisplayName', 'displayName')),
+    category: str(pick(r, 'Category', 'category')),
+    enable: bool(pick(r, 'Enable', 'enable')),
+    extranet: bool(pick(r, 'Extranet', 'extranet')),
+    singleton: bool(pick(r, 'Singleton', 'singleton')),
+    useScope: bool(pick(r, 'UseScope', 'useScope')),
+    address: str(pick(r, 'Address', 'address')),
+    healthCheck: bool(pick(r, 'HealthCheck', 'healthCheck')),
+    remark: str(pick(r, 'Remark', 'remark')),
+  };
+}
+
+export function servicePutBody(m: ServiceEditModel): Record<string, unknown> {
+  return {
+    DisplayName: m.displayName.trim(),
+    Category: m.category.trim(),
+    Enable: m.enable,
+    Extranet: m.extranet,
+    Singleton: m.singleton,
+    // F13-1：UseScope 实体是 Boolean，必须发布尔（字符串 "false" 会让后端 Boolean 反序列化失败 code=-2）
+    UseScope: m.useScope,
+    Address: m.address.trim(),
+    HealthCheck: m.healthCheck,
+    Remark: m.remark,
+  };
+}
+
+export function validateServiceEdit(m: ServiceEditModel): string {
+  if (!m.displayName.trim()) return '服务显示名必填';
+  return '';
+}
+
+export interface ServiceDetail {
+  /** Service.Id（PUT /{id} 用） */
+  id: number;
+  name: string;
+  service: ServiceEditModel | null;
+  providers: ServiceMemberRow[];
+  consumers: ServiceMemberRow[];
+}
+
+/** 拉服务详情：GET /Registry/Service/{id} + AppService/AppConsume 按 serviceId 过滤。整体失败返回 null */
+export async function fetchServiceDetail(request: Req, serviceId: number): Promise<ServiceDetail | null> {
+  if (!serviceId || serviceId <= 0) return null;
+  try {
+    const [svcRes, provRes, consRes] = await Promise.all([
+      request({ url: `/Registry/Service/${serviceId}`, method: 'GET' }),
+      request({ url: '/Registry/AppService', method: 'GET', params: { serviceId, PageSize: 200 } }),
+      request({ url: '/Registry/AppConsume', method: 'GET', params: { serviceId, PageSize: 200 } }),
+    ]);
+    const svcData = (svcRes as { data?: Rec }).data;
+    return {
+      id: serviceId,
+      name: str(pick(svcData ?? {}, 'Name', 'name')),
+      service: svcData ? toServiceEditModel(svcData) : null,
+      providers: toServiceMembers(listOf(provRes), 'provider'),
+      consumers: toServiceMembers(listOf(consRes), 'consumer'),
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** 保存服务：PUT /Registry/Service/{id}（部分更新） */
+export async function saveService(request: Req, id: number, m: ServiceEditModel): Promise<{ ok: boolean; message: string }> {
+  if (!id || id <= 0) return { ok: false, message: '缺少服务编号' };
+  try {
+    const res = await request({ url: `/Registry/Service/${id}`, method: 'PUT', data: servicePutBody(m) } as Parameters<Req>[0] & { data: Record<string, unknown> });
+    const r = okRes(res);
+    return { ok: r.ok, message: r.ok ? '服务已保存' : r.message || '服务保存失败' };
+  } catch (e) {
+    return { ok: false, message: errText(e, '服务保存失败') };
   }
 }
 

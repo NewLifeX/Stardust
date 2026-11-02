@@ -1,4 +1,4 @@
-﻿import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 const GALLERY = process.env.CT_BASE_URL || 'http://127.0.0.1:5190/';
 
@@ -11,6 +11,8 @@ async function openStory(page: Page, id: string) {
 const REFRESH = '[data-spec="ship-refresh"]';
 const STATS = '[data-spec="ship-current-stats"]';
 const DIFF = '[data-spec="ship-diff-count"]';
+const SYNC = '[data-spec="ship-sync-app"]';
+const EDIT = '[data-spec="ship-deploy-edit"]';
 
 test('DeployVersionBar 默认：显示版本与统计，刷新按钮可点、不在旋转', async ({ page }) => {
   await openStory(page, 'DeployVersionBar/Default');
@@ -21,6 +23,21 @@ test('DeployVersionBar 默认：显示版本与统计，刷新按钮可点、不
   await expect(btn).toContainText('刷新');
   await expect(btn).toHaveAttribute('aria-busy', 'false');
   await expect(btn.locator('.animate-spin')).toHaveCount(0);
+  // F06：编辑发布集与同步应用入口在视线内
+  await expect(page.locator(EDIT)).toBeEnabled();
+  await expect(page.locator(SYNC)).toBeEnabled();
+  await expect(page.locator(SYNC)).toContainText('同步应用');
+});
+
+// AGENTS.md §11：同步应用请求进行中必须禁用、旋转、文案变化
+test('DeployVersionBar 同步中：同步按钮禁用旋转写「同步中…」，编辑与刷新同时禁用', async ({ page }) => {
+  await openStory(page, 'DeployVersionBar/Syncing');
+  const btn = page.locator(SYNC);
+  await expect(btn).toBeDisabled();
+  await expect(btn).toContainText('同步中…');
+  await expect(btn.locator('.animate-spin')).toHaveCount(1);
+  await expect(page.locator(EDIT)).toBeDisabled();
+  await expect(page.locator(REFRESH)).toBeDisabled();
 });
 
 // AGENTS.md §11：刷新中必须禁用、旋转、文案变化

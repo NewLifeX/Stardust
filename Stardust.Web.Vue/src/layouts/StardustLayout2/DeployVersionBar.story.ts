@@ -1,4 +1,4 @@
-﻿import DeployVersionBar from './DeployVersionBar.vue';
+import DeployVersionBar from './DeployVersionBar.vue';
 
 const BASE = {
   version: 'v1.4.2',
@@ -9,6 +9,7 @@ const BASE = {
   nodesFailed: false,
   refreshing: false,
   busy: false,
+  syncing: false,
 };
 
 export const stories = [
@@ -20,6 +21,9 @@ export const stories = [
 
   // 测试状态：有节点操作在进行，刷新按钮禁用，但不是刷新中
   { id: 'DeployVersionBar/Busy', component: DeployVersionBar, props: { ...BASE, busy: true } },
+
+  // 测试状态：同步应用进行中（F06）：同步按钮禁用、旋转、「同步中…」，编辑/刷新按钮同样禁用
+  { id: 'DeployVersionBar/Syncing', component: DeployVersionBar, props: { ...BASE, syncing: true } },
 
   // 测试状态：节点加载失败，统计处写「节点加载失败」
   {

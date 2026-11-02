@@ -1,8 +1,9 @@
-// 日志页签纯逻辑单测：级别归一、按应用本地过滤（后端不支持 appId/Level 过滤）、级别筛选、取数兜底。
+// 日志页签纯逻辑单测：级别归一、本地 appId 过滤兜底、级别筛选、取数兜底；F17 服务端 appId/kind 过滤。
 import { describe, expect, it } from 'vitest';
 import {
   fetchAppLogs,
   filterLogsByLevel,
+  kindParam,
   normalizeLevel,
   todayRange,
   toAppLogRows,
@@ -77,12 +78,14 @@ describe('filterLogsByLevel：级别 chip 本地过滤', () => {
   });
 });
 
-describe('fetchAppLogs：取数（request 注入）', () => {
-  it('带 dtStart/dtEnd 时间窗请求 /Registry/AppClientLog，并按 appId 本地过滤', async () => {
+describe('fetchAppLogs：取数（request 注入；F17 服务端 appId/kind 过滤）', () => {
+  it('带 appId+时间窗请求，kind=all 不发 kind 参数', async () => {
     const req = fakeRequest((url, params) => {
       expect(url).toBe('/Registry/AppClientLog');
+      expect(params.appId).toBe(32);
       expect(params.dtStart).toBe('2026-10-29');
       expect(params.dtEnd).toBe('2026-10-29 23:59:59');
+      expect(params.kind).toBeUndefined();
       return [
         { Id: 1, AppId: 32, Kind: 'Info', Message: 'mine' },
         { Id: 2, AppId: 40, Kind: 'Error', Message: 'not mine' },
@@ -91,6 +94,20 @@ describe('fetchAppLogs：取数（request 注入）', () => {
     const rows = await fetchAppLogs(req, 32, { dtStart: '2026-10-29', dtEnd: '2026-10-29 23:59:59' });
     expect(rows).toHaveLength(1);
     expect(rows?.[0].message).toBe('mine');
+  });
+
+  it('F17：kind chip 传服务端精确匹配值（Error/Warn/Info/Debug），all 不带 kind', async () => {
+    const seen: Array<Record<string, unknown>> = [];
+    const req = fakeRequest((_url, params) => {
+      seen.push({ ...params });
+      return [];
+    });
+    await fetchAppLogs(req, 32, todayRange(new Date(2026, 9, 29)), 'error');
+    await fetchAppLogs(req, 32, todayRange(new Date(2026, 9, 29)), 'debug');
+    await fetchAppLogs(req, 32, todayRange(new Date(2026, 9, 29)), 'all');
+    expect(seen[0].kind).toBe('Error');
+    expect(seen[1].kind).toBe('Debug');
+    expect(seen[2].kind).toBeUndefined();
   });
 
   it('请求失败返回 null，由组件显示加载失败', async () => {
@@ -108,6 +125,16 @@ describe('fetchAppLogs：取数（request 注入）', () => {
     });
     expect(await fetchAppLogs(req, 0, todayRange(new Date(2026, 9, 29)))).toEqual([]);
     expect(called).toBe(0);
+  });
+});
+
+describe('F17 kindParam：chip → 服务端 kind 精确匹配值', () => {
+  it('all 不发 kind；debug→Debug 等', () => {
+    expect(kindParam('all')).toBeUndefined();
+    expect(kindParam('error')).toBe('Error');
+    expect(kindParam('warn')).toBe('Warn');
+    expect(kindParam('info')).toBe('Info');
+    expect(kindParam('debug')).toBe('Debug');
   });
 });
 

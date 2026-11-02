@@ -1,7 +1,10 @@
 // 配置页签纯逻辑单测（Vitest）。2026-10-29：子代理 B 配置/实例两页签，先红后绿。
 import { describe, it, expect } from 'vitest';
 import {
+  configItemPutBody,
   configItemState,
+  createConfigItem,
+  deleteConfigItem,
   fetchConfigApp,
   fetchConfigHistory,
   fetchConfigItems,
@@ -10,8 +13,11 @@ import {
   historyVersionOf,
   publishConfig,
   rollbackHistory,
+  saveConfigItem,
+  syncAppConfig,
   toConfigHistory,
   toConfigItems,
+  validateConfigItemForm,
 } from './appConfig.logic';
 import type { ConfigItem } from './appConfig.logic';
 import type { Req } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
@@ -52,9 +58,9 @@ describe('configItemState · 行状态推导', () => {
 describe('filterPending · 待发布行', () => {
   it('只留 pending 行', () => {
     const items: ConfigItem[] = [
-      { id: 1, key: 'a', scope: '', value: '1', newValue: '1', state: 'published', pending: false },
-      { id: 2, key: 'b', scope: '', value: '1', newValue: '2', state: 'modified', pending: true },
-      { id: 3, key: 'c', scope: '', value: '', newValue: '3', state: 'added', pending: true },
+      { id: 1, key: 'a', scope: '', value: '1', newValue: '1', enable: true, state: 'published', pending: false },
+      { id: 2, key: 'b', scope: '', value: '1', newValue: '2', enable: true, state: 'modified', pending: true },
+      { id: 3, key: 'c', scope: '', value: '', newValue: '3', enable: true, state: 'added', pending: true },
     ];
     expect(filterPending(items).map((i) => i.key)).toEqual(['b', 'c']);
   });
@@ -197,5 +203,96 @@ describe('publishConfig / rollbackHistory', () => {
 describe('toConfigItems · 行映射细节', () => {
   it('空行兜底', () => {
     expect(toConfigItems([], 1)).toEqual([]);
+  });
+
+  it('enable 取自行 Enable 字段', () => {
+    const rows = toConfigItems([{ Id: 1, Key: 'a', Value: '1', NewValue: '1', Version: 1, NewVersion: 0, Enable: false }], 1);
+    expect(rows[0].enable).toBe(false);
+  });
+});
+
+// ==================== F10 配置项就地编辑（ConfigData CRUD + SyncApp） ====================
+
+describe('F10 validateConfigItemForm / configItemPutBody', () => {
+  it('Key 必填', () => {
+    const m = { key: '  ', scope: '', value: '1', newValue: '', enable: true, remark: '' };
+    expect(validateConfigItemForm(m, false)).toContain('必填');
+    expect(validateConfigItemForm({ ...m, key: 'a' }, false)).toBe('');
+  });
+
+  it('已发布行改 Key/Scope 前置拦截', () => {
+    const m = { key: 'b', scope: 'x', value: '1', newValue: '', enable: true, remark: '' };
+    expect(validateConfigItemForm(m, true, { key: 'a', scope: 'x' })).toContain('不能修改名称与作用域');
+    expect(validateConfigItemForm(m, true, { key: 'b', scope: 'x' })).toBe('');
+  });
+
+  it('PUT body 分支：已发布只动 NewValue/Remark，Enable 变化才提交', () => {
+    const m = { key: 'a', scope: '', value: '1', newValue: '2', enable: true, remark: 'r' };
+    expect(configItemPutBody(m, true, true)).toEqual({ NewValue: '2', Remark: 'r' });
+    expect(configItemPutBody(m, true, false)).toEqual({ NewValue: '2', Remark: 'r', Enable: true });
+  });
+
+  it('PUT body 分支：未发布行直接改 Key/Scope/Value/Enable', () => {
+    const m = { key: 'a', scope: 'dev', value: '2', newValue: '', enable: false, remark: '' };
+    expect(configItemPutBody(m, false, true)).toEqual({ Key: 'a', Scope: 'dev', Value: '2', Enable: false, Remark: '' });
+  });
+});
+
+describe('F10 配置项 CRUD', () => {
+  it('saveConfigItem：PUT /Configs/ConfigData/{id}，body 按发布态', async () => {
+    const { req, calls } = stubReq([{ res: { code: 0, message: '操作成功' } }]);
+    const r = await saveConfigItem(req, { id: 5, published: true, enable: true }, { key: 'a', scope: '', value: '1', newValue: '2', enable: true, remark: '' });
+    expect(r.ok).toBe(true);
+    expect(calls[0]).toMatchObject({ url: '/Configs/ConfigData/5', method: 'PUT' });
+    expect((calls[0] as { data: Record<string, unknown> }).data).toEqual({ NewValue: '2', Remark: '' });
+  });
+
+  it('saveConfigItem：失败 code 500 透传消息', async () => {
+    const { req } = stubReq([{ res: { code: 500, message: '在用值不能修改！' } }]);
+    const r = await saveConfigItem(req, { id: 5, published: true, enable: true }, { key: 'a', scope: '', value: '1', newValue: '2', enable: true, remark: '' });
+    expect(r).toMatchObject({ ok: false, message: '在用值不能修改！' });
+  });
+
+  it('saveConfigItem：缺 id 不发请求', async () => {
+    const { req, calls } = stubReq([]);
+    expect((await saveConfigItem(req, { id: 0, published: false, enable: true }, { key: 'a', scope: '', value: '', newValue: '', enable: true, remark: '' })).ok).toBe(false);
+    expect(calls).toHaveLength(0);
+  });
+
+  it('createConfigItem：POST /Configs/ConfigData 带 ConfigId', async () => {
+    const { req, calls } = stubReq([{ res: { code: 0, message: '操作成功' } }]);
+    const r = await createConfigItem(req, 9, { key: 'k1', scope: '', value: 'v1', newValue: '', enable: true, remark: '' });
+    expect(r.ok).toBe(true);
+    expect(calls[0]).toMatchObject({ url: '/Configs/ConfigData', method: 'POST' });
+    expect((calls[0] as { data: Record<string, unknown> }).data).toEqual({ ConfigId: 9, Key: 'k1', Scope: '', Value: 'v1', Enable: true, Remark: '' });
+  });
+
+  it('createConfigItem：缺 configId 不发请求', async () => {
+    const { req, calls } = stubReq([]);
+    expect((await createConfigItem(req, 0, { key: 'k', scope: '', value: '', newValue: '', enable: true, remark: '' })).ok).toBe(false);
+    expect(calls).toHaveLength(0);
+  });
+
+  it('deleteConfigItem：DELETE /{id}；404 走「接口部署中」', async () => {
+    const { req, calls } = stubReq([{ res: { code: 0, message: '操作成功' } }]);
+    expect((await deleteConfigItem(req, 7)).ok).toBe(true);
+    expect(calls[0]).toEqual({ url: '/Configs/ConfigData/7', method: 'DELETE' });
+    const err = Object.assign(new Error('Request failed with status code 404'), { status: 404 });
+    const bad = stubReq([{ err }]);
+    const r = await deleteConfigItem(bad.req, 7);
+    expect(r.ok).toBe(false);
+    expect(r.message).toContain('接口部署中');
+  });
+
+  it('syncAppConfig：POST /Configs/AppConfig/SyncApp 透传「成功同步N个应用！」', async () => {
+    const { req, calls } = stubReq([{ res: { code: 0, message: '成功同步[3]个应用！' } }]);
+    const r = await syncAppConfig(req);
+    expect(r).toMatchObject({ ok: true, message: '成功同步[3]个应用！' });
+    expect(calls[0]).toEqual({ url: '/Configs/AppConfig/SyncApp', method: 'POST' });
+  });
+
+  it('syncAppConfig：网络失败给出失败文案', async () => {
+    const { req } = stubReq([{ err: new Error('boom') }]);
+    expect((await syncAppConfig(req)).ok).toBe(false);
   });
 });

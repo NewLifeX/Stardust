@@ -282,3 +282,34 @@ export async function fetchTraceSpans(request: Req, traceId: string, pageSize = 
     return null;
   }
 }
+
+// ---------- F14 /trace/:traceId 全局页（多值输入） ----------
+
+/**
+ * 把输入框的 TraceId 串按 逗号/分号/空白 拆分、去空、去重（保序），上限 limit 个（防误粘贴爆量）。
+ * 服务端 traceId 是单值精确过滤，没有「一次返回多条」的接口——多值只能前端逐个拉取。
+ */
+export function parseTraceIds(input: string, limit = 5): string[] {
+  const out: string[] = [];
+  for (const part of input.split(/[,;\s]+/)) {
+    const id = part.trim();
+    if (id && !out.includes(id)) out.push(id);
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
+/** 多值并行拉取：每个 traceId 独立请求（Map 值 null=该条链路取数失败，单条失败不拖垮其它） */
+export async function fetchTraceSpansMulti(
+  request: Req,
+  ids: string[],
+  pageSize = 500,
+): Promise<Map<string, Span[] | null>> {
+  const result = new Map<string, Span[] | null>();
+  await Promise.all(
+    ids.map(async (id) => {
+      result.set(id, await fetchTraceSpans(request, id, pageSize));
+    }),
+  );
+  return result;
+}

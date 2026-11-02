@@ -13,8 +13,8 @@
 //
 // 数据原则：接真实接口，不造演示数据。keyCount 来自 AppConfig.UsedKeys（客户端已实际拉取过的配置项数，
 // 字段为空时为 0，不臆造总数）；valueSummary 列表层无逐配置值，留空（Drawer 才拉全量 KV）。
-import { fetchAppList } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
-import type { Req } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
+import { fetchAppList, okRes } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
+import type { Req, ReqOptions } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
 import { historyVersionOf } from './appConfig.logic.ts';
 
 type Rec = Record<string, unknown>;
@@ -140,6 +140,21 @@ export function countUsedKeys(v: unknown): number {
   return s.split(/[,;\n]/).map((x) => x.trim()).filter((x) => x.length > 0).length;
 }
 
+/**
+ * ConfigData 全量行 → configId→键数 映射（/configs「Key 数」列的真实来源）。
+ * 只数未删除的键：NewStatus 为 [[Deleted]]（待删除草稿）不计入。
+ * UsedKeys 是客户端上报字段（很多应用从没上报过，列表会全 0），所以键数改从 ConfigData 实际行数取。
+ */
+export function buildKeyCounts(rows: Rec[]): Map<number, number> {
+  const m = new Map<number, number>();
+  for (const r of rows) {
+    if (str(pick(r, 'NewStatus', 'newStatus')).toLowerCase() === '[[deleted]]') continue;
+    const id = num(pick(r, 'ConfigId', 'configId'));
+    if (id > 0) m.set(id, (m.get(id) ?? 0) + 1);
+  }
+  return m;
+}
+
 /** 应用列表行 → appId→应用名 映射（DisplayName 优先，兜底 Name） */
 export function buildAppMap(apps: Rec[]): Map<number, string> {
   const m = new Map<number, string>();
@@ -152,22 +167,25 @@ export function buildAppMap(apps: Rec[]): Map<number, string> {
 }
 
 /** AppConfig 行 → 配置中心行。pending 行排前面，再按应用名排序 */
-export function toConfigCenterRows(appConfigs: Rec[], appMap: Map<number, string>): ConfigCenterRow[] {
+export function toConfigCenterRows(appConfigs: Rec[], appMap: Map<number, string>, keyCounts?: Map<number, number>): ConfigCenterRow[] {
   const out: ConfigCenterRow[] = [];
   for (const r of appConfigs) {
     const appId = num(pick(r, 'AppId', 'appId'));
     const cfgName = str(pick(r, 'DisplayName', 'displayName')) || str(pick(r, 'Name', 'name'));
     const version = num(pick(r, 'Version', 'version'));
     const nextVersion = num(pick(r, 'NextVersion', 'nextVersion'));
+    const id = num(pick(r, 'Id', 'id'));
+    // 键数优先取 ConfigData 实际行数；拉不到时回退 UsedKeys 上报计数（可能为 0）
+    const fromData = keyCounts?.get(id);
     out.push({
-      configId: num(pick(r, 'Id', 'id')),
+      configId: id,
       appId,
       appName: appMap.get(appId) || cfgName,
       configName: cfgName,
       version,
       nextVersion,
       enable: bool(pick(r, 'Enable', 'enable')),
-      keyCount: countUsedKeys(pick(r, 'UsedKeys', 'usedKeys')),
+      keyCount: fromData ?? countUsedKeys(pick(r, 'UsedKeys', 'usedKeys')),
       valueSummary: '',
       lastPublishText: fmtTime(toMs(pick(r, 'UpdateTime', 'updateTime'))),
       pending: nextVersion > version,
@@ -197,17 +215,20 @@ export interface FetchAllResult {
   error: string;
 }
 
-/** 拉全部 AppConfig + 应用列表（建 appId→名映射）。应用列表失败不阻塞（名字兜底用 AppConfig.Name） */
+/** 拉全部 AppConfig + 应用列表（建 appId→名映射）+ ConfigData 键数。应用列表失败不阻塞（名字兜底用 AppConfig.Name） */
 export async function fetchAllConfigs(request: Req, projectId?: number | null): Promise<FetchAllResult> {
   try {
     const pp = paramsOf(projectId);
-    const [appList, cfgRes] = await Promise.all([
+    const [appList, cfgRes, dataRes] = await Promise.all([
       // 应用名映射是锦上添花，失败降级为空映射，不拖垮列表
       fetchAppList(request).catch(() => ({ rows: [], online: [] })),
       request({ url: '/Configs/AppConfig', method: 'GET', params: { PageSize: 500, ...pp } }),
+      // Key 数来源：不传 configId 时后端返回全部 ConfigData（configId=-1 不加过滤），一次请求按 configId 分组计数
+      request({ url: '/Configs/ConfigData', method: 'GET', params: { PageSize: 1000 } }).catch(() => ({ data: [] })),
     ]);
     const appMap = buildAppMap(appList.rows as Rec[]);
-    return { rows: toConfigCenterRows(listOf(cfgRes), appMap), error: '' };
+    const keyCounts = buildKeyCounts(listOf(dataRes));
+    return { rows: toConfigCenterRows(listOf(cfgRes), appMap, keyCounts), error: '' };
   } catch (e) {
     return { rows: [], error: errText(e, '配置中心加载失败') };
   }
@@ -314,4 +335,207 @@ export function pendingDiff(items: DetailConfigItem[]): ConfigDiffRow[] {
   const oldRows = items.map((i) => ({ Key: i.key, Value: i.value }));
   const newRows = items.map((i) => ({ Key: i.key, Value: i.newValue }));
   return diffConfigValues(oldRows, newRows).filter((d) => d.state !== 'unchanged');
+}
+
+// ==================== F11 应用规则（AppRule，全局规则表，无 AppId 列） ====================
+
+/** 应用规则行（AppRule 实体：Rule/Result/Priority/Enable） */
+export interface AppRuleRow {
+  id: number;
+  /** 规则表达式，如 IP=10.*,172.*;LocalIP=192.* */
+  rule: string;
+  /** 命中结果，如 Scope=dev */
+  result: string;
+  /** 数字越大优先级越高 */
+  priority: number;
+  enable: boolean;
+  remark: string;
+  updateTimeText: string;
+}
+
+export function toAppRuleRows(rows: Rec[]): AppRuleRow[] {
+  return rows
+    .map((r) => ({
+      id: num(pick(r, 'Id', 'id')),
+      rule: str(pick(r, 'Rule', 'rule')),
+      result: str(pick(r, 'Result', 'result')),
+      priority: num(pick(r, 'Priority', 'priority')),
+      enable: bool(pick(r, 'Enable', 'enable')),
+      remark: str(pick(r, 'Remark', 'remark')),
+      updateTimeText: fmtTime(toMs(pick(r, 'UpdateTime', 'updateTime'))),
+    }))
+    .sort((a, b) => b.priority - a.priority || b.id - a.id);
+}
+
+export interface AppRuleForm {
+  rule: string;
+  result: string;
+  priority: number;
+  enable: boolean;
+  remark: string;
+}
+
+export function validateAppRuleForm(m: AppRuleForm): string {
+  if (!m.rule.trim()) return '规则表达式必填（如 IP=10.*;LocalIP=192.*）';
+  if (!m.result.trim()) return '命中结果必填（如 Scope=dev）';
+  if (!Number.isFinite(m.priority) || m.priority < 0) return '优先级必须是不小于 0 的数字';
+  return '';
+}
+
+export function appRuleBody(m: AppRuleForm): Record<string, unknown> {
+  return { Rule: m.rule.trim(), Result: m.result.trim(), Priority: m.priority, Enable: m.enable, Remark: m.remark };
+}
+
+/** 应用规则列表：GET /Configs/AppRule */
+export async function fetchAppRules(request: Req): Promise<AppRuleRow[] | null> {
+  try {
+    const res = await request({ url: '/Configs/AppRule', method: 'GET', params: { PageSize: 200 } });
+    return toAppRuleRows(listOf(res));
+  } catch {
+    return null;
+  }
+}
+
+/** 新增应用规则：POST /Configs/AppRule */
+export async function createAppRule(request: Req, m: AppRuleForm): Promise<{ ok: boolean; message: string }> {
+  try {
+    const res = await request({ url: '/Configs/AppRule', method: 'POST', data: appRuleBody(m) } as ReqOptions & { data: Record<string, unknown> });
+    const r = okRes(res);
+    return { ok: r.ok, message: r.ok ? '应用规则已新增' : r.message || '应用规则新增失败' };
+  } catch (e) {
+    return { ok: false, message: errText(e, '应用规则新增失败') };
+  }
+}
+
+/** 保存应用规则：PUT /Configs/AppRule/{id}（部分更新） */
+export async function saveAppRule(request: Req, id: number, m: AppRuleForm): Promise<{ ok: boolean; message: string }> {
+  if (!id || id <= 0) return { ok: false, message: '缺少规则编号' };
+  try {
+    const res = await request({ url: `/Configs/AppRule/${id}`, method: 'PUT', data: appRuleBody(m) } as ReqOptions & { data: Record<string, unknown> });
+    const r = okRes(res);
+    return { ok: r.ok, message: r.ok ? '应用规则已保存' : r.message || '应用规则保存失败' };
+  } catch (e) {
+    return { ok: false, message: errText(e, '应用规则保存失败') };
+  }
+}
+
+/** 删除应用规则：DELETE /Configs/AppRule/{id} */
+export async function deleteAppRule(request: Req, id: number): Promise<{ ok: boolean; message: string }> {
+  if (!id || id <= 0) return { ok: false, message: '缺少规则编号' };
+  try {
+    const res = await request({ url: `/Configs/AppRule/${id}`, method: 'DELETE' });
+    const r = okRes(res);
+    return { ok: r.ok, message: r.ok ? '应用规则已删除' : r.message || '应用规则删除失败' };
+  } catch (e) {
+    return { ok: false, message: errText(e, '应用规则删除失败') };
+  }
+}
+
+// ==================== F15 应用依赖（AppQuote：AppId 依赖 TargetAppId） ====================
+
+/** 应用依赖行（AppQuote 实体：AppId/TargetAppId/Kind/Enable；应用名由前端按 id 映射） */
+export interface AppQuoteRow {
+  id: number;
+  /** 依赖方（谁引用别人） */
+  appId: number;
+  /** 被依赖方（被引用的应用） */
+  targetAppId: number;
+  /** 依赖类型（实体 Int32，无枚举定义，原样展示） */
+  kind: number;
+  enable: boolean;
+  /** 依赖方应用名（id→name 映射，缺名退化为 #id） */
+  appName: string;
+  /** 被依赖方应用名 */
+  targetName: string;
+}
+
+export function toAppQuoteRows(rows: Rec[], nameOf: (id: number) => string): AppQuoteRow[] {
+  return rows
+    .map((r) => {
+      const appId = num(pick(r, 'AppId', 'appId'));
+      const targetAppId = num(pick(r, 'TargetAppId', 'targetAppId'));
+      return {
+        id: num(pick(r, 'Id', 'id')),
+        appId,
+        targetAppId,
+        kind: num(pick(r, 'Kind', 'kind')),
+        enable: bool(pick(r, 'Enable', 'enable')),
+        appName: appId > 0 ? nameOf(appId) : '—',
+        targetName: targetAppId > 0 ? nameOf(targetAppId) : '—',
+      };
+    })
+    .sort((a, b) => a.id - b.id);
+}
+
+export interface AppQuoteForm {
+  /** 依赖方应用 id */
+  appId: number;
+  /** 被依赖方应用 id */
+  targetAppId: number;
+  kind: number;
+  enable: boolean;
+}
+
+export function validateAppQuoteForm(m: AppQuoteForm): string {
+  if (!m.appId || m.appId <= 0) return '请选择依赖方应用';
+  if (!m.targetAppId || m.targetAppId <= 0) return '请选择被依赖的应用';
+  if (m.appId === m.targetAppId) return '应用不能依赖自身';
+  if (!Number.isFinite(m.kind) || m.kind < 0) return '依赖类型必须是不小于 0 的数字';
+  return '';
+}
+
+export function appQuoteBody(m: AppQuoteForm): Record<string, unknown> {
+  return { AppId: m.appId, TargetAppId: m.targetAppId, Kind: m.kind, Enable: m.enable };
+}
+
+/** 应用依赖列表：GET /Configs/AppQuote（可选 appId / targetAppId 过滤，后端 Search 均支持；nameOf 做 id→应用名映射） */
+export async function fetchAppQuotes(
+  request: Req,
+  filter: { appId?: number; targetAppId?: number; nameOf?: (id: number) => string } = {},
+): Promise<AppQuoteRow[] | null> {
+  try {
+    const params: Record<string, unknown> = { PageSize: 500 };
+    if (filter.appId && filter.appId > 0) params.appId = filter.appId;
+    if (filter.targetAppId && filter.targetAppId > 0) params.targetAppId = filter.targetAppId;
+    const res = await request({ url: '/Configs/AppQuote', method: 'GET', params });
+    const nameOf = filter.nameOf ?? (() => '');
+    return toAppQuoteRows(listOf(res), nameOf);
+  } catch {
+    return null;
+  }
+}
+
+/** 新增应用依赖：POST /Configs/AppQuote */
+export async function createAppQuote(request: Req, m: AppQuoteForm): Promise<{ ok: boolean; message: string }> {
+  try {
+    const res = await request({ url: '/Configs/AppQuote', method: 'POST', data: appQuoteBody(m) } as ReqOptions & { data: Record<string, unknown> });
+    const r = okRes(res);
+    return { ok: r.ok, message: r.ok ? '应用依赖已新增' : r.message || '应用依赖新增失败' };
+  } catch (e) {
+    return { ok: false, message: errText(e, '应用依赖新增失败') };
+  }
+}
+
+/** 保存应用依赖：PUT /Configs/AppQuote/{id}（部分更新） */
+export async function saveAppQuote(request: Req, id: number, m: AppQuoteForm): Promise<{ ok: boolean; message: string }> {
+  if (!id || id <= 0) return { ok: false, message: '缺少依赖编号' };
+  try {
+    const res = await request({ url: `/Configs/AppQuote/${id}`, method: 'PUT', data: appQuoteBody(m) } as ReqOptions & { data: Record<string, unknown> });
+    const r = okRes(res);
+    return { ok: r.ok, message: r.ok ? '应用依赖已保存' : r.message || '应用依赖保存失败' };
+  } catch (e) {
+    return { ok: false, message: errText(e, '应用依赖保存失败') };
+  }
+}
+
+/** 删除应用依赖：DELETE /Configs/AppQuote/{id} */
+export async function deleteAppQuote(request: Req, id: number): Promise<{ ok: boolean; message: string }> {
+  if (!id || id <= 0) return { ok: false, message: '缺少依赖编号' };
+  try {
+    const res = await request({ url: `/Configs/AppQuote/${id}`, method: 'DELETE' });
+    const r = okRes(res);
+    return { ok: r.ok, message: r.ok ? '应用依赖已删除' : r.message || '应用依赖删除失败' };
+  } catch (e) {
+    return { ok: false, message: errText(e, '应用依赖删除失败') };
+  }
 }

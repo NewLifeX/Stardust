@@ -1,4 +1,4 @@
-﻿import DeployVersionList from './DeployVersionList.vue';
+import DeployVersionList from './DeployVersionList.vue';
 import type { VersionOption } from './ship.logic.ts';
 
 function ver(id: number, patch: Partial<VersionOption> = {}): VersionOption {
@@ -20,6 +20,7 @@ const BASE = {
   versionsFailed: false,
   notice: null,
   busyKey: '',
+  uploading: false,
 };
 
 export const stories = [
@@ -37,6 +38,13 @@ export const stories = [
 
   // 测试状态：正在应用 id=2 的版本：该行按钮写「切换中…」，所有按钮禁用
   { id: 'DeployVersionList/Busy', component: DeployVersionList, props: { ...BASE, busyKey: 'ver:2' } },
+
+  // 测试状态：上传中（F05）：上传按钮禁用、图标旋转、文案「上传中…」，文件名在视线内（AGENTS.md §11）
+  {
+    id: 'DeployVersionList/Uploading',
+    component: DeployVersionList,
+    props: { ...BASE, uploading: true },
+  },
 
   // 测试状态：提示条两种语气
   {

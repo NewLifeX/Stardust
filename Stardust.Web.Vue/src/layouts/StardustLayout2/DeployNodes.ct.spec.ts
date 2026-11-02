@@ -1,4 +1,4 @@
-﻿import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 const GALLERY = process.env.CT_BASE_URL || 'http://127.0.0.1:5190/';
 
@@ -67,6 +67,51 @@ test('DeployNodes 没有节点与加载失败的提示不同', async ({ page }) 
   await openStory(page, 'DeployNodes/Failed');
   await expect(page.locator('[data-spec="ship-nodes-failed"]')).toContainText('节点加载失败');
   await expect(page.locator('[data-spec="ship-nodes-empty"]')).toHaveCount(0);
+});
+
+// F07：勾选节点出现批量操作栏，批量按钮带勾选数；取消选择后收起；新增节点入口在视线内
+test('DeployNodes 勾选出现批量栏：全选、批量按钮、取消选择；新增节点按钮常在', async ({ page }) => {
+  await openStory(page, 'DeployNodes/Default');
+  await expect(page.locator('[data-spec="ship-node-create"]')).toBeEnabled();
+  await expect(page.locator('[data-spec="ship-node-batchbar"]')).toHaveCount(0);
+
+  await page.locator('[data-spec="ship-node-check-11"]').check();
+  await page.locator('[data-spec="ship-node-check-12"]').check();
+  const bar = page.locator('[data-spec="ship-node-batchbar"]');
+  await expect(bar).toBeVisible();
+  await expect(bar).toContainText('已选 2 个节点（node-a、node-b）');
+  for (const act of ACTS) {
+    await expect(bar.locator(`[data-spec="ship-node-batch-${act}"]`)).toBeEnabled();
+  }
+  await bar.locator('[data-spec="ship-node-batch-clear"]').click();
+  await expect(page.locator('[data-spec="ship-node-batchbar"]')).toHaveCount(0);
+
+  await page.locator('[data-spec="ship-node-check-all"]').check();
+  await expect(page.locator('[data-spec="ship-node-batchbar"]')).toContainText('已选 3 个节点');
+});
+
+// F07：每行有编辑/删除入口；批量下发进行中：勾选节点出现批量栏，批量按钮写「下发中…」且全禁用
+test('DeployNodes 行内编辑删除；批量下发中勾选后批量按钮写「下发中…」并全禁用', async ({ page }) => {
+  await openStory(page, 'DeployNodes/Default');
+  const row = page.locator(ROW).nth(0);
+  await expect(row.locator('[data-spec="ship-node-edit"]')).toBeEnabled();
+  await expect(row.locator('[data-spec="ship-node-remove"]')).toBeEnabled();
+  await expect(row.locator('[data-spec="ship-node-remove"]')).toHaveText('删除');
+
+  await openStory(page, 'DeployNodes/BatchBusy');
+  // 批量栏随勾选出现：先勾一台，再断言批量按钮的进行中文案与禁用
+  await page.locator('[data-spec="ship-node-check-11"]').check();
+  const bar = page.locator('[data-spec="ship-node-batchbar"]');
+  await expect(bar).toBeVisible();
+  await expect(bar.locator('[data-spec="ship-node-batch-uninstall"]')).toHaveText('下发中…');
+  for (const act of ACTS) {
+    await expect(bar.locator(`[data-spec="ship-node-batch-${act}"]`)).toBeDisabled();
+  }
+  await expect(page.locator('[data-spec="ship-node-create"]')).toBeDisabled();
+  for (let r = 0; r < 3; r++) {
+    await expect(page.locator(ROW).nth(r).locator('[data-spec="ship-node-edit"]')).toBeDisabled();
+    await expect(page.locator(ROW).nth(r).locator('[data-spec="ship-node-remove"]')).toBeDisabled();
+  }
 });
 
 // 语义断言：危险操作（停止、卸载）与普通操作的样式要有区别；一致与不一致标签颜色不同

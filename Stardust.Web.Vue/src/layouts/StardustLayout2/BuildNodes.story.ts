@@ -29,11 +29,14 @@ const BASE = {
 };
 
 export const stories = [
-  // 正常：三行编译节点（全流程开、不拉代码、已停用且无名字）
+  // 正常：三行编译节点（全流程开、不拉代码、已停用且无名字），每行有编辑/删除（F08）
   { id: 'BuildNodes/Default', component: BuildNodes, props: { ...BASE } },
 
   // 处理中：在 node-build-a（id=21）上执行「编译上传」，该按钮写「处理中…」，所有按钮禁用
   { id: 'BuildNodes/Busy', component: BuildNodes, props: { ...BASE, busyKey: '21:Build-Upload' } },
+
+  // 删除进行中（F08）：该行删除按钮写「删除中…」，全部按钮禁用
+  { id: 'BuildNodes/Removing', component: BuildNodes, props: { ...BASE, busyKey: 'bnode-del:22' } },
 
   // 空态：该部署集还没有配置编译节点
   { id: 'BuildNodes/Empty', component: BuildNodes, props: { ...BASE, rows: [] } },

@@ -85,3 +85,11 @@ test('DeployHistory 已下发与下发失败的标签颜色不同', async ({ pag
     page.locator('[data-spec="tag"]', { hasText: text }).first().evaluate((el) => getComputedStyle(el).color);
   expect(await colorOf('下发失败')).not.toBe(await colorOf('已下发'));
 });
+
+test('F14 深链：部署历史 TraceId 是到 /trace/:id 的链接', async ({ page }) => {
+  await openStory(page, 'DeployHistory/Default');
+  await page.locator('[data-spec="ship-history-row"]').first().click();
+  const link = page.locator('[data-spec="deploy-trace-link"]');
+  await expect(link).toBeVisible();
+  await expect(link).toHaveAttribute('href', '/trace/trace-101');
+});

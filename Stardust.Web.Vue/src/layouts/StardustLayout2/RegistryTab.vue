@@ -4,6 +4,7 @@
  * 列：服务 / 实例 / 健康 / 负载均衡 / 消费者。
  * 实例=Service.Providers、消费者=Service.Consumers（后端聚合数）；健康条按 Enable 在线/停用二态渲染，
  * 不编造百分比；「负载均衡」在 Service/Gateway 之间无对应路由级字段，固定显示「待接入」。
+ * F13：服务名可点（button），emit open(serviceId) → 容器打开 ServiceDetailDrawer。
  */
 import Card from './Card.vue';
 import Tag from './Tag.vue';
@@ -19,7 +20,7 @@ withDefaults(
   { loading: false, error: '' },
 );
 
-const emit = defineEmits<{ retry: [] }>();
+const emit = defineEmits<{ retry: []; open: [serviceId: number] }>();
 </script>
 
 <template>
@@ -95,9 +96,15 @@ const emit = defineEmits<{ retry: [] }>();
           class="hover:bg-[var(--el-bg-color-overlay)]"
         >
           <td :class="TD">
-            <div class="text-[12.5px] font-medium text-[var(--el-text-color-primary)]">
+            <button
+              type="button"
+              data-spec="registry-open"
+              class="block cursor-pointer text-left text-[12.5px] font-medium text-[var(--el-color-primary)] outline-none hover:underline"
+              :title="`查看服务详情：${r.name || r.serviceName}`"
+              @click="emit('open', r.id)"
+            >
               {{ r.name || r.serviceName }}
-            </div>
+            </button>
             <div class="text-[11.5px] text-[var(--el-text-color-secondary)]">
               <span class="font-mono">{{ r.serviceName }}</span>
               <span v-if="r.category"> · {{ r.category }}</span>

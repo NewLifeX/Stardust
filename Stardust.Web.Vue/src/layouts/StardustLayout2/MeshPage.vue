@@ -13,11 +13,13 @@ import PageHead from './PageHead.vue';
 import Btn from './Btn.vue';
 import KIcon from './KIcon.vue';
 import RegistryTab from './RegistryTab.vue';
+import ServiceDetailDrawer from './ServiceDetailDrawer.vue';
 import GatewayTab from './GatewayTab.vue';
 import McpTab from './McpTab.vue';
 import PlatformTab from './PlatformTab.vue';
-import { fetchGateway, fetchMcpServers, fetchPlatform, fetchRegistry } from './mesh.logic.ts';
-import type { GatewayRouteRow, McpServerRow, MemberRow, PlatformTile, ProjectInfo, RegistryRow } from './mesh.logic.ts';
+import { fetchGateway, fetchMcpServers, fetchPlatform, fetchRegistry, fetchServiceDetail, saveService } from './mesh.logic.ts';
+import type { GatewayRouteRow, McpServerRow, MemberRow, PlatformTile, ProjectInfo, RegistryRow, ServiceDetail, ServiceEditModel } from './mesh.logic.ts';
+import { toast } from './useToast.ts';
 import { fetchMcpManage, type McpManageData } from './mcpToken.logic.ts';
 import { stardustContext } from '@/stores/stardustContext';
 import { useContextReload } from './useContextReload.ts';
@@ -124,6 +126,44 @@ async function loadAll(): Promise<void> {
   await Promise.allSettled([loadRegistry(), loadGateway(), loadMcp(), loadPlatform()]);
 }
 
+/** F13 服务详情 Drawer：点服务名打开，拉详情（Service + 提供者 + 消费者） */
+const serviceDrawerOpen = ref(false);
+const serviceDetailLoading = ref(false);
+const serviceDetailFailed = ref(false);
+const serviceDetail = ref<ServiceDetail | null>(null);
+const serviceDetailName = ref('');
+const serviceSaveBusy = ref(false);
+
+async function openService(id: number, name: string): Promise<void> {
+  serviceDrawerOpen.value = true;
+  serviceDetailFailed.value = false;
+  serviceDetailName.value = name;
+  serviceDetailLoading.value = true;
+  try {
+    const d = await fetchServiceDetail(req, id);
+    serviceDetail.value = d;
+    serviceDetailFailed.value = d === null;
+  } finally {
+    serviceDetailLoading.value = false;
+  }
+}
+
+/** 保存服务：PUT /Registry/Service/{id} 部分更新后重拉该服务详情与列表 */
+async function onServiceSubmit(m: ServiceEditModel): Promise<void> {
+  if (!serviceDetail.value || serviceSaveBusy.value) return;
+  serviceSaveBusy.value = true;
+  try {
+    const r = await saveService(req, serviceDetail.value.id, m);
+    toast(r.message, r.ok ? 'ok' : 'err');
+    if (r.ok) {
+      await openService(serviceDetail.value.id, serviceDetail.value.name);
+      await loadRegistry();
+    }
+  } finally {
+    serviceSaveBusy.value = false;
+  }
+}
+
 // 上下文（项目/环境）就绪后首轮取数，之后切换自动重取
 const { reload } = useContextReload(() => { void loadAll(); }, stardustContext);
 </script>
@@ -186,6 +226,7 @@ const { reload } = useContextReload(() => { void loadAll(); }, stardustContext);
       :loading="registry.loading"
       :error="registry.error"
       @retry="loadRegistry"
+      @open="(id) => openService(id, String(registry.rows.find((r) => r.id === id)?.name || ''))"
     />
     <GatewayTab
       v-show="active === 'gateway'"
@@ -219,6 +260,21 @@ const { reload } = useContextReload(() => { void loadAll(); }, stardustContext);
       :loading="platform.loading"
       :error="platform.error"
       @retry="loadPlatform"
+    />
+
+    <!-- F13 服务详情 Drawer：编辑服务信息 + 提供者/消费者列表 -->
+    <ServiceDetailDrawer
+      :open="serviceDrawerOpen"
+      :loading="serviceDetailLoading"
+      :failed="serviceDetailFailed"
+      :service="serviceDetail?.service ?? null"
+      :providers="serviceDetail?.providers ?? []"
+      :consumers="serviceDetail?.consumers ?? []"
+      :service-name="serviceDetailName"
+      :busy="serviceSaveBusy"
+      @close="serviceDrawerOpen = false"
+      @retry="serviceDetail && openService(serviceDetail.id, serviceDetailName)"
+      @submit="onServiceSubmit"
     />
   </div>
 </template>
