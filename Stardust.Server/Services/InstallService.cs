@@ -24,7 +24,7 @@ public class InstallService
     private const Int32 CatalogExpire = 60;
 
     /// <summary>页面展示的运行时保留的主版本数。只挑最近几个大版本，避免列表过长</summary>
-    private const Int32 RuntimeMajorKeep = 2;
+    private const Int32 RuntimeMajorKeep = 3;
 
     private readonly StarServerSetting _setting;
     private readonly ICacheProvider _cacheProvider;
@@ -167,6 +167,9 @@ public class InstallService
         if (osKind == OSKind.Any) return null;
 
         var cpuArch = ParseArch(arch);
+        // 未知架构时下发自检脚本：由目标机自行识别架构后重新拉取对应脚本，页面无需选择架构
+        if (cpuArch == CpuArch.Any) return BuildBootstrapScript(osKind, runtime, version, server);
+
         var isWindows = osKind == OSKind.Windows;
         var catalog = GetCatalog();
 
@@ -202,6 +205,47 @@ public class InstallService
         foreach (var item in values) sb.Replace("{{" + item.Key + "}}", item.Value);
 
         return sb.ToString();
+    }
+
+    /// <summary>生成架构自检脚本。页面不选架构，脚本运行在目标机上再判断</summary>
+    /// <param name="os">目标系统</param>
+    /// <param name="runtime">.NET主版本号</param>
+    /// <param name="version">StarAgent版本</param>
+    /// <param name="server">服务端地址</param>
+    /// <returns>脚本内容</returns>
+    private static String BuildBootstrapScript(OSKind os, String? runtime, String? version, String server)
+    {
+        var url = server.TrimEnd('/') + (os == OSKind.Windows ? "/install.ps1?os=windows" : "/install.sh?os=linux");
+        if (!runtime.IsNullOrEmpty()) url += "&runtime=" + runtime;
+        if (!version.IsNullOrEmpty()) url += "&version=" + version;
+
+        if (os == OSKind.Windows)
+        {
+            return $$"""
+# 架构自检后拉取 Windows 安装脚本
+$ErrorActionPreference = "Stop"
+$arch = if ($env:PROCESSOR_ARCHITECTURE -match 'ARM64') { 'arm64' } else { 'x64' }
+Write-Host "检测到架构：$arch"
+$script = (Invoke-WebRequest -Uri '{{url}}&arch=' + $arch -UseBasicParsing).Content
+Invoke-Expression $script
+""";
+        }
+
+        return $$"""
+#!/bin/bash
+# 架构自检后拉取 Linux 安装脚本
+set -e
+ARCH="$(uname -m)"
+case "$ARCH" in
+    x86_64|amd64) ARCH=x64 ;;
+    aarch64|arm64) ARCH=arm64 ;;
+    armv7l|armv6l|arm) ARCH=arm ;;
+    loongarch64) ARCH=loongarch64 ;;
+    *) ARCH=x64 ;;
+esac
+echo "检测到架构：$ARCH"
+curl -fsSL '{{url}}&arch='"$ARCH" | bash
+""";
     }
 
     /// <summary>生成运行时安装片段</summary>
@@ -413,13 +457,27 @@ fi
         return model;
     }
 
-    /// <summary>页面展示的运行时清单。每个系统架构只保留最近两个主版本的最新包，避免列表过长</summary>
+    /// <summary>页面展示的运行时主版本白名单。只保留常用的 10/8/4，避免列表过长与流量浪费</summary>
+    private static readonly String[] RuntimeMajors = ["10", "8", "4"];
+
+    /// <summary>页面展示的运行时系统白名单</summary>
+    private static readonly OSKind[] RuntimeOSs = [OSKind.Windows, OSKind.Linux];
+
+    /// <summary>页面展示的运行时架构白名单。常用 win-x64 / linux-x64 / linux-arm64</summary>
+    private static readonly CpuArch[] RuntimeArchs = [CpuArch.X64, CpuArch.Arm64];
+
+    /// <summary>页面展示的运行时清单。每个系统架构只保留白名单内主版本的最新包</summary>
     /// <returns>运行时安装包</returns>
     private static List<InstallPackage> BuildRuntimeList()
     {
         var list = new List<InstallPackage>();
 
-        foreach (var group in QueryRuntimes(200).GroupBy(e => new { e.OSKind, e.Architecture }))
+        var packages = QueryRuntimes(200)
+            .Where(e => RuntimeOSs.Contains(e.OSKind) && RuntimeArchs.Contains(e.Architecture))
+            .Where(e => RuntimeMajors.Contains(MajorOf(e.Version)))
+            .GroupBy(e => new { e.OSKind, e.Architecture });
+
+        foreach (var group in packages)
         {
             var majors = group
                 .GroupBy(e => MajorOf(e.Version))
@@ -541,18 +599,14 @@ fi
             });
         }
 
-        // 新版本在前，脚本挑选时直接取首个匹配项
+        // 只保留常用版本，新版本在前；Linux 用 tar.gz 更自然，Windows 用 zip
         Add("staragent10.tar.gz", "net10.0", "10", "Linux", "Any");
         Add("staragent10.zip", "net10.0", "10", "Windows", "Any");
-        Add("staragent90.tar.gz", "net9.0", "9", "Linux", "Any");
-        Add("staragent90.zip", "net9.0", "9", "Windows", "Any");
         Add("staragent80.tar.gz", "net8.0", "8", "Linux", "Any");
         Add("staragent80.zip", "net8.0", "8", "Windows", "Any");
         Add("staragent60.tar.gz", "net6.0", "6", "Linux", "Any");
         Add("staragent60.zip", "net6.0", "6", "Windows", "Any");
         Add("staragent45.zip", "net4.5", "4", "Windows", "Any");
-        Add("staragent31.tar.gz", "netcoreapp3.1", "3.1", "Linux", "Mips64");
-        Add("staragent31.zip", "netcoreapp3.1", "3.1", "Windows", "Mips64");
 
         return list;
     }

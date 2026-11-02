@@ -35,7 +35,7 @@ StarServer 根路径 `/` 是**平台门户**：上方展示节点/应用在线�
 | `GET /` | 安装引导页。`Accept: application/json` 或 `?format=json` 时返回清单 |
 | `GET /home/summary` | 平台概览：在线/总节点、在线/总应用、今日与昨日调用、错误率、版本、运行时长、近7天趋势 |
 | `GET /install` | 安装清单 JSON：`server`、`versions[]`、`runtimes[]`、`mirror[]` |
-| `GET /install.sh?os=linux&arch=x64&runtime=10&version=` | bash 脚本，含服务端地址、包地址与校验 |
+| `GET /install.sh?os=linux&arch=x64&runtime=10&version=` | bash 脚本，含服务端地址、包地址与校验；**省略 `arch` 时下发自检脚本** |
 | `GET /install.ps1?os=windows&arch=x64` | PowerShell 脚本 |
 | `GET /install/download/{kind}/{id}` | `kind` 取 `agent`/`runtime`，只放行启用版本下的安装包，现场签发短时令牌后 302 |
 | `GET /install/leaf.png`、`GET /favicon.ico` | 品牌四叶草图标（嵌入资源 `Resources/leaf.png`，缓存一天） |
@@ -48,7 +48,7 @@ StarServer 根路径 `/` 是**平台门户**：上方展示节点/应用在线�
 |------|------|
 | `ProductRelease`（ProductCode=StarAgent、Enable、Channel） | 发布版本，新到旧 |
 | `ProductPackage`（ReleaseId、OSKind、CpuArch、TargetRuntime） | 各平台安装包；`TargetRuntime` 为 `go`/`rust`/`cpp` 时归入原生 Agent |
-| `DotNetPackage`（Kind=runtime） | .NET 运行时安装包；页面每个系统架构只保留最近 2 个主版本，避免列表过长 |
+| `DotNetPackage`（Kind=runtime） | .NET 运行时安装包；白名单 net10/net8/net45 × Windows/Linux × x64/arm64，每个平台架构只留最近 3 个主版本，不下发 mips |
 | `AgentDownloadBaseUrl` | 公共镜像兜底，仅在服务端未维护对应包时使用 |
 
 清单缓存 60 秒（`ICacheProvider.Cache`），因此后台发布后最迟约一分钟可见。
@@ -68,6 +68,13 @@ StarServer 根路径 `/` 是**平台门户**：上方展示节点/应用在线�
 3. 解压到 `/opt/staragent` 或 `C:\Program Files\StarAgent`
 4. 执行 `dotnet StarAgent.dll -install -server <服务端地址>`
 
+**架构自检**：页面不再让用户选架构，命令里也不带 `arch` 参数。服务端收到无 `arch` 的请求时下发一段引导脚本——
+Linux 用 `uname -m`、Windows 用 `$env:PROCESSOR_ARCHITECTURE` 识别架构，再带 `&arch=` 回拉真正的安装脚本执行。
+因此同一条命令在 x64 / arm64 / arm / loongarch64 机器上都能直接跑。
+
+**包格式按平台固定**：Linux 用 `tar.gz`（系统自带 `tar`，`zip` 常需另装 `unzip`），Windows 用 `zip`（`Expand-Archive` 原生支持）。
+两种格式由平台页签决定，不再让用户选。
+
 脚本内的下载地址一律是 `/install/download/...`，执行时才换令牌，所以页面打开很久后再跑脚本也不会失效。
 
 ## 6. 配置项（StarServer）
@@ -84,7 +91,8 @@ StarServer 根路径 `/` 是**平台门户**：上方展示节点/应用在线�
 - 完整版 StarAgent：StarWeb → 节点管理 → 产品版本 → 产品发布包，按 OS/架构/运行时上传；上传后自动回填文件大小、MD5 与相对下载地址（`/cube/file?id=...`）。
 - 原生 Agent：同一张发布包表，`TargetRuntime` 填 `go`/`rust`/`cpp`。
 - .NET 运行时：`DotNetSyncService` 自动同步官方 releases.json；离线环境手工上传。
-- 公共镜像：发布到 `x.newlifex.com/star`，作为兜底。
+- 公共镜像：发布到 `x.newlifex.com/star`，作为兜底。镜像清单只保留 staragent10/staragent80/staragent60/staragent45（`net10`/`net8`/`net6`/`net45`），已下掉 net9 与 netcoreapp3.1/mips 项；
+  页面按当前平台页签过滤，镜像包直接 302 到外部地址，不消耗本机流量；自建站点如需完全离线，把包上传到 StarWeb 后即按本站相对地址下发。
 
 ## 8. 安全
 

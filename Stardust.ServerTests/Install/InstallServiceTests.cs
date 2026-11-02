@@ -254,6 +254,20 @@ public class InstallServiceTests
         Assert.Contains("StarAgent.dll -install -server", script);
     }
 
+    /// <summary>未指定架构时下发自检脚本，架构由目标机识别，页面无需选择。</summary>
+    [Fact]
+    [Trait("Category", "Install")]
+    public void BuildScript_WithoutArch_ReturnsBootstrap()
+    {
+        var (service, _) = CreateService();
+
+        var script = service.BuildScript("linux", null, null, null, BaseUri);
+
+        Assert.NotNull(script);
+        Assert.Contains("uname -m", script);
+        Assert.Contains("install.sh?os=linux&arch=", script);
+    }
+
     [Fact]
     [Trait("Category", "Install")]
     public void BuildScript_RejectsInvalidServer()

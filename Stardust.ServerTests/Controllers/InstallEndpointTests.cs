@@ -133,6 +133,19 @@ public class InstallEndpointTests : StarTestBase
         Assert.DoesNotContain("token=", script);
     }
 
+    /// <summary>页面不选架构时，下发的是自检脚本，由目标机识别架构后再拉真正安装脚本。</summary>
+    [Fact]
+    [Trait("Category", "Install")]
+    public async Task ShellScript_WithoutArch_ReturnsBootstrap()
+    {
+        var client = _server.CreateClient();
+
+        var script = await client.GetStringAsync("/install.sh?os=linux");
+
+        Assert.Contains("uname -m", script);
+        Assert.Contains("install.sh?os=linux&arch=", script);
+    }
+
     [Fact]
     [Trait("Category", "Install")]
     public async Task Download_EnabledPackage_RedirectsWithToken()

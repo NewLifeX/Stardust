@@ -332,13 +332,6 @@
             </div>
             <pre id="command">-</pre>
             <div class="cmd-foot">
-                <select class="field" id="archSel">
-                    <option value="x64">x64</option>
-                    <option value="arm64">arm64</option>
-                    <option value="arm">arm</option>
-                    <option value="loongarch64">loongarch64</option>
-                    <option value="mips64">mips64</option>
-                </select>
                 <button class="primary" id="copyBtn" data-i18n="copyCommand">复制命令</button>
                 <span class="tip" id="copyTip"></span>
             </div>
@@ -511,6 +504,7 @@ const I18N = {
         copyCommand: "复制命令",
         copied: "已复制到剪贴板",
         autoPicked: "已按当前浏览器识别为",
+        archAuto: "架构由脚本自动检测",
         packages: "安装包",
         native: "原生 Agent",
         nativeHint: "Go / Rust / C++ 轻量版本",
@@ -559,6 +553,7 @@ const I18N = {
         copyCommand: "Copy command",
         copied: "Copied to clipboard",
         autoPicked: "Detected from your browser:",
+        archAuto: "arch auto-detected by the script",
         packages: "Packages",
         native: "Native agents",
         nativeHint: "Go / Rust / C++ builds",
@@ -583,7 +578,6 @@ let lang = (navigator.language || "zh").toLowerCase().startsWith("zh") ? "zh" : 
 const reducedMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 let manifest = null;
 let os = "linux";
-let arch = "x64";
 let detected = false;
 
 const $ = id => document.getElementById(id);
@@ -744,12 +738,13 @@ function renderCommand() {
         btn.classList.toggle("on", btn.dataset.os === os);
     });
 
+    // 架构由目标机上的脚本自行识别，命令里无需带参数
     if (os === "windows") {
-        const url = server + "/install.ps1?os=windows&arch=" + arch;
+        const url = server + "/install.ps1?os=windows";
         $("command").textContent =
             "powershell -NoProfile -ExecutionPolicy Bypass -Command \"iwr '" + url + "' -UseBasicParsing | iex\"";
     } else {
-        const url = server + "/install.sh?os=linux&arch=" + arch;
+        const url = server + "/install.sh?os=linux";
         $("command").textContent = "curl -fsSL '" + url + "' | sudo bash";
     }
 }
@@ -757,7 +752,16 @@ function renderCommand() {
 function renderAutoHint() {
     if (!detected) return;
     const name = os === "windows" ? "Windows" : "Linux / macOS";
-    $("autoHint").textContent = t("autoPicked") + " " + name + " · " + arch;
+    $("autoHint").textContent = t("autoPicked") + " " + name + " · " + t("archAuto");
+}
+
+/** 安装包是否属于当前平台页签 */
+function matchOS(pkg) {
+    const name = (pkg.os || "Any").toLowerCase();
+    if (name === "any") return true;
+    if (os === "windows") return name === "windows";
+
+    return name === "linux" || name === "linuxmusl" || name === "osx";
 }
 
 function render() {
@@ -768,8 +772,8 @@ function render() {
 
     const ver = currentVersion();
     const packages = (ver && ver.packages) || [];
-    const agent = packages.filter(e => !e.kind || e.kind === "agent");
-    const native = packages.filter(e => e.kind === "native");
+    const agent = packages.filter(e => (!e.kind || e.kind === "agent") && matchOS(e));
+    const native = packages.filter(e => e.kind === "native" && matchOS(e));
 
     fill("agentTable", "agentEmpty", agent, false);
 
@@ -777,7 +781,7 @@ function render() {
     if (native.length > 0) fill("nativeTable", null, native, false);
 
     renderTiles(manifest.runtimes);
-    fill("mirrorTable", null, manifest.mirror, false);
+    fill("mirrorTable", null, (manifest.mirror || []).filter(matchOS), false);
 
     // 服务端未维护任何发布版本时，直接展开公共镜像，避免用户面对空表
     const mirrorBox = document.querySelector("details.mirror");
@@ -787,23 +791,10 @@ function render() {
 }
 
 async function detectPlatform() {
-    const ua = navigator.userAgent || "";
-    if (/Windows/i.test(ua)) os = "windows";
+    if (/Windows/i.test(navigator.userAgent || "")) os = "windows";
     else os = "linux";
 
-    // 优先读取 User-Agent Client Hints，Chromium 系可拿到真实架构
-    if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
-        try {
-            const v = await navigator.userAgentData.getHighEntropyValues(["architecture", "bitness", "platform"]);
-            if (v.platform && /Windows/i.test(v.platform)) os = "windows";
-            if (v.architecture === "arm") arch = v.bitness === "64" ? "arm64" : "arm";
-        } catch { /* 部分浏览器拒绝高熵值，忽略即可 */ }
-    } else if (/aarch64|arm64/i.test(ua)) {
-        arch = "arm64";
-    }
-
     detected = true;
-    $("archSel").value = arch;
     renderAutoHint();
     renderCommand();
 }
@@ -959,12 +950,11 @@ document.querySelectorAll("#osTabs button").forEach(btn => {
         os = btn.dataset.os;
         detected = false;
         $("autoHint").textContent = "";
-        renderCommand();
+        render();
     });
 });
 $("langBtn").addEventListener("click", () => { lang = lang === "zh" ? "en" : "zh"; applyLang(); });
 $("versionSel").addEventListener("change", render);
-$("archSel").addEventListener("change", e => { arch = e.target.value; renderCommand(); });
 
 async function copyText(text) {
     try {
