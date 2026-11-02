@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
 using Stardust.Data.Deployment;
 using Stardust.Web.Services;
@@ -80,5 +81,63 @@ public class AppPipelineRunController : DeploymentEntityController<AppPipelineRu
         {
             return Json(500, ex.Message);
         }
+    }
+
+    /// <summary>运行详情。返回运行记录及其步骤列表</summary>
+    /// <param name="id">运行编号</param>
+    /// <returns>运行字段 + steps 数组；不存在时业务错误「Run record does not exist.」</returns>
+    [DisplayName("运行详情")]
+    [EntityAuthorize(PermissionFlags.Detail)]
+    public ActionResult Detail(Int32 id)
+    {
+        var run = AppPipelineRun.FindById(id);
+        if (run == null)
+        {
+            // 契约固定文案，便于前端识别空运行
+            return Json(500, "Run record does not exist.");
+        }
+
+        var steps = AppPipelineStep.FindAllByRunId(id).OrderBy(e => e.StepIndex).ToList();
+
+        return Json(0, null, new
+        {
+            run.Id,
+            run.PipelineId,
+            Status = run.Status + "",
+            run.TriggerSource,
+            run.CommitId,
+            run.CommitMessage,
+            run.CommitAuthor,
+            run.CommitTime,
+            run.Branch,
+            run.BuildNodeId,
+            run.AppVersionId,
+            run.BuildStartedTime,
+            run.BuildFinishedTime,
+            run.DeployStartedTime,
+            run.DeployFinishedTime,
+            run.TraceId,
+            run.CreateUserId,
+            run.CreateTime,
+            run.CreateIP,
+            run.UpdateUserId,
+            run.UpdateTime,
+            run.UpdateIP,
+            run.Remark,
+            steps = steps.Select(s => new
+            {
+                s.Id,
+                s.RunId,
+                s.StepType,
+                s.StepIndex,
+                s.NodeId,
+                s.CommandId,
+                s.Status,
+                s.Message,
+                s.StartedTime,
+                s.FinishedTime,
+                s.CreateTime,
+            }).ToArray(),
+        });
     }
 }

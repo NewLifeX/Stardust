@@ -35,19 +35,27 @@ public class AppClientLogController : RegistryEntityController<AppClientLog>
         //ListFields.TraceUrl("TraceId");
     }
 
-    /// <summary>高级搜索。列表页查询、导出Excel、导出Json、分享页等使用</summary>
-    /// <param name="p">分页器。包含分页排序参数，以及Http请求参数</param>
-    /// <returns></returns>
     /// <summary>高级搜索。按条件分页查询</summary>
+    /// <remarks>
+    /// 应用日志是分表实体（按月分库+按天分表），必须带 Id 时间窗做分表感知查询，禁止打基础表。
+    /// appId 为必要过滤条件（分表感知查询按应用定位）；clientId/threadId/kind 可选；
+    /// dtStart/dtEnd 均为空时默认当天 00:00 起。缺表环境返回空数据而非异常（SearchSafe 兜底）。
+    /// </remarks>
     /// <param name="p">分页参数</param>
     /// <returns>实体列表</returns>
     protected override IEnumerable<AppClientLog> Search(Pager p)
     {
-        //var deviceId = p["deviceId"].ToInt(-1);
+        var appId = p["appId"].ToInt(-1);
+        var clientId = p["clientId"];
+        var threadId = p["threadId"];
+        var kind = p["kind"];
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return AppClientLog.Search(start, end, p["Q"], p);
+        // 均未指定时间时默认当天 00:00 起，保证分表感知查询始终有时间窗
+        if (start.Year < 2000 && end.Year < 2000) start = DateTime.Today;
+
+        return AppClientLog.SearchSafe(appId, clientId, threadId, start, end, p["Q"], kind, p, out _);
     }
 }

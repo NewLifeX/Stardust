@@ -78,6 +78,54 @@ public class AppDeployVersionController : DeploymentEntityController<AppDeployVe
         return AppDeployVersion.Search(deployId, null, null, start, end, p["Q"], p);
     }
 
+    /// <summary>上传新版本。multipart 提交 deployId+file（可选 remark），自动生成版本号并保存文件</summary>
+    /// <remarks>
+    /// 行为对齐 MVC 上传：包名须匹配部署集 PackageName；版本号自动取 yyyyMMdd-HHmmss；
+    /// 文件保存为 cube 附件并回写 Hash/Size/Url；部署集开启自动发布时上传即发布。
+    /// </remarks>
+    /// <param name="deployId">部署集</param>
+    /// <param name="file">应用包文件</param>
+    /// <param name="remark">备注，可选</param>
+    /// <returns>新版本信息</returns>
+    [DisplayName("上传新版本")]
+    [EntityAuthorize(PermissionFlags.Update)]
+    public async Task<ActionResult> Upload([FromForm] Int32 deployId, IFormFile file, [FromForm] String remark = null)
+    {
+        if (deployId <= 0) throw new ArgumentNullException(nameof(deployId), L.T("Deployment is required."));
+        if (file == null || file.Length <= 0) throw new ArgumentNullException(nameof(file), L.T("No file was uploaded."));
+
+        var deploy = AppDeploy.FindById(deployId);
+        if (deploy == null) throw new InvalidOperationException(L.T("Deployment [{0}] does not exist.", deployId));
+
+        // 包名校验，与表单上传一致：避免误传其它应用包
+        var name = Path.GetFileName(file.FileName);
+        if (!name.IsNullOrEmpty() && !deploy.PackageName.IsNullOrEmpty() && !deploy.PackageName.IsMatch(name, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException(L.T("File name [{0}] does not match the application package name [{1}].", name, deploy.PackageName));
+
+        var entity = new AppDeployVersion
+        {
+            DeployId = deployId,
+            Version = DateTime.Now.ToString("yyyyMMdd-HHmmss"),
+            Enable = true,
+            Remark = remark,
+        };
+
+        // 复刻标准新增流程：OnInsert（含部署集统计 Fix）后保存文件（override 已回写 Hash/Size/Url 并处理自动发布）
+        OnInsert(entity);
+        try
+        {
+            await SaveFile(entity, file, null, null);
+        }
+        catch
+        {
+            // 文件保存失败时回滚版本行，避免留下无包记录
+            entity.Delete();
+            throw;
+        }
+
+        return Json(0, null, new { id = entity.Id, version = entity.Version, size = entity.Size, hash = entity.Hash, url = entity.Url });
+    }
+
     protected override Boolean Valid(AppDeployVersion entity, DataObjectMethodType type, Boolean post)
     {
         if (type == DataObjectMethodType.Delete || type == DataObjectMethodType.Update) return base.Valid(entity, type, post);
