@@ -179,6 +179,14 @@ public class InstallServiceTests
         Assert.All(manifest.Mirror, e => Assert.Equal("mirror", e.Origin));
         Assert.All(manifest.Mirror, e => Assert.True(e.Url!.StartsWithIgnoreCase("http://", "https://"), e.Url));
         Assert.All(manifest.Mirror, e => Assert.Equal("agent", e.Kind));
+
+        // net6/8/10 是框架依赖包，系统与架构都中立；只有 net4.5 限 Windows
+        Assert.All(manifest.Mirror.Where(e => e.Runtime != "4"), e =>
+        {
+            Assert.Equal("Any", e.OS);
+            Assert.Equal("Any", e.Arch);
+        });
+        Assert.All(manifest.Mirror.Where(e => e.Runtime == "4"), e => Assert.Equal("Windows", e.OS));
     }
 
     /// <summary>下载地址指向本站下载入口，访问时才签发短时令牌。</summary>
@@ -252,6 +260,11 @@ public class InstallServiceTests
         Assert.NotNull(script);
         Assert.Contains("staragent10.tar.gz", script);
         Assert.Contains("StarAgent.dll -install -server", script);
+
+        // Windows 回退镜像时取 zip，Linux 取 tar.gz
+        var win = service.BuildScript("windows", "x64", null, null, BaseUri);
+        Assert.NotNull(win);
+        Assert.Contains("staragent10.zip", win);
     }
 
     /// <summary>未指定架构时下发自检脚本，架构由目标机识别，页面无需选择。</summary>

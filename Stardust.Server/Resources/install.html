@@ -421,6 +421,7 @@
 
     <details class="mirror" id="mirrorBox">
         <summary data-i18n="mirror">公共镜像（服务端未维护安装包时兜底）</summary>
+        <p data-i18n="mirrorHint" style="margin:0 0 8px;font-size:12px;opacity:.6">6/8/10 为通用包，Linux 取 tar.gz、Windows 取 zip；只有 net45 限 Windows</p>
         <div class="card" style="margin-top:12px">
             <div class="table-wrap" style="margin-top:0">
                 <table>
@@ -512,6 +513,7 @@ const I18N = {
         runtimeHint: "缺少运行时的机器先装这个",
         items: "个安装包",
         mirror: "公共镜像（服务端未维护安装包时兜底）",
+        mirrorHint: "6/8/10 为通用包，Linux 取 tar.gz、Windows 取 zip；只有 net45 限 Windows",
         colOS: "平台", colArch: "架构", colRuntime: "运行时", colFile: "文件",
         colSize: "大小", colAction: "下载",
         download: "下载", empty: "该版本暂未发布安装包", emptyAgent: "该版本暂未发布安装包，可先用下方公共镜像", suggest: "推荐",
@@ -561,6 +563,7 @@ const I18N = {
         runtimeHint: "Install first when the runtime is missing",
         items: "packages",
         mirror: "Public mirror (fallback when nothing is published here)",
+        mirrorHint: "6/8/10 are portable packages: tar.gz for Linux, zip for Windows. Only net45 is Windows-only.",
         colOS: "Platform", colArch: "Arch", colRuntime: "Runtime", colFile: "File",
         colSize: "Size", colAction: "Download",
         download: "Download", empty: "No package published for this version", emptyAgent: "No packages for this version yet — use the public mirror below", suggest: "Latest",
@@ -908,9 +911,13 @@ function renderSummary() {
         animateNumber($("stAppOnline"), summary.appOnline, show);
         $("stAppSub").textContent = summary.appTotal > 0 ? t("stTotal") + " " + show(summary.appTotal) : "-";
         animateNumber($("stTodayCall"), summary.todayCall, show);
-        $("stCallSub").textContent = summary.todayCall > 0 && summary.yesterdayCall > 0
-            ? t("vsYesterday") + " " + (((summary.todayCall - summary.yesterdayCall) / summary.yesterdayCall * 100).toFixed(1)) + "%"
-            : (summary.yesterdayCall > 0 ? t("yesterday") + " " + show(summary.yesterdayCall) : t("today"));
+        // 量级化后今日与昨日可能差好几个数量级，此时百分比没有意义，改为直接给昨日量级
+        const today = summary.todayCall || 0;
+        const yst = summary.yesterdayCall || 0;
+        const ratio = yst > 0 ? today / yst : 0;
+        $("stCallSub").textContent = today > 0 && yst > 0 && ratio >= 0.1 && ratio <= 10
+            ? t("vsYesterday") + " " + (((today - yst) / yst * 100).toFixed(1)) + "%"
+            : (yst > 0 ? t("yesterday") + " " + show(yst) : t("today"));
         animateNumber($("stTodayError"), summary.todayError, show);
         $("stErrorSub").textContent = t("errorRate") + " " + percent(summary.errorRate);
     }

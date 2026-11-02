@@ -179,7 +179,7 @@ public class InstallService
 
         // 优先使用后台维护的安装包，缺失时回退公共镜像
         var pkg = release == null ? null : SelectPackage(release.Packages, osKind, cpuArch, runtime, isWindows);
-        pkg ??= SelectPackage(catalog.Mirror, osKind, cpuArch, runtime, isWindows);
+        pkg ??= SelectMirrorPackage(catalog.Mirror, osKind, cpuArch, runtime, isWindows);
         if (pkg == null || pkg.Url.IsNullOrEmpty()) return null;
 
         // 运行时版本以安装包自身的运行时就近匹配，找不到则退回该平台最新运行时
@@ -338,6 +338,27 @@ fi
             .ThenByDescending(e => arch != CpuArch.Any && e.Arch.EqualIgnoreCase(archName))
             .ThenByDescending(e => isWindows != null && IsZip(e.FileName) == isWindows)
             .ThenByDescending(e => IsRuntimeMatch(e.Runtime, runtime))
+            .FirstOrDefault();
+    }
+
+    /// <summary>从公共镜像中挑包。镜像里的包系统中立，格式分 tar.gz 与 zip，按目标系统取对应格式，并保持新版本在前</summary>
+    /// <param name="packages">镜像包集合</param>
+    /// <param name="os">目标系统</param>
+    /// <param name="arch">目标架构</param>
+    /// <param name="runtime">目标运行时主版本</param>
+    /// <param name="isWindows">是否 Windows 系统</param>
+    /// <returns>镜像安装包</returns>
+    private static InstallPackage? SelectMirrorPackage(IEnumerable<InstallPackage> packages, OSKind os, CpuArch arch, String? runtime, Boolean isWindows)
+    {
+        var osName = os + "";
+        var archName = arch + "";
+
+        return packages
+            .Where(e => e.Kind.IsNullOrEmpty() || e.Kind.EqualIgnoreCase("agent"))
+            .Where(e => e.OS.IsNullOrEmpty() || e.OS.EqualIgnoreCase("Any") || e.OS.EqualIgnoreCase(osName))
+            .Where(e => e.Arch.IsNullOrEmpty() || e.Arch.EqualIgnoreCase("Any") || e.Arch.EqualIgnoreCase(archName))
+            .Where(e => IsZip(e.FileName) == isWindows)
+            .OrderByDescending(e => IsRuntimeMatch(e.Runtime, runtime))
             .FirstOrDefault();
     }
 
@@ -599,13 +620,14 @@ fi
             });
         }
 
-        // 只保留常用版本，新版本在前；Linux 用 tar.gz 更自然，Windows 用 zip
-        Add("staragent10.tar.gz", "net10.0", "10", "Linux", "Any");
-        Add("staragent10.zip", "net10.0", "10", "Windows", "Any");
-        Add("staragent80.tar.gz", "net8.0", "8", "Linux", "Any");
-        Add("staragent80.zip", "net8.0", "8", "Windows", "Any");
-        Add("staragent60.tar.gz", "net6.0", "6", "Linux", "Any");
-        Add("staragent60.zip", "net6.0", "6", "Windows", "Any");
+        // 只保留常用版本，新版本在前。staragent6/8/10 是框架依赖的 IL 包，系统与架构都中立（同一份 dll 任意平台可跑），
+        // 只是压缩格式分 tar.gz 与 zip；仅 net45 版限 Windows。选包时按平台挑对应格式（见 SelectPackage）
+        Add("staragent10.tar.gz", "net10.0", "10", "Any", "Any");
+        Add("staragent10.zip", "net10.0", "10", "Any", "Any");
+        Add("staragent80.tar.gz", "net8.0", "8", "Any", "Any");
+        Add("staragent80.zip", "net8.0", "8", "Any", "Any");
+        Add("staragent60.tar.gz", "net6.0", "6", "Any", "Any");
+        Add("staragent60.zip", "net6.0", "6", "Any", "Any");
         Add("staragent45.zip", "net4.5", "4", "Windows", "Any");
 
         return list;

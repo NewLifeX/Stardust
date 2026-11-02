@@ -92,6 +92,9 @@ Linux 用 `uname -m`、Windows 用 `$env:PROCESSOR_ARCHITECTURE` 识别架构，
 - 原生 Agent：同一张发布包表，`TargetRuntime` 填 `go`/`rust`/`cpp`。
 - .NET 运行时：`DotNetSyncService` 自动同步官方 releases.json；离线环境手工上传。
 - 公共镜像：发布到 `x.newlifex.com/star`，作为兜底。镜像清单只保留 staragent10/staragent80/staragent60/staragent45（`net10`/`net8`/`net6`/`net45`），已下掉 net9 与 netcoreapp3.1/mips 项；
+  **6/8/10 是框架依赖的 IL 包，系统与架构都中立**（同一份 dll 在任意平台可跑，也非 AOT），因此清单里标 `Any`/`Any`，仅格式分 `tar.gz` 与 `zip`；
+  只有 net45 版限 Windows。脚本选包时按目标系统取对应格式（Windows→zip、Linux→tar.gz）且新版本优先，见 `SelectMirrorPackage`。
+  镜像包直接 302 到外部地址，不消耗本机流量；自建站点如需完全离线，把包上传到 StarWeb 后即按本站相对地址下发。
   页面按当前平台页签过滤，镜像包直接 302 到外部地址，不消耗本机流量；自建站点如需完全离线，把包上传到 StarWeb 后即按本站相对地址下发。
 
 ## 8. 安全
@@ -99,6 +102,7 @@ Linux 用 `uname -m`、Windows 用 `$env:PROCESSOR_ARCHITECTURE` 识别架构，
 - 页面与清单匿名：引导安装发生在节点注册之前，没有令牌可用；只暴露公开的安装包元数据。
 - **规模数据默认量级化**：`HomeSummaryMode=Magnitude` 时只展示 `1,200+`、`1,287 万+` 这类数量级，配合同比趋势与错误率，足以体现平台在跑而不泄露精确运营数据；公网部署建议保持默认，内网可改 `Exact`，完全不想展示则设 `Hidden`（服务端也不会读取与返回统计）。
 - **趋势曲线只给形状**：近 7 天调用量在服务端按峰值归一化到 0~100 后下发，页面只能画出走势，拿不到任何一天的绝对值。
+- **量级化时不给百分比**：今日与昨日相差超过 10 倍时，环比百分数没有意义（例如今天 1.5k、昨天 73 万），此时改为直接展示「昨日 73 万+」。
 - **概览缓存 30 秒**：公开页面刷新频率高，缓存既降低数据库压力，也避免访客通过连续刷新反推实时数据。
 - 下载入口只放行"启用版本下的安装包编号"，不开放附件表任意下载。
 - 令牌短时（`AttachmentTokenExpire`，默认 600 秒）且不落库，每次访问现场签发。
