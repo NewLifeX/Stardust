@@ -11,9 +11,6 @@ public class InstallManifest
     /// <summary>服务端地址。StarAgent 安装后注册的目标地址，也是相对下载地址的补全基址</summary>
     public String? Server { get; set; }
 
-    /// <summary>升级通道。release/beta/develop</summary>
-    public String? Channel { get; set; }
-
     /// <summary>清单生成时间</summary>
     public DateTime UpdateTime { get; set; }
 
@@ -35,9 +32,6 @@ public class InstallVersion
 
     /// <summary>版本号</summary>
     public String? Version { get; set; }
-
-    /// <summary>升级通道</summary>
-    public String? Channel { get; set; }
 
     /// <summary>是否强制升级</summary>
     public Boolean Force { get; set; }

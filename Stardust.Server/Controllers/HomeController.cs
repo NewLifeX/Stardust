@@ -26,11 +26,10 @@ public class HomeController : ControllerBase
 
     /// <summary>首页。默认返回安装引导页，Accept 或 format 指定 json 时返回安装清单</summary>
     /// <param name="format">返回格式。json 返回安装清单</param>
-    /// <param name="channel">升级通道。release/beta/develop</param>
     /// <returns>安装引导页或安装清单</returns>
     [Route("/")]
     [HttpGet]
-    public IActionResult Index(String? format, String? channel)
+    public IActionResult Index(String? format)
     {
         if (!_setting.EnableInstallPage) return LegacyHome();
 
@@ -39,7 +38,7 @@ public class HomeController : ControllerBase
         if (format.EqualIgnoreCase("json") || accept.Contains("application/json", StringComparison.OrdinalIgnoreCase))
         {
             var server = InstallService.GetServerUrl(Request, _setting);
-            return Ok(_installService.GetManifest(channel, server));
+            return Ok(_installService.GetManifest(server));
         }
 
         var html = _installService.GetPage();

@@ -33,8 +33,8 @@
 | 接口 | 说明 |
 |------|------|
 | `GET /` | 安装引导页。`Accept: application/json` 或 `?format=json` 时返回清单 |
-| `GET /install` | 安装清单 JSON：`server`、`channel`、`versions[]`、`runtimes[]`、`mirror[]` |
-| `GET /install.sh?os=linux&arch=x64&runtime=10&version=&channel=` | bash 脚本，含服务端地址、包地址与校验 |
+| `GET /install` | 安装清单 JSON：`server`、`versions[]`、`runtimes[]`、`mirror[]` |
+| `GET /install.sh?os=linux&arch=x64&runtime=10&version=` | bash 脚本，含服务端地址、包地址与校验 |
 | `GET /install.ps1?os=windows&arch=x64` | PowerShell 脚本 |
 | `GET /install/download/{kind}/{id}` | `kind` 取 `agent`/`runtime`，只放行启用版本下的安装包，现场签发短时令牌后 302 |
 
@@ -50,6 +50,9 @@
 | `AgentDownloadBaseUrl` | 公共镜像兜底，仅在服务端未维护对应包时使用 |
 
 清单缓存 60 秒（`ICacheProvider.Cache`），因此后台发布后最迟约一分钟可见。
+
+**不区分升级通道**：页面与清单只按 `Enable` 判定是否上架，发布版本不分 Release/Beta，避免用户面对通道选择；
+需要下线的版本在后台停用即可。
 
 **同一套选包逻辑也服务于引导安装**：`POST /node/bootstrap` 由 `NodeService.GetBootstrap` 转调 `InstallService.GetBootstrap`，
 与安装页共用版本优先级、系统/架构匹配与运行时就近匹配规则，不再各写一份。
@@ -71,7 +74,6 @@
 |------|------|------|
 | `AgentServerUrl` | 空 | 下发给客户端的服务端地址；为空时取请求地址。反代/端口映射时必须显式配置 |
 | `EnableInstallPage` | true | 关闭后根路径恢复旧行为（跳转 StarWeb `/Agent`） |
-| `InstallChannel` | Release | 页面与脚本默认通道 |
 | `AgentDownloadBaseUrl` | `https://x.newlifex.com/star/` | 公共镜像地址 |
 
 ## 7. 上传管理

@@ -45,17 +45,15 @@ public class InstallService
 
     #region 清单
     /// <summary>获取安装引导清单</summary>
-    /// <param name="channel">升级通道，为空时取配置默认通道</param>
     /// <param name="server">服务端地址，下发给客户端的注册地址</param>
     /// <returns>安装引导清单</returns>
-    public InstallManifest GetManifest(String? channel, String server)
+    public InstallManifest GetManifest(String server)
     {
-        var catalog = GetCatalog(ParseChannel(channel));
+        var catalog = GetCatalog();
 
         return new InstallManifest
         {
             Server = server,
-            Channel = catalog.Channel,
             UpdateTime = catalog.UpdateTime,
             Versions = catalog.Versions,
             Runtimes = catalog.Runtimes,
@@ -82,7 +80,7 @@ public class InstallService
         if (!Enum.TryParse<CpuArch>(node.Architecture, true, out var arch)) arch = CpuArch.Any;
 
         // 产品编码固定为完整版 StarAgent：原生 Agent 的编码是 StarAgent-Go/Rust/Cpp，直接匹配会落空
-        foreach (var release in QueryReleases(null, 50))
+        foreach (var release in QueryReleases(50))
         {
             var packages = ProductPackage.FindAll(ProductPackage._.ReleaseId == release.Id);
             if (packages == null || packages.Count == 0) continue;
@@ -157,10 +155,9 @@ public class InstallService
     /// <param name="arch">目标架构。x64/arm64/arm/loongarch64/mips64</param>
     /// <param name="runtime">.NET主版本号，如8/10；为空表示不限制</param>
     /// <param name="version">StarAgent版本，为空取最新版本</param>
-    /// <param name="channel">升级通道，为空取配置默认通道</param>
     /// <param name="server">服务端地址，安装后注册的目标地址</param>
     /// <returns>脚本内容；没有可用安装包时返回null</returns>
-    public String? BuildScript(String? os, String? arch, String? runtime, String? version, String? channel, String server)
+    public String? BuildScript(String? os, String? arch, String? runtime, String? version, String server)
     {
         if (server.IsNullOrEmpty()) throw new ArgumentException("server is required");
         if (server.Contains('\'') || server.Contains('"') || server.Contains('\n') || server.Contains('\r'))
@@ -171,7 +168,7 @@ public class InstallService
 
         var cpuArch = ParseArch(arch);
         var isWindows = osKind == OSKind.Windows;
-        var catalog = GetCatalog(ParseChannel(channel));
+        var catalog = GetCatalog();
 
         var release = version.IsNullOrEmpty()
             ? catalog.Versions.FirstOrDefault()
@@ -256,15 +253,6 @@ fi
     private static String Absolutize(String url, String server) =>
         url.StartsWithIgnoreCase("http://", "https://") ? url : server.TrimEnd('/') + "/" + url.TrimStart('/');
 
-    private NodeChannels ParseChannel(String? channel)
-    {
-        if (channel.IsNullOrEmpty()) return _setting.InstallChannel;
-
-        if (Enum.TryParse<NodeChannels>(channel, true, out var value) && value >= NodeChannels.Release) return value;
-
-        return _setting.InstallChannel;
-    }
-
     private static OSKind ParseOS(String? os) => os?.ToLowerInvariant() switch
     {
         "windows" or "win" => OSKind.Windows,
@@ -336,29 +324,25 @@ fi
 
     #region 数据查询
     /// <summary>查询启用中的产品版本。直接查库而不是走实体缓存：后台发布后下一次刷新清单就应该看到</summary>
-    /// <param name="channel">升级通道，null表示不限通道</param>
     /// <param name="max">最大条数</param>
     /// <returns>产品版本，新到旧</returns>
-    private static IList<ProductRelease> QueryReleases(NodeChannels? channel, Int32 max)
+    private static IList<ProductRelease> QueryReleases(Int32 max)
     {
         var exp = new WhereExpression();
         exp &= ProductRelease._.ProductCode == AgentProductCode;
         exp &= ProductRelease._.Enable == true;
-        if (channel != null && channel >= NodeChannels.Release) exp &= ProductRelease._.Channel == channel;
 
         return ProductRelease.FindAll(exp, "Id Desc", null, 0, max);
     }
 
     /// <summary>查询启用中的 .NET 运行时安装包</summary>
-    /// <param name="channel">升级通道，null表示不限通道</param>
     /// <param name="max">最大条数</param>
     /// <returns>运行时安装包，新到旧</returns>
-    private static IList<DotNetPackage> QueryRuntimes(NodeChannels? channel, Int32 max)
+    private static IList<DotNetPackage> QueryRuntimes(Int32 max)
     {
         var exp = new WhereExpression();
         exp &= DotNetPackage._.Enable == true;
         exp &= DotNetPackage._.Kind == "runtime";
-        if (channel != null && channel >= NodeChannels.Release) exp &= DotNetPackage._.Channel == channel;
 
         return DotNetPackage.FindAll(exp, "Id Desc", null, 0, max);
     }
@@ -370,7 +354,7 @@ fi
     /// <returns>运行时安装包</returns>
     private static DotNetPackage? FindRuntimeEntity(OSKind os, CpuArch arch, String? major)
     {
-        var list = QueryRuntimes(null, 200)
+        var list = QueryRuntimes(200)
             .Where(e => IsOSMatch(e.OSKind, os) && IsArchMatch(e.Architecture, arch))
             .OrderByDescending(e => e.OSKind != OSKind.Any && e.OSKind == os)
             .ThenByDescending(e => e.Architecture != CpuArch.Any && e.Architecture == arch)
@@ -388,30 +372,26 @@ fi
     #endregion
 
     #region 清单构建
-    private InstallManifest GetCatalog(NodeChannels channel)
+    private InstallManifest GetCatalog()
     {
-        var key = $"install:catalog:{(Int32)channel}";
+        const String key = "install:catalog";
         var cache = _cacheProvider.Cache;
         var catalog = cache.Get<InstallManifest>(key);
         if (catalog == null)
         {
-            catalog = BuildCatalog(channel);
+            catalog = BuildCatalog();
             cache.Set(key, catalog, CatalogExpire);
         }
 
         return catalog;
     }
 
-    private InstallManifest BuildCatalog(NodeChannels channel)
+    private InstallManifest BuildCatalog()
     {
-        var model = new InstallManifest
-        {
-            Channel = channel.ToString().ToLower(),
-            UpdateTime = DateTime.Now,
-        };
+        var model = new InstallManifest { UpdateTime = DateTime.Now };
 
-        // 产品版本：只取完整版 StarAgent，按通道过滤，新版本在前
-        foreach (var release in QueryReleases(channel, 20))
+        // 产品版本：只取完整版 StarAgent，新版本在前。通道不再参与展示，是否上架由 Enable 控制
+        foreach (var release in QueryReleases(20))
         {
             var packages = ProductPackage.FindAll(ProductPackage._.ReleaseId == release.Id);
             if (packages == null || packages.Count == 0) continue;
@@ -420,7 +400,6 @@ fi
             {
                 Id = release.Id,
                 Version = release.Version,
-                Channel = release.Channel.ToString().ToLower(),
                 Force = release.Force,
             };
             foreach (var pkg in packages) version.Packages.Add(ToPackage(pkg, release.Version));
@@ -428,20 +407,19 @@ fi
             model.Versions.Add(version);
         }
 
-        model.Runtimes = BuildRuntimeList(channel);
+        model.Runtimes = BuildRuntimeList();
         model.Mirror = BuildMirror();
 
         return model;
     }
 
     /// <summary>页面展示的运行时清单。每个系统架构只保留最近两个主版本的最新包，避免列表过长</summary>
-    /// <param name="channel">升级通道</param>
     /// <returns>运行时安装包</returns>
-    private static List<InstallPackage> BuildRuntimeList(NodeChannels channel)
+    private static List<InstallPackage> BuildRuntimeList()
     {
         var list = new List<InstallPackage>();
 
-        foreach (var group in QueryRuntimes(channel, 200).GroupBy(e => new { e.OSKind, e.Architecture }))
+        foreach (var group in QueryRuntimes(200).GroupBy(e => new { e.OSKind, e.Architecture }))
         {
             var majors = group
                 .GroupBy(e => MajorOf(e.Version))

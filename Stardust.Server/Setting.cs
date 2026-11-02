@@ -3,7 +3,6 @@ using NewLife;
 using NewLife.Configuration;
 using NewLife.Remoting.Models;
 using NewLife.Security;
-using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Services;
 using XCode.Configuration;
@@ -194,10 +193,6 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     /// <summary>启用安装引导页。启用后根路径返回安装引导页面，默认true</summary>
     [Description("Enable the install guide page at the root path. Default true.")]
     public Boolean EnableInstallPage { get; set; } = true;
-
-    /// <summary>安装引导默认通道。页面与脚本默认展示的产品版本通道，默认Release</summary>
-    [Description("Default release channel for the install guide page and scripts. Default Release.")]
-    public NodeChannels InstallChannel { get; set; } = NodeChannels.Release;
 
     ///// <summary>新服务器。节点自动迁移到新的服务器地址</summary>
     //[Description("新服务器。节点自动迁移到新的服务器地址")]

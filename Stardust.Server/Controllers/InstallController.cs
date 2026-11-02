@@ -29,13 +29,12 @@ public class InstallController : ControllerBase
     }
 
     /// <summary>安装清单。页面、脚本与工具统一从这里取包</summary>
-    /// <param name="channel">升级通道。release/beta/develop，为空取服务端默认通道</param>
     /// <returns>安装清单</returns>
     [HttpGet("/install")]
-    public InstallManifest Manifest(String? channel)
+    public InstallManifest Manifest()
     {
         var server = InstallService.GetServerUrl(Request, _setting);
-        return _installService.GetManifest(channel, server);
+        return _installService.GetManifest(server);
     }
 
     /// <summary>Linux 安装脚本</summary>
@@ -43,14 +42,13 @@ public class InstallController : ControllerBase
     /// <param name="arch">目标架构</param>
     /// <param name="runtime">.NET 主版本号，为空不限制</param>
     /// <param name="version">StarAgent 版本，为空取最新</param>
-    /// <param name="channel">升级通道</param>
     /// <returns>可直接执行的 bash 脚本</returns>
     [HttpGet("/install.sh")]
-    public ActionResult Shell(String? os, String? arch, String? runtime, String? version, String? channel)
+    public ActionResult Shell(String? os, String? arch, String? runtime, String? version)
     {
         try
         {
-            var script = _installService.BuildScript("linux", arch, runtime, version, channel, InstallService.GetServerUrl(Request, _setting));
+            var script = _installService.BuildScript("linux", arch, runtime, version, InstallService.GetServerUrl(Request, _setting));
             if (script.IsNullOrEmpty()) return NotFound();
 
             return Content(script, "text/x-shellscript; charset=utf-8", Encoding.UTF8);
@@ -66,14 +64,13 @@ public class InstallController : ControllerBase
     /// <param name="arch">目标架构</param>
     /// <param name="runtime">.NET 主版本号，为空不限制</param>
     /// <param name="version">StarAgent 版本，为空取最新</param>
-    /// <param name="channel">升级通道</param>
     /// <returns>可直接执行的 PowerShell 脚本</returns>
     [HttpGet("/install.ps1")]
-    public ActionResult PowerShell(String? os, String? arch, String? runtime, String? version, String? channel)
+    public ActionResult PowerShell(String? os, String? arch, String? runtime, String? version)
     {
         try
         {
-            var script = _installService.BuildScript("windows", arch, runtime, version, channel, InstallService.GetServerUrl(Request, _setting));
+            var script = _installService.BuildScript("windows", arch, runtime, version, InstallService.GetServerUrl(Request, _setting));
             if (script.IsNullOrEmpty()) return NotFound();
 
             return Content(script, "text/plain; charset=utf-8", Encoding.UTF8);

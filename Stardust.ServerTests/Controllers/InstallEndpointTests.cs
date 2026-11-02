@@ -85,7 +85,6 @@ public class InstallEndpointTests : StarTestBase
 
         var server = root.GetProperty("server").GetString();
         Assert.False(server.IsNullOrEmpty());
-        Assert.False(root.GetProperty("channel").GetString().IsNullOrEmpty());
         Assert.True(root.GetProperty("mirror").GetArrayLength() > 0);
     }
 

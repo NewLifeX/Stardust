@@ -64,7 +64,7 @@ public class InstallServiceTests
 
         public ProductRelease Release { get; }
 
-        public CatalogScope(String version, NodeChannels channel = NodeChannels.Release, Boolean enable = true)
+        public CatalogScope(String version, Boolean enable = true)
         {
             Release = new ProductRelease
             {
@@ -72,7 +72,7 @@ public class InstallServiceTests
                 ProductCode = "StarAgent",
                 Enable = enable,
                 Force = false,
-                Channel = channel,
+                Channel = NodeChannels.Release,
             };
             Release.Insert();
         }
@@ -145,10 +145,9 @@ public class InstallServiceTests
         scope.AddRuntime("10.0.9", OSKind.Linux, CpuArch.Arm64);
 
         var (service, _) = CreateService();
-        var manifest = service.GetManifest("release", BaseUri);
+        var manifest = service.GetManifest(BaseUri);
 
         Assert.Equal(BaseUri, manifest.Server);
-        Assert.Equal("release", manifest.Channel);
 
         var version = manifest.Versions.FirstOrDefault(e => e.Id == scope.Release.Id);
         Assert.NotNull(version);
@@ -166,24 +165,6 @@ public class InstallServiceTests
         Assert.Contains(manifest.Runtimes, e => e.Version == "10.0.9" && e.Kind == "runtime");
     }
 
-    /// <summary>发布通道之外的产品版本不应出现在清单里。</summary>
-    [Fact]
-    [Trait("Category", "Install")]
-    public void Manifest_FiltersByChannel()
-    {
-        using var isolation = new CatalogIsolation();
-        using var scope = new CatalogScope("9.9.9999." + Guid.NewGuid().ToString("n")[..8], NodeChannels.Beta);
-        scope.AddPackage(OSKind.Linux, CpuArch.X64, "10");
-
-        var (service, _) = CreateService();
-
-        var release = service.GetManifest("release", BaseUri);
-        Assert.DoesNotContain(release.Versions, e => e.Id == scope.Release.Id);
-
-        var beta = service.GetManifest("beta", BaseUri);
-        Assert.Contains(beta.Versions, e => e.Id == scope.Release.Id);
-    }
-
     /// <summary>后台没有任何安装包时，公共镜像兜底必须仍然可用，保证页面开箱不为空。</summary>
     [Fact]
     [Trait("Category", "Install")]
@@ -192,7 +173,7 @@ public class InstallServiceTests
         using var isolation = new CatalogIsolation();
 
         var (service, _) = CreateService();
-        var manifest = service.GetManifest("release", BaseUri);
+        var manifest = service.GetManifest(BaseUri);
 
         Assert.NotEmpty(manifest.Mirror);
         Assert.All(manifest.Mirror, e => Assert.Equal("mirror", e.Origin));
@@ -246,7 +227,7 @@ public class InstallServiceTests
         var runtime = scope.AddRuntime("10.0.9", OSKind.Linux, CpuArch.X64);
 
         var (service, _) = CreateService();
-        var script = service.BuildScript("linux", "x64", "10", null, "release", BaseUri);
+        var script = service.BuildScript("linux", "x64", "10", null, BaseUri);
 
         Assert.NotNull(script);
         Assert.Contains($"SERVER=\"{BaseUri}\"", script);
@@ -266,7 +247,7 @@ public class InstallServiceTests
         using var isolation = new CatalogIsolation();
 
         var (service, _) = CreateService();
-        var script = service.BuildScript("linux", "x64", null, null, "release", BaseUri);
+        var script = service.BuildScript("linux", "x64", null, null, BaseUri);
 
         Assert.NotNull(script);
         Assert.Contains("staragent10.tar.gz", script);
@@ -279,8 +260,8 @@ public class InstallServiceTests
     {
         var (service, _) = CreateService();
 
-        Assert.Throws<ArgumentException>(() => service.BuildScript("linux", "x64", null, null, "release", "https://evil.com'\nrm -rf /"));
-        Assert.Throws<ArgumentException>(() => service.BuildScript("linux", "x64", null, null, "release", ""));
+        Assert.Throws<ArgumentException>(() => service.BuildScript("linux", "x64", null, null, "https://evil.com'\nrm -rf /"));
+        Assert.Throws<ArgumentException>(() => service.BuildScript("linux", "x64", null, null, ""));
     }
 
     /// <summary>无法识别的系统不生成脚本，避免把错误的包发给客户端。</summary>
@@ -290,7 +271,7 @@ public class InstallServiceTests
     {
         var (service, _) = CreateService();
 
-        Assert.Null(service.BuildScript("plan9", "x64", null, null, "release", BaseUri));
+        Assert.Null(service.BuildScript("plan9", "x64", null, null, BaseUri));
     }
 
     /// <summary>安装页面必须能从资源中读取到，避免根路径返回空。</summary>
