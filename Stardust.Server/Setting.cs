@@ -227,6 +227,10 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     [Description("MCP action set. Comma-separated module names (node/app/config/deploy/gateway/monitor/system), * means all enabled")]
     public String McpActionSet { get; set; } = "*";
 
+    /// <summary>敏感配置 key 关键词列表。配置项 key 名包含任一关键词（大小写不敏感）→ 视为敏感项，值一律返回 ***。逗号分隔。通用敏感配置，配置中心、MCP、审计等所有敏感值出口共用。</summary>
+    [Description("Sensitive config key keywords. Comma-separated; a key containing any keyword (case-insensitive) is treated as sensitive and its value is masked as ***. Shared by all sensitive-value outputs, not specific to MCP.")]
+    public String SensitiveKeywords { get; set; } = "db,database,redis,mysql,mssql,connectionstring,password,passwd,secret,token,apikey,access_key";
+
     /// <summary>限流路径前缀。逗号分隔，命中则按IP限流，默认登录/令牌等认证接口</summary>
     [Description("Rate limit path prefixes. Comma-separated; matching paths are rate-limited by IP; defaults to authentication endpoints such as login/token")]
     public String RateLimitPaths { get; set; } = "/App/Login,/Node/Login,/OAuth/Token,/App/Register";

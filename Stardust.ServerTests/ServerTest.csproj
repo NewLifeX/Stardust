@@ -39,6 +39,10 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="10.0.14" />
+    <!-- XCode 的 SQLite 驱动为运行时动态加载（Microsoft.Data.Sqlite.dll 或 System.Data.SQLite.dll），
+         宿主应用经 Bin\Plugins 注入，测试工程必须自带，否则所有连库用例在 DbSession.OnCreateCommand 处
+         抛 InvalidOperationException。取本机 NuGet 缓存已有的 10.0.11（XCode 要求 10.0.0+，离线可还原）。 -->
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.11" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <PackageReference Include="Moq" Version="4.21.0" />
     <PackageReference Include="xunit" Version="2.9.3" />
@@ -52,9 +56,33 @@
     </PackageReference>
   </ItemGroup>
 
+  <!--
+    本机安全软件（火绒 HIPS/腾讯管家/亚信 OfficeScan 之一）把「从 CodeBuddy\Claw 工作区用户目录启动的
+    exe」视为低信誉进程，禁止其跨进程 OpenProcess(PROCESS_ALL_ACCESS)。vstest 的 testhost 启动时固定对
+    传入的 parentprocessid 调用 Process.EnableRaisingEvents（要求 PROCESS_ALL_ACCESS，无任何开关可关），
+    被拒后抛 Win32Exception(5) 未处理异常 → testhost 崩溃、测试运行中止 TESTRUNABORT。
+    已实测：同一代码在受信任宿主（Program Files 的 dotnet.exe / pwsh.exe）下 OpenProcess 正常，
+    仅 exe 位于本工作区时被拒。
+    处理：删除输出目录里的 testhost.exe（apphost 启动壳，仅是加速启动用），vstest 会自动回退为
+    `dotnet exec testhost.dll`（DotnetTestHostManager 找不到 apphost 时走 muxer），testhost 便运行在
+    受信任的 dotnet.exe 下，不再被拦截。副作用仅是 testhost 启动稍慢。
+  -->
+  <Target Name="RemoveTestHostAppHostForSecuritySoftware" AfterTargets="Build">
+    <ItemGroup>
+      <_TestHostAppHost Include="$(OutputPath)testhost*.exe" />
+    </ItemGroup>
+    <Delete Files="@(_TestHostAppHost->'%(FullPath)')" />
+  </Target>
+
   <ItemGroup>
     <ProjectReference Include="..\Stardust.Server\Stardust.Server.csproj" />
     <ProjectReference Include="..\Stardust.Web\Stardust.Web.csproj" Aliases="web" />
+    <!-- MCP 令牌默认值特征测试（McpTokenDefaultsTests）经反射验证 API 宿主（程序集 StarWebApi）的
+         McpTokenController/McpTokenResourceController OnInsert（S1/S3 服务端强制在 API 宿主实现）。
+         加 extern alias webapi：StarWebApi 与 StarServer 存在同名类型（如 TraceStatService），
+         不能进入全局命名空间，测试仅以反射按程序集名访问 -->
+    <ProjectReference Include="..\Stardust.WebApi\Stardust.WebApi.csproj" Aliases="webapi" />
+    <ProjectReference Include="..\Stardust.Mcp\Stardust.Mcp.csproj" />
     <ProjectReference Include="..\StarAgent.Mobile\StarAgent.Mobile.csproj" />
   </ItemGroup>
 

@@ -7,20 +7,28 @@ namespace ServerTest.Mcp;
 public class McpTokenTests
 {
     [Fact]
-    public void GenerateToken_HasSdmcpPrefix()
+    public void GenerateToken_HasSkMcpPrefix()
     {
         var token = McpToken.GenerateToken();
 
-        Assert.StartsWith("sdmcp_", token);
+        Assert.StartsWith(McpToken.TokenPrefix, token);
     }
 
     [Fact]
     public void GenerateToken_HasCorrectLength()
     {
-        // sdmcp_ (6) + 32 chars = 38
         var token = McpToken.GenerateToken();
 
-        Assert.Equal(38, token.Length);
+        Assert.Equal(McpToken.TokenPrefix.Length + McpToken.TokenSecretLength, token.Length);
+    }
+
+    [Fact]
+    public void GenerateToken_SecretIsAlphanumericOnly()
+    {
+        var token = McpToken.GenerateToken();
+        var secret = token[McpToken.TokenPrefix.Length..];
+
+        Assert.Matches("^[A-Za-z0-9]+$", secret);
     }
 
     [Fact]

@@ -131,6 +131,46 @@ public partial class McpAudit
     [DataObjectField(false, false, true, 0)]
     [BindColumn("CreateTime", "调用时间", "")]
     public DateTime CreateTime { get => _CreateTime; set { if (OnPropertyChanging("CreateTime", value)) { _CreateTime = value; OnPropertyChanged("CreateTime"); } } }
+
+    private Int32 _RiskLevel;
+    /// <summary>风险级别。0=L0只读 1=L1可逆写 2=L2高危</summary>
+    [DisplayName("风险级别")]
+    [Description("风险级别。0=L0只读 1=L1可逆写 2=L2高危")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("RiskLevel", "风险级别。0=L0只读 1=L1可逆写 2=L2高危", "")]
+    public Int32 RiskLevel { get => _RiskLevel; set { if (OnPropertyChanging("RiskLevel", value)) { _RiskLevel = value; OnPropertyChanged("RiskLevel"); } } }
+
+    private Int32 _ProjectId;
+    /// <summary>项目编号快照</summary>
+    [DisplayName("项目编号")]
+    [Description("项目编号快照")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("ProjectId", "项目编号快照", "")]
+    public Int32 ProjectId { get => _ProjectId; set { if (OnPropertyChanging("ProjectId", value)) { _ProjectId = value; OnPropertyChanged("ProjectId"); } } }
+
+    private String _ScopesUsed;
+    /// <summary>调用时生效的scope集合，逗号分隔</summary>
+    [DisplayName("生效Scopes")]
+    [Description("调用时生效的scope集合，逗号分隔")]
+    [DataObjectField(false, false, true, 200)]
+    [BindColumn("ScopesUsed", "调用时生效的scope集合，逗号分隔", "")]
+    public String ScopesUsed { get => _ScopesUsed; set { if (OnPropertyChanging("ScopesUsed", value)) { _ScopesUsed = value; OnPropertyChanged("ScopesUsed"); } } }
+
+    private String _BeforeValue;
+    /// <summary>写操作前快照</summary>
+    [DisplayName("写前快照")]
+    [Description("写操作前快照")]
+    [DataObjectField(false, false, true, -1)]
+    [BindColumn("BeforeValue", "写操作前快照", "")]
+    public String BeforeValue { get => _BeforeValue; set { if (OnPropertyChanging("BeforeValue", value)) { _BeforeValue = value; OnPropertyChanged("BeforeValue"); } } }
+
+    private String _AfterValue;
+    /// <summary>写操作后快照</summary>
+    [DisplayName("写后快照")]
+    [Description("写操作后快照")]
+    [DataObjectField(false, false, true, -1)]
+    [BindColumn("AfterValue", "写操作后快照", "")]
+    public String AfterValue { get => _AfterValue; set { if (OnPropertyChanging("AfterValue", value)) { _AfterValue = value; OnPropertyChanged("AfterValue"); } } }
     #endregion
 
     #region 获取/设置 字段值
@@ -154,6 +194,11 @@ public partial class McpAudit
             "Duration" => _Duration,
             "TraceId" => _TraceId,
             "CreateTime" => _CreateTime,
+            "RiskLevel" => _RiskLevel,
+            "ProjectId" => _ProjectId,
+            "ScopesUsed" => _ScopesUsed,
+            "BeforeValue" => _BeforeValue,
+            "AfterValue" => _AfterValue,
             _ => base[name]
         };
         set
@@ -173,6 +218,11 @@ public partial class McpAudit
                 case "Duration": _Duration = value.ToInt(); break;
                 case "TraceId": _TraceId = Convert.ToString(value); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
+                case "RiskLevel": _RiskLevel = value.ToInt(); break;
+                case "ProjectId": _ProjectId = value.ToInt(); break;
+                case "ScopesUsed": _ScopesUsed = Convert.ToString(value); break;
+                case "BeforeValue": _BeforeValue = Convert.ToString(value); break;
+                case "AfterValue": _AfterValue = Convert.ToString(value); break;
                 default: base[name] = value; break;
             }
         }
@@ -286,6 +336,21 @@ public partial class McpAudit
         /// <summary>调用时间</summary>
         public static readonly Field CreateTime = FindByName("CreateTime");
 
+        /// <summary>风险级别。0=L0只读 1=L1可逆写 2=L2高危</summary>
+        public static readonly Field RiskLevel = FindByName("RiskLevel");
+
+        /// <summary>项目编号快照</summary>
+        public static readonly Field ProjectId = FindByName("ProjectId");
+
+        /// <summary>调用时生效的scope集合，逗号分隔</summary>
+        public static readonly Field ScopesUsed = FindByName("ScopesUsed");
+
+        /// <summary>写操作前快照</summary>
+        public static readonly Field BeforeValue = FindByName("BeforeValue");
+
+        /// <summary>写操作后快照</summary>
+        public static readonly Field AfterValue = FindByName("AfterValue");
+
         static Field FindByName(String name) => Meta.Table.FindByName(name);
     }
 
@@ -330,6 +395,21 @@ public partial class McpAudit
 
         /// <summary>调用时间</summary>
         public const String CreateTime = "CreateTime";
+
+        /// <summary>风险级别。0=L0只读 1=L1可逆写 2=L2高危</summary>
+        public const String RiskLevel = "RiskLevel";
+
+        /// <summary>项目编号快照</summary>
+        public const String ProjectId = "ProjectId";
+
+        /// <summary>调用时生效的scope集合，逗号分隔</summary>
+        public const String ScopesUsed = "ScopesUsed";
+
+        /// <summary>写操作前快照</summary>
+        public const String BeforeValue = "BeforeValue";
+
+        /// <summary>写操作后快照</summary>
+        public const String AfterValue = "AfterValue";
     }
     #endregion
 }

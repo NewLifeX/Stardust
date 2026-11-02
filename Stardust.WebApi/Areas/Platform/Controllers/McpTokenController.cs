@@ -57,6 +57,9 @@ public class McpTokenController : WebEntityController<McpToken>
     {
         // 自动生成Token字符串
         if (entity.Token.IsNullOrEmpty()) entity.Token = McpToken.GenerateToken();
+        // 绑定了项目但没填授权范围时，默认只读，避免新令牌发布后只能自检
+        if (entity.ProjectId > 0 && entity.Scopes.IsNullOrEmpty())
+            entity.Scopes = McpToken.DefaultProjectReadScopes;
 
         var result = base.OnInsert(entity);
         if (result > 0)
@@ -71,7 +74,9 @@ public class McpTokenController : WebEntityController<McpToken>
         return result;
     }
 
-    /// <summary>更新时同步资源授权（Token创建后不可修改）</summary>
+    /// <summary>更新时同步资源授权（Token创建后不可修改）。仅当表单携带了资源授权时才同步；
+    /// JSON/API 更新（前端 updateToken/setTokenEnable）不携带 res_* 字段，此时必须跳过同步，
+    /// 否则 ParseResourcesFromForm 返回空列表会经 SyncByToken 清空该令牌全部资源授权。</summary>
     protected override Int32 OnUpdate(McpToken entity)
     {
         // Token创建后不可修改，恢复原值
@@ -81,9 +86,12 @@ public class McpTokenController : WebEntityController<McpToken>
         var result = base.OnUpdate(entity);
         if (result > 0)
         {
-            // 同步资源授权（删除旧授权+插入新授权）
+            // 同步资源授权（删除旧授权+插入新授权）。与 OnInsert 相同，空列表不触发同步
             var resources = ParseResourcesFromForm();
-            McpTokenResource.SyncByToken(entity.Id, resources, ManageProvider.UserHost);
+            if (resources.Count > 0)
+            {
+                McpTokenResource.SyncByToken(entity.Id, resources, ManageProvider.UserHost);
+            }
         }
         return result;
     }
@@ -92,7 +100,10 @@ public class McpTokenController : WebEntityController<McpToken>
     /// <param name="id">令牌编号</param>
     /// <returns></returns>
     [EntityAuthorize(PermissionFlags.Update)]
-    public ActionResult Reset(Int32 id)
+    // 必须显式路由：否则 GET /api/Platform/McpToken/Reset 会被 ReadOnlyEntityController.Detail 的 {id} 捕获，
+    // id="Reset" 解析主键失败 → code 500（前端 GuardModal 确认后报「令牌重置失败」）。
+    [HttpGet("/api/[area]/[controller]/Reset")]
+    public ActionResult Reset([FromQuery] Int32 id)
     {
         var entity = McpToken.FindById(id);
         if (entity == null) throw new Exception(L.T("Token record not found."));
@@ -103,15 +114,18 @@ public class McpTokenController : WebEntityController<McpToken>
 
         // 写日志（LogOnChange=true会自动记录实体变更）
         var masked = oldToken?.Length > 10 ? oldToken.Substring(0, 10) + "***" : oldToken;
-        XTrace.WriteLine("[McpToken] Token reset: Id={Id}, Name={Name}, old token={Masked}, IP={IP}", entity.Id, entity.Name, masked, ManageProvider.UserHost);
+        XTrace.WriteLine("[McpToken] Token reset: Id={0}, Name={1}, old token={2}, IP={3}", entity.Id, entity.Name, masked, ManageProvider.UserHost);
 
-        return JsonRefresh("Token已重置！");
+        return JsonRefresh(new { id = entity.Id, token = entity.Token });
     }
 
     /// <summary>从表单解析资源授权列表。表单字段命名规则：res_all_{type}=true 表示全部资源；res_{type}=id 表示具体资源</summary>
     private List<McpTokenResource> ParseResourcesFromForm()
     {
         var resources = new List<McpTokenResource>();
+        // JSON/API 请求没有表单内容类型，访问 Request.Form 会抛异常；此时跳过资源授权同步
+        if (!Request.HasFormContentType) return resources;
+
         var form = Request.Form;
 
         // 表单字段使用小写协议名（res_all_project / res_project），存储统一转换为大驼峰（枚举成员名）

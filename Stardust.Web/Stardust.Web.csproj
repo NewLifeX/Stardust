@@ -58,6 +58,7 @@
     <ProjectReference Include="..\Stardust.Data\Stardust.Data.csproj" />
     <ProjectReference Include="..\Stardust.Extensions\Stardust.Extensions.csproj" />
     <ProjectReference Include="..\Stardust\Stardust.csproj" />
+    <ProjectReference Include="..\Stardust.Mcp\Stardust.Mcp.csproj" />
   </ItemGroup>
 
   <ItemGroup>

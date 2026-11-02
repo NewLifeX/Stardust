@@ -38,4 +38,11 @@ public class McpTokenResourceController : WebEntityController<McpTokenResource>
 
         return McpTokenResource.Search(tokenId, resourceType, resourceId, isAll, enable, start, end, p["Q"], p);
     }
+
+    /// <summary>插入时服务端强制 IsAll=false：不能一步开全量资源授权，只能通过后续编辑逐条收窄</summary>
+    protected override Int32 OnInsert(McpTokenResource entity)
+    {
+        entity.IsAll = false;
+        return base.OnInsert(entity);
+    }
 }

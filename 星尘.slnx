@@ -35,6 +35,8 @@
   <Project Path="Stardust.Web/Stardust.Web.csproj" />
   <Project Path="Stardust.WebApi/Stardust.WebApi.csproj" />
   <Project Path="Stardust.WebApiTests/Stardust.WebApiTests.csproj" />
+  <Project Path="Stardust.Mcp/Stardust.Mcp.csproj" />
+  <Project Path="Stardust.McpClientTests/Stardust.McpClientTests.csproj" />
   <Project Path="Stardust/Stardust.csproj" />
   <Project Path="StarGateway/StarGateway.csproj" />
   <Project Path="Test/Test.csproj" />

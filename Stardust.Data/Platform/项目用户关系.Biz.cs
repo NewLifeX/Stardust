@@ -64,8 +64,20 @@ public partial class ProjectUser : Entity<ProjectUser>
         //if (isNew && !Dirtys[nameof(CreateIP)]) CreateIP = ManageProvider.UserHost;
         //if (!Dirtys[nameof(UpdateIP)]) UpdateIP = ManageProvider.UserHost;
 
-        // 检查唯一索引
-        // CheckExist(isNew, nameof(ProjectId), nameof(UserId));
+        // 同一项目不能重复加入同一用户（唯一索引 UX_ProjectUser_ProjectId_UserId）
+        if (isNew || Dirtys[nameof(ProjectId)] || Dirtys[nameof(UserId)])
+            CheckExist(isNew, nameof(ProjectId), nameof(UserId));
+    }
+
+    /// <summary>插入前校验项目与用户真实存在。只由控制器 OnInsert 调用；实体单测用哨兵编号直接 Insert，不走这里。</summary>
+    public void EnsureLink()
+    {
+        if (ProjectId <= 0) throw new ArgumentException("请选择项目");
+        if (UserId <= 0) throw new ArgumentException("请选择用户");
+        if (GalaxyProject.FindById(ProjectId) == null)
+            throw new ArgumentException($"项目 {ProjectId} 不存在");
+        if (User == null)
+            throw new ArgumentException($"用户 {UserId} 不存在");
     }
 
     ///// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>

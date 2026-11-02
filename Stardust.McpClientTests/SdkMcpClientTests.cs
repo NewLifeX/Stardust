@@ -124,29 +124,20 @@ public class SdkMcpClientTests : IAsyncLifetime
         }
     }
 
-    /// <summary>SDK tools/list。验证 SDK 能获取 5 个 MCP 工具</summary>
+    /// <summary>SDK tools/list。零 scope 令牌至少能看到无 scope 要求的 whoami</summary>
     [Fact]
-    public async Task Sdk_ListTools_ReturnsFiveTools()
+    public async Task Sdk_ListTools_IncludesWhoAmI()
     {
         var (token, tokenStr) = McpTestHelper.CreateTestToken("sdk-tools");
         try
         {
-            McpTestHelper.AuthorizeAllProjects(token.Id);
             McpTestLog.Instance.Reset();
 
             await RunSdkAsync(tokenStr, async client =>
             {
                 var tools = await client.ListToolsAsync();
-
-                Assert.True(tools.Count >= 5, $"Expected at least 5 tools, got {tools.Count}");
-
                 var toolNames = tools.Select(t => t.Name).ToHashSet();
-                Assert.Contains("list_authorized_resources", toolNames);
-                Assert.Contains("search_resources", toolNames);
-                Assert.Contains("get_resource", toolNames);
-                Assert.Contains("list_actions", toolNames);
-                Assert.Contains("invoke_action", toolNames);
-
+                Assert.Contains("stardust_token_whoami", toolNames);
                 _output.WriteLine($"✅ SDK ListTools 成功：返回 {tools.Count} 个工具");
             });
             AssertAndPrintServerLog();
@@ -157,68 +148,25 @@ public class SdkMcpClientTests : IAsyncLifetime
         }
     }
 
-    /// <summary>SDK CallToolAsync — 调用 list_authorized_resources</summary>
+    /// <summary>SDK CallToolAsync — 调用 whoami 自检</summary>
     [Fact]
-    public async Task Sdk_CallTool_ListAuthorizedResources()
+    public async Task Sdk_CallTool_WhoAmI()
     {
-        var (token, tokenStr) = McpTestHelper.CreateTestToken("sdk-call");
+        var (token, tokenStr) = McpTestHelper.CreateTestToken("sdk-whoami");
         try
         {
-            McpTestHelper.AuthorizeAllProjects(token.Id);
             McpTestLog.Instance.Reset();
 
             await RunSdkAsync(tokenStr, async client =>
             {
-                var result = await client.CallToolAsync("list_authorized_resources", new Dictionary<String, Object?>());
-
+                var result = await client.CallToolAsync("stardust_token_whoami", new Dictionary<String, Object?>());
                 Assert.NotNull(result);
                 Assert.True(result.Content.Count > 0);
-
-                var textContent = result.Content.OfType<TextContentBlock>().FirstOrDefault();
-                Assert.NotNull(textContent);
-
-                var content = JsonSerializer.Deserialize<JsonElement>(textContent!.Text);
-                Assert.True(content.TryGetProperty("projects", out _), "响应应包含 projects 字段");
-
-                _output.WriteLine($"✅ SDK CallTool list_authorized_resources 成功");
-            });
-            AssertAndPrintServerLog();
-        }
-        finally
-        {
-            McpTestHelper.CleanupToken(token.Id);
-        }
-    }
-
-    /// <summary>SDK CallToolAsync — 端到端调用 invoke_action（node_search 只读动作），验证满血能力</summary>
-    [Fact]
-    public async Task Sdk_CallTool_InvokeAction_NodeSearch()
-    {
-        var (token, tokenStr) = McpTestHelper.CreateTestToken("sdk-invoke");
-        try
-        {
-            McpTestHelper.AuthorizeAllProjects(token.Id);
-            McpTestHelper.AuthorizeAllNodes(token.Id);
-            McpTestLog.Instance.Reset();
-
-            await RunSdkAsync(tokenStr, async client =>
-            {
-                var result = await client.CallToolAsync("invoke_action", new Dictionary<String, Object?>
-                {
-                    ["action_name"] = "node_search",
-                    ["params"] = new Dictionary<String, Object?> { ["keyword"] = "zzz-no-such-node-zzz" }
-                });
-
-                Assert.NotNull(result);
-                Assert.True(result.Content.Count > 0);
-
-                var textContent = result.Content.OfType<TextContentBlock>().FirstOrDefault();
-                Assert.NotNull(textContent);
-
-                var content = JsonSerializer.Deserialize<JsonElement>(textContent!.Text);
-                Assert.True(content.ValueKind == JsonValueKind.Object, "invoke_action 应返回 JSON 对象结果");
-
-                _output.WriteLine($"✅ SDK CallTool invoke_action(node_search) 端到端成功");
+                var text = result.Content.OfType<TextContentBlock>().FirstOrDefault();
+                Assert.NotNull(text);
+                var content = JsonSerializer.Deserialize<JsonElement>(text!.Text);
+                Assert.True(content.TryGetProperty("summary", out _), "whoami 应返回 summary");
+                _output.WriteLine("✅ SDK CallTool whoami 成功");
             });
             AssertAndPrintServerLog();
         }

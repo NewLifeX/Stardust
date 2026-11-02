@@ -88,6 +88,33 @@ public partial class McpToken
     [BindColumn("CallCount", "调用次数", "")]
     public Int32 CallCount { get => _CallCount; set { if (OnPropertyChanging("CallCount", value)) { _CallCount = value; OnPropertyChanged("CallCount"); } } }
 
+    private Int32 _UserId;
+    /// <summary>绑定用户。Membership用户Id，令牌权限来源之一；0表示未绑定</summary>
+    [Category("授权")]
+    [DisplayName("绑定用户")]
+    [Description("绑定用户。Membership用户Id，令牌权限来源之一；0表示未绑定")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("UserId", "绑定用户。Membership用户Id，令牌权限来源之一；0表示未绑定", "")]
+    public Int32 UserId { get => _UserId; set { if (OnPropertyChanging("UserId", value)) { _UserId = value; OnPropertyChanged("UserId"); } } }
+
+    private Int32 _ProjectId;
+    /// <summary>绑定项目。GalaxyProject.Id，严格单项目；0表示未绑定</summary>
+    [Category("授权")]
+    [DisplayName("绑定项目")]
+    [Description("绑定项目。GalaxyProject.Id，严格单项目；0表示未绑定")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("ProjectId", "绑定项目。GalaxyProject.Id，严格单项目；0表示未绑定", "")]
+    public Int32 ProjectId { get => _ProjectId; set { if (OnPropertyChanging("ProjectId", value)) { _ProjectId = value; OnPropertyChanged("ProjectId"); } } }
+
+    private String _Scopes;
+    /// <summary>授权范围。逗号分隔的域:级别（apps:read,config:write），空表示零授权仅可自检</summary>
+    [Category("授权")]
+    [DisplayName("授权范围")]
+    [Description("授权范围。逗号分隔的域:级别（apps:read,config:write），空表示零授权仅可自检")]
+    [DataObjectField(false, false, true, 500)]
+    [BindColumn("Scopes", "授权范围。逗号分隔的域:级别（apps:read,config:write），空表示零授权仅可自检", "")]
+    public String Scopes { get => _Scopes; set { if (OnPropertyChanging("Scopes", value)) { _Scopes = value; OnPropertyChanged("Scopes"); } } }
+
     private String _TraceId;
     /// <summary>链路追踪</summary>
     [Category("扩展")]
@@ -177,6 +204,9 @@ public partial class McpToken
             "LastTime" => _LastTime,
             "LastIP" => _LastIP,
             "CallCount" => _CallCount,
+            "UserId" => _UserId,
+            "ProjectId" => _ProjectId,
+            "Scopes" => _Scopes,
             "TraceId" => _TraceId,
             "CreateUserId" => _CreateUserId,
             "CreateTime" => _CreateTime,
@@ -199,6 +229,9 @@ public partial class McpToken
                 case "LastTime": _LastTime = value.ToDateTime(); break;
                 case "LastIP": _LastIP = Convert.ToString(value); break;
                 case "CallCount": _CallCount = value.ToInt(); break;
+                case "UserId": _UserId = value.ToInt(); break;
+                case "ProjectId": _ProjectId = value.ToInt(); break;
+                case "Scopes": _Scopes = Convert.ToString(value); break;
                 case "TraceId": _TraceId = Convert.ToString(value); break;
                 case "CreateUserId": _CreateUserId = value.ToInt(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -318,6 +351,15 @@ public partial class McpToken
         /// <summary>调用次数</summary>
         public static readonly Field CallCount = FindByName("CallCount");
 
+        /// <summary>绑定用户。Membership用户Id，令牌权限来源之一；0表示未绑定</summary>
+        public static readonly Field UserId = FindByName("UserId");
+
+        /// <summary>绑定项目。GalaxyProject.Id，严格单项目；0表示未绑定</summary>
+        public static readonly Field ProjectId = FindByName("ProjectId");
+
+        /// <summary>授权范围。逗号分隔的域:级别（apps:read,config:write），空表示零授权仅可自检</summary>
+        public static readonly Field Scopes = FindByName("Scopes");
+
         /// <summary>链路追踪</summary>
         public static readonly Field TraceId = FindByName("TraceId");
 
@@ -371,6 +413,15 @@ public partial class McpToken
 
         /// <summary>调用次数</summary>
         public const String CallCount = "CallCount";
+
+        /// <summary>绑定用户。Membership用户Id，令牌权限来源之一；0表示未绑定</summary>
+        public const String UserId = "UserId";
+
+        /// <summary>绑定项目。GalaxyProject.Id，严格单项目；0表示未绑定</summary>
+        public const String ProjectId = "ProjectId";
+
+        /// <summary>授权范围。逗号分隔的域:级别（apps:read,config:write），空表示零授权仅可自检</summary>
+        public const String Scopes = "Scopes";
 
         /// <summary>链路追踪</summary>
         public const String TraceId = "TraceId";

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -122,6 +123,22 @@ public partial class McpToken : Entity<McpToken>
     //}
     #endregion
 
+    #region 常量
+
+    /// <summary>绑定项目且 Scopes 为空时，OnInsert 默认写入的 7 域只读 Scope（Web / WebApi 控制器共用）。</summary>
+    public const String DefaultProjectReadScopes = "apps:read,nodes:read,config:read,deploy:read,monitor:read,now:read,platform:read";
+
+    /// <summary>新建令牌前缀（对齐常见 LLM API Key：sk-* + 字母数字秘密段，无标点）。</summary>
+    public const String TokenPrefix = "sk-mcp-";
+
+    /// <summary>秘密段长度（字符集 A–Z a–z 0–9）。</summary>
+    public const Int32 TokenSecretLength = 48;
+
+    /// <summary>历史前缀；库内旧令牌仍可认证，新发行不再使用。</summary>
+    public const String LegacyTokenPrefix = "sdmcp_";
+
+    #endregion
+
     #region 扩展属性
     #endregion
 
@@ -140,8 +157,17 @@ public partial class McpToken : Entity<McpToken>
 
     #region 业务操作
 
-    /// <summary>生成Token字符串。sdmcp_前缀+32位Base62随机字符</summary>
-    public static String GenerateToken() => "sdmcp_" + Rand.NextString(32, true);
+    /// <summary>生成 Token 字符串：sk-mcp- + 48 位字母数字（总长 55，适配字段 64）。</summary>
+    public static String GenerateToken()
+    {
+        const String alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        var secret = new Char[TokenSecretLength];
+        Span<Byte> bytes = stackalloc Byte[TokenSecretLength];
+        RandomNumberGenerator.Fill(bytes);
+        for (var i = 0; i < TokenSecretLength; i++)
+            secret[i] = alphabet[bytes[i] % alphabet.Length];
+        return TokenPrefix + new String(secret);
+    }
 
     /// <summary>重置Token字符串</summary>
     public void Reset()

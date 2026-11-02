@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>Stardust.Mcp</AssemblyName>
+    <RootNamespace>Stardust.Mcp</RootNamespace>
+    <AssemblyTitle>Stardust MCP</AssemblyTitle>
+    <Description>Shared MCP (Model Context Protocol) endpoint library for Stardust hosts. Journey-oriented tools with direct tools/list exposure, scope-based authorization, risk-level enforcement and dual-strategy auditing, per Doc/MCP-4-平台MCP重新设计.</Description>
+    <Company>新生命开发团队</Company>
+    <Copyright>©2002-2026 NewLife</Copyright>
+    <VersionPrefix>1.0</VersionPrefix>
+    <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
+    <Version>$(VersionPrefix).$(VersionSuffix)</Version>
+    <Deterministic>false</Deterministic>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <NoWarn>1701;1702;NU5104;NETSDK1138;CS7035;CS4014;CS8632;CS9113</NoWarn>
+    <!-- 与仓库主工程一致，用统一的 newlife.snk 强名称签名 -->
+    <SignAssembly>True</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\Doc\newlife.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Stardust.Data\Stardust.Data.csproj" />
+  </ItemGroup>
+
+</Project>

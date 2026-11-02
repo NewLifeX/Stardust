@@ -1,0 +1,57 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputPath>..\Bin\McpApiTests</OutputPath>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <IsTestProject>true</IsTestProject>
+    <IsPackable>false</IsPackable>
+    <NoWarn>1701;1702;CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="appsettings.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 不引用 Microsoft.Data.Sqlite：XCode 将探测该驱动，但其 SqliteConnectionStringBuilder 不支持 Busy Timeout/Journal Mode 等关键字；
+         与 McpClientTests/6681 服务一致，走 Bin\Plugins 的 System.Data.SQLite.dll -->
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
+    <PackageReference Include="ModelContextProtocol" Version="2.0.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector" Version="10.0.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Stardust.Data\Stardust.Data.csproj" />
+    <ProjectReference Include="..\Stardust.Mcp\Stardust.Mcp.csproj" />
+    <!-- 真实集成测试：内嵌 StarFactory/AppClient 以 mcpapi-app 身份登录 6600，注册真实应用实例 -->
+    <ProjectReference Include="..\Stardust\Stardust.csproj" />
+  </ItemGroup>
+
+  <!-- 安全软件拦截 testhost 进程的 OpenProcess 探测：构建后删除 testhost 副本 -->
+  <Target Name="RemoveTestHostAppHostForSecuritySoftware" AfterTargets="Build">
+    <ItemGroup>
+      <TestHostExe Include="$(OutputPath)testhost*.exe" />
+    </ItemGroup>
+    <Delete Files="@(TestHostExe)" />
+  </Target>
+
+</Project>

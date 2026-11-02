@@ -25,7 +25,7 @@ using Stardust.Server.Services;
 using Stardust.Web.Services;
 using XCode;
 using XCode.DataAccessLayer;
-using Stardust.Web.Mcp;
+using Stardust.Mcp;
 
 namespace Stardust.Web;
 
@@ -68,7 +68,16 @@ public class Startup
         services.AddSingleton<PipelineService>();
         services.AddSingleton<HotAppService>();
         services.AddSingleton<NewLife.Cube.Services.TokenService>();
-        services.AddSingleton<McpService>();
+        services.AddStardustMcp(o =>
+        {
+            // 运行时读取开关：EnableMcp 总开关、McpActionSet 域白名单（* 表示全部域）
+            o.Enabled = () => StarServerSetting.Current.EnableMcp;
+            o.Domains = () => StarServerSetting.Current.McpActionSet;
+            // 敏感配置 key 关键词（前端治理页平台设置可改）
+            o.SensitiveKeyKeywords = () => (StarServerSetting.Current.SensitiveKeywords ?? "")
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        });
+        services.AddSingleton<IMcpOperations, McpOperations>();
 
         // DDNS服务
         services.AddSingleton<IDnsProvider, AliyunDnsProvider>();
@@ -177,8 +186,8 @@ public class Startup
         if (Environment.GetEnvironmentVariable("__ASPNETCORE_BROWSER_TOOLS") is null)
             app.UseResponseCompression();
 
-        // MCP 协议端点中间件：在 Cube 之前短路 /mcp，避免 Web 中间件影响机器API
-        app.UseMiddleware<McpMiddleware>();
+        // MCP 协议端点：在 Cube 之前短路 /mcp，避免 Web 中间件影响机器 API
+        app.UseStardustMcp();
 
         app.UseCube(env);
 

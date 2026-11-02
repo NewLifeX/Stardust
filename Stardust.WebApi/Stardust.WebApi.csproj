@@ -5,7 +5,7 @@
     <AssemblyName>StarWebApi</AssemblyName>
     <RootNamespace>Stardust.Web</RootNamespace>
     <AssemblyTitle>Stardust management API</AssemblyTitle>
-    <Description>Decoupled WebApi backend for the Stardust distributed service platform. Reuses the area controllers and business services of Stardust.Web while exposing only JSON endpoints (GetPage/GetFields/Insert/Update/Delete and custom actions of EntityController), without Razor views, MCP, or static sites, for direct use by the Stardust.Web.Vue frontend.</Description>
+    <Description>Decoupled WebApi backend for the Stardust distributed service platform. Reuses the area controllers and business services of Stardust.Web while exposing JSON endpoints and the MCP endpoint (POST /mcp, via the shared Stardust.Mcp library), without Razor views or static sites, for direct use by the Stardust.Web.Vue frontend and MCP clients.</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2026 NewLife</Copyright>
     <VersionPrefix>3.7</VersionPrefix>
@@ -58,6 +58,7 @@
     <ProjectReference Include="..\Stardust.Data\Stardust.Data.csproj" />
     <ProjectReference Include="..\Stardust.Extensions\Stardust.Extensions.csproj" />
     <ProjectReference Include="..\Stardust\Stardust.csproj" />
+    <ProjectReference Include="..\Stardust.Mcp\Stardust.Mcp.csproj" />
   </ItemGroup>
 
   <!-- Program.cs 为顶级语句，隐式 Program 类是 internal 的，集成测试工程需可见才能用 WebApplicationFactory<Program>。

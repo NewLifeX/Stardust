@@ -42,20 +42,25 @@ public class ProjectUserController : EntityController<ProjectUser>
     //    _tracer = tracer;
     //}
 
-    /// <summary>高级搜索。列表页查询、导出Excel、导出Json、分享页等使用</summary>
-    /// <param name="p">分页器。包含分页排序参数，以及Http请求参数</param>
-    /// <returns></returns>
-    /// <summary>高级搜索。按条件分页查询</summary>
+    /// <summary>高级搜索。按项目、用户、启用状态分页查询。未传的编号为 -1，表示不按该列过滤。与 WebApi 宿主同逻辑。</summary>
     /// <param name="p">分页参数</param>
     /// <returns>实体列表</returns>
     protected override IEnumerable<ProjectUser> Search(Pager p)
     {
-        //var deviceId = p["deviceId"].ToInt(-1);
-        //var enable = p["enable"]?.Boolean();
+        var projectId = p["projectId"].ToInt(-1);
+        var userId = p["userId"].ToInt(-1);
+        var enable = p["enable"]?.ToBoolean();
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return ProjectUser.Search(start, end, p["Q"], p);
+        return ProjectUser.Search(projectId, userId, enable, start, end, p["Q"], p);
+    }
+
+    /// <summary>插入前确认项目和用户都存在。与 WebApi 宿主同逻辑。</summary>
+    protected override Int32 OnInsert(ProjectUser entity)
+    {
+        entity.EnsureLink();
+        return base.OnInsert(entity);
     }
 }
