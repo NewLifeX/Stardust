@@ -46,10 +46,13 @@
 |------|------|
 | `ProductRelease`（ProductCode=StarAgent、Enable、Channel） | 发布版本，新到旧 |
 | `ProductPackage`（ReleaseId、OSKind、CpuArch、TargetRuntime） | 各平台安装包；`TargetRuntime` 为 `go`/`rust`/`cpp` 时归入原生 Agent |
-| `DotNetPackage`（Kind=runtime） | .NET 运行时安装包 |
+| `DotNetPackage`（Kind=runtime） | .NET 运行时安装包；页面每个系统架构只保留最近 2 个主版本，避免列表过长 |
 | `AgentDownloadBaseUrl` | 公共镜像兜底，仅在服务端未维护对应包时使用 |
 
 清单缓存 60 秒（`ICacheProvider.Cache`），因此后台发布后最迟约一分钟可见。
+
+**同一套选包逻辑也服务于引导安装**：`POST /node/bootstrap` 由 `NodeService.GetBootstrap` 转调 `InstallService.GetBootstrap`，
+与安装页共用版本优先级、系统/架构匹配与运行时就近匹配规则，不再各写一份。
 
 ## 5. 安装脚本
 
@@ -90,6 +93,7 @@
 | 用例 | 覆盖 |
 |------|------|
 | `InstallServiceTests` | 清单组装、通道过滤、镜像兜底、令牌签发、停用版本拒绝、脚本内容、非法地址拒绝、页面资源可读 |
+| `InstallServiceBootstrapTests` | 引导安装：原生返回组包、.NET 版返回空、缺包返回空、精确系统架构优先 |
 | `InstallEndpointTests` | `/` 返回页面、`/install` 清单、`/install.sh` 可执行、下载 302 携带令牌、未知包 404 |
 
 ## 10. 与 StarWeb 的关系
@@ -101,5 +105,9 @@
 
 ## 11. 后续
 
-- 原生 Agent 的 `node/bootstrap` 与安装清单可进一步共用同一套包选择逻辑。
 - 页面若需要在 StarWeb 域名下直接展示（而不是跳转），可把 `install.html` 作为静态资源同样挂过去。
+
+## 12. 本地调试
+
+Visual Studio 默认启动地址为 `http://localhost:6600`（`Properties/launchSettings.json`），直接打开就是安装页。
+若地址后面带 `/api` 路径，说明仍是旧的调试配置，重新加载解决方案即可。

@@ -27,6 +27,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
     private readonly ICacheProvider _cacheProvider;
     private readonly ITracer _tracer;
     private readonly DnsService _dnsService;
+    private readonly InstallService _installService;
 
     /// <summary>实例化节点服务</summary>
     /// <param name="tokenService">令牌服务</param>
@@ -36,8 +37,9 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
     /// <param name="cacheProvider">缓存提供者</param>
     /// <param name="tracer">跟踪器</param>
     /// <param name="dnsService">DDNS 服务</param>
+    /// <param name="installService">安装引导服务</param>
     /// <param name="serviceProvider">服务提供者</param>
-    public NodeService(ITokenService tokenService, IPasswordProvider passwordProvider, StarServerSetting setting, NodeSessionManager sessionManager, ICacheProvider cacheProvider, ITracer tracer, DnsService dnsService, IServiceProvider serviceProvider) : base(sessionManager, passwordProvider, cacheProvider, serviceProvider)
+    public NodeService(ITokenService tokenService, IPasswordProvider passwordProvider, StarServerSetting setting, NodeSessionManager sessionManager, ICacheProvider cacheProvider, ITracer tracer, DnsService dnsService, InstallService installService, IServiceProvider serviceProvider) : base(sessionManager, passwordProvider, cacheProvider, serviceProvider)
     {
         _tokenService = tokenService;
         _passwordProvider = passwordProvider;
@@ -46,6 +48,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         _cacheProvider = cacheProvider;
         _tracer = tracer;
         _dnsService = dnsService;
+        _installService = installService;
 
         Name = "Node";
     }
@@ -842,60 +845,12 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         return null;
     }
 
-    /// <summary>完整版 StarAgent 的产品编码</summary>
-    private const String DotNetAgentProductCode = "StarAgent";
-
     /// <summary>获取原生 Agent 的引导安装信息（.NET 运行时 + 完整版 StarAgent）</summary>
-    /// <remarks>原生 Agent 只做采集与指令响应，需要完整能力时由它下载安装运行时与 .NET 版 StarAgent。</remarks>
+    /// <remarks>原生 Agent 只做采集与指令响应，需要完整能力时由它下载安装运行时与 .NET 版 StarAgent。
+    /// 选包逻辑与安装引导页共用 <see cref="InstallService"/>，避免两处各写一套。</remarks>
     /// <param name="node">节点</param>
     /// <returns>引导安装信息；非原生 Agent，或服务端未维护对应安装包时返回null</returns>
-    public BootstrapModel? GetBootstrap(Node node)
-    {
-        if (node == null || !IsNativeAgent(node.ProductCode)) return null;
-
-        // 完整版安装包按固定产品编码匹配，忽略节点自身产品编码（原生 Agent 的编码为 StarAgent-Go 等）
-        var (release, pkg) = ProductRelease.MatchProduct(node, DotNetAgentProductCode);
-        if (release == null || pkg == null) return null;
-
-        // 运行时优先取 runtime，没有时退回按节点自动判定的类型
-        var runtime = DotNetPackage.Match(node, "runtime") ?? DotNetPackage.Match(node, null);
-
-        using var span = _tracer?.NewSpan(nameof(GetBootstrap), new { node.Name, node.Code, node.Runtime, agent = release.Version });
-
-        return new BootstrapModel
-        {
-            Version = release.Version,
-            Code = node.Code,
-            // 运行时版本取自安装包自身，避免与完整版版本号混淆
-            Runtime = ToBootstrapPackage(runtime),
-            Agent = ToBootstrapPackage(pkg, release.Version),
-        };
-    }
-
-    /// <summary>判断是否为原生 Agent 的产品编码</summary>
-    /// <param name="productCode">产品编码</param>
-    /// <returns>原生 Agent 返回true</returns>
-    private static Boolean IsNativeAgent(String productCode) =>
-        productCode.EqualIgnoreCase("StarAgent-Go", "StarAgent-Rust", "StarAgent-Cpp");
-
-    private static BootstrapPackage? ToBootstrapPackage(DotNetPackage? pkg) => pkg == null ? null : new BootstrapPackage
-    {
-        Version = pkg.Version,
-        Kind = pkg.Kind,
-        FileName = pkg.FileName,
-        Source = pkg.Source,
-        Size = pkg.Size,
-        FileHash = pkg.FileHash,
-    };
-
-    private static BootstrapPackage? ToBootstrapPackage(ProductPackage? pkg, String? version) => pkg == null ? null : new BootstrapPackage
-    {
-        Version = version,
-        FileName = pkg.FileName,
-        Source = pkg.Source,
-        Size = pkg.Size,
-        FileHash = pkg.FileHash,
-    };
+    public BootstrapModel? GetBootstrap(Node node) => _installService.GetBootstrap(node);
     #endregion
 
     #region 下行指令

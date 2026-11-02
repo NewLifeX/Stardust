@@ -8,10 +8,11 @@ using XCode;
 
 namespace Stardust.Server.Services;
 
-/// <summary>安装引导服务。为原生 Agent、StarAgent 各版本与 .NET 运行时提供统一清单、下载地址与安装脚本</summary>
+/// <summary>安装引导服务。为安装页面、安装脚本与原生 Agent 引导安装提供统一的选包与下载地址</summary>
 /// <remarks>
-/// 清单优先取后台维护的产品版本与发布包，服务端未维护对应包时回退公共镜像（AgentDownloadBaseUrl），
-/// 保证页面开箱可用。下载地址统一指回本站 /install/download/{kind}/{id}，
+/// 安装页面、安装脚本与 node/bootstrap 共用同一套选包逻辑：先取后台维护的产品版本与发布包，
+/// 服务端未维护对应包时回退公共镜像（AgentDownloadBaseUrl），保证页面与引导安装开箱可用。
+/// 对外的下载地址统一指回本站 /install/download/{kind}/{id}，
 /// 由服务端在用户点击或脚本执行时现场签发短时令牌，因此界面与脚本里不会出现会过期的签名地址。
 /// </remarks>
 public class InstallService
@@ -21,6 +22,9 @@ public class InstallService
 
     /// <summary>清单缓存时间（秒）。安装包变更不频繁，短时缓存避免公开页面频繁查库</summary>
     private const Int32 CatalogExpire = 60;
+
+    /// <summary>页面展示的运行时保留的主版本数。只挑最近几个大版本，避免列表过长</summary>
+    private const Int32 RuntimeMajorKeep = 2;
 
     private readonly StarServerSetting _setting;
     private readonly ICacheProvider _cacheProvider;
@@ -62,6 +66,48 @@ public class InstallService
     /// <summary>获取安装引导页面内容</summary>
     /// <returns>页面HTML，读取失败时返回空</returns>
     public String? GetPage() => ReadResource("install.html");
+    #endregion
+
+    #region 引导安装
+    /// <summary>获取原生 Agent 的引导安装信息（.NET 运行时 + 完整版 StarAgent）</summary>
+    /// <remarks>原生 Agent 只做采集与指令响应，需要完整能力时由它下载安装运行时与 .NET 版 StarAgent。
+    /// 选包规则与安装页一致：最新启用版本优先，按节点系统与架构匹配，忽略节点自身产品编码。</remarks>
+    /// <param name="node">节点</param>
+    /// <returns>引导安装信息；非原生 Agent，或服务端未维护对应安装包时返回null</returns>
+    public BootstrapModel? GetBootstrap(Node node)
+    {
+        if (node == null || !IsNativeAgent(node.ProductCode)) return null;
+
+        var os = OSKindHelper.ToOSKind(node.OSKind);
+        if (!Enum.TryParse<CpuArch>(node.Architecture, true, out var arch)) arch = CpuArch.Any;
+
+        // 产品编码固定为完整版 StarAgent：原生 Agent 的编码是 StarAgent-Go/Rust/Cpp，直接匹配会落空
+        foreach (var release in QueryReleases(null, 50))
+        {
+            var packages = ProductPackage.FindAll(ProductPackage._.ReleaseId == release.Id);
+            if (packages == null || packages.Count == 0) continue;
+
+            var models = packages.Select(e => ToPackage(e, release.Version)).ToList();
+            var pkg = SelectPackage(models, os, arch, null, null);
+            if (pkg == null) continue;
+
+            var agent = packages.FirstOrDefault(e => e.Id == pkg.Id);
+            if (agent == null) continue;
+
+            var runtime = FindRuntimeEntity(os, arch, pkg.Runtime);
+
+            return new BootstrapModel
+            {
+                Version = release.Version,
+                Code = node.Code,
+                // 运行时版本取自安装包自身，避免与完整版版本号混淆
+                Runtime = ToBootstrapPackage(runtime),
+                Agent = ToBootstrapPackage(agent, release.Version),
+            };
+        }
+
+        return null;
+    }
     #endregion
 
     #region 下载
@@ -137,7 +183,7 @@ public class InstallService
         if (pkg == null || pkg.Url.IsNullOrEmpty()) return null;
 
         // 运行时版本以安装包自身的运行时就近匹配，找不到则退回该平台最新运行时
-        var runtimePkg = SelectRuntime(catalog.Runtimes, osKind, cpuArch, pkg.Runtime);
+        var runtimePkg = FindRuntimeEntity(osKind, cpuArch, pkg.Runtime);
 
         var values = new Dictionary<String, String>
         {
@@ -146,7 +192,7 @@ public class InstallService
             ["agentUrl"] = Absolutize(pkg.Url, server),
             ["agentFile"] = pkg.FileName ?? "staragent.tar.gz",
             ["agentHash"] = pkg.FileHash ?? "",
-            ["runtimeUrl"] = runtimePkg == null ? "" : Absolutize(runtimePkg.Url ?? "", server),
+            ["runtimeUrl"] = runtimePkg == null ? "" : Absolutize(ToPackage(runtimePkg).Url + "", server),
             ["runtimeFile"] = runtimePkg?.FileName ?? "",
             ["runtimeHash"] = runtimePkg?.FileHash ?? "",
             ["runtimeBlock"] = BuildRuntimeBlock(runtimePkg, isWindows),
@@ -165,9 +211,9 @@ public class InstallService
     /// <param name="runtime">运行时安装包，为空表示无需安装</param>
     /// <param name="isWindows">是否Windows</param>
     /// <returns>脚本片段</returns>
-    private static String BuildRuntimeBlock(InstallPackage? runtime, Boolean isWindows)
+    private static String BuildRuntimeBlock(DotNetPackage? runtime, Boolean isWindows)
     {
-        if (runtime == null || runtime.Url.IsNullOrEmpty())
+        if (runtime == null || runtime.Source.IsNullOrEmpty())
             return "# 无需安装 .NET 运行时（自包含发布包或已安装）";
 
         if (isWindows)
@@ -245,9 +291,9 @@ fi
     /// <param name="os">目标系统</param>
     /// <param name="arch">目标架构</param>
     /// <param name="runtime">目标运行时主版本号</param>
-    /// <param name="isWindows">是否Windows。用于优先挑选 zip 或 tar.gz</param>
+    /// <param name="isWindows">是否Windows。用于优先挑选 zip 或 tar.gz，null表示不关心</param>
     /// <returns>匹配的安装包</returns>
-    private static InstallPackage? SelectPackage(IEnumerable<InstallPackage> packages, OSKind os, CpuArch arch, String? runtime, Boolean isWindows)
+    private static InstallPackage? SelectPackage(IEnumerable<InstallPackage> packages, OSKind os, CpuArch arch, String? runtime, Boolean? isWindows)
     {
         var osName = os + "";
         var archName = arch + "";
@@ -258,36 +304,9 @@ fi
             .Where(e => e.Arch.IsNullOrEmpty() || e.Arch.EqualIgnoreCase("Any") || e.Arch.EqualIgnoreCase(archName))
             .OrderByDescending(e => os != OSKind.Any && e.OS.EqualIgnoreCase(osName))
             .ThenByDescending(e => arch != CpuArch.Any && e.Arch.EqualIgnoreCase(archName))
-            .ThenByDescending(e => IsZip(e.FileName) == isWindows)
+            .ThenByDescending(e => isWindows != null && IsZip(e.FileName) == isWindows)
             .ThenByDescending(e => IsRuntimeMatch(e.Runtime, runtime))
             .FirstOrDefault();
-    }
-
-    /// <summary>挑选运行时安装包。优先匹配安装包的.NET主版本，缺失时退回该平台最新运行时</summary>
-    /// <param name="runtimes">运行时包</param>
-    /// <param name="os">目标系统</param>
-    /// <param name="arch">目标架构</param>
-    /// <param name="major">.NET主版本号</param>
-    /// <returns>匹配的运行时包</returns>
-    private static InstallPackage? SelectRuntime(IEnumerable<InstallPackage> runtimes, OSKind os, CpuArch arch, String? major)
-    {
-        var osName = os + "";
-        var archName = arch + "";
-
-        var list = runtimes
-            .Where(e => e.OS.IsNullOrEmpty() || e.OS.EqualIgnoreCase("Any") || e.OS.EqualIgnoreCase(osName))
-            .Where(e => e.Arch.IsNullOrEmpty() || e.Arch.EqualIgnoreCase("Any") || e.Arch.EqualIgnoreCase(archName))
-            .OrderByDescending(e => os != OSKind.Any && e.OS.EqualIgnoreCase(osName))
-            .ThenByDescending(e => arch != CpuArch.Any && e.Arch.EqualIgnoreCase(archName))
-            .ToList();
-
-        if (!major.IsNullOrEmpty() && major != "*")
-        {
-            var hit = list.FirstOrDefault(e => e.Runtime.EqualIgnoreCase(major) || (e.Version != null && e.Version.StartsWithIgnoreCase(major + ".")));
-            if (hit != null) return hit;
-        }
-
-        return list.FirstOrDefault();
     }
 
     private static Boolean IsZip(String? fileName) => fileName != null && fileName.EndsWithIgnoreCase(".zip");
@@ -300,6 +319,10 @@ fi
         return target.EqualIgnoreCase(runtime) || (target + ".").StartsWithIgnoreCase(runtime + ".");
     }
 
+    private static Boolean IsOSMatch(OSKind pkg, OSKind target) => pkg == OSKind.Any || target == OSKind.Any || pkg == target;
+
+    private static Boolean IsArchMatch(CpuArch pkg, CpuArch target) => pkg == CpuArch.Any || target == CpuArch.Any || pkg == target;
+
     private static String? ReadResource(String name)
     {
         var assembly = typeof(InstallService).Assembly;
@@ -308,6 +331,59 @@ fi
 
         using var reader = new StreamReader(stream, Encoding.UTF8);
         return reader.ReadToEnd();
+    }
+    #endregion
+
+    #region 数据查询
+    /// <summary>查询启用中的产品版本。直接查库而不是走实体缓存：后台发布后下一次刷新清单就应该看到</summary>
+    /// <param name="channel">升级通道，null表示不限通道</param>
+    /// <param name="max">最大条数</param>
+    /// <returns>产品版本，新到旧</returns>
+    private static IList<ProductRelease> QueryReleases(NodeChannels? channel, Int32 max)
+    {
+        var exp = new WhereExpression();
+        exp &= ProductRelease._.ProductCode == AgentProductCode;
+        exp &= ProductRelease._.Enable == true;
+        if (channel != null && channel >= NodeChannels.Release) exp &= ProductRelease._.Channel == channel;
+
+        return ProductRelease.FindAll(exp, "Id Desc", null, 0, max);
+    }
+
+    /// <summary>查询启用中的 .NET 运行时安装包</summary>
+    /// <param name="channel">升级通道，null表示不限通道</param>
+    /// <param name="max">最大条数</param>
+    /// <returns>运行时安装包，新到旧</returns>
+    private static IList<DotNetPackage> QueryRuntimes(NodeChannels? channel, Int32 max)
+    {
+        var exp = new WhereExpression();
+        exp &= DotNetPackage._.Enable == true;
+        exp &= DotNetPackage._.Kind == "runtime";
+        if (channel != null && channel >= NodeChannels.Release) exp &= DotNetPackage._.Channel == channel;
+
+        return DotNetPackage.FindAll(exp, "Id Desc", null, 0, max);
+    }
+
+    /// <summary>为指定系统架构与 .NET 主版本挑选运行时安装包。优先匹配主版本，缺失时退回该平台最新运行时</summary>
+    /// <param name="os">目标系统</param>
+    /// <param name="arch">目标架构</param>
+    /// <param name="major">.NET主版本号</param>
+    /// <returns>运行时安装包</returns>
+    private static DotNetPackage? FindRuntimeEntity(OSKind os, CpuArch arch, String? major)
+    {
+        var list = QueryRuntimes(null, 200)
+            .Where(e => IsOSMatch(e.OSKind, os) && IsArchMatch(e.Architecture, arch))
+            .OrderByDescending(e => e.OSKind != OSKind.Any && e.OSKind == os)
+            .ThenByDescending(e => e.Architecture != CpuArch.Any && e.Architecture == arch)
+            .ThenByDescending(e => e.Id)
+            .ToList();
+
+        if (!major.IsNullOrEmpty() && major != "*")
+        {
+            var hit = list.FirstOrDefault(e => e.Version != null && e.Version.StartsWithIgnoreCase(major + "."));
+            if (hit != null) return hit;
+        }
+
+        return list.FirstOrDefault();
     }
     #endregion
 
@@ -334,15 +410,8 @@ fi
             UpdateTime = DateTime.Now,
         };
 
-        // 产品版本：只取完整版 StarAgent，按通道过滤，新版本在前。
-        // 直接查库而不是走实体缓存：后台发布后下一次刷新清单就应该看到，不必等待实体缓存过期
-        var exp = new WhereExpression();
-        exp &= ProductRelease._.ProductCode == AgentProductCode;
-        exp &= ProductRelease._.Enable == true;
-        if (channel >= NodeChannels.Release) exp &= ProductRelease._.Channel == channel;
-
-        var releases = ProductRelease.FindAll(exp, "Id Desc", null, 0, 20);
-        foreach (var release in releases)
+        // 产品版本：只取完整版 StarAgent，按通道过滤，新版本在前
+        foreach (var release in QueryReleases(channel, 20))
         {
             var packages = ProductPackage.FindAll(ProductPackage._.ReleaseId == release.Id);
             if (packages == null || packages.Count == 0) continue;
@@ -359,18 +428,51 @@ fi
             model.Versions.Add(version);
         }
 
-        // 运行时包：与产品版本同一通道，新包在前
-        var exp2 = new WhereExpression();
-        exp2 &= DotNetPackage._.Enable == true;
-        exp2 &= DotNetPackage._.Kind == "runtime";
-        if (channel >= NodeChannels.Release) exp2 &= DotNetPackage._.Channel == channel;
-
-        foreach (var pkg in DotNetPackage.FindAll(exp2, "Id Desc", null, 0, 40))
-            model.Runtimes.Add(ToPackage(pkg));
-
+        model.Runtimes = BuildRuntimeList(channel);
         model.Mirror = BuildMirror();
 
         return model;
+    }
+
+    /// <summary>页面展示的运行时清单。每个系统架构只保留最近两个主版本的最新包，避免列表过长</summary>
+    /// <param name="channel">升级通道</param>
+    /// <returns>运行时安装包</returns>
+    private static List<InstallPackage> BuildRuntimeList(NodeChannels channel)
+    {
+        var list = new List<InstallPackage>();
+
+        foreach (var group in QueryRuntimes(channel, 200).GroupBy(e => new { e.OSKind, e.Architecture }))
+        {
+            var majors = group
+                .GroupBy(e => MajorOf(e.Version))
+                .OrderByDescending(e => e.Key.ToInt(-1))
+                .Take(RuntimeMajorKeep);
+
+            foreach (var major in majors)
+            {
+                var newest = major
+                    .OrderByDescending(e => e.Version)
+                    .ThenByDescending(e => e.Id)
+                    .First();
+                list.Add(ToPackage(newest));
+            }
+        }
+
+        return list
+            .OrderBy(e => e.OS)
+            .ThenByDescending(e => e.Version)
+            .ToList();
+    }
+
+    /// <summary>取版本号的主版本段，如 10.0.9 → 10</summary>
+    /// <param name="version">版本号</param>
+    /// <returns>主版本段</returns>
+    private static String MajorOf(String? version)
+    {
+        if (version.IsNullOrEmpty()) return "";
+
+        var p = version.IndexOf('.');
+        return p > 0 ? version[..p] : version;
     }
 
     /// <summary>后台维护的安装包</summary>
@@ -409,6 +511,28 @@ fi
         FileHash = pkg.FileHash,
         Origin = "db",
     };
+
+    private static BootstrapPackage? ToBootstrapPackage(DotNetPackage? pkg) => pkg == null ? null : new BootstrapPackage
+    {
+        Version = pkg.Version,
+        Kind = pkg.Kind,
+        FileName = pkg.FileName,
+        Source = pkg.Source,
+        Size = pkg.Size,
+        FileHash = pkg.FileHash,
+    };
+
+    private static BootstrapPackage? ToBootstrapPackage(ProductPackage? pkg, String? version) => pkg == null ? null : new BootstrapPackage
+    {
+        Version = version,
+        FileName = pkg.FileName,
+        Source = pkg.Source,
+        Size = pkg.Size,
+        FileHash = pkg.FileHash,
+    };
+
+    private static Boolean IsNativeAgent(String? productCode) =>
+        productCode.EqualIgnoreCase("StarAgent-Go", "StarAgent-Rust", "StarAgent-Cpp");
 
     private static Boolean IsNative(String? runtime) =>
         runtime.EqualIgnoreCase("go", "rust", "cpp");

@@ -1,24 +1,28 @@
-using System.Runtime.CompilerServices;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using NewLife;
+using NewLife.Caching;
 using Stardust.Data.Nodes;
 using Stardust.Models;
+using Stardust.Server;
 using Stardust.Server.Services;
 using Xunit;
 
-namespace ServerTest.Nodes;
+namespace ServerTest.Install;
 
-/// <summary>原生 Agent 引导安装信息（NodeService.GetBootstrap）测试。
+/// <summary>原生 Agent 引导安装信息（InstallService.GetBootstrap）测试。
 /// 语义：只有原生 Agent（StarAgent-Go/Rust/Cpp）才返回引导信息；
-/// 完整版安装包按固定产品编码匹配，运行时包按节点系统与架构匹配。</summary>
-public class NodeServiceBootstrapTests
+/// 完整版安装包按固定产品编码匹配，运行时包按节点系统与架构匹配，选包规则与安装页一致。</summary>
+public class InstallServiceBootstrapTests
 {
     /// <summary>临时停用其它 StarAgent 发布版本与运行时包，避免共享测试库遗留数据干扰断言。</summary>
-    private sealed class BootstrapIsolation : IDisposable
+    private sealed class CatalogIsolation : IDisposable
     {
         private readonly List<ProductRelease> _releases = [];
         private readonly List<DotNetPackage> _packages = [];
 
-        public BootstrapIsolation()
+        public CatalogIsolation()
         {
             foreach (var item in ProductRelease.FindAll().Where(e => e.Enable && e.ProductCode.EqualIgnoreCase("StarAgent")).ToList())
             {
@@ -55,7 +59,7 @@ public class NodeServiceBootstrapTests
     private sealed class BootstrapScope : IDisposable
     {
         private readonly List<ProductPackage> _packages = [];
-        private readonly List<DotNetPackage> _runtimePackages = [];
+        private readonly List<DotNetPackage> _runtimes = [];
 
         public ProductRelease Release { get; }
 
@@ -119,11 +123,11 @@ public class NodeServiceBootstrapTests
                 Size = 1024,
                 FileHash = "0123456789abcdef0123456789abcdef",
                 Enable = true,
-                // GetValids 会按通道过滤，必须显式指定 Release（枚举值不为 0）
+                // 清单与运行时匹配按通道过滤，必须显式指定 Release（枚举值不为 0）
                 Channel = NodeChannels.Release,
             };
             pkg.Insert();
-            _runtimePackages.Add(pkg);
+            _runtimes.Add(pkg);
 
             return pkg;
         }
@@ -131,30 +135,28 @@ public class NodeServiceBootstrapTests
         public void Dispose()
         {
             foreach (var pkg in _packages) pkg.Delete();
-            foreach (var pkg in _runtimePackages) pkg.Delete();
+            foreach (var pkg in _runtimes) pkg.Delete();
             Node.Delete();
             Release.Delete();
         }
     }
 
-    private static NodeService CreateService() => (NodeService)RuntimeHelpers.GetUninitializedObject(typeof(NodeService));
+    private static InstallService CreateService()
+    {
+        var provider = new CacheProvider { Cache = new MemoryCache(), InnerCache = new MemoryCache() };
+        return new InstallService(StarServerSetting.Current, provider, new DownloadTokenService(provider));
+    }
 
     /// <summary>原生 Agent 能同时拿到运行时包与完整版安装包，运行时版本取自安装包自身。</summary>
     [Fact]
-    [Trait("Category", "Nodes")]
+    [Trait("Category", "Install")]
     public void NativeAgent_ReturnsRuntimeAndAgentPackages()
     {
-        using var isolation = new BootstrapIsolation();
+        using var isolation = new CatalogIsolation();
         using var scope = new BootstrapScope("StarAgent-Cpp");
 
         var agentPkg = scope.AddPackage(OSKind.Linux, CpuArch.Arm64);
         var runtimePkg = scope.AddRuntime("10.0.9", OSKind.Linux, CpuArch.Arm64);
-
-        // 先确认底层匹配可用，失败时能区分是匹配问题还是组包问题
-        var (release, package) = ProductRelease.MatchProduct(scope.Node, "StarAgent");
-        Assert.NotNull(release);
-        Assert.NotNull(package);
-        Assert.NotNull(DotNetPackage.Match(scope.Node, "runtime"));
 
         var model = CreateService().GetBootstrap(scope.Node);
 
@@ -175,10 +177,10 @@ public class NodeServiceBootstrapTests
 
     /// <summary>.NET 版 Agent 自身就是完整版，不返回引导信息。</summary>
     [Fact]
-    [Trait("Category", "Nodes")]
+    [Trait("Category", "Install")]
     public void DotNetAgent_ReturnsNull()
     {
-        using var isolation = new BootstrapIsolation();
+        using var isolation = new CatalogIsolation();
         using var scope = new BootstrapScope("StarAgent");
 
         scope.AddPackage(OSKind.Linux, CpuArch.Arm64);
@@ -189,14 +191,31 @@ public class NodeServiceBootstrapTests
 
     /// <summary>服务端没有完整版发布包时返回空，不产生半套引导信息。</summary>
     [Fact]
-    [Trait("Category", "Nodes")]
+    [Trait("Category", "Install")]
     public void MissingAgentPackage_ReturnsNull()
     {
-        using var isolation = new BootstrapIsolation();
+        using var isolation = new CatalogIsolation();
         using var scope = new BootstrapScope("StarAgent-Go");
 
         scope.AddRuntime("10.0.9", OSKind.Linux, CpuArch.Arm64);
 
         Assert.Null(CreateService().GetBootstrap(scope.Node));
+    }
+
+    /// <summary>节点系统与架构优先精确匹配，通用包兜底。</summary>
+    [Fact]
+    [Trait("Category", "Install")]
+    public void NativeAgent_PrefersExactOSAndArch()
+    {
+        using var isolation = new CatalogIsolation();
+        using var scope = new BootstrapScope("StarAgent-Rust");
+
+        scope.AddPackage(OSKind.Any, CpuArch.Any, "10");
+        var exact = scope.AddPackage(OSKind.Linux, CpuArch.Arm64, "10");
+
+        var model = CreateService().GetBootstrap(scope.Node);
+
+        Assert.NotNull(model);
+        Assert.Equal(exact.FileName, model!.Agent!.FileName);
     }
 }

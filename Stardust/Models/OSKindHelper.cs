@@ -32,6 +32,26 @@ public static class OSKindHelper
         return 0;
     }
 
+    /// <summary>把细分系统种类归并为通用操作系统类型，用于安装包匹配</summary>
+    /// <param name="kind">细分系统种类</param>
+    /// <returns>通用操作系统类型</returns>
+    public static OSKind ToOSKind(OSKinds kind)
+    {
+        // musl 系单独成类，与 glibc 版安装包不可混用
+        if (kind is OSKinds.Alpine or OSKinds.OpenWrt or OSKinds.Buildroot) return OSKind.LinuxMusl;
+        if (kind == OSKinds.SmartOS) return OSKind.Any;
+        if (kind == OSKinds.iOS) return OSKind.iOS;
+
+        var v = (Int32)kind;
+        if (v >= 10 && v < 100) return OSKind.Windows;
+        if (v >= 200 && v < 300) return OSKind.LinuxMusl;
+        if (v >= 100 && v < 200) return OSKind.Linux;
+        if (v >= 400 && v < 500) return OSKind.OSX;
+        if (v >= 500 && v < 600) return OSKind.Android;
+
+        return OSKind.Any;
+    }
+
     /// <summary>识别Windows操作系统</summary>
     /// <param name="osName"></param>
     /// <param name="osVersion"></param>

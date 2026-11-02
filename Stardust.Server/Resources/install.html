@@ -3,240 +3,331 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>StarAgent 安装 - 星尘</title>
+<title>安装 StarAgent · 星尘</title>
 <style>
     :root {
-        --bg: #f5f7fa;
-        --card: #fff;
-        --text: #1f2937;
-        --muted: #6b7280;
-        --line: #e5e7eb;
-        --accent: #2563eb;
-        --accent-soft: #eff6ff;
+        --ink: #0f172a;
+        --ink-2: #334155;
+        --muted: #64748b;
+        --line: #e2e8f0;
+        --surface: #ffffff;
+        --bg: #f6f8fb;
+        --brand: #4f46e5;
+        --brand-2: #0ea5e9;
+        --radius: 16px;
+        --shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 12px 32px -18px rgba(15, 23, 42, .28);
     }
     * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
     body {
-        margin: 0; padding: 0 16px 48px;
-        background: var(--bg); color: var(--text);
-        font: 14px/1.6 -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+        font: 15px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+        -webkit-font-smoothing: antialiased;
     }
-    .wrap { max-width: 1080px; margin: 0 auto; }
-    header {
-        display: flex; align-items: center; justify-content: space-between;
-        padding: 24px 0 12px;
+    .page { max-width: 1120px; margin: 0 auto; padding: 24px 20px 64px; }
+
+    /* 顶栏 */
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 8px 4px 20px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: -.01em; }
+    .brand .mark {
+        width: 30px; height: 30px; border-radius: 9px;
+        background: linear-gradient(135deg, var(--brand), var(--brand-2));
+        display: grid; place-items: center; color: #fff; font-size: 15px; font-weight: 700;
     }
-    header h1 { margin: 0; font-size: 20px; font-weight: 600; }
-    header .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
-    .btn {
-        display: inline-block; padding: 6px 12px; border-radius: 6px; cursor: pointer;
-        border: 1px solid var(--line); background: #fff; color: var(--text);
-        font-size: 13px; text-decoration: none;
+    .brand small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; letter-spacing: 0; }
+    .ghost {
+        appearance: none; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2);
+        padding: 7px 14px; border-radius: 10px; font-size: 13px; cursor: pointer; transition: .15s;
     }
-    .btn:hover { border-color: var(--accent); color: var(--accent); }
-    .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-    .btn-primary:hover { color: #fff; opacity: .9; }
+    .ghost:hover { border-color: #cbd5e1; color: var(--ink); }
+
+    /* 主视觉 */
+    .hero {
+        position: relative; overflow: hidden; border-radius: 22px; color: #eef2ff;
+        background:
+            radial-gradient(900px 420px at 88% -20%, rgba(14, 165, 233, .45), transparent 60%),
+            radial-gradient(700px 380px at 12% 120%, rgba(79, 70, 229, .55), transparent 62%),
+            linear-gradient(135deg, #0b1220, #141e35 55%, #16233f);
+        padding: 38px 36px 34px;
+        box-shadow: 0 30px 60px -40px rgba(9, 13, 26, .8);
+        display: grid; grid-template-columns: 1.05fr .95fr; gap: 32px; align-items: center;
+    }
+    .eyebrow {
+        display: inline-flex; align-items: center; gap: 8px;
+        font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: #a5b4fc;
+    }
+    .eyebrow::before { content: ""; width: 22px; height: 1px; background: #6366f1; }
+    .hero h1 { margin: 12px 0 10px; font-size: 34px; line-height: 1.2; letter-spacing: -.02em; font-weight: 650; }
+    .hero .lead { margin: 0 0 22px; color: #b8c4dc; font-size: 15px; max-width: 42ch; }
+    .server-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .server-row .label { font-size: 12px; color: #94a3b8; }
+    .server-row code {
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 13px;
+        background: rgba(148, 163, 184, .16); border: 1px solid rgba(148, 163, 184, .22);
+        color: #e2e8f0; padding: 5px 10px; border-radius: 8px; word-break: break-all;
+    }
+
+    .cmd {
+        background: rgba(8, 12, 24, .62); border: 1px solid rgba(148, 163, 184, .18);
+        border-radius: 14px; padding: 14px 16px; backdrop-filter: blur(6px);
+    }
+    .cmd-head { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #94a3b8; }
+    .cmd pre {
+        margin: 10px 0 0; padding: 0; background: none; color: #d7e0f0;
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12px;
+        line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; word-break: normal;
+    }
+    .cmd-foot { display: flex; gap: 8px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+    .field {
+        appearance: none; border: 1px solid rgba(148, 163, 184, .26); background: rgba(15, 23, 42, .55);
+        color: #e2e8f0; border-radius: 9px; padding: 6px 10px; font-size: 12.5px; cursor: pointer;
+    }
+    .field option { color: #0f172a; }
+    .primary {
+        appearance: none; border: none; cursor: pointer; font-size: 12.5px; font-weight: 600;
+        color: #0b1220; background: linear-gradient(135deg, #a5b4fc, #7dd3fc);
+        padding: 7px 14px; border-radius: 9px; transition: .15s;
+    }
+    .primary:hover { filter: brightness(1.06); }
+    .tip { font-size: 12px; color: #7dd3fc; min-height: 16px; }
+
+    /* 卡片 */
     .card {
-        background: var(--card); border: 1px solid var(--line); border-radius: 10px;
-        padding: 16px 18px; margin-bottom: 16px;
+        background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+        padding: 22px 24px 24px; margin-top: 20px; box-shadow: var(--shadow);
     }
-    .card h2 { margin: 0 0 10px; font-size: 15px; font-weight: 600; }
-    .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-    .server {
-        font-family: ui-monospace, Consolas, monospace; font-size: 13px;
-        background: var(--accent-soft); color: var(--accent);
-        padding: 3px 8px; border-radius: 6px; word-break: break-all;
+    .card-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 4px; }
+    .card h2 { margin: 0; font-size: 16.5px; font-weight: 620; letter-spacing: -.01em; }
+    .card h2 span { color: var(--muted); font-weight: 400; font-size: 13px; }
+    .card h2 span:first-child { color: var(--ink); font-weight: 620; font-size: 16.5px; margin-right: 8px; }
+    .tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .select {
+        appearance: none; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2);
+        border-radius: 9px; padding: 7px 12px; font-size: 13px; cursor: pointer;
     }
-    pre {
-        margin: 8px 0 0; padding: 10px 12px; border-radius: 8px; overflow-x: auto;
-        background: #0f172a; color: #e2e8f0; font-size: 12.5px; line-height: 1.7;
-        font-family: ui-monospace, Consolas, monospace;
+    .select:hover { border-color: #cbd5e1; }
+
+    .table-wrap { margin-top: 14px; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    thead th {
+        text-align: left; font-weight: 500; font-size: 12px; letter-spacing: .04em; text-transform: uppercase;
+        color: var(--muted); padding: 10px 12px; border-bottom: 1px solid var(--line); white-space: nowrap;
     }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
-    th { color: var(--muted); font-weight: 500; white-space: nowrap; }
-    tr:last-child td { border-bottom: none; }
-    td.mono { font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; }
-    .muted { color: var(--muted); }
-    .tag {
-        display: inline-block; padding: 1px 7px; border-radius: 999px; font-size: 12px;
-        background: var(--accent-soft); color: var(--accent);
+    tbody td { padding: 12px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    tbody tr:hover { background: #fafbfe; }
+    tbody tr:last-child td { border-bottom: none; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12.5px; color: var(--ink-2); }
+    .num { text-align: right; color: var(--muted); white-space: nowrap; }
+    .pill {
+        display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px;
+        font-size: 12px; background: #eef2ff; color: #4338ca; border: 1px solid #e0e7ff;
     }
-    select {
-        padding: 6px 10px; border-radius: 6px; border: 1px solid var(--line);
-        background: #fff; color: var(--text); font-size: 13px;
+    .pill.grey { background: #f1f5f9; color: #475569; border-color: #e2e8f0; }
+    .pill.green { background: #ecfdf5; color: #047857; border-color: #d1fae5; }
+    .link {
+        display: inline-flex; align-items: center; gap: 6px; text-decoration: none;
+        color: var(--brand); font-weight: 560; font-size: 13px; white-space: nowrap;
     }
-    details summary { cursor: pointer; color: var(--muted); font-size: 13px; }
-    .empty { color: var(--muted); padding: 8px 0; }
-    .table-wrap { overflow-x: auto; }
-    footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 24px; }
+    .link:hover { color: #3730a3; }
+    .empty { color: var(--muted); font-size: 13px; padding: 18px 4px; }
+
+    details.mirror { margin-top: 20px; }
+    details.mirror summary {
+        cursor: pointer; list-style: none; color: var(--muted); font-size: 13px;
+        padding: 14px 18px; background: var(--surface); border: 1px dashed var(--line); border-radius: 12px;
+    }
+    details.mirror summary::-webkit-details-marker { display: none; }
+    details.mirror summary:hover { color: var(--ink-2); border-color: #cbd5e1; }
+
+    footer { text-align: center; color: #94a3b8; font-size: 12px; padding-top: 28px; }
+
+    @media (max-width: 860px) {
+        .hero { grid-template-columns: 1fr; padding: 28px 22px; }
+        .hero h1 { font-size: 27px; }
+        .card { padding: 18px 16px; }
+    }
 </style>
 </head>
 <body>
-<div class="wrap">
-    <header>
-        <div>
-            <h1 data-i18n="title">StarAgent 安装</h1>
-            <div class="sub" data-i18n="subtitle">下载并安装星尘代理，或复制一条命令完成安装</div>
+<div class="page">
+    <div class="topbar">
+        <div class="brand">
+            <div class="mark">星</div>
+            <div>星尘 StarAgent<small data-i18n="brandSub">节点代理安装</small></div>
         </div>
-        <button class="btn" id="langBtn">English</button>
-    </header>
-
-    <div class="card">
-        <h2 data-i18n="serverTitle">服务端地址</h2>
-        <div class="row">
-            <span class="server" id="server">-</span>
-            <span class="muted" data-i18n="serverHint">安装后 StarAgent 将注册到该地址</span>
-        </div>
-        <h2 style="margin-top:16px" data-i18n="commandTitle">一键安装</h2>
-        <div class="row">
-            <select id="osSel">
-                <option value="linux">Linux</option>
-                <option value="windows">Windows</option>
-            </select>
-            <select id="archSel">
-                <option value="x64">x64</option>
-                <option value="arm64">arm64</option>
-                <option value="arm">arm</option>
-                <option value="loongarch64">loongarch64</option>
-                <option value="mips64">mips64</option>
-            </select>
-            <button class="btn btn-primary" id="copyBtn" data-i18n="copy">复制命令</button>
-            <span class="muted" id="copyTip"></span>
-        </div>
-        <pre id="command">-</pre>
-        <p class="muted" style="margin:8px 0 0" data-i18n="rootHint">需要 root / 管理员权限；脚本会先安装 .NET 运行时（如缺失），再安装 StarAgent。</p>
+        <button class="ghost" id="langBtn">English</button>
     </div>
 
-    <div class="card">
-        <h2 data-i18n="versionTitle">安装包</h2>
-        <div class="row" style="margin-bottom:10px">
-            <select id="channelSel">
-                <option value="release">release</option>
-                <option value="beta">beta</option>
-                <option value="develop">develop</option>
-            </select>
-            <select id="versionSel"></select>
-            <span class="muted" id="versionMeta"></span>
+    <section class="hero">
+        <div>
+            <div class="eyebrow">Stardust Agent</div>
+            <h1 data-i18n="title">安装 StarAgent</h1>
+            <p class="lead" data-i18n="lead">选择平台与版本下载安装包，或复制一条命令完成安装。安装后代理会自动注册到本服务端。</p>
+            <div class="server-row">
+                <span class="label" data-i18n="server">服务端</span>
+                <code id="server">-</code>
+            </div>
+        </div>
+
+        <div class="cmd">
+            <div class="cmd-head">
+                <span data-i18n="command">一键安装</span>
+                <span id="cmdHint">Linux / macOS</span>
+            </div>
+            <pre id="command">-</pre>
+            <div class="cmd-foot">
+                <select class="field" id="osSel">
+                    <option value="linux">Linux</option>
+                    <option value="windows">Windows</option>
+                </select>
+                <select class="field" id="archSel">
+                    <option value="x64">x64</option>
+                    <option value="arm64">arm64</option>
+                    <option value="arm">arm</option>
+                    <option value="loongarch64">loongarch64</option>
+                    <option value="mips64">mips64</option>
+                </select>
+                <button class="primary" id="copyBtn" data-i18n="copy">复制命令</button>
+                <span class="tip" id="copyTip"></span>
+            </div>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-head">
+            <h2><span id="versionName">-</span><span data-i18n="packages">安装包</span></h2>
+            <div class="tools">
+                <select class="select" id="channelSel">
+                    <option value="release">Release</option>
+                    <option value="beta">Beta</option>
+                    <option value="develop">Develop</option>
+                </select>
+                <select class="select" id="versionSel"></select>
+            </div>
         </div>
         <div class="table-wrap">
             <table>
                 <thead>
                     <tr>
-                        <th data-i18n="colRuntime">运行时</th>
-                        <th data-i18n="colOS">系统</th>
+                        <th data-i18n="colOS">平台</th>
                         <th data-i18n="colArch">架构</th>
-                        <th data-i18n="colFile">文件名</th>
-                        <th data-i18n="colSize">大小</th>
-                        <th data-i18n="colAction">操作</th>
+                        <th data-i18n="colRuntime">运行时</th>
+                        <th data-i18n="colFile">文件</th>
+                        <th class="num" data-i18n="colSize">大小</th>
+                        <th data-i18n="colAction">下载</th>
                     </tr>
                 </thead>
                 <tbody id="agentTable"></tbody>
             </table>
-            <div class="empty" id="agentEmpty" hidden data-i18n="empty">服务端未维护该版本的安装包</div>
+            <div class="empty" id="agentEmpty" hidden data-i18n="empty">该版本暂未发布安装包</div>
         </div>
-    </div>
+    </section>
 
-    <div class="card">
-        <h2 data-i18n="nativeTitle">原生 Agent</h2>
+    <section class="card" id="nativeCard" hidden>
+        <div class="card-head">
+            <h2><span data-i18n="native">原生 Agent</span></h2>
+        </div>
         <div class="table-wrap">
             <table>
                 <thead>
                     <tr>
-                        <th data-i18n="colRuntime">运行时</th>
-                        <th data-i18n="colOS">系统</th>
+                        <th data-i18n="colOS">平台</th>
                         <th data-i18n="colArch">架构</th>
-                        <th data-i18n="colFile">文件名</th>
-                        <th data-i18n="colSize">大小</th>
-                        <th data-i18n="colAction">操作</th>
+                        <th data-i18n="colRuntime">运行时</th>
+                        <th data-i18n="colFile">文件</th>
+                        <th class="num" data-i18n="colSize">大小</th>
+                        <th data-i18n="colAction">下载</th>
                     </tr>
                 </thead>
                 <tbody id="nativeTable"></tbody>
             </table>
-            <div class="empty" id="nativeEmpty" hidden data-i18n="empty">服务端未维护该版本的安装包</div>
         </div>
-    </div>
+    </section>
 
-    <div class="card">
-        <h2 data-i18n="runtimeTitle">.NET 运行时</h2>
+    <section class="card">
+        <div class="card-head">
+            <h2><span data-i18n="runtime">.NET 运行时</span></h2>
+            <span class="pill grey" data-i18n="runtimeHint">每个平台保留最近的主版本</span>
+        </div>
         <div class="table-wrap">
             <table>
                 <thead>
                     <tr>
                         <th data-i18n="colVersion">版本</th>
-                        <th data-i18n="colOS">系统</th>
+                        <th data-i18n="colOS">平台</th>
                         <th data-i18n="colArch">架构</th>
-                        <th data-i18n="colFile">文件名</th>
-                        <th data-i18n="colSize">大小</th>
-                        <th data-i18n="colAction">操作</th>
+                        <th data-i18n="colFile">文件</th>
+                        <th class="num" data-i18n="colSize">大小</th>
+                        <th data-i18n="colAction">下载</th>
                     </tr>
                 </thead>
                 <tbody id="runtimeTable"></tbody>
             </table>
-            <div class="empty" id="runtimeEmpty" hidden data-i18n="empty">服务端未维护该版本的安装包</div>
+            <div class="empty" id="runtimeEmpty" hidden data-i18n="empty">该版本暂未发布安装包</div>
         </div>
-    </div>
+    </section>
 
-    <div class="card">
-        <details>
-            <summary data-i18n="mirrorTitle">公共镜像（服务端未维护安装包时兜底）</summary>
-            <div class="table-wrap" style="margin-top:10px">
+    <details class="mirror">
+        <summary data-i18n="mirror">公共镜像（服务端未维护安装包时兜底）</summary>
+        <div class="card" style="margin-top:12px">
+            <div class="table-wrap">
                 <table>
                     <thead>
                         <tr>
                             <th data-i18n="colRuntime">运行时</th>
-                            <th data-i18n="colOS">系统</th>
+                            <th data-i18n="colOS">平台</th>
                             <th data-i18n="colArch">架构</th>
-                            <th data-i18n="colFile">文件名</th>
-                            <th data-i18n="colAction">操作</th>
+                            <th data-i18n="colFile">文件</th>
+                            <th data-i18n="colAction">下载</th>
                         </tr>
                     </thead>
                     <tbody id="mirrorTable"></tbody>
                 </table>
             </div>
-        </details>
-    </div>
+        </div>
+    </details>
 
-    <footer>
-        <span data-i18n="footer">StarServer 安装引导</span>
-        <span id="updateTime"></span>
-    </footer>
+    <footer><span data-i18n="footer">StarServer 安装引导</span><span id="updateTime"></span></footer>
 </div>
 
 <script>
 const I18N = {
     zh: {
-        title: "StarAgent 安装",
-        subtitle: "下载并安装星尘代理，或复制一条命令完成安装",
-        serverTitle: "服务端地址",
-        serverHint: "安装后 StarAgent 将注册到该地址",
-        commandTitle: "一键安装",
+        brandSub: "节点代理安装",
+        title: "安装 StarAgent",
+        lead: "选择平台与版本下载安装包，或复制一条命令完成安装。安装后代理会自动注册到本服务端。",
+        server: "服务端",
+        command: "一键安装",
         copy: "复制命令",
-        copied: "已复制",
-        rootHint: "需要 root / 管理员权限；脚本会先安装 .NET 运行时（如缺失），再安装 StarAgent。",
-        versionTitle: "安装包",
-        nativeTitle: "原生 Agent",
-        runtimeTitle: ".NET 运行时",
-        mirrorTitle: "公共镜像（服务端未维护安装包时兜底）",
-        colRuntime: "运行时", colOS: "系统", colArch: "架构", colFile: "文件名",
-        colSize: "大小", colAction: "操作", colVersion: "版本",
-        download: "下载", empty: "服务端未维护该版本的安装包", footer: "StarServer 安装引导",
+        copied: "已复制到剪贴板",
+        packages: "安装包",
+        native: "原生 Agent",
+        runtime: ".NET 运行时",
+        runtimeHint: "每个平台保留最近的主版本",
+        mirror: "公共镜像（服务端未维护安装包时兜底）",
+        colOS: "平台", colArch: "架构", colRuntime: "运行时", colFile: "文件",
+        colSize: "大小", colAction: "下载", colVersion: "版本",
+        download: "下载", empty: "该版本暂未发布安装包", footer: "StarServer 安装引导",
+        suggest: "推荐", local: "本站", remote: "镜像",
     },
     en: {
+        brandSub: "Node agent installation",
         title: "Install StarAgent",
-        subtitle: "Download the agent, or copy a single command to install it",
-        serverTitle: "Server address",
-        serverHint: "The agent will register to this address after installation",
-        commandTitle: "One-line install",
-        copy: "Copy command",
-        copied: "Copied",
-        rootHint: "Requires root / administrator privileges. The script installs the .NET runtime first when missing.",
-        versionTitle: "Packages",
-        nativeTitle: "Native agents",
-        runtimeTitle: ".NET runtime",
-        mirrorTitle: "Public mirror (fallback when no package is published here)",
-        colRuntime: "Runtime", colOS: "OS", colArch: "Arch", colFile: "File",
-        colSize: "Size", colAction: "Action", colVersion: "Version",
-        download: "Download", empty: "No package is published for this version", footer: "StarServer install guide",
+        lead: "Download a package for your platform, or run a single command. The agent registers to this server automatically.",
+        server: "Server",
+        command: "One-line install",
+        copy: "Copy",
+        copied: "Copied to clipboard",
+        packages: "Packages",
+        native: "Native agents",
+        runtime: ".NET runtime",
+        runtimeHint: "Latest major versions per platform",
+        mirror: "Public mirror (fallback when nothing is published here)",
+        colOS: "Platform", colArch: "Arch", colRuntime: "Runtime", colFile: "File",
+        colSize: "Size", colAction: "Download", colVersion: "Version",
+        download: "Download", empty: "No package published for this version", footer: "StarServer install guide",
+        suggest: "Latest", local: "Local", remote: "Mirror",
     },
 };
 
@@ -245,8 +336,7 @@ let manifest = null;
 let channel = "release";
 
 const $ = id => document.getElementById(id);
-
-function t(key) { return (I18N[lang] && I18N[lang][key]) || key; }
+const t = key => (I18N[lang] && I18N[lang][key]) || key;
 
 function applyLang() {
     document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
@@ -270,28 +360,42 @@ function sizeText(size) {
     return value.toFixed(i === 0 ? 0 : 1) + " " + units[i];
 }
 
-function cell(text, mono) {
+function cell(text, className) {
     const td = document.createElement("td");
     td.textContent = text == null || text === "" ? "-" : text;
-    if (mono) td.className = "mono";
+    if (className) td.className = className;
+    return td;
+}
+
+function platformCell(pkg) {
+    const td = document.createElement("td");
+    const span = document.createElement("span");
+    span.className = "pill" + (pkg.os === "Any" || !pkg.os ? " grey" : "");
+    span.textContent = pkg.os && pkg.os !== "Any" ? pkg.os : "Any";
+    td.appendChild(span);
+    return td;
+}
+
+function downloadCell(pkg) {
+    const td = document.createElement("td");
+    const a = document.createElement("a");
+    a.className = "link";
+    a.href = abs(pkg.url);
+    a.textContent = t("download") + " ↓";
+    td.appendChild(a);
     return td;
 }
 
 function row(pkg, withVersion) {
     const tr = document.createElement("tr");
-    if (withVersion) tr.appendChild(cell(pkg.version, true));
-    tr.appendChild(cell(pkg.runtime, true));
-    tr.appendChild(cell(pkg.os));
+    if (withVersion) tr.appendChild(cell(pkg.version, "mono"));
+    tr.appendChild(platformCell(pkg));
     tr.appendChild(cell(pkg.arch));
-    tr.appendChild(cell(pkg.fileName, true));
-    tr.appendChild(cell(sizeText(pkg.size)));
-    const action = document.createElement("td");
-    const a = document.createElement("a");
-    a.className = "btn";
-    a.href = abs(pkg.url);
-    a.textContent = t("download");
-    action.appendChild(a);
-    tr.appendChild(action);
+    // 运行时表的列里已经有版本，不再重复显示运行时列，与表头保持一致
+    if (!withVersion) tr.appendChild(cell(pkg.runtime || "-", "mono"));
+    tr.appendChild(cell(pkg.fileName, "mono"));
+    tr.appendChild(cell(sizeText(pkg.size), "num"));
+    tr.appendChild(downloadCell(pkg));
     return tr;
 }
 
@@ -299,7 +403,7 @@ function fill(tbodyId, emptyId, list, withVersion) {
     const body = $(tbodyId);
     body.innerHTML = "";
     (list || []).forEach(pkg => body.appendChild(row(pkg, withVersion)));
-    $(emptyId).hidden = (list || []).length > 0;
+    if (emptyId) $(emptyId).hidden = (list || []).length > 0;
 }
 
 function currentVersion() {
@@ -319,10 +423,10 @@ function renderVersions() {
         sel.appendChild(opt);
         return;
     }
-    versions.forEach(v => {
+    versions.forEach((v, i) => {
         const opt = document.createElement("option");
         opt.value = v.id;
-        opt.textContent = v.version + (v.force ? " (force)" : "");
+        opt.textContent = v.version + (i === 0 ? " · " + t("suggest") : "");
         sel.appendChild(opt);
     });
 }
@@ -332,15 +436,16 @@ function renderCommand() {
     const server = (manifest.server || "").replace(/\/+$/, "");
     const os = $("osSel").value;
     const arch = $("archSel").value;
-    let command;
+    $("cmdHint").textContent = os === "windows" ? "Windows PowerShell" : "Linux / macOS";
+
     if (os === "windows") {
         const url = server + "/install.ps1?os=windows&arch=" + arch + "&channel=" + channel;
-        command = "powershell -NoProfile -ExecutionPolicy Bypass -Command \"iwr '" + url + "' -UseBasicParsing | iex\"";
+        $("command").textContent =
+            "powershell -NoProfile -ExecutionPolicy Bypass -Command \"iwr '" + url + "' -UseBasicParsing | iex\"";
     } else {
         const url = server + "/install.sh?os=linux&arch=" + arch + "&channel=" + channel;
-        command = "curl -fsSL '" + url + "' | sudo bash";
+        $("command").textContent = "curl -fsSL '" + url + "' | sudo bash";
     }
-    $("command").textContent = command;
 }
 
 function render() {
@@ -354,12 +459,15 @@ function render() {
     const agent = packages.filter(e => !e.kind || e.kind === "agent");
     const native = packages.filter(e => e.kind === "native");
 
+    $("versionName").textContent = ver ? ver.version : "-";
     fill("agentTable", "agentEmpty", agent, false);
-    fill("nativeTable", "nativeEmpty", native, false);
-    fill("runtimeTable", "runtimeEmpty", manifest.runtimes, true);
-    fill("mirrorTable", "mirrorEmpty", manifest.mirror, false);
 
-    $("versionMeta").textContent = ver ? (ver.channel || "") + (ver.packages ? " · " + ver.packages.length : "") : "";
+    $("nativeCard").hidden = native.length === 0;
+    if (native.length > 0) fill("nativeTable", null, native, false);
+
+    fill("runtimeTable", "runtimeEmpty", manifest.runtimes, true);
+    fill("mirrorTable", null, manifest.mirror, false);
+
     renderCommand();
 }
 
@@ -380,15 +488,16 @@ $("copyBtn").addEventListener("click", async () => {
     const text = $("command").textContent;
     try {
         await navigator.clipboard.writeText(text);
-        $("copyTip").textContent = t("copied");
-        setTimeout(() => { $("copyTip").textContent = ""; }, 1500);
     } catch {
         const range = document.createRange();
         range.selectNodeContents($("command"));
         const sel = window.getSelection();
         sel.removeAllRanges();
         sel.addRange(range);
+        document.execCommand && document.execCommand("copy");
     }
+    $("copyTip").textContent = t("copied");
+    setTimeout(() => { $("copyTip").textContent = ""; }, 1800);
 });
 
 applyLang();
