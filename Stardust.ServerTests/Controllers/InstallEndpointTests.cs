@@ -70,6 +70,7 @@ public class InstallEndpointTests : StarTestBase
 
         Assert.False(root.GetProperty("server").GetString().IsNullOrEmpty());
         Assert.False(root.GetProperty("version").GetString().IsNullOrEmpty());
+        Assert.False(root.GetProperty("mode").GetString().IsNullOrEmpty());
         Assert.True(root.GetProperty("nodeTotal").GetInt32() >= 0);
         Assert.True(root.GetProperty("appTotal").GetInt32() >= 0);
         Assert.InRange(root.GetProperty("errorRate").GetDouble(), 0, 1);

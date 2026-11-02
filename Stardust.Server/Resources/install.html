@@ -61,7 +61,7 @@
             linear-gradient(140deg, #070b16 0%, #101a30 48%, #0d1729 100%);
         padding: 44px 40px 40px;
         box-shadow: 0 40px 80px -60px rgba(6, 10, 22, .95);
-        display: grid; grid-template-columns: .9fr 1.1fr; gap: 36px; align-items: stretch;
+        display: grid; grid-template-columns: .9fr 1.1fr; gap: 36px; align-items: center;
     }
     .hero::after {
         content: ""; position: absolute; inset: 0; pointer-events: none;
@@ -76,12 +76,19 @@
     .hero h1 { margin: 14px 0 12px; font-size: 38px; line-height: 1.15; letter-spacing: -.025em; font-weight: 660; }
     .hero h1 em { font-style: normal; background: linear-gradient(120deg, #a5b4fc, #7dd3fc); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .hero .lead { margin: 0 0 24px; color: #a9b6cd; font-size: 15px; max-width: 44ch; }
-    .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
+    .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
     .chip {
         font-size: 12px; color: #cbd5e1; border: 1px solid rgba(148, 163, 184, .24);
         background: rgba(148, 163, 184, .10); padding: 3px 10px; border-radius: 999px;
     }
-    .server-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }    .server-row .label { font-size: 11.5px; color: #8fa0b8; letter-spacing: .04em; }
+    .server-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .server-row .label { font-size: 11.5px; color: #8fa0b8; letter-spacing: .04em; }
+    .hero-link {
+        display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: #c7d2fe;
+        border: 1px solid rgba(148, 163, 184, .3); padding: 5px 12px; border-radius: 9px;
+        text-decoration: none; transition: .18s;
+    }
+    .hero-link:hover { background: rgba(148, 163, 184, .16); color: #e0e7ff; }
     .server-chip {
         display: inline-flex; align-items: center; gap: 8px;
         font-family: var(--mono); font-size: 13px; color: #e2e8f0;
@@ -107,8 +114,10 @@
     }
     .stat span { display: block; font-size: 11.5px; color: #8fa0b8; letter-spacing: .04em; }
     .stat small { display: block; font-size: 11px; color: #7d8ca4; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .stat { transition: .18s; }
+    .stat:hover { background: rgba(148, 163, 184, .14); border-color: rgba(148, 163, 184, .26); }
 
-    .cmd { background: rgba(6, 10, 20, .62); border: 1px solid rgba(148, 163, 184, .18); border-radius: 16px; padding: 18px 20px; backdrop-filter: blur(8px); display: flex; flex-direction: column; justify-content: space-between; gap: 10px; }
+    .cmd { background: rgba(6, 10, 20, .62); border: 1px solid rgba(148, 163, 184, .18); border-radius: 16px; padding: 18px 20px; backdrop-filter: blur(8px); display: flex; flex-direction: column; justify-content: flex-start; gap: 12px; }
     .tabs { display: inline-flex; padding: 3px; gap: 2px; border-radius: 10px; background: rgba(148, 163, 184, .13); }
     .tabs button {
         appearance: none; border: none; cursor: pointer; font-size: 12px; color: #a8b6cb;
@@ -149,7 +158,11 @@
     .card:nth-of-type(3) { animation-delay: .13s; }
     @keyframes fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
     .card-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 6px; }
-    .card-head h2 { display: flex; align-items: baseline; gap: 10px; margin: 0; font-size: 17px; font-weight: 640; letter-spacing: -.015em; }
+    .card-head h2 { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 17px; font-weight: 640; letter-spacing: -.015em; }
+    .card-head h2::before {
+        content: ""; width: 4px; height: 16px; border-radius: 2px; flex: none;
+        background: linear-gradient(180deg, var(--brand), var(--brand-2));
+    }
     .card-head h2 .sub { color: var(--muted); font-size: 12.5px; font-weight: 400; letter-spacing: 0; }
     .card-head .tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     .select {
@@ -222,6 +235,8 @@
 
     footer { text-align: center; color: #94a3b8; font-size: 12px; padding-top: 34px; }
 
+    :focus-visible { outline: 2px solid rgba(99, 102, 241, .55); outline-offset: 2px; border-radius: 8px; }
+
     @media (max-width: 900px) {
         .hero { grid-template-columns: 1fr; padding: 30px 22px; gap: 28px; }
         .hero h1 { font-size: 29px; }
@@ -245,17 +260,25 @@
             <div class="eyebrow">Stardust Platform</div>
             <h1>星尘 <em>Stardust</em></h1>
             <p class="lead" data-i18n="lead">分布式配置、注册发现、远程部署、性能监控与日志中心。节点与应用在这里统一接入。</p>
-            <div class="stats">
-                <div class="stat"><b id="stNodeOnline">-</b><span data-i18n="stNode">在线节点</span><small><i id="stNodeTotal">-</i> <span data-i18n="stTotal">总计</span></small></div>
-                <div class="stat"><b id="stAppOnline">-</b><span data-i18n="stApp">在线应用</span><small><i id="stAppTotal">-</i> <span data-i18n="stTotal">总计</span></small></div>
-                <div class="stat"><b id="stTodayCall">-</b><span data-i18n="stCall">今日调用</span><small id="stCallHint">-</small></div>
-                <div class="stat"><b id="stTodayError">-</b><span data-i18n="stError">今日错误</span><small id="stErrorRate">-</small></div>
+            <div class="chips">
+                <span class="chip" data-i18n="modConfig">配置中心</span>
+                <span class="chip" data-i18n="modReg">注册发现</span>
+                <span class="chip" data-i18n="modDeploy">远程部署</span>
+                <span class="chip" data-i18n="modTrace">链路监控</span>
+                <span class="chip" data-i18n="modLog">日志中心</span>
+            </div>
+            <div class="stats" id="statsBlock" hidden>
+                <div class="stat"><b id="stNodeOnline">-</b><span data-i18n="stNode">在线节点</span><small id="stNodeSub">-</small></div>
+                <div class="stat"><b id="stAppOnline">-</b><span data-i18n="stApp">在线应用</span><small id="stAppSub">-</small></div>
+                <div class="stat"><b id="stTodayCall">-</b><span data-i18n="stCall">今日调用</span><small id="stCallSub">-</small></div>
+                <div class="stat"><b id="stTodayError">-</b><span data-i18n="stError">今日错误</span><small id="stErrorSub">-</small></div>
             </div>
             <div class="server-row">
                 <span class="label" data-i18n="server">服务端</span>
                 <span class="server-chip"><span id="server">-</span><button id="copyServer" data-i18n="copy">复制</button></span>
                 <span class="chip" id="versionChip">-</span>
                 <span class="chip" id="uptimeChip">-</span>
+                <a class="hero-link" id="consoleBtn" hidden target="_blank" rel="noopener"></a>
             </div>
         </div>
 
@@ -386,7 +409,16 @@ const I18N = {
         stApp: "在线应用",
         stCall: "今日调用",
         stError: "今日错误",
+        onlineRate: "在线率",
+        vsYesterday: "较昨日",
+        today: "今日",
         stTotal: "总计",
+        console: "管理控制台",
+        modConfig: "配置中心",
+        modReg: "注册发现",
+        modDeploy: "远程部署",
+        modTrace: "链路监控",
+        modLog: "日志中心",
         errorRate: "错误率",
         uptime: "已稳定运行",
         packagesHint: "StarAgent 客户端",
@@ -420,7 +452,16 @@ const I18N = {
         stApp: "Apps online",
         stCall: "Calls today",
         stError: "Errors today",
+        onlineRate: "online",
+        vsYesterday: "vs yesterday",
+        today: "today",
         stTotal: "total",
+        console: "Console",
+        modConfig: "Config center",
+        modReg: "Registry",
+        modDeploy: "Deployment",
+        modTrace: "Tracing",
+        modLog: "Log center",
         errorRate: "error rate",
         uptime: "Uptime",
         packagesHint: "StarAgent client",
@@ -698,19 +739,57 @@ function uptimeText(seconds) {
 
 let summary = null;
 
+/** 量级化展示：只保留数量级，避免泄露精确运营数据 */
+function magnitude(value) {
+    if (!value) return "0";
+    if (value < 1000) return fmt(value);
+    if (value < 10000) return fmt(Math.floor(value / 100) * 100) + "+";
+
+    if (lang === "zh") {
+        if (value >= 100000000) return fmt(Math.floor(value / 100000000)) + " 亿+";
+        return fmt(Math.floor(value / 10000)) + " 万+";
+    }
+    if (value >= 1000000000) return Math.floor(value / 1000000000) + "B+";
+    if (value >= 1000000) return Math.floor(value / 1000000) + "M+";
+    return Math.floor(value / 1000) + "K+";
+}
+
+function percent(value) {
+    return ((value || 0) * 100).toFixed(2) + "%";
+}
+
 function renderSummary() {
     if (!summary) return;
-    $("stNodeOnline").textContent = fmt(summary.nodeOnline);
-    $("stNodeTotal").textContent = fmt(summary.nodeTotal);
-    $("stAppOnline").textContent = fmt(summary.appOnline);
-    $("stAppTotal").textContent = fmt(summary.appTotal);
-    $("stTodayCall").textContent = fmt(summary.todayCall);
-    $("stTodayError").textContent = fmt(summary.todayError);
-    $("stCallHint").textContent = summary.todayCall > 0 ? "" : "-";
-    $("stErrorRate").textContent = t("errorRate") + " " + ((summary.errorRate || 0) * 100).toFixed(2) + "%";
+
+    // 服务端按配置决定展示模式：hidden 不返回统计，页面同时隐藏统计块
+    const mode = summary.mode || "exact";
+    const showStats = mode !== "hidden" && (summary.nodeTotal > 0 || summary.appTotal > 0 || summary.todayCall > 0);
+    $("statsBlock").hidden = !showStats;
+
+    const show = mode === "exact" ? fmt : magnitude;
+    if (showStats) {
+        $("stNodeOnline").textContent = show(summary.nodeOnline);
+        $("stNodeSub").textContent = summary.nodeTotal > 0 ? t("stTotal") + " " + show(summary.nodeTotal) : "-";
+        $("stAppOnline").textContent = show(summary.appOnline);
+        $("stAppSub").textContent = summary.appTotal > 0 ? t("stTotal") + " " + show(summary.appTotal) : "-";
+        $("stTodayCall").textContent = show(summary.todayCall);
+        $("stCallSub").textContent = summary.yesterdayCall > 0
+            ? t("vsYesterday") + " " + (((summary.todayCall - summary.yesterdayCall) / summary.yesterdayCall * 100).toFixed(1)) + "%"
+            : t("today");
+        $("stTodayError").textContent = show(summary.todayError);
+        $("stErrorSub").textContent = t("errorRate") + " " + percent(summary.errorRate);
+    }
+
     $("versionChip").textContent = summary.version ? "v" + summary.version : "-";
-    $("uptimeChip").textContent = t("uptime") + " " + uptimeText(summary.uptime);
+    $("uptimeChip").textContent = summary.uptime > 0 ? t("uptime") + " " + uptimeText(summary.uptime) : "-";
     if (summary.server && (!manifest || !manifest.server)) $("server").textContent = summary.server;
+
+    if (summary.webUrl) {
+        const btn = $("consoleBtn");
+        btn.href = summary.webUrl;
+        btn.textContent = t("console") + " →";
+        btn.hidden = false;
+    }
 }
 
 async function loadSummary() {

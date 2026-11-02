@@ -7,6 +7,12 @@ public class HomeSummary
     /// <summary>服务端地址</summary>
     public String? Server { get; set; }
 
+    /// <summary>管理控制台地址。StarWeb 地址，为空表示未部署</summary>
+    public String? WebUrl { get; set; }
+
+    /// <summary>展示模式。hidden/magnitude/exact，由服务端配置决定</summary>
+    public String? Mode { get; set; }
+
     /// <summary>服务端版本</summary>
     public String? Version { get; set; }
 
@@ -27,6 +33,9 @@ public class HomeSummary
 
     /// <summary>今日调用量</summary>
     public Int64 TodayCall { get; set; }
+
+    /// <summary>昨日调用量。用于展示环比趋势</summary>
+    public Int64 YesterdayCall { get; set; }
 
     /// <summary>今日错误数</summary>
     public Int64 TodayError { get; set; }

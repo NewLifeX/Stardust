@@ -19,6 +19,19 @@ public enum ClearModes
     Delete = 2,
 }
 
+/// <summary>首页概览展示模式</summary>
+public enum HomeSummaryModes
+{
+    /// <summary>不展示。隐藏规模数据，只保留安装引导</summary>
+    Hidden = 1,
+
+    /// <summary>量级。保留数量级（如 1,000+）足以体现规模，不泄露精确运营数据</summary>
+    Magnitude = 2,
+
+    /// <summary>精确。内网或自有部署可直接展示真实数量</summary>
+    Exact = 3,
+}
+
 /// <summary>配置</summary>
 [Config("StarServer")]
 public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
@@ -193,6 +206,10 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     /// <summary>启用安装引导页。启用后根路径返回安装引导页面，默认true</summary>
     [Description("Enable the install guide page at the root path. Default true.")]
     public Boolean EnableInstallPage { get; set; } = true;
+
+    /// <summary>首页概览展示模式。默认量级，公网部署只显示数量级而不泄露精确运营数据</summary>
+    [Description("Home summary display mode. Magnitude hides exact figures, Exact shows real numbers, Hidden hides the summary.")]
+    public HomeSummaryModes HomeSummaryMode { get; set; } = HomeSummaryModes.Magnitude;
 
     ///// <summary>新服务器。节点自动迁移到新的服务器地址</summary>
     //[Description("新服务器。节点自动迁移到新的服务器地址")]

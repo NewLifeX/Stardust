@@ -56,23 +56,44 @@ public class HomeController : ControllerBase
     [HttpGet("/home/summary")]
     public HomeSummary Summary()
     {
+        var mode = _setting.HomeSummaryMode;
+        var model = new HomeSummary
+        {
+            Server = InstallService.GetServerUrl(Request, _setting),
+            WebUrl = FirstWebUrl(),
+            Version = typeof(HomeController).Assembly.GetName().Version + "",
+            Mode = mode.ToString().ToLower(),
+        };
+
+        // 不展示模式下不读取统计，避免把规模数据发送到浏览器
+        if (mode == HomeSummaryModes.Hidden) return model;
+
         var today = AppDayStat.Search(DateTime.Today, null);
         var total = today.Sum(e => (Int64)e.Total);
         var errors = today.Sum(e => (Int64)e.Errors);
+        var yesterday = AppDayStat.Search(DateTime.Today.AddDays(-1), null);
 
-        return new HomeSummary
-        {
-            Server = InstallService.GetServerUrl(Request, _setting),
-            Version = typeof(HomeController).Assembly.GetName().Version + "",
-            Uptime = Environment.TickCount64 / 1000,
-            NodeOnline = NodeOnline.Meta.Count,
-            NodeTotal = Node.Meta.Count,
-            AppOnline = AppOnline.Meta.Count,
-            AppTotal = App.Meta.Count,
-            TodayCall = total,
-            TodayError = errors,
-            ErrorRate = total > 0 ? (Double)errors / total : 0,
-        };
+        model.Uptime = Environment.TickCount64 / 1000;
+        model.NodeOnline = NodeOnline.Meta.Count;
+        model.NodeTotal = Node.Meta.Count;
+        model.AppOnline = AppOnline.Meta.Count;
+        model.AppTotal = App.Meta.Count;
+        model.TodayCall = total;
+        model.YesterdayCall = yesterday.Sum(e => (Int64)e.Total);
+        model.TodayError = errors;
+        model.ErrorRate = total > 0 ? (Double)errors / total : 0;
+
+        return model;
+    }
+
+    /// <summary>取第一个可用的管理控制台地址</summary>
+    /// <returns>控制台地址，未配置时返回null</returns>
+    private String? FirstWebUrl()
+    {
+        var url = _setting.WebUrl;
+        if (url.IsNullOrEmpty()) return null;
+
+        return url.Split(';', ',').FirstOrDefault(e => !e.IsNullOrWhiteSpace())?.Trim().TrimEnd('/');
     }
 
     /// <summary>旧版首页行为：跳转到 StarWeb 的代理安装页</summary>
