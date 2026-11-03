@@ -44,6 +44,18 @@ public class DeployService(StarFactory starFactory, ITracer tracer)
             var packageOutput = buildNode.PackageOutput;
             var uploadPackage = buildNode.UploadPackage;
 
+            // Build-Upload 的语义是“完整编译并上传”（界面按钮“拉代码及编译”、流水线固定用它），
+            // 步骤以动作准而不再取节点开关，否则节点漏勾“编译项目”会跳过编译直接打包，
+            // 落得“产物目录不存在：xxx\publish”这种与配置无关的诡异失败
+            if (action.EqualIgnoreCase("Build-Upload"))
+            {
+                buildProject = true;
+                packageOutput = true;
+                uploadPackage = true;
+                // 仅在配置了仓库地址时才拉代码，保留“本地源码目录（非 Git）”场景不被误触发克隆
+                if (!app.Repository.IsNullOrEmpty()) pullCode = true;
+            }
+
             // Package-Upload 仅打包上传，不拉代码和编译
             if (action.EqualIgnoreCase("Package-Upload"))
             {
