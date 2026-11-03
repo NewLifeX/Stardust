@@ -85,8 +85,33 @@ TODO.md
 /design-handoff/
 .pnpm-store/
 .codebuddy/
-.agents/skills/stardust-prototype-to-vue/SKILL.md
 .workbuddy/
 docs/Stardust-设计重构方案.md
+/docs/
 memory/
 .env.*.local
+
+# Agent / 本地工作区与临时目录（不入库）
+AGENTS.md
+CODEBUDDY.md
+CONTEXT.md
+TODO2.md
+.temp/
+.agents/
+
+# Cube 为独立 Git 仓库（本地 checkout，非本子模块）
+/Cube/
+
+# 前端测试与报告产物
+Stardust.Web.Vue/coverage/
+Stardust.Web.Vue/ct-report/
+Stardust.Web.Vue/test-results-ct/
+Stardust.Web.Vue/.forgeself/
+Stardust.Web.Vue/TODO.md
+
+# Windows 误重定向产生的 NUL 设备占位文件
+nul
+**/nul
+Doc/Design/Stardust/
+Doc/MVC功能真源/
+Doc/design-spec/
