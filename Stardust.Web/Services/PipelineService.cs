@@ -1,10 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using NewLife;
 using NewLife.Log;
-using NewLife.Serialization;
 using Stardust.Data.Deployment;
 using Stardust.Models;
 
@@ -107,35 +104,36 @@ public class PipelineService
     #endregion
 
     #region Webhook 入口
-    /// <summary>处理 git push webhook 入口。解析 payload、分支匹配、防抖后创建 run 并异步执行</summary>
+    /// <summary>处理 git push webhook 入口。多平台负载先经解析器转换为规范模型，再执行分支匹配、防抖与运行创建。
+    /// 后续编排与具体 git 平台无关，新增平台只需在 WebhookParserRegistry 注册一个解析器</summary>
     /// <param name="token">webhook 鉴权 token（AppPipeline.Token）</param>
-    /// <param name="body">原始请求体</param>
-    /// <param name="signature">GitHub 风格 X-Hub-Signature-256，可选</param>
+    /// <param name="request">原始请求（请求体、平台事件头、签名）</param>
     /// <returns>处理结果对象，形如 {result:"accepted", runId, status}</returns>
-    public async Task<Object> HandleWebhookAsync(String token, String body, String signature)
+    public async Task<Object> HandleWebhookAsync(String token, WebhookRequest request)
     {
         if (token.IsNullOrEmpty()) return new { result = "error", reason = "missing token" };
+        if (request == null || request.Body.IsNullOrEmpty()) return new { result = "error", reason = "empty payload" };
 
         var pipeline = AppPipeline.FindByToken(token);
         if (pipeline == null) return new { result = "error", reason = "invalid token" };
         if (!pipeline.Enable) return new { result = "ignored", reason = "pipeline disabled" };
 
         // 签名校验（可选，配置了 Secret 才校验）
-        if (!pipeline.Secret.IsNullOrEmpty())
-        {
-            if (signature.IsNullOrEmpty()) return new { result = "error", reason = "missing signature" };
-            if (!VerifySignature(pipeline.Secret, body, signature)) return new { result = "error", reason = "invalid signature" };
-        }
+        if (!pipeline.Secret.IsNullOrEmpty() && !WebhookSignature.Verify(pipeline.Secret, request))
+            return new { result = "error", reason = "invalid signature" };
 
-        // 解析 payload
-        var (branch, commitId, commitMessage, commitAuthor, commitTime) = ParsePayload(body);
-        if (branch.IsNullOrEmpty()) return new { result = "ignored", reason = "no branch" };
+        // 平台适配：不同 git 平台的负载在此收敛为统一模型，后续流程不再关心来源平台
+        var evt = WebhookParserRegistry.Parse(request);
+        if (evt == null) return new { result = "error", reason = "invalid payload" };
+        if (evt.Branch.IsNullOrEmpty()) return new { result = "ignored", reason = "no branch" };
+        if (evt.IsTag) return new { result = "ignored", reason = "tag push" };
+        if (evt.Deleted) return new { result = "ignored", reason = "ref deleted" };
 
         // 分支匹配
-        if (!MatchBranch(pipeline.Branch, branch)) return new { result = "ignored", reason = "branch mismatch" };
+        if (!MatchBranch(pipeline.Branch, evt.Branch)) return new { result = "ignored", reason = "branch mismatch" };
 
         // 防抖：同 pipeline + 同 commit 在 5 分钟内有进行中或已成功的 run 则跳过
-        if (!commitId.IsNullOrEmpty() && IsDuplicate(pipeline.Id, commitId, DedupWindow))
+        if (!evt.CommitId.IsNullOrEmpty() && IsDuplicate(pipeline.Id, evt.CommitId, DedupWindow))
             return new { result = "skipped", reason = "duplicate" };
 
         // 关联实体校验，避免创建无法执行的 run
@@ -151,11 +149,11 @@ public class PipelineService
             PipelineId = pipeline.Id,
             Status = PipelineStatus.Pending,
             TriggerSource = "webhook",
-            CommitId = commitId,
-            CommitMessage = commitMessage,
-            CommitAuthor = commitAuthor,
-            CommitTime = commitTime == default ? DateTime.Now : commitTime,
-            Branch = branch,
+            CommitId = evt.CommitId,
+            CommitMessage = evt.CommitMessage,
+            CommitAuthor = evt.CommitAuthor,
+            CommitTime = evt.CommitTime == default ? DateTime.Now : evt.CommitTime,
+            Branch = evt.Branch,
             BuildNodeId = pipeline.BuildNodeId,
         };
         run.Insert();
@@ -272,14 +270,14 @@ public class PipelineService
             }
             catch (Exception ex)
             {
-                // 命令下发即失败（如节点不存在）：立即标记失败
+                // 命令下发即失败（如节点不存在）：立即标记失败。Message/Remark 列宽有限，长异常消息需截断保留尾部
                 buildStep.Status = "Failed";
                 buildStep.FinishedTime = DateTime.Now;
-                buildStep.Message = ex.Message;
+                buildStep.Message = AppPipelineStep.CutMessage(ex.Message);
                 buildStep.Update();
                 run.BuildFinishedTime = DateTime.Now;
                 run.Status = PipelineStatus.Failed;
-                run.Remark = ex.Message;
+                run.Remark = AppPipelineStep.CutMessage(ex.Message, 480);
                 run.Update();
                 return;
             }
@@ -291,7 +289,7 @@ public class PipelineService
         {
             span?.SetError(ex, null);
             run.Status = PipelineStatus.Failed;
-            run.Remark = ex.Message;
+            run.Remark = AppPipelineStep.CutMessage(ex.Message, 480);
             run.Update();
         }
         finally
@@ -322,62 +320,6 @@ public class PipelineService
         return pattern.Equals(actual, StringComparison.OrdinalIgnoreCase);
     }
 
-    /// <summary>HMAC-SHA256 校验（GitHub 风格 X-Hub-Signature-256）</summary>
-    private Boolean VerifySignature(String secret, String body, String signature)
-    {
-        if (secret.IsNullOrEmpty() || body == null || signature.IsNullOrEmpty()) return false;
-
-        // 形如 "sha256=xxxxx"
-        var sig = signature.StartsWithIgnoreCase("sha256=") ? signature[7..] : signature;
-
-        try
-        {
-            using var hmac = new HMACSHA256(secret.GetBytes());
-            var hash = hmac.ComputeHash(body.GetBytes());
-            var expected = hash.ToBase64();
-            return expected.Equals(sig, StringComparison.OrdinalIgnoreCase);
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    /// <summary>解析通用 webhook payload（尽力兼容 GitHub/GitLab）</summary>
-    private (String branch, String commitId, String commitMessage, String commitAuthor, DateTime commitTime) ParsePayload(String body)
-    {
-        if (body.IsNullOrEmpty()) return default;
-
-        try
-        {
-            var json = body.ToJsonEntity<WebhookPayload>();
-            if (json == null) return default;
-
-            // GitHub: ref=refs/heads/main, head_commit.id
-            var branch = json.Ref;
-            if (!branch.IsNullOrEmpty() && branch.StartsWithIgnoreCase("refs/heads/")) branch = branch["refs/heads/".Length..];
-
-            // GitLab: object_attributes.source_branch / checkout_sha
-            if (branch.IsNullOrEmpty() && json.ObjectAttributes != null) branch = json.ObjectAttributes.SourceBranch;
-            var commitId = json.After ?? json.CheckoutSha ?? json.HeadCommit?.Id;
-            if (commitId.IsNullOrEmpty() && json.ObjectAttributes != null) commitId = json.ObjectAttributes.CheckoutSha;
-
-            var commitMessage = json.HeadCommit?.Message ?? json.ObjectAttributes?.Message;
-            var commitAuthor = json.HeadCommit?.Author?.Name ?? json.UserName ?? json.ObjectAttributes?.AuthorName;
-            // 时间戳：head_commit.timestamp → commits[0].timestamp → object_attributes.timestamp
-            var commitTime = json.HeadCommit?.Timestamp
-                ?? json.Commits?.FirstOrDefault()?.Timestamp
-                ?? json.ObjectAttributes?.Timestamp
-                ?? default;
-
-            return (branch, commitId, commitMessage, commitAuthor, commitTime);
-        }
-        catch
-        {
-            return default;
-        }
-    }
-
     /// <summary>同 commit 在窗口内已有进行中或已成功的 run 视为重复</summary>
     private Boolean IsDuplicate(Int32 pipelineId, String commitId, TimeSpan window)
     {
@@ -388,38 +330,4 @@ public class PipelineService
         return exists.Any(e => e.Status is PipelineStatus.Pending or PipelineStatus.Building or PipelineStatus.UploadSucceeded or PipelineStatus.Deploying or PipelineStatus.Success);
     }
     #endregion
-}
-
-/// <summary>通用 webhook payload（GitHub/GitLab/Gitea 兼容）</summary>
-internal class WebhookPayload
-{
-    public String Ref { get; set; }
-    public String After { get; set; }
-    public String CheckoutSha { get; set; }
-    public String UserName { get; set; }
-    public WebhookCommit HeadCommit { get; set; }
-    public WebhookObject ObjectAttributes { get; set; }
-    public WebhookCommit[] Commits { get; set; }
-}
-
-internal class WebhookCommit
-{
-    public String Id { get; set; }
-    public String Message { get; set; }
-    public DateTime Timestamp { get; set; }
-    public WebhookAuthor Author { get; set; }
-}
-
-internal class WebhookAuthor
-{
-    public String Name { get; set; }
-}
-
-internal class WebhookObject
-{
-    public String SourceBranch { get; set; }
-    public String CheckoutSha { get; set; }
-    public String Message { get; set; }
-    public DateTime Timestamp { get; set; }
-    public String AuthorName { get; set; }
 }

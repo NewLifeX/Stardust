@@ -38,23 +38,25 @@ internal class DeployService : ServiceBase
     {
         XTrace.WriteLine("Starting the Deploy client");
 
-        var set = StarSetting.Current;
+        // 节点凭据独立存于 config/DeployAgent.config，与 Star.config 的应用凭据隔离，
+        // 避免节点登录写回证书/密钥时污染应用登录
+        var set = DeployAgentSetting.Current;
 
         var server = set.Server;
         if (server.IsNullOrEmpty())
         {
-            XTrace.WriteLine("The Stardust server address is not configured; set Server in config/Star.config.");
+            XTrace.WriteLine("The Stardust server address is not configured; set Server in config/DeployAgent.config.");
             return;
         }
 
-        // 初始化星尘工厂，用于追踪和配置
+        // 初始化星尘工厂，用于追踪和配置（应用侧凭据仍走 Star.config/环境变量，与节点凭据互不干扰）
         _factory = new StarFactory(server, "StarDeploy", null);
         _factory.Register(ObjectContainer.Current);
 
         var client = new StarClient(server)
         {
             Name = "Deploy",
-            Code = set.AppKey,
+            Code = set.Code,
             Secret = set.Secret,
             ProductCode = "StarDeploy",
             Setting = set,
@@ -158,6 +160,7 @@ internal class DeployService : ServiceBase
 
         // 累计构建日志，便于回传服务端写入部署历史
         var buildLog = new StringBuilder();
+        buildLog.AppendLine($"任务启动：仓库={Stardust.Models.CompileCommand.RedactUrlForLog(cloneUrl)} 分支={cmd.Branch ?? "main"}");
 
         var workDir = "";
         try
@@ -167,12 +170,15 @@ internal class DeployService : ServiceBase
 
             // 确定源代码目录，统一走 EnsureAndSyncRepo 处理 clone/pull
             var repoDir = EnsureAndSyncRepo(cmd, cloneUrl, buildLog, sshKeyFile, ref workDir);
+            buildLog.AppendLine($"源代码目录：{GetDisplayPath(repoDir)}");
 
             // 编译项目
             var publishDir = BuildOrResolvePublishDir(cmd, repoDir, outputPath, buildLog);
 
             // 获取Git提交信息
             var (commitId, commitLog, commitTime) = GetCommitInfoIfGitRepo(repoDir);
+            if (!commitId.IsNullOrEmpty())
+                buildLog.AppendLine($"提交：{commitId} {commitLog} {commitTime}");
 
             // 打包（返回 zip 文件路径和版本号，确保版本号在打包和上传之间一致）
             var (zipFile, version) = ZipOutput(cmd, publishDir, workDir, buildLog);
@@ -181,6 +187,7 @@ internal class DeployService : ServiceBase
             UploadBuildPackageSync(cmd, zipFile, version, commitId, commitLog, commitTime);
 
             XTrace.WriteLine("========== Build task completed ==========");
+            buildLog.AppendLine("构建任务完成");
 
             // 上报部署完成事件
             ReportDeployEvent(cmd.DeployName, "done", $"部署代理处理完成（应用：{cmd.DeployName}，产物：{zipFile}）");
@@ -191,6 +198,9 @@ internal class DeployService : ServiceBase
         {
             XTrace.WriteLine("Build task failed: {0}", ex.Message);
             XTrace.WriteException(ex);
+
+            // 将异常信息写入 buildLog，确保上报的 tail 包含真正的失败原因
+            buildLog.AppendLine($"编译任务失败：{ex.Message}");
 
             // 将累计构建日志带入异常，便于服务端回传（仅保留尾部，避免消息过大）
             var tail = buildLog.Length > 6000 ? buildLog.ToString(buildLog.Length - 6000, 6000) : buildLog.ToString();
@@ -223,7 +233,9 @@ internal class DeployService : ServiceBase
         {
             try
             {
-                var set = StarSetting.Current;
+                // 服务端按节点表密钥（Node.Secret）加密下发仓库密码，这里必须用同一份节点密钥解密，
+                // 不能再取 Star.config 的应用密钥，否则两者分叉后私有仓库克隆失败
+                var set = DeployAgentSetting.Current;
                 var pass = Encoding.UTF8.GetBytes(set.Secret);
                 using var aes = System.Security.Cryptography.Aes.Create();
                 var plainPassword = Encoding.UTF8.GetString(aes.Decrypt(cmd.RepoPassword.ToHex(), pass, System.Security.Cryptography.CipherMode.CBC, System.Security.Cryptography.PaddingMode.PKCS7));
@@ -248,6 +260,7 @@ internal class DeployService : ServiceBase
     {
         if (cmd.BuildProject)
         {
+            buildLog.AppendLine($"开始编译，输出目录：{GetDisplayPath(Path.Combine(repoDir, outputPath))}");
             var lenBuild = buildLog.Length;
             var publishDir = BuildProject(cmd, repoDir, outputPath, buildLog);
             XTrace.WriteLine("Build completed, output directory: {0}", publishDir);
@@ -256,6 +269,8 @@ internal class DeployService : ServiceBase
         }
 
         // 不编译时直接使用输出目录
+        var skipDir = GetDisplayPath(Path.Combine(repoDir, outputPath));
+        buildLog.AppendLine($"跳过编译步骤（Build Project 未启用），直接使用产物目录：{skipDir}");
         return Path.Combine(repoDir, outputPath);
     }
 
@@ -274,10 +289,22 @@ internal class DeployService : ServiceBase
     /// <summary>打包输出目录。返回 zip 文件路径和版本号，版本号取自文件名中的时间戳，供上传复用</summary>
     private (String zipFile, String version) ZipOutput(CompileCommand cmd, String publishDir, String workDir, StringBuilder buildLog)
     {
-        if (!cmd.PackageOutput) return ("", "");
+        if (!cmd.PackageOutput)
+        {
+            buildLog.AppendLine("跳过打包步骤（Package Output 未启用）");
+            return ("", "");
+        }
 
         if (!Directory.Exists(publishDir))
-            throw new DirectoryNotFoundException(L.T("Artifact directory does not exist: {0}", publishDir));
+        {
+            // 区分“编译步骤被跳过”与“编译产物路径不对”，前者靠错误文本直接指向编译节点配置
+            var dir = GetDisplayPath(publishDir);
+            var msg = cmd.BuildProject
+                ? L.T("Artifact directory does not exist: {0}", dir)
+                : L.T("Artifact directory does not exist: {0}. The build step was skipped (Build Project is disabled on the build node); enable it or correct the output path.", dir);
+            buildLog.AppendLine(msg);
+            throw new DirectoryNotFoundException(msg);
+        }
 
         var packageName = cmd.DeployName ?? "app";
         // 如果没有临时工作目录，则在源代码目录上级创建临时目录存放zip
@@ -285,9 +312,12 @@ internal class DeployService : ServiceBase
         var now = DateTime.Now;
         var timestamp = now.ToString("yyyyMMdd-HHmmss");
         var zipFile = Path.Combine(zipDir, $"{packageName}-{timestamp}.zip");
+        buildLog.AppendLine($"开始打包：{GetDisplayPath(publishDir)} -> {zipFile}");
         ZipCompress(publishDir, zipFile, cmd.PackageFilters);
-        XTrace.WriteLine("Packaging completed: {0} ({1:n0} bytes)", zipFile, new FileInfo(zipFile).Length);
-        ReportDeployEvent(cmd.DeployName, "package", $"打包完成：{zipFile} ({new FileInfo(zipFile).Length:n0} bytes)");
+        var zipSize = new FileInfo(zipFile).Length;
+        XTrace.WriteLine("Packaging completed: {0} ({1:n0} bytes)", zipFile, zipSize);
+        buildLog.AppendLine($"打包完成：{zipFile} ({zipSize:n0} bytes)");
+        ReportDeployEvent(cmd.DeployName, "package", $"打包完成：{zipFile} ({zipSize:n0} bytes)");
 
         var version = $"v{now:yyyyMMdd-HHmmss}";
         return (zipFile, version);
@@ -591,7 +621,8 @@ internal class DeployService : ServiceBase
         foreach (var file in files)
         {
             // ZIP规范要求使用正斜杠作为目录分隔符，Windows反斜杠在Linux解压时会导致路径错乱
-            var entryName = file[sourceDir.Length..].TrimStart('/', '\\').Replace('\\', '/');
+            // 按相对路径计算条目名，不再用 sourceDir 长度硬切：传入目录带混用分隔符时长度切分容易错位
+            var entryName = Path.GetRelativePath(sourceDir, file).Replace('\\', '/');
             zip.CreateEntryFromFile(file, entryName, System.IO.Compression.CompressionLevel.Optimal);
         }
     }
@@ -721,6 +752,7 @@ internal class DeployService : ServiceBase
             workDir = Path.Combine(Path.GetTempPath(), $"stardust-build-{Guid.NewGuid():N}");
             Directory.CreateDirectory(workDir);
             XTrace.WriteLine("Working directory: {0}", workDir);
+            buildLog.AppendLine($"临时工作目录：{GetDisplayPath(workDir)}");
 
             var repoDir = Path.Combine(workDir, "repo");
             CloneWithRetry(cloneUrl, cmd.Branch ?? "main", repoDir, buildLog, sshKeyFile, cmd.DeployName);
@@ -729,25 +761,41 @@ internal class DeployService : ServiceBase
 
         var repo = cmd.SourcePath;
         XTrace.WriteLine("Using local source directory: {0}", repo);
+        buildLog.AppendLine($"使用本地源代码目录：{GetDisplayPath(repo)}");
+
+        var exist = Directory.Exists(repo);
+        // 不拉代码（如“打包上传”）时不得克隆：上一版只要 .git 不存在就 clone，
+        // 既违反“不拉代码不编译”的动作语义，又使刚建的空仓库没有产物目录，
+        // 最后报出与真正原因无关的“产物目录不存在”
+        if (!cmd.PullCode)
+        {
+            if (!exist)
+                throw new DirectoryNotFoundException(L.T("Source directory does not exist: {0}", GetDisplayPath(repo)));
+
+            // 目录（含非 Git 的本地目录）保持原样，直接参与后续编译/打包
+            return repo;
+        }
 
         // 目录不存在或存在但 .git 不存在，都走 clone
-        var needClone = !Directory.Exists(repo) || !Directory.Exists(Path.Combine(repo, ".git"));
-        if (needClone)
+        if (!exist || !Directory.Exists(Path.Combine(repo, ".git")))
         {
-            if (!Directory.Exists(repo))
+            if (!exist)
                 Directory.CreateDirectory(repo);
 
             CloneWithRetry(cloneUrl, cmd.Branch ?? "main", repo, buildLog, sshKeyFile, cmd.DeployName);
         }
-        else if (cmd.PullCode)
+        else
         {
             // 目录和 .git 都存在，拉取最新
             PullWithRetry(repo, cmd.Branch, buildLog, sshKeyFile, cmd.DeployName, cmd.Repository, cloneUrl);
         }
-        // else: 目录和 .git 都在，且不需要 pull → 啥也不做
 
         return repo;
     }
+
+    /// <summary>获取展示用路径：将正斜杠统一为本地路径分隔符，避免日志中出现混用分隔符的目录</summary>
+    private static String GetDisplayPath(String path) =>
+        Runtime.Windows ? path.Replace('/', '\\') : path;
 
     /// <summary>克隆仓库，失败时备份重试</summary>
     private void CloneWithRetry(String repoUrl, String branch, String repoDir, StringBuilder buildLog, String? sshKeyFile, String? deployName)
@@ -757,12 +805,14 @@ internal class DeployService : ServiceBase
             var lenGit = buildLog.Length;
             GitClone(repoUrl, branch, repoDir, buildLog, sshKeyFile);
             XTrace.WriteLine("Code pull completed: {0}", repoDir);
+            buildLog.AppendLine($"Git 克隆成功：{GetDisplayPath(repoDir)}");
             ReportDeployEvent(deployName, "gitclone", buildLog.ToString(lenGit, buildLog.Length - lenGit));
         }
         catch (Exception ex)
         {
             XTrace.WriteLine("Git clone failed: {0}", ex.Message);
             XTrace.WriteException(ex);
+            buildLog.AppendLine($"Git 克隆失败，尝试备份后重新克隆：{ex.Message}");
             RecoverAndReclone(repoUrl, branch, repoDir, sshKeyFile);
         }
     }
@@ -775,12 +825,14 @@ internal class DeployService : ServiceBase
             var lenPull = buildLog.Length;
             GitPull(repoDir, branch, buildLog, sshKeyFile);
             XTrace.WriteLine("Code pull completed");
+            buildLog.AppendLine($"Git 拉取成功：{GetDisplayPath(repoDir)}");
             ReportDeployEvent(deployName, "gitpull", buildLog.ToString(lenPull, buildLog.Length - lenPull));
         }
         catch (Exception ex)
         {
             XTrace.WriteLine("Git pull failed: {0}", ex.Message);
             XTrace.WriteException(ex);
+            buildLog.AppendLine($"Git 拉取失败，尝试备份后重新克隆：{ex.Message}");
             var repoUrl = cmdRepository.IsNullOrEmpty() ? cloneUrl : cmdRepository;
             RecoverAndReclone(repoUrl, branch ?? "main", repoDir, sshKeyFile);
         }
@@ -1036,8 +1088,8 @@ internal class DeployService : ServiceBase
 
         if (!sshKeyFile.IsNullOrEmpty())
         {
-            // 构建 SSH 命令：默认启用严格主机密钥校验，可通过 StarSetting 的 DisableSshStrictChecking 关闭
-            var strictChecking = !StarSetting.Current.DisableSshStrictChecking;
+            // 构建 SSH 命令：默认启用严格主机密钥校验，可通过 DeployAgentSetting 的 DisableSshStrictChecking 关闭
+            var strictChecking = !DeployAgentSetting.Current.DisableSshStrictChecking;
             if (strictChecking)
             {
                 // 严格模式：使用专用 known_hosts 文件

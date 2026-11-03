@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <TargetFramework>net10.0</TargetFramework>
     <AssemblyName>stardeploy</AssemblyName>
     <AssemblyTitle>Stardust deploy</AssemblyTitle>
     <Description>Stardust build and deployment tool. Automatically downloads repositories, builds, packs, and pushes artifacts to the Stardust release center, with version management and multi-platform distribution, working with StarAgent for automated deployment pipelines.</Description>

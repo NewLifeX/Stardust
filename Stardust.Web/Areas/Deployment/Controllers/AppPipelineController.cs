@@ -91,8 +91,9 @@ public class AppPipelineController : EntityController<AppPipeline>
         var entity = AppPipeline.FindById(id);
         if (entity == null) return Json(500, L.T("Pipeline does not exist."));
 
-        var serviceAddress = StarSetting.Current.ServiceAddress?.Split(",").FirstOrDefault(e => e.StartsWithIgnoreCase("http"));
-        var url = $"{serviceAddress}/Pipeline/Webhook?token={entity.Token}";
+        // webhook 入口位于 Deployment 区域，路由为 /Deployment/Pipeline/Webhook，此处必须带上区域前缀
+        var serviceAddress = StarSetting.Current.ServiceAddress?.Split(",").FirstOrDefault(e => e.StartsWithIgnoreCase("http"))?.TrimEnd('/');
+        var url = $"{serviceAddress}/Deployment/Pipeline/Webhook?token={entity.Token}";
 
         return Json(0, "ok", url);
     }

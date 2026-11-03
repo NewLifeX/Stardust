@@ -169,7 +169,8 @@ public partial class AppDeployHistory : Entity<AppDeployHistory>
 
             Action = action,
             Success = success,
-            Remark = remark,
+            // Remark 列宽 2000，而 Agent 上报的构建/部署日志尾巴可达 6000+ 字符，截断保留尾部防止写入报 truncated 异常
+            Remark = AppPipelineStep.CutMessage(remark, 1900),
 
             TraceId = DefaultSpan.Current?.TraceId,
             CreateTime = DateTime.Now,

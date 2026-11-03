@@ -101,6 +101,22 @@ public partial class AppPipelineStep : Entity<AppPipelineStep>
     //}
     #endregion
 
+    #region 工具
+    /// <summary>截断超长消息：只保留尾部内容（异常输出越靠后越有价值），并在截断处加省略号，
+    /// 防止超出数据库列宽导致写入报“String or binary data would be truncated”</summary>
+    /// <param name="message">原始消息</param>
+    /// <param name="maxLength">保留的最大长度，默认1900（Message 列宽2000，留出余量）；写入 Remark 等短列时由调用方指定</param>
+    /// <returns>截断后的消息；输入为 null/空时返回空字符串</returns>
+    public static String CutMessage(String message, Int32 maxLength = 1900)
+    {
+        if (message.IsNullOrEmpty()) return "";
+        if (message.Length <= maxLength) return message;
+
+        // 掐头去尾：含省略号在内共保留 maxLength 个字符，构建日志尾部（真正的失败原因）优先保留
+        return "…" + message.Substring(message.Length - maxLength + 1);
+    }
+    #endregion
+
     #region 扩展属性
     #endregion
 

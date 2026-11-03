@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Log;
+using Stardust.Data.Deployment;
 using Stardust.Web.Services;
 
 namespace Stardust.Web.Areas.Deployment.Controllers;
@@ -30,10 +31,11 @@ public class PipelineWebhookController(PipelineService pipelineService, ITracer 
         var body = await reader.ReadToEndAsync();
         Request.Body.Position = 0;
 
-        var signature = Request.Headers["X-Hub-Signature-256"].ToString();
+        // 平台识别与签名头/令牌头提取统一在 WebhookRequest.Create 内完成
+        var request = WebhookRequest.Create(body, name => Request.Headers[name].ToString());
 
-        using var span = tracer?.NewSpan("Pipeline-Webhook", new { token, len = body?.Length ?? 0 });
-        var rs = await pipelineService.HandleWebhookAsync(token, body, signature);
+        using var span = tracer?.NewSpan("Pipeline-Webhook", new { token, platform = request.Platform, len = body?.Length ?? 0 });
+        var rs = await pipelineService.HandleWebhookAsync(token, request);
         span?.AppendTag($"result={rs}");
         return rs;
     }

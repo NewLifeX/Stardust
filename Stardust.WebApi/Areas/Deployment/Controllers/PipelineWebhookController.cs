@@ -4,6 +4,7 @@ using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.ViewModels;
 using NewLife.Log;
+using Stardust.Data.Deployment;
 using Stardust.Web.Services;
 
 namespace Stardust.Web.Areas.Deployment.Controllers;
@@ -19,7 +20,7 @@ namespace Stardust.Web.Areas.Deployment.Controllers;
 [Route("[area]/[controller]/[action]")]
 public class PipelineWebhookController(PipelineService pipelineService, ITracer tracer) : ControllerBaseX
 {
-    /// <summary>接收 git push webhook。兼容源 MVC 版对外地址 /Deployment/Pipeline/Webhook</summary>
+    /// <summary>接收 git push webhook。对外地址固定为 /Deployment/Pipeline/Webhook，与 MVC 版一致</summary>
     /// <param name="token">流水线鉴权 token</param>
     [HttpPost]
     [Route("/Deployment/Pipeline/Webhook")]
@@ -35,10 +36,11 @@ public class PipelineWebhookController(PipelineService pipelineService, ITracer 
         var body = await reader.ReadToEndAsync();
         Request.Body.Position = 0;
 
-        var signature = Request.Headers["X-Hub-Signature-256"].ToString();
+        // 平台识别与签名头/令牌头提取统一在 WebhookRequest.Create 内完成
+        var request = WebhookRequest.Create(body, name => Request.Headers[name].ToString());
 
-        using var span = tracer?.NewSpan("Pipeline-Webhook", new { token, len = body?.Length ?? 0 });
-        var rs = await pipelineService.HandleWebhookAsync(token, body, signature);
+        using var span = tracer?.NewSpan("Pipeline-Webhook", new { token, platform = request.Platform, len = body?.Length ?? 0 });
+        var rs = await pipelineService.HandleWebhookAsync(token, request);
         span?.AppendTag($"result={rs}");
         return rs;
     }
@@ -55,7 +57,7 @@ public class PipelineWebhookController(PipelineService pipelineService, ITracer 
         return new List<DataField>
         {
             new() { Name = "token", DisplayName = "Token", Description = "流水线鉴权 token，拼接到 webhook URL 的 ?token= 参数" },
-            new() { Name = "secret", DisplayName = "Secret", Description = "可选，HMAC-SHA256 签名密钥（X-Hub-Signature-256）" },
+            new() { Name = "secret", DisplayName = "Secret", Description = "可选，签名密钥。支持 HMAC-SHA256 十六进制/Base64 摘要，以及 GitLab/Gitee 明文令牌头" },
         };
     }
 }

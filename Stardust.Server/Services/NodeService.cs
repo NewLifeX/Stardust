@@ -1077,7 +1077,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
                 {
                     run.BuildFinishedTime = DateTime.Now;
                     run.Status = isCancel ? PipelineStatus.Cancelled : PipelineStatus.Failed;
-                    run.Remark = model.Data;
+                    run.Remark = AppPipelineStep.CutMessage(model.Data, 480);
                     run.Update();
                 }
             }
@@ -1107,7 +1107,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
                 else
                 {
                     run.Status = isCancel ? PipelineStatus.Cancelled : PipelineStatus.Failed;
-                    run.Remark = model.Data;
+                    run.Remark = AppPipelineStep.CutMessage(model.Data, 480);
                     run.Update();
                 }
             }
@@ -1127,10 +1127,12 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
     private static Int32 TransitionStepToTerminal(Int64 stepId, String targetStatus, DateTime finishedTime, String message)
     {
         // 参数化条件更新：仅当 Id 匹配且当前 Status='Running' 时才更新；
-        // 数据库层原子保证并发（含多实例）下只有一个线程能抢到续跑权，影响行数为 0 即已被处理
+        // 数据库层原子保证并发（含多实例）下只有一个线程能抢到续跑权，影响行数为 0 即已被处理。
+        // Message 列宽 2000，而回包错误输出（含构建日志尾巴）可达 6000+ 字符，
+        // 必须截断保留尾部（真正的失败原因在末尾），否则 SqlServer 报 truncated 异常导致步骤永远卡在 Running
         return AppPipelineStep.Update(
             new[] { nameof(AppPipelineStep.Status), nameof(AppPipelineStep.FinishedTime), nameof(AppPipelineStep.Message) },
-            new Object[] { targetStatus, finishedTime, message ?? "" },
+            new Object[] { targetStatus, finishedTime, AppPipelineStep.CutMessage(message) },
             new[] { nameof(AppPipelineStep.Id), nameof(AppPipelineStep.Status) },
             new Object[] { stepId, "Running" }
         );
@@ -1219,7 +1221,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
                     {
                         deployStep.Status = "Failed";
                         deployStep.FinishedTime = DateTime.Now;
-                        deployStep.Message = ex.Message;
+                        deployStep.Message = AppPipelineStep.CutMessage(ex.Message);
                         AppDeployHistory.Create(pipeline.DeployId, dn.NodeId, "deploy/install", false, L.T("Failed to dispatch the deploy command to node {0}: {1}", dn.NodeName, ex.Message), ip).Insert();
                     }
                 }
