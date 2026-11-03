@@ -131,6 +131,19 @@ describe('F07 部署节点 CRUD + 批量', () => {
     expect(m.delay).toBe(2);
   });
 
+  it('toDeployNodeForm / update 体：日志目录与匹配规则', () => {
+    const m = toDeployNodeForm({
+      NodeId: 2,
+      LogDirectory: 'D:/app/logs',
+      LogFilePattern: '*.log',
+    });
+    expect(m.logDirectory).toBe('D:/app/logs');
+    expect(m.logFilePattern).toBe('*.log');
+    const body = deployNodeUpdateBody(m);
+    expect(body.logDirectory).toBe('D:/app/logs');
+    expect(body.logFilePattern).toBe('*.log');
+  });
+
   it('insert 体带 deployId；update 体不带 id（主键在路径）', () => {
     const m = toDeployNodeForm({ NodeId: 5 });
     expect(deployNodeInsertBody(9, m).deployId).toBe(9);

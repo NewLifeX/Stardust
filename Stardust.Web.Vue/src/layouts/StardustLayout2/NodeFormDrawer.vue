@@ -44,6 +44,8 @@ const form = reactive<DeployNodeForm & BuildNodeForm>({
   maxMemory: 0,
   delay: 0,
   healthCheck: '',
+  logDirectory: '',
+  logFilePattern: '*.log',
   remark: '',
   sourcePath: '',
   pullCode: true,
@@ -61,7 +63,7 @@ watch(
     formError.value = '';
     Object.assign(form, {
       nodeId: 0, enable: true, port: 0, fileName: '', arguments: '', workingDirectory: '', userName: '',
-      environments: '', maxMemory: 0, delay: 0, healthCheck: '', remark: '',
+      environments: '', maxMemory: 0, delay: 0, healthCheck: '', logDirectory: '', logFilePattern: '*.log', remark: '',
       sourcePath: '', pullCode: true, buildProject: true, packageOutput: true, uploadPackage: true, outputPath: '',
     }, init ?? {});
   },
@@ -83,7 +85,8 @@ function onSubmit(): void {
     const m: DeployNodeForm = {
       nodeId: form.nodeId, enable: form.enable, port: form.port, fileName: form.fileName, arguments: form.arguments,
       workingDirectory: form.workingDirectory, userName: form.userName, environments: form.environments,
-      maxMemory: form.maxMemory, delay: form.delay, healthCheck: form.healthCheck, remark: form.remark,
+      maxMemory: form.maxMemory, delay: form.delay, healthCheck: form.healthCheck,
+      logDirectory: form.logDirectory, logFilePattern: form.logFilePattern, remark: form.remark,
     };
     emit('submit', m);
   } else {
@@ -227,6 +230,24 @@ function onSubmit(): void {
             v-model="form.healthCheck"
             :class="inputCls"
             data-spec="node-form-healthcheck"
+          >
+        </label>
+        <label class="flex flex-col gap-[4px]">
+          <span class="text-[12px] text-[var(--el-text-color-secondary)]">日志目录（空=跟随部署集；相对路径基于工作目录）</span>
+          <input
+            v-model="form.logDirectory"
+            :class="inputCls"
+            data-spec="node-form-logdir"
+            placeholder="如 logs 或 D:/app/logs"
+          >
+        </label>
+        <label class="flex flex-col gap-[4px]">
+          <span class="text-[12px] text-[var(--el-text-color-secondary)]">日志文件匹配</span>
+          <input
+            v-model="form.logFilePattern"
+            :class="inputCls"
+            data-spec="node-form-logpattern"
+            placeholder="*.log"
           >
         </label>
       </template>

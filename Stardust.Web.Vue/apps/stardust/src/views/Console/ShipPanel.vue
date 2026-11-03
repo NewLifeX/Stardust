@@ -26,6 +26,7 @@ import DeployPipelineRuns from '@/layouts/StardustLayout2/DeployPipelineRuns.vue
 import DeployVersionBar from '@/layouts/StardustLayout2/DeployVersionBar.vue';
 import DeployVersionList from '@/layouts/StardustLayout2/DeployVersionList.vue';
 import NodeFormDrawer from '@/layouts/StardustLayout2/NodeFormDrawer.vue';
+import DeployLogDrawer from '@/layouts/StardustLayout2/DeployLogDrawer.vue';
 import AttentionList from '@/layouts/StardustLayout2/AttentionList.vue';
 import { openGuard } from '@/layouts/StardustLayout2/ui.store';
 import type { DeploySection } from '@/layouts/StardustLayout2/workbench.logic';
@@ -195,6 +196,17 @@ const nodeDrawer = ref<{
   loading: boolean;
 }>({ open: false, kind: 'deploy', id: 0, title: '', sub: '', initial: null, loading: false });
 const nodeSaving = computed(() => busyKey.value.startsWith('node') || busyKey.value.startsWith('bnode'));
+
+const logDrawer = ref<{ open: boolean; deployNodeId: number; nodeName: string }>({
+  open: false,
+  deployNodeId: 0,
+  nodeName: '',
+});
+
+function openDeployLogs(n: ShipNode): void {
+  if (busyKey.value) return;
+  logDrawer.value = { open: true, deployNodeId: n.id, nodeName: n.name };
+}
 
 async function loadNodeOptions(): Promise<void> {
   if (nodeOptions.value.length || nodeOptionsLoading.value) return;
@@ -535,6 +547,7 @@ const attention = computed(() =>
             @create="askCreateNode('deploy')"
             @edit="askEditNode"
             @remove="askRemoveNode"
+            @view-logs="openDeployLogs"
           />
           <BuildNodes
             v-else
@@ -592,6 +605,13 @@ const attention = computed(() =>
       :busy="nodeSaving || nodeDrawer.loading"
       @close="nodeDrawer.open = false"
       @submit="onNodeSubmit"
+    />
+
+    <DeployLogDrawer
+      :open="logDrawer.open"
+      :deploy-node-id="logDrawer.deployNodeId"
+      :node-name="logDrawer.nodeName"
+      @close="logDrawer.open = false"
     />
 
     <!-- 概览：版本条之后是需关注事项；加载中不显示，加载失败时照常显示（部署相关项为待接入，实例数不依赖部署集） -->

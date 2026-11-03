@@ -31,6 +31,7 @@ const emit = defineEmits<{
   create: [];
   edit: [node: ShipNode];
   remove: [node: ShipNode];
+  viewLogs: [node: ShipNode];
 }>();
 
 const selected = ref<number[]>([]);
@@ -206,6 +207,15 @@ function checkedNames(): string {
               >
                 {{ busyKey === `${n.id}:${a.act}` ? '下发中…' : a.label }}
               </Btn>
+              <button
+                type="button"
+                data-spec="ship-node-logs"
+                class="text-[12px] text-[var(--el-color-primary)] hover:underline disabled:pointer-events-none disabled:opacity-40"
+                :disabled="!!busyKey"
+                @click="emit('viewLogs', n)"
+              >
+                查看日志
+              </button>
               <button
                 type="button"
                 data-spec="ship-node-edit"

@@ -184,6 +184,8 @@ export interface DeployNodeForm {
   maxMemory: number;
   delay: number;
   healthCheck: string;
+  logDirectory: string;
+  logFilePattern: string;
   remark: string;
 }
 
@@ -201,6 +203,8 @@ export function toDeployNodeForm(r: Rec): DeployNodeForm {
     maxMemory: num(pick(r, 'MaxMemory', 'maxMemory')),
     delay: num(pick(r, 'Delay', 'delay')),
     healthCheck: str(pick(r, 'HealthCheck', 'healthCheck')),
+    logDirectory: str(pick(r, 'LogDirectory', 'logDirectory')),
+    logFilePattern: str(pick(r, 'LogFilePattern', 'logFilePattern')) || '*.log',
     remark: str(pick(r, 'Remark', 'remark')),
   };
 }
@@ -220,6 +224,8 @@ export function deployNodeInsertBody(deployId: number, m: DeployNodeForm): Rec {
     maxMemory: m.maxMemory,
     delay: m.delay,
     healthCheck: m.healthCheck,
+    logDirectory: m.logDirectory,
+    logFilePattern: m.logFilePattern,
     remark: m.remark,
   };
 }
@@ -238,6 +244,8 @@ export function deployNodeUpdateBody(m: DeployNodeForm): Rec {
     maxMemory: m.maxMemory,
     delay: m.delay,
     healthCheck: m.healthCheck,
+    logDirectory: m.logDirectory,
+    logFilePattern: m.logFilePattern,
     remark: m.remark,
   };
 }

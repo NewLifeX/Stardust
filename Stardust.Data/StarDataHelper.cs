@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -149,6 +149,23 @@ public static class StarDataHelper
 
                         DAL.Create(key).Db.CreateMetaData().SetTables(Migration.On, [table1]);
                     }
+                }
+            }
+
+            // AppClientLog 按月分库（StardustData_yyyyMM）+按天分表（AppClientLog_dd）：
+            // 分库连接名不在任何配置文件中，若不显式注册，各进程会落到各自的默认 DataPath
+            // （服务端与测试进程不同，造成读写分叉——2026-11-02 app_logs 集成测试踩中）。
+            // 这里按基础连接同目录显式注册当月与次月分库，保证所有进程共享同一分表文件；
+            // 当天分表由 XCode 首次访问自动创建，无需在此预建。
+            var today = DateTime.Now;
+            foreach (var monthOffset in new[] { 0, 1 })
+            {
+                var month = today.AddMonths(monthOffset);
+                var monthKey = $"StardustData_{month:yyyyMM}";
+                if (!DAL.ConnStrs.ContainsKey(monthKey))
+                {
+                    builder["Data Source"] = $"{root}/StardustData_{month:yyyyMM}.db";
+                    DAL.AddConnStr(monthKey, builder.ToString(), null, "sqlite");
                 }
             }
             foreach (var factory in targets)
