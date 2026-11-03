@@ -296,7 +296,7 @@
     <div class="topbar">
         <div class="brand">
             <div class="mark"><img src="/install/leaf.png" alt="" /></div>
-            <div><b>星尘 Stardust</b><small data-i18n="brandSub">分布式服务与监控平台</small></div>
+            <div><b>星尘 Stardust</b><small data-i18n="brandSub">分布式服务与运维平台</small></div>
         </div>
         <button class="ghost" id="langBtn">English</button>
     </div>
@@ -305,13 +305,13 @@
         <div>
             <div class="eyebrow">Stardust Platform</div>
             <h1>星尘 <em>Stardust</em></h1>
-            <p class="lead" data-i18n="lead">分布式配置、注册发现、远程部署、性能监控与日志中心。节点与应用在这里统一接入。</p>
+            <p class="lead" data-i18n="lead">节点管理、应用中心、配置中心、注册发现、链路监控与发布部署。节点与应用在这里统一接入。</p>
             <div class="chips">
+                <span class="chip" data-i18n="modNode">节点管理</span>
                 <span class="chip" data-i18n="modConfig">配置中心</span>
                 <span class="chip" data-i18n="modReg">注册发现</span>
-                <span class="chip" data-i18n="modDeploy">远程部署</span>
+                <span class="chip" data-i18n="modDeploy">发布部署</span>
                 <span class="chip" data-i18n="modTrace">链路监控</span>
-                <span class="chip" data-i18n="modLog">日志中心</span>
             </div>
             <div class="server-row">
                 <span class="label" data-i18n="server">服务端</span>
@@ -476,8 +476,8 @@
 <script>
 const I18N = {
     zh: {
-        brandSub: "分布式服务与监控平台",
-        lead: "分布式配置、注册发现、远程部署、性能监控与日志中心。节点与应用在这里统一接入。",
+        brandSub: "分布式服务与运维平台",
+        lead: "节点管理、应用中心、配置中心、注册发现、链路监控与发布部署。节点与应用在这里统一接入。",
         stNode: "在线节点",
         stApp: "在线应用",
         stCall: "今日调用",
@@ -491,11 +491,11 @@ const I18N = {
         trendHint: "仅展示形状",
         platforms: "支持平台",
         console: "管理控制台",
+        modNode: "节点管理",
         modConfig: "配置中心",
         modReg: "注册发现",
-        modDeploy: "远程部署",
+        modDeploy: "发布部署",
         modTrace: "链路监控",
-        modLog: "日志中心",
         errorRate: "错误率",
         uptime: "已稳定运行",
         packagesHint: "StarAgent 客户端",
@@ -526,8 +526,8 @@ const I18N = {
         note3: "完整版支持平台下发升级包，原生版本可通过引导安装切换到完整版。",
     },
     en: {
-        brandSub: "Distributed services & monitoring",
-        lead: "Config center, service registry, remote deployment, tracing and log center. Nodes and applications register here.",
+        brandSub: "Distributed services & operations",
+        lead: "Node management, application center, config center, registry, tracing and release deployment. Nodes and applications register here.",
         stNode: "Nodes online",
         stApp: "Apps online",
         stCall: "Calls today",
@@ -541,11 +541,11 @@ const I18N = {
         trendHint: "Shape only",
         platforms: "Platforms",
         console: "Console",
+        modNode: "Nodes",
         modConfig: "Config center",
         modReg: "Registry",
         modDeploy: "Deployment",
         modTrace: "Tracing",
-        modLog: "Log center",
         errorRate: "error rate",
         uptime: "Uptime",
         packagesHint: "StarAgent client",

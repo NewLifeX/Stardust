@@ -221,4 +221,4 @@
 "Succeeded": "Erfolgreich"
 "File [{0}] changed; stopping the application and starting it {1}ms later": "Datei [{0}] geändert; Anwendung wird beendet und {1}ms später gestartet"
 "Stardust distributed core": "Verteilter Stardust-Kern"
-"Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting.": "Kernbibliothek des verteilten Stardust-Serviceframeworks. Bietet Client-SDKs für Konfigurationszentrum, Registry, Service-Discovery, verteiltes Tracing, APM und Log-Center und unterstützt Konfigurationsabruf, Service-Registrierung und -Discovery, Aufrufverfolgung sowie Leistungs- und Protokollmeldungen."
+"Stardust distributed core client library. One-line integration for configuration delivery, service registration and discovery, distributed tracing, APM and log reporting.": "Stardust Core-Clientbibliothek. Einzeilige Integration für Konfigurationsauslieferung, Dienstregistrierung und -erkennung, Tracing, APM und Log-Reporting."

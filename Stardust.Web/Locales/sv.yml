@@ -86,7 +86,7 @@
 "Domain changed": "Domänen har ändrats"
 "Domains changed: {0} -> {1}": "Domänerna har ändrats: {0} -> {1}"
 "Stardust management portal": "Stardust-hanteringsportal"
-"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Hanteringsportal för den distribuerade Stardust-tjänsteplattformen. Ett visuellt hanteringssystem byggt på NewLife.Cube som ger en enhetlig ingång för nodhantering, applikationshantering, konfigurationscenter, register, övervakningscenter, utgivningscenter, spårning av anropskedjor, prestandaanalys och loggfrågor."
+"Management console of the Stardust distributed service platform, built on NewLife.Cube. Provides unified entry points for node management, application center, configuration center, registry, monitoring center, release center, gateway management, dashboards, data middleware and MCP.": "Administrationskonsol för Stardust-plattformen baserad på NewLife.Cube. Enhetlig ingång för noder, applikationer, konfiguration, register, övervakning, utgivningar, gateway, instrumentpaneler, datamiddleware och MCP."
 "Successfully deleted {0}": "{0} har tagits bort"
 "Unknown tool: {0}": "Okänt verktyg: {0}"
 # 界面元数据词条
@@ -292,7 +292,7 @@
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] loggade in {2}, senast aktiv {3}"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "Noden [{0}/{1}] är mycket lik den befintliga noden [{2}]; den befintliga noden används"
 "Stardust service platform": "Stardust-tjänsteplattform"
-"Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally.": "Backendkärnan i den distribuerade Stardust-tjänsteplattformen. Tillhandahåller centrala API-tjänster för konfigurationscenter, register, tjänsteidentifiering, fjärrdistribution, prestandaövervakning och loggcenter, stöder applikationsregistrering, konfigurationsdistribution, aggregering av mätvärden, statistikberäkningar och aktivitetsschemaläggning samt kan skalas horisontellt."
+"Backend core of the Stardust distributed service platform. Provides APIs for node management, application center, configuration center, registry and service discovery, monitoring and alerting, release center, gateway and MCP, together with metric aggregation, statistics and scheduled tasks; scales horizontally.": "Backendkärnan i den distribuerade Stardust-plattformen. Tillhandahåller API:er för noder, applikationer, konfiguration, register, övervakning och larm, utgivningar, gateway och MCP samt metrisk aggregering, statistik och schemalagda uppgifter."
 "Service port. Default 6600.": "Tjänsteport. Standard 6600."
 "Token secret. Algorithm and secret used to generate JWT tokens, e.g. HS256:ABCD1234": "Tokenhemlighet. Algoritm och hemlighet som används för att generera JWT-token, t.ex. HS256:ABCD1234"
 "Token validity period. Default 2*3600 seconds.": "Tokens giltighetstid. Standard 2*3600 sekunder."

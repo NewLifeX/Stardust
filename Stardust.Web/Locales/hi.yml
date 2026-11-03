@@ -86,7 +86,7 @@
 "Domain changed": "डोमेन बदल गया"
 "Domains changed: {0} -> {1}": "डोमेन बदले: {0} -> {1}"
 "Stardust management portal": "Stardust प्रबंधन पोर्टल"
-"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Stardust वितरित सेवा प्लेटफ़ॉर्म का प्रबंधन पोर्टल। NewLife.Cube पर आधारित दृश्य प्रबंधन प्रणाली, जो नोड प्रबंधन, एप्लिकेशन प्रबंधन, कॉन्फ़िगरेशन केंद्र, रजिस्ट्री, निगरानी केंद्र, रिलीज़ केंद्र, कॉल चेन ट्रेसिंग, प्रदर्शन विश्लेषण और लॉग क्वेरी के लिए एकीकृत प्रवेश बिंदु प्रदान करती है।"
+"Management console of the Stardust distributed service platform, built on NewLife.Cube. Provides unified entry points for node management, application center, configuration center, registry, monitoring center, release center, gateway management, dashboards, data middleware and MCP.": "NewLife.Cube पर आधारित Stardust प्लेटफ़ॉर्म का प्रबंधन कंसोल। नोड्स, एप्लिकेशन, कॉन्फ़िगरेशन, रजिस्ट्री, मॉनिटरिंग, रिलीज़, गेटवे, डैशबोर्ड, डेटा मिडलवेयर और MCP के लिए एकीकृत प्रवेश।"
 "Successfully deleted {0}": "{0} हटा दिया गया"
 "Unknown tool: {0}": "अज्ञात टूल: {0}"
 # 界面元数据词条
@@ -292,7 +292,7 @@
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] ने {2} पर लॉग इन किया, अंतिम सक्रियता {3}"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "नोड [{0}/{1}] मौजूदा नोड [{2}] से बहुत मिलता-जुलता है; मौजूदा नोड का उपयोग किया जाएगा"
 "Stardust service platform": "Stardust सेवा प्लेटफ़ॉर्म"
-"Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally.": "Stardust वितरित सेवा प्लेटफ़ॉर्म का बैकएंड कोर। कॉन्फ़िगरेशन केंद्र, रजिस्ट्री, सेवा खोज, दूरस्थ परिनियोजन, प्रदर्शन निगरानी और लॉग केंद्र के लिए मुख्य API सेवाएँ प्रदान करता है; एप्लिकेशन पंजीकरण, कॉन्फ़िगरेशन वितरण, मीट्रिक एकत्रीकरण, सांख्यिकीय गणना और कार्य शेड्यूलिंग का समर्थन करता है, और क्षैतिज रूप से स्केल किया जा सकता है।"
+"Backend core of the Stardust distributed service platform. Provides APIs for node management, application center, configuration center, registry and service discovery, monitoring and alerting, release center, gateway and MCP, together with metric aggregation, statistics and scheduled tasks; scales horizontally.": "Stardust वितरित सेवा प्लेटफ़ॉर्म का बैकएंड कोर। नोड्स, एप्लिकेशन, कॉन्फ़िगरेशन, रजिस्ट्री, मॉनिटरिंग और अलर्ट, रिलीज़, गेटवे और MCP के लिए API, साथ में मीट्रिक एकत्रीकरण, सांख्यिकी और निर्धारित कार्य प्रदान करता है।"
 "Service port. Default 6600.": "सेवा पोर्ट। डिफ़ॉल्ट 6600।"
 "Token secret. Algorithm and secret used to generate JWT tokens, e.g. HS256:ABCD1234": "टोकन गुप्त कुंजी। JWT टोकन उत्पन्न करने के लिए उपयोग किया जाने वाला एल्गोरिदम और गुप्त कुंजी, जैसे HS256:ABCD1234"
 "Token validity period. Default 2*3600 seconds.": "टोकन वैधता अवधि। डिफ़ॉल्ट 2*3600 सेकंड।"

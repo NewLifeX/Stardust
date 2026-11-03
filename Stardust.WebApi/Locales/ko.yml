@@ -234,7 +234,7 @@
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] 로그인 시간 {2}, 마지막 활동 {3}"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "노드 [{0}/{1}]이(가) 기존 노드 [{2}]와 매우 유사하여 기존 노드를 사용합니다"
 "Stardust service platform": "Stardust 서비스 플랫폼"
-"Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally.": "Stardust 분산 서비스 플랫폼의 백엔드 코어입니다. 구성 센터, 레지스트리, 서비스 검색, 원격 배포, 성능 모니터링, 로그 센터를 위한 핵심 API 서비스를 제공하며, 애플리케이션 등록, 구성 배포, 메트릭 집계, 통계 계산, 작업 예약을 지원하고 수평 확장이 가능합니다."
+"Backend core of the Stardust distributed service platform. Provides APIs for node management, application center, configuration center, registry and service discovery, monitoring and alerting, release center, gateway and MCP, together with metric aggregation, statistics and scheduled tasks; scales horizontally.": "Stardust 분산 서비스 플랫폼의 백엔드 코어. 노드, 애플리케이션, 구성, 레지스트리, 모니터링과 알림, 릴리스, 게이트웨이, MCP API와 지표 집계, 통계, 작업 스케줄링을 제공합니다."
 "Service port. Default 6600.": "서비스 포트입니다. 기본값 6600."
 "Token secret. Algorithm and secret used to generate JWT tokens, e.g. HS256:ABCD1234": "토큰 비밀. JWT 토큰을 생성하는 데 사용하는 알고리즘과 비밀 값입니다. 예: HS256:ABCD1234"
 "Token validity period. Default 2*3600 seconds.": "토큰 유효 기간. 기본 2*3600초."

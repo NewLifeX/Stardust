@@ -86,7 +86,7 @@
 "Domain changed": "Tên miền đã thay đổi"
 "Domains changed: {0} -> {1}": "Tên miền đã thay đổi: {0} -> {1}"
 "Stardust management portal": "Cổng quản trị Stardust"
-"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Cổng quản trị cho nền tảng dịch vụ phân tán Stardust. Hệ thống quản trị trực quan xây dựng trên NewLife.Cube, cung cấp điểm truy cập thống nhất cho quản lý nút, quản lý ứng dụng, trung tâm cấu hình, sổ đăng ký, trung tâm giám sát, trung tâm phát hành, theo dõi chuỗi gọi, phân tích hiệu năng và truy vấn nhật ký."
+"Management console of the Stardust distributed service platform, built on NewLife.Cube. Provides unified entry points for node management, application center, configuration center, registry, monitoring center, release center, gateway management, dashboards, data middleware and MCP.": "Bảng điều khiển quản trị nền tảng Stardust dựa trên NewLife.Cube. Điểm vào thống nhất cho nút, ứng dụng, cấu hình, sổ đăng ký, giám sát, phát hành, cổng, bảng điều khiển, phần mềm trung gian dữ liệu và MCP."
 "Successfully deleted {0}": "Đã xóa {0}"
 "Unknown tool: {0}": "Công cụ không xác định: {0}"
 # 界面元数据词条
@@ -292,7 +292,7 @@
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] đăng nhập lúc {2}, hoạt động lần cuối lúc {3}"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "Nút [{0}/{1}] rất giống với nút hiện có [{2}]; sẽ sử dụng nút hiện có"
 "Stardust service platform": "Nền tảng dịch vụ Stardust"
-"Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally.": "Lõi backend của nền tảng dịch vụ phân tán Stardust. Cung cấp các dịch vụ API cốt lõi cho trung tâm cấu hình, sổ đăng ký, khám phá dịch vụ, triển khai từ xa, giám sát hiệu năng và trung tâm nhật ký; hỗ trợ đăng ký ứng dụng, phân phối cấu hình, tổng hợp số liệu, tính toán thống kê và lập lịch tác vụ, đồng thời có thể mở rộng theo chiều ngang."
+"Backend core of the Stardust distributed service platform. Provides APIs for node management, application center, configuration center, registry and service discovery, monitoring and alerting, release center, gateway and MCP, together with metric aggregation, statistics and scheduled tasks; scales horizontally.": "Lõi phụ trợ của nền tảng dịch vụ phân tán Stardust. Cung cấp API cho nút, ứng dụng, cấu hình, sổ đăng ký, giám sát và cảnh báo, phát hành, cổng và MCP, cùng tổng hợp số liệu, thống kê và tác vụ theo lịch."
 "Service port. Default 6600.": "Cổng dịch vụ. Mặc định 6600."
 "Token secret. Algorithm and secret used to generate JWT tokens, e.g. HS256:ABCD1234": "Bí mật mã thông báo. Thuật toán và khóa dùng để tạo mã thông báo JWT, ví dụ HS256:ABCD1234"
 "Token validity period. Default 2*3600 seconds.": "Thời hạn hiệu lực của token. Mặc định 2*3600 giây."

@@ -86,7 +86,7 @@
 "Domain changed": "โดเมนเปลี่ยนแล้ว"
 "Domains changed: {0} -> {1}": "โดเมนเปลี่ยน: {0} -> {1}"
 "Stardust management portal": "พอร์ทัลการจัดการ Stardust"
-"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "พอร์ทัลการจัดการสำหรับแพลตฟอร์มบริการแบบกระจาย Stardust ระบบการจัดการแบบภาพที่สร้างบน NewLife.Cube ให้จุดเข้าใช้งานแบบรวมสำหรับการจัดการโหนด การจัดการแอปพลิเคชัน ศูนย์กำหนดค่า รีจิสทรี ศูนย์ตรวจสอบ ศูนย์เผยแพร่ การติดตามสายการเรียกใช้ การวิเคราะห์ประสิทธิภาพ และการค้นหาบันทึก"
+"Management console of the Stardust distributed service platform, built on NewLife.Cube. Provides unified entry points for node management, application center, configuration center, registry, monitoring center, release center, gateway management, dashboards, data middleware and MCP.": "คอนโซลจัดการแพลตฟอร์ม Stardust ที่สร้างบน NewLife.Cube ทางเข้าที่รวมศูนย์สำหรับโหนด แอปพลิเคชัน คอนฟิกูเรชัน รีจิสทรี การเฝ้าระวัง การเผยแพร่ เกตเวย์ แดชบอร์ด มิดเดิลแวร์ข้อมูล และ MCP"
 "Successfully deleted {0}": "ลบ {0} แล้ว"
 "Unknown tool: {0}": "เครื่องมือที่ไม่รู้จัก: {0}"
 # 界面元数据词条
@@ -292,7 +292,7 @@
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] เข้าสู่ระบบเมื่อ {2} ใช้งานล่าสุดเมื่อ {3}"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "โหนด [{0}/{1}] คล้ายกับโหนดที่มีอยู่ [{2}] มาก จะใช้โหนดที่มีอยู่"
 "Stardust service platform": "แพลตฟอร์มบริการ Stardust"
-"Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally.": "แกนหลังบ้านของแพลตฟอร์มบริการแบบกระจาย Stardust ให้บริการ API หลักสำหรับศูนย์กำหนดค่า รีจิสทรี การค้นหาบริการ การติดตั้งใช้งานระยะไกล การตรวจสอบประสิทธิภาพ และศูนย์บันทึก รองรับการลงทะเบียนแอปพลิเคชัน การส่งมอบการกำหนดค่า การรวมเมตริก การคำนวณทางสถิติ และการจัดตารางงาน และสามารถขยายแบบแนวนอนได้"
+"Backend core of the Stardust distributed service platform. Provides APIs for node management, application center, configuration center, registry and service discovery, monitoring and alerting, release center, gateway and MCP, together with metric aggregation, statistics and scheduled tasks; scales horizontally.": "แกนหลังบ้านของแพลตฟอร์มบริการแบบกระจาย Stardust ให้ API สำหรับโหนด แอปพลิเคชัน คอนฟิกูเรชัน รีจิสทรี การเฝ้าระวังและการแจ้งเตือน การเผยแพร่ เกตเวย์ และ MCP พร้อมการรวมเมตริก สถิติ และงานตามกำหนดเวลา"
 "Service port. Default 6600.": "พอร์ตบริการ ค่าเริ่มต้น 6600"
 "Token secret. Algorithm and secret used to generate JWT tokens, e.g. HS256:ABCD1234": "รหัสลับโทเค็น อัลกอริทึมและรหัสลับที่ใช้สร้างโทเค็น JWT เช่น HS256:ABCD1234"
 "Token validity period. Default 2*3600 seconds.": "ระยะเวลาความถูกต้องของโทเค็น ค่าเริ่มต้น 2*3600 วินาที"

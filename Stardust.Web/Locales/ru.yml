@@ -86,7 +86,7 @@
 "Domain changed": "Домен изменён"
 "Domains changed: {0} -> {1}": "Домены изменены: {0} -> {1}"
 "Stardust management portal": "Портал управления Stardust"
-"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Портал управления распределённой платформой сервисов Stardust. Визуальная система управления на базе NewLife.Cube, предоставляющая единую точку входа для управления узлами, приложениями, центром конфигурации, реестром, центром мониторинга, центром релизов, трассировки цепочек вызовов, анализа производительности и запросов к журналам."
+"Management console of the Stardust distributed service platform, built on NewLife.Cube. Provides unified entry points for node management, application center, configuration center, registry, monitoring center, release center, gateway management, dashboards, data middleware and MCP.": "Консоль управления платформой Stardust на базе NewLife.Cube. Единый вход для узлов, приложений, конфигурации, реестра, мониторинга, релизов, шлюза, панелей, промежуточного слоя данных и MCP."
 "Successfully deleted {0}": "{0} удалён"
 "Unknown tool: {0}": "Неизвестный инструмент: {0}"
 # 界面元数据词条
@@ -292,7 +292,7 @@
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] вошёл в {2}, последняя активность в {3}"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "Узел [{0}/{1}] очень похож на существующий узел [{2}]; используется существующий узел"
 "Stardust service platform": "Платформа сервисов Stardust"
-"Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally.": "Бэкенд-ядро распределённой платформы сервисов Stardust. Предоставляет основные API-сервисы для центра конфигурации, реестра, обнаружения сервисов, удалённого развёртывания, мониторинга производительности и центра журналов; поддерживает регистрацию приложений, доставку конфигурации, агрегацию метрик, статистические расчёты и планирование задач, а также масштабируется горизонтально."
+"Backend core of the Stardust distributed service platform. Provides APIs for node management, application center, configuration center, registry and service discovery, monitoring and alerting, release center, gateway and MCP, together with metric aggregation, statistics and scheduled tasks; scales horizontally.": "Ядро серверной части распределённой платформы Stardust. Предоставляет API для узлов, приложений, конфигурации, реестра, мониторинга и оповещений, релизов, шлюза и MCP, а также агрегацию метрик, статистику и планировщик задач."
 "Service port. Default 6600.": "Порт службы. По умолчанию 6600."
 "Token secret. Algorithm and secret used to generate JWT tokens, e.g. HS256:ABCD1234": "Секрет токена. Алгоритм и ключ для создания токенов JWT, например HS256:ABCD1234"
 "Token validity period. Default 2*3600 seconds.": "Срок действия токена. По умолчанию 2*3600 секунд."

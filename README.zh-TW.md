@@ -18,7 +18,7 @@
 
 > ⚠️ 本翻譯可能落後，以 [English README](README.md) 為準。
 
-**星塵（Stardust）** 是輕量級分散式服務平台：節點管理、設定中心、註冊中心與服務探索、全鏈路追蹤與 APM、日誌中心與遠端發佈，支援服務自動註冊探索、負載平衡、動態伸縮與故障轉移。應用服務猶如宇宙中的塵埃，而作為應用服務承載體的電腦節點是為星星，星星與塵埃構成整個浩瀚星空，即為星塵！
+**星塵（Stardust）** 是一體化分散式服務與維運平台：節點管理、應用中心、設定中心、註冊中心與服務探索、監控中心（鏈路追蹤與 APM）、發佈中心（管線、灰度與回滾），並延伸出閘道管理、分層看板與 MCP 工具服務；支援服務自動註冊探索、負載平衡、動態伸縮與故障轉移。應用服務猶如宇宙中的塵埃，而作為應用服務承載體的電腦節點是為星星，星星與塵埃構成整個浩瀚星空，即為星塵！
 
 ![星塵分散式](Doc/星尘分布式.png)
 
@@ -193,39 +193,42 @@ dotnet run
 
 | 優勢 | 說明 |
 | --- | --- |
-| 一體化 | 節點管理 / 設定中心 / 註冊中心 / 服務探索 / 全鏈路追蹤 / APM / 日誌中心 / 遠端發佈 / 資源監控 統一模型與介面 |
+| 一體化 | 節點管理 / 應用中心 / 設定中心 / 註冊中心 / 服務探索 / 監控（APM）/ 發佈中心 / 閘道 / 看板 / MCP 統一模型與介面 |
 | 超輕量 | 核心庫零第三方重量級相依，單一行程即可執行，自動建立資料庫與資料表 |
 | 強相容 | 同一生態覆蓋 .NET Framework 4.5 起至最新 .NET 10，多平台（Windows/Linux/macOS/Android/iOS/ARM/IoT） |
 | 多語言 Agent | Go/Rust/C++ 輕量原生 Agent 可直接對接 StarServer，覆蓋無 .NET 執行階段、嵌入式與 OpenWrt 場景 |
 | 高效能 | 基於 NewLife.Core & NewLife.Net 等十餘年最佳化累積，網路輸送量與序列化效能優異 |
 | 極易接入 | 幾行程式碼完成接入；ASP.NET Core / Console / Service / IoT 邊緣統一方式 |
-| 自帶維運 | StarAgent 守護程序 + 遠端發佈 + 指標 & 日誌蒐集，極大降低分散式維運複雜度 |
+| 自帶維運 | StarAgent 守護程序 + 發佈中心（管線/灰度/回滾）+ 指標與應用日誌蒐集，極大降低分散式維運複雜度 |
 
 </details>
 
 <details>
-<summary><b>平台核心</b>（13 項）</summary>
+<summary><b>平台核心</b>（16 項）</summary>
 
 | 功能 | 關鍵特性 |
 | --- | --- |
-| 星塵代理 | StarAgent部署在每台應用伺服器，作為系統服務負責守護本機應用及監控節點效能，支援Windows/Linux/macOS，並提供Android/iOS簡化版（註冊心跳/指標/日誌/命令子集） |
-| 節點管理 | 集中化管理多機器上的海量StarAgent，支援機房內伺服器節點、遠端桌面工控機以及物聯網邊緣運算節點 |
-| 應用管理 | 為每個應用系統分配接入金鑰，用於設定中心、應用監控、服務註冊、服務探索等 |
-| 設定中心 | 各應用從設定中心讀取自己的設定資訊，有利於應用的多執行個體部署以及集中管理 |
-| 監控中心 | 各應用（服務提供者與服務消費者）向中心上報效能指標等監控資料 |
+| 星塵代理 | StarAgent 部署在每台應用伺服器，作為系統服務守護本機應用並蒐集節點指標（CPU/記憶體/磁碟/網路/GPU），支援 Windows/Linux/macOS，並提供 Android/iOS 簡化版（註冊、心跳、指標、日誌與命令子集） |
+| 節點管理 | 集中化管理多機器上的海量 StarAgent，涵蓋機房伺服器、遠端工控機與物聯網邊緣節點；提供線上離線歷史、節點資料、定位、命令下發與升級 |
+| 應用中心 | 為每個應用系統分配 AppId/金鑰，集中管理線上執行個體、存取權杖、工作階段、服務消費關係與執行日誌 |
+| 設定中心 | 各應用從設定中心讀取自己的設定資訊，有利於多執行個體部署與集中管理，支援環境隔離、範本繼承與推送更新 |
 | 註冊中心 | 各微服務應用（服務提供者）向註冊中心上報自身服務資訊 |
 | 服務探索 | 各業務應用（服務消費者）從註冊中心拉取指定服務的提供者資訊，進行分散式呼叫（不經過閘道） |
-| 遠端發佈 | 在星塵主控台上發佈應用套件到多台安裝有星塵代理的應用伺服器或物聯網邊緣節點，StarAgent負責拉起並守護程序 |
-| 日誌中心 | 各應用（服務提供者與服務消費者）向中心上報日誌資料，統一在星塵Web查看 |
+| 監控中心（APM） | 應用上報效能指標，中心建構端到端呼叫鏈與服務相依關係圖，依應用與執行個體展示 QPS/耗時/錯誤趨勢 |
+| 告警管理 | 告警群組與告警紀錄，支援確認與靜默；離線節點與異常應用在看板集中呈現 |
+| 發佈中心 | 在星塵主控台上發佈應用套件到多台安裝有星塵代理的應用伺服器或物聯網邊緣節點，StarAgent 負責解壓、拉起並守護程序，支援灰度發佈與一鍵回滾 |
+| 管線 | 支援建立管線及執行/步驟模型，透過 webhook 自動觸發建置發佈流程，配合儲存庫 SSH 金鑰與使用者名稱密碼驗證實現自動化部署 |
+| 閘道管理 | 集中管理 StarGateway 叢集、節點、路由與憑證：動態路由引擎、負載平衡、健康檢查、TLS 終止、WebSocket 代理與靜態檔案託管（SPA 回退/大檔案保護），並整合 APM 追蹤 |
+| 分層看板 | 系統/專案/應用/節點四層看板與 16:9 大屏模式，支援卡片下鑽、事件流與個人化版面 |
+| 資料中介 | 在同一主控台管理 MySQL 與 Redis 節點及資料（慢查詢、鍵值、訊息佇列） |
+| MCP 工具服務 | 面向 LLM 與智慧體的 MCP HTTP 入口，提供權杖憑證、資源授權與稽核日誌 |
 | [多供應商DNS DDNS](Doc/NODE-16-阿里云DNS动态域名解析.md) | StarAgent支援動態域名解析(DDNS)，自動將節點公網IP註冊到DNS（支援阿里雲/騰訊雲(DNSPod)/優刻得(UDNS)/AWS Route53四家供應商），適用於動態IP環境 |
 | .NET執行階段管理 | StarServer自動同步官方.NET發佈資訊，StarAgent支援按需安裝.NET執行階段版本，配合升級命令實現自動升級與冒煙測試回滾 |
-| 管線 | 支援建立管線及執行/步驟模型，透過 webhook 自動觸發建置發佈流程，配合儲存庫 SSH 金鑰與使用者名稱密碼驗證實現自動化部署 |
-| 閘道v2.0 | StarGateway 重構升級，支援動態路由引擎、負載平衡、健康檢查、TLS 終止、WebSocket 代理與靜態檔案託管（SPA 回退/大檔案保護），並整合 APM 追蹤 |
 
 </details>
 
 <details>
-<summary><b>架構與元件</b>（7 項）</summary>
+<summary><b>架構與元件</b>（8 項）</summary>
 
 ```
 +--------------------+        +-------------------+        +---------------------+
@@ -236,18 +239,19 @@ dotnet run
           v                               |                           v
    StarAgent (節點守護/部署/監控蒐集)     |                   StarWeb 管理介面
           |                               |                           |
-       遠端發佈 / 效能 & 日誌 / 指標上報 --+--- 資料儲存 (XCode ORM, 多資料庫)
+       發佈部署 / 指標 / 應用日誌 -------+--- 資料儲存 (XCode ORM, 多資料庫)
 ```
 
 | 元件 | 功能與典型部署 |
 | --- | --- |
-| StarServer | 服務平台後端（API / 設定 / 註冊 / 發佈 / 指標聚合 / 統計計算）。1~N，可橫向擴充，持久化依賴資料庫/Redis(選用) |
+| StarServer | 服務平台後端（節點 / 應用 / 設定 / 註冊 / 監控 / 發佈 / 閘道 API，指標聚合與統計計算）。1~N，可橫向擴充，持久化依賴資料庫/Redis(選用) |
 | StarWeb | 基於 NewLife.Cube 的管理與視覺化介面。1，可與 StarServer 同機或分離 |
 | StarAgent | 安裝在每台節點主機：程序守護、遠端發佈、蒐集監控（CPU/記憶體/網路/自訂）。N（每機一執行個體），支援 Windows 服務、Linux systemd、容器或背景程序 |
 | Stardust Core Library (SDK) | 客戶端 SDK，提供設定拉取、註冊探索、呼叫追蹤、效能 & 日誌上報。與業務應用同行程，透過 AddStardust/UseStardust 整合 |
 | Stardust.Extensions | ASP.NET Core 擴充（AddStardust / UseStardust / RegisterService / ConsumeService）。用於業務 Web/API，暴露中介軟體與註冊/探索便捷方法 |
 | 資料層 (Stardust.Data) | 基於 XCode 的實體與統計任務 |
 | StarGateway / DeployAgent（選用） | 流量轉發 / 建置與分發支撐，視需求部署，可與服務探索協同 |
+| Stardust.WebApi / Stardust.Web.Vue（選用） | 純 JSON API 後端與 Vue 主控台，重用 Web 區域控制器，便於前後端分離部署 |
 
 </details>
 
@@ -313,7 +317,7 @@ app.ConsumeService("SvcName");
 | 手動 Span | 業務層需要時顯式建立 span |
 | 效能計數 | QPS、耗時分佈、錯誤率 |
 | 系統指標 | Agent 蒐集 CPU/記憶體/執行緒/網路 |
-| 日誌 | 透過 NewLife.Log 上報；在 Web 中統一查詢 |
+| 應用日誌 | 透過 NewLife.Log 上報；在「應用中心 → 應用日誌」依應用檢索 |
 
 ```csharp
 using var span = star.Tracer?.NewSpan("biz:calc", new { id });
@@ -322,7 +326,7 @@ using var span = star.Tracer?.NewSpan("biz:calc", new { id });
 </details>
 
 <details>
-<summary><b>遠端發佈 / 持續交付</b>（5 項）</summary>
+<summary><b>發佈中心 / 持續交付</b>（5 項）</summary>
 
 | 步驟 | 說明 |
 | --- | --- |
@@ -373,7 +377,7 @@ using var span = star.Tracer?.NewSpan("biz:calc", new { id });
 
 | 訴求 | 星塵 | 單一註冊中心 (如 Consul/Eureka) | 僅設定中心 | 傳統腳本發佈 |
 | ---- | ---- | ------------------------------- | --------- | ------------ |
-| 功能覆蓋 | 註冊/探索/設定/發佈/監控/追蹤 | 註冊 + 健康 | 設定 | 僅分發 |
+| 功能覆蓋 | 節點管理/應用中心/設定/註冊/探索/監控/追蹤/發佈/閘道 | 註冊 + 健康 | 設定 | 僅分發 |
 | 接入複雜度 | 低 | 中 | 中 | 高 |
 | 維運統一度 | 高 | 中 | 中 | 低 |
 | 語言生態 | 以 .NET 為主 | 多語言 | 多語言 | 任意 |
@@ -428,7 +432,7 @@ NewLife 生態系按相依分層，各專案獨立版本、獨立發行。下面
 | [NewLife.MySql](https://github.com/NewLifeX/NewLife.MySql) | 建構於 NewLife 資料堆疊之上的 MySql 驅動與輔助層。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.MySql?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.MySql) |
 | **Web、AI 與分散式** | | |
 | [NewLife.Cube](https://github.com/NewLifeX/NewLife.Cube) | 快速後台開發框架：權限、SSO、OAuth 服務端與 CRUD 樣板。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Cube?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Cube) |
-| [Stardust](https://github.com/NewLifeX/Stardust) | 分散式服務平台：節點管理、APM、設定中心、註冊中心與發佈中心。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Stardust?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Stardust) |
+| [Stardust](https://github.com/NewLifeX/Stardust) | 星塵分散式服務與維運平台：節點管理、應用中心、APM、設定中心、註冊中心、發佈中心與閘道。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Stardust?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Stardust) |
 | [AntJob](https://github.com/NewLifeX/AntJob) | 分散式任務與即時資料排程平台，支援分片、重試與回溯補算。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.AntJob?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.AntJob) |
 | [NewLife.AI](https://github.com/NewLifeX/NewLife.AI) | 統一接入 46 家大模型服務商，附帶開箱即用的 ChatAI Web 對話應用。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.AI?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.AI) |
 | **工業與物聯網** | | |

@@ -234,7 +234,7 @@
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] התחבר ב-{2}, פעיל לאחרונה ב-{3}"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "הצומת [{0}/{1}] דומה מאוד לצומת הקיים [{2}]; הצומת הקיים ישמש"
 "Stardust service platform": "פלטפורמת השירותים Stardust"
-"Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally.": "ליבת ה-backend של פלטפורמת השירותים המבוזרת Stardust. מספקת שירותי API ליבה עבור מרכז התצורה, הרישום, גילוי שירותים, פריסה מרחוק, ניטור ביצועים ומרכז יומנים; תומכת ברישום יישומים, הפצת תצורה, צבירת מדדים, חישובים סטטיסטיים ותזמון משימות, וניתנת להרחבה אופקית."
+"Backend core of the Stardust distributed service platform. Provides APIs for node management, application center, configuration center, registry and service discovery, monitoring and alerting, release center, gateway and MCP, together with metric aggregation, statistics and scheduled tasks; scales horizontally.": "ליבת הקצה האחורי של פלטפורמת השירותים המפוזרת Stardust. מספקת ממשקי API לצמתים, יישומים, תצורה, מרשם, ניטור והתראות, פרסומים, שער ו-MCP, עם צבירת מדדים, סטטיסטיקות ומשימות מתוזמנות."
 "Service port. Default 6600.": "יציאת השירות. ברירת מחדל 6600."
 "Token secret. Algorithm and secret used to generate JWT tokens, e.g. HS256:ABCD1234": "סוד אסימון. האלגוריתם והמפתח המשמשים ליצירת אסימוני JWT, כגון HS256:ABCD1234"
 "Token validity period. Default 2*3600 seconds.": "תקופת תוקף האסימון. ברירת מחדל 2*3600 שניות."

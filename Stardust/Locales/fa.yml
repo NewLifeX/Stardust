@@ -221,4 +221,4 @@
 "Succeeded": "موفق"
 "File [{0}] changed; stopping the application and starting it {1}ms later": "فایل [{0}] تغییر کرد؛ برنامه متوقف و {1}ms بعد شروع می‌شود"
 "Stardust distributed core": "هسته توزیع‌شده Stardust"
-"Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting.": "کتابخانه هسته چارچوب سرویس توزیع‌شده Stardust. SDKهای کلاینت را برای مرکز پیکربندی، رجیستری، کشف سرویس، ردیابی توزیع‌شده، APM و مرکز گزارش‌ها فراهم می‌کند و از دریافت پیکربندی، ثبت و کشف سرویس، ردیابی فراخوانی و ارسال عملکرد و گزارش‌ها پشتیبانی می‌کند."
+"Stardust distributed core client library. One-line integration for configuration delivery, service registration and discovery, distributed tracing, APM and log reporting.": "کتابخانه کلاینت هسته Stardust. یکپارچه‌سازی با یک خط کد برای توزیع پیکربندی، ثبت و کشف سرویس، ردیابی، APM و ارسال گزارش."

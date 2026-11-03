@@ -234,7 +234,7 @@
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] は {2} にログインし、{3} に最後にアクティブでした"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "ノード [{0}/{1}] は既存のノード [{2}] と非常に類似しているため、既存のノードを使用します"
 "Stardust service platform": "Stardust サービスプラットフォーム"
-"Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally.": "Stardust 分散サービスプラットフォームのバックエンドコア。構成センター、レジストリ、サービス検出、リモートデプロイ、パフォーマンス監視、ログセンター向けの中核 API サービスを提供し、アプリケーション登録、構成配信、メトリック集約、統計計算、タスクスケジューリングをサポートするとともに、水平スケーリングが可能です。"
+"Backend core of the Stardust distributed service platform. Provides APIs for node management, application center, configuration center, registry and service discovery, monitoring and alerting, release center, gateway and MCP, together with metric aggregation, statistics and scheduled tasks; scales horizontally.": "Stardust 分散サービス プラットフォームのバックエンド コア。ノード、アプリケーション、構成、レジストリ、監視とアラート、リリース、ゲートウェイ、MCP の API を提供し、メトリック集計、統計、タスク スケジュールを担います。"
 "Service port. Default 6600.": "サービスポート。既定値6600。"
 "Token secret. Algorithm and secret used to generate JWT tokens, e.g. HS256:ABCD1234": "トークンシークレット。JWT トークンの生成に使用するアルゴリズムとシークレット。例：HS256:ABCD1234"
 "Token validity period. Default 2*3600 seconds.": "トークンの有効期間。既定 2*3600 秒。"

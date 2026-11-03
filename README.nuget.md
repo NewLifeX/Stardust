@@ -18,7 +18,7 @@
 🌐 [简体中文](https://github.com/NewLifeX/Stardust/blob/master/README.zh-CN.md) | [繁體中文](https://github.com/NewLifeX/Stardust/blob/master/README.zh-TW.md) | [Español](https://github.com/NewLifeX/Stardust/blob/master/README.es.md) | [Deutsch](https://github.com/NewLifeX/Stardust/blob/master/README.de.md) | [日本語](https://github.com/NewLifeX/Stardust/blob/master/README.ja.md) | [Français](https://github.com/NewLifeX/Stardust/blob/master/README.fr.md) | [Português](https://github.com/NewLifeX/Stardust/blob/master/README.pt.md) | [Русский](https://github.com/NewLifeX/Stardust/blob/master/README.ru.md) | [한국어](https://github.com/NewLifeX/Stardust/blob/master/README.ko.md) | [العربية](https://github.com/NewLifeX/Stardust/blob/master/README.ar.md)
 <!-- lang:end -->
 
-**Stardust** is a lightweight distributed service platform: node management, configuration center, registry and service discovery, distributed tracing and APM, log center and remote release, with automatic service registration and discovery, load balancing, dynamic scaling and failover. Application services are like dust in the universe, and the computer nodes that host them are the stars; stars and dust together form the vast starry sky, which is Stardust.
+**Stardust** is an all-in-one distributed service and operations platform: node management, application center, configuration center, registry and service discovery, monitoring center (tracing and APM) and release center (pipelines, canary releases and rollback), together with gateway management, layered dashboards and an MCP tool service, with automatic service registration and discovery, load balancing, dynamic scaling and failover. Application services are like dust in the universe, and the computer nodes that host them are the stars; stars and dust together form the vast starry sky, which is Stardust.
 
 ![Stardust](https://github.com/NewLifeX/Stardust/blob/master/Doc/星尘分布式.png)
 
@@ -182,39 +182,42 @@ dotnet run
 
 | Advantage | What it gives you |
 | --- | --- |
-| All-in-one | Node management / configuration center / registry / service discovery / distributed tracing / APM / log center / remote release / resource monitoring, with a unified model and UI |
+| All-in-one | Node management / application center / configuration center / registry / service discovery / monitoring (APM) / release center / gateway / dashboards / MCP, with a unified model and UI |
 | Ultra-lightweight | The core library has no heavy third-party dependencies and runs in a single process, with automatic database and table creation |
 | Strong compatibility | One ecosystem covers .NET Framework 4.5 through the latest .NET 10, across multiple platforms (Windows/Linux/macOS/Android/iOS/ARM/IoT) |
 | Multi-language agents | Lightweight Go/Rust/C++ native agents can connect directly to StarServer, covering scenarios without a .NET runtime, embedded systems, and OpenWrt |
 | High performance | Built on more than a decade of optimization in NewLife.Core & NewLife.Net, with excellent network throughput and serialization performance |
 | Easy integration | Integrate with just a few lines of code; the same approach for ASP.NET Core / Console / Service / IoT edge |
-| Built-in operations | StarAgent daemon + remote release + metric & log collection, greatly reducing the complexity of distributed operations |
+| Built-in operations | StarAgent daemon + release center (pipelines, canary, rollback) + metric and application-log collection, greatly reducing the complexity of distributed operations |
 
 </details>
 
 <details>
-<summary><b>Platform Core</b> (13)</summary>
+<summary><b>Platform Core</b> (16)</summary>
 
 | Feature | Key Characteristics |
 | --- | --- |
-| Stardust Agent | StarAgent is deployed on every application server and, as a system service, supervises local applications and monitors node performance. It supports Windows/Linux/macOS and also provides simplified Android/iOS versions (registration heartbeat/metric/log/command subset) |
-| Node management | Centrally manage massive numbers of StarAgents across machines, covering server nodes in data centers, remote desktop industrial PCs, and IoT edge computing nodes |
-| Application management | Assign an access key to each application system for the configuration center, application monitoring, service registration, service discovery, etc. |
-| Configuration center | Each application reads its own configuration from the configuration center, which facilitates multi-instance deployment and centralized management |
-| Monitoring center | Each application (service provider and service consumer) reports performance metrics and other monitoring data to the center |
+| Stardust Agent | StarAgent is deployed on every application server and, as a system service, supervises local applications and collects node metrics (CPU/memory/disk/network/GPU). It supports Windows/Linux/macOS and also provides simplified Android/iOS builds (registration, heartbeat, metrics, logs and a command subset) |
+| Node management | Centrally manage massive numbers of StarAgents across machines, covering server nodes in data centers, remote industrial PCs, and IoT edge computing nodes; online/offline history, node data, location, commands and upgrades |
+| Application center | Assign an AppId/Secret to each application system and manage online instances, access tokens, sessions, service relationships and runtime logs in one place |
+| Configuration center | Each application reads its own configuration from the configuration center, which facilitates multi-instance deployment and centralized management, with environment isolation, template inheritance and push updates |
 | Registry | Each microservice application (service provider) reports its own service information to the registry |
 | Service discovery | Each business application (service consumer) pulls provider information for the specified service from the registry and makes distributed calls (without going through a gateway) |
-| Remote release | Publish application packages from the Stardust console to multiple application servers or IoT edge nodes with StarAgent installed; StarAgent starts and supervises the processes |
-| Log center | Each application (service provider and service consumer) reports log data to the center, which is viewed centrally in Stardust Web |
+| Monitoring center (APM) | Applications report performance metrics; the center builds end-to-end traces and service dependency graphs, and shows QPS/latency/error trends per application and instance |
+| Alerting | Alarm groups and alarm records with acknowledge and silence actions; offline nodes and anomalous applications surface on the dashboards |
+| Release center | Publish application packages from the Stardust console to multiple application servers or IoT edge nodes with StarAgent installed; StarAgent unpacks, starts and supervises the processes, with canary releases and one-click rollback |
+| Pipeline | Create pipelines with run/step models, trigger builds and releases via webhooks, and authenticate repositories with SSH keys or username/password |
+| Gateway management | Centrally manage StarGateway clusters, nodes, routes and certificates: dynamic routing, load balancing, health checks, TLS termination, WebSocket proxying and static file hosting (SPA fallback/large-file protection), with integrated APM tracing |
+| Dashboards | System / project / application / node dashboards plus a 16:9 wallboard mode, with drill-down links, event streams and personalized layouts |
+| Data middleware | Manage MySQL and Redis nodes and data (slow queries, keys, message queues) from the same console |
+| MCP tool service | An MCP HTTP endpoint for LLMs and agents, with token credentials, resource authorization and audit logs |
 | [Multi-provider DNS DDNS](https://github.com/NewLifeX/Stardust/blob/master/Doc/NODE-16-阿里云DNS动态域名解析.md) | StarAgent supports dynamic DNS (DDNS), automatically registering the node's public IP with DNS (Alibaba Cloud/Tencent Cloud (DNSPod)/UCloud (UDNS)/AWS Route53), suitable for dynamic IP environments |
 | .NET runtime management | StarServer automatically synchronizes official .NET release information, and StarAgent can install .NET runtime versions on demand, working with upgrade commands to enable automatic upgrades and smoke-test rollback |
-| Pipeline | Supports creating pipelines and run/step models, automatically triggering the build and release process via webhooks, and enabling automated deployment with repository SSH keys and username/password authentication |
-| Gateway v2.0 | StarGateway has been refactored and upgraded, supporting a dynamic routing engine, load balancing, health checks, TLS termination, WebSocket proxying, and static file hosting (SPA fallback/large-file protection), with integrated APM tracing |
 
 </details>
 
 <details>
-<summary><b>Architecture &amp; Components</b> (7)</summary>
+<summary><b>Architecture &amp; Components</b> (8)</summary>
 
 ```
 +--------------------+        +-------------------+        +---------------------+
@@ -225,18 +228,19 @@ dotnet run
           v                             ^                             v
    StarAgent (node supervision/deploy/monitoring)             StarWeb admin UI
           |                             |                             |
-       Remote release / performance & logs / metrics ---+--- Data storage (XCode ORM, multi-database)
+          Release deployment / metrics / app logs ------+--- Data storage (XCode ORM, multi-database)
 ```
 
 | Component | Function and typical deployment |
 | --- | --- |
-| StarServer | Service platform backend (API / configuration / registry / release / metric aggregation / statistics computation). 1~N, horizontally scalable; persistence depends on a database/Redis (optional) |
+| StarServer | Service platform backend (node / application / configuration / registry / monitoring / release / gateway APIs, metric aggregation and statistics computation). 1~N, horizontally scalable; persistence depends on a database/Redis (optional) |
 | StarWeb | Management and visualization UI based on NewLife.Cube. 1, on the same machine as StarServer or separated |
 | StarAgent | Installed on every node host: process supervision, remote release, and monitoring collection (CPU/memory/network/custom). N (one instance per machine); Windows service, Linux systemd, container, or background process |
 | Stardust Core Library (SDK) | Client SDK providing configuration pull, registry discovery, call tracing, and performance & log reporting. Runs in the same process as the business application; integrated via AddStardust/UseStardust |
 | Stardust.Extensions | ASP.NET Core extensions (AddStardust / UseStardust / RegisterService / ConsumeService). Used by business Web/API projects; exposes middleware and convenience methods for registration/discovery |
 | Data layer (Stardust.Data) | XCode-based entities and statistics tasks |
 | StarGateway / DeployAgent (optional) | Traffic forwarding / build and distribution support; deployed as required and can work together with service discovery |
+| Stardust.WebApi / Stardust.Web.Vue (optional) | JSON-only API backend and Vue console; reuses the Web area controllers for headless or separated front-end deployments |
 
 </details>
 
@@ -302,7 +306,7 @@ app.ConsumeService("SvcName");
 | Manual spans | Create spans explicitly wherever business-level tracing is needed |
 | Performance counters | QPS, latency distribution and error rate |
 | System metrics | Agent collects CPU/memory/threads/network |
-| Logs | Reported through NewLife.Log and queried centrally in the Web |
+| Application logs | Reported through NewLife.Log and queried per application in the application center |
 
 ```csharp
 using var span = star.Tracer?.NewSpan("biz:calc", new { id });
@@ -311,7 +315,7 @@ using var span = star.Tracer?.NewSpan("biz:calc", new { id });
 </details>
 
 <details>
-<summary><b>Remote Release / Continuous Delivery</b> (5)</summary>
+<summary><b>Release Center / Continuous Delivery</b> (5)</summary>
 
 | Step | Description |
 | --- | --- |
@@ -362,7 +366,7 @@ using var span = star.Tracer?.NewSpan("biz:calc", new { id });
 
 | Concern | Stardust | Single registry (e.g. Consul/Eureka) | Configuration center only | Traditional script deployment |
 | ---- | ---- | ------------------------------- | --------- | ------------ |
-| Feature coverage | Registry/discovery/configuration/release/monitoring/tracing | Registry + health | Configuration | Distribution only |
+| Feature coverage | Node management / app center / config / registry / discovery / monitoring / tracing / release / gateway | Registry + health | Configuration | Distribution only |
 | Integration complexity | Low | Medium | Medium | High |
 | Operations consistency | High | Medium | Medium | Low |
 | Language ecosystem | Primarily .NET | Multi-language | Multi-language | Any |
@@ -417,7 +421,7 @@ NewLife is a layered ecosystem of independently versioned open-source projects. 
 | [NewLife.MySql](https://github.com/NewLifeX/NewLife.MySql) | MySql driver and helper layer built on the NewLife data stack. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.MySql?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.MySql) |
 | **Web, AI & Distributed** | | |
 | [NewLife.Cube](https://github.com/NewLifeX/NewLife.Cube) | Rapid admin-platform framework: permissions, SSO, OAuth server and CRUD scaffolding. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Cube?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Cube) |
-| [Stardust](https://github.com/NewLifeX/Stardust) | Distributed service platform: node management, APM, configuration center, registry and release center. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Stardust?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Stardust) |
+| [Stardust](https://github.com/NewLifeX/Stardust) | Distributed service and operations platform: node management, application center, APM, configuration center, registry, release center and gateway. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Stardust?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Stardust) |
 | [AntJob](https://github.com/NewLifeX/AntJob) | Distributed task and real-time data scheduling platform with sharding, retries and backfill. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.AntJob?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.AntJob) |
 | [NewLife.AI](https://github.com/NewLifeX/NewLife.AI) | Unified client for 46 LLM providers plus ChatAI, a ready-to-run web chat application. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.AI?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.AI) |
 | **Industrial & IoT** | | |

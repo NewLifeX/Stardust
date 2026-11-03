@@ -86,7 +86,7 @@
 "Domain changed": "Domain berubah"
 "Domains changed: {0} -> {1}": "Domain berubah: {0} -> {1}"
 "Stardust management portal": "Portal manajemen Stardust"
-"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "Portal manajemen untuk platform layanan terdistribusi Stardust. Sistem manajemen visual yang dibangun di atas NewLife.Cube, menyediakan titik masuk terpadu untuk manajemen node, manajemen aplikasi, pusat konfigurasi, registri, pusat pemantauan, pusat rilis, pelacakan rantai panggilan, analisis kinerja, dan kueri log."
+"Management console of the Stardust distributed service platform, built on NewLife.Cube. Provides unified entry points for node management, application center, configuration center, registry, monitoring center, release center, gateway management, dashboards, data middleware and MCP.": "Konsol manajemen platform Stardust berbasis NewLife.Cube. Pintu masuk terpadu untuk node, aplikasi, konfigurasi, registri, pemantauan, rilis, gateway, dasbor, middleware data, dan MCP."
 "Successfully deleted {0}": "{0} telah dihapus"
 "Unknown tool: {0}": "Alat tidak dikenal: {0}"
 # 界面元数据词条
@@ -292,7 +292,7 @@
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] masuk pada {2}, terakhir aktif pada {3}"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "Node [{0}/{1}] sangat mirip dengan node yang ada [{2}]; node yang ada akan digunakan"
 "Stardust service platform": "Platform layanan Stardust"
-"Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally.": "Inti backend platform layanan terdistribusi Stardust. Menyediakan layanan API inti untuk pusat konfigurasi, registri, penemuan layanan, penerapan jarak jauh, pemantauan kinerja, dan pusat log; mendukung pendaftaran aplikasi, pengiriman konfigurasi, agregasi metrik, perhitungan statistik, dan penjadwalan tugas, serta dapat diskalakan secara horizontal."
+"Backend core of the Stardust distributed service platform. Provides APIs for node management, application center, configuration center, registry and service discovery, monitoring and alerting, release center, gateway and MCP, together with metric aggregation, statistics and scheduled tasks; scales horizontally.": "Inti backend platform layanan terdistribusi Stardust. Menyediakan API untuk node, aplikasi, konfigurasi, registri, pemantauan dan peringatan, rilis, gateway, dan MCP, beserta agregasi metrik, statistik, dan tugas terjadwal."
 "Service port. Default 6600.": "Port layanan. Default 6600."
 "Token secret. Algorithm and secret used to generate JWT tokens, e.g. HS256:ABCD1234": "Rahasia token. Algoritma dan rahasia yang digunakan untuk membuat token JWT, mis. HS256:ABCD1234"
 "Token validity period. Default 2*3600 seconds.": "Masa berlaku token. Default 2*3600 detik."

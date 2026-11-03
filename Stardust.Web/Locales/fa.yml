@@ -86,7 +86,7 @@
 "Domain changed": "دامنه تغییر کرد"
 "Domains changed: {0} -> {1}": "دامنه‌ها تغییر کرد: {0} -> {1}"
 "Stardust management portal": "درگاه مدیریت Stardust"
-"Management portal for the Stardust distributed service platform. A visual management system built on NewLife.Cube, providing unified entry points for node management, application management, configuration center, registry, monitoring center, release center, call chain tracing, performance analysis, and log queries.": "درگاه مدیریت پلتفرم سرویس توزیع‌شده Stardust. سامانه مدیریت بصری مبتنی بر NewLife.Cube که ورودی یکپارچه‌ای برای مدیریت گره، مدیریت برنامه، مرکز پیکربندی، رجیستری، مرکز پایش، مرکز انتشار، ردیابی زنجیره فراخوانی، تحلیل عملکرد و جست‌وجوی گزارش‌ها فراهم می‌کند."
+"Management console of the Stardust distributed service platform, built on NewLife.Cube. Provides unified entry points for node management, application center, configuration center, registry, monitoring center, release center, gateway management, dashboards, data middleware and MCP.": "کنسول مدیریت پلتفرم Stardust مبتنی بر NewLife.Cube. ورودی یکپارچه برای گره‌ها، برنامه‌ها، پیکربندی، رجیستری، پایش، انتشار، درگاه، داشبوردها، میان‌افزار داده و MCP."
 "Successfully deleted {0}": "{0} حذف شد"
 "Unknown tool: {0}": "ابزار ناشناخته: {0}"
 # 界面元数据词条
@@ -292,7 +292,7 @@
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}] در {2} وارد شد، آخرین فعالیت در {3}"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "گره [{0}/{1}] بسیار شبیه به گره موجود [{2}] است؛ از گره موجود استفاده می‌شود"
 "Stardust service platform": "پلتفرم سرویس Stardust"
-"Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally.": "هسته بک‌اند پلتفرم سرویس توزیع‌شده Stardust. سرویس‌های API اصلی برای مرکز پیکربندی، رجیستری، کشف سرویس، استقرار از راه دور، پایش عملکرد و مرکز گزارش‌ها فراهم می‌کند و از ثبت برنامه، توزیع پیکربندی، تجمیع معیارها، محاسبات آماری و زمان‌بندی وظایف پشتیبانی می‌کند و قابلیت مقیاس‌پذیری افقی دارد."
+"Backend core of the Stardust distributed service platform. Provides APIs for node management, application center, configuration center, registry and service discovery, monitoring and alerting, release center, gateway and MCP, together with metric aggregation, statistics and scheduled tasks; scales horizontally.": "هسته بک‌اند پلتفرم سرویس توزیع‌شده Stardust. APIهایی برای گره‌ها، برنامه‌ها، پیکربندی، رجیستری، پایش و هشدار، انتشار، درگاه و MCP همراه با تجمیع معیارها، آمار و وظایف زمان‌بندی‌شده ارائه می‌دهد."
 "Service port. Default 6600.": "درگاه سرویس. پیش‌فرض 6600."
 "Token secret. Algorithm and secret used to generate JWT tokens, e.g. HS256:ABCD1234": "کلید مخفی توکن. الگوریتم و کلید مورد استفاده برای تولید توکنهای JWT، مانند HS256:ABCD1234"
 "Token validity period. Default 2*3600 seconds.": "مدت اعتبار توکن. پیش‌فرض 2*3600 ثانیه."

@@ -17,7 +17,7 @@
 > ⚠️ Esta traducción puede estar desactualizada; la referencia es el [README en inglés](README.md).
 > ℹ️ La estructura de esta traducción puede estar desactualizada; prevalece el [README en inglés](README.md).
 
-Stardust es una plataforma de servicios distribuidos con gestión de nodos, registro, centro de configuración, monitoreo APM, centro de despliegues y comandos remotos.
+Stardust es una plataforma unificada de servicios distribuidos y operaciones: gestión de nodos, centro de aplicaciones, centro de configuración, registro y descubrimiento de servicios, monitorización (trazas y APM), centro de despliegues (canalizaciones, despliegue gradual y reversión), pasarela, paneles por niveles y servicio de herramientas MCP.
 
 ## Instalación
 
@@ -33,11 +33,14 @@ client.Start();
 ```
 
 <details>
-<summary><b>Características</b> (3)</summary>
+<summary><b>Características</b> (6)</summary>
 
-- Registro, trazabilidad y diagnóstico en tiempo de ejecución completos
-- Probado en entornos de producción de larga duración
-- Arquitectura extensible y conectable para desarrollo propio
+- Gestión de nodos y alta de aplicaciones en una sola consola
+- Centro de configuración con entrega automática; registro y descubrimiento de servicios
+- Trazas y APM con alertas y paneles por niveles
+- Centro de despliegues: canalizaciones, despliegue gradual y reversión con un clic
+- Pasarela, middleware de datos MySQL/Redis y servicio de herramientas MCP
+- SDK de una línea para .NET y varios lenguajes, ligero y autoalojado
 
 </details>
 

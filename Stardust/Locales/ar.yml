@@ -221,4 +221,4 @@
 "Succeeded": "ناجح"
 "File [{0}] changed; stopping the application and starting it {1}ms later": "تم تغيير الملف [{0}]؛ سيتم إيقاف التطبيق وبدء تشغيله بعد {1}ms"
 "Stardust distributed core": "نواة Stardust الموزعة"
-"Stardust distributed service framework core library. Provides client SDKs for configuration center, registry, service discovery, distributed tracing, APM, and log center, supporting configuration pulling, service registration and discovery, call tracing, performance and log reporting.": "المكتبة الأساسية لإطار الخدمات الموزعة Stardust. توفر SDKs للعميل لمركز التكوين والسجل واكتشاف الخدمات والتتبع الموزع وAPM ومركز السجلات، وتدعم سحب التكوين وتسجيل الخدمات واكتشافها وتتبع الاستدعاءات وإرسال الأداء والسجلات."
+"Stardust distributed core client library. One-line integration for configuration delivery, service registration and discovery, distributed tracing, APM and log reporting.": "مكتبة العميل الأساسية الموزعة Stardust. تكامل بسطر واحد لتوزيع التهيئة وتسجيل الخدمات واكتشافها والتتبع وAPM وإرسال السجلات."

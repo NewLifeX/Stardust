@@ -177,7 +177,7 @@
 "[{0}/{1}] logged in at {2}, last active at {3}": "[{0}/{1}]登入於 {2}，最後活躍於 {3}"
 "Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node": "偵測到節點[{0}/{1}]與舊節點[{2}]高度相似，選擇使用舊節點"
 "Stardust service platform": "星塵服務平台"
-"Backend core of the Stardust distributed service platform. Provides core API services for configuration center, registry, service discovery, remote deployment, performance monitoring, and log center, supporting application registration, configuration delivery, metric aggregation, statistics, and task scheduling, and can scale horizontally.": "星塵分散式服務平台後端核心。提供設定中心、註冊中心、服務探索、遠端發佈、效能監控、日誌中心等核心 API 服務，支援應用程式註冊、設定下發、指標彙總、統計計算與工作排程，可橫向擴充。"
+"Backend core of the Stardust distributed service platform. Provides APIs for node management, application center, configuration center, registry and service discovery, monitoring and alerting, release center, gateway and MCP, together with metric aggregation, statistics and scheduled tasks; scales horizontally.": "星塵分散式服務平台後端核心。提供節點管理、應用中心、設定中心、註冊中心與服務探索、監控與告警、發佈中心、閘道與 MCP 等 API，並負責指標聚合、統計計算與任務排程。"
 "Service port. Default 6600.": "服務連接埠。預設6600"
 "Token secret. Algorithm and secret used to generate JWT tokens, e.g. HS256:ABCD1234": "權杖金鑰。用於產生JWT權杖的演算法和金鑰，如HS256:ABCD1234"
 "Token validity period. Default 2*3600 seconds.": "權杖有效期間。預設2*3600秒"
