@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * AppFormDrawer：应用新增/编辑（F12）。
+ * AppFormDrawer：应用新增/编辑。
  * 新建走 POST /Registry/App（返回 data.id）；编辑走 PUT /Registry/App/{id} 部分更新。
  * Secret：列表隐藏、表单可见；新建留空由服务端自动生成，编辑留空=不修改（不提交该字段）。
  * 名称（Name）编辑时只读——它是接入端注册与服务匹配的键。

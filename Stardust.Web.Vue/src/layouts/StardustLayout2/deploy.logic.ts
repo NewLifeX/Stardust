@@ -1,4 +1,4 @@
-// 发布部署收口纯逻辑（FE-3，task-4：F05~F09）。无 Vue 依赖，request 由调用方注入，便于单测。
+// 发布部署收口纯逻辑（版本上传、部署集/节点、流水线等）。无 Vue 依赖，request 由调用方注入，便于单测。
 // 路由契约（Cube/NewLife.Cube/Common/EntityController.cs + ReadOnlyEntityController.cs，2026-11-03 回读源码）：
 //  - 单条：GET  /api/[area]/[controller]/{id}   → { code, data: 实体 }（Detail）
 //  - 新增：POST /api/[area]/[controller]        → JSON 实体体（Insert，body 不带 id）
@@ -32,7 +32,7 @@ function bool(v: unknown): boolean {
   return s === 'true' || s === '1';
 }
 
-/** 提取请求失败的人类可读信息；状态 404/405 识别为「接口部署中」（BE-1 未发布到当前 6681） */
+/** 提取请求失败的人类可读信息；状态 404/405 识别为「接口未部署或未发布到当前 WebApi」 */
 export function requestFailText(e: unknown, fallback: string): string {
   const anyE = e as { status?: unknown; response?: { status?: unknown }; message?: unknown } | null;
   const st = num(anyE?.status) || num(anyE?.response?.status);
@@ -450,7 +450,7 @@ export async function deleteBuildNode(request: Req, id: number): Promise<{ ok: b
   }
 }
 
-// ================= F05 上传新版本（multipart；BE-1 未就绪时给出「接口部署中」） =================
+// ================= 上传部署版本包（multipart POST AppDeployVersion/Upload） =================
 
 /** 上传结果 */
 export interface UploadResult {

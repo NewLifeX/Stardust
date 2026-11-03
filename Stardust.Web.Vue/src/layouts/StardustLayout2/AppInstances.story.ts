@@ -13,7 +13,7 @@ const LIST = {
   ],
 };
 
-// F04-1：Snapshot 的 memory/availableMemory 单位是 MB（189→189MB、5119≈5GB），merge 层转字节
+// Snapshot 的 memory/availableMemory 单位为 MB（189→189MB、5119≈5GB），merge 层转字节
 const SNAPSHOT = {
   code: 0,
   data: [

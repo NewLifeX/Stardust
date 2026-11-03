@@ -46,8 +46,8 @@ test('无趋势数据时不渲染 sparkline', async ({ page }) => {
   await expect(page.locator('[data-spec="app-row-trend"]')).toHaveCount(0);
 });
 
-// F12-1：hover 操作条「编辑」按钮发 edit 事件（Apps.vue 用它开 AppFormDrawer 编辑态）
-test('F12-1 悬浮操作条出现「编辑」按钮，点击发 edit 事件', async ({ page }) => {
+// hover 操作条「编辑」按钮发 edit 事件（Apps.vue 开 AppFormDrawer 编辑态）
+test('悬浮操作条出现「编辑」按钮，点击发 edit 事件', async ({ page }) => {
   await openStory(page, 'AppRow/EditEmit');
   await page.evaluate(() => {
     (window as unknown as { __appRowEvents?: string[] }).__appRowEvents = [];

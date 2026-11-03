@@ -180,7 +180,7 @@ export function servicePutBody(m: ServiceEditModel): Record<string, unknown> {
     Enable: m.enable,
     Extranet: m.extranet,
     Singleton: m.singleton,
-    // F13-1：UseScope 实体是 Boolean，必须发布尔（字符串 "false" 会让后端 Boolean 反序列化失败 code=-2）
+    // UseScope 实体是 Boolean，必须发布尔（字符串 "false" 会让后端 Boolean 反序列化失败）
     UseScope: m.useScope,
     Address: m.address.trim(),
     HealthCheck: m.healthCheck,

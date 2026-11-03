@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * DeployEditDrawer：部署集「编辑」抽屉（F06）。纯 UI + 本地表单状态。
+ * DeployEditDrawer：部署集「编辑」抽屉。纯 UI + 本地表单状态。
  * RepoPassword 永不回显：占位提示「留空不修改」；仅当用户输入新值才随 PUT 提交（deployPutBody 已按此裁剪），
  * 避免把掩码/密文当新密码造成二次加密（后端 Valid 对 "*****" 做还原，但前端空值语义更稳）。
  * 校验在 deploy.logic.validateDeployEdit；真正保存走容器（useDeployData.saveDeployEdit）。

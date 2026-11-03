@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * DeployNodes：发布页「部署节点」，对应 ShipPanel 原模板的第 3 块（2026-10-28 拆分；task-4 F07 扩展）。
+ * DeployNodes：发布页「部署节点」，对应 ShipPanel 原模板的第 3 块（2026-10-28 拆分；含批量远程操作）。
  * 纯 UI：只收 props、只发 operate/batch/create/edit/remove；二次确认（openGuard）与真正下发在容器里。
  * 勾选是本组件内的展示状态：批量栏随勾选出现，批量按钮 emit('batch', action, ids)，容器按 nodes 找名字。
  * 下发中的按钮写「下发中…」，且有操作进行时所有按钮禁用，避免并发下发（AGENTS.md §11）。

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * ConfigItemDrawer：配置项就地编辑/新增（F10）。
+ * ConfigItemDrawer：配置项就地编辑/新增。
  * 编辑态按发布态收窄（源码 ConfigDataController.OnUpdate 语义）：
  *  - 已发布行（published）：Key/Scope/Value 只读，改动写入 NewValue 草稿；Enable 变化才提交（转 NewStatus）；
  *  - 未发布行：Key/Scope/Value 可直接改；

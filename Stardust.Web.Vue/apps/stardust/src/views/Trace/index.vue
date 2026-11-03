@@ -1,5 +1,5 @@
 
-<!-- F14-1（2026-11-03）：本页已退役（死代码保留备查）——/Trace/:id 在 src/main.ts 重定向到契约页 /trace/:traceId（Console/TraceDetail.vue，单值瀑布+多值并列+诊断框）。不再有路由入口，勿再引用。 -->
+<!-- 本页已退役（备查）——/Trace/:id 在 src/main.ts 重定向到契约页 /trace/:traceId（TraceDetail.vue）。不再有路由入口，勿再引用。 -->
 <script setup lang="ts">
 /**
  * Trace/Index — 调用链树（自定义迁移页，根 Area 隐藏页兜底）

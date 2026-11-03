@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * AppQuoteDrawer：/configs「新增/编辑应用依赖」抽屉（F15）。
+ * AppQuoteDrawer：/configs「新增/编辑应用依赖」抽屉。
  * 表单：依赖方/被依赖应用（下拉，来自应用列表）、依赖类型（数字）、启用。
  * 编辑态两个应用 id 都可改（AppQuote 无草稿语义，PUT 全字段）。
  * 校验在视线内（AGENTS.md §11）：错误提示 data-spec app-quote-error。

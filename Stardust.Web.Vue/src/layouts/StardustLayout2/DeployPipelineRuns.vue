@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * DeployPipelineRuns：发布页「流水线运行 · 按节点的部署结果」，对应 ShipPanel 原模板的最后一块（2026-10-28 拆分；task-4 F09 扩展）。
+ * DeployPipelineRuns：发布页「流水线运行 · 按节点的部署结果」，对应 ShipPanel 原模板的最后一块（2026-10-28 拆分；含一键回滚）。
  * 纯 UI：只收 props、只发 select(runId)/rollback；取步骤的请求在 useDeployData，stages 与 view 由容器算好传入。
  * F09 一键回滚：头部按钮，候选版本挑选与 Guard 确认在容器（rollbackCandidates + rollbackNotice）。
  * 格子、四段进度的样式常量在 deployPipeline.styles.ts；图例与选中行都由传入的数据在本组件内推出。

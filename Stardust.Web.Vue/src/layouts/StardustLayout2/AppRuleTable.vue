@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * AppRuleTable：/configs 页「应用规则」区块（F11）。纯 UI + 内部勾选无；收 rows 做表格，
+ * AppRuleTable：/configs 页「应用规则」区块。纯 UI + 内部勾选无；收 rows 做表格，
  * 操作全部 emit 给容器（Configs.vue）发请求：新增/编辑/删除/启停切换。
  * 三态：loading / error+重试 / 空态「还没有应用规则」。空态引导新增。
  */

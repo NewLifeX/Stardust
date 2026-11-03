@@ -15,7 +15,7 @@ function spansOf(traceId: string): Span[] {
 }
 
 async function stubSpans(_req: Req, traceId: string): Promise<Span[] | null> {
-  // F14-1 断言素材：记录每次取数的 traceId（应总是单值——多值由前端拆分逐条请求）
+  // 断言素材：记录每次取数的 traceId（应总是单值——多值由前端拆分逐条请求）
   (window as unknown as { __traceCalls?: string[] }).__traceCalls = (
     window as unknown as { __traceCalls?: string[] }
   ).__traceCalls ?? [];

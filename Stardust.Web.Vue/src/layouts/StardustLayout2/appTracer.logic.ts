@@ -1,4 +1,4 @@
-// 应用工作台「监控中心」页签纯逻辑（F01）。无 Vue 依赖，request 由调用方注入。
+// 应用工作台「监控中心」页签纯逻辑。无 Vue 依赖，request 由调用方注入。
 // 真源（backend-dev 未广播 LOGIN-READY 前，字段以源码为准，登录后 curl 复核）：
 //  - 字段：Stardust.Data/Monitors/应用跟踪器.cs（ID/ProjectId/AppId/Name/DisplayName/Category/
 //    ItemCount/Days/Total/Enable/Mode/Period/MaxSamples/MaxErrors/EnableMeter/WhiteList/Excludes/

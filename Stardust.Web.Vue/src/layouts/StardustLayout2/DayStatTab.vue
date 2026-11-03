@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * DayStatTab：应用工作台「监控大屏」页签（F02）。
+ * DayStatTab：应用工作台「监控大屏」页签。
  * 日统计双图（调用/错误折线 + 耗时）+ 最近 24h 分钟曲线切换 + RetryStat 批量重算。
  * 数据真实接口：GET /api/Monitors/AppDayStat?appId=&dtStart=&dtEnd=、
  *   GET /api/Monitors/AppMinuteStat?appId=&dtStart=&dtEnd=&pageSize=288（只读控制器，最近24h）、

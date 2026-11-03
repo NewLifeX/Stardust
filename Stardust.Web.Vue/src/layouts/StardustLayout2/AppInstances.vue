@@ -3,7 +3,7 @@
  * AppInstances：应用工作台「实例」页签（原型 README §4.3 第 197-200 行）。
  * 纯 UI + 自带三态取数：props 只收 appId；deps.request 是测试缝（默认接 cube-vue request）。
  * 数据源：GET /Registry/AppOnline?appId=（实例列表）+ GET /Registry/AppOnline/Snapshot?appId=
- * （F04 快照：按 clientId 取 AppMeter 最新一条 + 节点可用内存；无性能数据的行仍标「待接入」）。
+ * 快照：GET AppOnline/Snapshot，按 clientId 合并 AppMeter；无性能数据的行仍标「待接入」。
  *
  * F03 批量命令：行首勾选 → 工具条（命令/参数输入 + 执行命令 + 释放内存 + 取消选择）。
  * 「执行命令」GET /Registry/AppOnline/Execute?command=&argument=&keys=（AppOnline.Id 逗号串），

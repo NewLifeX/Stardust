@@ -1,8 +1,8 @@
 <script setup lang="ts">
 /**
- * AppLog：应用工作台「日志」页签（2026-10-29；F17 2026-11-03 改服务端过滤）。
+ * AppLog：应用工作台「日志」页签（级别 chip 走服务端 kind 过滤）。
  * 自包含：只收 appId，内部处理 loading / error / empty 三态，取数经 deps 注入（默认接真实接口）。
- * 数据口径：GET /Registry/AppClientLog?appId=&kind=&dtStart=&dtEnd=（BE-1 ⑤：appId 分表感知必填、
+ * 数据口径：GET /Registry/AppClientLog?appId=&kind=&dtStart=&dtEnd=（appId 分表感知必填、
  * kind 精确匹配 Info/Warn/Error/Fatal、默认当天 00:00 起、SearchSafe 缺表兜底）。
  * 级别 chip 切换=重发服务端请求（kind 精确匹配，Kind 为空/其它值只在「全部」可见——如实展示）。
  * 实时：未暂停时按 intervalMs 轮询；用户在底部附近才跟随滚动，避免打断向上翻看。
@@ -78,7 +78,7 @@ function schedulePoll(): void {
   }, interval);
 }
 
-// F17：级别 chip=服务端 kind 过滤 → 切换时重发请求（不再本地过滤）
+// 级别 chip=服务端 kind 过滤 → 切换时重发请求（不再本地过滤）
 watch(level, () => {
   void load();
 });

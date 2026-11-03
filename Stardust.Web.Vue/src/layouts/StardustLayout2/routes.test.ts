@@ -1,4 +1,4 @@
-// F14/F14-1 路由接线单测：/trace/:traceId? 契约页必须可达；旧 /Trace/:id 只能命名跳转让位。
+// 调用链路由：/trace/:traceId? 契约页必须可达；旧 /Trace/:id 只能命名跳转让位。
 // 关键回归（P1）：必选段 /Trace/:id 在 vue-router 打分上压过可选段 /trace/:traceId?，
 // 若旧记录 redirect 回「路径 /trace/<id>」会再次命中自身 → 无限递归 RangeError 全部深链白屏。
 // 所以本文件用「consoleRoutes + legacyTraceRedirect 全量组合」真实解析，锁死最终 matched 记录。
@@ -16,7 +16,7 @@ function buildRouter() {
   return createRouter({ history: createMemoryHistory(), routes });
 }
 
-describe('F14 /trace 路由契约', () => {
+describe('/trace 路由契约', () => {
   it('/trace/a,b（逗号多值）最终命中 ConsoleTrace 且 params.traceId 原样保留，不落在 /Trace/:id', async () => {
     const router = buildRouter();
     await router.push('/trace/a,b');
@@ -56,7 +56,7 @@ describe('F14 /trace 路由契约', () => {
     expect(router.currentRoute.value.query.id).toBe('old-link');
   });
 
-  it('F14-1 文本守卫：main.ts 不再 import 旧页组件、/Trace/:id 只能来自 routes.ts 的 legacyTraceRedirect', () => {
+  it('文本守卫：main.ts 不再 import 旧页组件、/Trace/:id 只能来自 routes.ts 的 legacyTraceRedirect', () => {
     const main = readFileSync(resolve(fileURLToPath(import.meta.url), '../../../main.ts'), 'utf8');
     // 旧页组件 Trace/index.vue 不得再被 import 进 main.ts
     expect(main).not.toContain('views/Trace/index.vue');
@@ -65,7 +65,7 @@ describe('F14 /trace 路由契约', () => {
     expect(main).toContain('legacyTraceRedirect');
   });
 
-  it('F14-1：旧 MVC 链形态 /trace?id=xxx 由 TraceDetail 的 query.id 兜底（组件层已实现，此处锁约定）', () => {
+  it('旧 MVC 链形态 /trace?id=xxx 由 TraceDetail 的 query.id 兜底', () => {
     const page = readFileSync(resolve(fileURLToPath(import.meta.url), '../../../../apps/stardust/src/views/Console/TraceDetail.vue'), 'utf8');
     expect(page).toContain('query?.id');
   });

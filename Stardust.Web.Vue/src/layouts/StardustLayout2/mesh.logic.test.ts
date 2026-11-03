@@ -379,8 +379,8 @@ describe('F13 toServiceMembers / toServiceEditModel', () => {
     expect(rows[0]).not.toHaveProperty('version');
   });
 
-  it('编辑表单归一大小写；UseScope 是布尔（F13-1）', () => {
-    // F13-1：后端实体的 UseScope 是 Boolean；字符串 "prod"/"false" 一律归一为布尔
+  it('编辑表单归一大小写；UseScope 是布尔', () => {
+    // 后端实体的 UseScope 是 Boolean；字符串 "prod"/"false" 一律归一为布尔
     const m = toServiceEditModel({ DisplayName: '网关', Category: 'Web', Enable: true, Extranet: false, Singleton: true, UseScope: true, Address: 'tcp://x', HealthCheck: true, Remark: 'r' });
     expect(m).toEqual({ displayName: '网关', category: 'Web', enable: true, extranet: false, singleton: true, useScope: true, address: 'tcp://x', healthCheck: true, remark: 'r' });
     // 字符串形态（历史数据/JSON）也归一为布尔，不透传字符串
@@ -390,11 +390,11 @@ describe('F13 toServiceMembers / toServiceEditModel', () => {
     expect(m3.useScope).toBe(true);
   });
 
-  it('PUT body 全字段且布尔字段全为 Boolean 类型（F13-1 回归）；显示名必填校验', () => {
+  it('PUT body 全字段且布尔字段全为 Boolean 类型；显示名必填校验', () => {
     const m = toServiceEditModel({ DisplayName: ' 网关 ', Category: 'Web', Enable: true, Extranet: false, Singleton: false, UseScope: true, Address: 'tcp://x ', HealthCheck: true, Remark: '' });
     const body = servicePutBody(m);
     expect(body).toEqual({ DisplayName: '网关', Category: 'Web', Enable: true, Extranet: false, Singleton: false, UseScope: true, Address: 'tcp://x', HealthCheck: true, Remark: '' });
-    // F13-1：Enable/Extranet/Singleton/UseScope/HealthCheck 必须全是 boolean，不得是字符串
+    // Enable/Extranet/Singleton/UseScope/HealthCheck 必须全是 boolean，不得是字符串
     for (const k of ['Enable', 'Extranet', 'Singleton', 'UseScope', 'HealthCheck']) {
       expect(typeof body[k]).toBe('boolean');
     }

@@ -108,16 +108,16 @@ describe('F04 fetchSnapshots / mergeSnapshots / cpuText', () => {
     const rows: InstanceRow[] = [{ id: 11, nodeId: 7, node: 'node-a', ip: '10.0.0.1', client: 'c1', version: '1.0', longLink: true }];
     const snaps = new Map([[11, toSnapshot({ id: 11, online: false, cpu: 55.55, memory: 4096, availableMemory: 8192, threads: 9, connections: 3, updateTime: '2026-11-03T10:00:00' })]]);
     const merged = mergeSnapshots(rows, snaps);
-    // F04-1：Snapshot 的 memory/availableMemory 单位是 MB，merge 转成字节（4096MB→4GiB）
+    // Snapshot 的 memory/availableMemory 单位为 MB，merge 转成字节（4096MB→4GiB）
     expect(merged[0]).toMatchObject({ online: false, cpu: 55.55, memory: 4096 * 1024 * 1024, updateTimeText: '2026-11-03 10:00' });
     const merged2 = mergeSnapshots(rows, null);
     expect(merged2[0]).toMatchObject({ online: true, cpu: null, memory: null, updateTimeText: '' });
   });
 
-  it('F04-1 内存单位：MB 转字节后 formatBytes 显示 189 MB / 5.0 GB', async () => {
+  it('内存单位：MB 转字节后 formatBytes 显示 189 MB / 5.0 GB', async () => {
     const { formatBytes } = await import('./appObserve.logic');
     const rows: InstanceRow[] = [{ id: 21, nodeId: 7, node: 'n', ip: '10.0.0.9', client: 'c', version: '', longLink: false }];
-    // verifier 实锤：memory=189（MB）、availableMemory=5119（MB≈5GB），此前被当字节显示成「189 B」
+    // memory=189（MB）、availableMemory=5119（MB≈5GB）；若误当字节会显示成「189 B」
     const snaps = new Map([[21, toSnapshot({ id: 21, online: true, cpu: 3, memory: 189, availableMemory: 5119, threads: 8, connections: 1, updateTime: '2026-11-03T10:00:00' })]]);
     const merged = mergeSnapshots(rows, snaps)[0];
     expect(formatBytes(merged.memory as number)).toBe('189 MB');

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * ServiceDetailDrawer：服务详情（F13）。三段：Service 编辑表单（PUT /Registry/Service/{id}
+ * ServiceDetailDrawer：服务详情。三段：Service 编辑表单（PUT /Registry/Service/{id}
  * 部分更新）+ 提供者表（/Registry/AppService?serviceId=）+ 消费者表（/Registry/AppConsume?serviceId=）。
  * 详情取数由容器做（失败显示加载失败）；表单校验 inline；保存中禁用（§11）。
  */

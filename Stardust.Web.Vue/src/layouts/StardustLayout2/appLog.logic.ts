@@ -1,6 +1,6 @@
 // 日志页签纯逻辑（无 Vue 依赖，request 由调用方注入，便于单测）。
 // 真实数据来源：GET /Registry/AppClientLog?appId=&kind=&dtStart=&dtEnd=&Q=
-// F17（2026-11-03，BE-1 ⑤ 已上线）：服务端支持 appId（分表感知必填）/clientId/threadId/kind 过滤，
+// 应用客户端日志：服务端 Search 支持 appId（分表感知必填）/clientId/threadId/kind 过滤，
 // dtStart/dtEnd 均空时默认当天 00:00 起；缺表环境返回空数据（SearchSafe 兜底）。
 // kind 服务端是精确匹配（_.Kind == kind，Biz 注释：Info/Warn/Error/Fatal）→ 级别 chip 改服务端过滤，
 // chip 值映射 Error/Warn/Info/Debug；Kind 为空或其它值（如 Fatal）只在「全部」下可见（UI 不隐藏事实）。
@@ -114,7 +114,7 @@ export function kindParam(level: 'all' | LogLevel): string | undefined {
 
 /**
  * GET /Registry/AppClientLog?appId=&kind=&dtStart=&dtEnd=
- * F17：appId/kind 服务端过滤（appId 是分表感知必填）；时间窗默认当天。
+ * appId/kind 服务端过滤（appId 是分表感知必填）；时间窗默认当天。
  * 失败返回 null。
  */
 export async function fetchAppLogs(

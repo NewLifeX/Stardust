@@ -39,7 +39,7 @@ test('F14 输入框多值查询（无路由环境本地查询）', async ({ page
   await expect(page.locator('[data-spec="trace-back"]')).toBeVisible();
 });
 
-test('F14-1 多值逐条请求：/trace/a,b 语义=两次单 id 请求（不整串直传）', async ({ page }) => {
+test('多值逐条请求：/trace/a,b 为两次单 id 请求（不整串直传）', async ({ page }) => {
   await openStory(page, 'TraceDetail/Multi');
   await expect(page.locator('[data-spec="trace-unit"]')).toHaveCount(2);
   const calls = await page.evaluate(() => (window as unknown as { __traceCalls?: string[] }).__traceCalls ?? []);

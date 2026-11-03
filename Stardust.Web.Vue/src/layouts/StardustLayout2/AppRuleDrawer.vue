@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * AppRuleDrawer：应用规则新增/编辑（F11）。AppRule 是全局规则表（无 AppId 列），
+ * AppRuleDrawer：应用规则新增/编辑。AppRule 是全局规则表（无 AppId 列），
  * 规则表达式分号分段（IP=10.*,172.*;LocalIP=192.*），命中结果如 Scope=dev。
  * 校验 inline；保存中禁用（§11）。
  */

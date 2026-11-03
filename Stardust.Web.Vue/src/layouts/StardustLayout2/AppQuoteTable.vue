@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * AppQuoteTable：/configs「应用依赖」区块表格（F15）。
+ * AppQuoteTable：/configs「应用依赖」区块表格。
  * 纯展示三态（loading/failed/empty）+ 行操作 emit（create/edit/remove），
  * 行内应用名由逻辑层按 appId→应用名映射注入；AppQuote.Kind 实体无枚举，原样展示数字。
  */

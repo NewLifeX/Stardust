@@ -24,12 +24,12 @@ export const consoleRoutes: ConfigRoute[] = [
   { path: '/mesh', name: 'ConsoleMesh', component: Mesh, meta: { auth: true, title: '治理' } },
   { path: '/configs', name: 'ConsoleConfigs', component: Configs, meta: { auth: true, title: '配置中心' } },
   { path: '/alarms', name: 'ConsoleAlarms', component: Alarms, meta: { auth: true, title: '告警中心' } },
-  // F14：全局调用链页（参数可含逗号多值；?id= 旧 MVC 链接也落到这页，页面侧兼容）
+  // 全局调用链页（参数可含逗号多值；?id= 旧 MVC 链接也落到这页，页面侧兼容）
   { path: '/trace/:traceId?', name: 'ConsoleTrace', component: TraceDetail, meta: { auth: true, title: '链路详情' } },
 ];
 
 /**
- * F14-1 旧调用链隐藏页路由的让位声明（main.ts 里随 externalRoutes 并入）。
+ * 旧调用链隐藏页路由的让位声明（main.ts 里随 externalRoutes 并入）。
  *
  * 旧页 /Trace/<id>（apps/stardust/src/views/Trace/index.vue）已退役：/trace 统一由契约页
  * ConsoleTrace（Console/TraceDetail.vue）承载（单值瀑布 + 逗号多值并列 + 诊断框）。

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * AppTracerTab：应用工作台「监控中心」页签（F01）。
+ * AppTracerTab：应用工作台「监控中心」页签。
  * 列表 + 编辑 Drawer + 删除 + 批量修正 Fix / FixOldData；无跟踪器时空态引导。
  * 数据真实接口：GET /api/Monitors/AppTracer?appId=（后端在 appId 有效但无跟踪器时会自动补建）。
  * 行为真源见 appTracer.logic.ts 头注释（AppTracerController.cs：SelectKeys=GetRequest("Keys") 逗号串）。

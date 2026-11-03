@@ -2,7 +2,7 @@
 // 数据源（已读后端控制器与实体确认）：
 //  - 在线实例：GET /Registry/AppOnline?appId=  （AppOnlineController.Search 支持 appId 过滤；
 //      列表带 Map 出来的 NodeName 字段）
-//  - F04 实例快照：GET /Registry/AppOnline/Snapshot?appId=（BE-1 ①，2026-11-03 回读控制器）：
+//  - 实例快照：GET /Registry/AppOnline/Snapshot?appId=（AppMeter 最新一条，字段 camelCase）：
 //      每行按 clientId 取 AppMeter 最新一条 + 节点 NodeOnline.AvailableMemory；
 //      cpu/memory/threads/connections/updateTime 无性能数据时为 null（不造 0）；online 由
 //      服务端按会话超时判定。camelCase 字段。
@@ -140,7 +140,7 @@ export async function fetchSnapshots(request: Req, appId: number): Promise<Map<n
   }
 }
 
-/** MB → 字节（Snapshot 的 memory/availableMemory 单位是 MB，F04-1：转成字节再走 formatBytes） */
+/** MB → 字节（Snapshot 的 memory/availableMemory 单位为 MB，合并后统一走 formatBytes） */
 export function mbToBytes(mb: number | null): number | null {
   if (mb === null || !Number.isFinite(mb)) return null;
   return Math.round(mb * 1024 * 1024);
@@ -167,7 +167,7 @@ export function mergeSnapshots(rows: InstanceRow[], snaps: Map<number, InstanceS
       ...r,
       online: s ? s.online : true,
       cpu: s ? s.cpu : null,
-      // F04-1：Snapshot memory/availableMemory 单位是 MB（verifier 实锤 189→189MB、5119≈5GB），
+      // Snapshot memory/availableMemory 单位为 MB（例如 189→「189 MB」、5119→约 5 GB），
       // 在数据层统一转字节，展示层继续用 formatBytes
       memory: s ? mbToBytes(s.memory) : null,
       availableMemory: s ? mbToBytes(s.availableMemory) : null,

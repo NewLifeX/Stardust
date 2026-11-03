@@ -400,7 +400,7 @@ describe('F15 validateAppQuoteForm / appQuoteBody', () => {
     expect(validateAppQuoteForm({ appId: 7, targetAppId: 9, kind: 0, enable: true })).toBe('');
   });
 
-  it('body 为 PascalCase 全字段（Enable 真布尔，F13-1 同规）', () => {
+  it('body 为 PascalCase 全字段（Enable 等为原生布尔）', () => {
     expect(appQuoteBody({ appId: 7, targetAppId: 9, kind: 1, enable: true })).toEqual({
       AppId: 7, TargetAppId: 9, Kind: 1, Enable: true,
     });

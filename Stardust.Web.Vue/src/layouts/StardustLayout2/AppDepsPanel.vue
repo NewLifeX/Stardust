@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * AppDepsPanel：应用工作台「配置」页签的上下游依赖面板（F15）。
+ * AppDepsPanel：应用工作台「配置」页签的上下游依赖面板。
  * 读同一接口 GET /Configs/AppQuote：appId=本应用 → 上游（本应用依赖谁）；
  * targetAppId=本应用 → 下游（谁依赖本应用）。只读展示，CRUD 在 /configs 页。
  * 应用名经 fetchAppList 建 id→名映射；取数失败独立三态，不拖垮配置表。
