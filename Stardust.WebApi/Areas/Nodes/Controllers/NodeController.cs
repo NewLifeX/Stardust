@@ -233,6 +233,31 @@ public class NodeController : NodesEntityController<Node>
         return JsonRefresh("操作成功！");
     }
 
+    /// <summary>框架推荐。按节点环境推荐 .NET 运行时，安装走 NodeFramework/InstallFramework</summary>
+    /// <param name="id">节点ID</param>
+    /// <returns></returns>
+    [EntityAuthorize(PermissionFlags.Update)]
+    public ActionResult FrameworkRecommend(Int32 id)
+    {
+        var node = Node.FindByID(id);
+        if (node == null) return Json(500, L.T("Node does not exist."));
+
+        var recs = DotNetPackage.GetRecommendations(node);
+
+        return Json(0, null, new
+        {
+            node = new { node.ID, node.Name, node.Code, node.Framework, node.OSKind, node.Architecture },
+            recommendations = recs.Select(e => new
+            {
+                e.Package.Version,
+                e.Package.Kind,
+                e.Package.OSKind,
+                e.Package.Architecture,
+                e.Label,
+            }).ToArray(),
+        });
+    }
+
     /// <summary>刷新DNS。触发指定节点的动态域名解析更新</summary>
     /// <param name="id">节点ID</param>
     /// <returns></returns>

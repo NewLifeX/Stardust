@@ -1,10 +1,12 @@
 using System.ComponentModel;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Log;
+using Stardust;
 using Stardust.Models;
 
 namespace Stardust.Web.Areas.Nodes.Controllers;
@@ -16,13 +18,25 @@ namespace Stardust.Web.Areas.Nodes.Controllers;
 public class AgentDeployController : ControllerBaseX
 {
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly StarFactory _starFactory;
     private readonly ITracer _tracer;
 
     /// <summary>实例化</summary>
-    public AgentDeployController(IHttpClientFactory httpClientFactory, ITracer tracer)
+    public AgentDeployController(IHttpClientFactory httpClientFactory, StarFactory starFactory, ITracer tracer)
     {
         _httpClientFactory = httpClientFactory;
+        _starFactory = starFactory;
         _tracer = tracer;
+    }
+
+    /// <summary>部署面板首屏默认值。对齐 MVC Index 下发的 ServerUrl/DownloadUrl</summary>
+    /// <returns></returns>
+    public ActionResult Index()
+    {
+        // 获取服务器地址
+        var serverUrl = $"http://{Request.Host}";
+
+        return Json(0, null, new { serverUrl, downloadUrl = "http://x.newlifex.com/star/" });
     }
 
     /// <summary>执行部署</summary>
@@ -40,8 +54,11 @@ public class AgentDeployController : ControllerBaseX
 
             if (executeOn.EqualIgnoreCase("server"))
             {
-                // 调用StarServer接口
+                // 调用StarServer接口，附加应用令牌（Server端AgentDeploy已要求鉴权，安全V-3）
                 var httpClient = _httpClientFactory.CreateClient();
+                var token = _starFactory?.Client?.Token;
+                if (!token.IsNullOrEmpty())
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
                 var serverUrl = $"http://{Request.Host}";
 
                 var json = JsonSerializer.Serialize(model);
@@ -56,10 +73,10 @@ public class AgentDeployController : ControllerBaseX
             else
             {
                 // StarWeb本地执行（暂不支持，返回错误）
-                return Json(500, "StarWeb本地执行功能暂未实现，请选择StarServer执行");
+                return Json(500, L.T("Local execution in StarWeb is not implemented; use StarServer instead."));
             }
 
-            return Json(0, "部署完成", results);
+            return Json(0, L.T("Deployment completed."), results);
         }
         catch (Exception ex)
         {
@@ -86,8 +103,11 @@ public class AgentDeployController : ControllerBaseX
 
             if (executeOn.EqualIgnoreCase("server"))
             {
-                // 调用StarServer接口
+                // 调用StarServer接口，附加应用令牌（Server端AgentDeploy已要求鉴权，安全V-3）
                 var httpClient = _httpClientFactory.CreateClient();
+                var token = _starFactory?.Client?.Token;
+                if (!token.IsNullOrEmpty())
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
                 var serverUrl = $"http://{Request.Host}";
 
                 var param = new { host, port, userName, password };
