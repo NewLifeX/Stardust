@@ -155,7 +155,8 @@ public partial class AlarmRecord : Entity<AlarmRecord>
     public static IList<AlarmRecord> SearchGroupCategory(DateTime start, DateTime end)
     {
         var selects = _.Times.Sum() & _.Id.Count() & _.Category;
-        var where = new WhereExpression() & _.StartTime.Between(start, end);
+        // 主键Id为雪花时间片，走主键索引；StartTime 没有索引，直接按它过滤会全表扫描
+        var where = new WhereExpression() & _.Id.Between(start, end, Meta.Factory.Snow);
 
         return FindAll(where.GroupBy(_.Category), null, selects);
     }
