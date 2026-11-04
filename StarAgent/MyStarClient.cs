@@ -260,6 +260,10 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
             {
                 this.WriteInfoEvent("Upgrade", L.T("Forced update completed; the new process has been launched, waiting for the current service to restart."));
             }
+            else if (TryRestartService(upgrade))
+            {
+                // 服务管理器重启不依赖可执行文件名，是名称解析失败时的兜底通道
+            }
             else
             {
                 // 两次均失败，确认新版有致命缺陷，回滚 .del 恢复旧版文件
@@ -289,6 +293,10 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
 
                 upgrade.KillSelf();
             }
+            else if (TryRestartService(upgrade))
+            {
+                // 进程模式下拉起失败时，若本机存在后台服务，改由服务管理器重启
+            }
             else
             {
                 // 两次均失败，确认新版有致命缺陷，回滚 .del 恢复旧版文件
@@ -298,11 +306,54 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
         }
     }
 
+    /// <summary>兜底重启服务</summary>
+    /// <remarks>
+    /// 更新已经把新文件覆盖到位（旧文件改名为 .del），此时拉起新进程失败多半是名称/路径解析问题，
+    /// 由服务管理器重启不依赖可执行文件名，能直接把服务切到新版本。
+    /// 只在目标目录确实存在新主程序时才尝试，避免新版文件残缺导致服务反复拉起失败。
+    /// </remarks>
+    /// <param name="upgrade">升级对象</param>
+    /// <returns>是否已交给服务管理器重启</returns>
+    private Boolean TryRestartService(Upgrade upgrade)
+    {
+        try
+        {
+            var name = GetExecutableName();
+            var dest = upgrade.DestinationPath;
+            if (dest.IsNullOrEmpty()) return false;
+
+            var exe = Path.Combine(dest, name + ".exe");
+            var dll = Path.Combine(dest, name + ".dll");
+            if (!File.Exists(exe) && !File.Exists(dll)) return false;
+
+            var host = Service?.Host;
+            if (host == null) return false;
+
+            this.WriteInfoEvent("Upgrade", L.T("Failed to launch the new process; falling back to restarting the background service. {0}", upgrade.LastErrorMessage));
+            WriteLog("Fallback: restart service {0}", Service.ServiceName);
+
+            host.Restart(Service.ServiceName);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            this.WriteInfoEvent("Upgrade", L.T("Failed to restart the background service: {0}", ex.Message));
+            return false;
+        }
+    }
+
     /// <summary>获取当前进程可执行文件名（不含扩展名），支持重命名场景。dotnet/mono 宿主下返回真正目标程序集名</summary>
+    /// <remarks>
+    /// 升级过程会把正在使用的 exe/dll 改名为 *.del，此后 <see cref="Process.ProcessName"/> 会带上 .del 后缀
+    /// （实测为 StarAgent.exe.del），据此拼路径得到 StarAgent.exe.del.exe，必然找不到文件，导致升级完成后无法拉起新进程。
+    /// 入口程序集名是编译期确定的，与磁盘文件改名无关，故优先使用，进程名仅作兜底。
+    /// </remarks>
     private static String GetExecutableName()
     {
-        // 获取进程名（不含扩展名），再防御性清理可能混入的后缀
-        var name = Process.GetCurrentProcess().GetProcessName() ?? "StarAgent";
+        var name = Assembly.GetEntryAssembly()?.GetName().Name;
+        if (name.IsNullOrEmpty()) name = Process.GetCurrentProcess().GetProcessName();
+        if (name.IsNullOrEmpty()) return "StarAgent";
+
         return name.TrimSuffix(".exe", ".dll", ".del");
     }
 
