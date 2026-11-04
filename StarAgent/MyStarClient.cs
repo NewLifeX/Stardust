@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using NewLife;
 using NewLife.Agent;
@@ -177,6 +178,53 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
         if (channel.IsNullOrEmpty()) channel = AgentSetting.Channel;
 
         return base.Upgrade(channel, cancellationToken);
+    }
+
+    /// <summary>向服务端查询升级信息。在基类纯查询前后输出本地版本、服务端返回与对比结论，让日志能直接回答「要不要更新」</summary>
+    /// <remarks>周期轮询与 node/upgrade 命令两条路径都经由 Upgrade→UpgradeAsync，此处一处覆盖。下载/覆盖/回滚仍由基类 Upgrade 处理，不受影响。</remarks>
+    /// <param name="channel">更新通道</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>服务端升级信息，无更新时为空</returns>
+    protected override async Task<IUpgradeInfo?> UpgradeAsync(String? channel, CancellationToken cancellationToken = default)
+    {
+        var local = GetLocalVersion();
+        WriteLog("升级检查：本地版本={0}，通道={1}，正在查询服务端……", local, channel);
+
+        var info = await base.UpgradeAsync(channel, cancellationToken);
+        if (info == null || info.Version.IsNullOrEmpty())
+        {
+            WriteLog("升级检查结论：服务端无可用更新（本地版本={0}，通道={1}）。如预期应有更新，请到平台核对「产品版本/发布包」：是否启用、通道是否匹配、产品编码是否一致、发布包目标运行时是否匹配节点运行时", local, channel);
+            return info;
+        }
+
+        var same = info.Version.EqualIgnoreCase(local);
+        if (info is UpgradeInfo ui)
+            WriteLog("升级检查结论：服务端最新版本={0}，本地版本={1}，{2}。Source={3}，大小={4}，MD5={5}，Force={6}",
+                info.Version, local,
+                same ? "版本相同，无需更新" : "需要更新，准备下载",
+                info.Source, ui.FileSize, info.FileHash, ui.Force);
+        else
+            WriteLog("升级检查结论：服务端最新版本={0}，本地版本={1}，{2}。Source={3}，MD5={4}",
+                info.Version, local,
+                same ? "版本相同，无需更新" : "需要更新，准备下载",
+                info.Source, info.FileHash);
+
+        return info;
+    }
+
+    private String? _localVersion;
+    /// <summary>本地版本。取主程序集文件版本（如 3.7.2026.1103），与节点登录上报及平台「产品版本」的 Version 同源</summary>
+    /// <returns></returns>
+    private String GetLocalVersion()
+    {
+        if (_localVersion.IsNullOrEmpty())
+        {
+            var asm = typeof(MyStarClient).Assembly;
+            _localVersion = asm.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version
+                ?? asm.GetName().Version?.ToString();
+        }
+
+        return _localVersion!;
     }
 
     protected override void Restart(Upgrade upgrade)
