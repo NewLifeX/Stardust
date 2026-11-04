@@ -251,7 +251,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
         var target = App.FindByName(code) ?? throw new ArgumentOutOfRangeException(nameof(model.Code), L.T("Invalid application."));
 
         var app = Context.Device as App;
-        if (app == null) throw new ApiException(ApiCode.Unauthorized, L.T("No permission to perform this operation."));
+        if (app == null) throw new ApiException(ApiCode.Unauthorized, L.T("The current connection has no valid application identity. Application commands require an application token."));
 
         // 安全V-2：未配置密钥的应用可被匿名冒用，禁止其向其它应用下发控制命令
         if (app.Secret.IsNullOrEmpty())
@@ -263,7 +263,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
                 throw new ApiException(ApiCode.Forbidden, L.T("[{0}] is not allowed to operate application [{1}].\nFor security, applications cannot send control commands to other applications by default.\nIn the registry, edit the controllable nodes of [{0}], add [{2}], or set it to * for all applications.", app, target, target.Name));
         }
         else if (!setting.AllowControlNodesWhenEmpty)
-            throw new ApiException(ApiCode.Unauthorized, L.T("No permission to perform this operation."));
+            throw new ApiException(ApiCode.Forbidden, L.T("[{0}] has no controllable nodes configured.\nFor security, applications cannot send control commands to other applications by default.\nIn the registry, edit the controllable nodes of [{0}], add [{1}], or set it to * for all applications. Internal environments may set AllowControlNodesWhenEmpty=true to allow apps without explicit nodes.", app, target.Name));
 
         return registryService.SendCommand(target, clientId, model, app + "");
     }

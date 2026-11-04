@@ -870,7 +870,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         if (ex != null) throw ex;
 
         var app = App.FindByName(jwt?.Subject);
-        if (app == null) throw new ApiException(ApiCode.Unauthorized, L.T("No permission to perform this operation."));
+        if (app == null) throw new ApiException(ApiCode.Unauthorized, L.T("The application [{0}] carried by the token does not exist. Check that the application exists and is enabled in the registry.", jwt?.Subject + ""));
 
         // 安全V-2：未配置密钥的应用（如种子StarWeb）可被匿名冒用登录，禁止其向节点下发命令，防止全节点RCE
         if (app.Secret.IsNullOrEmpty())
@@ -882,7 +882,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
                 throw new ApiException(ApiCode.Forbidden, L.T("[{0}] is not allowed to operate node [{1}].\nFor security, applications cannot send control commands to arbitrary nodes by default.\nIn the registry, edit the controllable nodes of [{0}], add [{2}], or set it to * for all nodes.", app, node, node.Code));
         }
         else if (!_setting.AllowControlNodesWhenEmpty)
-            throw new ApiException(ApiCode.Unauthorized, L.T("No permission to perform this operation."));
+            throw new ApiException(ApiCode.Forbidden, L.T("[{0}] has no controllable nodes configured.\nFor security, applications cannot send control commands to arbitrary nodes by default.\nIn the registry, edit the controllable nodes of [{0}], add [{1}], or set it to * for all nodes. Internal environments may set AllowControlNodesWhenEmpty=true to allow apps without explicit nodes.", app, node.Code));
 
         return SendCommand(node, model, app + "", cancellationToken);
     }
