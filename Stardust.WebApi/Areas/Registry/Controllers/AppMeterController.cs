@@ -34,6 +34,7 @@ public class AppMeterController : RegistryEntityController<AppMeter>
     /// <returns>实体列表</returns>
     protected override IEnumerable<AppMeter> Search(Pager p)
     {
+        PageSetting.EnableAdd = false;
         // 纯 API 无视图，原 MVC 图表(ECharts)已删除
 
         var appId = p["appId"].ToInt(-1);

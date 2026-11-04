@@ -40,6 +40,7 @@ public class AppServiceController : RegistryEntityController<AppService>
     /// <returns>实体列表</returns>
     protected override IEnumerable<AppService> Search(Pager p)
     {
+        PageSetting.EnableAdd = false;
         //PageSetting.EnableNavbar = false;
 
         var appId = p["appId"].ToInt(-1);
