@@ -268,7 +268,7 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
             {
                 // 两次均失败，确认新版有致命缺陷，回滚 .del 恢复旧版文件
                 upgrade.Rollback();
-                this.WriteInfoEvent("Upgrade", L.T("The new version failed to start (smoke test failed); the old files have been rolled back and the current service keeps running. {0}", upgrade.LastErrorMessage));
+                this.WriteErrorEvent("Upgrade", L.T("The new version failed to start (smoke test failed); the old files have been rolled back and the current service keeps running. {0}", upgrade.LastErrorMessage));
             }
         }
         else
@@ -301,7 +301,7 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
             {
                 // 两次均失败，确认新版有致命缺陷，回滚 .del 恢复旧版文件
                 upgrade.Rollback();
-                this.WriteInfoEvent("Upgrade", L.T("The new version failed to start (smoke test failed); the old files have been rolled back and the current service keeps running. {0}", upgrade.LastErrorMessage));
+                this.WriteErrorEvent("Upgrade", L.T("The new version failed to start (smoke test failed); the old files have been rolled back and the current service keeps running. {0}", upgrade.LastErrorMessage));
             }
         }
     }
