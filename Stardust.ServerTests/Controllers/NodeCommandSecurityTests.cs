@@ -71,6 +71,39 @@ public class NodeCommandSecurityTests : StarTestBase
         }
     }
 
+    [Fact(DisplayName = "未配置可控节点的应用下发节点命令返回403及可行动提示")]
+    public async Task EmptyAllowControlNodes_Returns403WithActionableMessage()
+    {
+        var appName = "v2acl_" + Rand.NextString(8);
+        var node = new Node { Code = "n_" + Rand.NextString(8), Name = "v2aclnode", Enable = true };
+        node.Insert();
+        var app = new App { Name = appName, Secret = "v2-secret", Enable = true, AllowControlNodes = "" };
+        app.Insert();
+        var setting = _server.Services.GetService(typeof(StarServerSetting)) as StarServerSetting;
+        var old = setting?.AllowControlNodesWhenEmpty ?? false;
+        if (setting != null) setting.AllowControlNodesWhenEmpty = false;
+        try
+        {
+            var rs = await AppLoginAsync(appName, "v2-secret");
+            Assert.NotNull(rs?.Token);
+
+            var body = await SendNodeCommandAsync(rs.Token, node.Code);
+
+            // 权限拒绝必须返回 403（禁止访问），不能是 401（认证失败，会诱导客户端重新登录）
+            Assert.Contains("403", body);
+            // 提示必须可行动：写明应用、目标节点与配置路径（注册中心可控节点），而不是笼统的「无权操作」
+            Assert.Contains(appName, body);
+            Assert.Contains(node.Code, body);
+            Assert.Contains("可控节点", body);
+        }
+        finally
+        {
+            if (setting != null) setting.AllowControlNodesWhenEmpty = old;
+            app.Delete();
+            node.Delete();
+        }
+    }
+
     [Fact(DisplayName = "已配置密钥且ACL允许的应用可正常下发节点命令（回归保护）")]
     public async Task AppWithSecret_CanSendNodeCommand()
     {

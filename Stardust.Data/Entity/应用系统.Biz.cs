@@ -81,8 +81,9 @@ public partial class App : Entity<App>, IDeviceModel2, ILogProvider
     {
         if (Meta.Count > 0) return;
 
-        // 种子应用开启"临时放行"重注册模式：全新库首次登录时本地实例（StarServer/StarWeb）密钥未知，
-        // 需借窗口自动收敛拿到密钥；首登成功后 OnLogin 自动关窗，未收敛的窗口由 AppSecurityService 兜底清理
+        // 种子应用开启"临时放行"重注册模式：全新库首次登录时本地实例（StarServer/StarWeb/StarWebApi）密钥未知，
+        // 需借窗口自动收敛拿到密钥；首登成功后 OnLogin 自动关窗，未收敛的窗口由 AppSecurityService 兜底清理。
+        // StarWebApi 是控制台节点/应用命令的 RPC 调用方（AppDeployNode/Operate 等），可控节点必须默认放行，否则部署操作报无权
         var entity = new App
         {
             Name = "StarServer",
@@ -94,6 +95,16 @@ public partial class App : Entity<App>, IDeviceModel2, ILogProvider
         entity = new App
         {
             Name = "StarWeb",
+            Enable = true,
+            ReRegister = ReRegisterModes.Temporary,
+            AllowControlNodes = "*",
+        };
+        entity.Insert();
+
+        entity = new App
+        {
+            Name = "StarWebApi",
+            DisplayName = "Stardust management API",
             Enable = true,
             ReRegister = ReRegisterModes.Temporary,
             AllowControlNodes = "*",
