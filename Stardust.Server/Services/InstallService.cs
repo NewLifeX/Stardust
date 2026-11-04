@@ -215,9 +215,11 @@ public class InstallService
     /// <returns>脚本内容</returns>
     private static String BuildBootstrapScript(OSKind os, String? runtime, String? version, String server)
     {
-        var url = server.TrimEnd('/') + (os == OSKind.Windows ? "/install.ps1?os=windows" : "/install.sh?os=linux");
-        if (!runtime.IsNullOrEmpty()) url += "&runtime=" + runtime;
-        if (!version.IsNullOrEmpty()) url += "&version=" + version;
+        // 平台由 .ps1/.sh 区分，无需 os 参数；arch 留空交给脚本自检后回填
+        var url = server.TrimEnd('/') + (os == OSKind.Windows ? "/install.ps1" : "/install.sh") + "?";
+        if (!runtime.IsNullOrEmpty()) url += "runtime=" + runtime + "&";
+        if (!version.IsNullOrEmpty()) url += "version=" + version + "&";
+        url += "arch=";
 
         if (os == OSKind.Windows)
         {
@@ -226,7 +228,7 @@ public class InstallService
 $ErrorActionPreference = "Stop"
 $arch = if ($env:PROCESSOR_ARCHITECTURE -match 'ARM64') { 'arm64' } else { 'x64' }
 Write-Host "检测到架构：$arch"
-$script = (Invoke-WebRequest -Uri '{{url}}&arch=' + $arch -UseBasicParsing).Content
+$script = (Invoke-WebRequest -Uri ('{{url}}' + $arch) -UseBasicParsing).Content
 Invoke-Expression $script
 """;
         }
@@ -244,7 +246,7 @@ case "$ARCH" in
     *) ARCH=x64 ;;
 esac
 echo "检测到架构：$ARCH"
-curl -fsSL '{{url}}&arch='"$ARCH" | bash
+curl -fsSL '{{url}}'"$ARCH" | bash
 """;
     }
 

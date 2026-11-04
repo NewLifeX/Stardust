@@ -35,8 +35,8 @@ StarServer 根路径 `/` 是**平台门户**：上方展示节点/应用在线�
 | `GET /` | 安装引导页。`Accept: application/json` 或 `?format=json` 时返回清单 |
 | `GET /home/summary` | 平台概览：在线/总节点、在线/总应用、今日与昨日调用、错误率、版本、运行时长、近7天趋势 |
 | `GET /install` | 安装清单 JSON：`server`、`versions[]`、`runtimes[]`、`mirror[]` |
-| `GET /install.sh?os=linux&arch=x64&runtime=10&version=` | bash 脚本，含服务端地址、包地址与校验；**省略 `arch` 时下发自检脚本** |
-| `GET /install.ps1?os=windows&arch=x64` | PowerShell 脚本 |
+| `GET /install.sh?arch=x64&runtime=10&version=` | bash 脚本，含服务端地址、包地址与校验；**省略 `arch` 时下发自检脚本** |
+| `GET /install.ps1?arch=x64` | PowerShell 脚本；平台由 `.ps1`/`.sh` 扩展名区分，无需 `os` 参数 |
 | `GET /install/download/{kind}/{id}` | `kind` 取 `agent`/`runtime`，只放行启用版本下的安装包，现场签发短时令牌后 302 |
 | `GET /install/leaf.png`、`GET /favicon.ico` | 品牌四叶草图标（嵌入资源 `Resources/leaf.png`，缓存一天） |
 

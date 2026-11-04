@@ -38,13 +38,12 @@ public class InstallController : ControllerBase
     }
 
     /// <summary>Linux 安装脚本</summary>
-    /// <param name="os">目标系统，固定 linux</param>
     /// <param name="arch">目标架构</param>
     /// <param name="runtime">.NET 主版本号，为空不限制</param>
     /// <param name="version">StarAgent 版本，为空取最新</param>
     /// <returns>可直接执行的 bash 脚本</returns>
     [HttpGet("/install.sh")]
-    public ActionResult Shell(String? os, String? arch, String? runtime, String? version)
+    public ActionResult Shell(String? arch, String? runtime, String? version)
     {
         try
         {
@@ -60,13 +59,12 @@ public class InstallController : ControllerBase
     }
 
     /// <summary>Windows 安装脚本</summary>
-    /// <param name="os">目标系统，固定 windows</param>
     /// <param name="arch">目标架构</param>
     /// <param name="runtime">.NET 主版本号，为空不限制</param>
     /// <param name="version">StarAgent 版本，为空取最新</param>
     /// <returns>可直接执行的 PowerShell 脚本</returns>
     [HttpGet("/install.ps1")]
-    public ActionResult PowerShell(String? os, String? arch, String? runtime, String? version)
+    public ActionResult PowerShell(String? arch, String? runtime, String? version)
     {
         try
         {

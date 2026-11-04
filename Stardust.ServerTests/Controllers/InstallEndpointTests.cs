@@ -127,7 +127,7 @@ public class InstallEndpointTests : StarTestBase
     {
         var client = _server.CreateClient();
 
-        var script = await client.GetStringAsync("/install.sh?os=linux&arch=x64");
+        var script = await client.GetStringAsync("/install.sh?arch=x64");
 
         Assert.Contains("StarAgent.dll -install -server", script);
         Assert.DoesNotContain("token=", script);
@@ -140,10 +140,10 @@ public class InstallEndpointTests : StarTestBase
     {
         var client = _server.CreateClient();
 
-        var script = await client.GetStringAsync("/install.sh?os=linux");
+        var script = await client.GetStringAsync("/install.sh");
 
         Assert.Contains("uname -m", script);
-        Assert.Contains("install.sh?os=linux&arch=", script);
+        Assert.Contains("install.sh?arch=", script);
     }
 
     [Fact]

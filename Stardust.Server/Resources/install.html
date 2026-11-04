@@ -741,13 +741,13 @@ function renderCommand() {
         btn.classList.toggle("on", btn.dataset.os === os);
     });
 
-    // 架构由目标机上的脚本自行识别，命令里无需带参数
+    // 平台由扩展名区分（.ps1/.sh），架构由目标机上的脚本自行识别，命令里无需带参数
     if (os === "windows") {
-        const url = server + "/install.ps1?os=windows";
+        const url = server + "/install.ps1";
         $("command").textContent =
             "powershell -NoProfile -ExecutionPolicy Bypass -Command \"iwr '" + url + "' -UseBasicParsing | iex\"";
     } else {
-        const url = server + "/install.sh?os=linux";
+        const url = server + "/install.sh";
         $("command").textContent = "curl -fsSL '" + url + "' | sudo bash";
     }
 }

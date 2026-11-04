@@ -292,7 +292,14 @@ public class InstallServiceTests
 
         Assert.NotNull(script);
         Assert.Contains("uname -m", script);
-        Assert.Contains("install.sh?os=linux&arch=", script);
+        Assert.Contains("install.sh?arch=", script);
+        Assert.DoesNotContain("os=linux", script);
+
+        // Windows 自检脚本的 URI 必须加括号，否则 PowerShell 会把 + $arch 当成多余参数丢弃
+        var win = service.BuildScript("windows", null, null, null, BaseUri);
+        Assert.NotNull(win);
+        Assert.Contains("install.ps1?arch=", win);
+        Assert.Contains("-Uri ('", win);
     }
 
     [Fact]
@@ -325,5 +332,8 @@ public class InstallServiceTests
 
         Assert.NotNull(html);
         Assert.Contains("StarAgent", html);
+
+        // 安装命令的平台语义来自 .ps1/.sh，不再附带冗余的 os 参数
+        Assert.DoesNotContain("?os=", html);
     }
 }
