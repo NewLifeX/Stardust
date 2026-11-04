@@ -111,6 +111,7 @@ export default defineConfig({
         'src/stores/contextParams.logic.ts',
         'apps/stardust/src/views/Stardust/appsModel.ts',
         'apps/stardust/src/views/Stardust/nodes.model.ts',
+        'apps/stardust/src/components/traceGraph.logic.ts',
       ],
       thresholds: {
         // 门槛 = 当前真实基线（纳入 appConfig/configCenter/apps/mesh/appInstances.logic 后 2026-11-03 实测：
