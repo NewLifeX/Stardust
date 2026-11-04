@@ -50,6 +50,8 @@ public partial class Node : Entity<Node>, IDeviceModel2, ILogProvider
 
         this.TrimExtraLong(__.Uuid, __.MachineGuid, __.MACs, __.DiskID, __.SerialNumber, __.OS, __.DriveInfo);
         this.TrimExtraLong(__.Framework, __.Frameworks, __.CLibVersion, __.IP);
+        // 多网卡机器的DNS地址列表很容易超过字段长度，截断避免登录与心跳因系统信息失败
+        this.TrimExtraLong(__.Dns, __.Gateway);
 
         // 清洗域名列表。拆分去空后重合并，遏制 Cube 表单全逗号脏数据持久化
         var dv = Domains;

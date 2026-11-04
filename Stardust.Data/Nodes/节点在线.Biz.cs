@@ -39,6 +39,8 @@ public partial class NodeOnline : Entity<NodeOnline>, IOnlineModel2
     {
         // 截取部分进程字段，避免过长无法保存
         this.TrimExtraLong(__.Processes, __.MACs, __.DriveInfo);
+        // 多网卡机器的DNS地址列表很容易超过字段长度，截断避免登录与心跳因系统信息失败
+        this.TrimExtraLong(__.Dns, __.Gateway);
 
         if (!Dirtys[nameof(MemoryUsed)] && Node != null) MemoryUsed = Node.Memory - (FreeMemory > 0 ? FreeMemory : AvailableMemory);
         if (!Dirtys[nameof(SpaceUsed)] && Node != null) SpaceUsed = Node.TotalSize - AvailableFreeSpace;

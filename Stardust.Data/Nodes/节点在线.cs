@@ -94,7 +94,7 @@ public partial class NodeOnline
     /// <summary>DNS地址</summary>
     [DisplayName("DNS地址")]
     [Description("DNS地址")]
-    [DataObjectField(false, false, true, 50)]
+    [DataObjectField(false, false, true, 200)]
     [BindColumn("Dns", "DNS地址", "")]
     public String Dns { get => _Dns; set { if (OnPropertyChanging("Dns", value)) { _Dns = value; OnPropertyChanged("Dns"); } } }
 
