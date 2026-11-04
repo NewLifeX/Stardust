@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using NewLife;
+using Stardust.Data;
 
 namespace Stardust.Server.Controllers;
 
@@ -12,8 +13,8 @@ namespace Stardust.Server.Controllers;
 /// </remarks>
 public static class WebSocketHistoryFilter
 {
-    private const String Connected = "WebSocket connected";
-    private const String Disconnected = "WebSocket disconnected";
+    private const String Connected = HistoryAction.WebSocketConnected;
+    private const String Disconnected = HistoryAction.WebSocketDisconnected;
     private const String ConnectedCn = "WebSocket连接";
     private const String DisconnectedCn = "WebSocket断开";
 

@@ -532,8 +532,8 @@ public class DashboardService
 
         // 最近变更：只看发布与生命周期动作，过滤心跳、WebSocket、鉴权等运行日志；同一动作只留最新一条
         var changes = AppHistory.FindAll(AppHistory._.AppId == appId, AppHistory._.Id.Desc(), null, 0, 60)
-            .Where(e => _changeKeywords.Any(k => (e.Action ?? "").Contains(k)))
-            .GroupBy(e => e.Action ?? "")
+            .Where(e => HistoryAction.IsChange(e.Action))
+            .GroupBy(e => HistoryAction.Normalize(e.Action ?? ""))
             .Select(g => g.First())
             .Take(8)
             .ToList();
@@ -543,7 +543,7 @@ public class DashboardService
             model.Changes.Add(new ChangeItem
             {
                 Target = app.Name,
-                Action = item.Action,
+                Action = HistoryAction.Localize(item.Action),
                 Success = item.Success,
                 Time = item.CreateTime,
                 Remark = item.Remark,
@@ -717,7 +717,7 @@ public class DashboardService
         {
             model.History.Add(new HistoryItem
             {
-                Action = item.Action,
+                Action = HistoryAction.Localize(item.Action),
                 Success = item.Success,
                 Version = item.Version,
                 Time = item.CreateTime,
@@ -834,9 +834,6 @@ public class DashboardService
     #endregion
 
     #region 辅助
-    /// <summary>应用变更动作关键字。用于从运行日志中挑出发布与生命周期事件</summary>
-    private static readonly String[] _changeKeywords = ["上线", "下线", "注册", "重启", "升级", "部署", "安装", "卸载", "版本", "停止", "启动", "启用", "禁用", "超时"];
-
     private sealed record CacheItem(Object Value, DateTime Expire);
 
     private readonly ConcurrentDictionary<String, CacheItem> _cache = new();
@@ -1486,7 +1483,7 @@ public class DashboardService
             {
                 Time = item.CreateTime,
                 Level = item.Success ? "info" : "warn",
-                Title = $"应用 {appName ?? item.AppId + ""} {item.Action}",
+                Title = $"应用 {appName ?? item.AppId + ""} {HistoryAction.Localize(item.Action)}",
                 Meta = $"版本 {item.Version} · {item.Creator}",
                 Url = $"/Dashboard/App/{item.AppId}",
             });
@@ -1513,7 +1510,7 @@ public class DashboardService
                 {
                     Time = item.CreateTime,
                     Level = item.Success ? "info" : "warn",
-                    Title = $"节点 {item.Name} {item.Action}",
+                    Title = $"节点 {item.Name} {HistoryAction.Localize(item.Action)}",
                     Meta = item.Remark,
                     Url = $"/Dashboard/Node/{item.NodeID}",
                 });

@@ -6,6 +6,7 @@ using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Remoting.Extensions;
 using NewLife.Serialization;
+using Stardust.Data;
 using Stardust.Data.Deployment;
 using Stardust.Data.Nodes;
 using Stardust.Models;
@@ -64,7 +65,7 @@ public class DeployController(NodeService nodeService, DeployService deployServi
                 inf.Url = downloadTokenService.AppendToken(inf.Url, StarServerSetting.Current.AttachmentTokenExpire);
 
             rs.Add(inf);
-            WriteHistory(app.Id, nameof(GetAll), true, inf.ToJson());
+            WriteHistory(app.Id, HistoryAction.GetAll, true, inf.ToJson());
         }
 
         return rs.ToArray();
@@ -131,7 +132,7 @@ public class DeployController(NodeService nodeService, DeployService deployServi
             // 先保存，可能有插入，需要取得应用发布Id
             var rs2 = app.Save();
 
-            if (rs2 > 0) WriteHistory(app.Id, nameof(Upload), true, svc.ToJson());
+            if (rs2 > 0) WriteHistory(app.Id, HistoryAction.Upload, true, svc.ToJson());
 
             rs += rs2;
 
@@ -261,7 +262,7 @@ public class DeployController(NodeService nodeService, DeployService deployServi
         ver.Save();
         app.Fix();
 
-        WriteHistory(app.Id, nameof(UploadBuildFile), true, L.T("Version={0} Size={1:n0} Node={2}", version, att.Size, node?.Name));
+        WriteHistory(app.Id, HistoryAction.UploadBuildFile, true, L.TLog("Version={0} Size={1:n0} Node={2}", version, att.Size, node?.Name));
 
         return new { ver.Id, ver.Version, ver.Url, ver.Size, ver.Hash };
     }

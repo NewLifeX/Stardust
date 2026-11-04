@@ -42,7 +42,7 @@ public class OAuthController(ITokenService tokenService, AppTokenService appToke
 
                 var olt = appOnline.UpdateOnline(app, clientId, ip, tokenModel.AccessToken);
 
-                app.WriteHistory("Authorize", true, model.UserName, olt?.Version, ip, clientId);
+                app.WriteHistory(HistoryAction.Authorize, true, model.UserName, olt?.Version, ip, clientId);
 
                 // 临时放行/开放模式：随令牌下发密钥，供客户端保存后自动收敛
                 return WithSecret(tokenModel, app);
@@ -63,7 +63,7 @@ public class OAuthController(ITokenService tokenService, AppTokenService appToke
 
                 if (ex != null)
                 {
-                    app.WriteHistory("RefreshToken", false, ex.ToString(), null, ip, clientId);
+                    app.WriteHistory(HistoryAction.RefreshToken, false, ex.ToString(), null, ip, clientId);
                     throw ex;
                 }
 
@@ -83,7 +83,7 @@ public class OAuthController(ITokenService tokenService, AppTokenService appToke
         catch (Exception ex)
         {
             var app = App.FindByName(model.UserName);
-            app?.WriteHistory("Authorize", false, ex.ToString(), null, ip, clientId);
+            app?.WriteHistory(HistoryAction.Authorize, false, ex.ToString(), null, ip, clientId);
 
             throw;
         }

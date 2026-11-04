@@ -2,6 +2,7 @@
 using NewLife.Remoting.Extensions.Services;
 using NewLife.Remoting.Models;
 using NewLife.Remoting.Services;
+using Stardust.Data;
 using Stardust.Data.Nodes;
 
 namespace Stardust.Server.Services;
@@ -27,7 +28,7 @@ class NodeCommandSession(WebSocket socket) : WsCommandSession(socket)
     {
         if (command == null || command.Id == 0 || command.Expire.Year > 2000 && command.Expire < DateTime.UtcNow)
         {
-            Log?.WriteLog("WebSocket send", false, "The message is invalid or has expired." + message);
+            Log?.WriteLog(HistoryAction.WebSocketSend, false, "The message is invalid or has expired." + message);
 
             var log = NodeCommand.FindById((Int32)command.Id);
             if (log != null)
@@ -40,7 +41,7 @@ class NodeCommandSession(WebSocket socket) : WsCommandSession(socket)
         }
 
         {
-            Log?.WriteLog("WebSocket send", true, message);
+            Log?.WriteLog(HistoryAction.WebSocketSend, true, message);
 
             var log = NodeCommand.FindById((Int32)command.Id);
             if (log != null)

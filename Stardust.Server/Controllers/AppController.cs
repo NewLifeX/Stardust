@@ -348,7 +348,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
             };
             consumes.Add(svc);
 
-            WriteLog("ResolveService", true, L.TLog("Consuming service [{0}] {1}", model.ServiceName, model.ToJson()));
+            WriteLog(HistoryAction.ResolveService, true, L.TLog("Consuming service [{0}] {1}", model.ServiceName, model.ToJson()));
         }
 
         // 节点信息

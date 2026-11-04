@@ -61,12 +61,12 @@ public class AppTokenService
             }
 
             // 临时放行/开放：放行，等待客户端收敛；密钥由令牌接口（OAuth/Token）随响应下发
-            app.WriteHistory(L.T("Application re-registered"), true, L.T("[{0}] secret mismatch; allowed by [{1}] mode", app.Name, mode), null, ip, clientId);
+            app.WriteHistory(HistoryAction.ApplicationReRegistered, true, L.TLog("[{0}] secret mismatch; allowed by [{1}] mode", app.Name, mode), null, ip, clientId);
         }
         // 显式临时放行：客户端已携带正确密钥，自动关闭窗口完成收敛。跟随全局（Default）的应用由全局默认统一控制，不改写自身配置
         else if (app.ReRegister == ReRegisterModes.Temporary)
         {
-            app.WriteHistory(L.T("Application re-registered"), true, L.T("[{0}] the client now carries the correct secret; the convergence window is closed automatically", app.Name), null, ip, clientId);
+            app.WriteHistory(HistoryAction.ApplicationReRegistered, true, L.TLog("[{0}] the client now carries the correct secret; the convergence window is closed automatically", app.Name), null, ip, clientId);
             app.ReRegister = ReRegisterModes.Off;
             app.Update();
         }

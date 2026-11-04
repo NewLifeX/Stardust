@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
@@ -40,6 +41,8 @@ public class AppHistoryController : RegistryEntityController<AppHistory>
         {
             var df = ListFields.GetField("Action") as ListField;
             df.Url = "/Registry/AppHistory?appId={AppId}&action={Action}";
+            // 数据库只存英文规范键，列表按当前界面语言显示；链接仍使用原始值，保证筛选有效
+            df.GetValue = e => e is AppHistory entity ? HistoryAction.Localize(entity.Action) : null;
         }
     }
 
@@ -49,6 +52,23 @@ public class AppHistoryController : RegistryEntityController<AppHistory>
         if (appId >= 0) PageSetting.OrderByKey = true;
 
         return base.SearchData(p);
+    }
+
+    /// <summary>查看。详情中的操作名同样按当前界面语言显示</summary>
+    /// <param name="id">编号</param>
+    /// <returns></returns>
+    public override ActionResult Detail(String id)
+    {
+        var rs = base.Detail(id);
+        if (rs is ViewResult view && view.Model is AppHistory entity)
+        {
+            // 克隆后再翻译，避免改动单对象缓存中的实体
+            var clone = entity.CloneEntity();
+            clone.Action = HistoryAction.Localize(clone.Action);
+            view.ViewData.Model = clone;
+        }
+
+        return rs;
     }
 
     /// <summary>高级搜索。按条件分页查询</summary>

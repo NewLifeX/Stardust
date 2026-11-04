@@ -33,6 +33,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Stardust\Stardust.csproj" />
+    <ProjectReference Include="..\Stardust.Data\Stardust.Data.csproj" />
     <ProjectReference Include="..\Stardust.Extensions\Stardust.Extensions.csproj" />
     <ProjectReference Include="..\StarAgent.Mobile\StarAgent.Mobile.csproj" />
     <!-- ServiceManager/ServiceController 由 StarAgent 工程编译，引用后可直接测试应用服务管理 -->

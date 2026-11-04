@@ -171,7 +171,7 @@ public class AppOnlineService(ICacheProvider cacheProvider, ITracer tracer)
         online.SaveAsync();
 
         if (isNew)
-            app.WriteHistory(L.T("Associated online"), true, info.ToJson(), info?.Version, ip, clientId);
+            app.WriteHistory(HistoryAction.AssociatedOnline, true, info.ToJson(), info?.Version, ip, clientId);
 
         return online;
     }
@@ -240,7 +240,7 @@ public class AppOnlineService(ICacheProvider cacheProvider, ITracer tracer)
             if (node.Name.IsNullOrEmpty()) node.Name = node.Code;
             node.Insert();
 
-            node.WriteHistory("AppAddNode", true, inf.ToJson(), ip);
+            node.WriteHistory(HistoryAction.AppAddNode, true, inf.ToJson(), ip);
 
             return node;
         }

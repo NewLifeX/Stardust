@@ -1,4 +1,4 @@
-using NewLife;
+﻿using NewLife;
 using NewLife.Caching;
 using NewLife.Log;
 using NewLife.Remoting;
@@ -89,7 +89,7 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
         // 安全治理：禁止空密钥应用匿名登录（认证绕过）。空密钥应用需在注册中心设置密钥，或临时开启"临时放行"自动收敛
         if (app.Secret.IsNullOrEmpty())
         {
-            app.WriteHistory(L.T("Application authentication"), false, L.T("An application with an empty secret cannot log in. Set a Secret for this application in the registry or enable re-registration."), null, ip, context.ClientId);
+            app.WriteHistory(HistoryAction.ApplicationAuthentication, false, L.TLog("An application with an empty secret cannot log in. Set a Secret for this application in the registry or enable re-registration."), null, ip, context.ClientId);
             return false;
         }
         if (app.Secret.EqualIgnoreCase(request.Secret)) return true;
@@ -101,7 +101,7 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
         }
         if (request.Secret.IsNullOrEmpty() || !_passwordProvider.Verify(app.Secret, request.Secret))
         {
-            app.WriteHistory(L.T("Application authentication"), false, L.T("Secret validation failed."), null, ip, context.ClientId);
+            app.WriteHistory(HistoryAction.ApplicationAuthentication, false, L.TLog("Secret validation failed."), null, ip, context.ClientId);
             return false;
         }
 
@@ -138,9 +138,9 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
                 var model = request as AppModel;
                 var uuid = (model != null && !model.UUID.IsNullOrEmpty()) ? model.UUID : null;
                 var remark = uuid == null
-                    ? L.T("[{0}] re-registered in [{1}] mode; secret issued", app.Name, mode)
-                    : L.T("[{0}] re-registered in [{1}] mode; secret issued, UUID={2}", app.Name, mode, uuid);
-                app.WriteHistory(L.T("Application re-registered"), true, remark, null, context.UserHost, context.ClientId);
+                    ? L.TLog("[{0}] re-registered in [{1}] mode; secret issued", app.Name, mode)
+                    : L.TLog("[{0}] re-registered in [{1}] mode; secret issued, UUID={2}", app.Name, mode, uuid);
+                app.WriteHistory(HistoryAction.ApplicationReRegistered, true, remark, null, context.UserHost, context.ClientId);
                 context.Device = app;
 
                 return app;
@@ -154,14 +154,14 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
                 Enable = _setting.AppAutoRegister,
             });
 
-            app.WriteHistory(L.T("Application registered"), true, L.T("[{0}] registered successfully.", app.Name), null, context.UserHost, context.ClientId);
+            app.WriteHistory(HistoryAction.ApplicationRegistered, true, L.TLog("[{0}] registered successfully.", app.Name), null, context.UserHost, context.ClientId);
             context.Device = app;
         }
         catch (Exception ex)
         {
             span?.SetError(ex, null);
 
-            app?.WriteHistory(L.T("Application registered"), false, L.T("[{0}] registration failed: {1}", app.Name, ex.Message), null, context.UserHost, context.ClientId);
+            app?.WriteHistory(HistoryAction.ApplicationRegistered, false, L.TLog("[{0}] registration failed: {1}", app.Name, ex.Message), null, context.UserHost, context.ClientId);
 
             throw;
         }
@@ -288,7 +288,7 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
         }
 
         // 登录历史
-        WriteHistory(context, L.T("Application authentication"), true, L.T("[{0}/{1}] authenticated {2}", app.DisplayName, app.Name, model.ToJson(false, false, false)));
+        WriteHistory(context, HistoryAction.ApplicationAuthentication, true, L.TLog("[{0}/{1}] authenticated {2}", app.DisplayName, app.Name, model.ToJson(false, false, false)));
 
         // 检查应用上线恢复
         OnlineService.CheckOnline(app);
@@ -355,7 +355,7 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
             services.Add(svc);
 
             changed = true;
-            WriteHistory(app, "RegisterService", true, L.T("Registered service [{0}] {1}", model.ServiceName, model.ClientId), ip, clientId);
+            WriteHistory(app, HistoryAction.RegisterService, true, L.TLog("Registered service [{0}] {1}", model.ServiceName, model.ClientId), ip, clientId);
         }
         else
         {
@@ -521,7 +521,7 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
             services.Remove(svc);
 
             changed = true;
-            WriteHistory(app, "UnregisterService", true, L.T("Service [{0}] went offline: {1}", model.ServiceName, svc.Client), ip, svc.Client);
+            WriteHistory(app, HistoryAction.UnregisterService, true, L.TLog("Service [{0}] went offline: {1}", model.ServiceName, svc.Client), ip, svc.Client);
         }
 
         info.Providers = services.Count;

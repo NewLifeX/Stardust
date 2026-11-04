@@ -66,7 +66,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         node = CheckNode(node, inf.Node, inf.ProductCode, ip, _setting.NodeCodeLevel);
         if (node == null)
         {
-            WriteHistory(node, L.T("Node authentication"), false, L.T("Hardware information changed too much."), ip);
+            WriteHistory(node, HistoryAction.NodeAuthentication, false, L.TLog("Hardware information changed too much."), ip);
             return false;
         }
 
@@ -81,7 +81,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         }
         if (request.Secret.IsNullOrEmpty() || !_passwordProvider.Verify(node.Secret, request.Secret))
         {
-            WriteHistory(context, L.T("Node authentication"), false, L.T("Secret validation failed."));
+            WriteHistory(context, HistoryAction.NodeAuthentication, false, L.TLog("Secret validation failed."));
             return false;
         }
 
@@ -120,13 +120,13 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
                 node = AutoRegister(node, inf, ip, _setting);
             }
 
-            node?.WriteHistory(L.T("Dynamic registration"), true, inf.ToJson(false, false, false), ip);
+            node?.WriteHistory(HistoryAction.DynamicRegistration, true, inf.ToJson(false, false, false), ip);
         }
         catch (Exception ex)
         {
             span?.SetError(ex, null);
 
-            node?.WriteHistory(L.T("Dynamic registration"), false, inf.ToJson(false, false, false), ip);
+            node?.WriteHistory(HistoryAction.DynamicRegistration, false, inf.ToJson(false, false, false), ip);
 
             throw;
         }
@@ -174,7 +174,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         }
 
         // 登录历史
-        WriteHistory(context, L.T("Node authentication"), true, L.T("[{0}/{1}] authenticated {2}", node.Name, node.Code, inf.ToJson(false, false, false)));
+        WriteHistory(context, HistoryAction.NodeAuthentication, true, L.TLog("[{0}/{1}] authenticated {2}", node.Name, node.Code, inf.ToJson(false, false, false)));
 
         // 检查节点上线恢复
         NodeOnlineService.CheckOnline(node);
@@ -247,22 +247,22 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         var level = 5;
         if (!uuid.IsNullOrEmpty() && uuid != node.Uuid)
         {
-            node.WriteHistory(L.T("Login validation"), false, L.T("Unique identifier mismatch (new != old): {0} != {1}", uuid, node.Uuid), ip);
+            node.WriteHistory(HistoryAction.LoginValidation, false, L.TLog("Unique identifier mismatch (new != old): {0} != {1}", uuid, node.Uuid), ip);
             level--;
         }
         if (!guid.IsNullOrEmpty() && guid != node.MachineGuid)
         {
-            node.WriteHistory(L.T("Login validation"), false, L.T("Machine identifier mismatch (new != old): {0} != {1}", guid, node.MachineGuid), ip);
+            node.WriteHistory(HistoryAction.LoginValidation, false, L.TLog("Machine identifier mismatch (new != old): {0} != {1}", guid, node.MachineGuid), ip);
             level--;
         }
         if (!serial.IsNullOrEmpty() && serial != node.SerialNumber)
         {
-            node.WriteHistory(L.T("Login validation"), false, L.T("Computer serial number mismatch (new != old): {0} != {1}", serial, node.SerialNumber), ip);
+            node.WriteHistory(HistoryAction.LoginValidation, false, L.TLog("Computer serial number mismatch (new != old): {0} != {1}", serial, node.SerialNumber), ip);
             level--;
         }
         if (!board.IsNullOrEmpty() && board != node.Board)
         {
-            node.WriteHistory(L.T("Login validation"), false, L.T("Motherboard mismatch (new != old): {0} != {1}", board, node.Board), ip);
+            node.WriteHistory(HistoryAction.LoginValidation, false, L.TLog("Motherboard mismatch (new != old): {0} != {1}", board, node.Board), ip);
             //flag = false;
         }
         //if (!diskid.IsNullOrEmpty() && diskid != node.DiskID)
@@ -272,14 +272,14 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         //}
         if (!node.ProductCode.IsNullOrEmpty() && !productCode.IsNullOrEmpty() && !node.ProductCode.EqualIgnoreCase(productCode))
         {
-            node.WriteHistory(L.T("Login validation"), false, L.T("Product code mismatch (new != old): {0} != {1}", productCode, node.ProductCode), ip);
+            node.WriteHistory(HistoryAction.LoginValidation, false, L.TLog("Product code mismatch (new != old): {0} != {1}", productCode, node.ProductCode), ip);
             //level--;
         }
 
         // 机器名
         if (di.MachineName != node.MachineName)
         {
-            node.WriteHistory(L.T("Login validation"), false, L.T("Machine name mismatch (new != old): {0} != {1}", di.MachineName, node.MachineName), ip);
+            node.WriteHistory(HistoryAction.LoginValidation, false, L.TLog("Machine name mismatch (new != old): {0} != {1}", di.MachineName, node.MachineName), ip);
         }
 
         // 网卡地址
@@ -290,7 +290,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
             // 任意匹配则通过
             if (!nodems.Any(e => dims.Contains(e)))
             {
-                node.WriteHistory(L.T("Login validation"), false, L.T("MAC address mismatch (new != old): {0} != {1}", di.Macs, node.MACs), ip);
+                node.WriteHistory(HistoryAction.LoginValidation, false, L.TLog("MAC address mismatch (new != old): {0} != {1}", di.Macs, node.MACs), ip);
                 level--;
             }
         }
@@ -303,7 +303,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
             // 任意匹配则通过
             if (!nodems.Any(e => dims.Contains(e)))
             {
-                node.WriteHistory(L.T("Login validation"), false, L.T("Disk serial number mismatch (new != old): {0} != {1}", diskid, node.DiskID), ip);
+                node.WriteHistory(HistoryAction.LoginValidation, false, L.TLog("Disk serial number mismatch (new != old): {0} != {1}", diskid, node.DiskID), ip);
                 level--;
             }
         }
@@ -344,10 +344,10 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
             node = QueryByInfo(inf.ProductCode, di, set.NodeCodeLevel).FirstOrDefault();
             if (node != null)
             {
-                var msg = L.T("Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node", inf.Code, di.Macs, node.Code);
+                var msg = L.TLog("Node [{0}/{1}] is highly similar to the existing node [{2}]; using the existing node", inf.Code, di.Macs, node.Code);
                 XTrace.WriteLine(msg);
                 span?.AppendTag(msg);
-                node.WriteHistory(L.T("Matched existing node"), true, msg, ip);
+                node.WriteHistory(HistoryAction.MatchedExistingNode, true, msg, ip);
             }
         }
 
@@ -717,7 +717,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         // 检查是否已经升级过这个版本
         if (node.LastVersion == pv.Version) return null;
 
-        node.WriteHistory(L.T("Auto update"), true, $"channel={ch} version={node.Version} last={node.LastVersion} => [{pv.ID}] {pv.Version} {pv.Executor}", ip);
+        node.WriteHistory(HistoryAction.AutoUpdate, true, $"channel={ch} version={node.Version} last={node.LastVersion} => [{pv.ID}] {pv.Version} {pv.Executor}", ip);
 
         node.Channel = ch;
         node.LastVersion = pv.Version;
@@ -759,7 +759,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
             var pkg = release.MatchPackage(node);
             if (pkg == null) continue;
 
-            node.WriteHistory(L.T("Auto update"), true, $"channel={channel} version={node.Version} last={node.LastVersion} => Release[{release.Id}] {release.Version} Package[{pkg.TargetRuntime}] {pkg.FileName}", ip);
+            node.WriteHistory(HistoryAction.AutoUpdate, true, $"channel={channel} version={node.Version} last={node.LastVersion} => Release[{release.Id}] {release.Version} Package[{pkg.TargetRuntime}] {pkg.FileName}", ip);
 
             node.Channel = channel;
             node.LastVersion = release.Version;
@@ -837,7 +837,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
             };
             _ = SendCommand(node, model, $"NodeVersion:{pv.Version}");
 
-            node.WriteHistory(L.T("Push dotNet"), true, $"version={node.Framework} => [{pv.ID}] {pv.Version} {fmodel.BaseUrl}", ip);
+            node.WriteHistory(HistoryAction.PushDotNet, true, $"version={node.Framework} => [{pv.ID}] {pv.Version} {fmodel.BaseUrl}", ip);
 
             return pv;
         }
