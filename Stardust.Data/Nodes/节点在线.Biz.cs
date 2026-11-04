@@ -252,6 +252,8 @@ public partial class NodeOnline : Entity<NodeOnline>, IOnlineModel2
 
         if (inf.AvailableMemory > 0) online.AvailableMemory = (Int32)(inf.AvailableMemory / 1024 / 1024);
         if (inf.FreeMemory > 0) online.FreeMemory = (Int32)(inf.FreeMemory / 1024 / 1024);
+        // 部分客户端/内核取不到 MemAvailable 会上报 0，此时用空闲内存兜底，避免列表上可用内存长期为 0
+        if (online.AvailableMemory <= 0 && online.FreeMemory > 0) online.AvailableMemory = online.FreeMemory;
         MemoryUsed = online.Memory - (online.FreeMemory > 0 ? online.FreeMemory : online.AvailableMemory);
         if (inf.AvailableFreeSpace > 0) online.AvailableFreeSpace = (Int32)(inf.AvailableFreeSpace / 1024 / 1024);
         if (!online.DriveInfo.IsNullOrEmpty()) online.DriveInfo = online.DriveInfo;
@@ -265,6 +267,8 @@ public partial class NodeOnline : Entity<NodeOnline>, IOnlineModel2
 
         if (inf.AvailableMemory > 0) online.AvailableMemory = (Int32)(inf.AvailableMemory / 1024 / 1024);
         if (inf.FreeMemory > 0) online.FreeMemory = (Int32)(inf.FreeMemory / 1024 / 1024);
+        // 部分客户端/内核取不到 MemAvailable 会上报 0，此时用空闲内存兜底，避免列表上可用内存长期为 0
+        if (online.AvailableMemory <= 0 && online.FreeMemory > 0) online.AvailableMemory = online.FreeMemory;
         MemoryUsed = online.Memory - (online.FreeMemory > 0 ? online.FreeMemory : online.AvailableMemory);
         if (inf.AvailableFreeSpace > 0) online.AvailableFreeSpace = (Int32)(inf.AvailableFreeSpace / 1024 / 1024);
         if (!inf.DriveInfo.IsNullOrEmpty()) online.DriveInfo = inf.DriveInfo;

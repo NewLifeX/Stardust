@@ -784,6 +784,14 @@ public partial class Node : Entity<Node>, IDeviceModel2, ILogProvider
         online.Creator = Environment.MachineName;
         online.LoginTime = DateTime.Now;
 
+        // 弱网节点（外网抖动、NAT 断链）会每隔几分钟重连一次，每次登录都会新建一条在线记录，
+        // 心跳计数与在线时长随之归零。这里沿用上一段在线记录的登录时间，让列表上的在线时长保持连续
+        var last = NodeOnline.FindAllByNodeId(node.ID)
+            .Where(e => !e.SessionID.EqualIgnoreCase(sessionId) && e.UpdateTime > DateTime.Now.AddMinutes(-5))
+            .OrderByDescending(e => e.UpdateTime)
+            .FirstOrDefault();
+        if (last != null && last.LoginTime.Year > 2000) online.LoginTime = last.LoginTime;
+
         return online;
     }
     #endregion

@@ -196,8 +196,10 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
 
             if (rs is MyPingResponse mrs)
             {
-                // 服务端设置节点的同步时间周期时，客户端会覆盖掉；服务端未设置时，不要覆盖客户端的同步参数
-                if (node.SyncTime > 0) mrs.SyncTime = node.SyncTime;
+                // 服务端设置节点的同步时间周期时，客户端会覆盖掉；服务端未设置时，不要覆盖客户端的同步参数。
+                // 节点级优先，未设置时沿用所属项目的统一配置，避免逐台节点配置
+                var syncTime = node.SyncTime > 0 ? node.SyncTime : node.Project?.SyncTime ?? 0;
+                if (syncTime > 0) mrs.SyncTime = syncTime;
             }
 
             // 令牌有效期检查，10分钟内到期的令牌，颁发新令牌，以获取业务的连续性。

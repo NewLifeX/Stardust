@@ -119,6 +119,15 @@ public partial class GalaxyProject
     [BindColumn("NewServer", "新服务器。该项目下的节点自动迁移到新的服务器地址", "")]
     public String NewServer { get => _NewServer; set { if (OnPropertyChanging("NewServer", value)) { _NewServer = value; OnPropertyChanged("NewServer"); } } }
 
+    private Int32 _SyncTime;
+    /// <summary>同步时间。该项目下节点定期同步服务器时间到本地的秒数，默认0表示不校时</summary>
+    [Category("参数设置")]
+    [DisplayName("同步时间")]
+    [Description("同步时间。该项目下节点定期同步服务器时间到本地的秒数，默认0表示不校时")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("SyncTime", "同步时间。该项目下节点定期同步服务器时间到本地的秒数，默认0表示不校时", "")]
+    public Int32 SyncTime { get => _SyncTime; set { if (OnPropertyChanging("SyncTime", value)) { _SyncTime = value; OnPropertyChanged("SyncTime"); } } }
+
     private Int32 _CreateUserId;
     /// <summary>创建者</summary>
     [Category("扩展")]
