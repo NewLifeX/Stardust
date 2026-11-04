@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using NewLife;
 using NewLife.Http;
 using NewLife.Log;
@@ -35,6 +36,10 @@ public class StarTracer : DefaultTracer
 
     /// <summary>要排除的操作名</summary>
     public String[]? Excludes { get; set; }
+
+    /// <summary>脱敏埋点标签。自动遮蔽连接串、口令、令牌等敏感信息，默认true</summary>
+    /// <remarks>第三方组件的活动属性常带连接串与凭据，上报前统一遮蔽，避免敏感信息进入监控平台</remarks>
+    public static Boolean EnableTagSanitize { get; set; } = true;
 
     /// <summary>Api客户端</summary>
     public IApiClient? Client { get; set; }
@@ -210,6 +215,9 @@ public class StarTracer : DefaultTracer
         if (Excludes != null) builders = builders.Where(e => !Excludes.Any(y => y.IsMatch(e.Name, StringComparison.OrdinalIgnoreCase))).ToArray();
         if (TrimSelf) builders = builders.Where(e => !e.Name.EndsWithIgnoreCase("/Trace/Report", "/Trace/ReportRaw")).ToArray();
         if (builders.Length == 0) return;
+
+        // 敏感信息脱敏，第三方组件的活动属性可能携带连接串与口令
+        if (EnableTagSanitize) SanitizeTags(builders);
 
         // 初始化
         Init();
@@ -406,6 +414,39 @@ public class StarTracer : DefaultTracer
             var type = "Stardust.Extensions.TracerMiddleware".GetTypeEx();
             var pi = type?.GetPropertyEx("Tracer");
             if (pi != null && pi.PropertyType == typeof(ITracer)) pi.SetValue(null, this, null);
+        }
+    }
+
+    private static readonly Regex _connectionStringRegex = new(@"(?im)^([^\r\n]*connection[._ -]?string[^\r\n]*?[=:]).*$", RegexOptions.Compiled);
+    private static readonly Regex _secretRegex = new(@"\b(password|pwd|passwd|secret|token|api[._ -]?key|access[._ -]?key|private[._ -]?key)\b\s*([=:])\s*([^\s;,&#\r\n]+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+    /// <summary>脱敏埋点标签里的敏感信息</summary>
+    /// <param name="builders">埋点构建器集合</param>
+    internal static void SanitizeTags(ISpanBuilder[] builders)
+    {
+        if (builders == null) return;
+
+        foreach (var builder in builders)
+        {
+            Sanitize(builder.Samples);
+            Sanitize(builder.ErrorSamples);
+        }
+    }
+
+    private static void Sanitize(IList<ISpan>? spans)
+    {
+        if (spans == null) return;
+
+        for (var i = 0; i < spans.Count; i++)
+        {
+            var span = spans[i];
+            var tag = span?.Tag;
+            if (tag.IsNullOrEmpty()) continue;
+
+            // 连接串整段遮蔽，其后的口令键值对再逐个遮蔽
+            var txt = _connectionStringRegex.Replace(tag, "$1 ***");
+            txt = _secretRegex.Replace(txt, "$1$2***");
+            if (txt != tag) span!.Tag = txt;
         }
     }
     #endregion
