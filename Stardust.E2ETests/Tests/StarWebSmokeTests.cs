@@ -202,6 +202,11 @@ public class StarWebSmokeTests : IAsyncLifetime
         var marker = _errorMarkers.FirstOrDefault(e => body.Contains(e, StringComparison.OrdinalIgnoreCase));
         if (marker != null) reasons.Add($"响应含错误标记[{marker}]");
 
+        // 列表列头不得残留未解析的单元格模板（如 {Name}）：模板应写在 ListField.Text，列名由字段描述提供
+        var headers = await page.Locator("table thead th").AllInnerTextsAsync();
+        var templated = headers.Select(e => e.Trim()).Where(e => e.StartsWith('{') && e.EndsWith('}')).ToList();
+        if (templated.Count > 0) reasons.Add($"列头残留模板：{String.Join(" | ", templated.Take(3))}");
+
         var ok = reasons.Count == 0;
         var known = !ok && _knownIssues.TryGetValue(menu.Url, out var note);
         var knownNote = known ? _knownIssues[menu.Url] : "";
