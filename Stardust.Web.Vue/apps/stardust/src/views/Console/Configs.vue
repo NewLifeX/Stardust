@@ -9,8 +9,6 @@
  * 下（F11）：AppRuleTable——应用规则是全局规则表（无 AppId 列），CRUD 走 /Configs/AppRule
  * （POST 新增 / PUT /{id} 部分更新 / DELETE /{id}），Drawer 表单在 AppRuleDrawer。
  *
- * 下（F15）：AppQuoteTable——应用依赖（AppQuote：AppId 依赖 TargetAppId），CRUD 走 /Configs/AppQuote；
- * 行内应用名由 fetchAppList 建 id→名映射注入；Drawer 下拉同源。
  * 取数随 stardustContext（项目/环境）失效重取（useContextReload）。
  */
 import { ref } from 'vue';
@@ -23,24 +21,15 @@ import ConfigCenterList from '@/layouts/StardustLayout2/ConfigCenterList.vue';
 import ConfigDetailDrawer from '@/layouts/StardustLayout2/ConfigDetailDrawer.vue';
 import AppRuleTable from '@/layouts/StardustLayout2/AppRuleTable.vue';
 import AppRuleDrawer from '@/layouts/StardustLayout2/AppRuleDrawer.vue';
-import AppQuoteTable from '@/layouts/StardustLayout2/AppQuoteTable.vue';
-import AppQuoteDrawer from '@/layouts/StardustLayout2/AppQuoteDrawer.vue';
-import { fetchAppList } from '../Stardust/appsModel';
 import {
-  createAppQuote,
   createAppRule,
-  deleteAppQuote,
   deleteAppRule,
   fetchAllConfigs,
-  fetchAppQuotes,
   fetchAppRules,
   fetchConfigDetail,
-  saveAppQuote,
   saveAppRule,
 } from '@/layouts/StardustLayout2/configCenter.logic';
 import type {
-  AppQuoteForm,
-  AppQuoteRow,
   AppRuleForm,
   AppRuleRow,
   ConfigCenterRow,
@@ -104,8 +93,6 @@ async function load(isStale: () => boolean): Promise<void> {
   }
   // 规则块独立三态，失败不拖垮配置列表
   void loadRules(isStale);
-  // 依赖块独立三态，失败不拖垮配置列表
-  void loadQuotes(isStale);
 }
 
 async function onOpen(configId: number): Promise<void> {
@@ -174,88 +161,6 @@ function askDeleteRule(row: AppRuleRow): void {
   });
 }
 
-// ---------- F15 应用依赖（AppQuote） ----------
-
-const quotes = ref<AppQuoteRow[]>([]);
-const quotesLoading = ref(false);
-const quotesError = ref('');
-const quoteRemovingId = ref(0);
-const quoteDrawerOpen = ref(false);
-/** null=新增 */
-const quoteEditing = ref<AppQuoteForm | null>(null);
-const quoteEditId = ref(0);
-const quoteBusy = ref(false);
-/** 应用下拉选项（依赖方/被依赖方同源） */
-const quoteApps = ref<{ id: number; label: string }[]>([]);
-
-async function loadQuotes(isStale: () => boolean): Promise<void> {
-  quotesLoading.value = true;
-  quotesError.value = '';
-  try {
-    const [list, appRes] = await Promise.all([
-      fetchAppQuotes(request),
-      fetchAppList(request),
-    ]);
-    if (isStale()) return;
-    if (list === null) {
-      quotesError.value = '加载失败';
-      quotes.value = [];
-    } else {
-      const names = new Map<number, string>();
-      for (const a of appRes.rows) names.set(Number(a.id), String(a.displayName || a.name || `#${a.id}`));
-      const nameOf = (id: number) => names.get(id) ?? `#${id}`;
-      // 列表已带映射（fetchAppQuotes 默认 nameOf 空），这里按应用名重算一遍
-      quotes.value = list.map((q) => ({ ...q, appName: nameOf(q.appId), targetName: nameOf(q.targetAppId) }));
-      quoteApps.value = appRes.rows.map((a) => ({ id: Number(a.id), label: String(a.displayName || a.name || `#${a.id}`) }));
-    }
-  } finally {
-    if (!isStale()) quotesLoading.value = false;
-  }
-}
-
-function askCreateQuote(): void {
-  if (quoteBusy.value) return;
-  quoteEditId.value = 0;
-  quoteEditing.value = { appId: 0, targetAppId: 0, kind: 0, enable: true };
-  quoteDrawerOpen.value = true;
-}
-
-function askEditQuote(row: AppQuoteRow): void {
-  if (quoteBusy.value) return;
-  quoteEditId.value = row.id;
-  quoteEditing.value = { appId: row.appId, targetAppId: row.targetAppId, kind: row.kind, enable: row.enable };
-  quoteDrawerOpen.value = true;
-}
-
-async function onQuoteSubmit(form: AppQuoteForm): Promise<void> {
-  if (quoteBusy.value) return;
-  quoteBusy.value = true;
-  try {
-    const r = quoteEditId.value > 0 ? await saveAppQuote(request, quoteEditId.value, form) : await createAppQuote(request, form);
-    toast(r.message, r.ok ? 'ok' : 'err');
-    if (r.ok) {
-      quoteDrawerOpen.value = false;
-      await loadQuotes(() => false);
-    }
-  } finally {
-    quoteBusy.value = false;
-  }
-}
-
-function askDeleteQuote(row: AppQuoteRow): void {
-  if (quoteBusy.value) return;
-  openGuard(`确认删除依赖「${row.appName} → ${row.targetName}」？删除后应用侧按依赖划分的可见性立即恢复为无依赖。`, async () => {
-    quoteRemovingId.value = row.id;
-    try {
-      const r = await deleteAppQuote(request, row.id);
-      toast(r.message, r.ok ? 'ok' : 'err');
-      if (r.ok) await loadQuotes(() => false);
-    } finally {
-      quoteRemovingId.value = 0;
-    }
-  });
-}
-
 const { reload } = useContextReload(load, stardustContext);
 </script>
 
@@ -305,18 +210,6 @@ const { reload } = useContextReload(load, stardustContext);
       @remove="askDeleteRule"
     />
 
-    <AppQuoteTable
-      :rows="quotes"
-      :loading="quotesLoading"
-      :error="quotesError"
-      :removing-id="quoteRemovingId"
-      :busy="quoteBusy"
-      @retry="loadQuotes(() => false)"
-      @create="askCreateQuote"
-      @edit="askEditQuote"
-      @remove="askDeleteQuote"
-    />
-
     <ConfigDetailDrawer
       :open="drawerOpen"
       :detail="detail"
@@ -334,17 +227,6 @@ const { reload } = useContextReload(load, stardustContext);
       :busy="ruleBusy"
       @close="ruleDrawerOpen = false"
       @submit="onRuleSubmit"
-    />
-
-    <AppQuoteDrawer
-      :open="quoteDrawerOpen"
-      :apps="quoteApps"
-      :initial="quoteEditing"
-      :title="quoteEditId > 0 ? '编辑应用依赖' : '新增应用依赖'"
-      :sub="quoteEditId > 0 ? '调整依赖关系后立即生效' : '声明「依赖方 → 被依赖方」的引用关系'"
-      :busy="quoteBusy"
-      @close="quoteDrawerOpen = false"
-      @submit="onQuoteSubmit"
     />
   </div>
 </template>

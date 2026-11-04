@@ -94,7 +94,7 @@ function writeReport(apiHost: string) {
     '',
     '## 待 WebApi 发布后可做破坏性/确认类补验',
     '',
-    'AppOnline/Snapshot 字段、AppDeployVersion/Upload、Configs/AppQuote 写操作、AppPipelineRun/Detail、AppClientLog 分表 Search；实例/节点远程 Execute 真下发汇总。',
+    'AppOnline/Snapshot 字段、AppDeployVersion/Upload、AppPipelineRun/Detail、AppClientLog 分表 Search；实例/节点远程 Execute 真下发汇总。',
   );
   fs.mkdirSync(path.dirname(REPORT_MD), { recursive: true });
   fs.writeFileSync(REPORT_MD, lines.join('\n'), 'utf8');
@@ -357,27 +357,7 @@ test('应用工作台只读验收走查（Guard 一律取消）', async ({ page 
     shot: await snap(page, 'shot-lead-walk-F11-rules.png'),
   });
 
-  // —— F15 ——
-  logStep({
-    id: 'F15',
-    route: '/configs',
-    status: /应用依赖/.test(configs) ? 'PASS' : 'FAIL',
-    safeActions: '只看依赖表',
-    observed: '应用依赖区块',
-    issues: 'AppQuote CRUD 待 API 发布后再验',
-    shot: await snap(page, 'shot-lead-walk-F15-quotes.png'),
-  });
-  await gotoPage(page, `/app/config/${APP_ID}`);
-  const depsPanel = /上下游依赖/.test(await page.locator('body').innerText());
-  logStep({
-    id: 'F15-panel',
-    route: `/app/config/${APP_ID}`,
-    status: depsPanel ? 'PASS' : 'FAIL',
-    safeActions: '只读上下游面板',
-    observed: `上下游面板=${depsPanel}`,
-    issues: '',
-    shot: await snap(page, 'shot-lead-walk-F15-deps-panel.png'),
-  });
+  // —— F15 ——（2026-11-04 用户拍板移除应用依赖功能，F15/F15-panel 断言已删）
 
   // —— F12 ——
   await gotoPage(page, '/apps');

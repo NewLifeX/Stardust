@@ -1,30 +1,23 @@
 // 跨应用配置中心纯逻辑单测（Vitest）。2026-10-30。
 import { describe, it, expect } from 'vitest';
 import {
-  appQuoteBody,
   buildAppMap,
   buildKeyCounts,
   countPendingItems,
   countUsedKeys,
-  createAppQuote,
   createAppRule,
-  deleteAppQuote,
   deleteAppRule,
   diffConfigValues,
   fetchAllConfigs,
-  fetchAppQuotes,
   fetchAppRules,
   fetchConfigDetail,
   filterRows,
   pendingDiff,
-  saveAppQuote,
   saveAppRule,
-  toAppQuoteRows,
   toAppRuleRows,
   toConfigCenterRows,
   toDetailHistory,
   toDetailItems,
-  validateAppQuoteForm,
   validateAppRuleForm,
 } from './configCenter.logic';
 import type { ConfigCenterRow } from './configCenter.logic';
@@ -372,90 +365,3 @@ function stubNoCall(): { req: Req; calls: unknown[] } {
   };
   return { req, calls };
 }
-
-describe('F15 toAppQuoteRows · AppQuote 归一 + id→应用名映射', () => {
-  const nameOf = (id: number) => (id === 7 ? 'OrderService' : id === 9 ? 'StarWeb' : '#' + id);
-
-  it('AppId/TargetAppId/Kind/Enable 归一，应用名按映射（缺名退化 #id）', () => {
-    const rows = toAppQuoteRows(
-      [
-        { Id: 2, AppId: 7, TargetAppId: 9, Kind: 1, Enable: true },
-        { Id: 1, AppId: 7, TargetAppId: 99, Kind: 0, Enable: false },
-        { id: 3, appId: 0, targetAppId: 7, kind: 2, enable: true },
-      ],
-      nameOf,
-    );
-    expect(rows).toHaveLength(3);
-    expect(rows[0]).toMatchObject({ id: 1, appName: 'OrderService', targetName: '#99', kind: 0, enable: false });
-    expect(rows[2]).toMatchObject({ appName: '—', targetName: 'OrderService' });
-  });
-});
-
-describe('F15 validateAppQuoteForm / appQuoteBody', () => {
-  it('未选应用/自依赖/负类型给出视线内错误', () => {
-    expect(validateAppQuoteForm({ appId: 0, targetAppId: 9, kind: 0, enable: true })).toContain('依赖方');
-    expect(validateAppQuoteForm({ appId: 7, targetAppId: 0, kind: 0, enable: true })).toContain('被依赖');
-    expect(validateAppQuoteForm({ appId: 7, targetAppId: 7, kind: 0, enable: true })).toContain('自身');
-    expect(validateAppQuoteForm({ appId: 7, targetAppId: 9, kind: -1, enable: true })).toContain('依赖类型');
-    expect(validateAppQuoteForm({ appId: 7, targetAppId: 9, kind: 0, enable: true })).toBe('');
-  });
-
-  it('body 为 PascalCase 全字段（Enable 等为原生布尔）', () => {
-    expect(appQuoteBody({ appId: 7, targetAppId: 9, kind: 1, enable: true })).toEqual({
-      AppId: 7, TargetAppId: 9, Kind: 1, Enable: true,
-    });
-    expect(typeof appQuoteBody({ appId: 7, targetAppId: 9, kind: 1, enable: false }).Enable).toBe('boolean');
-  });
-});
-
-describe('F15 AppQuote CRUD · 路由与请求体', () => {
-  it('fetchAppQuotes：GET /Configs/AppQuote，appId/targetAppId 过滤进 params', async () => {
-    const calls: unknown[] = [];
-    const req = routingStub({
-      '/Configs/AppQuote': (opt) => {
-        calls.push(opt);
-        return { data: [{ Id: 2, AppId: 7, TargetAppId: 9, Kind: 1, Enable: true }] };
-      },
-    });
-    const rows = await fetchAppQuotes(req, { appId: 7 });
-    expect(rows).toHaveLength(1);
-    expect(rows?.[0]).toMatchObject({ id: 2, appId: 7, targetAppId: 9, enable: true });
-    expect((calls[0] as { params: Record<string, unknown> }).params.appId).toBe(7);
-    await fetchAppQuotes(req, { targetAppId: 9 });
-    expect((calls[1] as { params: Record<string, unknown> }).params.targetAppId).toBe(9);
-  });
-
-  it('create/save 走 POST 与 PUT /{id}（PascalCase 体）；delete 走 DELETE /{id}', async () => {
-    const calls: unknown[] = [];
-    const req = routingStub({
-      '/Configs/AppQuote': (opt) => {
-        calls.push(opt);
-        return { code: 0, data: 5 };
-      },
-      '/Configs/AppQuote/2': (opt) => {
-        calls.push(opt);
-        return { code: 0 };
-      },
-    });
-    const form = { appId: 7, targetAppId: 9, kind: 1, enable: true };
-    const c = await createAppQuote(req, form);
-    expect(c.ok).toBe(true);
-    expect((calls[0] as { method: string }).method).toBe('POST');
-    const s = await saveAppQuote(req, 2, form);
-    expect(s.ok).toBe(true);
-    expect((calls[1] as { method: string }).method).toBe('PUT');
-    const d = await deleteAppQuote(req, 2);
-    expect(d.ok).toBe(true);
-    expect((calls[2] as { method: string }).method).toBe('DELETE');
-  });
-
-  it('save/delete 缺 id 不发请求；取数失败返回 null', async () => {
-    const req = routingStub({});
-    expect((await saveAppQuote(req, 0, { appId: 7, targetAppId: 9, kind: 0, enable: true })).ok).toBe(false);
-    expect((await deleteAppQuote(req, 0)).ok).toBe(false);
-    const bad: Req = async () => {
-      throw new Error('net');
-    };
-    expect(await fetchAppQuotes(bad, { appId: 7 })).toBeNull();
-  });
-});
