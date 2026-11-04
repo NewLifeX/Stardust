@@ -27,14 +27,14 @@ public class GalaxyProjectController : WebEntityController<GalaxyProject>
         }
         {
             var df = ListFields.GetField("Nodes") as ListField;
-            df.DisplayName = "{Nodes}";
+            df.Text = "{Nodes}";
             df.Url = "/Nodes/Node?projectId={Id}";
             df.Target = "_blank";
             df.Title = "{Name}（节点）";
         }
         {
             var df = ListFields.GetField("Apps") as ListField;
-            df.DisplayName = "{Apps}";
+            df.Text = "{Apps}";
             df.Url = "/Registry/App?projectId={Id}";
             df.Target = "_blank";
             df.Title = "{Name}（应用）";

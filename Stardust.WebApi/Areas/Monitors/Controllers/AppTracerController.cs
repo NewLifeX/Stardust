@@ -45,7 +45,7 @@ public class AppTracerController : WebEntityController<AppTracer>
         {
             var df = ListFields.GetField("ItemCount") as ListField;
             //df.Header = "每日监控";
-            df.DisplayName = "{ItemCount}";
+            df.Text = "{ItemCount}";
             df.Title = "{AppName}监控项。应用下的所有监控项（埋点）";
             df.Url = "/Monitors/TraceItem?appId={ID}";
             df.Target = "_frame";

@@ -18,14 +18,14 @@ public class AppServiceController : RegistryEntityController<AppService>
 
         {
             var df = ListFields.GetField("ServiceName") as ListField;
-            df.DisplayName = "{ServiceName}";
+            df.Text = "{ServiceName}";
             df.Url = "/Registry/Service?name={ServiceName}";
             df.Target = "_blank";
         }
         {
             var df = ListFields.GetField("NodeName") as ListField;
             df.Header = "节点";
-            df.DisplayName = "{NodeName}";
+            df.Text = "{NodeName}";
             df.Url = "/Nodes/Node?Id={NodeId}";
             df.Target = "_blank";
         }

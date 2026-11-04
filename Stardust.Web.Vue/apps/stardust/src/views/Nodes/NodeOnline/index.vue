@@ -7,7 +7,7 @@ import { toUrl } from '@/utils/routeLink';
  * 路由由 MenuTree 注册，直接访问 /Nodes/NodeOnline。本页在其之上扩展自定义逻辑
  * （对应 MVC 源 NodeOnlineController.cs / _List_Search.cshtml / _List_Toolbar_Batch.cshtml）：
  *  - 后端自定义 url 跳转字段（AutoPage 不渲染 Url 链接列，需自建）：
- *      Name     DisplayName="{Name}"  Url="/Nodes/Node/Detail?Id={NodeID}"  → 节点详情
+ *      Name     Text="{Name}"  Url="/Nodes/Node/Detail?Id={NodeID}"  → 节点详情
  *      TraceId  TraceUrl() 跟踪列                                    → 追踪详情
  *  - 自定义 Action（选中行后显示，对应 _List_Toolbar_Batch 的 data-fields=keys）：
  *      CheckUpgrade GET /Nodes/NodeOnline/CheckUpgrade?keys=...        （检查更新）
@@ -79,8 +79,8 @@ const cmd = reactive({
 function toFieldMeta(f: BackendField): FieldMeta {
   return {
     name: f.name,
-    // displayName 形如 "{Name}" 时去掉花括号，还原成可读列名
-    displayName: (f.displayName || f.name).replace(/^\{(.+)\}$/, '$1'),
+    // 后端把单元格模板放在 text，displayName 始终是列名
+    displayName: f.displayName || f.name,
     typeName: f.typeName,
     itemType: f.itemType,
     primaryKey: f.primaryKey,

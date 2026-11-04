@@ -25,14 +25,15 @@ public class AppOnlineController : RegistryEntityController<AppOnline>
 
         {
             var df = ListFields.GetField("AppName") as ListField;
-            df.DisplayName = "{AppName}";
+            df.Header = "应用";
+            df.Text = "{AppName}";
             df.Url = "/Registry/App/Detail?id={AppId}";
             df.Target = "_blank";
         }
         {
             var df = ListFields.GetField("NodeName") as ListField;
             df.Header = "节点";
-            df.DisplayName = "{NodeName}";
+            df.Text = "{NodeName}";
             df.Url = "/Nodes/Node?Id={NodeId}";
             df.Target = "_blank";
         }

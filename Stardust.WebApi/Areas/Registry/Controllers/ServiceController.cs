@@ -24,12 +24,12 @@ public class ServiceController : RegistryEntityController<Service>
 
         {
             var df = ListFields.GetField("Providers") as ListField;
-            df.DisplayName = "{Providers}";
+            df.Text = "{Providers}";
             df.Url = "/Registry/AppService?serviceId={Id}";
         }
         {
             var df = ListFields.GetField("Consumers") as ListField;
-            df.DisplayName = "{Consumers}";
+            df.Text = "{Consumers}";
             df.Url = "/Registry/AppConsume?serviceId={Id}";
         }
     }

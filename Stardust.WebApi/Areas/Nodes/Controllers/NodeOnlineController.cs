@@ -36,7 +36,7 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
 
         {
             var df = ListFields.GetField("Name") as ListField;
-            df.DisplayName = "{Name}";
+            df.Text = "{Name}";
             df.Url = "/Nodes/Node/Detail?Id={NodeID}";
             df.Target = "_blank";
         }
