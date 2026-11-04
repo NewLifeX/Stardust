@@ -42,7 +42,7 @@
     <!-- XCode 的 SQLite 驱动为运行时动态加载（Microsoft.Data.Sqlite.dll 或 System.Data.SQLite.dll），
          宿主应用经 Bin\Plugins 注入，测试工程必须自带，否则所有连库用例在 DbSession.OnCreateCommand 处
          抛 InvalidOperationException。取本机 NuGet 缓存已有的 10.0.11（XCode 要求 10.0.0+，离线可还原）。 -->
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.11" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.14" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <PackageReference Include="Moq" Version="4.21.0" />
     <PackageReference Include="xunit" Version="2.9.3" />
