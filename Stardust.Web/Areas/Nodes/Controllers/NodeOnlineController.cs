@@ -141,22 +141,8 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
                     continue;
                 }
 
-                // 双层取值：Package优先级高于Release，客户端自行处理空Executor
-                var executor = !pkg.Executor.IsNullOrEmpty() ? pkg.Executor : release.Executor;
-                var preinstall = !pkg.Preinstall.IsNullOrEmpty() ? pkg.Preinstall : release.Preinstall;
-
-                var info = new UpgradeInfo
-                {
-                    Version = release.Version,
-                    Source = pkg.Source,
-                    FileHash = pkg.FileHash,
-                    FileSize = pkg.Size,
-                    Preinstall = preinstall,
-                    Executor = executor,
-                    Force = release.Force,
-                    Description = release.Remark,
-                };
-                var args = info.ToJson();
+                // 手工升级到指定版本：下发通道与版本，代理据此拉取指定版本，不受自动去重与通道限制
+                var args = $"channel={release.Channel}&version={release.Version}";
                 ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/upgrade", args, 0, 600, 0, HttpContext.RequestAborted)));
             }
         }

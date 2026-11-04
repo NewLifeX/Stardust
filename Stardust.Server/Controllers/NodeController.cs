@@ -231,10 +231,11 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
     #region 升级更新
     /// <summary>升级检查</summary>
     /// <param name="channel">更新通道。兼容旧版本客户端，允许为空，默认Release</param>
+    /// <param name="version">指定版本。控制台手工升级时传递，为空时按策略自动匹配</param>
     /// <returns></returns>
     [HttpGet(nameof(Upgrade))]
     [HttpPost(nameof(Upgrade))]
-    public IUpgradeInfo? Upgrade(String? channel)
+    public IUpgradeInfo? Upgrade(String? channel, String? version)
     {
         var node = Context.Device as Node;
 
@@ -243,7 +244,7 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
         var p = uri.IndexOf('/', "https://".Length);
         if (p > 0) uri = uri[..p];
 
-        var info = nodeService.Upgrade(Context, channel);
+        var info = nodeService.Upgrade(Context, channel, version);
         if (info == null)
         {
             nodeService.CheckDotNet(node, new Uri(uri), UserHost);

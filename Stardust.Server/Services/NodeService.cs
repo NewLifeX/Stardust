@@ -688,9 +688,17 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
 
     #region 升级更新
     /// <summary>升级检查。新版优先匹配 ProductRelease + ProductPackage，回退到旧 NodeVersion 逻辑</summary>
+    /// <param name="context">上下文</param>
     /// <param name="channel">更新通道</param>
     /// <returns></returns>
-    public override IUpgradeInfo? Upgrade(DeviceContext context, String? channel)
+    public override IUpgradeInfo? Upgrade(DeviceContext context, String? channel) => Upgrade(context, channel, null);
+
+    /// <summary>升级检查。指定版本时用于控制台手工升级到指定版本</summary>
+    /// <param name="context">上下文</param>
+    /// <param name="channel">更新通道</param>
+    /// <param name="version">指定版本。为空时按策略匹配；指定版本时忽略去重与通道限制，但仍校验产品编码与安装包匹配</param>
+    /// <returns></returns>
+    public IUpgradeInfo? Upgrade(DeviceContext context, String? channel, String? version)
     {
         // 默认Release通道
         if (!Enum.TryParse<NodeChannels>(channel, true, out var ch)) ch = NodeChannels.Release;
@@ -698,6 +706,9 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
 
         var node = context.Device as Node;
         var ip = context.UserHost;
+
+        // ---- 手工指定版本：用于控制台升级到指定版本 ----
+        if (!version.IsNullOrEmpty()) return TryUpgradeFromVersion(node, version, ch, ip);
 
         // ---- 新路径：ProductRelease + ProductPackage 匹配 ----
         var upgradeInfo = TryUpgradeFromRelease(node, ch);
@@ -729,6 +740,45 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
             Executor = pv.Executor,
             Force = pv.Force,
             Description = pv.Description,
+        };
+    }
+
+    /// <summary>按指定版本升级。用于控制台手工升级到指定版本，忽略自动去重与通道限制</summary>
+    /// <param name="node">节点</param>
+    /// <param name="version">目标版本号</param>
+    /// <param name="channel">通道</param>
+    /// <param name="ip">操作IP</param>
+    /// <returns></returns>
+    private UpgradeInfo TryUpgradeFromVersion(Node node, String version, NodeChannels channel, String ip)
+    {
+        // 允许指定已停用的发布版本，便于回退或重装同版本
+        var releases = ProductRelease.FindAll().Where(e => e.Version.EqualIgnoreCase(version)).ToList();
+        if (releases.Count == 0) return null;
+
+        // 通用版本或与节点产品编码一致，避免把 .NET 包发给原生 Agent
+        var release = releases.FirstOrDefault(e => e.ProductCode.IsNullOrEmpty() || e.ProductCode.EqualIgnoreCase(node.ProductCode));
+        if (release == null) return null;
+
+        var pkg = release.MatchPackage(node);
+        if (pkg == null) return null;
+
+        var key = BuildUpgradeKey(release, pkg);
+        RecordUpgrade(node, channel, release.Version, key, $"手动升级 Release[{release.Id}] {release.Version} Package[{pkg.TargetRuntime}] {pkg.FileName}", ip);
+
+        // 双层取值：Package优先级高于Release，客户端自行处理空Executor
+        var executor = !pkg.Executor.IsNullOrEmpty() ? pkg.Executor : release.Executor;
+        var preinstall = !pkg.Preinstall.IsNullOrEmpty() ? pkg.Preinstall : release.Preinstall;
+
+        return new UpgradeInfo
+        {
+            Version = release.Version,
+            Source = pkg.Source,
+            FileHash = pkg.FileHash,
+            FileSize = pkg.Size,
+            Preinstall = preinstall,
+            Executor = executor,
+            Force = release.Force,
+            Description = release.Remark,
         };
     }
 

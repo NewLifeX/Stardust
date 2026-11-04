@@ -312,6 +312,25 @@ public class NodeServiceUpgradeTests
         Assert.NotNull(svc.Upgrade(ctx, "Release"));
     }
 
+    /// <summary>手工指定版本时绕过去重，即使同一份安装包已下发过也会重新下发。</summary>
+    [Fact]
+    [Trait("Category", "Nodes")]
+    public void SpecifiedVersion_BypassesThrottle()
+    {
+        using var isolation = new UpgradeIsolation();
+        using var scope = new UpgradeScope("StarAgent", "StarAgent", "8.0.6");
+        scope.AddPackage("8");
+
+        var svc = CreateService();
+        var ctx = NewContext(scope.Node);
+        Assert.NotNull(svc.Upgrade(ctx, "Release"));
+        Assert.Null(svc.Upgrade(ctx, "Release"));
+
+        var info = svc.Upgrade(ctx, "Release", scope.Release.Version);
+        Assert.NotNull(info);
+        Assert.Equal(scope.Release.Version, info.Version);
+    }
+
     /// <summary>代理上报升级成功后停止重试，即使退避到期也不再下发。</summary>
     [Fact]
     [Trait("Category", "Nodes")]
