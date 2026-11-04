@@ -113,6 +113,26 @@ public class StarTracer : DefaultTracer
 
     #region OpenTelemetry
 #if NET6_0_OR_GREATER
+    /// <summary>默认排除的活动源。这些源已经被星尘自研埋点覆盖，重复采集只会让同一段耗时在链路上出现两份</summary>
+    /// <remarks>
+    /// <para>ASP.NET Core 的 <c>HttpRequestIn</c> 与 <c>Stardust.Extensions.TracerMiddleware</c> 产出的服务端埋点完全重复，
+    /// 两者还会成为同一父级下的兄弟节点，让上游按"父耗时减子耗时"计算时把同一次请求算两遍。
+    /// 通过 <c>AddStardust</c> 接入的应用必定带追踪中间件，排除后不会丢失入站埋点。</para>
+    /// <para>ADO.NET 驱动自带的 SQL 埋点不含 SQL 文本，信息量是 XCode <c>db:库:操作:实体</c> 埋点的子集，
+    /// 连接活动还会把连接串（服务器地址、库名、账号）写进数据标签。</para>
+    /// <para>确实需要采集时，可在调用 <see cref="AttachOpenTelemetry"/> 之前自行给 <see cref="OpenTelemetry"/> 赋值，
+    /// 或直接从本集合中移除条目。</para>
+    /// </remarks>
+    public static IList<String> DefaultExcludeSources { get; } = [
+        // ASP.NET Core 入站请求，已被追踪中间件的服务端埋点覆盖
+        "Microsoft.AspNetCore*",
+        // ADO.NET 驱动，已被 XCode 的 db: 埋点覆盖
+        "connector-net*",
+        "MySqlConnector",
+        "Npgsql",
+        "Oracle.ManagedDataAccess*",
+    ];
+
     /// <summary>挂载 OpenTelemetry 采集器。把进程内第三方组件的活动转成埋点，与自研埋点统一上报</summary>
     /// <returns>采集器实例，未启用时返回空。低版本目标框架不支持 OpenTelemetry，方法不提供</returns>
     public OpenTelemetryCollector? AttachOpenTelemetry()
@@ -123,6 +143,15 @@ public class StarTracer : DefaultTracer
         if (collector == null)
         {
             collector = new OpenTelemetryCollector { Tracer = this };
+
+            // 在采集器默认排除项之上追加星尘自己的排除项，避免与自研埋点重复上报
+            var excludes = collector.ExcludeSources == null ? new List<String>() : new List<String>(collector.ExcludeSources);
+            foreach (var item in DefaultExcludeSources)
+            {
+                if (!excludes.Contains(item)) excludes.Add(item);
+            }
+            collector.ExcludeSources = excludes;
+
             OpenTelemetry = collector;
         }
         collector.Attach();
