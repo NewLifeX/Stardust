@@ -25,7 +25,7 @@ public class DashboardService
     /// <returns>可见范围</returns>
     public ScopeInfo ResolveScope(Int32 userId)
     {
-        var projects = GalaxyProject.FindAll();
+        var projects = ProjectCache;
         if (userId <= 0) return DashboardScope.Resolve(projects, false, []);
 
         var user = XCode.Membership.User.FindByID(userId);
@@ -35,7 +35,7 @@ public class DashboardService
         return DashboardScope.Resolve(projects, isAdmin, members);
     }
 
-    private static Boolean IsSystemRole(XCode.Membership.User user)
+    private Boolean IsSystemRole(XCode.Membership.User user)
     {
         var roleIds = new List<Int32>();
         if (user.RoleID > 0) roleIds.Add(user.RoleID);
@@ -49,7 +49,7 @@ public class DashboardService
 
         if (roleIds.Count == 0) return false;
 
-        var roles = Role.FindAll();
+        var roles = Cache("roles", 10, () => Role.FindAll());
         return roles.Any(e => roleIds.Contains(e.ID) && e.IsSystem);
     }
 
@@ -403,7 +403,7 @@ public class DashboardService
         // 最近部署
         var deploys = AppDeploy.FindAll(AppDeploy._.ProjectId == projectId);
         var deployIds = deploys.Select(e => e.Id).ToHashSet();
-        var histories = AppDeployHistory.FindAll(AppDeployHistory._.CreateTime >= DateTime.Now.AddDays(-7), AppDeployHistory._.CreateTime.Desc(), null, 0, 50)
+        var histories = AppDeployHistory.FindAll(AppDeployHistory._.Id.Between(DateTime.Now.AddDays(-7), DateTime.Now, AppDeployHistory.Meta.Factory.Snow), AppDeployHistory._.Id.Desc(), null, 0, 50)
             .Where(e => deployIds.Contains(e.DeployId))
             .Take(8);
         foreach (var item in histories)
@@ -531,13 +531,13 @@ public class DashboardService
         }
 
         // 最近变更：只看发布与生命周期动作，过滤心跳、WebSocket、鉴权等运行日志；同一动作只留最新一条
-        var changes = AppHistory.FindAll(AppHistory._.AppId == appId, AppHistory._.CreateTime.Desc(), null, 0, 60)
+        var changes = AppHistory.FindAll(AppHistory._.AppId == appId, AppHistory._.Id.Desc(), null, 0, 60)
             .Where(e => _changeKeywords.Any(k => (e.Action ?? "").Contains(k)))
             .GroupBy(e => e.Action ?? "")
             .Select(g => g.First())
             .Take(8)
             .ToList();
-        if (changes.Count == 0) changes = [.. AppHistory.FindAll(AppHistory._.AppId == appId, AppHistory._.CreateTime.Desc(), null, 0, 8)];
+        if (changes.Count == 0) changes = [.. AppHistory.FindAll(AppHistory._.AppId == appId, AppHistory._.Id.Desc(), null, 0, 8)];
         foreach (var item in changes)
         {
             model.Changes.Add(new ChangeItem
@@ -854,25 +854,62 @@ public class DashboardService
         return data;
     }
 
-    private static IList<GalaxyProject> LoadProjects(ScopeInfo scope)
+    /// <summary>项目表快照。看板各页面共用，10 秒内不重复加载</summary>
+    private IList<GalaxyProject> ProjectCache => Cache("projects", 10, () => GalaxyProject.FindAll());
+
+    /// <summary>应用表快照。看板每次请求都要按项目过滤应用，全量加载代价不小</summary>
+    private IList<App> AppCache => Cache("apps", 10, () => App.FindAll());
+
+    /// <summary>最近报警记录。主键为雪花Id（时间片），按主键倒序等价于按开始时间倒序，且无需排序全表</summary>
+    /// <remarks>报警记录在触发时立即写入，Id 与 StartTime 同源；按 StartTime 排序无索引，数据量大时直接超时</remarks>
+    private IList<AlarmRecord> RecentAlarms => Cache("alarms", 10, () => AlarmRecord.FindAll(null, AlarmRecord._.Id.Desc(), null, 0, 200));
+
+    /// <summary>告警组到项目的映射。报警记录只带组编号，看板按项目过滤告警时需要</summary>
+    private IDictionary<Int32, Int32> AlarmGroupProjects => Cache("alarmGroups", 10, () =>
     {
-        var list = GalaxyProject.FindAll().Where(e => e.Enable).ToList();
+        var dic = new Dictionary<Int32, Int32>();
+        var selects = $"{AlarmGroup._.Id},{AlarmGroup._.ProjectId}";
+        foreach (var item in AlarmGroup.FindAll(null, null, selects))
+        {
+            dic[item.Id] = item.ProjectId;
+        }
+
+        return dic;
+    });
+
+    /// <summary>节点名到项目的映射。报警记录只带对象名，需要反查归属项目</summary>
+    /// <remarks>Node 表没有 Name 索引，逐条 Find 会反复全表扫描，这里一次加载成字典</remarks>
+    private IDictionary<String, Int32> NodeProjects => Cache("nodeProjects", 10, () =>
+    {
+        var dic = new Dictionary<String, Int32>(StringComparer.OrdinalIgnoreCase);
+        var selects = $"{Node._.ID},{Node._.Name},{Node._.ProjectId}";
+        foreach (var item in Node.FindAll(null, null, selects))
+        {
+            if (!item.Name.IsNullOrEmpty()) dic[item.Name] = item.ProjectId;
+        }
+
+        return dic;
+    });
+
+    private IList<GalaxyProject> LoadProjects(ScopeInfo scope)
+    {
+        var list = ProjectCache.Where(e => e.Enable).ToList();
         return scope.IsAdmin ? list.OrderBy(e => e.Sort).ThenBy(e => e.Id).ToList() : list.Where(e => scope.ProjectIds.Contains(e.Id)).OrderBy(e => e.Sort).ThenBy(e => e.Id).ToList();
     }
 
-    private static List<App> LoadApps(ScopeInfo scope) => App.FindAll()
+    private List<App> LoadApps(ScopeInfo scope) => AppCache
         .Where(e => e.Enable && IsVisible(scope, e.ProjectId))
         .ToList();
 
-    private static List<AppOnline> LoadOnlineApps(ScopeInfo scope)
+    private List<AppOnline> LoadOnlineApps(ScopeInfo scope)
     {
-        var list = AppOnline.FindAll();
+        var list = Cache("appOnline", 10, () => AppOnline.FindAll());
         return list.Where(e => e.AppId > 0).Where(e => scope.IsAdmin || scope.ProjectIds.Contains(e.ProjectId)).ToList();
     }
 
-    private static (Dictionary<Int32, NodeOnline> Online, Dictionary<Int32, Node> Nodes) LoadOnlineNodes(ScopeInfo scope)
+    private (Dictionary<Int32, NodeOnline> Online, Dictionary<Int32, Node> Nodes) LoadOnlineNodes(ScopeInfo scope)
     {
-        var list = NodeOnline.FindAll();
+        var list = Cache("nodeOnline", 10, () => NodeOnline.FindAll());
         var ids = list.Select(e => e.NodeID).Where(e => e > 0).Distinct().ToArray();
         var nodes = ids.Length > 0 ? Node.FindAll(Node._.ID.In(ids)) : [];
         var nodeMap = nodes.ToDictionary(e => e.ID, e => e);
@@ -1009,7 +1046,7 @@ public class DashboardService
             .OrderByDescending(e => e.Count)
             .ToList();
 
-        var meters = AppMeter.FindAll(AppMeter._.AppId == appId, AppMeter._.Time.Desc(), null, 0, 200)
+        var meters = AppMeter.FindAll(AppMeter._.AppId == appId, AppMeter._.Id.Desc(), null, 0, 200)
             .Where(e => !e.ClientId.IsNullOrEmpty())
             .GroupBy(e => e.ClientId)
             .ToDictionary(g => g.Key, g => g.First());
@@ -1061,7 +1098,7 @@ public class DashboardService
     private static MeterModel BuildMeter(Int32 appId)
     {
         var model = new MeterModel();
-        var list = AppMeter.FindAll(AppMeter._.AppId == appId, AppMeter._.Time.Desc(), null, 0, 50);
+        var list = AppMeter.FindAll(AppMeter._.AppId == appId, AppMeter._.Id.Desc(), null, 0, 50);
         if (list.Count == 0) return model;
 
         model.SampleTime = list[0].Time;
@@ -1132,12 +1169,12 @@ public class DashboardService
     /// <param name="total">节点总数</param>
     /// <param name="now">当前时间</param>
     /// <returns>在线率序列</returns>
-    private static List<Double> BuildNodeRateHistory(Int32 total, DateTime now)
+    private List<Double> BuildNodeRateHistory(Int32 total, DateTime now)
     {
         var list = new List<Double>();
         if (total <= 0) return list;
 
-        var rows = NodeOnline.FindAll();
+        var rows = Cache("nodeOnline", 10, () => NodeOnline.FindAll());
         for (var i = 23; i >= 0; i--)
         {
             var time = now.AddHours(-i);
@@ -1312,23 +1349,23 @@ public class DashboardService
         return (rows2, "项目");
     }
 
-    private static List<AlarmItem> LoadAlarms(ScopeInfo scope, String target, Int32 projectId, Int32 max)
+    private List<AlarmItem> LoadAlarms(ScopeInfo scope, String target, Int32 projectId, Int32 max)
     {
         if (scope.IsNone) return [];
 
-        var records = AlarmRecord.FindAll(null, AlarmRecord._.StartTime.Desc(), null, 0, 200);
+        var records = RecentAlarms;
         if (records.Count == 0) return [];
 
+        // 只保留命中项目的告警组，组外报警再按对象名称反查归属
         HashSet<Int32> groups = null;
         if (!scope.IsAdmin)
         {
             var ids = scope.ProjectIds;
-            groups = ids.Length == 0 ? [] : AlarmGroup.FindAll(AlarmGroup._.ProjectId.In(ids)).Select(e => e.Id).ToHashSet();
+            groups = ids.Length == 0 ? [] : AlarmGroupProjects.Where(e => ids.Contains(e.Value)).Select(e => e.Key).ToHashSet();
         }
         else if (projectId > 0)
         {
-            // 直接查库，避免告警组实体缓存尚未刷新导致误判
-            groups = AlarmGroup.FindAll(AlarmGroup._.ProjectId == projectId).Select(e => e.Id).ToHashSet();
+            groups = AlarmGroupProjects.Where(e => e.Value == projectId).Select(e => e.Key).ToHashSet();
         }
 
         var list = new List<AlarmItem>();
@@ -1403,26 +1440,26 @@ public class DashboardService
         return node?.ProjectId ?? 0;
     }
 
-    private static Boolean IsVisibleName(ScopeInfo scope, String action, Int32 projectId)
+    private Boolean IsVisibleName(ScopeInfo scope, String action, Int32 projectId)
     {
         if (action.IsNullOrEmpty()) return false;
 
         // 指定项目时只认该项目下的应用与节点，避免管理员跨项目误命中
         Boolean InProject(Int32 id) => projectId > 0 ? id == projectId : scope.ProjectIds.Contains(id);
 
-        var apps = App.FindAll();
-        if (apps.Any(e => InProject(e.ProjectId) && e.Name.EqualIgnoreCase(action))) return true;
+        // 应用与节点都用 10 秒快照。Node.Name 无索引，逐条 Find 会全表扫描
+        if (AppCache.Any(e => InProject(e.ProjectId) && e.Name.EqualIgnoreCase(action))) return true;
 
-        var node = Node.Find(Node._.Name == action);
-        return node != null && InProject(node.ProjectId);
+        return NodeProjects.TryGetValue(action, out var nodeProjectId) && InProject(nodeProjectId);
     }
 
-    private static List<EventItem> LoadEvents(ScopeInfo scope, Int32[] appIds, Int32[] nodeIds, Int32 max)
+    private List<EventItem> LoadEvents(ScopeInfo scope, Int32[] appIds, Int32[] nodeIds, Int32 max)
     {
         var list = new List<EventItem>();
-        var appMap = App.FindAll().ToDictionary(e => e.Id, e => e.DisplayName.IsNullOrEmpty() ? e.Name : e.DisplayName);
+        var appMap = AppCache.ToDictionary(e => e.Id, e => e.DisplayName.IsNullOrEmpty() ? e.Name : e.DisplayName);
 
-        foreach (var item in AlarmRecord.FindAll(AlarmRecord._.StartTime >= DateTime.Now.AddDays(-1), AlarmRecord._.StartTime.Desc(), null, 0, 10))
+        // 报警直接复用最近报警快照，避免按无索引的 StartTime 过滤排序
+        foreach (var item in RecentAlarms.Where(e => e.StartTime >= DateTime.Now.AddDays(-1)).Take(10))
         {
             var level = item.Status == AlarmStatuses.Alarming ? "bad" : "ok";
             list.Add(new EventItem
@@ -1441,7 +1478,7 @@ public class DashboardService
             });
         }
 
-        foreach (var item in AppHistory.FindAll(AppHistory._.CreateTime >= DateTime.Now.AddDays(-1), AppHistory._.CreateTime.Desc(), null, 0, 20))
+        foreach (var item in AppHistory.FindAll(AppHistory._.Id.Between(DateTime.Now.AddDays(-1), DateTime.Now, AppHistory.Meta.Factory.Snow), AppHistory._.Id.Desc(), null, 0, 20))
         {
             if (appIds.Length > 0 && !appIds.Contains(item.AppId)) continue;
             appMap.TryGetValue(item.AppId, out var appName);
@@ -1455,7 +1492,7 @@ public class DashboardService
             });
         }
 
-        foreach (var item in AppDeployHistory.FindAll(AppDeployHistory._.CreateTime >= DateTime.Now.AddDays(-1), AppDeployHistory._.CreateTime.Desc(), null, 0, 20))
+        foreach (var item in AppDeployHistory.FindAll(AppDeployHistory._.Id.Between(DateTime.Now.AddDays(-1), DateTime.Now, AppDeployHistory.Meta.Factory.Snow), AppDeployHistory._.Id.Desc(), null, 0, 20))
         {
             list.Add(new EventItem
             {
@@ -1469,7 +1506,7 @@ public class DashboardService
 
         if (nodeIds.Length > 0)
         {
-            foreach (var item in NodeHistory.FindAll(NodeHistory._.CreateTime >= DateTime.Now.AddDays(-1), NodeHistory._.CreateTime.Desc(), null, 0, 20))
+            foreach (var item in NodeHistory.FindAll(NodeHistory._.Id.Between(DateTime.Now.AddDays(-1), DateTime.Now, NodeHistory.Meta.Factory.Snow), NodeHistory._.Id.Desc(), null, 0, 20))
             {
                 if (!nodeIds.Contains(item.NodeID)) continue;
                 list.Add(new EventItem
