@@ -66,12 +66,6 @@ async function shot(page, name) {
   return name;
 }
 
-async function waitNoErrorToast(page) {
-  const err = page.locator('.el-message--error');
-  await err.first().waitFor({ state: 'hidden', timeout: 500 }).catch(() => {});
-  return (await err.count()) === 0;
-}
-
 async function confirmGuard(page) {
   const g = page.locator('[data-spec="guard-modal"]');
   await g.waitFor({ state: 'visible', timeout: 10_000 });
@@ -186,7 +180,6 @@ async function main() {
     // F06-F08 nodes
     await page.goto(`${FE}/app/nodes/4`, { waitUntil: 'networkidle', timeout: 60_000 });
     const nodesText = await page.locator('body').innerText();
-    const hasDeploy = /部署节点|编辑发布集|同步应用/.test(nodesText);
     const s06 = await shot(page, 'shot-lead-rerun-F06-F08-nodes.png');
     record('F06', /编辑发布集|同步应用/.test(nodesText), '部署顶栏可见', s06);
     record('F07', /部署节点|批量/.test(nodesText), '部署节点区块', s06);

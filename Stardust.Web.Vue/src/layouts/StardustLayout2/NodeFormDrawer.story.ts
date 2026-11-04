@@ -14,6 +14,8 @@ const deployInitial: DeployNodeForm = {
   delay: 5,
   healthCheck: 'http://*/health',
   remark: '内网节点',
+  logDirectory: 'logs',
+  logFilePattern: 'app-*.log',
 };
 
 const buildInitial: BuildNodeForm = {
