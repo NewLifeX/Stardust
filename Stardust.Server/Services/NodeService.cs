@@ -710,18 +710,14 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
 
         using var span = _tracer?.NewSpan(nameof(Upgrade), new { node.Name, node.Code, node.Runtime, node.Framework, node.Frameworks, ip, vers = list.Count });
 
-        // 应用过滤规则，使用最新的一个版本
-        var pv = list.OrderByDescending(e => e.ID).FirstOrDefault(e => e.Version != node.LastVersion && e.Match(node));
+        // 应用过滤规则，使用最新的一个版本。命中后即使被去重拦截也不再回退到旧版本，避免降级与来回横跳
+        var pv = list.Where(e => e.Match(node)).OrderByDescending(e => e.ID).FirstOrDefault();
         if (pv == null) return null;
 
-        // 检查是否已经升级过这个版本
-        if (node.LastVersion == pv.Version) return null;
+        var key = BuildUpgradeKey(pv);
+        if (!AllowUpgrade(node, pv.Version, key, pv.Force)) return null;
 
-        node.WriteHistory(HistoryAction.AutoUpdate, true, $"channel={ch} version={node.Version} last={node.LastVersion} => [{pv.ID}] {pv.Version} {pv.Executor}", ip);
-
-        node.Channel = ch;
-        node.LastVersion = pv.Version;
-        node.Update();
+        RecordUpgrade(node, ch, pv.Version, key, $"[{pv.ID}] {pv.Version} {pv.Executor}", ip);
 
         return new UpgradeInfo
         {
@@ -753,17 +749,14 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
 
         foreach (var release in releases)
         {
-            // 检查是否已经升级过这个版本
-            if (node.LastVersion == release.Version) continue;
-
             var pkg = release.MatchPackage(node);
             if (pkg == null) continue;
 
-            node.WriteHistory(HistoryAction.AutoUpdate, true, $"channel={channel} version={node.Version} last={node.LastVersion} => Release[{release.Id}] {release.Version} Package[{pkg.TargetRuntime}] {pkg.FileName}", ip);
+            // 命中最新的可升级版本后，即使被去重拦截也不再回退到旧版本，避免降级与来回横跳
+            var key = BuildUpgradeKey(release, pkg);
+            if (!AllowUpgrade(node, release.Version, key, release.Force)) return null;
 
-            node.Channel = channel;
-            node.LastVersion = release.Version;
-            node.Update();
+            RecordUpgrade(node, channel, release.Version, key, $"Release[{release.Id}] {release.Version} Package[{pkg.TargetRuntime}] {pkg.FileName}", ip);
 
             // 双层取值：Package优先级高于Release，客户端自行处理空Executor
             var executor = !pkg.Executor.IsNullOrEmpty() ? pkg.Executor : release.Executor;
@@ -783,6 +776,75 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         }
 
         return null;
+    }
+
+    /// <summary>构造升级指纹。版本、发布记录与安装包哈希共同决定是否需要重新下发，允许同版本号重新打包后再次升级</summary>
+    /// <param name="release">产品发布版本</param>
+    /// <param name="package">产品安装包</param>
+    /// <returns></returns>
+    private static String BuildUpgradeKey(ProductRelease release, ProductPackage package) => $"{release.Version}:{release.Id}:{package?.FileHash}";
+
+    /// <summary>构造升级指纹。用于旧版 NodeVersion 升级策略</summary>
+    /// <param name="version">节点版本策略</param>
+    /// <returns></returns>
+    private static String BuildUpgradeKey(NodeVersion version) => $"{version.Version}:{version.ID}:{version.FileHash}";
+
+    /// <summary>判断是否需要向节点下发升级指令</summary>
+    /// <remarks>
+    /// 一、目标版本与最后版本不同，视为新的升级目标，立即下发；管理员清空最后版本后也会重新下发
+    /// 二、同一版本号重新打包或客户端已上报失败时指纹不一致，允许重新下发
+    /// 三、同一份安装包：非强制升级下发一次即视为完成；强制升级按退避间隔等待节点确认，次数用完则停止
+    /// </remarks>
+    /// <param name="node">节点</param>
+    /// <param name="version">目标版本</param>
+    /// <param name="key">升级指纹</param>
+    /// <param name="force">是否强制升级，即升级后重启</param>
+    /// <returns></returns>
+    private static Boolean AllowUpgrade(Node node, String version, String key, Boolean force)
+    {
+        if (node.LastVersion != version) return true;
+        if (node.LastUpgradeKey != key) return true;
+
+        if (node.UpgradeAttempts >= Node.MaxUpgradeAttempts) return false;
+
+        if (!force) return false;
+
+        var last = node.LastUpgradeTime;
+        return last.Year <= 2000 || last.Add(GetUpgradeBackoff(node.UpgradeAttempts)) <= DateTime.Now;
+    }
+
+    /// <summary>同一份安装包两次下发之间的最小间隔。失败后逐级退避，避免反复下载大安装包</summary>
+    /// <param name="attempts">已下发次数</param>
+    /// <returns></returns>
+    private static TimeSpan GetUpgradeBackoff(Int32 attempts) => attempts switch
+    {
+        <= 1 => TimeSpan.FromMinutes(10),
+        2 => TimeSpan.FromMinutes(30),
+        3 => TimeSpan.FromHours(2),
+        4 => TimeSpan.FromHours(6),
+        _ => TimeSpan.FromHours(24),
+    };
+
+    /// <summary>记录一次升级下发。目标版本不变则累加次数，切换目标版本后重新计数</summary>
+    /// <param name="node">节点</param>
+    /// <param name="channel">通道</param>
+    /// <param name="version">目标版本</param>
+    /// <param name="key">升级指纹</param>
+    /// <param name="detail">发布版本与安装包明细</param>
+    /// <param name="ip">操作IP</param>
+    private static void RecordUpgrade(Node node, NodeChannels channel, String version, String key, String detail, String ip)
+    {
+        var last = node.LastVersion;
+        var attempts = last == version ? node.UpgradeAttempts + 1 : 1;
+
+        node.Channel = channel;
+        node.LastVersion = version;
+        node.LastUpgradeKey = key;
+        node.LastUpgradeTime = DateTime.Now;
+        node.UpgradeAttempts = attempts;
+        node.Update();
+
+        node.WriteHistory(HistoryAction.AutoUpdate, true, $"channel={channel} from={node.Version} last={last} attempts={attempts} => {detail}（已下发，待节点确认）", ip);
     }
 
     /// <summary>检查节点是否符合规则，并推送dotNet运行时安装指令</summary>
@@ -1241,6 +1303,21 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         foreach (var model in events)
         {
             var success = !model.Type.EqualIgnoreCase("error");
+
+            // 代理升级结果：成功即停止重试；失败则清空指纹并让退避立即到期，使下一轮检查重新下发
+            if (node != null && model.Name.EqualIgnoreCase(HistoryAction.Upgrade))
+            {
+                if (model.Type.EqualIgnoreCase("success"))
+                    node.UpgradeAttempts = Node.MaxUpgradeAttempts;
+                else if (!success)
+                {
+                    node.LastUpgradeKey = null;
+                    node.LastUpgradeTime = DateTime.Now.Add(-GetUpgradeBackoff(node.UpgradeAttempts));
+                }
+
+                node.Update();
+            }
+
             if (model.Name.EqualIgnoreCase("ServiceController"))
             {
                 var appId = 0;

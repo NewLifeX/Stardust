@@ -512,6 +512,9 @@ public partial class Node : Entity<Node>, IDeviceModel2, ILogProvider
     #endregion
 
     #region 业务
+    /// <summary>同一份安装包允许的最大连续下发次数。达到上限后停止自动重试，等待人工介入</summary>
+    public const Int32 MaxUpgradeAttempts = 5;
+
     ///// <summary>根据编码查询或添加</summary>
     ///// <param name="code"></param>
     ///// <returns></returns>
@@ -552,7 +555,23 @@ public partial class Node : Entity<Node>, IDeviceModel2, ILogProvider
         if (!info.OSName.IsNullOrEmpty()) node.OS = info.OSName;
         if (!info.OSVersion.IsNullOrEmpty()) node.OSVersion = info.OSVersion;
         if (!info.Architecture.IsNullOrEmpty()) node.Architecture = info.Architecture;
-        if (!info.Version.IsNullOrEmpty()) node.Version = info.Version;
+        if (!info.Version.IsNullOrEmpty() && info.Version != node.Version)
+        {
+            // 节点上报新版本，说明已完成升级重启。与最后下发的版本一致时视为升级生效，停止自动重试
+            if (node.LastVersion == info.Version)
+            {
+                node.UpgradeAttempts = MaxUpgradeAttempts;
+                node.WriteHistory(HistoryAction.Upgrade, true, $"升级生效 {node.Version} => {info.Version}", node.UpdateIP);
+            }
+            else
+            {
+                // 版本与最后下发的版本不一致，可能是手工替换或回退，清空去重状态后重新评估
+                node.UpgradeAttempts = 0;
+                node.LastUpgradeKey = null;
+            }
+
+            node.Version = info.Version;
+        }
         if (info.Compile.Year > 2000) node.CompileTime = info.Compile;
 
         if (!info.MachineName.IsNullOrEmpty())
