@@ -475,6 +475,33 @@ public partial class Node
     [BindColumn("LastVersion", "最后版本。最后一次升级所使用的版本号，避免重复升级同一个版本", "")]
     public String LastVersion { get => _LastVersion; set { if (OnPropertyChanging("LastVersion", value)) { _LastVersion = value; OnPropertyChanged("LastVersion"); } } }
 
+    private String _LastUpgradeKey;
+    /// <summary>升级标识。最近一次下发升级的版本与安装包指纹，指纹变化即视为新包</summary>
+    [Category("参数设置")]
+    [DisplayName("升级标识")]
+    [Description("升级标识。最近一次下发升级的版本与安装包指纹，指纹变化即视为新包")]
+    [DataObjectField(false, false, true, 300)]
+    [BindColumn("LastUpgradeKey", "升级标识。最近一次下发升级的版本与安装包指纹，指纹变化即视为新包", "")]
+    public String LastUpgradeKey { get => _LastUpgradeKey; set { if (OnPropertyChanging("LastUpgradeKey", value)) { _LastUpgradeKey = value; OnPropertyChanged("LastUpgradeKey"); } } }
+
+    private DateTime _LastUpgradeTime;
+    /// <summary>升级时间。最后一次下发升级指令的时间，用于失败退避</summary>
+    [Category("参数设置")]
+    [DisplayName("升级时间")]
+    [Description("升级时间。最后一次下发升级指令的时间，用于失败退避")]
+    [DataObjectField(false, false, true, 0)]
+    [BindColumn("LastUpgradeTime", "升级时间。最后一次下发升级指令的时间，用于失败退避", "")]
+    public DateTime LastUpgradeTime { get => _LastUpgradeTime; set { if (OnPropertyChanging("LastUpgradeTime", value)) { _LastUpgradeTime = value; OnPropertyChanged("LastUpgradeTime"); } } }
+
+    private Int32 _UpgradeAttempts;
+    /// <summary>升级次数。同一份安装包的连续下发次数，达到上限后停止重试</summary>
+    [Category("参数设置")]
+    [DisplayName("升级次数")]
+    [Description("升级次数。同一份安装包的连续下发次数，达到上限后停止重试")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("UpgradeAttempts", "升级次数。同一份安装包的连续下发次数，达到上限后停止重试", "")]
+    public Int32 UpgradeAttempts { get => _UpgradeAttempts; set { if (OnPropertyChanging("UpgradeAttempts", value)) { _UpgradeAttempts = value; OnPropertyChanged("UpgradeAttempts"); } } }
+
     private NodeChannels _Channel;
     /// <summary>通道。升级通道，默认Release通道，使用Beta通道可以得到较新版本</summary>
     [Category("参数设置")]
@@ -724,6 +751,9 @@ public partial class Node
             "SyncTime" => _SyncTime,
             "NewServer" => _NewServer,
             "LastVersion" => _LastVersion,
+            "LastUpgradeKey" => _LastUpgradeKey,
+            "LastUpgradeTime" => _LastUpgradeTime,
+            "UpgradeAttempts" => _UpgradeAttempts,
             "Channel" => _Channel,
             "Domains" => _Domains,
             "WebHook" => _WebHook,
@@ -802,6 +832,9 @@ public partial class Node
                 case "SyncTime": _SyncTime = value.ToInt(); break;
                 case "NewServer": _NewServer = Convert.ToString(value); break;
                 case "LastVersion": _LastVersion = Convert.ToString(value); break;
+                case "LastUpgradeKey": _LastUpgradeKey = Convert.ToString(value); break;
+                case "LastUpgradeTime": _LastUpgradeTime = value.ToDateTime(); break;
+                case "UpgradeAttempts": _UpgradeAttempts = value.ToInt(); break;
                 case "Channel": _Channel = (NodeChannels)value.ToInt(); break;
                 case "Domains": _Domains = Convert.ToString(value); break;
                 case "WebHook": _WebHook = Convert.ToString(value); break;
@@ -1057,6 +1090,15 @@ public partial class Node
         /// <summary>最后版本。最后一次升级所使用的版本号，避免重复升级同一个版本</summary>
         public static readonly Field LastVersion = FindByName("LastVersion");
 
+        /// <summary>升级标识。最近一次下发升级的版本与安装包指纹，指纹变化即视为新包</summary>
+        public static readonly Field LastUpgradeKey = FindByName("LastUpgradeKey");
+
+        /// <summary>升级时间。最后一次下发升级指令的时间，用于失败退避</summary>
+        public static readonly Field LastUpgradeTime = FindByName("LastUpgradeTime");
+
+        /// <summary>升级次数。同一份安装包的连续下发次数，达到上限后停止重试</summary>
+        public static readonly Field UpgradeAttempts = FindByName("UpgradeAttempts");
+
         /// <summary>通道。升级通道，默认Release通道，使用Beta通道可以得到较新版本</summary>
         public static readonly Field Channel = FindByName("Channel");
 
@@ -1278,6 +1320,15 @@ public partial class Node
 
         /// <summary>最后版本。最后一次升级所使用的版本号，避免重复升级同一个版本</summary>
         public const String LastVersion = "LastVersion";
+
+        /// <summary>升级标识。最近一次下发升级的版本与安装包指纹，指纹变化即视为新包</summary>
+        public const String LastUpgradeKey = "LastUpgradeKey";
+
+        /// <summary>升级时间。最后一次下发升级指令的时间，用于失败退避</summary>
+        public const String LastUpgradeTime = "LastUpgradeTime";
+
+        /// <summary>升级次数。同一份安装包的连续下发次数，达到上限后停止重试</summary>
+        public const String UpgradeAttempts = "UpgradeAttempts";
 
         /// <summary>通道。升级通道，默认Release通道，使用Beta通道可以得到较新版本</summary>
         public const String Channel = "Channel";

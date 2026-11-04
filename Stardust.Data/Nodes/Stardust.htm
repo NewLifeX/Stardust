@@ -611,6 +611,39 @@
         </tr>
 
         <tr>
+            <td>LastUpgradeKey</td>
+            <td>升级标识</td>
+            <td>String</td>
+            <td>300</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>最近一次下发升级的版本与安装包指纹，指纹变化即视为新包</td>
+        </tr>
+
+        <tr>
+            <td>LastUpgradeTime</td>
+            <td>升级时间</td>
+            <td>DateTime</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>最后一次下发升级指令的时间，用于失败退避</td>
+        </tr>
+
+        <tr>
+            <td>UpgradeAttempts</td>
+            <td>升级次数</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>同一份安装包的连续下发次数，达到上限后停止重试</td>
+        </tr>
+
+        <tr>
             <td>Channel</td>
             <td>通道</td>
             <td>Int32</td>
@@ -3526,6 +3559,28 @@
         </tr>
 
         <tr>
+            <td>OSKind</td>
+            <td>操作系统</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>目标操作系统，0表示通用</td>
+        </tr>
+
+        <tr>
+            <td>Architecture</td>
+            <td>CPU架构</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>目标指令集架构，0表示通用</td>
+        </tr>
+
+        <tr>
             <td>TargetRuntime</td>
             <td>目标运行时</td>
             <td>String</td>
@@ -3533,7 +3588,7 @@
             <td></td>
             <td></td>
             <td></td>
-            <td>目标.NET运行时主版本，如 4/5/6/7/8/9/10，*表示万能包</td>
+            <td>.NET为主版本号，如 4/5/6/7/8/9/10；原生Agent为 go/rust/cpp；*表示万能包</td>
         </tr>
 
         <tr>
