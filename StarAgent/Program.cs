@@ -225,34 +225,7 @@ internal class MyService : ServiceBase, IServiceProvider
 
         WriteLog("Legacy service file detected; correcting KillMode");
 
-        var exe = Process.GetCurrentProcess().MainModule.FileName;
-
-        // 兼容dotnet
-        var args = Environment.GetCommandLineArgs();
-        if (args.Length >= 1)
-        {
-            var fileName = Path.GetFileName(exe);
-            if (exe.Contains(' ')) exe = $"\"{exe}\"";
-
-            var dll = args[0].GetFullPath();
-            if (dll.Contains(' ')) dll = $"\"{dll}\"";
-
-            if (fileName.EqualIgnoreCase("dotnet", "dotnet.exe"))
-                exe += " " + dll;
-            else if (fileName.EqualIgnoreCase("mono", "mono.exe", "mono-sgen"))
-                exe = dll;
-        }
-
-        var service = new ServiceModel
-        {
-            ServiceName = ServiceName,
-            DisplayName = DisplayName,
-            Description = Description,
-            FileName = exe,
-            Arguments = "-s",
-        };
-
-        Host.Install(service);
+        Host.Install(UpgradeHealer.BuildServiceModel(this));
     }
     #endregion
 
@@ -307,6 +280,10 @@ internal class MyService : ServiceBase, IServiceProvider
 
         // 启动星尘客户端，连接服务端
         StartClient();
+
+        // 自愈历史升级残局：旧版升级失败会留下 *.del 备份、服务入口可能被指向备份文件。
+        // 新版进程启动即清理，设备只需重启一次服务即可完成补升级，无需人工登录机器
+        HealUpgrade();
 
         _Manager.Start();
         StarAgentSetting.Provider.Changed += OnSettingChanged;
@@ -501,6 +478,28 @@ internal class MyService : ServiceBase, IServiceProvider
         }
     }
     #endregion
+
+    /// <summary>自愈历史升级残局</summary>
+    /// <remarks>
+    /// 旧版代理升级失败后，部署目录会残留 *.del 备份、Update 目录残留旧升级包，服务入口也可能被指向备份文件。
+    /// 新版进程启动时清理一次并上报节点事件，设备只需重启一次服务就能完成补升级，不必人工登录机器。
+    /// </remarks>
+    private void HealUpgrade()
+    {
+        try
+        {
+            var msg = UpgradeHealer.Heal(this, XTrace.Log);
+            if (msg.IsNullOrEmpty()) return;
+
+            WriteLog("Upgrade self-heal: {0}", msg);
+            _Client?.WriteInfoEvent("Upgrade", L.T("Post-upgrade self-healing on startup: {0}", msg));
+        }
+        catch (Exception ex)
+        {
+            // 自愈失败不能影响服务启动
+            XTrace.WriteException(ex);
+        }
+    }
 
     #region 客户端启动
     public void StartClient()
