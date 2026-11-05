@@ -177,6 +177,24 @@ public partial class AppDeployNode
     [BindColumn("HealthCheck", "健康检查。探针检测服务是否正常，http/tcp/udp地址，为空时使用应用集配置", "")]
     public String HealthCheck { get => _HealthCheck; set { if (OnPropertyChanging("HealthCheck", value)) { _HealthCheck = value; OnPropertyChanged("HealthCheck"); } } }
 
+    private String _LogDirectory;
+    /// <summary>日志目录。节点上应用日志目录；绝对路径或相对工作目录；为空时使用部署集配置</summary>
+    [Category("发布参数")]
+    [DisplayName("日志目录")]
+    [Description("日志目录。节点上应用日志目录；绝对路径或相对工作目录；为空时使用部署集配置")]
+    [DataObjectField(false, false, true, 500)]
+    [BindColumn("LogDirectory", "日志目录。节点上应用日志目录；绝对路径或相对工作目录；为空时使用部署集配置", "")]
+    public String LogDirectory { get => _LogDirectory; set { if (OnPropertyChanging("LogDirectory", value)) { _LogDirectory = value; OnPropertyChanged("LogDirectory"); } } }
+
+    private String _LogFilePattern;
+    /// <summary>日志文件匹配。为空时使用部署集配置，默认 *.log</summary>
+    [Category("发布参数")]
+    [DisplayName("日志文件匹配")]
+    [Description("日志文件匹配。为空时使用部署集配置，默认 *.log")]
+    [DataObjectField(false, false, true, 200)]
+    [BindColumn("LogFilePattern", "日志文件匹配。为空时使用部署集配置，默认 *.log", "*.log")]
+    public String LogFilePattern { get => _LogFilePattern; set { if (OnPropertyChanging("LogFilePattern", value)) { _LogFilePattern = value; OnPropertyChanged("LogFilePattern"); } } }
+
     private Int32 _ProcessId;
     /// <summary>进程</summary>
     [Category("状态")]
@@ -348,6 +366,8 @@ public partial class AppDeployNode
             "Mode" => _Mode,
             "Delay" => _Delay,
             "HealthCheck" => _HealthCheck,
+            "LogDirectory" => _LogDirectory,
+            "LogFilePattern" => _LogFilePattern,
             "ProcessId" => _ProcessId,
             "ProcessName" => _ProcessName,
             "ProcessUser" => _ProcessUser,
@@ -388,6 +408,8 @@ public partial class AppDeployNode
                 case "Mode": _Mode = (Stardust.Models.DeployMode)value.ToInt(); break;
                 case "Delay": _Delay = value.ToInt(); break;
                 case "HealthCheck": _HealthCheck = Convert.ToString(value); break;
+                case "LogDirectory": _LogDirectory = Convert.ToString(value); break;
+                case "LogFilePattern": _LogFilePattern = Convert.ToString(value); break;
                 case "ProcessId": _ProcessId = value.ToInt(); break;
                 case "ProcessName": _ProcessName = Convert.ToString(value); break;
                 case "ProcessUser": _ProcessUser = Convert.ToString(value); break;
@@ -506,6 +528,12 @@ public partial class AppDeployNode
         /// <summary>健康检查。探针检测服务是否正常，http/tcp/udp地址，为空时使用应用集配置</summary>
         public static readonly Field HealthCheck = FindByName("HealthCheck");
 
+        /// <summary>日志目录。节点上应用日志目录；绝对路径或相对工作目录；为空时使用部署集配置</summary>
+        public static readonly Field LogDirectory = FindByName("LogDirectory");
+
+        /// <summary>日志文件匹配。为空时使用部署集配置，默认 *.log</summary>
+        public static readonly Field LogFilePattern = FindByName("LogFilePattern");
+
         /// <summary>进程</summary>
         public static readonly Field ProcessId = FindByName("ProcessId");
 
@@ -613,6 +641,12 @@ public partial class AppDeployNode
 
         /// <summary>健康检查。探针检测服务是否正常，http/tcp/udp地址，为空时使用应用集配置</summary>
         public const String HealthCheck = "HealthCheck";
+
+        /// <summary>日志目录。节点上应用日志目录；绝对路径或相对工作目录；为空时使用部署集配置</summary>
+        public const String LogDirectory = "LogDirectory";
+
+        /// <summary>日志文件匹配。为空时使用部署集配置，默认 *.log</summary>
+        public const String LogFilePattern = "LogFilePattern";
 
         /// <summary>进程</summary>
         public const String ProcessId = "ProcessId";

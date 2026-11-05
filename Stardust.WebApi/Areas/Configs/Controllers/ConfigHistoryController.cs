@@ -6,6 +6,7 @@ using NewLife.Cube.Extensions;
 using NewLife.Serialization;
 using NewLife.Web;
 using Stardust.Data.Configs;
+using Stardust.Server.Services;
 
 namespace Stardust.Web.Areas.Configs.Controllers;
 
@@ -14,6 +15,12 @@ namespace Stardust.Web.Areas.Configs.Controllers;
 [ConfigsArea]
 public class ConfigHistoryController : ConfigsEntityController<ConfigHistory>
 {
+    private readonly ConfigService _configService;
+
+    /// <summary>实例化。回滚等写操作复用 ConfigService，与 MCP 共用同一实现</summary>
+    /// <param name="configService">配置服务</param>
+    public ConfigHistoryController(ConfigService configService) => _configService = configService;
+
     static ConfigHistoryController()
     {
         // 日志列表需要显示详细信息
@@ -72,30 +79,19 @@ public class ConfigHistoryController : ConfigsEntityController<ConfigHistory>
         }, 0);
     }
 
-    /// <summary>回滚到历史版本。仅发布历史支持；恢复应用配置版本并重发布配置数据</summary>
+    /// <summary>回滚到历史版本。仅发布历史支持；复用 ConfigService 回滚与通知逻辑</summary>
     /// <param name="id">历史编号</param>
-    public ActionResult Rollback(Int32 id)
+    public async Task<ActionResult> Rollback(Int32 id)
     {
-        var hi = ConfigHistory.FindById(id);
-        if (hi == null) return JsonRefresh("历史不存在！");
-        if (!hi.Action.EqualIgnoreCase("Publish")) return JsonRefresh("仅发布历史支持回滚！");
-
-        var cfg = AppConfig.FindById(hi.ConfigId);
-        if (cfg == null) return JsonRefresh("应用配置不存在！");
-
-        var snap = hi.Remark.ToJsonEntity<AppConfig>();
-        if (snap == null) return JsonRefresh("历史快照解析失败！");
-
-        // 回滚到该次 Publish 引入的版本（NextVersion），无效（<=0）时用快照版本兜底
-        cfg.Version = snap.NextVersion > 0 ? snap.NextVersion : snap.Version;
-        cfg.NextVersion = snap.NextVersion;
-        cfg.Update();
-
-        ConfigHistory.Add(cfg.Id, "Rollback", true, cfg.ToJson());
-
-        var rs = ConfigData.Publish(ConfigData.FindAllByApp(cfg.Id), cfg.Version);
-
-        return JsonRefresh($"已回滚到版本 {cfg.Version}，重发布 {rs} 项");
+        try
+        {
+            var rs = await _configService.Rollback(id, HttpContext.RequestAborted);
+            return JsonRefresh($"已回滚到版本 {rs.Version}，重发布 {rs.Republished} 项");
+        }
+        catch (Exception ex)
+        {
+            return JsonRefresh(ex.Message);
+        }
     }
 
     /// <summary>比较两个JSON的顶层键差异。包含新增、删除或值变化的键，按键名排序</summary>

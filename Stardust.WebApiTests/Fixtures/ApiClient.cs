@@ -84,6 +84,29 @@ public sealed class ApiClient
     public Task<ApiResponse<JsonElement>> GetJsonAsync(String endpoint, Boolean auth = true) =>
         GetApiAsync<JsonElement>(endpoint, auth);
 
+    /// <summary>GET 并解析统一信封，不断言 Code（用于负例 API 测试）。</summary>
+    public async Task<ApiResponse<JsonElement>> GetApiEnvelopeAsync(String endpoint, Boolean auth = true)
+    {
+        var resp = await GetAsync(endpoint, auth);
+        var url = NormalizeUrl(endpoint);
+        var raw = await resp.Content.ReadAsStringAsync();
+
+        Assert.True(resp.IsSuccessStatusCode, $"[{url}] HTTP 状态码 {(Int32)resp.StatusCode} 非成功：{raw}");
+
+        ApiResponse<JsonElement>? api = null;
+        try
+        {
+            api = JsonSerializer.Deserialize<ApiResponse<JsonElement>>(raw, _json);
+        }
+        catch (JsonException ex)
+        {
+            Assert.Fail($"[{url}] 响应格式不符合 ApiResponse：{ex.Message}{Environment.NewLine}{raw}");
+        }
+
+        Assert.NotNull(api);
+        return api!;
+    }
+
     private async Task<HttpResponseMessage> SendAsync(Func<HttpClient, Task<HttpResponseMessage>> send, String method, String endpoint, Boolean auth)
     {
         var url = NormalizeUrl(endpoint);

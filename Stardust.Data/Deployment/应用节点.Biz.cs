@@ -234,6 +234,31 @@ public partial class AppDeployNode : Entity<AppDeployNode>
         return inf;
     }
 
+    /// <summary>合并后的工作目录（节点覆盖部署集）</summary>
+    public String GetEffectiveWorkingDirectory()
+    {
+        var app = Deploy;
+        if (!WorkingDirectory.IsNullOrEmpty()) return WorkingDirectory;
+        return app?.WorkingDirectory;
+    }
+
+    /// <summary>合并后的日志目录（节点覆盖部署集）</summary>
+    public String GetEffectiveLogDirectory()
+    {
+        var app = Deploy;
+        if (!LogDirectory.IsNullOrEmpty()) return LogDirectory;
+        return app?.LogDirectory;
+    }
+
+    /// <summary>合并后的日志文件匹配（节点覆盖部署集）</summary>
+    public String GetEffectiveLogFilePattern()
+    {
+        var app = Deploy;
+        if (!LogFilePattern.IsNullOrEmpty()) return LogFilePattern;
+        if (!app?.LogFilePattern.IsNullOrEmpty() == true) return app.LogFilePattern;
+        return "*.log";
+    }
+
     public void Fill(AppInfo inf)
     {
         ProcessId = inf.Id;

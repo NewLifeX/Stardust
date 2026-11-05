@@ -846,6 +846,8 @@ public class ServiceManager : DisposeBase
         client.RegisterCommand("deploy/stop", DoControl);
         client.RegisterCommand("deploy/restart", DoControl);
         client.RegisterCommand("deploy/uninstall", DoControl);
+        client.RegisterCommand("deploy/log/list", DeployLogCommands.ListAsync);
+        client.RegisterCommand("deploy/log/tail", DeployLogCommands.TailAsync);
 
         //_timer?.SetNext(-1);
         CheckNow();

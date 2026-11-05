@@ -294,6 +294,35 @@ public partial class AppConfig : Entity<AppConfig>
         return rs;
     }
 
+    /// <summary>回滚到指定发布历史。恢复快照版本号并重发布该版本数据。值与版本的快照能力受 ConfigHistory.Remark 长度限制，属既有设计约束。</summary>
+    /// <param name="historyId">发布历史编号</param>
+    /// <returns>回滚结果。Config 用于服务层继续通知应用</returns>
+    public static ConfigRollbackResult Rollback(Int32 historyId)
+    {
+        if (historyId <= 0) throw new ArgumentNullException(nameof(historyId));
+
+        var hi = ConfigHistory.FindById(historyId) ?? throw new InvalidOperationException("历史不存在！");
+        if (!hi.Action.EqualIgnoreCase("Publish")) throw new InvalidOperationException("仅发布历史支持回滚！");
+
+        var cfg = FindById(hi.ConfigId) ?? throw new InvalidOperationException("应用配置不存在！");
+        var snap = hi.Remark.ToJsonEntity<AppConfig>() ?? throw new InvalidOperationException("历史快照解析失败！");
+
+        // 回滚到该次 Publish 引入的版本（NextVersion），无效（<=0）时用快照版本兜底
+        var version = snap.NextVersion > 0 ? snap.NextVersion : snap.Version;
+        if (version <= 0) throw new InvalidOperationException("历史快照缺少有效版本号，无法回滚！");
+
+        var before = cfg.Version;
+        cfg.Version = version;
+        cfg.NextVersion = snap.NextVersion;
+        cfg.Update();
+
+        ConfigHistory.Add(cfg.Id, "Rollback", true, cfg.ToJson());
+
+        var republished = ConfigData.Publish(ConfigData.FindAllByApp(cfg.Id), version);
+
+        return new ConfigRollbackResult { Config = cfg, Before = before, Version = version, Republished = republished };
+    }
+
     /// <summary>
     /// 清理旧数据。把原来多行的配置数据，修改为单行
     /// </summary>
@@ -411,4 +440,26 @@ public partial class AppConfig : Entity<AppConfig>
         return count;
     }
     #endregion
+}
+
+/// <summary>配置回滚结果</summary>
+public sealed class ConfigRollbackResult
+{
+    /// <summary>回滚前的生效版本</summary>
+    public Int32 Before { get; set; }
+
+    /// <summary>回滚后的生效版本。取自发布历史快照</summary>
+    public Int32 Version { get; set; }
+
+    /// <summary>本版本重发布的配置项数</summary>
+    public Int32 Republished { get; set; }
+
+    /// <summary>已通知的应用数。0 表示只更新服务端记录</summary>
+    public Int32 Notified { get; set; }
+
+    /// <summary>通知失败原因。空表示通知成功或无需通知</summary>
+    public String NotifyError { get; set; }
+
+    /// <summary>配置对象</summary>
+    public AppConfig Config { get; set; } = null!;
 }

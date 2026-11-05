@@ -40,8 +40,9 @@ public class ConfigController(ConfigService configService, ITokenService tokenSe
         online.Scope = scope;
         online.SaveAsync(3_000);
 
-        // 版本没有变化时，不做计算处理，不返回配置数据
-        if (!change && version > 0 && version >= app.Version) return new ConfigInfo { Version = app.Version, UpdateTime = app.UpdateTime };
+        // 版本没有变化时，不做计算处理，不返回配置数据。
+        // 用 == 而不是 >=：回滚后服务端版本可能低于客户端已知版本，此时必须返回完整配置让客户端重新对齐
+        if (!change && version > 0 && version == app.Version) return new ConfigInfo { Version = app.Version, UpdateTime = app.UpdateTime };
         var dic = configService.GetConfigs(app, scope);
 
         // 返回WorkerId
@@ -88,8 +89,9 @@ public class ConfigController(ConfigService configService, ITokenService tokenSe
         online.Scope = scope;
         online.SaveAsync(3_000);
 
-        // 版本没有变化时，不做计算处理，不返回配置数据
-        if (!change && model.Version > 0 && model.Version >= app.Version)
+        // 版本没有变化时，不做计算处理，不返回配置数据。
+        // 用 == 而不是 >=：回滚后服务端版本可能低于客户端已知版本，此时必须返回完整配置让客户端重新对齐
+        if (!change && model.Version > 0 && model.Version == app.Version)
             return new ConfigInfo
             {
                 Version = app.Version,

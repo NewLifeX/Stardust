@@ -143,4 +143,41 @@ public class AppDeployNodeController : DeploymentEntityController<AppDeployNode>
 
         return JsonRefresh($"批量执行[{act}]操作", 1);
     }
+
+    /// <summary>列出节点上配置的日志文件</summary>
+    [EntityAuthorize(PermissionFlags.Detail)]
+    public async Task<ActionResult> LogFiles(Int32 id)
+    {
+        var dn = AppDeployNode.Find(AppDeployNode._.Id == id);
+        if (dn == null || dn.Node == null) return Json(500, $"[{id}]不存在");
+
+        try
+        {
+            var rs = await _deployService.ListLogFilesAsync(dn, HttpContext.RequestAborted);
+            return Json(0, null, rs);
+        }
+        catch (Exception ex)
+        {
+            return Json(500, ex.Message);
+        }
+    }
+
+    /// <summary>读取日志文件尾部</summary>
+    [EntityAuthorize(PermissionFlags.Detail)]
+    public async Task<ActionResult> LogTail(Int32 id, String file, Int64 offset = 0, Int32 maxBytes = 262144)
+    {
+        var dn = AppDeployNode.Find(AppDeployNode._.Id == id);
+        if (dn == null || dn.Node == null) return Json(500, $"[{id}]不存在");
+        if (file.IsNullOrEmpty()) return Json(500, "请指定日志文件名");
+
+        try
+        {
+            var rs = await _deployService.TailLogFileAsync(dn, file, offset, maxBytes, HttpContext.RequestAborted);
+            return Json(0, null, rs);
+        }
+        catch (Exception ex)
+        {
+            return Json(500, ex.Message);
+        }
+    }
 }

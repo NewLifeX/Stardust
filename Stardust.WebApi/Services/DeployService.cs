@@ -10,6 +10,7 @@ using NewLife.Serialization;
 using Stardust.Data.Deployment;
 using Stardust.Data.Nodes;
 using Stardust.Deployment;
+using Stardust.Managers;
 using Stardust.Models;
 using Stardust.Server;
 
@@ -465,4 +466,61 @@ public class DeployService(StarFactory starFactory, ITracer tracer)
 
         return true;
     }
+
+    #region 节点应用文件日志
+
+    /// <summary>列出部署节点配置目录下的日志文件</summary>
+    public Task<DeployLogListResult> ListLogFilesAsync(AppDeployNode deployNode, CancellationToken cancellationToken = default)
+        => InvokeDeployLogAsync<DeployLogListResult>(deployNode, "deploy/log/list", BuildLogListArg(deployNode), cancellationToken);
+
+    /// <summary>读取日志文件尾部</summary>
+    public Task<DeployLogTailResult> TailLogFileAsync(AppDeployNode deployNode, String file, Int64 offset = 0, Int32 maxBytes = 256 * 1024, CancellationToken cancellationToken = default)
+    {
+        var arg = BuildLogListArg(deployNode);
+        var tail = new DeployLogTailArg
+        {
+            LogDirectory = arg.LogDirectory,
+            WorkingDirectory = arg.WorkingDirectory,
+            File = file,
+            Offset = offset,
+            MaxBytes = maxBytes,
+        };
+        return InvokeDeployLogAsync<DeployLogTailResult>(deployNode, "deploy/log/tail", tail, cancellationToken);
+    }
+
+    static DeployLogListArg BuildLogListArg(AppDeployNode deployNode)
+    {
+        var logDir = deployNode.GetEffectiveLogDirectory();
+        if (logDir.IsNullOrEmpty()) throw new InvalidOperationException(L.T("Log directory is not configured for this deploy node. Set it on the deploy set or node."));
+
+        return new DeployLogListArg
+        {
+            LogDirectory = logDir,
+            WorkingDirectory = deployNode.GetEffectiveWorkingDirectory(),
+            Pattern = deployNode.GetEffectiveLogFilePattern(),
+        };
+    }
+
+    async Task<T> InvokeDeployLogAsync<T>(AppDeployNode deployNode, String command, Object arg, CancellationToken cancellationToken)
+    {
+        var node = deployNode.Node ?? throw new InvalidOperationException(L.T("Node not found."));
+        var json = arg.ToJson();
+
+        var reply = await starFactory.SendNodeCommandAsync(node.Code, command, json, 0, 60, 25, cancellationToken);
+        if (reply == null) throw new TimeoutException(L.T("Timed out waiting for the node to respond. Check that StarAgent is online and upgraded."));
+
+        if (reply.Status == CommandStatus.错误)
+        {
+            var err = reply.Data?.ToString();
+            throw new InvalidOperationException(err.IsNullOrEmpty() ? L.T("The node failed to read logs.") : err);
+        }
+
+        var data = reply.Data?.ToString();
+        if (data.IsNullOrEmpty()) throw new InvalidOperationException(L.T("Empty response from node."));
+
+        var rs = data.ToJsonEntity<T>();
+        return rs ?? throw new InvalidOperationException(L.T("Invalid response from node."));
+    }
+
+    #endregion
 }

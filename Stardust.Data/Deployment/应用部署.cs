@@ -316,6 +316,24 @@ public partial class AppDeploy
     [BindColumn("HealthCheck", "健康检查。探针检测服务是否正常，http/tcp/udp地址，如http://localhost:6600/health", "")]
     public String HealthCheck { get => _HealthCheck; set { if (OnPropertyChanging("HealthCheck", value)) { _HealthCheck = value; OnPropertyChanged("HealthCheck"); } } }
 
+    private String _LogDirectory;
+    /// <summary>日志目录。节点上应用日志目录；绝对路径或相对工作目录，为空时不可在控制台查看文件日志</summary>
+    [Category("发布参数")]
+    [DisplayName("日志目录")]
+    [Description("日志目录。节点上应用日志目录；绝对路径或相对工作目录，为空时不可在控制台查看文件日志")]
+    [DataObjectField(false, false, true, 500)]
+    [BindColumn("LogDirectory", "日志目录。节点上应用日志目录；绝对路径或相对工作目录，为空时不可在控制台查看文件日志", "")]
+    public String LogDirectory { get => _LogDirectory; set { if (OnPropertyChanging("LogDirectory", value)) { _LogDirectory = value; OnPropertyChanged("LogDirectory"); } } }
+
+    private String _LogFilePattern;
+    /// <summary>日志文件匹配。列目录与默认选中时使用，如 *.log 或 app-*.log</summary>
+    [Category("发布参数")]
+    [DisplayName("日志文件匹配")]
+    [Description("日志文件匹配。列目录与默认选中时使用，如 *.log 或 app-*.log")]
+    [DataObjectField(false, false, true, 200)]
+    [BindColumn("LogFilePattern", "日志文件匹配。列目录与默认选中时使用，如 *.log 或 app-*.log", "*.log")]
+    public String LogFilePattern { get => _LogFilePattern; set { if (OnPropertyChanging("LogFilePattern", value)) { _LogFilePattern = value; OnPropertyChanged("LogFilePattern"); } } }
+
     private Int32 _CreateUserId;
     /// <summary>创建者</summary>
     [Category("扩展")]
@@ -422,6 +440,8 @@ public partial class AppDeploy
             "AutoStop" => _AutoStop,
             "ReloadOnChange" => _ReloadOnChange,
             "HealthCheck" => _HealthCheck,
+            "LogDirectory" => _LogDirectory,
+            "LogFilePattern" => _LogFilePattern,
             "CreateUserId" => _CreateUserId,
             "CreateTime" => _CreateTime,
             "CreateIP" => _CreateIP,
@@ -469,6 +489,8 @@ public partial class AppDeploy
                 case "AutoStop": _AutoStop = value.ToBoolean(); break;
                 case "ReloadOnChange": _ReloadOnChange = value.ToBoolean(); break;
                 case "HealthCheck": _HealthCheck = Convert.ToString(value); break;
+                case "LogDirectory": _LogDirectory = Convert.ToString(value); break;
+                case "LogFilePattern": _LogFilePattern = Convert.ToString(value); break;
                 case "CreateUserId": _CreateUserId = value.ToInt(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -640,6 +662,12 @@ public partial class AppDeploy
         /// <summary>健康检查。探针检测服务是否正常，http/tcp/udp地址，如http://localhost:6600/health</summary>
         public static readonly Field HealthCheck = FindByName("HealthCheck");
 
+        /// <summary>日志目录。节点上应用日志目录；绝对路径或相对工作目录，为空时不可在控制台查看文件日志</summary>
+        public static readonly Field LogDirectory = FindByName("LogDirectory");
+
+        /// <summary>日志文件匹配。列目录与默认选中时使用，如 *.log 或 app-*.log</summary>
+        public static readonly Field LogFilePattern = FindByName("LogFilePattern");
+
         /// <summary>创建者</summary>
         public static readonly Field CreateUserId = FindByName("CreateUserId");
 
@@ -768,6 +796,12 @@ public partial class AppDeploy
 
         /// <summary>健康检查。探针检测服务是否正常，http/tcp/udp地址，如http://localhost:6600/health</summary>
         public const String HealthCheck = "HealthCheck";
+
+        /// <summary>日志目录。节点上应用日志目录；绝对路径或相对工作目录，为空时不可在控制台查看文件日志</summary>
+        public const String LogDirectory = "LogDirectory";
+
+        /// <summary>日志文件匹配。列目录与默认选中时使用，如 *.log 或 app-*.log</summary>
+        public const String LogFilePattern = "LogFilePattern";
 
         /// <summary>创建者</summary>
         public const String CreateUserId = "CreateUserId";

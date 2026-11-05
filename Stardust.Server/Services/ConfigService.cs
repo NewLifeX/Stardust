@@ -328,20 +328,36 @@ public class ConfigService
             if (app.Version >= app.NextVersion) throw new ApiException(701, L.T("Already the latest version."));
             app.Publish();
 
-            await _starFactory.SendAppCommandAsync(app.Name, null, "config/publish", "", 0, 3600, 5, cancellationToken);
-            var rs = 1;
+            return await NotifyApps(app, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            span?.SetError(ex, null);
+            throw;
+        }
+    }
 
-            // 通知下游依赖应用
-            if (app.CanBeQuoted)
+    /// <summary>回滚到指定发布历史。复用实体层回滚逻辑，并按发布通道通知应用与下游依赖</summary>
+    /// <param name="historyId">发布历史编号</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>回滚结果。Notified 为已通知应用数</returns>
+    public async Task<ConfigRollbackResult> Rollback(Int32 historyId, CancellationToken cancellationToken = default)
+    {
+        using var span = _tracer?.NewSpan(nameof(Rollback), historyId + "");
+        try
+        {
+            var rs = AppConfig.Rollback(historyId);
+
+            // 回滚已落库，通知失败不回滚本次操作；把失败原因带回给调用方展示
+            try
             {
-                foreach (var item in app.GetChilds())
-                {
-                    if (item.Enable)
-                    {
-                        _ = _starFactory.SendAppCommandAsync(item.Name, null, "config/publish", "", 0, 3600, 5, cancellationToken);
-                        rs++;
-                    }
-                }
+                rs.Notified = await NotifyApps(rs.Config, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                rs.NotifyError = ex.Message;
+                span?.SetError(ex, null);
+                XTrace.WriteException(ex);
             }
 
             return rs;
@@ -351,5 +367,30 @@ public class ConfigService
             span?.SetError(ex, null);
             throw;
         }
+    }
+
+    /// <summary>通知应用与下游依赖重新加载配置。与发布保持同一通道</summary>
+    /// <param name="app">应用配置</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>已通知应用数</returns>
+    private async Task<Int32> NotifyApps(AppConfig app, CancellationToken cancellationToken)
+    {
+        await _starFactory.SendAppCommandAsync(app.Name, null, "config/publish", "", 0, 3600, 5, cancellationToken);
+        var rs = 1;
+
+        // 通知下游依赖应用
+        if (app.CanBeQuoted)
+        {
+            foreach (var item in app.GetChilds())
+            {
+                if (item.Enable)
+                {
+                    _ = _starFactory.SendAppCommandAsync(item.Name, null, "config/publish", "", 0, 3600, 5, cancellationToken);
+                    rs++;
+                }
+            }
+        }
+
+        return rs;
     }
 }

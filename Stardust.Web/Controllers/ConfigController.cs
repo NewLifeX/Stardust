@@ -24,8 +24,9 @@ public class ConfigController(ConfigService configService, AppTokenService token
         var app = Valid(appId, secret, out var online);
         var ip = HttpContext.GetUserHost();
 
-        // 版本没有变化时，不做计算处理，不返回配置数据
-        if (version >= app.Version) return new ConfigInfo { Version = app.Version, UpdateTime = app.UpdateTime };
+        // 版本没有变化时，不做计算处理，不返回配置数据。
+        // 用 == 而不是 >=：回滚后服务端版本可能低于客户端已知版本，此时必须返回完整配置让客户端重新对齐
+        if (version > 0 && version == app.Version) return new ConfigInfo { Version = app.Version, UpdateTime = app.UpdateTime };
 
         // 作用域为空时重写
         scope = scope.IsNullOrEmpty() ? AppRule.CheckScope(app.Id, ip, null) : scope;

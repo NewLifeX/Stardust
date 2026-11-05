@@ -30,6 +30,8 @@ public class McpOperations : IMcpOperations
 
     public Task<Int32> PublishConfigAsync(Int32 configId) => _config.Publish(configId);
 
+    public Task<ConfigRollbackResult> RollbackConfigAsync(Int32 historyId) => _config.Rollback(historyId);
+
     public Task<String> UseVersionAsync(Int32 versionId, String ip, Boolean publishEnabledNodes = true)
         => _deploy.UseVersion(versionId, ip, publishEnabledNodes);
 
@@ -56,5 +58,19 @@ public class McpOperations : IMcpOperations
     {
         var reply = await _star.SendAppCommandAsync(appName, clientId, command, args, 0, 3600, 5);
         return new { status = reply?.Status.ToString(), data = reply?.Data };
+    }
+
+    public async Task<Object> ReadDeployLogFilesAsync(Int32 deployNodeId)
+    {
+        var dn = AppDeployNode.FindById(deployNodeId) ?? throw new InvalidOperationException($"部署节点[{deployNodeId}]不存在");
+        var rs = await _deploy.ListLogFilesAsync(dn);
+        return new { files = rs.Files.Select(f => new { name = f.Name, size = f.Size, last_write_utc = f.LastWriteUtc }).ToArray() };
+    }
+
+    public async Task<Object> ReadDeployLogTailAsync(Int32 deployNodeId, String file, Int64 offset, Int32 maxBytes)
+    {
+        var dn = AppDeployNode.FindById(deployNodeId) ?? throw new InvalidOperationException($"部署节点[{deployNodeId}]不存在");
+        var rs = await _deploy.TailLogFileAsync(dn, file, offset, maxBytes);
+        return new { content = rs.Content, offset = rs.Offset, file_size = rs.FileSize, truncated = rs.Truncated };
     }
 }
