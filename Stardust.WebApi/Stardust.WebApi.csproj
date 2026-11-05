@@ -5,7 +5,7 @@
     <AssemblyName>StarWebApi</AssemblyName>
     <RootNamespace>Stardust.Web</RootNamespace>
     <AssemblyTitle>Stardust management API</AssemblyTitle>
-    <Description>Decoupled WebApi backend for the Stardust distributed service platform. Reuses the area controllers and business services of Stardust.Web while exposing JSON endpoints and the MCP endpoint (POST /mcp, via the shared Stardust.Mcp library), without Razor views or static sites, for direct use by the Stardust.Web.Vue frontend and MCP clients.</Description>
+    <Description>Decoupled WebApi backend for the Stardust distributed service platform. Reuses the area controllers and business services of Stardust.Web while exposing JSON endpoints and the MCP endpoint (POST /mcp, via the shared Stardust.Mcp library), without Razor views. The Vue console (Stardust.Web.Vue build output) is embedded into the assembly, so publishing this project alone ships both API and console, with SPA fallback for history-mode routes.</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2026 NewLife</Copyright>
     <VersionPrefix>3.7</VersionPrefix>
@@ -48,9 +48,11 @@
     <PackageReference Include="NewLife.IP" Version="2.6.2026.1024" />
     <PackageReference Include="NewLife.Redis" Version="7.0.2026.1026-beta0931" />
     <PackageReference Include="NewLife.Remoting.Extensions" Version="4.0.2026.1109-beta0753" />
-    <!-- 魔方 WebAPI 核心库，复用其 EntityController/ApiResponse/AuthController 等纯 API 能力 -->
+    <!-- 魔方 WebAPI 核心库，复用其 EntityController/ApiResponse/AuthController 等纯 API 能力。
+         6.16.2026.1105-beta0348 起皮肤系统支持 /api 回退保护（MapFallback("/api/{**path}",404)），
+         WebApi 实现 ICubeSkin 托管内嵌控制台前端；稳定版发布后可回切 -->
     <PackageReference Include="NewLife.Cube" Version="6.16.2026.1105-beta0802" />
-    <!-- 魔方 Swagger/Scalar 依赖的 OpenAPI 文档生成（AddCubeSwagger） -->
+    <!-- 魔方 Swagger/Scalar 依赖的 OpenAPI 文档生成（AddCubeSwagger），与 NewLife.Cube 同步升级 -->
     <PackageReference Include="NewLife.Cube.Swagger" Version="6.16.2026.1105-beta0802" />
   </ItemGroup>
 
@@ -60,6 +62,25 @@
     <ProjectReference Include="..\Stardust\Stardust.csproj" />
     <ProjectReference Include="..\Stardust.Mcp\Stardust.Mcp.csproj" />
   </ItemGroup>
+
+  <!-- 新控制台前端（Vue SPA）：沿用魔方皮肤包 NewLife.Cube.Vue 的 wwwroot 惯例，构建产物放入本工程 wwwroot 后嵌入程序集，
+       发布本工程得到 DLL 即自带前端，无需额外发布静态文件；运行时由皮肤系统（ICubeSkin 自动发现）托管并回退 index.html。
+       流程：在 Stardust.Web.Vue 执行 pnpm build:all（= vite build + 同步产物到本目录 wwwroot，已 gitignore），再 dotnet publish 本工程；
+       产物缺失时不嵌入，纯后端构建（CI）不受影响，皮肤系统检测无 index.html 自动跳过注册。 -->
+  <ItemGroup Condition="'$(SpaFrontend)' != 'false' And Exists('wwwroot\index.html')">
+    <EmbeddedResource Include="wwwroot\**\*" Exclude="**\*.map" />
+  </ItemGroup>
+
+  <!-- 发布前校验：SpaFrontend 未显式关闭时，发布必须带上前端产物，避免「以为 DLL 有前端」的静默降级 -->
+  <Target Name="VerifySpaAssets" BeforeTargets="PrepareForPublish" Condition="'$(SpaFrontend)' != 'false' And !Exists('wwwroot\index.html')">
+    <Error Text="未找到前端构建产物 Stardust.WebApi/wwwroot/index.html。请先在 Stardust.Web.Vue 目录执行 pnpm build:all 构建并同步前端（产物将嵌入 DLL），或使用 -p:SpaFrontend=false 发布纯 API 后端。" />
+  </Target>
+
+  <!-- wwwroot 仅为编译期嵌入源，不随发布输出（内嵌资源已含全部前端文件；物理副本会以无 no-cache 头遮蔽内嵌入口页，且 DLL 单独升级时物理副本陈旧会反向遮蔽内嵌新版）。
+       实测 Content Remove/StaticWebAssetsEnabled 均拦不住 Web SDK 对 wwwroot 的发布拷贝，故发布管线结束后直接移除输出目录中的 wwwroot -->
+  <Target Name="RemoveSpaWwwrootFromPublish" AfterTargets="Publish">
+    <RemoveDir Directories="$(PublishDir)wwwroot" Condition="'$(PublishDir)' != '' And Exists('$(PublishDir)wwwroot')" />
+  </Target>
 
   <!-- Program.cs 为顶级语句，隐式 Program 类是 internal 的，集成测试工程需可见才能用 WebApplicationFactory<Program>。
        本工程现已与仓库统一用 newlife.snk 强名称签名，故 InternalsVisibleTo 必须带 Key=（friend 程序集 Stardust.WebApiTests 亦签名）。

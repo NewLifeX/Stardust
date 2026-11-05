@@ -1,7 +1,5 @@
-﻿using System.Reflection;
-using Microsoft.AspNetCore.Http.Features;
+﻿using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.Extensions.FileProviders;
 using NewLife;
 using NewLife.Caching;
 using NewLife.Caching.Services;
@@ -174,8 +172,6 @@ public class Startup
         else
             app.UseExceptionHandler("/CubeHome/Error");
 
-        Usewwwroot(app, env);
-
         app.UseStardust();
 
         // 缓存运行时安装文件
@@ -185,6 +181,10 @@ public class Startup
 
         if (Environment.GetEnvironmentVariable("__ASPNETCORE_BROWSER_TOOLS") is null)
             app.UseResponseCompression();
+
+        // 新控制台前端（Vue SPA）：由魔方皮肤系统托管（UseCube 内自动发现 ICubeSkin 实现并注册静态文件与回退），
+        // 注册位置在响应压缩之后，JS/CSS 产物经 gzip/br 传输；ApiSpaSkin 提供内嵌资源（实现见 Skin/ApiSpaSkin.cs）。
+        // 前端未构建（程序集无内嵌 index.html）时皮肤系统自动跳过，行为与纯 API 后端一致
 
         // MCP 协议端点：在 Cube 之前短路 /mcp，避免 Web 中间件影响机器 API
         app.UseStardustMcp();
@@ -434,21 +434,5 @@ public class Startup
                 }
             }
         }
-    }
-
-    private static IApplicationBuilder Usewwwroot(IApplicationBuilder app, IWebHostEnvironment env)
-    {
-        // 独立静态文件设置，魔方自己的静态资源内嵌在程序集里面
-        var options = new StaticFileOptions();
-        {
-            var embeddedProvider = new CubeEmbeddedFileProvider(Assembly.GetExecutingAssembly(), "Stardust.Web.wwwroot");
-            if (!env.WebRootPath.IsNullOrEmpty() && Directory.Exists(env.WebRootPath))
-                options.FileProvider = new CompositeFileProvider(new PhysicalFileProvider(env.WebRootPath), embeddedProvider);
-            else
-                options.FileProvider = embeddedProvider;
-        }
-        app.UseStaticFiles(options);
-
-        return app;
     }
 }

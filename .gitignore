@@ -45,6 +45,7 @@ bld/
 Stardust.Web.Vue/.vscode
 Stardust.Web.Vue/node_modules
 Stardust.Web.Vue/dist
+Stardust.WebApi/wwwroot
 
 /Stardust.Data/Platform/Config
 /Stardust.Data/RedisNodes/Config
