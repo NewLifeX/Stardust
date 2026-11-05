@@ -497,7 +497,7 @@ describe('useDeployData · F06/F07/F08 新操作', () => {
     const deleteDeployNode = vi.fn<DeployDeps['deleteDeployNode']>(async () => ({ ok: true, message: '部署节点已删除' }));
     const s = setup({ createDeployNode, updateDeployNode, deleteDeployNode });
     await settle();
-    const m = { nodeId: 2, enable: true, port: 0, fileName: '', arguments: '', workingDirectory: '', userName: '', environments: '', maxMemory: 0, delay: 0, healthCheck: '', remark: '' };
+    const m = { nodeId: 2, enable: true, port: 0, fileName: '', arguments: '', workingDirectory: '', userName: '', environments: '', maxMemory: 0, delay: 0, healthCheck: '', remark: '', logDirectory: '', logFilePattern: '' };
     expect(await s.d.saveNode(m)).toBe(true);
     expect(createDeployNode).toHaveBeenCalledTimes(1);
     expect(await s.d.saveNode(m, 12)).toBe(true);

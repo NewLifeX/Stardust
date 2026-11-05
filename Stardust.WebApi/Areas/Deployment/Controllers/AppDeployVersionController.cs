@@ -110,6 +110,9 @@ public class AppDeployVersionController : DeploymentEntityController<AppDeployVe
             Remark = remark,
         };
 
+        // 与 MVC 表单上传一致：Valid(post) 显式写入当前追踪 ID（除实体 TraceInterceptor 兜底外再保证一次语义一致）
+        entity.TraceId = DefaultSpan.Current?.TraceId;
+
         // 复刻标准新增流程：OnInsert（含部署集统计 Fix）后保存文件（override 已回写 Hash/Size/Url 并处理自动发布）
         OnInsert(entity);
         try

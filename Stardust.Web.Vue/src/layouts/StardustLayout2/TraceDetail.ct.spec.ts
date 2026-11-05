@@ -45,3 +45,25 @@ test('多值逐条请求：/trace/a,b 为两次单 id 请求（不整串直传�
   const calls = await page.evaluate(() => (window as unknown as { __traceCalls?: string[] }).__traceCalls ?? []);
   expect(calls).toEqual(['405', 'bad']);
 });
+
+test('关系图视图：deps 桩渲染 EChart（API 优先注入，layout=none 确定性）', async ({ page }) => {
+  await openStory(page, 'TraceDetail/Graph');
+  const wrap = page.locator('[data-spec="trace-graph"]');
+  await expect(wrap).toBeVisible();
+  await expect(wrap.locator('canvas')).toHaveCount(1);
+  // 桩记录：关系图按单 traceId 逐条取数（与瀑布一致的多值拆分语义）
+  const calls = await page.evaluate(() => (window as unknown as { __graphCalls?: string[] }).__graphCalls ?? []);
+  expect(calls).toEqual(['405']);
+});
+
+test('视图切换：关系图↔瀑布往返（默认瀑布，既有基线不受影响）', async ({ page }) => {
+  await openStory(page, 'TraceDetail/Graph');
+  await expect(page.locator('[data-spec="trace-graph"] canvas')).toHaveCount(1);
+  await page.locator('[data-spec="trace-view-waterfall"]').click();
+  await expect(page.locator('[data-spec="trace-waterfall"]')).toBeVisible();
+  // 切换不影响数据：瀑布内容（诊断框就位）
+  await expect(page.locator('[data-spec="trace-diag"]')).toContainText('共 2 个片段');
+  await expect(page.locator('[data-spec="trace-graph"]')).toHaveCount(0);
+  await page.locator('[data-spec="trace-view-graph"]').click();
+  await expect(page.locator('[data-spec="trace-graph"] canvas')).toHaveCount(1);
+});

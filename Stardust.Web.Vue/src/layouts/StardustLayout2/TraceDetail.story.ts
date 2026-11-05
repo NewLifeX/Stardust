@@ -1,5 +1,6 @@
 import TraceDetail from '../../../apps/stardust/src/views/Console/TraceDetail.vue';
 import type { Span } from './trace.logic.ts';
+import type { GraphResult } from '../../../apps/stardust/src/components/traceGraph.logic.ts';
 import type { Req } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
 
 /**
@@ -24,10 +25,36 @@ async function stubSpans(_req: Req, traceId: string): Promise<Span[] | null> {
   return traceId === '369299' ? [spansOf(traceId)[0]] : spansOf(traceId);
 }
 
+/** 关系图桩（deps.graph）：layout=none + 固定 x/y → ECharts 确定性渲染（CT 稳定）；记录调用验证「单值逐条」 */
+async function stubGraph(_req: Req, traceId: string): Promise<GraphResult> {
+  (window as unknown as { __graphCalls?: string[] }).__graphCalls = (
+    window as unknown as { __graphCalls?: string[] }
+  ).__graphCalls ?? [];
+  (window as unknown as { __graphCalls?: string[] }).__graphCalls!.push(traceId);
+  return {
+    status: 'ok',
+    data: {
+      traceId,
+      title: 'order-service关系图',
+      layout: 'none',
+      categories: [{ name: 'App' }],
+      nodes: [
+        { id: '1', name: 'GET /order', value: 500, category: 0, symbolSize: 80, x: 80, y: 60 },
+        { id: '2', name: 'db.query', value: 300, category: 0, symbolSize: 60, x: 240, y: 150 },
+      ],
+      links: [{ source: '1', target: '2' }],
+      source: 'api',
+    },
+  };
+}
+
 export const stories = [
   // 测试状态：单链路 → 瀑布 + 诊断框（含失败片段），无「多值并列」标注
   { id: 'TraceDetail/Single', component: TraceDetail, props: { traceId: '405', deps: { fetchSpans: stubSpans } } },
 
   // 测试状态：多值（含一条取数失败 bad）→ 两个链路卡 + 顶部部分失败提示 + 多值标注
   { id: 'TraceDetail/Multi', component: TraceDetail, props: { traceId: '405,bad', deps: { fetchSpans: stubSpans } } },
+
+  // 测试状态：关系图视图（initialView='graph'）→ TraceGraph 经桩渲染（API 优先注入；瀑布数据仍用 stubSpans）
+  { id: 'TraceDetail/Graph', component: TraceDetail, props: { traceId: '405', initialView: 'graph', deps: { fetchSpans: stubSpans, graph: stubGraph } } },
 ];

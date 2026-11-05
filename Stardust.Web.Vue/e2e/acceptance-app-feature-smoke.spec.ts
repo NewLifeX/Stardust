@@ -157,9 +157,7 @@ test('应用功能冒烟（WebApi 契约 + 关键页路由）', async ({ page })
   const s10 = await shot(page, 'shot-lead-rerun-F10-configs-keycount.png');
   record('F10-keys', keyNonZero, `Key 数非 0=${keyNonZero}`, s10);
   record('F11', /应用规则/.test(configs), '应用规则');
-  record('F15', /应用依赖/.test(configs), '应用依赖区块');
-  await page.goto('/app/config/4', { waitUntil: 'networkidle' });
-  record('F15-panel', /上下游依赖/.test(await page.locator('body').innerText()), '上下游面板');
+  // F15 应用依赖已于 2026-11-04 按用户决策移除，不再断言
 
   // F12
   await page.goto('/apps', { waitUntil: 'networkidle' });

@@ -81,10 +81,11 @@ public class NodeVersionController : NodesEntityController<NodeVersion>
             entity.Size = att.Size;
             entity.Source = $"/cube/file?id={att.Id}{att.Extension}";
 
-            entity.Update();
+            if (!(entity as XCode.IEntity).IsNullKey) entity.Update();
         }
 
-        // 不给上层拿到附件，避免Url字段被覆盖
-        return null;
+        // API 版 /attachments 端点直接使用返回值，必须返回附件实体；
+        // 基类 SaveFiles 写回的也是 GetAttachmentUrl 相对地址（/cube/file?id=…），不会被物理路径覆盖
+        return att;
     }
 }

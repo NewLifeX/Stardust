@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.ViewModels;
@@ -38,6 +39,13 @@ public class AppOnlineController : RegistryEntityController<AppOnline>
             df.Target = "_blank";
         }
         {
+            var df = ListFields.AddListField("OnlineState", null, "PingCount");
+            df.Header = "状态";
+            df.DisplayName = "状态";
+            df.GetValue = e => IsOnline(e as AppOnline) ? "在线" : "离线";
+            df.GetClass = e => IsOnline(e as AppOnline) ? "text-success" : "text-muted";
+        }
+        {
             var df = ListFields.AddListField("Meter", "LongLink");
             df.Header = "性能";
             df.DisplayName = "性能";
@@ -58,6 +66,14 @@ public class AppOnlineController : RegistryEntityController<AppOnline>
     }
 
     public AppOnlineController(StarFactory starFactory) => _starFactory = starFactory;
+
+    public override void OnActionExecuting(ActionExecutingContext filterContext)
+    {
+        base.OnActionExecuting(filterContext);
+
+        // 对齐 MVC：应用在线列表禁止手工新增在线记录
+        PageSetting.EnableAdd = false;
+    }
 
     /// <summary>高级搜索。按条件分页查询</summary>
     /// <param name="p">分页参数</param>
@@ -88,10 +104,7 @@ public class AppOnlineController : RegistryEntityController<AppOnline>
     {
         if (appId <= 0) throw new ArgumentNullException(nameof(appId), L.T("Application is required."));
 
-        // 在线判定与服务端会话超时保持一致（默认600秒）
-        var timeout = Stardust.Server.StarServerSetting.Current.SessionTimeout;
-        if (timeout <= 0) timeout = 60;
-        var onlineLine = DateTime.Now.AddSeconds(-timeout);
+        // 在线判定复用 IsOnline（心跳 SessionTimeout，兜底 600 秒，与 MVC 一致）
 
         var list = AppOnline.FindAllByApp(appId);
         var rs = new List<Object>();
@@ -115,7 +128,7 @@ public class AppOnlineController : RegistryEntityController<AppOnline>
                 nodeId = item.NodeId,
                 name = item.Name,
                 ip = item.IP,
-                online = item.UpdateTime >= onlineLine,
+                online = IsOnline(item),
                 cpu = meter?.CpuUsage,
                 memory = meter?.Memory,
                 availableMemory = nodeOnline?.AvailableMemory,
@@ -136,11 +149,19 @@ public class AppOnlineController : RegistryEntityController<AppOnline>
         if (command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(command));
 
         var ts = new List<(String name, Task<CommandReplyModel?> task)>();
+        var skipped = 0;
         foreach (var item in SelectKeys)
         {
             var online = AppOnline.FindById(item.ToInt());
             if (online != null && online.App != null)
             {
+                // 单例应用会保留最近2天的历史会话，离线会话不再下发，避免无谓等待
+                if (!IsOnline(online))
+                {
+                    skipped++;
+                    continue;
+                }
+
                 ts.Add((online.AppName, _starFactory.SendAppCommandAsync(online.App.Name, online.Client, command, argument, 0, 300, 0, HttpContext.RequestAborted)));
             }
         }
@@ -150,6 +171,7 @@ public class AppOnlineController : RegistryEntityController<AppOnline>
         var success = ts.Count(t => t.task.Result != null);
         var timeout = ts.Count(t => t.task.Result == null);
         var msg = $"操作成功！下发{ts.Count}个，响应{success}个，超时{timeout}个";
+        if (skipped > 0) msg += $"，跳过离线{skipped}个";
         foreach (var (name, task) in ts)
         {
             var reply = task.Result;
@@ -165,11 +187,19 @@ public class AppOnlineController : RegistryEntityController<AppOnline>
     public async Task<ActionResult> FreeMemory()
     {
         var ts = new List<(String name, Task<CommandReplyModel?> task)>();
+        var skipped = 0;
         foreach (var item in SelectKeys)
         {
             var online = AppOnline.FindById(item.ToInt());
             if (online != null && online.App != null)
             {
+                // 单例应用会保留最近2天的历史会话，离线会话不再下发，避免无谓等待
+                if (!IsOnline(online))
+                {
+                    skipped++;
+                    continue;
+                }
+
                 ts.Add((online.AppName, _starFactory.SendAppCommandAsync(online.App.Name, online.Client, "app/freeMemory", null, 0, 300, 5, HttpContext.RequestAborted)));
             }
         }
@@ -179,6 +209,7 @@ public class AppOnlineController : RegistryEntityController<AppOnline>
         var success = ts.Count(t => t.task.Result != null);
         var timeout = ts.Count(t => t.task.Result == null);
         var msg = $"操作成功！下发{ts.Count}个，响应{success}个，超时{timeout}个";
+        if (skipped > 0) msg += $"，跳过离线{skipped}个";
         foreach (var (name, task) in ts)
         {
             var reply = task.Result;
@@ -187,5 +218,19 @@ public class AppOnlineController : RegistryEntityController<AppOnline>
         }
 
         return JsonRefresh(msg);
+    }
+
+    /// <summary>判断在线会话是否仍然活跃</summary>
+    /// <param name="online">在线会话</param>
+    /// <returns>是否在线</returns>
+    /// <remarks>单例应用下线后记录会保留2天，列表与批量命令必须按心跳时间区分在线状态。对齐 MVC 同名私有方法（Stardust.Web 9d117ab1）。</remarks>
+    private static Boolean IsOnline(AppOnline online)
+    {
+        if (online == null) return false;
+
+        var timeout = Stardust.Server.StarServerSetting.Current.SessionTimeout;
+        if (timeout <= 0) timeout = 600;
+
+        return (DateTime.Now - online.UpdateTime).TotalSeconds < timeout;
     }
 }

@@ -51,9 +51,6 @@ import { stories as appRuleDrawerStories } from '../src/layouts/StardustLayout2/
 import { stories as appRuleTableStories } from '../src/layouts/StardustLayout2/AppRuleTable.story';
 import { stories as appFormDrawerStories } from '../src/layouts/StardustLayout2/AppFormDrawer.story';
 import { stories as serviceDetailDrawerStories } from '../src/layouts/StardustLayout2/ServiceDetailDrawer.story';
-import { stories as appQuoteTableStories } from '../src/layouts/StardustLayout2/AppQuoteTable.story';
-import { stories as appQuoteDrawerStories } from '../src/layouts/StardustLayout2/AppQuoteDrawer.story';
-import { stories as appDepsPanelStories } from '../src/layouts/StardustLayout2/AppDepsPanel.story';
 import { stories as traceDetailStories } from '../src/layouts/StardustLayout2/TraceDetail.story';
 
 export const stories: Array<{
@@ -107,8 +104,5 @@ export const stories: Array<{
   ...appRuleTableStories,
   ...appFormDrawerStories,
   ...serviceDetailDrawerStories,
-  ...appQuoteTableStories,
-  ...appQuoteDrawerStories,
-  ...appDepsPanelStories,
   ...traceDetailStories,
 ];

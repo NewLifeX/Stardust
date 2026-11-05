@@ -59,10 +59,11 @@ public class DotNetPackageController : NodesEntityController<DotNetPackage>
             entity.FileHash = att.Hash;
             entity.Size = att.Size;
             entity.Source = $"/cube/file?id={att.Id}{att.Extension}";
-            entity.Update();
+            if (!(entity as XCode.IEntity).IsNullKey) entity.Update();
         }
 
-        // 返回 null 阻止 Cube 用物理路径覆盖 Source 字段
-        return null;
+        // API 版 /attachments 端点直接使用返回值，必须返回附件实体；
+        // 基类 SaveFiles 写回的也是 GetAttachmentUrl 相对地址（/cube/file?id=…），不会被物理路径覆盖
+        return att;
     }
 }

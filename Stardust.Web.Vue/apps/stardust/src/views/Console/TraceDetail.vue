@@ -4,6 +4,8 @@
  * 顶部 TraceId 输入框支持逗号多值（parseTraceIds 拆分去重，上限 5 个）：
  * 服务端 /Monitors/SampleData?traceId= 是单值查询、没有「一次返回多条链路」的接口，
  * 多值=前端逐条并行拉取后**并列展示各链路独立时间轴**（UI 明确标注，不是合并视图）。
+ * 视图切换（2026-11-04 用户拍板接入 /api/trace/graph）：瀑布（默认）｜关系图
+ * ——关系图内嵌 TraceGraph 组件（API 优先、SampleData 自解析回退，见 traceGraph.logic.ts）。
  * 复用 trace.logic 的 toSpans/buildTraceList/buildWaterfall/summarizeTrace。
  * 入口深链：AppObserve（应用历史/命令）、DeployHistory、TraceList 的 TraceId 链接。
  * 取数经 deps 注入（story/CT 假实现，生产走真实 request）。
@@ -11,6 +13,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import realRequest from '@newlifex/cube-vue/core/utils/request';
+import TraceGraph from '../../components/TraceGraph.vue';
 import Btn from '@/layouts/StardustLayout2/Btn.vue';
 import Card from '@/layouts/StardustLayout2/Card.vue';
 import KIcon from '@/layouts/StardustLayout2/KIcon.vue';
@@ -25,10 +28,13 @@ import {
   summarizeTrace,
 } from '@/layouts/StardustLayout2/trace.logic';
 import type { Span, TraceSummary, WaterfallBar } from '@/layouts/StardustLayout2/trace.logic';
+import type { GraphResult } from '../../components/traceGraph.logic';
 import type { Req } from '../Stardust/appsModel';
 
 export interface TraceDetailDeps {
   fetchSpans: (request: Req, traceId: string) => Promise<Span[] | null>;
+  /** 覆盖关系图取数决策（透传给 TraceGraph deps.resolve）；story/CT 桩用 */
+  graph?: (request: Req, traceId: string) => Promise<GraphResult>;
 }
 
 const DEFAULT_DEPS: TraceDetailDeps = { fetchSpans: fetchTraceSpans };
@@ -40,6 +46,8 @@ const props = defineProps<{
   deps?: TraceDetailDeps;
   /** story/CT 种子：无路由环境（gallery）直接从 prop 取初始 TraceId */
   traceId?: string;
+  /** story/CT 种子：初始视图（默认瀑布，保持既有基线） */
+  initialView?: 'waterfall' | 'graph';
 }>();
 
 function req(): Req {
@@ -49,6 +57,8 @@ function req(): Req {
 const input = ref('');
 const loading = ref(false);
 const loadError = ref(false);
+/** 视图切换：瀑布（默认）｜关系图（TraceGraph：API 优先、SampleData 自解析回退） */
+const view = ref<'waterfall' | 'graph'>(props.initialView ?? 'waterfall');
 /** 每条链路一份：summary + 片段；null=取数失败 */
 interface TraceUnit {
   summary: TraceSummary;
@@ -63,6 +73,9 @@ const multi = computed(() => units.value.length > 1);
 
 const barsOf = (spans: Span[] | null): WaterfallBar[] => buildWaterfall(spans ?? []);
 const diagOf = (spans: Span[] | null) => summarizeTrace(spans ?? []);
+
+/** 关系图 deps：把页面 deps.graph 透传给 TraceGraph 的 resolve（无注入则组件走默认真实取数） */
+const graphDeps = computed(() => (props.deps?.graph ? { resolve: props.deps.graph } : undefined));
 
 async function query(raw: string): Promise<void> {
   const ids = parseTraceIds(raw);
@@ -148,7 +161,7 @@ function goBack(): void {
     <PageHead
       eyebrow="观测 · 调用链"
       title="链路详情"
-      sub="按 TraceId 查看整段链路瀑布。支持逗号分隔多值（最多 5 个），多值并列展示各链路独立时间轴。"
+      sub="按 TraceId 查看整段链路瀑布或关系图（瀑布/关系图可切换）。支持逗号分隔多值（最多 5 个），多值并列展示各链路独立结果。"
     >
       <template #actions>
         <Btn
@@ -193,11 +206,32 @@ function goBack(): void {
           {{ loading ? '查询中…' : '查询' }}
         </Btn>
         <span
+          class="flex items-center gap-[4px]"
+          data-spec="trace-view-toggle"
+        >
+          <Btn
+            size="sm"
+            :variant="view === 'waterfall' ? 'primary' : 'ghost'"
+            data-spec="trace-view-waterfall"
+            @click="view = 'waterfall'"
+          >
+            瀑布
+          </Btn>
+          <Btn
+            size="sm"
+            :variant="view === 'graph' ? 'primary' : 'ghost'"
+            data-spec="trace-view-graph"
+            @click="view = 'graph'"
+          >
+            关系图
+          </Btn>
+        </span>
+        <span
           v-if="multi && !loading"
           class="text-[11.5px] text-[var(--el-text-color-secondary)]"
           data-spec="trace-multi-note"
         >
-          多值并列展示：{{ units.length }} 条链路各自独立时间轴（服务端按 TraceId 单值查询，无合并接口）
+          多值并列展示：{{ units.length }} 条链路各自独立{{ view === 'waterfall' ? '时间轴' : '关系图' }}（服务端按 TraceId 单值查询，无合并接口）
         </span>
       </div>
     </Card>
@@ -262,7 +296,15 @@ function goBack(): void {
         </div>
 
         <div class="px-[18px] py-[14px]">
-          <template v-if="u.spans === null">
+          <!-- 关系图视图：TraceGraph 自取数（API 优先、SampleData 自解析回退），与瀑布取数相互独立 -->
+          <template v-if="view === 'graph'">
+            <TraceGraph
+              :trace-id="u.summary.traceId"
+              height="360px"
+              :deps="graphDeps"
+            />
+          </template>
+          <template v-else-if="u.spans === null">
             <div
               class="py-6 text-center text-[12.5px] text-[var(--el-color-danger)]"
               data-spec="trace-unit-failed"

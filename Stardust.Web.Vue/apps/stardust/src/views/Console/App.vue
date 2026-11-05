@@ -17,7 +17,6 @@ import AppTabs from '@/layouts/StardustLayout2/AppTabs.vue';
 import TraceList from '@/layouts/StardustLayout2/TraceList.vue';
 import AppLog from '@/layouts/StardustLayout2/AppLog.vue';
 import AppConfigTable from '@/layouts/StardustLayout2/AppConfigTable.vue';
-import AppDepsPanel from '@/layouts/StardustLayout2/AppDepsPanel.vue';
 import AppInstances from '@/layouts/StardustLayout2/AppInstances.vue';
 import AppObserve from '@/layouts/StardustLayout2/AppObserve.vue';
 import AppTracerTab from '@/layouts/StardustLayout2/AppTracerTab.vue';
@@ -240,11 +239,6 @@ const { reload } = useContextReload(loadApps, stardustContext);
       >
         <AppConfigTable
           :app-id="Number(row.id)"
-        />
-        <!-- F15：上下游依赖（AppQuote 双向查询；CRUD 在 /configs） -->
-        <AppDepsPanel
-          :app-id="Number(row.id)"
-          @manage="router.push('/configs')"
         />
       </template>
       <AppInstances
