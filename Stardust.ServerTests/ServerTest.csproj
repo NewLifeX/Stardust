@@ -74,8 +74,27 @@
     <Delete Files="@(_TestHostAppHost->'%(FullPath)')" />
   </Target>
 
+  <!--
+    仓库并存两个同简单名 NewLife.Cube 程序集：Stardust.Web 用 NewLife.Cube.Core（完整版，含 ECharts，
+    asm 6.16.9799.11704），Stardust.WebApi 用 NewLife.Cube（API 版，无 ECharts，6.16.9799.11718）。
+    本工程同时传递引用两者，RAR 统一取高修订版 11718（API 版）→ 编译期 CS7069（AppMinuteStatChartTests
+    已改反射调用规避），但运行期 JIT BuildDashboard 仍需要 ECharts。此目标在构建后用 Core 版覆盖输出
+    目录的 NewLife.Cube.dll，保证运行期类型一致。上游统一两包程序集版本后可移除本目标。
+  -->
+  <Target Name="UseFullCubeForCharts" AfterTargets="Build">
+    <PropertyGroup>
+      <!-- 从 Web 宿主输出复制 Core 版（含 ECharts），避免 NuGetPackageRoot 无尾斜杠时路径拼错 -->
+      <_FullCubeDll>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\Bin\Web\NewLife.Cube.dll'))</_FullCubeDll>
+    </PropertyGroup>
+    <Copy
+      SourceFiles="$(_FullCubeDll)"
+      DestinationFiles="$(TargetDir)NewLife.Cube.dll"
+      Condition="Exists('$(_FullCubeDll)')" />
+  </Target>
+
   <ItemGroup>
     <ProjectReference Include="..\Stardust.Server\Stardust.Server.csproj" />
+    <ProjectReference Include="..\StarAgent\StarAgent.csproj" />
     <ProjectReference Include="..\Stardust.Web\Stardust.Web.csproj" Aliases="web" />
     <!-- 注意：不要在这里引用 Stardust.WebApi。其依赖的 NewLife.Cube(API版) 与本工程经
          Stardust.Web 引入的 NewLife.Cube.Core 是同一程序集标识（都产出 NewLife.Cube.dll）但类型集不同，

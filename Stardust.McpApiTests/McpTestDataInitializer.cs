@@ -24,11 +24,11 @@ namespace Stardust.McpApiTests;
 /// 所有写入均按业务唯一键查重，已存在直接跳过并复用，可重复运行。</summary>
 public static class McpTestDataInitializer
 {
-    /// <summary>WebApi 宿主地址（仅 API，Web 不同步）</summary>
-    public const String BaseUrl = "http://127.0.0.1:6681";
+    /// <summary>WebApi 宿主地址（仅 API，Web 不同步）。可用环境变量 STARDUST_MCP_TEST_BASE_URL 覆盖，便于并行工作区换端口</summary>
+    public static String BaseUrl { get; } = Environment.GetEnvironmentVariable("STARDUST_MCP_TEST_BASE_URL") ?? "http://127.0.0.1:6681";
 
     /// <summary>MCP 端点</summary>
-    public const String McpEndpoint = BaseUrl + "/mcp";
+    public static String McpEndpoint => BaseUrl + "/mcp";
 
     /// <summary>测试项目名</summary>
     public const String ProjectName = "MCP 测试";
@@ -62,6 +62,11 @@ public static class McpTestDataInitializer
     public static Int32 ConfigHistoryId { get; private set; }
     public static Int64 TraceDataId { get; private set; }
     public static Int64 SampleDataId { get; private set; }
+    /// <summary>同一条 TraceId 的第二个 DataId（多值 Id In 分表路由回归数据）</summary>
+    public static Int64 TraceDataId2 { get; private set; }
+    public static Int64 SampleDataId2 { get; private set; }
+    /// <summary>初始化器为调用链造数使用的 TraceId（两个 SampleData 共用）</summary>
+    public static String TraceId { get; private set; } = "";
 
     /// <summary>真实集成：真实节点 Agent 在线节点（NodeOnline 新鲜心跳，Id=3 DGCWIAX10 等）。
     /// 0 表示测试环境无真实节点 Agent（覆盖-3 的 4 个 Agent 依赖工具回退网关受理断言）。</summary>
@@ -401,6 +406,35 @@ public static class McpTestDataInitializer
             output?.WriteLine($"✅ 新建 SampleData（Id={sd.Id}）");
         }
         SampleDataId = sd.Id;
+
+        // 第二个 DataId：同一条 TraceId 下多片段，用于回归「TraceData 反查必须按多值 Id 分片路由」
+        // （单 DataId 的 In(...) 会退化为 =，XCode 能自动定位分片，测不出缺表缺陷）
+        TraceData? td2 = null;
+        using (var split = TraceData.Meta.CreateShard(DateTime.Today))
+        {
+            td2 = TraceData.FindAll().FirstOrDefault(e => e.AppId == AppId && e.Name == Prefix + "trace2");
+        }
+        if (td2 == null)
+        {
+            td2 = new TraceData { AppId = AppId, NodeId = NodeId, ClientId = "mcp-test", Name = Prefix + "trace2", Cost = 20, Errors = 1, Total = 1, StatDate = DateTime.Today, StartTime = DateTime.Now.AddMinutes(-5).ToLong(), CreateTime = DateTime.Now.AddMinutes(-5) };
+            td2.Insert();
+            output?.WriteLine($"✅ 新建 TraceData2（Id={td2.Id}）");
+        }
+        TraceDataId2 = td2.Id;
+
+        SampleData? sd2 = null;
+        using (var split = SampleData.Meta.CreateShard(DateTime.Today))
+        {
+            sd2 = SampleData.FindAll().FirstOrDefault(e => e.DataId == td2.Id && e.SpanId == Prefix + "span2");
+        }
+        if (sd2 == null)
+        {
+            sd2 = new SampleData { DataId = td2.Id, TraceId = sd.TraceId, SpanId = Prefix + "span2", ParentId = null, Cost = 20, Success = false, StartTime = DateTime.Now.AddMinutes(-5).ToLong(), CreateTime = DateTime.Now.AddMinutes(-5) };
+            sd2.Insert();
+            output?.WriteLine($"✅ 新建 SampleData2（Id={sd2.Id}，TraceId={sd2.TraceId}）");
+        }
+        SampleDataId2 = sd2.Id;
+        TraceId = sd.TraceId;
 
         // --- 应用在线 / 节点在线（node_list online / app_health） ---
         var ao = AppOnline.FindAll().FirstOrDefault(e => e.AppId == AppId && e.NodeId == NodeId);

@@ -25,6 +25,11 @@ public sealed class StarServerFixture : IDisposable
 
     public StarServerFixture()
     {
+        // 测试进程自己的星尘客户端不要去连开发者本机正在跑的 6600，否则和夹具抢同一份库。
+        Environment.SetEnvironmentVariable("StarServer", "http://127.0.0.1:1");
+        // 节点登录会按 IP 库解析地区。库不在时会同步去 PluginServer 下载，超过客户端滚动超时后登录被取消。
+        EnsureIpDatabase();
+
         // 关闭 SQL 与调试日志，并停用 .NET 运行时信息同步，避免测试期间写大量日志与访问外网
         StarTestServer.DisableDebugLog();
         XCode.XCodeSetting.Current.ShowSQL = false;
@@ -51,6 +56,18 @@ public sealed class StarServerFixture : IDisposable
 
     /// <summary>销毁服务端</summary>
     public void Dispose() => _host.Dispose();
+
+    /// <summary>节点登录解析地区时读取 Data/ip.gz。缺文件会阻塞登录去下载，这里复用本机已有库。</summary>
+    private static void EnsureIpDatabase()
+    {
+        var dstDir = Path.Combine(AppContext.BaseDirectory, "Data");
+        Directory.CreateDirectory(dstDir);
+        var dst = Path.Combine(dstDir, "ip.gz");
+        if (File.Exists(dst)) return;
+
+        var src = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "Data", "ip.gz"));
+        if (File.Exists(src)) File.Copy(src, dst);
+    }
 }
 
 /// <summary>共享真实 StarServer 的测试集合</summary>
