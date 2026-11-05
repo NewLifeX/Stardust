@@ -1,6 +1,5 @@
 using System.Text.Json;
 using NewLife;
-using NewLife.Serialization;
 using Stardust.Data.Configs;
 
 namespace Stardust.Mcp.Tools.Config;
@@ -24,9 +23,16 @@ public class ConfigListTool : McpToolBase
     public override Task<Object> InvokeAsync(JsonElement args, McpContext ctx)
     {
         var app = McpGuard.App(ctx, GetInt32(args, "app_id"));
-        var cfg = AppConfig.FindAll(AppConfig._.AppId == app.Id & AppConfig._.ProjectId == ctx.ProjectId).FirstOrDefault();
-        if (cfg == null) return Task.FromResult<Object>(McpResult.Ok($"{app.Name} 还没有配置", new { records = Array.Empty<Object>() }));
-        var rows = ConfigData.FindAllByApp(cfg.Id).Select(e => new { e.Id, e.Key, e.Version, e.Enable, secret = McpGuard.Secret(e.Key) }).ToArray();
+        // 单应用定位用 FindByAppId。MVC/WebApi AppConfigController.Search 在 appId 上先 FindAllByAppId（没有则插入），再 AppConfig.Search；MCP 只读，不插入。
+        var cfg = AppConfig.FindByAppId(app.Id);
+        if (cfg == null)
+            return Task.FromResult<Object>(McpResult.Ok($"{app.Name} 还没有配置", new { records = Array.Empty<Object>() }));
+        // 定位后再核对项目。不符时不能把该配置的名称写进摘要。
+        if (cfg.ProjectId != ctx.ProjectId)
+            return Task.FromResult<Object>(McpResult.Ok("还没有配置", new { records = Array.Empty<Object>() }));
+        // 配置项与 Web/WebApi ConfigDataController.Search 相同：空键、空作用域、时间 MinValue、不按关键字。
+        var rows = ConfigData.Search(cfg.Id, "", "", DateTime.MinValue, DateTime.MinValue, null, null)
+            .Select(e => new { e.Id, e.Key, e.Version, e.Enable, secret = McpGuard.Secret(e.Key) }).ToArray();
         return Task.FromResult<Object>(McpResult.Ok($"{app.Name} 配置 {rows.Length} 项", new { config_id = cfg.Id, version = cfg.Version, records = rows }));
     }
 }
@@ -51,8 +57,9 @@ public class ConfigGetTool : McpToolBase
     public override Task<Object> InvokeAsync(JsonElement args, McpContext ctx)
     {
         var cfg = McpGuard.Config(ctx, GetInt32(args, "config_id"));
-        var key = GetString(args, "key");
-        var rows = ConfigData.FindAllByApp(cfg.Id).Where(e => key.IsNullOrEmpty() || e.Key.EqualIgnoreCase(key))
+        // 与 MVC/WebApi ConfigDataController.Search 一样走作用域为 string 的重载。null 会同时匹配 string 与 bool?。
+        var key = GetString(args, "key") ?? "";
+        var rows = ConfigData.Search(cfg.Id, key, "", DateTime.MinValue, DateTime.MinValue, null, null)
             .Select(e => new
             {
                 e.Key,

@@ -129,6 +129,48 @@ public class DeployService(StarFactory starFactory, ITracer tracer)
         return (Int32)(reply?.Id ?? 0);
     }
 
+    /// <summary>切换部署集当前版本。规则在 <see cref="AppDeployVersion.UseAsCurrent"/>；自动发布与 MVC/API 的 UseVersion 相同，对启用节点并行下发 install。</summary>
+    /// <param name="publishEnabledNodes">为 false 时只改版本号，由调用方自己决定向哪些节点下发。</param>
+    public async Task<String> UseVersion(Int32 versionId, String ip, Boolean publishEnabledNodes = true)
+    {
+        var ver = AppDeployVersion.FindById(versionId) ?? throw new Exception(L.T("Version not found."));
+        var app = ver.UseAsCurrent();
+        if (publishEnabledNodes)
+        {
+            await PublishEnabledNodes(app, ip);
+            if (app.Enable && app.AutoPublish)
+                return "已切换版本，并按自动发布向启用节点下发安装";
+        }
+        return publishEnabledNodes
+            ? "已切换版本号，未开启自动发布，未下发节点"
+            : "已切换版本号，未下发节点";
+    }
+
+    /// <summary>自动发布。应用版本后向启用节点下发安装。</summary>
+    public async Task PublishEnabledNodes(AppDeploy app, String ip)
+    {
+        if (app == null) return;
+        if (!app.Enable || !app.AutoPublish) return;
+
+        using var span = tracer?.NewSpan("AutoPublish", app);
+        try
+        {
+            var ts = new List<Task>();
+            var appNodes = AppDeployNode.FindAllByAppId(app.Id);
+            foreach (var item in appNodes)
+            {
+                if (item.Enable) ts.Add(Control(app, item, "install", ip, item.Delay, 0));
+            }
+            span?.AppendTag(L.TLog("Controlling {0} node(s)", ts.Count));
+            await Task.WhenAll(ts);
+        }
+        catch (Exception ex)
+        {
+            span?.SetError(ex, null);
+            throw;
+        }
+    }
+
     /// <summary>发布控制</summary>
     /// <param name="app">应用部署集</param>
     /// <param name="deployNode">部署节点</param>

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
@@ -118,6 +119,28 @@ public partial class AppConsume : Entity<AppConsume>
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ServiceId == serviceId);
 
         return FindAll(_.ServiceId == serviceId);
+    }
+
+    /// <summary>按服务名包含匹配，并限定在指定项目的应用内。精确匹配用 <see cref="FindAllByService(String)"/>。</summary>
+    /// <param name="serviceName">服务名片段</param>
+    /// <param name="projectId">项目。小于等于 0 时返回空列表</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppConsume> FindAllByServiceName(String serviceName, Int32 projectId)
+    {
+        if (serviceName.IsNullOrEmpty() || projectId <= 0) return new List<AppConsume>();
+
+        var appIds = App.FindAllByProjectId(projectId).Select(e => e.Id).ToArray();
+        if (appIds.Length == 0) return new List<AppConsume>();
+
+        if (Meta.Session.Count < 1000)
+        {
+            var set = new HashSet<Int32>(appIds);
+            return Meta.Cache.FindAll(e => set.Contains(e.AppId) && !e.ServiceName.IsNullOrEmpty() && e.ServiceName.Contains(serviceName, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return FindAll(_.AppId.In(appIds))
+            .Where(e => !e.ServiceName.IsNullOrEmpty() && e.ServiceName.Contains(serviceName, StringComparison.OrdinalIgnoreCase))
+            .ToList();
     }
     #endregion
 

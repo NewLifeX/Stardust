@@ -47,13 +47,11 @@ public class AppDeployVersionController : DeploymentEntityController<AppDeployVe
 
     private readonly DeployService _deployService;
     private readonly IFileStorage _fileStorage;
-    private readonly ITracer _tracer;
 
-    public AppDeployVersionController(DeployService deployService, IFileStorage fileStorage, ITracer tracer)
+    public AppDeployVersionController(DeployService deployService, IFileStorage fileStorage)
     {
         _deployService = deployService;
         _fileStorage = fileStorage;
-        _tracer = tracer;
     }
 
     /// <summary>高级搜索。按条件分页查询</summary>
@@ -203,7 +201,7 @@ public class AppDeployVersionController : DeploymentEntityController<AppDeployVe
                 deploy.Version = entity.Version;
                 deploy.Update();
 
-                _ = Publish(entity.Deploy);
+                _ = _deployService.PublishEnabledNodes(entity.Deploy, UserHost);
             }
         }
 
@@ -239,61 +237,7 @@ public class AppDeployVersionController : DeploymentEntityController<AppDeployVe
     [EntityAuthorize(PermissionFlags.Update)]
     public async Task<ActionResult> UseVersion(Int32 id)
     {
-        var ver = AppDeployVersion.FindById(id);
-        if (ver == null) throw new Exception(L.T("Version not found."));
-
-        if (!ver.Enable) throw new Exception(L.T("Version is not enabled."));
-        if (ver.Version.IsNullOrEmpty()) throw new Exception(L.T("Version is not set."));
-        if (ver.Url.IsNullOrEmpty()) throw new Exception(L.T("File does not exist."));
-
-        ver.TraceId = DefaultSpan.Current?.TraceId;
-        ver.Update();
-
-        var app = ver.Deploy;
-        app.Version = ver.Version;
-        app.Update();
-
-        // 自动发布。应用版本后自动发布到启用节点，加快发布速度
-        await Publish(app);
-
+        await _deployService.UseVersion(id, UserHost);
         return JsonRefresh($"成功！");
-    }
-
-    async Task Publish(AppDeploy app)
-    {
-        if (app == null) return;
-
-        // 自动发布。应用版本后自动发布到启用节点，加快发布速度
-        if (app.Enable && app.AutoPublish)
-        {
-            using var span = _tracer?.NewSpan("AutoPublish", app);
-            try
-            {
-                var ts = new List<Task>();
-                var appNodes = AppDeployNode.FindAllByAppId(app.Id);
-                //// 排序和延迟
-                //appNodes = appNodes.OrderBy(e => e.Delay).ToList();
-                foreach (var item in appNodes)
-                {
-                    //span?.AppendTag(item);
-                    if (item.Enable) ts.Add(_deployService.Control(app, item, "install", UserHost, item.Delay, 0));
-                    //if (item.Enable)
-                    //{
-                    //    ts.Add(Task.Run(async () =>
-                    //    {
-                    //        if (item.Delay > 0) await Task.Delay(item.Delay * 1000);
-                    //        await _deployService.Control(app, item, "install", UserHost, 0);
-                    //    }));
-                    //}
-                }
-                span?.AppendTag(L.TLog("Controlling {0} node(s)", ts.Count));
-                await Task.WhenAll(ts);
-            }
-            catch (Exception ex)
-            {
-                span?.SetError(ex, null);
-                throw;
-            }
-        }
     }
 }

@@ -1,5 +1,4 @@
 using System.Text.Json;
-using NewLife;
 using NewLife.Data;
 using Stardust.Data.Platform;
 
@@ -16,6 +15,7 @@ public class ProjectListTool : McpToolBase
 
     public override Task<Object> InvokeAsync(JsonElement args, McpContext ctx)
     {
+        // 令牌只绑定一个项目。控制台没有「当前令牌项目」页，这里按编号取那一条实体。
         var project = ctx.ProjectId > 0 ? GalaxyProject.FindById(ctx.ProjectId) : null;
         var data = project == null ? null : new { id = project.Id, name = project.Name, enable = project.Enable, nodes = project.Nodes, apps = project.Apps };
         return Task.FromResult<Object>(McpResult.Ok(project == null ? "当前令牌未绑定项目" : $"当前项目：{project.Name}", new { project = data }));
@@ -43,17 +43,21 @@ public class AuditListTool : McpToolBase
 
     public override Task<Object> InvokeAsync(JsonElement args, McpContext ctx)
     {
-        var key = GetString(args, "tool");
+        var tool = GetString(args, "tool");
         var start = Since(args);
-        var pageIdx = Page(args);
-        var pageSize = PageSize(args);
-        var exp = McpAudit._.TokenId == ctx.TokenId & McpAudit._.CreateTime >= start;
-        if (!key.IsNullOrEmpty()) exp &= McpAudit._.ToolName.Contains(key);
-        var all = McpAudit.FindAll(exp).OrderByDescending(e => e.Id).ToArray();
-        var total = all.Length;
-        var rows = all.Skip((pageIdx - 1) * pageSize).Take(pageSize)
-            .Select(e => new { time = e.CreateTime, tool = e.ToolName, success = e.Success, error = e.ErrorMessage, duration = e.Duration, ip = e.CallerIp }).ToArray();
+        var page = new PageParameter
+        {
+            PageIndex = Page(args),
+            PageSize = PageSize(args),
+            Sort = McpAudit._.Id,
+            Desc = true,
+            RetrieveTotalCount = true,
+        };
+        // 与 Web/WebApi McpAuditController 同一份查询（MCP审计日志.cs 的 Search）。end 留空，与未填 dtEnd 相同。
+        var list = McpAudit.Search(ctx.TokenId, tool, null, null, start, DateTime.MinValue, null, page);
+        var total = (Int32)page.TotalCount;
+        var rows = list.Select(e => new { time = e.CreateTime, tool = e.ToolName, success = e.Success, error = e.ErrorMessage, duration = e.Duration, ip = e.CallerIp }).ToArray();
         return Task.FromResult<Object>(McpResult.Ok($"审计 {rows.Length}/{total} 条", new { records = rows },
-            null, null, McpResult.Paged(total, pageIdx, pageSize)));
+            null, null, McpResult.Paged(total, page.PageIndex, page.PageSize)));
     }
 }

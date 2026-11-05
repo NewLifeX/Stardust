@@ -87,7 +87,7 @@ public partial class AlarmRecord : Entity<AlarmRecord>
     /// <returns></returns>
     public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
 
-    /// <summary>高级查询</summary>
+    /// <summary>高级查询。管理端列表不传项目；令牌项目内列表传入 projectId，按看板同一套归属收窄</summary>
     /// <param name="groupId">告警组</param>
     /// <param name="category">类别</param>
     /// <param name="status">状态</param>
@@ -95,8 +95,9 @@ public partial class AlarmRecord : Entity<AlarmRecord>
     /// <param name="end">时间结束</param>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+    /// <param name="projectId">项目。大于 0 时只保留 <see cref="ResolveProjectId"/> 等于该项目的记录；0 表示不按项目收窄</param>
     /// <returns>实体列表</returns>
-    public static IList<AlarmRecord> Search(Int32 groupId, String category, AlarmStatuses status, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<AlarmRecord> Search(Int32 groupId, String category, AlarmStatuses status, DateTime start, DateTime end, String key, PageParameter page, Int32 projectId = 0)
     {
         var exp = new WhereExpression();
 
@@ -106,7 +107,33 @@ public partial class AlarmRecord : Entity<AlarmRecord>
         exp &= _.Id.Between(start, end, Meta.Factory.Snow);
         if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.Category.Contains(key) | _.Action.Contains(key) | _.Content.Contains(key) | _.Creator.Contains(key);
 
-        return FindAll(exp, page);
+        // 不传项目时仍走原来的数据库分页，管理端列表行为不变
+        if (projectId <= 0) return FindAll(exp, page);
+
+        // 归属要先看告警组再看 Action，无法写成名称或类别 IN，查出时间窗后再用同一方法过滤
+        var all = FindAll(exp, page?.OrderBy, null, 0, 0);
+        var matched = new List<AlarmRecord>();
+        foreach (var item in all)
+        {
+            if (item.ResolveProjectId() == projectId) matched.Add(item);
+        }
+
+        if (page == null) return matched;
+
+        page.TotalCount = matched.Count;
+        var size = page.PageSize;
+        if (size <= 0) return matched;
+
+        var index = page.PageIndex;
+        if (index < 1) index = 1;
+        var startRow = (index - 1) * size;
+        if (startRow >= matched.Count) return new List<AlarmRecord>();
+
+        var count = size;
+        if (startRow + count > matched.Count) count = matched.Count - startRow;
+        var rows = new List<AlarmRecord>(count);
+        for (var i = 0; i < count; i++) rows.Add(matched[startRow + i]);
+        return rows;
     }
     #endregion
 
@@ -130,6 +157,53 @@ public partial class AlarmRecord : Entity<AlarmRecord>
         if (hours <= 0) hours = 24;
 
         SilenceTime = DateTime.Now.AddHours(hours);
+
+        return Update() > 0;
+    }
+
+    /// <summary>解析告警归属项目。先看告警组，再取 Action 首段匹配应用或节点。与看板同一套</summary>
+    /// <returns>项目编号。无法归属时返回 0</returns>
+    public Int32 ResolveProjectId()
+    {
+        if (GroupId > 0)
+        {
+            var group = AlarmGroup.FindById(GroupId);
+            if (group != null && group.ProjectId > 0) return group.ProjectId;
+        }
+
+        var action = Action;
+        if (action.IsNullOrEmpty()) return 0;
+
+        // 埋点告警的对象形如 appName/itemName，取第一段用于定位应用或节点
+        var name = action.Split('/', '\\')[0];
+        var app = Stardust.Data.App.FindByName(name);
+        if (app != null) return app.ProjectId;
+
+        var node = Stardust.Data.Nodes.Node.FindByName(name);
+        return node?.ProjectId ?? 0;
+    }
+
+    /// <summary>处置报警。把意见追加到内容，并写下结束时间。不改动作、状态、确认和静默</summary>
+    /// <param name="note">处置意见</param>
+    /// <returns>是否保存成功</returns>
+    public Boolean Resolve(String note)
+    {
+        if (note.IsNullOrEmpty()) throw new ArgumentNullException(nameof(note), "处置意见不能为空");
+
+        const String mark = "\nMCP处置：";
+        var limit = _.Content.Length;
+        if (limit <= 0) limit = 2000;
+
+        // 列长不够时只截意见。原内容里有对象名，不能整段砍到 1000
+        var body = Content ?? "";
+        var room = limit - body.Length - mark.Length;
+        if (room >= 0)
+        {
+            if (note.Length > room) note = note[..room];
+            Content = body + mark + note;
+        }
+
+        EndTime = DateTime.Now;
 
         return Update() > 0;
     }

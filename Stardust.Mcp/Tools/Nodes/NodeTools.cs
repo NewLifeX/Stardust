@@ -1,7 +1,9 @@
 using System.Text.Json;
 using NewLife;
+using NewLife.Data;
 using Stardust.Data;
 using Stardust.Data.Nodes;
+using Stardust.Models;
 
 namespace Stardust.Mcp.Tools.Nodes;
 
@@ -27,15 +29,38 @@ public class NodeListTool : McpToolBase
     {
         McpGuard.NeedProject(ctx);
         var key = GetString(args, "keyword");
-        var exp = Node._.ProjectId == ctx.ProjectId;
-        if (!key.IsNullOrEmpty()) exp &= Node._.Name.Contains(key) | Node._.IP.Contains(key) | Node._.Code.Contains(key);
-        var onlineIds = NodeOnline.FindAll(NodeOnline._.ProjectId == ctx.ProjectId).Select(e => e.NodeID).ToHashSet();
-        var all = Node.FindAll(exp).Where(e => !GetBoolean(args, "online_only") || onlineIds.Contains(e.ID)).ToArray();
-        var total = all.Length;
-        var rows = all.Skip((Page(args) - 1) * PageSize(args)).Take(PageSize(args))
-            .Select(e => new { id = e.ID, e.Name, e.IP, e.Version, e.Category, online = onlineIds.Contains(e.ID) }).ToArray();
-        return Task.FromResult<Object>(McpResult.Ok($"节点 {rows.Length}/{total} 台", new { records = rows },
-            null, null, McpResult.Paged(total, Page(args), PageSize(args))));
+        var pageIndex = Page(args);
+        var pageSize = PageSize(args);
+        var page = new PageParameter
+        {
+            PageIndex = pageIndex,
+            PageSize = pageSize,
+            RetrieveTotalCount = true,
+        };
+
+        // 只看在线走节点在线页的 NodeOnline.Search；其余走节点管理页的 Node.Search。分页都在查询内完成。
+        if (GetBoolean(args, "online_only"))
+        {
+            var onlines = NodeOnline.Search(ctx.ProjectId, -1, -1, -1, null, default, default, key, page);
+            var rows = onlines.Select(e => new { id = e.NodeID, e.Name, e.IP, e.Version, e.Category, online = true }).ToArray();
+            var total = (Int32)page.TotalCount;
+            return Task.FromResult<Object>(McpResult.Ok($"节点 {rows.Length}/{total} 台", new { records = rows },
+                null, null, McpResult.Paged(total, pageIndex, pageSize)));
+        }
+
+        var list = Node.Search(ctx.ProjectId, -1, -1, null, null, (OSKinds)(-1), null, null, null, null, null, default, default, key, page);
+        var records = list.Select(e => new
+        {
+            id = e.ID,
+            e.Name,
+            e.IP,
+            e.Version,
+            e.Category,
+            online = NodeOnline.FindByNodeId(e.ID) != null,
+        }).ToArray();
+        var count = (Int32)page.TotalCount;
+        return Task.FromResult<Object>(McpResult.Ok($"节点 {records.Length}/{count} 台", new { records },
+            null, null, McpResult.Paged(count, pageIndex, pageSize)));
     }
 }
 
@@ -59,9 +84,14 @@ public class NodeDetailTool : McpToolBase
     public override Task<Object> InvokeAsync(JsonElement args, McpContext ctx)
     {
         var node = McpGuard.Node(ctx, GetInt32(args, "node_id"));
-        var online = NodeOnline.FindAll(NodeOnline._.NodeID == node.ID).FirstOrDefault();
-        var commands = NodeCommand.FindAll(NodeCommand._.NodeID == node.ID).OrderByDescending(e => e.Id).Take(10)
-            .Select(e => new { e.Command, e.Result, e.StartTime }).ToArray();
+        var online = NodeOnline.FindAllByNodeId(node.ID).OrderByDescending(e => e.UpdateTime).FirstOrDefault();
+        var commands = NodeCommand.Search(node.ID, null, default, default, null, new PageParameter
+        {
+            PageIndex = 1,
+            PageSize = 10,
+            Sort = NodeCommand._.Id,
+            Desc = true,
+        }).Select(e => new { e.Command, e.Result, e.StartTime }).ToArray();
         return Task.FromResult<Object>(McpResult.Ok($"{node.Name} {(online == null ? "离线" : "在线")}", new
         {
             id = node.ID,
@@ -95,7 +125,8 @@ public class NodeAppsTool : McpToolBase
     public override Task<Object> InvokeAsync(JsonElement args, McpContext ctx)
     {
         var node = McpGuard.Node(ctx, GetInt32(args, "node_id"));
-        var rows = AppOnline.FindAll(AppOnline._.NodeId == node.ID & AppOnline._.ProjectId == ctx.ProjectId)
+        // PageSize 为 0 表示不分页，返回该节点上的全部实例，与应用在线页同一查询。
+        var rows = AppOnline.Search(ctx.ProjectId, -1, node.ID, null, default, default, null, new PageParameter { PageSize = 0 })
             .Select(e => new { e.AppId, e.Name, e.Version, e.ProcessId, e.IP }).ToArray();
         return Task.FromResult<Object>(McpResult.Ok($"{node.Name} 上 {rows.Length} 个应用实例", new { records = rows }));
     }

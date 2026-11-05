@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NewLife;
 using NewLife.Data;
+using NewLife.Log;
 using XCode;
 
 namespace Stardust.Data.Deployment;
@@ -125,5 +126,20 @@ public partial class AppDeployVersion : Entity<AppDeployVersion>
     #endregion
 
     #region 业务操作
+    /// <summary>把此版本设为部署集的当前版本。MVC、API 与 MCP 共用：校验启用、版本号和包地址，写入 TraceId，并更新部署集的 Version。不下发节点。</summary>
+    public AppDeploy UseAsCurrent()
+    {
+        if (!Enable) throw new Exception(L.T("Version is not enabled."));
+        if (Version.IsNullOrEmpty()) throw new Exception(L.T("Version is not set."));
+        if (Url.IsNullOrEmpty()) throw new Exception(L.T("File does not exist."));
+
+        TraceId = DefaultSpan.Current?.TraceId;
+        Update();
+
+        var app = Deploy ?? AppDeploy.FindById(DeployId) ?? throw new Exception(L.T("Version not found."));
+        app.Version = Version;
+        app.Update();
+        return app;
+    }
     #endregion
 }

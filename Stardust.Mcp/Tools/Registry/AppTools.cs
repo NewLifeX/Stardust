@@ -2,10 +2,6 @@ using System.Text.Json;
 using NewLife;
 using NewLife.Data;
 using Stardust.Data;
-using Stardust.Data.Configs;
-using Stardust.Data.Deployment;
-using Stardust.Data.Monitors;
-using XCode;
 
 namespace Stardust.Mcp.Tools.Registry;
 
@@ -33,11 +29,17 @@ public class AppListTool : McpToolBase
         McpGuard.NeedProject(ctx);
         var key = GetString(args, "keyword");
         var category = GetString(args, "category");
-        var exp = App._.ProjectId == ctx.ProjectId;
-        if (!key.IsNullOrEmpty()) exp &= App._.Name.Contains(key) | App._.DisplayName.Contains(key);
-        if (!category.IsNullOrEmpty()) exp &= App._.Category == category;
-        var total = (Int32)App.FindCount(exp);
-        var apps = App.FindAll(exp, null, null, Page(args) - 1, PageSize(args));
+        var page = new PageParameter
+        {
+            PageIndex = Page(args),
+            PageSize = PageSize(args),
+            Sort = App.__.Id,
+            RetrieveTotalCount = true,
+        };
+        var apps = App.Search(ctx.ProjectId, category, null, DateTime.MinValue, DateTime.MinValue, key, page);
+        var onlineByApp = AppOnline.FindAllByProjectId(ctx.ProjectId)
+            .GroupBy(e => e.AppId)
+            .ToDictionary(g => g.Key, g => g.Count());
         var rows = apps.Select(a => new
         {
             id = a.Id,
@@ -46,8 +48,9 @@ public class AppListTool : McpToolBase
             category = a.Category,
             enable = a.Enable,
             version = a.Version,
-            online = AppOnline.FindAll(AppOnline._.AppId == a.Id).Count,
+            online = onlineByApp.TryGetValue(a.Id, out var n) ? n : 0,
         }).ToArray();
+        var total = (Int32)page.TotalCount;
         return Task.FromResult<Object>(McpResult.Ok($"项目内应用 {rows.Length}/{total} 个", new { records = rows },
             null, null, McpResult.Paged(total, Page(args), PageSize(args))));
     }
@@ -56,7 +59,7 @@ public class AppListTool : McpToolBase
 public class AppHealthTool : McpToolBase
 {
     public override String Name => "stardust_app_health";
-    public override String Description => "One-call health check for one application: online instances, latest error rate, latest deploy version, latest pipeline run, active alarms and recent error logs (last 24h, shard-aware; empty records with log_note when log shards not created yet).";
+    public override String Description => "One-call health check for one application: online instances, latest error rate, latest deploy version, latest pipeline run, and recent error logs (last 24h, shard-aware; empty records with log_note when log shards not created yet).";
     public override McpRiskLevel Risk => McpRiskLevel.L0;
     public override String ScopeDomain => "apps";
 
@@ -73,27 +76,18 @@ public class AppHealthTool : McpToolBase
     public override Task<Object> InvokeAsync(JsonElement args, McpContext ctx)
     {
         var app = McpGuard.App(ctx, GetInt32(args, "app_id"));
-        var online = AppOnline.FindAll(AppOnline._.AppId == app.Id);
-        var stat = AppMinuteStat.FindAll(AppMinuteStat._.AppId == app.Id).OrderByDescending(e => e.StatTime).FirstOrDefault();
-        var deploy = AppDeploy.FindAll(AppDeploy._.AppId == app.Id & AppDeploy._.ProjectId == ctx.ProjectId).FirstOrDefault();
-        var pipeline = deploy == null ? null : AppPipeline.FindAll(AppPipeline._.DeployId == deploy.Id).FirstOrDefault();
-        var run = pipeline == null ? null : AppPipelineRun.FindAll(AppPipelineRun._.PipelineId == pipeline.Id).OrderByDescending(e => e.Id).FirstOrDefault();
-        // AppClientLog 是分表实体（按月分库+按天分表），必须带时间窗做分表感知查询；
-        // 全新环境（尚无应用上报日志）分表不存在，兜底为空数据而非 -32000
-        var logs = AppClientLog.SearchSafe(app.Id, DateTime.Now.AddHours(-24), DateTime.Now, null, null,
-            new PageParameter { PageIndex = 1, PageSize = 5, Sort = AppClientLog._.Id, Desc = true }, out var logNote)
-            .Select(e => e.Message).ToArray();
+        var snap = app.QueryHealth(ctx.ProjectId);
         var data = new
         {
             app = app.Name,
-            online = online.Count,
-            error_rate = stat?.ErrorRate,
-            deploy_version = deploy?.Version,
-            pipeline_status = run?.Status.ToString(),
-            recent_errors = logs,
-            log_note = logNote,
+            online = snap.Online,
+            error_rate = snap.ErrorRate,
+            deploy_version = snap.DeployVersion,
+            pipeline_status = snap.PipelineStatus,
+            recent_errors = snap.RecentErrors,
+            log_note = snap.LogNote,
         };
-        return Task.FromResult<Object>(McpResult.Ok($"{app.Name}：在线 {online.Count}，错误率 {stat?.ErrorRate ?? 0:P2}", data,
+        return Task.FromResult<Object>(McpResult.Ok($"{app.Name}：在线 {snap.Online}，错误率 {snap.ErrorRate ?? 0:P2}", data,
             ["stardust_deploy_status", "stardust_trace_search", "stardust_alarm_list"]));
     }
 }
@@ -118,8 +112,8 @@ public class AppTopologyTool : McpToolBase
     public override Task<Object> InvokeAsync(JsonElement args, McpContext ctx)
     {
         var app = McpGuard.App(ctx, GetInt32(args, "app_id"));
-        var provides = AppService.FindAll(AppService._.AppId == app.Id).Select(e => new { e.ServiceName, e.Address, e.Healthy, e.Enable }).ToArray();
-        var consumes = AppConsume.FindAll(AppConsume._.AppId == app.Id).Select(e => new { e.ServiceName, e.Address, e.Enable }).ToArray();
+        var provides = AppService.FindAllByAppId(app.Id).Select(e => new { e.ServiceName, e.Address, e.Healthy, e.Enable }).ToArray();
+        var consumes = AppConsume.FindAllByAppId(app.Id).Select(e => new { e.ServiceName, e.Address, e.Enable }).ToArray();
         return Task.FromResult<Object>(McpResult.Ok($"{app.Name}：提供 {provides.Length} 个服务，消费 {consumes.Length} 个依赖", new { provides, consumes }));
     }
 }
@@ -196,10 +190,9 @@ public class ServiceLookupTool : McpToolBase
         McpGuard.NeedProject(ctx);
         var name = GetString(args, "service_name");
         if (name.IsNullOrEmpty()) throw new McpException(-32602, "无效参数：缺少 service_name");
-        var appIds = App.FindAll(App._.ProjectId == ctx.ProjectId).Select(e => e.Id).ToHashSet();
-        var providers = AppService.FindAll(AppService._.ServiceName.Contains(name)).Where(e => appIds.Contains(e.AppId))
+        var providers = AppService.FindAllByServiceName(name, ctx.ProjectId)
             .Select(e => new { e.AppId, e.ServiceName, e.Address, e.Healthy }).ToArray();
-        var consumers = AppConsume.FindAll(AppConsume._.ServiceName.Contains(name)).Where(e => appIds.Contains(e.AppId))
+        var consumers = AppConsume.FindAllByServiceName(name, ctx.ProjectId)
             .Select(e => new { e.AppId, e.ServiceName, e.Address }).ToArray();
         return Task.FromResult<Object>(McpResult.Ok($"服务 {name}：提供者 {providers.Length}，消费者 {consumers.Length}", new { providers, consumers }));
     }

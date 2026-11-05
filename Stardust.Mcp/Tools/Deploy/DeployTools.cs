@@ -1,5 +1,6 @@
 using System.Text.Json;
 using NewLife;
+using NewLife.Data;
 using Stardust.Data.Deployment;
 
 namespace Stardust.Mcp.Tools.Deploy;
@@ -33,7 +34,7 @@ public class DeployStatusTool : McpToolBase
     public override Task<Object> InvokeAsync(JsonElement args, McpContext ctx)
     {
         var deploy = args.TryGetProperty("deploy_id", out _) ? McpGuard.Deploy(ctx, GetInt32(args, "deploy_id")) : McpGuard.DeployByApp(ctx, GetInt32(args, "app_id"));
-        var nodes = AppDeployNode.FindAll(AppDeployNode._.DeployId == deploy.Id);
+        var nodes = AppDeployNode.FindAllByDeployId(deploy.Id);
         var behind = nodes.Where(e => e.Enable && e.Version != deploy.Version).Select(e => new { e.Id, e.NodeId, e.IP, current = e.Version, target = deploy.Version }).ToArray();
         var alive = nodes.Count(e => e.ProcessId > 0);
         return Task.FromResult<Object>(McpResult.Ok($"{deploy.Name} 当前版本 {deploy.Version}，{behind.Length} 台落后，{alive} 台进程存活", new
@@ -67,7 +68,8 @@ public class DeployVersionsTool : McpToolBase
     public override Task<Object> InvokeAsync(JsonElement args, McpContext ctx)
     {
         var deploy = DeployLookup.ResolveDeploy(args, ctx);
-        var rows = AppDeployVersion.FindAll(AppDeployVersion._.DeployId == deploy.Id).OrderByDescending(e => e.Id)
+        // 与 MVC/API AppDeployVersionController.Search 同一重载。不传时间与关键字，取出该部署集全部版本后再按编号倒序裁剪。
+        var rows = AppDeployVersion.Search(deploy.Id, null, null, DateTime.MinValue, DateTime.MinValue, null, null).OrderByDescending(e => e.Id)
             .Select(e => new { e.Id, e.Version, e.Enable, e.Size, e.CommitId, commit = e.CommitLog, usable = e.Enable && !e.Url.IsNullOrEmpty() }).ToArray();
         return Task.FromResult<Object>(McpResult.Ok($"{deploy.Name} 版本 {rows.Length} 个", new { records = rows }));
     }
@@ -95,13 +97,20 @@ public class DeployHistoryTool : McpToolBase
     public override Task<Object> InvokeAsync(JsonElement args, McpContext ctx)
     {
         var deploy = DeployLookup.ResolveDeploy(args, ctx);
-        var exp = AppDeployHistory._.DeployId == deploy.Id & AppDeployHistory._.CreateTime >= Since(args);
-        var all = AppDeployHistory.FindAll(exp).OrderByDescending(e => e.Id).ToArray();
-        var total = all.Length;
-        var rows = all.Skip((Page(args) - 1) * PageSize(args)).Take(PageSize(args))
-            .Select(e => new { e.Id, time = e.CreateTime, e.NodeId, e.Action, e.Success, e.Remark }).ToArray();
+        // 与 MVC/API AppDeployHistoryController.Search 同一重载。since 作为开始时间，结束留空；分页在查询内完成。
+        var page = new PageParameter
+        {
+            PageIndex = Page(args),
+            PageSize = PageSize(args),
+            Sort = AppDeployHistory._.Id,
+            Desc = true,
+            RetrieveTotalCount = true,
+        };
+        var list = AppDeployHistory.Search(deploy.Id, -1, null, Since(args), DateTime.MinValue, null, page);
+        var total = (Int32)page.TotalCount;
+        var rows = list.Select(e => new { e.Id, time = e.CreateTime, e.NodeId, e.Action, e.Success, e.Remark }).ToArray();
         return Task.FromResult<Object>(McpResult.Ok($"部署下发记录 {rows.Length}/{total} 条。成功只表示命令已下发，不是节点执行结果", new { records = rows },
-            null, null, McpResult.Paged(total, Page(args), PageSize(args))));
+            null, null, McpResult.Paged(total, page.PageIndex, page.PageSize)));
     }
 }
 
@@ -126,7 +135,7 @@ public class PipelineRunDetailTool : McpToolBase
         var run = AppPipelineRun.FindById(GetInt32(args, "run_id")) ?? throw new McpException(-32602, "流水线运行不存在。");
         var pipeline = AppPipeline.FindById(run.PipelineId) ?? throw new McpException(-32602, "流水线不存在。");
         McpGuard.Deploy(ctx, pipeline.DeployId);
-        var steps = AppPipelineStep.FindAll(AppPipelineStep._.RunId == run.Id);
+        var steps = AppPipelineStep.FindAllByRunId(run.Id).OrderBy(e => e.StepIndex).ToList();
         var allSkipped = steps.Count > 0 && steps.All(e => e.Status.EqualIgnoreCase("Skipped"));
         return Task.FromResult<Object>(McpResult.Ok(allSkipped ? "该运行标记成功，但所有步骤都被跳过，没有节点实际部署" : $"运行 {run.Id} 状态 {run.Status}", new
         {
@@ -245,12 +254,13 @@ public class DeployReleaseTool : McpToolBase
         if (ver.DeployId != deploy.Id) throw new McpException(-32602, "版本不属于该部署集。");
         var nodes = args.TryGetProperty("deploy_node_ids", out var idEl) && idEl.ValueKind == JsonValueKind.Array
             ? idEl.EnumerateArray().Select(e => AppDeployNode.FindById(e.GetInt32())).Where(e => e != null && e.DeployId == deploy.Id).ToArray()
-            : AppDeployNode.FindAll(AppDeployNode._.DeployId == deploy.Id).Where(e => e.Enable).ToArray();
+            : AppDeployNode.FindAllByDeployId(deploy.Id).Where(e => e.Enable).ToArray();
         if (nodes.Length == 0) throw new McpException(-32602, "没有可发布的启用节点。");
         var plan = nodes.Select(e => new { e.Id, e.NodeId, from = e.Version, to = ver.Version }).ToArray();
         if (GetBoolean(args, "dry_run")) return McpResult.Ok($"发布计划 {plan.Length} 台，未执行", new { plan });
         var ops = ctx.Services.GetService(typeof(IMcpOperations)) as IMcpOperations ?? throw new McpException(-32000, "宿主未注册 MCP 写操作适配器。");
-        await ops.UseVersionAsync(ver.Id, ctx.CallerIp);
+        // 只切版本。安装由下面按选中节点下发，避免再走一遍自动发布把启用节点装两次。
+        await ops.UseVersionAsync(ver.Id, ctx.CallerIp, false);
         var results = new List<Object>();
         foreach (var node in nodes)
         {

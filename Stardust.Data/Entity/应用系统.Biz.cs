@@ -11,6 +11,7 @@ using NewLife.Reflection;
 using NewLife.Remoting.Models;
 using NewLife.Security;
 using Stardust.Data.Deployment;
+using Stardust.Data.Monitors;
 using Stardust.Models;
 using Stardust.Monitors;
 using XCode;
@@ -409,5 +410,62 @@ public partial class App : Entity<App>, IDeviceModel2, ILogProvider
 
         return online;
     }
+
+    /// <summary>汇总单个应用的健康快照。控制台没有对应聚合接口，在线、分钟统计、部署与日志各自走已有查询。</summary>
+    /// <param name="projectId">项目。部署版本只取该项目下编号最大的部署集</param>
+    /// <returns>健康快照</returns>
+    public AppHealthSnapshot QueryHealth(Int32 projectId)
+    {
+        var online = AppOnline.FindAllByAppId(Id).Count;
+
+        var statPage = new PageParameter
+        {
+            PageIndex = 1,
+            PageSize = 1,
+            Sort = AppMinuteStat.__.StatTime,
+            Desc = true,
+        };
+        var stat = AppMinuteStat.Search(Id, 0, DateTime.MinValue, DateTime.MinValue, null, statPage).FirstOrDefault();
+
+        var deploy = AppDeploy.FindAllByAppId(Id).Where(e => e.ProjectId == projectId).OrderByDescending(e => e.Id).FirstOrDefault();
+        var pipeline = deploy == null ? null : AppPipeline.FindAllByDeployId(deploy.Id).OrderByDescending(e => e.Id).FirstOrDefault();
+        var run = pipeline == null ? null : AppPipelineRun.FindAllByPipelineId(pipeline.Id).OrderByDescending(e => e.Id).FirstOrDefault();
+
+        // kind 与日志查询一致：Info/Warn/Error/Fatal，空=不过滤；这里只要错误级别
+        var logs = AppClientLog.SearchSafe(Id, DateTime.Now.AddHours(-24), DateTime.Now, null, "Error",
+            new PageParameter { PageIndex = 1, PageSize = 5, Sort = AppClientLog._.Id, Desc = true }, out var logNote);
+
+        return new AppHealthSnapshot
+        {
+            Online = online,
+            ErrorRate = stat?.ErrorRate,
+            DeployVersion = deploy?.Version,
+            PipelineStatus = run?.Status.ToString(),
+            RecentErrors = logs.Select(e => e.Message).ToArray(),
+            LogNote = logNote,
+        };
+    }
     #endregion
+}
+
+/// <summary>应用健康快照。在线实例数、最近错误率、当前项目编号最大的部署版本、最近一次流水线状态，以及近 24 小时错误日志。</summary>
+public class AppHealthSnapshot
+{
+    /// <summary>在线实例数</summary>
+    public Int32 Online { get; set; }
+
+    /// <summary>最近一条分钟统计的错误率。没有统计时为空</summary>
+    public Double? ErrorRate { get; set; }
+
+    /// <summary>当前项目下编号最大的部署集版本</summary>
+    public String DeployVersion { get; set; }
+
+    /// <summary>编号最大的流水线上，最近一次运行状态</summary>
+    public String PipelineStatus { get; set; }
+
+    /// <summary>近 24 小时错误级别客户端日志消息。分表不存在时为空数组</summary>
+    public String[] RecentErrors { get; set; } = [];
+
+    /// <summary>日志为空时的说明。正常查到日志时为空</summary>
+    public String LogNote { get; set; }
 }

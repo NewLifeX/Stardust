@@ -1417,25 +1417,7 @@ public class DashboardService
         return projectId > 0 && scope.ProjectIds.Contains(projectId);
     }
 
-    private static Int32 ResolveAlarmProjectId(AlarmRecord record)
-    {
-        if (record.GroupId > 0)
-        {
-            var group = AlarmGroup.FindById(record.GroupId);
-            if (group != null && group.ProjectId > 0) return group.ProjectId;
-        }
-
-        var action = record.Action;
-        if (action.IsNullOrEmpty()) return 0;
-
-        // 埋点告警的对象形如 appName/itemName，取第一段用于定位应用
-        var name = action.Split('/', '\\')[0];
-        var app = App.FindByName(name);
-        if (app != null) return app.ProjectId;
-
-        var node = Node.FindByName(name);
-        return node?.ProjectId ?? 0;
-    }
+    private static Int32 ResolveAlarmProjectId(AlarmRecord record) => record.ResolveProjectId();
 
     private Boolean IsVisibleName(ScopeInfo scope, String action, Int32 projectId)
     {
