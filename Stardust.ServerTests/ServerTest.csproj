@@ -77,11 +77,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Stardust.Server\Stardust.Server.csproj" />
     <ProjectReference Include="..\Stardust.Web\Stardust.Web.csproj" Aliases="web" />
-    <!-- MCP 令牌默认值特征测试（McpTokenDefaultsTests）经反射验证 API 宿主（程序集 StarWebApi）的
-         McpTokenController/McpTokenResourceController OnInsert（S1/S3 服务端强制在 API 宿主实现）。
-         加 extern alias webapi：StarWebApi 与 StarServer 存在同名类型（如 TraceStatService），
-         不能进入全局命名空间，测试仅以反射按程序集名访问 -->
-    <ProjectReference Include="..\Stardust.WebApi\Stardust.WebApi.csproj" Aliases="webapi" />
+    <!-- 注意：不要在这里引用 Stardust.WebApi。其依赖的 NewLife.Cube(API版) 与本工程经
+         Stardust.Web 引入的 NewLife.Cube.Core 是同一程序集标识（都产出 NewLife.Cube.dll）但类型集不同，
+         同一编译闭包内会互相覆盖并导致 CS7069。WebApi 宿主相关测试放在 Stardust.WebApiTests 工程。 -->
     <ProjectReference Include="..\Stardust.Mcp\Stardust.Mcp.csproj" />
     <ProjectReference Include="..\StarAgent.Mobile\StarAgent.Mobile.csproj" />
   </ItemGroup>

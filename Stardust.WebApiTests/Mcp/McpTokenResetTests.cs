@@ -5,14 +5,16 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Stardust.Data.Platform;
+using Stardust.WebApiTests.Fixtures;
 using Xunit;
 
-namespace ServerTest.Mcp;
+namespace Stardust.WebApiTests.Mcp;
 
 /// <summary>
 /// MCP 令牌 Reset 回归：GET /api/Platform/McpToken/Reset?id= 不得被 Detail/{id} 误匹配；
 /// 重置后应返回新 token（一次性展示）。
 /// </summary>
+[Collection(WebApiCollection.Name)]
 public class McpTokenResetTests
 {
     private static Type ApiControllerType =>

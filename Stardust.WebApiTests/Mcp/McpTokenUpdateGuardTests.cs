@@ -5,9 +5,10 @@ using System.Reflection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Stardust.Data.Platform;
+using Stardust.WebApiTests.Fixtures;
 using Xunit;
 
-namespace ServerTest.Mcp;
+namespace Stardust.WebApiTests.Mcp;
 
 /// <summary>
 /// G1 修复回归测试：McpTokenController.OnUpdate 在 JSON/API 请求（无表单内容类型）下
@@ -16,6 +17,7 @@ namespace ServerTest.Mcp;
 /// 发 JSON PUT（不含 res_* 字段），ParseResourcesFromForm 返回空列表，SyncByToken 先删后插
 /// 导致该令牌全部资源授权被清空（McpGuard 对零授权放行，反而扩大权限）。
 /// </summary>
+[Collection(WebApiCollection.Name)]
 public class McpTokenUpdateGuardTests
 {
     [Fact(DisplayName = "G1: OnUpdate 在 JSON 请求下不清空资源授权")]

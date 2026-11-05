@@ -8,6 +8,8 @@ Stardust.WebApi（解耦纯 API 版）的**集成测试工程**（xUnit，net10.
 
 - 验证对象：统一响应信封 `{code, data, message}`、各区域字段端点（`GET {area}/{controller}/meta`）可用性、`list/form/search` 区段契约。
 - 单元测试（服务层、实体行为）放在 `Stardust.ServerTests`，不在本工程。
+- API 宿主专属的控制器行为测试（如 `Mcp/` 下经反射验证 `StarWebApi` 的 `McpTokenController`）放在本工程：`Stardust.ServerTests`
+  同时引用 Stardust.Web，与 `NewLife.Cube`(API版) 的同名程序集冲突，无法加载 API 宿主。
 - 前端 e2e 在 `Stardust.Web.Vue`（`pnpm exec playwright test`），与后端测试分层互不重叠。
 
 ## 接入被测工程

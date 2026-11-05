@@ -3,9 +3,10 @@ using System.Linq;
 using System.Reflection;
 using NewLife;
 using Stardust.Data.Platform;
+using Stardust.WebApiTests.Fixtures;
 using Xunit;
 
-namespace ServerTest.Mcp;
+namespace Stardust.WebApiTests.Mcp;
 
 /// <summary>
 /// MCP 令牌默认值与服务端强制特征测试。覆盖本轮修复：
@@ -16,6 +17,7 @@ namespace ServerTest.Mcp;
 /// 这两个逻辑在 Controller 层 protected OnInsert 里，单测通过反射验证关键行为存在；
 /// 完整 HTTP 层行为由后续真端口集成测试覆盖。
 /// </summary>
+[Collection(WebApiCollection.Name)]
 public class McpTokenDefaultsTests
 {
     [Fact(DisplayName = "S1: McpToken 实体新建时 Scopes 默认为空（不带任何写权限）")]
