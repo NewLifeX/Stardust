@@ -1,5 +1,6 @@
 using System.Text.Json;
 using NewLife;
+using NewLife.Data;
 using Stardust.Data;
 using Stardust.Data.Monitors;
 
@@ -31,11 +32,10 @@ public class TraceSearchTool : McpToolBase
         var app = McpGuard.App(ctx, GetInt32(args, "app_id"));
         var min = GetInt32(args, "min_cost");
         var errorOnly = GetBoolean(args, "error_only");
-        var exp = TraceData._.AppId == app.Id & TraceData._.StatDate >= Since(args).Date;
-        // SQLite 下 TraceData/SampleData 已按天分库分表（SplitSqliteTables），查询必须包分片路由，否则查主表报 no such table
         var since = Since(args).Date;
-        using var split = TraceData.Meta.CreateShard(since);
-        var rows = TraceData.FindAll(exp).Where(e => e.Cost >= min && (!errorOnly || e.Errors > 0))
+        // 复用实体 Biz 层查询（与 MVC/WebApi 同一份）：跨天逐分片聚合，避免只查 since 起始分片而漏掉今天
+        var list = TraceData.FindAllByAppIdAndTime(app.Id, since, DateTime.Today, errorOnly ? 1 : -1);
+        var rows = list.Where(e => e.Cost >= min)
             .OrderByDescending(e => e.Cost).Take(PageSize(args))
             .Select(e => new { e.Id, e.Name, e.Cost, e.Errors, e.Total, client = e.ClientId, node_id = e.NodeId }).ToArray();
         return Task.FromResult<Object>(McpResult.Ok($"{app.Name} 调用 {rows.Length} 条", new { records = rows }, ["stardust_trace_detail"]));
@@ -64,20 +64,21 @@ public class TraceDetailTool : McpToolBase
         McpGuard.NeedProject(ctx);
         var id = GetInt64(args, "data_id");
         var traceId = GetString(args, "trace_id");
-        // SQLite 下 SampleData/TraceData 按天分库分表，必须包分片路由
-        using var split = SampleData.Meta.CreateShard(DateTime.Today);
-        var samples = id > 0
-            ? SampleData.FindAll(SampleData._.DataId == id)
-            : SampleData.FindAll(SampleData._.TraceId == traceId);
+        if (id <= 0 && traceId.IsNullOrEmpty()) throw new McpException(-32602, "请传 data_id 或 trace_id。");
 
-        // 项目隔离：SampleData 本身无 AppId，需经 DataId 反查 TraceData.AppId，只保留属于当前项目的片段
-        var projectAppIds = App.FindAll(App._.ProjectId == ctx.ProjectId).Select(e => e.Id).ToHashSet();
+        // SampleData/TraceData 按天分表（SQLite 下按天分库），都没有基础表。
+        // 采样查询走 Biz.Search 的 AutoShard 逐分片扫描（与 Web 调用链页一致，覆盖最近30天），避免裸查基础表。
+        var start = DateTime.Today.AddDays(-30);
+        var end = DateTime.Today;
+        var samples = SampleData.Search(id, traceId, null, start, end, new PageParameter { PageIndex = 1, PageSize = 10_000 });
+
+        // 项目隔离：SampleData 本身无 AppId，需经 DataId 反查 TraceData.AppId，只保留属于当前项目的片段。
+        // TraceData 同样按天分表，复用实体 Biz 层的分片感知查询（与 MVC/WebApi 同一份）
+        var projectAppIds = App.FindAllByProjectId(ctx.ProjectId).Select(e => e.Id).ToHashSet();
         var dataIds = samples.Select(e => e.DataId).Distinct().ToArray();
-        var appIdByDataId = dataIds.Length == 0
-            ? new Dictionary<Int64, Int32>()
-            : TraceData.FindAll(TraceData._.Id.In(dataIds)).GroupBy(e => e.Id).ToDictionary(g => g.Key, g => g.First().AppId);
+        var appIdByDataId = TraceData.FindAllByIds(dataIds).ToDictionary(e => e.Id, e => e.AppId);
         var filtered = samples.Where(e => appIdByDataId.TryGetValue(e.DataId, out var appId) && projectAppIds.Contains(appId)).ToList();
-        if (filtered.Count == 0) throw new McpException(-32003, "该调用链不属于当前令牌绑定的项目。");
+        if (filtered.Count == 0) throw new McpException(-32003, "未找到该调用链，或它不属于当前令牌绑定的项目。");
 
         var rows = filtered.OrderBy(e => e.StartTime).Take(100)
             .Select(e => new { e.SpanId, e.ParentId, e.Cost, e.Success, error = e.Error, tag = e.Tag }).ToArray();

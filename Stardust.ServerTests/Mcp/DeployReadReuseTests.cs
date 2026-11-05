@@ -56,6 +56,8 @@ public class DeployReadReuseTests
         var body = ToolBody("DeployReleaseTool");
         Assert.Contains("AppDeployNode.FindAllByDeployId(deploy.Id)", body);
         Assert.DoesNotContain("AppDeployNode.FindAll(", body);
+        Assert.Contains("AppDeployVersion.FindByDeployIdAndVersion(deploy.Id, version)", body);
+        Assert.DoesNotContain("AppDeployVersion.FindAll(", body);
         Assert.Contains("await ops.UseVersionAsync(ver.Id, ctx.CallerIp, false);", body);
         Assert.DoesNotContain("publishEnabledNodes", body);
         Assert.Contains("ControlDeployAsync(deploy.Id, node.Id, \"install\", ctx.CallerIp)", body);

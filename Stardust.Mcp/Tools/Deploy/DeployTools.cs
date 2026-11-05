@@ -248,7 +248,7 @@ public class DeployReleaseTool : McpToolBase
         {
             var version = GetString(args, "version");
             if (version.IsNullOrEmpty()) throw new McpException(-32602, "请传 version 或 version_id。可先调 stardust_deploy_versions。");
-            ver = AppDeployVersion.FindAll(AppDeployVersion._.DeployId == deploy.Id & AppDeployVersion._.Version == version).FirstOrDefault()
+            ver = AppDeployVersion.FindByDeployIdAndVersion(deploy.Id, version)
                 ?? throw new McpException(-32602, $"部署集里没有版本 {version}。");
         }
         if (ver.DeployId != deploy.Id) throw new McpException(-32602, "版本不属于该部署集。");
