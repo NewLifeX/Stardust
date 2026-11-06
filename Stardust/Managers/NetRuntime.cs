@@ -1018,7 +1018,7 @@ public class NetRuntime
     {
         Log?.InfoPrefixed("[NetRuntime]", format, args);
 
-        var msg = (args == null || args.Length == 0) ? format : String.Format(format, args);
+        var msg = L.TLog(format, args);
         DefaultSpan.Current?.AppendTag(msg);
 
         if (format.Contains("错误") || format.Contains("失败") || format.Contains("error", StringComparison.OrdinalIgnoreCase) || format.Contains("fail", StringComparison.OrdinalIgnoreCase) || format.Contains("exception", StringComparison.OrdinalIgnoreCase))

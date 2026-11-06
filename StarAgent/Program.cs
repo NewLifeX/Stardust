@@ -492,7 +492,7 @@ internal class MyService : ServiceBase, IServiceProvider
             if (msg.IsNullOrEmpty()) return;
 
             WriteLog("Upgrade self-heal: {0}", msg);
-            _Client?.WriteInfoEvent("Upgrade", L.T("Post-upgrade self-healing on startup: {0}", msg));
+            _Client?.WriteInfoEvent("Upgrade", L.TLog("Post-upgrade self-healing on startup: {0}", msg));
         }
         catch (Exception ex)
         {

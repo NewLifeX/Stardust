@@ -30,7 +30,7 @@ public class HistoryRemarkLanguageTests
         if (root == null) return;
 
         var bad = new List<String>();
-        foreach (var name in new[] { "Stardust.Server", "Stardust.Data", "Stardust.Web", "Stardust.WebApi" })
+        foreach (var name in new[] { "Stardust", "Stardust.Server", "Stardust.Data", "Stardust.Web", "Stardust.WebApi", "StarAgent" })
         {
             var dir = Path.Combine(root, name);
             if (!Directory.Exists(dir)) continue;
@@ -44,7 +44,8 @@ public class HistoryRemarkLanguageTests
                 var writesHistory = false;
                 foreach (var item in lines)
                 {
-                    if (item.Contains("WriteHistory(") || item.Contains("NodeHistory.Create(") || item.Contains("AppHistory.Create(")) writesHistory = true;
+                    if (item.Contains("WriteHistory(") || item.Contains("NodeHistory.Create(") || item.Contains("AppHistory.Create(") ||
+                        item.Contains("WriteInfoEvent(") || item.Contains("WriteErrorEvent(") || item.Contains("WriteEvent(")) writesHistory = true;
                 }
                 if (!writesHistory) continue;
 
@@ -60,7 +61,8 @@ public class HistoryRemarkLanguageTests
                         continue;
                     }
 
-                    if (!line.Contains("WriteHistory(") && !line.Contains("NodeHistory.Create(") && !line.Contains("AppHistory.Create(")) continue;
+                    if (!line.Contains("WriteHistory(") && !line.Contains("NodeHistory.Create(") && !line.Contains("AppHistory.Create(") &&
+                        !line.Contains("WriteInfoEvent(") && !line.Contains("WriteErrorEvent(") && !line.Contains("WriteEvent(")) continue;
                     if (line.Contains("L.T(")) bad.Add($"{name}/{Path.GetFileName(file)}:{i + 1}");
                 }
             }
@@ -76,6 +78,9 @@ public class HistoryRemarkLanguageTests
         var oldLog = Localization.LogCulture;
         try
         {
+            // Stardust.Data 的词表随程序集加载注册，先触碰类型避免首次查表时尚未注册
+            GC.KeepAlive(typeof(Stardust.Data.Nodes.Node));
+
             // 界面英文、日志中文：历史备注取日志语言
             Localization.Culture = CultureInfo.GetCultureInfo("en");
             Localization.LogCulture = CultureInfo.GetCultureInfo("zh-Hans");

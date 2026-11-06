@@ -51,8 +51,8 @@ public static class UpgradeHealer
         {
             log?.Debug("Upgrade self-heal: scan backups failed: {0}", ex.Message);
         }
-        if (deleted > 0) msgs.Add(L.T("cleaned {0} upgrade backup(s)", deleted));
-        if (failed > 0) msgs.Add(L.T("{0} backup(s) are still in use", failed));
+        if (deleted > 0) msgs.Add(L.TLog("cleaned {0} upgrade backup(s)", deleted));
+        if (failed > 0) msgs.Add(L.TLog("{0} backup(s) are still in use", failed));
 
         // 2，校正服务注册。半途失败的升级可能把服务入口指向 .del 备份
         try
@@ -63,7 +63,7 @@ public static class UpgradeHealer
             {
                 log?.Warn("Upgrade self-heal: service points to backup file {0}; re-registering", path);
 
-                if (service.Host.Install(BuildServiceModel(service))) msgs.Add(L.T("service registration repaired"));
+                if (service.Host.Install(BuildServiceModel(service))) msgs.Add(L.TLog("service registration repaired"));
             }
         }
         catch (Exception ex)
@@ -89,7 +89,7 @@ public static class UpgradeHealer
                     }
                     catch { }
                 }
-                if (count > 0) msgs.Add(L.T("cleaned {0} stale update package(s)", count));
+                if (count > 0) msgs.Add(L.TLog("cleaned {0} stale update package(s)", count));
             }
         }
         catch (Exception ex)
