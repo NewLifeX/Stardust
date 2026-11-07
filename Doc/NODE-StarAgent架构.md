@@ -319,9 +319,14 @@ Android/iOS 的 .NET 移动代理（`StarAgent.Mobile` + `StarAgent.Android` + `
 
 除 RSS 外，关闭 W^X 双映射还回收了 16~27 MB 共享内存（`Pss_Shmem` 归零）。
 
-PC 与三台嵌入式设备的差异，来自优化手段本身全是 Linux/glibc 侧特性：竞技场是 glibc 的线程分配策略，`Pss_Shmem` 双映射在 Windows 上不走 tmpfs，关闭 R2R 省下的是文件页，对总内存 32 GB 的 PC 也谈不上收益。桌面与服务器场景按默认参数运行即可，省内存的开关只为嵌入式设备服务。
+PC 与三台嵌入式设备的差异，来自优化手段本身全是 Linux/glibc 侧特性：竞技场是 glibc 的线程分配策略，`Pss_Shmem` 双映射在 Windows 上不走 tmpfs，关闭 R2R 省下的是文件页，对总内存 32 GB 的 PC 也谈不上收益。桌面与服务器场景按默认参数运行即可，省内存的开关只为嵌入式设备服务。表中 PC 一列只核对了改造前的 47 MB 基线（Windows 服务形态，25 线程），Linux 专属开关不会注入 Windows 进程，因此没有为它单独发版复测。
 
 > ⚠️ **换版测试与运维注意**：带 SmartIPC 固件的设备（A2/A4/A6 均属此类）由 `newlifed` 看门狗守护代理，代理停止运行十几秒就会用固件内置的救援副本（`/usr/share/newlife/rescue/staragent`）覆盖部署目录后重启。换版时必须**同时刷新该救援副本**，否则设备会在无人察觉时回滚到固件随附的老版本（内存优化全部失效，实测 A6 就曾这样悄悄退回 116 MB）。救援事件由 `MyStarClient.CheckRescueFlag` 上报，平台节点事件里能看到“代理恢复成功……已还原 N 个核心文件”。
+
+>
+>
+> 换版脚本用 `systemctl restart` 收尾时，服务单元是 `KillMode=process` + `SIGINT`，老进程若正在忙（如升级中的同步动作）可能没在超时内退出，留下一个父子关系已断的旧代理进程继续上报。换版后请核对 `systemctl show StarAgent -p MainPID --value` 与 `ps -eo pid,etimes,args | grep StarAgent.dll` 是否只有一个进程；多出来的按 PID 杀掉（实测 A6 曾在换版后同时跑着新旧两个代理，内存统计也因此偏高）。
+
 
 空闲 CPU 约单核 0.5%（4 核板，逐线程采样），常驻工作只有 60 秒心跳、10 分钟升级检查与 10 秒级服务巡检。连续 15 分钟采样 RSS 在 63~66 MB 间随 GC 周期波动，**无持续增长**。
 
