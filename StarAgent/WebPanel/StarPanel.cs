@@ -8,6 +8,7 @@ using NewLife.Agent;
 using NewLife.Agent.WebPanel;
 using NewLife.Data;
 using NewLife.Http;
+using Stardust;
 
 namespace StarAgent.WebPanel;
 
@@ -65,14 +66,47 @@ public class StarPanel(ServiceBase service) : AgentWebPanel(service)
     /// <param name="ctx">Http上下文</param>
     protected override void WriteIndex(IHttpContext ctx)
     {
-        var culture = Localization.Culture ?? CultureInfo.CurrentUICulture;
-        var language = UiLocalization.GetLanguage(culture);
+        var language = GetUiLanguage(ctx);
         var html = _pages.GetOrAdd(language, lang => LocalizeHtml(ReadIndexHtml(), lang,
             UiLocalization.GetDictionary(EmbeddedResourceAssemblyType.Assembly, EmbeddedResourcePrefix, lang)));
 
         ctx.Response.ContentType = "text/html; charset=utf-8";
         ctx.Response.Headers["Cache-Control"] = "no-cache";
         ctx.Response.Body = new ArrayPacket(html.GetBytes());
+    }
+
+    /// <summary>识别界面语言</summary>
+    /// <param name="ctx">Http上下文</param>
+    /// <returns>词表语言名，未识别时返回 en</returns>
+    /// <remarks>
+    /// 不直接依赖 <see cref="CultureInfo"/>：进程以 <c>DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1</c> 运行（不装 ICU）时，
+    /// 具体区域性一个都创建不出来，<see cref="CultureInfo.CurrentUICulture"/> 恒为不变区域性，此时只能显示英文。
+    /// 但词表本身是纯文本资源，与 ICU 无关，因此这里按下面的顺序自己识别语言：
+    /// 核心配置里显式选定的语言 → 浏览器声明的请求语言 → 系统 <c>LANG</c>/<c>LC_ALL</c> → 托管侧区域性。
+    /// 前两项都不依赖 ICU，无 ICU 的设备同样能显示中文。
+    /// </remarks>
+    private static String GetUiLanguage(IHttpContext ctx)
+    {
+        // 1，核心配置里固定了语言（面板右上角切换会写进该配置）
+        var name = StarLocalization.NormalizeCulture(NewLife.Setting.Current.Language);
+        if (name != null) return name;
+
+        // 2，浏览器声明的语言，最贴近当前使用者
+        name = StarLocalization.NormalizeCulture(ctx.Request.Headers["Accept-Language"]);
+        if (name != null) return name;
+
+        // 3，系统界面语言来自环境变量。无 ICU 时这是唯一能拿到系统语言的途径
+        foreach (var key in new[] { "LC_ALL", "LC_MESSAGES", "LANG" })
+        {
+            name = StarLocalization.NormalizeCulture(Environment.GetEnvironmentVariable(key));
+            if (name != null) return name;
+        }
+
+        // 4，最后才看托管侧的区域性（有 ICU 时才有效）
+        name = StarLocalization.NormalizeCulture((Localization.Culture ?? CultureInfo.CurrentUICulture).Name);
+        if (name != null) return name;
+
+        return "en";
     }
 
     /// <summary>本地化首页源文</summary>
