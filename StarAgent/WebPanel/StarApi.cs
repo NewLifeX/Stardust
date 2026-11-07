@@ -288,7 +288,8 @@ public class StarApi : IHttpController
         {
             new { name = "Server", displayName = L.T("Server address"), value = (Object)(starSet.Server ?? ""), type = "String", description = L.T("Stardust server address, e.g. http://star.newlifex.com:6600") },
             new { name = "AppKey", displayName = L.T("Application ID"), value = (Object)(starSet.AppKey ?? ""), type = "String", description = L.T("Application ID registered with the Stardust registry") },
-            new { name = "Secret", displayName = L.T("Application secret"), value = (Object)(starSet.Secret ?? ""), type = "Password", description = L.T("Application secret registered with the Stardust registry") },
+            // 密钥只写不读：不回显已保存的值，避免面板与浏览器侧泄漏
+            new { name = "Secret", displayName = L.T("Application secret"), value = (Object)"", type = "Password", description = L.T("Application secret registered with the Stardust registry") },
         }});
 
         items.Add(new { group = L.T("StarAgent local settings"), items = new Object[]
@@ -296,7 +297,8 @@ public class StarApi : IHttpController
             new { name = "LocalPort", displayName = L.T("Local port (UDP)"), value = (Object)agentSet.LocalPort, type = "Int32", description = L.T("Local API port (UDP), default 5500. Shares the port with the web panel: UDP for local RPC, TCP for the web panel") },
             new { name = "WebBind", displayName = L.T("Panel bind address"), value = (Object)(agentSet.WebBind ?? ""), type = "String", description = L.T("Web panel listen address, default 127.0.0.1 for local access only. Set to * for all interfaces or a specific IP. Requires a StarAgent restart") },
             new { name = "Code", displayName = L.T("Node code"), value = (Object)(agentSet.Code ?? ""), type = "String", description = L.T("Unique code of the current node") },
-            new { name = "Secret_Agent", displayName = L.T("Node secret"), value = (Object)(agentSet.Secret ?? ""), type = "Password", description = L.T("Secret used for node communication") },
+            // 节点密钥同样只写不读
+            new { name = "Secret_Agent", displayName = L.T("Node secret"), value = (Object)"", type = "Password", description = L.T("Secret used for node communication") },
             new { name = "Project", displayName = L.T("Project"), value = (Object)(agentSet.Project ?? ""), type = "String", description = L.T("Project the new node joins by default") },
             new { name = "Channel", displayName = L.T("Update channel"), value = (Object)agentSet.Channel, type = "String", description = L.T("Update channel: Release/Debug") },
             new { name = "Delay", displayName = L.T("Delay (ms)"), value = (Object)agentSet.Delay, type = "Int32", description = L.T("Delay before restarting the process or service, default 3000 ms") },
@@ -340,7 +342,14 @@ public class StarApi : IHttpController
                     {
                         case "Server": starSet.Server = value?.ToString() ?? ""; break;
                         case "AppKey": starSet.AppKey = value?.ToString(); break;
-                        case "Secret": starSet.Secret = value?.ToString(); break;
+                        // 密钥只写不读：空值表示保持原值不变
+                        case "Secret":
+                            {
+                                var secret = value?.ToString();
+                                if (!secret.IsNullOrEmpty()) starSet.Secret = secret;
+
+                                break;
+                            }
                     }
                     changedStar = true;
                 }
@@ -351,7 +360,14 @@ public class StarApi : IHttpController
                         case "LocalPort": agentSet.LocalPort = Convert.ToInt32(value ?? 5500); break;
                         case "WebBind": agentSet.WebBind = value?.ToString() ?? "127.0.0.1"; break;
                         case "Code": agentSet.Code = value?.ToString() ?? ""; break;
-                        case "Secret": agentSet.Secret = value?.ToString(); break;
+                        // 密钥只写不读：空值表示保持原值不变
+                        case "Secret":
+                            {
+                                var secret = value?.ToString();
+                                if (!secret.IsNullOrEmpty()) agentSet.Secret = secret;
+
+                                break;
+                            }
                         case "Project": agentSet.Project = value?.ToString(); break;
                         case "Channel": agentSet.Channel = value?.ToString() ?? "Release"; break;
                         case "Delay": agentSet.Delay = Convert.ToInt32(value ?? 3000); break;

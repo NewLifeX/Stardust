@@ -215,6 +215,8 @@ StarAgent 基于 NewLife.Agent 内置的 `AgentWebPanel` 框架，提供了轻�
 
 凭据在 `agent.config` 中通过 `WebUserName` / `WebPassword` 配置。登录后签发 Bearer Token，有效期 24 小时。当前版本所有 API 请求统一要求登录凭证，`WebAuthLevel` 仅保留配置、未参与鉴权判定。
 
+配置页中的密钥字段只写不读：`StarApi.GetStarConfig` 对应用密钥与节点密钥一律返回空值，前端以“输入新值以修改”呈现；`UpdateStarConfig` 收到空密钥时保持原值，避免留空保存把密钥清空。
+
 ### 6.6 安全默认与远程访问
 
 面板默认仅本机监听（`WebBind` 默认 `127.0.0.1`），局域网内其他机器无法访问；设备上请使用 `http://127.0.0.1:5500` 打开面板。
