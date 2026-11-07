@@ -31,8 +31,8 @@ internal class Program
 {
     private static void Main(String[] args)
     {
-        // 必须最先执行：工作线程尚未创建，此时调整分配器才有效
-        TuneNativeAllocator(args);
+        // 必须最先执行：工作线程尚未创建，此时调整运行时参数才有效
+        TuneRuntime(args);
 
         // 小内存设备优先：关掉用不到的协议栈，避免多装载一整套程序集
         TrimRuntimeFeatures();
@@ -128,13 +128,25 @@ internal class Program
     private const Int32 M_TOP_PAD = -2;
     private const Int32 M_MMAP_THRESHOLD = -3;
 
-    /// <summary>需要注入给 glibc 的分配器参数。库在进程初始化阶段读取，因此只能通过环境变量生效</summary>
-    private static readonly String[][] _allocatorEnv =
+    /// <summary>关闭 ICU 的开关名。运维显式设置该变量时以运维为准</summary>
+    private const String InvariantKey = "DOTNET_SYSTEM_GLOBALIZATION_INVARIANT";
+
+    /// <summary>需要注入给运行时的参数。这些开关都在进程初始化阶段读取，只能通过环境变量生效</summary>
+    /// <remarks>首项同时作为"已经重载过镜像"的标记，见 <see cref="TuneRuntime"/></remarks>
+    private static readonly String[][] _runtimeEnv =
     [
+        // glibc 分配器：单竞技场 + 空闲堆及时归还
         ["MALLOC_ARENA_MAX", "1"],
         ["MALLOC_TRIM_THRESHOLD_", "65536"],
         ["MALLOC_MMAP_THRESHOLD_", "65536"],
         ["MALLOC_TOP_PAD_", "0"],
+        // 关闭预编译镜像：代理空跑只走少量代码路径，按需 JIT 出来的代码比整份预编译镜像省 6~8MB 常驻，
+        // 代价是启动时全量编译（armv7 实测 15 秒变 31 秒）。边缘设备看重内存、启动次数极少，这笔交易划算
+        ["DOTNET_ReadyToRun", "0"],
+        // 不装载 ICU：ICU 只提供区域性数据（日期格式、排序规则、CultureInfo），并不负责文案翻译。
+        // 代理的日志与面板文案都由自己的词表决定，面板语言已改为按配置/浏览器/系统环境变量判断，
+        // 因此关掉 ICU 不影响中文界面，只让日志回落英文；换取 ICU 三个共享库与内部缓存共 8MB 常驻
+        [InvariantKey, "1"],
     ];
 
     /// <summary>setenv 的托管委托</summary>
@@ -149,24 +161,28 @@ internal class Program
     /// <summary>mallopt 的托管委托</summary>
     private delegate Int32 MalloptFunc(Int32 param, Int32 value);
 
-    /// <summary>收紧原生分配器，降低边缘小内存设备上的常驻内存</summary>
+    /// <summary>选择省内存的启动参数，降低边缘小内存设备上的常驻内存</summary>
     /// <param name="args">命令行参数，只有常驻运行才需要重载镜像</param>
     /// <remarks>
     /// glibc 默认为每个线程准备一个内存竞技场（32 位 1MB、64 位 64MB 虚拟空间），并在竞技场内缓存空闲块；
     /// 星尘代理常驻 20 多个线程，实测在 armv7 设备上仅竞技场就占掉约两成常驻内存。
     /// 又因为默认的 trim/mmap 阈值偏大，空闲堆长时间不归还操作系统。
     /// <para>
-    /// 竞技场数量只在进程初始化阶段由环境变量 MALLOC_ARENA_MAX 决定，运行时 mallopt 改不动（竞技场早已建好），
-    /// 因此这里先设好环境变量并原地重新加载自身镜像（execv，PID 不变，宿主 systemd 无感知），
-    /// 让新镜像在 glibc 初始化时就按单竞技场运行。省下的是几十 MB，代价只是一次可忽略的进程重启。
+    /// 这些开关只能在进程初始化阶段由环境变量决定（运行时 mallopt 改不动，竞技场早已建好），
+    /// 因此这里先设好环境变量并原地重新加载自身镜像（execv，PID 不变，宿主 systemd 无感知）。
+    /// 省下的是几十 MB，代价是启动慢一些（关闭预编译镜像需要全量 JIT）。
+    /// </para>
+    /// <para>
+    /// 关闭 ICU 会让托管侧失去具体区域性（日志回落英文），但它不参与界面翻译：
+    /// 运维若需要中文日志，在服务单元里设 <c>DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=0</c> 即可覆盖默认值。
     /// </para>
     /// <para>
     /// 环境变量只对本进程有效，星尘代理会托管大量业务进程，新镜像启动后立即 unsetenv，
-    /// 避免这些参数被业务进程继承而改变它们的分配器行为。
+    /// 避免这些参数被业务进程继承而改变它们的运行时行为。
     /// </para>
     /// <para>不能写成 DllImport("libc")：Linux 上 libc.so 多是链接脚本，直接按库名加载会失败，需显式逐个尝试真实文件名。</para>
     /// </remarks>
-    private static void TuneNativeAllocator(String[] args)
+    private static void TuneRuntime(String[] args)
     {
         if (!Runtime.Linux) return;
 
@@ -179,10 +195,15 @@ internal class Program
             if (!TryLoadLibc(out var lib)) return;
             if (GetExport<SetEnvFunc>(lib, "setenv") is not { } setEnv) return;
 
-            if (Environment.GetEnvironmentVariable(_allocatorEnv[0][0]).IsNullOrEmpty())
+            if (Environment.GetEnvironmentVariable(_runtimeEnv[0][0]).IsNullOrEmpty())
             {
                 // 首次进入：注入环境变量后重启镜像，成功则不会返回
-                foreach (var item in _allocatorEnv) setEnv(item[0], item[1], 1);
+                foreach (var item in _runtimeEnv)
+                {
+                    // 运维显式配置过的参数不覆盖，例如在 systemd 单元里设 DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=0 换取中文日志
+                    if (item[0] == InvariantKey && !Environment.GetEnvironmentVariable(item[0]).IsNullOrEmpty()) continue;
+                    setEnv(item[0], item[1], 1);
+                }
 
                 if (GetExport<ExecVFunc>(lib, "execv") is { } execv)
                 {
@@ -197,7 +218,7 @@ internal class Program
             else if (GetExport<UnsetEnvFunc>(lib, "unsetenv") is { } unsetEnv)
             {
                 // 重新加载后的镜像：参数已被 glibc 消费，清掉以免被托管的业务进程继承
-                foreach (var item in _allocatorEnv) unsetEnv(item[0]);
+                foreach (var item in _runtimeEnv) unsetEnv(item[0]);
             }
 
             // 兜底：exec 不可用（如容器未挂载 /proc）时，阈值类参数仍可在运行时调整
