@@ -299,6 +299,7 @@ Android/iOS 的 .NET 移动代理（`StarAgent.Mobile` + `StarAgent.Android` + `
 | `MALLOC_ARENA_MAX=1` | 单竞技场 | 竞技场数量只在进程初始化阶段由环境变量决定，运行时 `mallopt` 改不动，因此先 `setenv` 再 `execv` 原地重载自身镜像（PID 不变，systemd 无感知），新镜像立即 `unsetenv` 避免被托管的业务进程继承 |
 | `MALLOC_TRIM_THRESHOLD_` / `MALLOC_MMAP_THRESHOLD_` = 64KB，`MALLOC_TOP_PAD_` = 0 | 空闲堆及时归还 | 默认阈值偏大，空闲块长期留在进程里 |
 | `System.Runtime.TieredCompilation=false`（runtimeconfig） | 只保留一份全优化代码 | 关闭分层编译后不再同时持有 tier0 与 tier1 两份代码，省下 JIT 代码页 |
+| 关闭 HTTP/3（`System.Net.SocketsHttpHandler.Http3Support=false`） | 少装一套协议栈 | 代理只走 HTTP/1.1；不关闭时 .NET 探测 HTTP/3 会连带装载 `System.Net.Quic`（arm64 实测约 0.5~1.4 MB） |
 
 重载镜像只在常驻模式（`-s`/`-run`/`-restart`/`-delay`/`-upgrade`/`-repair` 或交互菜单）执行，`install`/`uninstall` 等一次性命令不额外付进程启动开销。
 
@@ -309,18 +310,37 @@ Android/iOS 的 .NET 移动代理（`StarAgent.Mobile` + `StarAgent.Android` + `
 | 设备 | 硬件 | 总内存 | 优化前 RSS | 优化后 RSS | 降幅 |
 |------|------|--------|-----------|-----------|------|
 | A6 | armv7 4 核 | 486 MB | 140 MB | 83 MB | -41% |
-| A4 | arm64 2 核 | 481 MB | 173 MB | 105 MB | -39% |
+| A4 | arm64 2 核 | 481 MB | 173 MB | 106 MB | -39% |
 | A2 | arm64 4 核 | 949 MB | 150 MB | 103 MB | -31% |
 
-空闲 CPU 约单核 1.3%（4 核板），常驻工作只有 60 秒心跳、10 分钟升级检查与 10 秒级服务巡检。
+空闲 CPU 约单核 0.5%（4 核板，逐线程采样），常驻工作只有 60 秒心跳、10 分钟升级检查与 10 秒级服务巡检。连续 15 分钟采样 RSS 在 83~85 MB 间随 GC 周期波动，**无持续增长**。
+
+### 8.2 剩余构成与优化边界
+
+优化后 armv7 设备（A6，83 MB）的构成，其中约 59 MB 是可被内核回收的干净文件页（内存紧张时自动让位），真正独占的脏页只有 25 MB：
+
+| 组成 | 约占用 | 能否再降 |
+|------|--------|----------|
+| 运行时本体（CoreLib 13.2 + coreclr 3.9 + clrjit 1.6 + JIT 代码 8.1） | 27 MB | 否，任何 .NET 进程的地板 |
+| 星尘客户端栈（Http/TLS/Json/Remoting/追踪） | 11 MB | 否，心跳与命令通道必需 |
+| ICU（`libicudata`/`icui18n`/`icuuc` + 内部缓存） | 12.6 MB | 仅能通过关闭 ICU 换取，见下 |
+| BCL 其余（Xml/Expressions/Cryptography/Regex/Linq/压缩） | 9 MB | 仅能改配置格式等大改换取 |
+| 自研程序集（NewLife.* + Stardust + StarAgent） | 5 MB | 否 |
+| 托管堆 + 原生堆 + 线程栈 | 14 MB | 已接近下限（GC 参数实测无收益） |
+
+至此 .NET 代理已接近地板，再要显著下降只有三条路：
+
+- **关闭 ICU**：设 `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1` 实测降到 72 MB（-12.6 MB），代价是界面与日志只剩英文，只适合不需要中文界面的极简设备。
+- **换原生代理**：`StarAgent.Native` 的 C++ 版实测 7 MB，差一个数量级，但缺进程守护/远程发布/Web 面板/插件/自升级。
+- **NativeAOT**：理论可到 20~30 MB，但需各平台交叉 AOT 工具链并适配反射密集的配置与序列化代码，属大型改造。
 
 已试过但**未采用**的选项：
 
 - `PublishReadyToRun`：程序集体积涨 2~3 倍、升级包变大，实测内存基本持平（JIT 代码页减少的量被文件页抵消）。
 - 关闭诊断端口（`DOTNET_EnableDiagnostics=0`）：内存几乎无变化，只少两个线程，不值得牺牲可诊断性。
-- `InvariantGlobalization`：可省 ICU 的数 MB，但会让多语言界面失效，不可接受。
+- GC 参数（`GCHeapHardLimit` 16/32/48 MB、`GCgen0size` 1 MB、`gcConcurrent=0`）：托管堆本来就小，实测无收益甚至略升。
 
-### 8.2 与原生 Agent 的差距
+### 8.3 与原生 Agent 的差距
 
 同一台 A4 上实测 C++ 原生代理（`StarAgent.Native`）常驻 **7 MB**、6 个线程，与 .NET 版差一个数量级。差距来自运行时自身——托管运行时即使只做心跳也要装载 CoreLib、JIT 与 ICU。
 

@@ -34,6 +34,9 @@ internal class Program
         // 必须最先执行：工作线程尚未创建，此时调整分配器才有效
         TuneNativeAllocator(args);
 
+        // 小内存设备优先：关掉用不到的协议栈，避免多装载一整套程序集
+        TrimRuntimeFeatures();
+
         // 先按宿主语言初始化日志语言，保证首次写出的配置文件注释即为本地语言，避免稍后改写
         StarLocalization.InitLogCulture();
 
@@ -212,8 +215,27 @@ internal class Program
 #endif
     }
 
-    /// <summary>判断是否为常驻运行模式</summary>
-    /// <param name="args">命令行参数</param>
+    /// <summary>关闭代理用不到的运行时特性，减少程序集装载</summary>
+    /// <remarks>
+    /// 星尘代理只与服务端做 HTTP/1.1 通信，用不到 HTTP/3。
+    /// .NET 在探测 HTTP/3 支持时会连带装载 <c>System.Net.Quic</c>（约 0.5MB 常驻），
+    /// 在 arm64 设备上实测确实被加载，小内存设备上没有任何收益，统一关掉。
+    /// </remarks>
+    private static void TrimRuntimeFeatures()
+    {
+#if NET6_0_OR_GREATER
+        try
+        {
+            AppContext.SetSwitch("System.Net.SocketsHttpHandler.Http3Support", false);
+        }
+        catch
+        {
+            // 开关名字随运行时版本变化时忽略
+        }
+#endif
+    }
+
+    /// <summary>判断是否为常驻运行模式</summary>    /// <param name="args">命令行参数</param>
     /// <returns>常驻或交互运行返回真</returns>
     /// <remarks>安装、卸载等一次性命令不需要为内存优化多付一次进程启动</remarks>
     private static Boolean IsDaemonMode(String[] args)
