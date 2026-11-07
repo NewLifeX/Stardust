@@ -872,7 +872,10 @@ async function doControl(action){
 /* ── Config ── */
 async function loadConfig(){
  try{
-  const j=await api('/api/configMetadata');if(j.code!==0)return;const items=j.data.items||[];
+  const j=await api('/api/configMetadata');if(j.code!==0)return;
+  // 面板监听/认证/证书由 staragent.config 统一管理（启动时覆盖 Agent.config），避免在此重复编辑后被回写覆盖
+  const synced=['WebAuthLevel','WebAuthMode','WebAdminGroups','WebTls','WebCertificate','WebCertificatePassword','WebAllowInsecureRemote'];
+  const items=(j.data.items||[]).filter(i=>!synced.includes(i.name));
   let html=`<div class="glass-card card"><h2>⚙ Agent 配置</h2><table class="config-table"><tbody>`;
   items.forEach(item=>{
    html+=`<tr><td>${esc(item.displayName)}</td><td>${renderConfigInput(item)}</td><td>${esc(item.description)}</td></tr>`;
