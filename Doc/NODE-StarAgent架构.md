@@ -300,6 +300,7 @@ Android/iOS 的 .NET 移动代理（`StarAgent.Mobile` + `StarAgent.Android` + `
 | `MALLOC_TRIM_THRESHOLD_` / `MALLOC_MMAP_THRESHOLD_` = 64KB，`MALLOC_TOP_PAD_` = 0 | 空闲堆及时归还 | 默认阈值偏大，空闲块长期留在进程里 |
 | `System.Runtime.TieredCompilation=false`（runtimeconfig） | 只保留一份全优化代码 | 关闭分层编译后不再同时持有 tier0 与 tier1 两份代码，省下 JIT 代码页 |
 | 关闭 HTTP/3（`System.Net.SocketsHttpHandler.Http3Support=false`） | 少装一套协议栈 | 代理只走 HTTP/1.1；不关闭时 .NET 探测 HTTP/3 会连带装载 `System.Net.Quic`（arm64 实测约 0.5~1.4 MB） |
+| `System.Runtime.EnableWriteXorExecute=false`（runtimeconfig） | 去掉代码的双重映射 | 默认用 memfd 给 JIT/预编译代码建读写别名，实测该项独占 **26 MB 共享内存**（`Pss_Shmem`，属 tmpfs，内核不能像干净文件页那样回收）；关掉后代码走单映射，RSS 再降 1~2 MB，`Pss_Shmem` 归零 |
 
 重载镜像只在常驻模式（`-s`/`-run`/`-restart`/`-delay`/`-upgrade`/`-repair` 或交互菜单）执行，`install`/`uninstall` 等一次性命令不额外付进程启动开销。
 
@@ -310,8 +311,10 @@ Android/iOS 的 .NET 移动代理（`StarAgent.Mobile` + `StarAgent.Android` + `
 | 设备 | 硬件 | 总内存 | 优化前 RSS | 优化后 RSS | 降幅 |
 |------|------|--------|-----------|-----------|------|
 | A6 | armv7 4 核 | 486 MB | 140 MB | 83 MB | -41% |
-| A4 | arm64 2 核 | 481 MB | 173 MB | 106 MB | -39% |
-| A2 | arm64 4 核 | 949 MB | 150 MB | 103 MB | -31% |
+| A4 | arm64 2 核 | 481 MB | 173 MB | 105 MB | -39% |
+| A2 | arm64 4 核 | 949 MB | 150 MB | 102 MB | -32% |
+
+除 RSS 外，关闭 W^X 双映射还回收了 16~27 MB 共享内存（`Pss_Shmem` 归零）。
 
 空闲 CPU 约单核 0.5%（4 核板，逐线程采样），常驻工作只有 60 秒心跳、10 分钟升级检查与 10 秒级服务巡检。连续 15 分钟采样 RSS 在 83~85 MB 间随 GC 周期波动，**无持续增长**。
 
