@@ -172,12 +172,6 @@ internal class MyService : ServiceBase, IServiceProvider
 
         // StarAgent 以 staragent.config 为唯一配置入口，启动时同步到框架面板配置
         set.WebBind = AgentSetting.WebBind;
-        set.WebAuthMode = AgentSetting.WebAuthMode;
-        set.WebAdminGroups = AgentSetting.WebAdminGroups;
-        set.WebTls = AgentSetting.WebTls;
-        set.WebCertificate = AgentSetting.WebCertificate;
-        set.WebCertificatePassword = AgentSetting.WebCertificatePassword;
-        set.WebAllowInsecureRemote = AgentSetting.WebAllowInsecureRemote;
         set.Save();
 
         ProtectConfigFiles();

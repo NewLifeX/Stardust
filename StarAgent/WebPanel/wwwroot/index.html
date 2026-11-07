@@ -286,8 +286,6 @@ document.getElementById('lpass').addEventListener('keydown', e => {
 
 <script>
 let token='',timer=null,statusData=null,logFiles=[],currentLogFile=null;
-// 系统账号认证模式下不允许面板改密；首屏沿用上次登录结果，未登录时默认显示
-let canChangePassword=sessionStorage.getItem('agent_can_change_pwd')!=='0';
 let svcTimer=null,starTimer=null;
 let cmdHistory=JSON.parse(sessionStorage.getItem('agent_cmd_history')||'[]');
 const $=id=>document.getElementById(id);
@@ -309,15 +307,13 @@ async function doLogin(){
    e.classList.add('show');return
   }
   token=j.data.token;sessionStorage.setItem('agent_token',token);
-  canChangePassword=j.data.canChangePassword===true;
-  sessionStorage.setItem('agent_can_change_pwd',canChangePassword?'1':'0');
   showApp();
  }catch(ex){e.textContent='网络错误，请检查服务是否正常运行';e.classList.add('show')}
 }
 
 async function logout(){
  try{await fetch('/api/logout',{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'}})}catch(e){}
- sessionStorage.removeItem('agent_token');sessionStorage.removeItem('agent_can_change_pwd');token='';
+ sessionStorage.removeItem('agent_token');token='';
  clearInterval(timer);if(svcTimer)clearInterval(svcTimer);if(starTimer)clearInterval(starTimer);
  $('login').style.display='';$('app').style.display='none';$('luser').focus()
 }
@@ -873,17 +869,15 @@ async function doControl(action){
 async function loadConfig(){
  try{
   const j=await api('/api/configMetadata');if(j.code!==0)return;
-  // 面板监听/认证/证书由 staragent.config 统一管理（启动时覆盖 Agent.config），避免在此重复编辑后被回写覆盖
-  const synced=['WebAuthLevel','WebAuthMode','WebAdminGroups','WebTls','WebCertificate','WebCertificatePassword','WebAllowInsecureRemote'];
-  const items=(j.data.items||[]).filter(i=>!synced.includes(i.name));
+  // 监听地址/端口由 staragent.config 统管（启动时覆盖 Agent.config），不在此处编辑
+  const items=(j.data.items||[]).filter(i=>!['WebBind','WebPort'].includes(i.name));
   let html=`<div class="glass-card card"><h2>⚙ Agent 配置</h2><table class="config-table"><tbody>`;
   items.forEach(item=>{
    html+=`<tr><td>${esc(item.displayName)}</td><td>${renderConfigInput(item)}</td><td>${esc(item.description)}</td></tr>`;
   });
   html+=`</tbody></table><div class="mt-16"><button class="btn btn-primary" onclick="saveConfig()">💾 保存配置</button> <span style="font-size:12px;color:var(--text-muted);margin-left:12px">部分配置需重启服务后生效</span></div></div>`;
 
-  // 修改密码卡片（系统账号认证模式下隐藏）
-  if(canChangePassword){
+  // 修改密码卡片
   html+=`<div class="glass-card card" style="margin-top:16px"><h2>🔑 修改密码</h2>`;
   html+=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:end">`;
   html+=`<div><label style="display:block;font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">旧密码</label><input type="password" id="pwd-old" placeholder="请输入旧密码" autocomplete="off"></div>`;
@@ -893,7 +887,7 @@ async function loadConfig(){
   html+=`<div style="margin-top:14px;display:flex;align-items:center;gap:12px">`;
   html+=`<button class="btn btn-primary" onclick="changePassword()">修改密码</button>`;
   html+=`<span id="pwd-msg" style="font-size:12px;color:var(--text-muted)"></span></div></div>`;
-  }
+
  }catch(e){$('panel-config').innerHTML=`<div class="glass-card card"><h2>⚙ Agent 配置</h2><p class="text-muted">加载失败</p></div>`}
 }
 
@@ -918,7 +912,21 @@ async function saveConfig(){
  });
  try{
   const j=await api('/api/updateConfig',{method:'POST',body:JSON.stringify(updates)});
-  if(j.code===0){dirtyFields.clear();showToast(j.message,'success');loadConfig()}
+  if(j.code===0){
+   dirtyFields.clear();showToast(j.message,'success');
+   const d=j.data;
+   if(d&&d.port){
+    // 监听端口变化意味着 origin 变化，跳到新地址重新登录
+    const curPort=location.port||(location.protocol==='https:'?'443':'80');
+    const reachable=String(d.port)===curPort&&(d.listenAll||d.address===location.hostname);
+    if(!reachable){
+     const host=d.listenAll?location.hostname:(d.address||location.hostname);
+     setTimeout(()=>{location.replace(location.protocol+'//'+host+':'+d.port+'/')},1500);
+     return;
+    }
+   }
+   loadConfig()
+  }
   else showToast(j.message,'error');
  }catch(e){showToast('保存失败','error')}
 }

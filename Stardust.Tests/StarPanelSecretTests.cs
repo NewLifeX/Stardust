@@ -33,7 +33,6 @@ public class StarPanelSecretTests
 
         var panel = new StarPanel(mockSvc.Object)
         {
-            Level = AuthLevel.Full,
             UserName = "admin",
             Password = "123456",
         };

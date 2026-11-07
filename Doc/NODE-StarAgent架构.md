@@ -207,15 +207,9 @@ StarAgent 基于 NewLife.Agent 内置的 `AgentWebPanel` 框架，提供了轻�
 
 ### 6.5 鉴权策略
 
-| 级别 | 说明 |
-|------|------|
-| `None` | 不鉴权，任何人都可访问 |
-| `LocalOnly`（默认） | 本地地址（127.0.0.1）免鉴权，远程访问需登录 |
-| `Full` | 全部请求需登录 |
+面板所有接口统一要求登录（由 `AgentWebPanel` 注册的鉴权中间件拦截），仅登录页、静态资源、`/api/Login`、`/api/Languages` 等公开路径例外；**本机访问同样需要口令**。登录后签发 Bearer Token，有效期 24 小时。
 
-凭据在 `agent.config` 中通过 `WebUserName` / `WebPassword` 配置。登录后签发 Bearer Token，有效期 24 小时。当前版本所有 API 请求统一要求登录凭证，`WebAuthLevel` 已废弃并忽略。
-
-`WebPassword` 以 PBKDF2 加盐哈希保存（历史明文在首次登录后自动升级）；新装首次启动会生成随机初始口令，输出到日志与配置目录下的 `panel.initial-password.txt`（登录成功后删除）。也可通过 `WebAuthMode=OsAccount` 改用操作系统账号登录，只允许管理员组成员（Windows 为 Administrators；Linux 为 root/sudo/wheel/admin，可用 `WebAdminGroups` 覆盖），该模式下面板不提供改密。
+凭据在 `agent.config` 中通过 `WebUserName` / `WebPassword` 配置。`WebPassword` 默认 `admin`，保存为加盐哈希（`IPasswordProvider`，默认 `SaltPasswordProvider`），也可直接填写明文，首次登录成功后自动升级为哈希；需要更强散列时，可在面板构造后替换 `AgentWebPanel.PasswordProvider`。认证方式可扩展：子类重写 `OnAuthenticate` 即可接入域账号或单点登录（当前 StarAgent 未启用）。
 
 配置页中的密钥字段只写不读：`StarApi.GetStarConfig` 对应用密钥与节点密钥一律返回空值，前端以“输入新值以修改”呈现；`UpdateStarConfig` 收到空密钥时保持原值，避免留空保存把密钥清空。
 
@@ -225,11 +219,11 @@ StarAgent 基于 NewLife.Agent 内置的 `AgentWebPanel` 框架，提供了轻�
 
 需要远程管理时，在 `staragent.config` 配置 `WebBind` 为 `*`（所有网卡）或指定 IP，重启 StarAgent 后生效（也可在面板“星尘设置”中修改）：
 
-- 框架默认值：`NewLife.Agent` 的 `Agent.config` 中 `WebBind` 默认 `127.0.0.1`；StarAgent 启动时按 `staragent.config` 的同名配置覆盖
+- 框架默认值：`NewLife.Agent` 的 `Agent.config` 中 `WebBind` 默认 `127.0.0.1`；StarAgent 启动时按 `staragent.config` 的同名配置覆盖，因此面板监听地址/端口不在 Agent 配置页开放编辑
 - 非法绑定地址回退本机回环，避免配置笔误把面板误开放到局域网
-- 远程访问默认启用 TLS：`WebTls` 默认 `Auto`，非本机监听时自动使用自签证书（首次启动生成到配置目录 `panel.pfx`），也可配置为 `SelfSigned` 或 `Pfx`（配合 `WebCertificate` / `WebCertificatePassword`）
-- 安全拒绝：监听非本机地址且（未启用 TLS，或本地口令为空/仍为默认）时，面板**拒绝启动**；确认风险后可设 `WebAllowInsecureRemote=true` 显式放开
-- 凭据：`WebUserName` 默认 `admin`，`WebPassword` 不再内置默认值（新装为随机初始口令）；面板启动日志会给出初始口令
+- 远程访问不内置 TLS：优先用 Nginx/Caddy 反向代理或 SSH 隧道提供 HTTPS，只把本机回环端口交给面板
+- 安全拒绝：监听非本机地址且口令仍为空或 `admin` 时，面板**拒绝启动**；先在 `127.0.0.1` 登录改密，或直接修改配置中的 `WebPassword` 后再开放
+- 本机访问同样需要登录口令，不再有“本地免鉴权”级别
 
 ### 6.7 多实例与地址重用
 
