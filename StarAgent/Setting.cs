@@ -38,6 +38,30 @@ public class StarAgentSetting : Config<StarAgentSetting>, IClientSetting
     [Description("Web panel bind address. Default 127.0.0.1 allows local access only; set to * to listen on all NICs, or specify a concrete IP")]
     public String WebBind { get; set; } = "127.0.0.1";
 
+    /// <summary>Web面板认证模式。Password本地口令（哈希保存），OsAccount操作系统账号（仅管理员组）</summary>
+    [Description("Web panel authentication mode. Password: local password stored as a salted hash; OsAccount: operating system account limited to the administrator group")]
+    public String WebAuthMode { get; set; } = "Password";
+
+    /// <summary>操作系统账号模式下的管理员组，逗号分隔。留空使用平台默认值</summary>
+    [Description("Administrator groups for the OS account mode, separated by commas. Empty uses the platform default (Administrators on Windows; root, sudo, wheel, admin on Linux)")]
+    public String WebAdminGroups { get; set; } = "";
+
+    /// <summary>Web面板传输安全。Auto按绑定地址决定，Off关闭TLS，SelfSigned自签证书，Pfx使用WebCertificate</summary>
+    [Description("Web panel transport security. Auto: off for loopback and self-signed otherwise; Off: no TLS; SelfSigned: self-signed certificate; Pfx: use WebCertificate")]
+    public String WebTls { get; set; } = "Auto";
+
+    /// <summary>PFX证书文件。WebTls为Pfx时使用</summary>
+    [Description("PFX certificate file used when WebTls is Pfx")]
+    public String WebCertificate { get; set; } = "";
+
+    /// <summary>PFX证书口令</summary>
+    [Description("PFX certificate password")]
+    public String WebCertificatePassword { get; set; } = "";
+
+    /// <summary>允许非本机监听且不启用TLS。默认false，此时面板拒绝在没有TLS的情况下暴露到网络</summary>
+    [Description("Allow listening on non-loopback addresses without TLS. Default false; the panel then refuses to expose itself to the network without TLS")]
+    public Boolean WebAllowInsecureRemote { get; set; }
+
     /// <summary>更新通道。默认Release</summary>
     [Description("Update channel. Default Release.")]
     public String Channel { get; set; } = "Release";

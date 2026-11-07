@@ -286,6 +286,8 @@ document.getElementById('lpass').addEventListener('keydown', e => {
 
 <script>
 let token='',timer=null,statusData=null,logFiles=[],currentLogFile=null;
+// 系统账号认证模式下不允许面板改密；首屏沿用上次登录结果，未登录时默认显示
+let canChangePassword=sessionStorage.getItem('agent_can_change_pwd')!=='0';
 let svcTimer=null,starTimer=null;
 let cmdHistory=JSON.parse(sessionStorage.getItem('agent_cmd_history')||'[]');
 const $=id=>document.getElementById(id);
@@ -306,13 +308,16 @@ async function doLogin(){
    else e.textContent=j.message||'登录失败';
    e.classList.add('show');return
   }
-  token=j.data.token;sessionStorage.setItem('agent_token',token);showApp();
+  token=j.data.token;sessionStorage.setItem('agent_token',token);
+  canChangePassword=j.data.canChangePassword===true;
+  sessionStorage.setItem('agent_can_change_pwd',canChangePassword?'1':'0');
+  showApp();
  }catch(ex){e.textContent='网络错误，请检查服务是否正常运行';e.classList.add('show')}
 }
 
 async function logout(){
  try{await fetch('/api/logout',{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'}})}catch(e){}
- sessionStorage.removeItem('agent_token');token='';
+ sessionStorage.removeItem('agent_token');sessionStorage.removeItem('agent_can_change_pwd');token='';
  clearInterval(timer);if(svcTimer)clearInterval(svcTimer);if(starTimer)clearInterval(starTimer);
  $('login').style.display='';$('app').style.display='none';$('luser').focus()
 }
@@ -874,7 +879,8 @@ async function loadConfig(){
   });
   html+=`</tbody></table><div class="mt-16"><button class="btn btn-primary" onclick="saveConfig()">💾 保存配置</button> <span style="font-size:12px;color:var(--text-muted);margin-left:12px">部分配置需重启服务后生效</span></div></div>`;
 
-  // 修改密码卡片
+  // 修改密码卡片（系统账号认证模式下隐藏）
+  if(canChangePassword){
   html+=`<div class="glass-card card" style="margin-top:16px"><h2>🔑 修改密码</h2>`;
   html+=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:end">`;
   html+=`<div><label style="display:block;font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">旧密码</label><input type="password" id="pwd-old" placeholder="请输入旧密码" autocomplete="off"></div>`;
@@ -884,8 +890,7 @@ async function loadConfig(){
   html+=`<div style="margin-top:14px;display:flex;align-items:center;gap:12px">`;
   html+=`<button class="btn btn-primary" onclick="changePassword()">修改密码</button>`;
   html+=`<span id="pwd-msg" style="font-size:12px;color:var(--text-muted)"></span></div></div>`;
-
-  $('panel-config').innerHTML=html;
+  }
  }catch(e){$('panel-config').innerHTML=`<div class="glass-card card"><h2>⚙ Agent 配置</h2><p class="text-muted">加载失败</p></div>`}
 }
 

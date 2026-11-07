@@ -4,6 +4,8 @@ using System.Reflection;
 using NewLife;
 using NewLife.Agent;
 using NewLife.Agent.Models;
+using NewLife.Agent.WebPanel.Security;
+using NewLife.Configuration;
 using NewLife.Log;
 using NewLife.Model;
 using NewLife.Net;
@@ -167,7 +169,18 @@ internal class MyService : ServiceBase, IServiceProvider
 
         var set = NewLife.Agent.Setting.Current;
         set.WebPort = AgentSetting.LocalPort;
+
+        // StarAgent 以 staragent.config 为唯一配置入口，启动时同步到框架面板配置
+        set.WebBind = AgentSetting.WebBind;
+        set.WebAuthMode = AgentSetting.WebAuthMode;
+        set.WebAdminGroups = AgentSetting.WebAdminGroups;
+        set.WebTls = AgentSetting.WebTls;
+        set.WebCertificate = AgentSetting.WebCertificate;
+        set.WebCertificatePassword = AgentSetting.WebCertificatePassword;
+        set.WebAllowInsecureRemote = AgentSetting.WebAllowInsecureRemote;
         set.Save();
+
+        ProtectConfigFiles();
 
         var panel = new StarPanel(service);
 
@@ -183,6 +196,16 @@ internal class MyService : ServiceBase, IServiceProvider
         }
 
         return panel;
+    }
+
+    /// <summary>收紧星尘相关配置文件的权限，避免同机低权限用户读取密钥</summary>
+    private static void ProtectConfigFiles()
+    {
+        foreach (var provider in new IConfigProvider?[] { StarSetting.Provider, StarAgentSetting.Provider, NewLife.Agent.Setting.Provider })
+        {
+            if (provider is FileConfigProvider file && !file.FileName.IsNullOrEmpty())
+                WebPanelSecurity.ProtectFile(file.FileName.GetBasePath());
+        }
     }
     #endregion
 
