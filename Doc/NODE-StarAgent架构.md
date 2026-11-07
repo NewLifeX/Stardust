@@ -344,6 +344,8 @@ Android/iOS 的 .NET 移动代理（`StarAgent.Mobile` + `StarAgent.Android` + `
 - `PublishReadyToRun`：程序集体积涨 2~3 倍、升级包变大，实测内存基本持平（JIT 代码页减少的量被文件页抵消）。
 - 关闭诊断端口（`DOTNET_EnableDiagnostics=0`）：内存几乎无变化，只少两个线程，不值得牺牲可诊断性。
 - GC 参数（`GCHeapHardLimit` 16/32/48 MB、`GCgen0size` 1 MB、`gcConcurrent=0`）：托管堆本来就小，实测无收益甚至略升。
+- 定时 `malloc_trim(0)`：启动 90 秒后调用一次，页面虽有归还但 WorkingSet 只从 83180K 变成 83300K（噪声级），原生堆碎片没有可回收量，不必加定时任务。
+- `DOTNET_ReadyToRun=0`（关预编译镜像）：常驻内存确实更省（armv7 83→74 MB、arm64 109→103 MB），但 JIT 全量编译让启动时间从 15 秒涨到 **31 秒**，边缘设备上看重上线速度，不划算。
 
 ### 8.3 与原生 Agent 的差距
 
