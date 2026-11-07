@@ -353,4 +353,66 @@ public class NodeServiceUpgradeTests
 
         Assert.Null(svc.Upgrade(ctx, "Release"));
     }
+
+    /// <summary>升级策略版本号是标签（如 agent60-1106）时，节点上报的是程序集文件版本（如 3.7.2026.1106）。
+    /// 两者写法不同也必须识别升级生效，否则已经升级成功的节点会被反复重推直到次数用尽。</summary>
+    [Fact]
+    [Trait("Category", "Nodes")]
+    public void StrategyLabelVersion_NodeUpgraded_StopsRetry()
+    {
+        using var isolation = new UpgradeIsolation();
+
+        var nv = new NodeVersion
+        {
+            Version = "agent60-" + Guid.NewGuid().ToString("n")[..4],
+            ProductCode = "StarAgent",
+            Enable = true,
+            Force = true,
+            Channel = NodeChannels.Release,
+            Strategy = "runtime=8.*;version<=3.7.2026.1106",
+            Source = "http://127.0.0.1/files/agent.zip",
+            Size = 1024,
+            FileHash = "0123456789abcdef0123456789abcdef",
+        };
+        nv.Insert();
+
+        var node = new Node
+        {
+            Code = "test-nvlabel-" + Guid.NewGuid().ToString("n")[..8],
+            Name = "test-nvlabel",
+            ProductCode = "StarAgent",
+            Runtime = "8.0.6",
+            OSKind = OSKinds.Ubuntu,
+            Architecture = "Arm64",
+            Version = "3.7.2026.0728",
+            Enable = true,
+        };
+        node.Insert();
+
+        try
+        {
+            var svc = CreateService();
+            var ctx = NewContext(node);
+
+            var info = svc.Upgrade(ctx, "Release");
+            Assert.NotNull(info);
+            Assert.Equal(nv.Version, node.LastVersion);
+
+            // 模拟代理升级完成重启：上报的是程序集文件版本，与策略标签写法不同
+            node.Fill(new NodeInfo { Version = "3.7.2026.1106" });
+            node.Update();
+
+            Assert.Equal(Node.MaxUpgradeAttempts, node.UpgradeAttempts);
+
+            // 升级已经生效，不得继续重推
+            Assert.Null(svc.Upgrade(ctx, "Release"));
+        }
+        finally
+        {
+            NodeHistory.Delete(NodeHistory._.NodeID == node.ID);
+            node.Delete();
+            nv.Delete();
+        }
+    }
 }
+

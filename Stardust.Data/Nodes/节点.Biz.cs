@@ -557,15 +557,18 @@ public partial class Node : Entity<Node>, IDeviceModel2, ILogProvider
         if (!info.Architecture.IsNullOrEmpty()) node.Architecture = info.Architecture;
         if (!info.Version.IsNullOrEmpty() && info.Version != node.Version)
         {
-            // 节点上报新版本，说明已完成升级重启。与最后下发的版本一致时视为升级生效，停止自动重试
-            if (node.LastVersion == info.Version)
+            // 节点上报版本变化，说明升级包已经生效（或人为替换）。LastVersion 存的是升级策略里的版本号，
+            // 可能是 agent60-1106 这类标签，同一份包却让节点上报 3.7.2026.1106，直接相等比较永远不成立，
+            // 会把已经升级成功的节点一直判定为未生效，反复重推直到次数用尽。因此只要版本没有回退，都视为升级生效
+            if (node.LastVersion == info.Version || IsVersionUp(node.Version, info.Version))
             {
+                // 升级生效，停止自动重试
                 node.UpgradeAttempts = MaxUpgradeAttempts;
                 node.WriteHistory(HistoryAction.Upgrade, true, $"升级生效 {node.Version} => {info.Version}", node.UpdateIP);
             }
             else
             {
-                // 版本与最后下发的版本不一致，可能是手工替换或回退，清空去重状态后重新评估
+                // 版本回退，可能是手工替换，清空去重状态后重新评估
                 node.UpgradeAttempts = 0;
                 node.LastUpgradeKey = null;
             }
@@ -666,6 +669,19 @@ public partial class Node : Entity<Node>, IDeviceModel2, ILogProvider
 
         // 如果不是4.0.30319.x版本格式，直接返回原始版本
         return ver.ToString();
+    }
+
+    /// <summary>判断节点上报的新版本是否不低于旧版本。版本号无法解析时按升级生效处理，避免格式差异导致反复重推</summary>
+    /// <param name="oldVersion">节点原来的版本</param>
+    /// <param name="newVersion">节点上报的新版本</param>
+    /// <returns></returns>
+    private static Boolean IsVersionUp(String oldVersion, String newVersion)
+    {
+        if (oldVersion.IsNullOrEmpty() || newVersion.IsNullOrEmpty()) return true;
+        if (!System.Version.TryParse(oldVersion.TrimStart('v', 'V'), out var ver1)) return true;
+        if (!System.Version.TryParse(newVersion.TrimStart('v', 'V'), out var ver2)) return true;
+
+        return ver2 >= ver1;
     }
 
     /// <summary>修正地区</summary>
