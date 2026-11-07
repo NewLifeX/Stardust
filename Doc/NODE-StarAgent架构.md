@@ -316,6 +316,8 @@ Android/iOS 的 .NET 移动代理（`StarAgent.Mobile` + `StarAgent.Android` + `
 
 除 RSS 外，关闭 W^X 双映射还回收了 16~27 MB 共享内存（`Pss_Shmem` 归零）。
 
+> ⚠️ **换版测试与运维注意**：带 SmartIPC 固件的设备（A2/A4/A6 均属此类）由 `newlifed` 看门狗守护代理，代理停止运行十几秒就会用固件内置的救援副本（`/usr/share/newlife/rescue/staragent`）覆盖部署目录后重启。换版时必须**同时刷新该救援副本**，否则设备会在无人察觉时回滚到固件随附的老版本（内存优化全部失效，实测 A6 就曾这样悄悄退回 116 MB）。救援事件由 `MyStarClient.CheckRescueFlag` 上报，平台节点事件里能看到“代理恢复成功……已还原 N 个核心文件”。
+
 空闲 CPU 约单核 0.5%（4 核板，逐线程采样），常驻工作只有 60 秒心跳、10 分钟升级检查与 10 秒级服务巡检。连续 15 分钟采样 RSS 在 83~85 MB 间随 GC 周期波动，**无持续增长**。
 
 ### 8.2 剩余构成与优化边界
@@ -348,6 +350,16 @@ Android/iOS 的 .NET 移动代理（`StarAgent.Mobile` + `StarAgent.Android` + `
 同一台 A4 上实测 C++ 原生代理（`StarAgent.Native`）常驻 **7 MB**、6 个线程，与 .NET 版差一个数量级。差距来自运行时自身——托管运行时即使只做心跳也要装载 CoreLib、JIT 与 ICU。
 
 因此选型建议：**极小内存设备（<256 MB）或必须极致省内存的嵌入式场景**优先用原生 Agent；需要进程守护、远程发布、Web 面板、插件、自升级等完整能力时用 .NET 版。
+
+### 8.4 上游可优化项（跨仓库，未实施）
+
+用 `AppDomain.AssemblyLoad` 挂钩逐项确认了剩余程序集的装载来源，以下三项需要改别的仓库才能拿下，合计约 7 MB：
+
+| 程序集 | 占用 | 装载来源 | 可行的改法 |
+|--------|------|----------|-----------|
+| `System.Linq.Expressions` | 2.1 MB | `NewLife.Reflection.DefaultReflect.RegisterAndCreate`，首次访问 `Config<T>.Current` 就触发 | NewLife.Core 的对象工厂改为 `Activator.CreateInstance` 或缓存委托，不用表达式树 |
+| `System.Reflection.Metadata` + `System.Collections.Immutable` | 1.7 MB | 异常堆栈解析源码行号（`StackTraceSymbols`），首次带文件信息的 `StackTrace` 触发 | NewLife.Core 记录异常时不再请求文件行号信息 |
+| `System.Private.Xml` | 3.1 MB | `XmlConfigProvider` 读取 `*.config` | 配置文件改用 JSON（`FileConfigProvider` 按扩展名选解析器），需迁移全部既有部署 |
 
 ---
 
