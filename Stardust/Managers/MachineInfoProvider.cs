@@ -134,7 +134,7 @@ public class MachineInfoProvider : IMachineInfo
 
     /// <summary>解析设备树 compatible 内容，提取厂商/主板/处理器</summary>
     /// <remarks>
-    /// compatible 是 NUL 分隔、从具体到通用的一组标识串，例如 GT68XX 的“htnice,gt685x”+“rockchip,rk3568”两条；
+    /// compatible 是 NUL 分隔、从具体到通用的一组标识串，例如 A2 上就是“厂商,主板”+“厂商,芯片”两条；
     /// 不拆分 NUL 而直接按逗号切分，会把相邻两条拼成错误的主板名。个别平台为单条“厂商,芯片”。
     /// </remarks>
     /// <param name="compatible">compatible 原始内容</param>

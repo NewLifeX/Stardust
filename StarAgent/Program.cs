@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics;
 using System.Net;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Text;
 using NewLife;
 using NewLife.Agent;
 using NewLife.Agent.Models;
@@ -29,6 +31,9 @@ internal class Program
 {
     private static void Main(String[] args)
     {
+        // 必须最先执行：工作线程尚未创建，此时调整分配器才有效
+        TuneNativeAllocator(args);
+
         // 先按宿主语言初始化日志语言，保证首次写出的配置文件注释即为本地语言，避免稍后改写
         StarLocalization.InitLogCulture();
 
@@ -113,6 +118,166 @@ internal class Program
 
         svc.Main(args);
     }
+
+    #region 原生分配器调优
+    /// <summary>glibc 分配器参数。见 mallopt(3)，均为负数常量</summary>
+    private const Int32 M_TRIM_THRESHOLD = -1;
+    private const Int32 M_TOP_PAD = -2;
+    private const Int32 M_MMAP_THRESHOLD = -3;
+
+    /// <summary>需要注入给 glibc 的分配器参数。库在进程初始化阶段读取，因此只能通过环境变量生效</summary>
+    private static readonly String[][] _allocatorEnv =
+    [
+        ["MALLOC_ARENA_MAX", "1"],
+        ["MALLOC_TRIM_THRESHOLD_", "65536"],
+        ["MALLOC_MMAP_THRESHOLD_", "65536"],
+        ["MALLOC_TOP_PAD_", "0"],
+    ];
+
+    /// <summary>setenv 的托管委托</summary>
+    private delegate Int32 SetEnvFunc(String name, String value, Int32 overwrite);
+
+    /// <summary>unsetenv 的托管委托</summary>
+    private delegate Int32 UnsetEnvFunc(String name);
+
+    /// <summary>execv 的托管委托</summary>
+    private delegate Int32 ExecVFunc(String path, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] argv);
+
+    /// <summary>mallopt 的托管委托</summary>
+    private delegate Int32 MalloptFunc(Int32 param, Int32 value);
+
+    /// <summary>收紧原生分配器，降低边缘小内存设备上的常驻内存</summary>
+    /// <param name="args">命令行参数，只有常驻运行才需要重载镜像</param>
+    /// <remarks>
+    /// glibc 默认为每个线程准备一个内存竞技场（32 位 1MB、64 位 64MB 虚拟空间），并在竞技场内缓存空闲块；
+    /// 星尘代理常驻 20 多个线程，实测在 armv7 设备上仅竞技场就占掉约两成常驻内存。
+    /// 又因为默认的 trim/mmap 阈值偏大，空闲堆长时间不归还操作系统。
+    /// <para>
+    /// 竞技场数量只在进程初始化阶段由环境变量 MALLOC_ARENA_MAX 决定，运行时 mallopt 改不动（竞技场早已建好），
+    /// 因此这里先设好环境变量并原地重新加载自身镜像（execv，PID 不变，宿主 systemd 无感知），
+    /// 让新镜像在 glibc 初始化时就按单竞技场运行。省下的是几十 MB，代价只是一次可忽略的进程重启。
+    /// </para>
+    /// <para>
+    /// 环境变量只对本进程有效，星尘代理会托管大量业务进程，新镜像启动后立即 unsetenv，
+    /// 避免这些参数被业务进程继承而改变它们的分配器行为。
+    /// </para>
+    /// <para>不能写成 DllImport("libc")：Linux 上 libc.so 多是链接脚本，直接按库名加载会失败，需显式逐个尝试真实文件名。</para>
+    /// </remarks>
+    private static void TuneNativeAllocator(String[] args)
+    {
+        if (!Runtime.Linux) return;
+
+#if NET6_0_OR_GREATER
+        // 安装、卸载、启动停止等一次性命令不占用常驻内存，没必要为它们多付一次进程启动
+        if (!IsDaemonMode(args)) return;
+
+        try
+        {
+            if (!TryLoadLibc(out var lib)) return;
+            if (GetExport<SetEnvFunc>(lib, "setenv") is not { } setEnv) return;
+
+            if (Environment.GetEnvironmentVariable(_allocatorEnv[0][0]).IsNullOrEmpty())
+            {
+                // 首次进入：注入环境变量后重启镜像，成功则不会返回
+                foreach (var item in _allocatorEnv) setEnv(item[0], item[1], 1);
+
+                if (GetExport<ExecVFunc>(lib, "execv") is { } execv)
+                {
+                    var cmdline = File.ReadAllBytes("/proc/self/cmdline");
+                    var argv = Encoding.UTF8.GetString(cmdline).TrimEnd('\0').Split('\0');
+                    // execv 要求 argv 以 NULL 结尾，托管数组不会自动补上，缺失时 exec 直接返回 -1
+                    var full = new String[argv.Length + 1];
+                    argv.CopyTo(full, 0);
+                    if (argv.Length > 0 && !argv[0].IsNullOrEmpty()) execv(GetSelfExe(), full);
+                }
+            }
+            else if (GetExport<UnsetEnvFunc>(lib, "unsetenv") is { } unsetEnv)
+            {
+                // 重新加载后的镜像：参数已被 glibc 消费，清掉以免被托管的业务进程继承
+                foreach (var item in _allocatorEnv) unsetEnv(item[0]);
+            }
+
+            // 兜底：exec 不可用（如容器未挂载 /proc）时，阈值类参数仍可在运行时调整
+            if (GetExport<MalloptFunc>(lib, "mallopt") is { } mallopt)
+            {
+                mallopt(M_TRIM_THRESHOLD, 64 * 1024);
+                mallopt(M_MMAP_THRESHOLD, 64 * 1024);
+                mallopt(M_TOP_PAD, 0);
+            }
+        }
+        catch
+        {
+            // 非 glibc（如 musl）或受限环境没有这些接口，保持系统默认即可
+        }
+#endif
+    }
+
+    /// <summary>判断是否为常驻运行模式</summary>
+    /// <param name="args">命令行参数</param>
+    /// <returns>常驻或交互运行返回真</returns>
+    /// <remarks>安装、卸载等一次性命令不需要为内存优化多付一次进程启动</remarks>
+    private static Boolean IsDaemonMode(String[] args)
+    {
+        if (args == null || args.Length == 0) return true;
+
+        foreach (var item in args)
+        {
+            if (item.IsNullOrEmpty()) continue;
+            if (item.EqualIgnoreCase("-s", "-run", "-restart", "-delay", "-upgrade", "-repair")) return true;
+        }
+
+        return false;
+    }
+
+#if NET6_0_OR_GREATER
+    /// <summary>取当前进程可执行文件的真实路径</summary>
+    /// <returns>真实路径，解析失败时返回 /proc/self/exe</returns>
+    /// <remarks>
+    /// 不能直接把 /proc/self/exe 交给 execv：内核按传入路径的文件名设置进程名，
+    /// 进程名会从 dotnet 变成 exe，平台侧按进程名识别代理的逻辑都会失准。
+    /// </remarks>
+    private static String GetSelfExe()
+    {
+        try
+        {
+            if (File.ResolveLinkTarget("/proc/self/exe", true) is { } target && File.Exists(target.FullName)) return target.FullName;
+        }
+        catch
+        {
+            // 忽略，退回 /proc/self/exe
+        }
+
+        return "/proc/self/exe";
+    }
+
+    /// <summary>加载 libc。逐个尝试真实文件名，兼容 glibc 与 musl</summary>
+    /// <param name="lib">库句柄</param>
+    /// <returns>成功返回真</returns>
+    private static Boolean TryLoadLibc(out IntPtr lib)
+    {
+        foreach (var name in new[] { "libc.so.6", "libc.so", "libc" })
+        {
+            if (NativeLibrary.TryLoad(name, out lib)) return true;
+        }
+
+        lib = IntPtr.Zero;
+        return false;
+    }
+
+    /// <summary>取导出函数并转换为托管委托</summary>
+    /// <typeparam name="TFunc">委托类型</typeparam>
+    /// <param name="lib">库句柄</param>
+    /// <param name="name">导出名</param>
+    /// <returns>委托实例，不存在时返回空</returns>
+    private static TFunc? GetExport<TFunc>(IntPtr lib, String name) where TFunc : Delegate
+    {
+        if (!NativeLibrary.TryGetExport(lib, name, out var fn) || fn == IntPtr.Zero) return null;
+
+        return (TFunc)Marshal.GetDelegateForFunctionPointer(fn, typeof(TFunc));
+    }
+#endif
+
+    #endregion
 
     /// <summary>用户模式存储配置，方便服务模式读取。因为服务模式无法读取用户和分辨率等信息</summary>
     /// <param name="set"></param>

@@ -3,6 +3,7 @@
     "System.GC.HeapCount": 1,
     "System.GC.HeapHardLimit": 209715200,
     "System.GC.ConserveMemory": 9,
-    "System.GC.RetainVM": false
+    "System.GC.RetainVM": false,
+    "System.Runtime.TieredCompilation": false
   }
 }

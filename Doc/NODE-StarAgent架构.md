@@ -288,4 +288,44 @@ Android/iOS 的 .NET 移动代理（`StarAgent.Mobile` + `StarAgent.Android` + `
 
 ---
 
+## 8. 资源占用与内存优化
+
+.NET 代理常驻内存由三部分组成：运行时与程序集文件页（可回收的干净页）、JIT 生成代码、以及原生分配器堆。其中原生堆在 Linux 上长期偏大，原因是 glibc 为每个线程准备独立竞技场（arena），并在竞技场内缓存空闲块不归还；代理常驻二十多个线程，竞技场本身就能占掉一成以上内存。
+
+代理启动时按以下顺序收紧（`Program.TuneNativeAllocator`）：
+
+| 手段 | 作用 | 说明 |
+|------|------|------|
+| `MALLOC_ARENA_MAX=1` | 单竞技场 | 竞技场数量只在进程初始化阶段由环境变量决定，运行时 `mallopt` 改不动，因此先 `setenv` 再 `execv` 原地重载自身镜像（PID 不变，systemd 无感知），新镜像立即 `unsetenv` 避免被托管的业务进程继承 |
+| `MALLOC_TRIM_THRESHOLD_` / `MALLOC_MMAP_THRESHOLD_` = 64KB，`MALLOC_TOP_PAD_` = 0 | 空闲堆及时归还 | 默认阈值偏大，空闲块长期留在进程里 |
+| `System.Runtime.TieredCompilation=false`（runtimeconfig） | 只保留一份全优化代码 | 关闭分层编译后不再同时持有 tier0 与 tier1 两份代码，省下 JIT 代码页 |
+
+重载镜像只在常驻模式（`-s`/`-run`/`-restart`/`-delay`/`-upgrade`/`-repair` 或交互菜单）执行，`install`/`uninstall` 等一次性命令不额外付进程启动开销。
+
+### 8.1 实测数据
+
+局域网真机（2026-11，StarAgent 3.7.2026.1107，框架依赖部署，面板开启）：
+
+| 设备 | 硬件 | 总内存 | 优化前 RSS | 优化后 RSS | 降幅 |
+|------|------|--------|-----------|-----------|------|
+| A6 | armv7 4 核 | 486 MB | 140 MB | 83 MB | -41% |
+| A4 | arm64 2 核 | 481 MB | 173 MB | 105 MB | -39% |
+| A2 | arm64 4 核 | 949 MB | 150 MB | 103 MB | -31% |
+
+空闲 CPU 约单核 1.3%（4 核板），常驻工作只有 60 秒心跳、10 分钟升级检查与 10 秒级服务巡检。
+
+已试过但**未采用**的选项：
+
+- `PublishReadyToRun`：程序集体积涨 2~3 倍、升级包变大，实测内存基本持平（JIT 代码页减少的量被文件页抵消）。
+- 关闭诊断端口（`DOTNET_EnableDiagnostics=0`）：内存几乎无变化，只少两个线程，不值得牺牲可诊断性。
+- `InvariantGlobalization`：可省 ICU 的数 MB，但会让多语言界面失效，不可接受。
+
+### 8.2 与原生 Agent 的差距
+
+同一台 A4 上实测 C++ 原生代理（`StarAgent.Native`）常驻 **7 MB**、6 个线程，与 .NET 版差一个数量级。差距来自运行时自身——托管运行时即使只做心跳也要装载 CoreLib、JIT 与 ICU。
+
+因此选型建议：**极小内存设备（<256 MB）或必须极致省内存的嵌入式场景**优先用原生 Agent；需要进程守护、远程发布、Web 面板、插件、自升级等完整能力时用 .NET 版。
+
+---
+
 > 详细子模块文档见：[NODE-9-指令下发](NODE-9-指令下发.md)、[NODE-15-StarAgent远程部署](NODE-15-StarAgent远程部署.md)、[NODE-14-防火墙管理](NODE-14-防火墙管理.md)

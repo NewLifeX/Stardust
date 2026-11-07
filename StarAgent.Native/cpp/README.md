@@ -5,7 +5,7 @@ StarAgent 的 C++17 原生实现，与 `spec/protocol.md`、Go/Rust 实现保持
 ## 状态
 
 - Windows（MSVC 19.51 / Visual Studio 2026，x64）：实际编译、CTest 与一致性测试通过。
-- Linux ARM64 真机（Ubuntu 26.04，A2 `HTNICE GT685X` / A4-WiFi `Nuvoton MA35D1`）：依赖目标机 `g++`/`cmake`，用 `-DFETCHCONTENT_SOURCE_DIR_IXWEBSOCKET` 指向离线源码即可构建；登录、心跳、指标上报与一致性测试 6/6 通过。
+- Linux ARM64 真机（Ubuntu 26.04，A2 / A4-WiFi）：依赖目标机 `g++`/`cmake`，用 `-DFETCHCONTENT_SOURCE_DIR_IXWEBSOCKET` 指向离线源码即可构建；登录、心跳、指标上报与一致性测试 6/6 通过。
 - 一致性测试：`conformance --agent staragent.exe --scenario all` → **6 passed / 0 failed**（basic、http-fallback、dedup、expired、reconnect、events）。
 - 单元测试：`ctest -C Release` → **2/2**（`staragent_tests` 70/70 checks、`staragent --version`）。
 - 真实服务端：在真实 Kestrel StarServer 上完成登录、自动注册、Code/Secret 持久化与在线状态验证（`NativeAgentIntegrationTests`，`ProductCode=StarAgent-Cpp`）。
