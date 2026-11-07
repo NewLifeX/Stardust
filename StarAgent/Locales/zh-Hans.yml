@@ -271,3 +271,4 @@
 "Upgrade self-heal: service points to backup file {0}; re-registering": "升级自愈：服务入口指向备份文件 {0}，正在重新注册"
 "Upgrade self-heal: repair service registration failed: {0}": "升级自愈：修复服务注册失败：{0}"
 "Upgrade self-heal: clean update packages failed: {0}": "升级自愈：清理升级包失败：{0}"
+"Received a local probe from {0}": "收到来自 {0} 的本地探测请求"

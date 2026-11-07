@@ -271,3 +271,4 @@
 "Upgrade self-heal: service points to backup file {0}; re-registering": "Upgrade self-heal: service points to backup file {0}; re-registering"
 "Upgrade self-heal: repair service registration failed: {0}": "Upgrade self-heal: repair service registration failed: {0}"
 "Upgrade self-heal: clean update packages failed: {0}": "Upgrade self-heal: clean update packages failed: {0}"
+"Received a local probe from {0}": "התקבלה בדיקה מקומית מ-{0}"

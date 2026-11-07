@@ -87,6 +87,15 @@ public class StarService : DisposeBase, IApi
         ai.IP = AgentInfo.GetIps();
 
         var raw = (ControllerContext.Current?.Request as IPacket)?.ToStr();
+
+        // 局域网广播搜索等无参探测不带请求体，补上来访地址，避免平台历史出现空内容
+        if (raw.IsNullOrEmpty())
+        {
+            var remote = (Session as INetSession)?.Remote;
+            raw = L.TLog("Received a local probe from {0}", remote == null ? "-" : remote.ToString());
+            WriteLog(raw);
+        }
+
         if (Provider?.GetService<StarClient>() is StarClient client)
         {
             client.WriteEvent("info", "LocalProbe", raw);
