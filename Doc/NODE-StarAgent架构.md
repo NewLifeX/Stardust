@@ -292,12 +292,14 @@ Android/iOS 的 .NET 移动代理（`StarAgent.Mobile` + `StarAgent.Android` + `
 
 .NET 代理常驻内存由三部分组成：运行时与程序集文件页（可回收的干净页）、JIT 生成代码、以及原生分配器堆。其中原生堆在 Linux 上长期偏大，原因是 glibc 为每个线程准备独立竞技场（arena），并在竞技场内缓存空闲块不归还；代理常驻二十多个线程，竞技场本身就能占掉一成以上内存。
 
-代理启动时按以下顺序收紧（`Program.TuneNativeAllocator`）：
+代理启动时按以下顺序收紧（`Program.TuneRuntime`）：
 
 | 手段 | 作用 | 说明 |
 |------|------|------|
 | `MALLOC_ARENA_MAX=1` | 单竞技场 | 竞技场数量只在进程初始化阶段由环境变量决定，运行时 `mallopt` 改不动，因此先 `setenv` 再 `execv` 原地重载自身镜像（PID 不变，systemd 无感知），新镜像立即 `unsetenv` 避免被托管的业务进程继承 |
 | `MALLOC_TRIM_THRESHOLD_` / `MALLOC_MMAP_THRESHOLD_` = 64KB，`MALLOC_TOP_PAD_` = 0 | 空闲堆及时归还 | 默认阈值偏大，空闲块长期留在进程里 |
+| `DOTNET_ReadyToRun=0` | 不装载预编译镜像 | 放弃直接执行 R2R 代码，改为全量 JIT 一份本地代码，程序集文件页从 43 MB 降到 29 MB（CoreLib 13 MB → 5.4 MB）；代价是启动变慢约 2 倍（armv7 实测 15 秒 → 31 秒）。与 `execv` 重载合并进行，不额外多一次启动 |
+| `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1` | 不装载 ICU | ICU 只提供区域性数据（日期格式、排序规则、`CultureInfo`），不参与文案翻译。关掉后 `libicudata`/`libicui18n`/`libicuuc` 与内部缓存共 7~8 MB 不再落地，日志回落英文、界面不受影响；运维显式设了该变量时以运维为准 |
 | `System.Runtime.TieredCompilation=false`（runtimeconfig） | 只保留一份全优化代码 | 关闭分层编译后不再同时持有 tier0 与 tier1 两份代码，省下 JIT 代码页 |
 | 关闭 HTTP/3（`System.Net.SocketsHttpHandler.Http3Support=false`） | 少装一套协议栈 | 代理只走 HTTP/1.1；不关闭时 .NET 探测 HTTP/3 会连带装载 `System.Net.Quic`（arm64 实测约 0.5~1.4 MB） |
 | `System.Runtime.EnableWriteXorExecute=false`（runtimeconfig） | 去掉代码的双重映射 | 默认用 memfd 给 JIT/预编译代码建读写别名，实测该项独占 **26 MB 共享内存**（`Pss_Shmem`，属 tmpfs，内核不能像干净文件页那样回收）；关掉后代码走单映射，RSS 再降 1~2 MB，`Pss_Shmem` 归零 |
@@ -306,36 +308,39 @@ Android/iOS 的 .NET 移动代理（`StarAgent.Mobile` + `StarAgent.Android` + `
 
 ### 8.1 实测数据
 
-局域网真机（2026-11，StarAgent 3.7.2026.1107，框架依赖部署，面板开启）：
+局域网真机（2026-11，StarAgent 3.7.2026.1108，框架依赖部署，面板开启）：
 
-| 设备 | 硬件 | 总内存 | 优化前 RSS | 优化后 RSS | 降幅 |
+| 设备 | 架构 | 总内存 | 优化前 RSS | 优化后 RSS | 降幅 |
 |------|------|--------|-----------|-----------|------|
-| A6 | armv7 4 核 | 486 MB | 140 MB | 83 MB | -41% |
-| A4 | arm64 2 核 | 481 MB | 173 MB | 105 MB | -39% |
-| A2 | arm64 4 核 | 949 MB | 150 MB | 102 MB | -32% |
+| A6 | armv7 4 核 | 486 MB | 140 MB | 64 MB | -54% |
+| A4 | arm64 2 核 | 481 MB | 173 MB | 90 MB | -48% |
+| A2 | arm64 4 核 | 949 MB | 150 MB | 87 MB | -42% |
+| 本机 PC | x64 16 线程（Windows 服务） | 32 GB | 47 MB | 47 MB | 持平 |
 
 除 RSS 外，关闭 W^X 双映射还回收了 16~27 MB 共享内存（`Pss_Shmem` 归零）。
 
+PC 与三台嵌入式设备的差异，来自优化手段本身全是 Linux/glibc 侧特性：竞技场是 glibc 的线程分配策略，`Pss_Shmem` 双映射在 Windows 上不走 tmpfs，关闭 R2R 省下的是文件页，对总内存 32 GB 的 PC 也谈不上收益。桌面与服务器场景按默认参数运行即可，省内存的开关只为嵌入式设备服务。
+
 > ⚠️ **换版测试与运维注意**：带 SmartIPC 固件的设备（A2/A4/A6 均属此类）由 `newlifed` 看门狗守护代理，代理停止运行十几秒就会用固件内置的救援副本（`/usr/share/newlife/rescue/staragent`）覆盖部署目录后重启。换版时必须**同时刷新该救援副本**，否则设备会在无人察觉时回滚到固件随附的老版本（内存优化全部失效，实测 A6 就曾这样悄悄退回 116 MB）。救援事件由 `MyStarClient.CheckRescueFlag` 上报，平台节点事件里能看到“代理恢复成功……已还原 N 个核心文件”。
 
-空闲 CPU 约单核 0.5%（4 核板，逐线程采样），常驻工作只有 60 秒心跳、10 分钟升级检查与 10 秒级服务巡检。连续 15 分钟采样 RSS 在 83~85 MB 间随 GC 周期波动，**无持续增长**。
+空闲 CPU 约单核 0.5%（4 核板，逐线程采样），常驻工作只有 60 秒心跳、10 分钟升级检查与 10 秒级服务巡检。连续 15 分钟采样 RSS 在 63~66 MB 间随 GC 周期波动，**无持续增长**。
 
 ### 8.2 剩余构成与优化边界
 
-优化后 armv7 设备（A6，83 MB）的构成，其中约 59 MB 是可被内核回收的干净文件页（内存紧张时自动让位），真正独占的脏页只有 25 MB：
+优化后 armv7 设备（A6，63~65 MB）的构成，其中约 40 MB 是可被内核回收的干净文件页（内存紧张时自动让位），真正独占的脏页只有 24 MB：
 
 | 组成 | 约占用 | 能否再降 |
 |------|--------|----------|
-| 运行时本体（CoreLib 13.2 + coreclr 3.9 + clrjit 1.6 + JIT 代码 8.1） | 27 MB | 否，任何 .NET 进程的地板 |
-| 星尘客户端栈（Http/TLS/Json/Remoting/追踪） | 11 MB | 否，心跳与命令通道必需 |
-| ICU（`libicudata`/`icui18n`/`icuuc` + 内部缓存） | 12.6 MB | 仅能通过关闭 ICU 换取，见下 |
-| BCL 其余（Xml/Expressions/Cryptography/Regex/Linq/压缩） | 9 MB | 仅能改配置格式等大改换取 |
-| 自研程序集（NewLife.* + Stardust + StarAgent） | 5 MB | 否 |
-| 托管堆 + 原生堆 + 线程栈 | 14 MB | 已接近下限（GC 参数实测无收益） |
+| 运行时本体（CoreLib 5.4 + coreclr 3.8 + clrjit 1.6 + JIT 代码） | 22 MB | 否，任何 .NET 进程的地板；关闭 R2R 后 CoreLib 从 13.2 降到 5.4，多出来的 JIT 代码已计入 |
+| 星尘客户端栈（Http/TLS/Json/Remoting/追踪） | 9 MB | 否，心跳与命令通道必需 |
+| BCL 其余（Xml/Cryptography/libstdc++/libc） | 8 MB | 仅能改配置格式等大改换取 |
+| 自研程序集（NewLife.* + Stardust + StarAgent） | 4 MB | 否 |
+| 匿名页（托管堆 + 原生堆 + 线程栈 + JIT 代码） | 24 MB | 已接近下限（GC 参数实测无收益） |
 
-至此 .NET 代理已接近地板，再要显著下降只有三条路：
+ICU 已默认关闭（`libicudata`/`libicui18n`/`libicuuc` 均不再装载），这一项在 8.1 的降幅里占最后 8 MB。
 
-- **关闭 ICU**：设 `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1` 实测降到 72 MB（-12.6 MB），代价是界面与日志只剩英文，只适合不需要中文界面的极简设备。
+至此 .NET 代理已接近地板，再要显著下降只有两条路：
+
 - **换原生代理**：`StarAgent.Native` 的 C++ 版实测 7 MB，差一个数量级，但缺进程守护/远程发布/Web 面板/插件/自升级。
 - **NativeAOT**：理论可到 20~30 MB，但需各平台交叉 AOT 工具链并适配反射密集的配置与序列化代码，属大型改造。
 
@@ -345,15 +350,22 @@ Android/iOS 的 .NET 移动代理（`StarAgent.Mobile` + `StarAgent.Android` + `
 - 关闭诊断端口（`DOTNET_EnableDiagnostics=0`）：内存几乎无变化，只少两个线程，不值得牺牲可诊断性。
 - GC 参数（`GCHeapHardLimit` 16/32/48 MB、`GCgen0size` 1 MB、`gcConcurrent=0`）：托管堆本来就小，实测无收益甚至略升。
 - 定时 `malloc_trim(0)`：启动 90 秒后调用一次，页面虽有归还但 WorkingSet 只从 83180K 变成 83300K（噪声级），原生堆碎片没有可回收量，不必加定时任务。
-- `DOTNET_ReadyToRun=0`（关预编译镜像）：常驻内存确实更省（armv7 83→74 MB、arm64 109→103 MB），但 JIT 全量编译让启动时间从 15 秒涨到 **31 秒**，边缘设备上看重上线速度，不划算。
 
-### 8.3 与原生 Agent 的差距
+### 8.3 启动时间与包体积的取舍
 
-同一台 A4 上实测 C++ 原生代理（`StarAgent.Native`）常驻 **7 MB**、6 个线程，与 .NET 版差一个数量级。差距来自运行时自身——托管运行时即使只做心跳也要装载 CoreLib、JIT 与 ICU。
+这套优化只拿启动时间换常驻内存，**不动发布包体积**：`DOTNET_ReadyToRun=0` 与关闭 ICU 都是运行时行为，升级包里还是同一批程序集；ICU 本就是系统共享库，从不随包分发。本次改动后 `StarAgent.dll` 从 1.38 MB 涨到 1.40 MB（多出的 19 KB 是语言判定与开关代码）。
+
+启动时间是真实代价。systemd `Started` 到面板 `Http Ready` 的实测：A6（armv7 4 核）**28 秒**、A4（arm64 2 核）**33 秒**、A2（arm64 4 核）**14 秒**；改造前 armv7 只需 15 秒左右。慢的部分是一次性 JIT 全量编译，编译完成后运行的是优化代码，**稳态执行不会变慢**（分层编译下反而要等 tier1 重新编译）。
+
+对边缘设备这笔交易划得来：常驻内存按天算，启动只在上电或升级时发生一次，而看门狗的重启等待上限是十几秒到几十秒量级，仍在可接受范围。若某个部署场景更看重秒级上线，把 `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT` 之外的两项关掉即可（ICU 只影响 8 MB，与启动时间无关，可以单独保留）。
+
+### 8.4 与原生 Agent 的差距
+
+同一台 A4 上实测 C++ 原生代理（`StarAgent.Native`）常驻 **7 MB**、6 个线程，与 .NET 版差一个数量级。差距来自运行时自身——托管运行时即使只做心跳也要装载 CoreLib 与 JIT。
 
 因此选型建议：**极小内存设备（<256 MB）或必须极致省内存的嵌入式场景**优先用原生 Agent；需要进程守护、远程发布、Web 面板、插件、自升级等完整能力时用 .NET 版。
 
-### 8.4 上游可优化项（跨仓库，未实施）
+### 8.5 上游可优化项（跨仓库，未实施）
 
 用 `AppDomain.AssemblyLoad` 挂钩逐项确认了剩余程序集的装载来源，以下三项需要改别的仓库才能拿下，合计约 7 MB：
 
