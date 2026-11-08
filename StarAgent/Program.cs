@@ -128,9 +128,6 @@ internal class Program
     private const Int32 M_TOP_PAD = -2;
     private const Int32 M_MMAP_THRESHOLD = -3;
 
-    /// <summary>关闭 ICU 的开关名。运维显式设置该变量时以运维为准</summary>
-    private const String InvariantKey = "DOTNET_SYSTEM_GLOBALIZATION_INVARIANT";
-
     /// <summary>需要注入给运行时的参数。这些开关都在进程初始化阶段读取，只能通过环境变量生效</summary>
     /// <remarks>首项同时作为"已经重载过镜像"的标记，见 <see cref="TuneRuntime"/></remarks>
     private static readonly String[][] _runtimeEnv =
@@ -143,10 +140,6 @@ internal class Program
         // 关闭预编译镜像：代理空跑只走少量代码路径，按需 JIT 出来的代码比整份预编译镜像省 6~8MB 常驻，
         // 代价是启动时全量编译（armv7 实测 15 秒变 31 秒）。边缘设备看重内存、启动次数极少，这笔交易划算
         ["DOTNET_ReadyToRun", "0"],
-        // 不装载 ICU：ICU 只提供区域性数据（日期格式、排序规则、CultureInfo），并不负责文案翻译。
-        // 代理的日志与面板文案都由自己的词表决定，面板语言已改为按配置/浏览器/系统环境变量判断，
-        // 因此关掉 ICU 不影响中文界面，只让日志回落英文；换取 ICU 三个共享库与内部缓存共 8MB 常驻
-        [InvariantKey, "1"],
     ];
 
     /// <summary>setenv 的托管委托</summary>
@@ -173,8 +166,9 @@ internal class Program
     /// 省下的是几十 MB，代价是启动慢一些（关闭预编译镜像需要全量 JIT）。
     /// </para>
     /// <para>
-    /// 关闭 ICU 会让托管侧失去具体区域性（日志回落英文），但它不参与界面翻译：
-    /// 运维若需要中文日志，在服务单元里设 <c>DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=0</c> 即可覆盖默认值。
+    /// 关闭 ICU 不在这里做：它要靠 runtimeconfig 里的 <c>System.Globalization.Invariant</c>，
+    /// 才能在运行时初始化阶段就生效——有些嵌入式系统压根没装 ICU，走环境变量注入时
+    /// 进程可能在重载镜像之前就先崩了。
     /// </para>
     /// <para>
     /// 环境变量只对本进程有效，星尘代理会托管大量业务进程，新镜像启动后立即 unsetenv，
@@ -198,12 +192,7 @@ internal class Program
             if (Environment.GetEnvironmentVariable(_runtimeEnv[0][0]).IsNullOrEmpty())
             {
                 // 首次进入：注入环境变量后重启镜像，成功则不会返回
-                foreach (var item in _runtimeEnv)
-                {
-                    // 运维显式配置过的参数不覆盖，例如在 systemd 单元里设 DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=0 换取中文日志
-                    if (item[0] == InvariantKey && !Environment.GetEnvironmentVariable(item[0]).IsNullOrEmpty()) continue;
-                    setEnv(item[0], item[1], 1);
-                }
+                foreach (var item in _runtimeEnv) setEnv(item[0], item[1], 1);
 
                 if (GetExport<ExecVFunc>(lib, "execv") is { } execv)
                 {

@@ -34,6 +34,18 @@
     <!--<StackTraceSupport>false</StackTraceSupport>-->
   </PropertyGroup>
 
+  <!--
+    Linux 上默认不装载 ICU：
+    1，省内存——ICU 三个共享库加内部缓存约占 8MB 常驻；
+    2，能起得来——部分嵌入式发行版根本没装 ICU，.NET 默认会在缺少 ICU 时直接启动失败。
+    代理用不到区域性数据：界面文案来自自己的词表，语言靠配置/请求头/环境变量判定，
+    日志回落英文（要中文日志的部署用环境变量 DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=0 覆盖，
+    环境变量优先级高于 runtimeconfig）。Windows 不关，桌面与服务器场景保留完整区域性。
+  -->
+  <ItemGroup Condition="'$(RuntimeIdentifier)' != '' and !$(RuntimeIdentifier.StartsWith('win'))">
+    <RuntimeHostConfigurationOption Include="System.Globalization.Invariant" Value="true" />
+  </ItemGroup>
+
   <ItemGroup>
     <Compile Include="..\Stardust\Managers\FirewallManager.cs" Link="Managers\FirewallManager.cs" />
     <Compile Include="..\Stardust\Managers\ServiceController.cs" Link="Managers\ServiceController.cs" />
