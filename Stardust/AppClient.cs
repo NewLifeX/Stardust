@@ -195,6 +195,9 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
         if (!NetworkInterface.GetIsNetworkAvailable()) return;
         if (!Logined) return;
 
+        // 心跳成功后上报本地事件台账，上报失败的事件留在台账等下一次心跳
+        await EventLedger.ReportAsync(this, NewLife.Setting.Current.DataPath.GetBasePath(), EventLedger.AppEvents, "AppReportFailed").ConfigureAwait(false);
+
         await RefreshPublish().ConfigureAwait(false);
         await RefreshConsume().ConfigureAwait(false);
     }
