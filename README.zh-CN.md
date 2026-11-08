@@ -77,7 +77,7 @@ dotnet publish StarAgent/StarAgent.csproj -c Release -f net10.0 -r linux-arm64 `
   --self-contained true -p:StarAgentAot=true -o publish
 ```
 
-PC / A2 / A4 / A6 实测：RSS 32~40 MB（JIT 版 73~95 MB），启动 0.14~1 秒。详见 [NODE-StarAgent-AOT适配](Doc/NODE-StarAgent-AOT适配.md)。
+PC / A2 / A4 / A6 实测：RSS 33~44 MB（JIT 版 73~95 MB），启动 0.14~1 秒。详见 [NODE-StarAgent-AOT适配](Doc/NODE-StarAgent-AOT适配.md)。
 
 #### 其它平台
 
