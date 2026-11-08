@@ -127,7 +127,56 @@ glibc 默认的 trim/mmap 阈值偏大，空闲块长期留在进程里。设成
 - **换原生代理**：C++ 版 7 MB，差一个数量级，但缺进程守护、远程发布、Web 面板、插件、自升级。
 - **NativeAOT**：理论 20~30 MB，需各平台交叉 AOT 工具链并适配反射密集的配置与序列化代码，属大型改造。
 
-## 5. 试过但不采用
+## 5. 虚拟内存与线程
+
+`VmSize`（VIRT）动辄三四百 MB，看着比 RSS 吓人得多，但它和 RSS 是两回事：VIRT 只是地址空间占位，不占物理页，不影响 OOM 判定，也不影响性能。真正要盯的是 RSS 与其中的匿名页。
+
+不过既然看着吓人，还是把账算清楚（armv7 设备实测，VmSize 366 MB / RSS 65 MB）：
+
+| 组成 | 约占用 | 说明 |
+|------|--------|------|
+| 线程栈 | **168 MB** | 21 个线程 × 8 MB（glibc 默认跟随 `ulimit -s`，本机 8192 KB） |
+| 程序集文件映射 | 70 MB | 关闭 R2R 后已是压缩过的量 |
+| GC 堆区预留 | 40 MB | 三段 `---p`，GC 的地址空间预留 |
+| 原生堆与其他 | 90 MB | 含 glibc 竞技场（已限为 1 个）、主线程栈、.NET 运行时内部区 |
+
+### 5.1 为什么要这么多个线程
+
+线程数随负载在 21~27 之间浮动，不是固定值。构成大致是：
+
+| 用途 | 数量 | 能否省 |
+|------|------|--------|
+| 主线程 + GC 后台 + Finalizer | 3~4 | 否 |
+| ThreadPool worker | 随 CPU 核数扩展（4 核设备常见 4~8） | 否，心跳、命令处理、HTTP 面板都靠它 |
+| ThreadPool IO 完成端口 | 1~2 | 否 |
+| 定时器与服务巡检 | 2~3 | 否，60 秒心跳与 10 分钟升级检查必需 |
+| 诊断与事件管道 | 2 | 可以，但实测 `DOTNET_EnableDiagnostics=0` 只少两个线程、RSS 不变，得不偿失 |
+
+所以线程这块没有实质优化空间——它们都是干活的人，不是闲着占位。
+
+### 5.2 如果确实想压 VIRT：降栈
+
+线程栈是 VIRT 的大头。在服务单元里限制栈大小，实测：
+
+| 配置 | VmSize | VmRSS |
+|------|--------|-------|
+| 默认（`ulimit -s` = 8 MB） | 366 MB | 65 MB |
+| `LimitSTACK=4194304`（4 MB） | 288 MB | 62.8 MB |
+| `LimitSTACK=2097152`（2 MB） | 244 MB | 62.7 MB |
+
+```ini
+# /etc/systemd/system/StarAgent.service.d/stack.conf
+[Service]
+LimitSTACK=4194304
+```
+
+**代价必须说清楚**：`RLIMIT_STACK` 是进程级限制，StarAgent 拉起的业务子进程会**继承**这个值。.NET 业务应用仍能拿到自己的托管栈（默认 1.5 MB），但 Java 等依赖大栈的运行时在 2 MB 下可能启动失败。
+
+**结论**：VIRT 不影响真实资源，而改栈限制会把影响传到它守护的业务进程上，所以**默认不改**。确实需要压低 VIRT 的设备，从 4 MB 起步，改完重点回归它守护的业务进程能否正常启动。
+
+> `DOTNET_DefaultStackSize` 对 ThreadPool 线程无效（实测 VmSize 无变化），只有 `RLIMIT_STACK` 起作用。
+
+## 6. 试过但不采用
 
 | 选项 | 结论 |
 |------|------|
@@ -137,12 +186,13 @@ glibc 默认的 trim/mmap 阈值偏大，空闲块长期留在进程里。设成
 | GC 细调参数 | 托管堆本来就小，无收益 |
 | 把 ICU 放回环境变量注入 | 有系统没装 ICU 时会先崩，改用 runtimeconfig |
 
-## 6. 运维手册
+## 7. 运维手册
 
 | 想做什么 | 怎么做 |
 |---------|--------|
 | 恢复完整区域性（要中文日志） | 服务单元加 `Environment=DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=0`，重启服务 |
 | 恢复预编译镜像（换更快的启动） | 服务单元加 `Environment=DOTNET_ReadyToRun=1` |
+| 压低虚拟内存（VIRT） | 服务单元加 `LimitSTACK=4194304`；注意该限制会传给被托管的业务进程，理由与风险见第 5 节 |
 | 确认优化是否生效 | 看 `/proc/<pid>/environ` 是否有 `MALLOC_ARENA_MAX`、`DOTNET_ReadyToRun`；`pmap -x <pid> \| grep icu` 应无输出 |
 | 换版后核对 | `systemctl show StarAgent -p MainPID --value` 与 `ps -eo pid,etimes,args \| grep StarAgent.dll` 必须只有一个进程 |
 
@@ -150,7 +200,7 @@ glibc 默认的 trim/mmap 阈值偏大，空闲块长期留在进程里。设成
 
 > ⚠️ **部署要整包**：升级时务必带上同一份发布产物里的全部程序集与 `runtimeconfig.json`。只替换 `StarAgent.dll` 会出现 `TypeInitializationException: Could not load file or assembly 'Stardust, Version=...'` 的崩溃循环。
 
-## 7. 上游可优化项（跨仓库，未实施）
+## 8. 上游可优化项（跨仓库，未实施）
 
 | 程序集 | 占用 | 装载来源 | 可行的改法 |
 |--------|------|----------|-----------|
