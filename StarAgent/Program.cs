@@ -137,9 +137,6 @@ internal class Program
         ["MALLOC_TRIM_THRESHOLD_", "65536"],
         ["MALLOC_MMAP_THRESHOLD_", "65536"],
         ["MALLOC_TOP_PAD_", "0"],
-        // 关闭预编译镜像：代理空跑只走少量代码路径，按需 JIT 出来的代码比整份预编译镜像省 6~8MB 常驻，
-        // 代价是启动时全量编译（armv7 实测 15 秒变 31 秒）。边缘设备看重内存、启动次数极少，这笔交易划算
-        ["DOTNET_ReadyToRun", "0"],
     ];
 
     /// <summary>setenv 的托管委托</summary>
