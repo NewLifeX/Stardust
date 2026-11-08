@@ -46,6 +46,7 @@ StarAgent 是部署在每台应用服务器上的节点代理程序，以系统�
 - 节点编码公式：`Crc({ProductCode}@{UUID}@{DiskID}@{Macs})`
 - 心跳周期：60 秒，同时上报 CPU/内存/磁盘/网络等指标
 - 在线会话：通过 WebSocket 长连接保持，断线自动重连
+- 事件上报：心跳成功后取走 `Data/NodeEvents.csv` 台账分批上报，成功即删除；上报失败的事件写回台账，等下一次心跳重试
 
 ### 2.2 进程守护
 
@@ -323,12 +324,11 @@ Android/iOS 的 .NET 移动代理（`StarAgent.Mobile` + `StarAgent.Android` + `
 
 PC 与三台嵌入式设备的差异，来自优化手段本身全是 Linux/glibc 侧特性：竞技场是 glibc 的线程分配策略，`Pss_Shmem` 双映射在 Windows 上不走 tmpfs，关闭 R2R 省下的是文件页，对总内存 32 GB 的 PC 也谈不上收益。桌面与服务器场景按默认参数运行即可，省内存的开关只为嵌入式设备服务。表中 PC 一列只核对了改造前的 47 MB 基线（Windows 服务形态，25 线程），Linux 专属开关不会注入 Windows 进程，因此没有为它单独发版复测。
 
-> ⚠️ **换版测试与运维注意**：带 SmartIPC 固件的设备（A2/A4/A6 均属此类）由 `newlifed` 看门狗守护代理，代理停止运行十几秒就会用固件内置的救援副本（`/usr/share/newlife/rescue/staragent`）覆盖部署目录后重启。换版时必须**同时刷新该救援副本**，否则设备会在无人察觉时回滚到固件随附的老版本（内存优化全部失效，实测 A6 就曾这样悄悄退回 116 MB）。救援事件由 `MyStarClient.CheckRescueFlag` 上报，平台节点事件里能看到“代理恢复成功……已还原 N 个核心文件”。
-
+> ⚠️ **换版测试与运维注意**：带 SmartIPC 固件的设备（A2/A4/A6 均属此类）由 `newlifed` 星尘自愈巡检守护代理，默认每 15 分钟一轮（启动后约 2 分钟首巡）。救援副本是 `/usr/share/newlife/rescue/staragent-<ver>.tar.gz` + 同名 `.md5`（黄金代理，7 个核心文件；缺包/缺 md5/校验失败一律不用），归属固件/newlifed，**StarAgent 不写该目录**。
 >
+> **新版 newlifed（2026-11-08 起，含 e0fab1a/79b62f2 状态机修正与后续细化）的救援条件**：`ActiveState=failed` 或一个巡检周期内 `NRestarts` 增长 ≥3（重启循环）才恢复；`active`/`reloading`/`activating`/`deactivating` 视为正常；`inactive` 且曾成功运行过给 30 分钟人工维护宽限，首启从未启动过才直接恢复；`masked` 不介入。覆盖前检查 `MainPID`/`pgrep` 存活进程；`failed` 或宽限到期的 `inactive` 先 `reset-failed` + `start` 等 60 秒，仍失败才还原。恢复前会把被覆盖的核心文件备份到 `/root/agent.broken-<时间戳>`（只保留最近 2 份，含 `manifest.txt`；`Config/` 与现场插件不动），恢复动作限流 30 分钟；运行时连续两轮巡检异常才重装（同时校验 `Microsoft.NETCore.App` 与 `Microsoft.AspNetCore.App` 10.x）。结果追加到 `/root/agent/Data/NodeEvents.csv` 事件台账，由 StarAgent 作为普通节点事件上报（代理不感知事件来源，也不感知救援机制；台账锁为 `NodeEvents.lock`）。现场维护可用 `newlifed guard-hold [分钟]` 暂停自动恢复（`guard-release` 解除），`rescue-now` 强制忽略宽限/限流。A6 在旧版 newlifed 上曾因停止运行十几秒被救援、内存退回 116 MB；新版已按上述状态机修正（设备上需确认 `newlifed` 二进制已更新到该版本）。
 >
-> 换版脚本用 `systemctl restart` 收尾时，服务单元是 `KillMode=process` + `SIGINT`，老进程若正在忙（如升级中的同步动作）可能没在超时内退出，留下一个父子关系已断的旧代理进程继续上报。换版后请核对 `systemctl show StarAgent -p MainPID --value` 与 `ps -eo pid,etimes,args | grep StarAgent.dll` 是否只有一个进程；多出来的按 PID 杀掉（实测 A6 曾在换版后同时跑着新旧两个代理，内存统计也因此偏高）。
-
+> 换版脚本用 `systemctl restart` 收尾时，服务单元是 `KillMode=process` + `SIGINT`，老进程若正在忙（如升级替换中的文件写操作）可能没在超时内退出，留下一个父子关系已断的旧代理进程继续上报。换版后请核对 `systemctl show StarAgent -p MainPID --value` 与 `ps -eo pid,etimes,args | grep StarAgent.dll` 是否只有一个进程；多出来的按 PID 杀掉（实测 A6 曾在换版后同时跑着新旧两个代理，内存统计也因此偏高）。
 
 空闲 CPU 约单核 0.5%（4 核板，逐线程采样），常驻工作只有 60 秒心跳、10 分钟升级检查与 10 秒级服务巡检。连续 15 分钟采样 RSS 在 63~66 MB 间随 GC 周期波动，**无持续增长**。
 

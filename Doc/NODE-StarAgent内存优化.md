@@ -207,7 +207,7 @@ LimitSTACK=4194304
 | 确认优化是否生效 | 看 `/proc/<pid>/environ` 是否有 `MALLOC_ARENA_MAX`；`pmap -x <pid> \| grep icu` 应无输出 |
 | 换版后核对 | `systemctl show StarAgent -p MainPID --value` 与 `ps -eo pid,etimes,args \| grep StarAgent.dll` 必须只有一个进程 |
 
-> ⚠️ **救援副本**：带固件的设备由 `newlifed` 星尘自愈巡检守护代理（默认 15 分钟一轮）。新版 newlifed（2026-11-08 起）按 `ActiveState` 区分：`failed`/重启循环才恢复，`active`/`activating` 正常，`inactive` 且曾成功运行过给 30 分钟人工维护宽限；恢复前检查 `MainPID`/`pgrep` 存活进程，`failed` 或宽限到期的 `inactive` 先普通 `start` 60 秒，仍失败才还原；被覆盖的核心文件备份到 `/root/agent.broken-*`（保留 2 份，含 `manifest.txt`），`Config/` 与现场插件不动；运行时连续两轮异常才重装；支持 `newlifed guard-hold`/`guard-release`。A6 在旧版 newlifed 上曾因停止十几秒被救援、内存退回 116 MB；新版已修正。**救援副本归固件/newlifed 所有，StarAgent 不写该目录**。平台升级已在 Stardust 升级流程接入 `guard-hold`/`guard-release`（FIX-18）。
+> ⚠️ **救援副本**：带固件的设备由 `newlifed` 星尘自愈巡检守护代理（默认 15 分钟一轮）。新版 newlifed（2026-11-08 起）按 `ActiveState` 区分：`failed`/重启循环才恢复，`active`/`activating` 正常，`inactive` 且曾成功运行过给 30 分钟人工维护宽限；恢复前检查 `MainPID`/`pgrep` 存活进程，`failed` 或宽限到期的 `inactive` 先普通 `start` 60 秒，仍失败才还原；被覆盖的核心文件备份到 `/root/agent.broken-*`（保留 2 份，含 `manifest.txt`），`Config/` 与现场插件不动；运行时连续两轮异常才重装；支持 `newlifed guard-hold`/`guard-release`。A6 在旧版 newlifed 上曾因停止十几秒被救援、内存退回 116 MB；新版已修正。**救援副本归固件/newlifed 所有，StarAgent 不写该目录**；救援结果由设备侧追加到 `/root/agent/Data/NodeEvents.csv`，StarAgent 只把台账里的行作为普通节点事件上报，不感知写入方。
 
 > ⚠️ **部署要整包**：升级时务必带上同一份发布产物里的全部程序集与 `runtimeconfig.json`。只替换 `StarAgent.dll` 会出现 `TypeInitializationException: Could not load file or assembly 'Stardust, Version=...'` 的崩溃循环。
 

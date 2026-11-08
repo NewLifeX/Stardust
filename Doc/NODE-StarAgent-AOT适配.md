@@ -133,9 +133,7 @@ mv /root/StarAgent.aot /root/agent/StarAgent && chmod +x /root/agent/StarAgent
 sed -i 's#^ExecStart=.*#ExecStart=/root/agent/StarAgent -s#' /etc/systemd/system/StarAgent.service
 systemctl daemon-reload
 
-# 3) 带 newlifed 看门狗的机型：新版 newlifed（2026-11-08 起）按 ActiveState 状态机巡检
-#    （failed/重启循环才恢复，inactive 且曾成功运行过有 30 分钟宽限），救援副本归固件/newlifed 所有，
-#    StarAgent 不写该目录。平台升级前应调用 `newlifed guard-hold [分钟]`，新版本启动并确认在线后 `guard-release`。
+# 3) 带设备侧看门狗的机型：救援副本归固件所有，StarAgent 不写该目录，也不参与升级窗口的暂停/恢复；
 #    AOT 部署的黄金副本应包含原生 StarAgent（不是 dll），由固件构建侧装配；当前 build-rescue 只收 *.dll/*.json。
 
 systemctl start StarAgent
