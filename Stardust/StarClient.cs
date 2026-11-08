@@ -45,6 +45,9 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
         SetActions("Node/");
 
         Log = XTrace.Log;
+
+        // NativeAOT 下模型属性必须显式保留，否则序列化为空对象
+        AotRoots.Ensure();
     }
 
     /// <summary>使用客户端设置来初始化</summary>
@@ -470,7 +473,12 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
     #region 部署
     /// <summary>获取分配到本节点的应用服务信息</summary>
     /// <returns></returns>
-    public Task<DeployInfo[]?> GetDeploy(Int32 deployId, String deployName, String appName) => InvokeAsync<DeployInfo[]>("Deploy/GetAll", new { deployId, deployName, appName });
+    public Task<DeployInfo[]?> GetDeploy(Int32 deployId, String deployName, String appName) => InvokeAsync<DeployInfo[]>("Deploy/GetAll", new Dictionary<String, Object?>
+    {
+        ["deployId"] = deployId,
+        ["deployName"] = deployName,
+        ["appName"] = appName,
+    });
 
     /// <summary>上传本节点的所有应用服务信息</summary>
     /// <param name="services"></param>

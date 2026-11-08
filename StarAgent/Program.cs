@@ -1,10 +1,11 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using NewLife;
 using NewLife.Agent;
+using NewLife.Agent.Command;
 using NewLife.Agent.Models;
 using NewLife.Agent.WebPanel.Security;
 using NewLife.Configuration;
@@ -39,6 +40,18 @@ internal class Program
 
         // 先按宿主语言初始化日志语言，保证首次写出的配置文件注释即为本地语言，避免稍后改写
         StarLocalization.InitLogCulture();
+
+        // NativeAOT 下自定义命令处理器的元数据需显式保留
+        AotRoots.Ensure();
+
+        // 自定义命令处理器必须静态注册：NativeAOT 下程序集类型枚举不可靠，反射扫描会静默丢命令。
+        // 依赖上游未发布的 API，仅在本地源码模式下启用；正式包版本仍由反射发现（见 AotRoots 的元数据保留）
+#if LOCAL_NEWLIFE_SOURCE
+        CommandFactory.RegisterCustomFactory(s => new CommandHandler.ListServices(s));
+        CommandFactory.RegisterCustomFactory(s => new CommandHandler.StartService(s));
+        CommandFactory.RegisterCustomFactory(s => new CommandHandler.StopService(s));
+        CommandFactory.RegisterCustomFactory(s => new CommandHandler.RestartService(s));
+#endif
 
 #if NETFRAMEWORK
         // .NET Framework 默认给 POST 附加 Expect: 100-continue 头，请求体要等服务端 100 响应后才发送。
@@ -298,11 +311,12 @@ internal class Program
     /// <param name="lib">库句柄</param>
     /// <param name="name">导出名</param>
     /// <returns>委托实例，不存在时返回空</returns>
+    /// <remarks>NativeAOT 只支持泛型重载，非泛型的 Type 版本会在 AOT 下抛 PlatformNotSupportedException</remarks>
     private static TFunc? GetExport<TFunc>(IntPtr lib, String name) where TFunc : Delegate
     {
         if (!NativeLibrary.TryGetExport(lib, name, out var fn) || fn == IntPtr.Zero) return null;
 
-        return (TFunc)Marshal.GetDelegateForFunctionPointer(fn, typeof(TFunc));
+        return Marshal.GetDelegateForFunctionPointer<TFunc>(fn);
     }
 #endif
 
@@ -501,6 +515,11 @@ internal class MyService : ServiceBase, IServiceProvider
 
         // 启动插件
         WriteLog("Starting plugin [{0}]", pm.Identity);
+#if NET5_0_OR_GREATER
+        // NativeAOT 不能加载新的托管程序集，插件只能编译进代理本体
+        if (!System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported)
+            WriteLog("NativeAOT build: external plugin assemblies in the plugin directory cannot be loaded; only plugins compiled into the agent are available");
+#endif
         pm.Load();
         pm.Init();
         foreach (var item in pm.Plugins)
@@ -811,7 +830,12 @@ internal class MyService : ServiceBase, IServiceProvider
         {
             // 仅 Udp，局域网广播搜索 + 本地进程 UDP RPC；Tcp 由 HttpServer（Web 面板）接管
             var svr = LocalApiServer.CreateServer(new NetUri(NetType.Udp, IPAddress.Any.ToString(), port), _factory?.Tracer, XTrace.Log);
-            svr.Register(new StarService
+
+            // 控制器动作方法需要静态保留，才能被 NativeAOT 裁剪后继续分发。
+            // 泛型入口 Register<T>() 会保留 StarService 的方法，并驱动 NewLife.Remoting 源生成器产出静态调用委托；
+            // 实例化好再回填给每个动作，避免依赖容器反射构造与属性注入。
+            svr.Register<StarService>();
+            var service = new StarService
             {
                 Provider = this,
                 //Host = Host,
@@ -820,7 +844,12 @@ internal class MyService : ServiceBase, IServiceProvider
                 StarSetting = StarSetting,
                 AgentSetting = AgentSetting,
                 Log = XTrace.Log
-            }, null);
+            };
+            foreach (var act in svr.Manager.Services.Values)
+            {
+                act.Controller = service;
+            }
+            _container.AddSingleton(service);
 
             _server = svr;
             _container.AddSingleton(svr);

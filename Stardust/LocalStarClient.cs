@@ -175,14 +175,14 @@ public class LocalStarClient
             args = Environment.CommandLine.TrimPrefix(ext).Trim();
         }
 
-        // 发起命令
-        var rs = _client.Invoke<String>("KillAndStart", new
+        // 发起命令。AOT 下匿名类型成员会被裁剪，改用字典封套，键名与接口保持一致
+        var rs = _client.Invoke<String>("KillAndStart", new Dictionary<String, Object?>
         {
-            processId = p.Id,
-            delay = 3,
-            fileName,
-            arguments = args,
-            workingDirectory = Environment.CurrentDirectory,
+            ["processId"] = p.Id,
+            ["delay"] = 3,
+            ["fileName"] = fileName,
+            ["arguments"] = args,
+            ["workingDirectory"] = Environment.CurrentDirectory,
         });
 
         // 本进程退出

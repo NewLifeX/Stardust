@@ -1,4 +1,4 @@
-﻿using NewLife.Agent;
+using NewLife.Agent;
 using NewLife.Agent.Command;
 using NewLife.Log;
 using NewLife.Remoting;
@@ -69,7 +69,7 @@ public class StopService : BaseCommandHandler
         try
         {
             // 通过 UDP RPC 停止服务
-            var response = client.Invoke<ServiceOperationResult>("StopService", new { serviceName });
+            var response = client.Invoke<ServiceOperationResult>("StopService", new Dictionary<String, Object?> { ["serviceName"] = serviceName });
 
             if (response == null)
             {

@@ -1,4 +1,5 @@
-﻿using NewLife;
+using System.Diagnostics.CodeAnalysis;
+using NewLife;
 using NewLife.Log;
 using NewLife.Messaging;
 using NewLife.Serialization;
@@ -23,7 +24,7 @@ public class StringEventContext(IEventBus eventBus, String message) : IEventCont
 /// <typeparam name="TEvent"></typeparam>
 /// <param name="client"></param>
 /// <param name="topic"></param>
-public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEvent>, IEventHandler<String>, ITracerFeature
+public class StarEventBus<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor | DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.PublicProperties)] TEvent>(AppClient client, String topic) : EventBus<TEvent>, IEventHandler<String>, ITracerFeature
 {
     #region 属性
     /// <summary>超时时间。默认5000毫秒</summary>

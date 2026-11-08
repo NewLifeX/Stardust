@@ -1,4 +1,4 @@
-﻿using NewLife.Agent;
+using NewLife.Agent;
 using NewLife.Agent.Command;
 using NewLife.Log;
 using NewLife.Remoting;
@@ -65,7 +65,7 @@ public class StartService : BaseCommandHandler
         try
         {
             // 通过 UDP RPC 启动服务
-            var response = client.Invoke<ServiceOperationResult>("StartService", new { serviceName });
+            var response = client.Invoke<ServiceOperationResult>("StartService", new Dictionary<String, Object?> { ["serviceName"] = serviceName });
 
             if (response == null)
             {

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Runtime;
@@ -551,7 +552,7 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
     /// <param name="topic">主题</param>
     /// <param name="clientId">客户端标识</param>
     /// <returns></returns>
-    public IEventBus<TEvent> CreateEventBus<TEvent>(String topic, String? clientId = null)
+    public IEventBus<TEvent> CreateEventBus<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor | DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.PublicProperties)] TEvent>(String topic, String? clientId = null)
     {
         if (!_initedEventBus)
         {

@@ -173,6 +173,21 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
     #endregion
 
     #region 更新
+    private static Boolean _aotUpgradeWarned;
+
+    /// <summary>是否以 NativeAOT 方式运行（无动态代码能力）</summary>
+    private static Boolean IsNativeAot
+    {
+        get
+        {
+#if NET5_0_OR_GREATER
+            return !System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported;
+#else
+            return false;
+#endif
+        }
+    }
+
     public override Task<IUpgradeInfo?> Upgrade(String? channel, CancellationToken cancellationToken = default)
     {
         if (channel.IsNullOrEmpty()) channel = AgentSetting.Channel;
@@ -187,6 +202,18 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
     /// <returns>服务端升级信息，无更新时为空</returns>
     protected override async Task<IUpgradeInfo?> UpgradeAsync(String? channel, CancellationToken cancellationToken = default)
     {
+        // NativeAOT 单体程序不能被平台下发的托管程序集包覆盖（覆盖后会静默退回 JIT 版），自动更新直接跳过
+        if (IsNativeAot)
+        {
+            if (!_aotUpgradeWarned)
+            {
+                _aotUpgradeWarned = true;
+                WriteLog("NativeAOT build: automatic upgrade is disabled because the platform distributes managed assembly packages that cannot replace a native executable. Deploy the native package manually instead.");
+            }
+
+            return null;
+        }
+
         var local = GetLocalVersion();
         WriteLog("Upgrade check: local version={0}, channel={1}, querying the server...", local, channel);
 

@@ -75,10 +75,23 @@ Stardust distributed core client library. One-line integration for configuration
     </None>
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="NewLife.Remoting" Version="4.0.2026.1024" />
+  <!-- 本地联调：NewLife 源码仓库与本仓库同处一个根目录（默认 C:\X）时，
+       加 -p:UseLocalNewLifeSource=true 改为项目引用，便于 AOT 适配期间同步修改上游；
+       默认仍引用 NuGet 包，保持正常构建与发布不受影响 -->
+  <PropertyGroup>
+    <NewLifeSourceRoot Condition="'$(NewLifeSourceRoot)' == ''">$(MSBuildProjectDirectory)\..\..</NewLifeSourceRoot>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(UseLocalNewLifeSource)' == 'true'">
+    <ProjectReference Include="$(NewLifeSourceRoot)\NewLife.Core\NewLife.Core\NewLife.Core.csproj" GlobalPropertiesToRemove="PublishAot;PublishTrimmed;SelfContained" />
+    <ProjectReference Include="$(NewLifeSourceRoot)\NewLife.Remoting\NewLife.Remoting\NewLife.Remoting.csproj" GlobalPropertiesToRemove="PublishAot;PublishTrimmed;SelfContained" />
+    <!-- 项目引用不会像 NuGet 包那样把 analyzers 传递下来，本地联调显式挂上 Core/Remoting 源生成器 -->
+    <ProjectReference Include="$(NewLifeSourceRoot)\NewLife.Core\NewLife.Core.SourceGenerator\NewLife.Core.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" SetTargetFramework="TargetFramework=netstandard2.0" Private="false" AdditionalProperties="PublishAot=false" GlobalPropertiesToRemove="PublishAot;PublishTrimmed;SelfContained;RuntimeIdentifier;RuntimeIdentifiers" />
+    <ProjectReference Include="$(NewLifeSourceRoot)\NewLife.Remoting\NewLife.Remoting.SourceGenerator\NewLife.Remoting.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" SetTargetFramework="TargetFramework=netstandard2.0" Private="false" AdditionalProperties="PublishAot=false" GlobalPropertiesToRemove="PublishAot;PublishTrimmed;SelfContained;RuntimeIdentifier;RuntimeIdentifiers" />
+    <!-- Core 包的 props 会把 Locales\*.yml 挂成 AdditionalFiles，项目引用模式需自行挂载 -->
+    <AdditionalFiles Include="$(MSBuildProjectDirectory)/Locales/*.yml" />
   </ItemGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(UseLocalNewLifeSource)' != 'true'">
+    <PackageReference Include="NewLife.Remoting" Version="4.0.2026.1024" />
     <PackageReference Include="NewLife.Core" Version="12.0.2026.1024" />
   </ItemGroup>
 

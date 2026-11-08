@@ -130,6 +130,9 @@ public class StarFactory : DisposeBase
     {
         XTrace.WriteLine("Initializing Stardust...");
 
+        // NativeAOT 下模型属性必须显式保留，否则序列化为空对象
+        AotRoots.Ensure();
+
         Local = new LocalStarClient { Log = Log };
 
         // 从命令行读取参数

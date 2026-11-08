@@ -136,7 +136,7 @@ glibc 默认的 trim/mmap 阈值偏大，空闲块长期留在进程里。设成
 再要显著下降只有两条路：
 
 - **换原生代理**：C++ 版 7 MB，差一个数量级，但缺进程守护、远程发布、Web 面板、插件、自升级。
-- **NativeAOT**：理论 20~30 MB，需各平台交叉 AOT 工具链并适配反射密集的配置与序列化代码，属大型改造。
+- **NativeAOT**：已在 2026-11-08 落地，桌面/边缘四端实测 32~40 MB（见第 9 节）。
 
 ## 5. 虚拟内存与线程
 
@@ -219,54 +219,36 @@ LimitSTACK=4194304
 | `System.Reflection.Metadata` + `System.Collections.Immutable` | 1.7 MB | 异常堆栈解析源码行号，首次带文件信息的 `StackTrace` 触发 | 记录异常时不再请求文件行号 |
 | `System.Private.Xml` | 3.1 MB | `XmlConfigProvider` 读取 `*.config` | 配置文件改用 JSON（`FileConfigProvider` 按扩展名选解析器） |
 
-## 9. NativeAOT 实测（2026-11，A4）
+## 9. NativeAOT（2026-11-08 已落地）
 
-### 9.1 为什么要试
+### 9.1 首轮结论（历史）
 
-NativeAOT 把 IL 在发布时就编译成机器码，运行时既不需要 JIT 也不需要加载程序集，理论上能一次性解决“启动慢”与“内存高”两个问题。
+2026-11 初在 A4 上首次试编 NativeAOT：RSS 从 92 MB 降到 29 MB、线程 23→13，但**功能不可用**——
+`Assembly.GetReferencedAssemblies()` 抛 `PlatformNotSupportedException` 导致插件全灭，
+`ApiServer.Register(Object, String)` 反射路由被裁剪导致面板无响应。
+当时判断需要跨仓库改造（Core 反射边界、Remoting 泛型注册、面板资源、`GetDelegateForFunctionPointer`），
+先以原生代理（`StarAgent.Native`，7 MB）作为极小内存场景的答案。
 
-### 9.2 怎么编出来的
+### 9.2 现状：四端实测通过
 
-Windows 上无法交叉编译 Linux 原生二进制（`Cross-OS native compilation is not supported`），改在 WSL 里编：
+上述改造已完成，PC（win-x64）、A2/A4（linux-arm64）、A6（linux-arm）四类目标全部通过：
 
-```bash
-# 工具链
-apt-get install -y clang zlib1g-dev binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu
+| 设备 | JIT 版 RSS | NativeAOT RSS | 启动（JIT → AOT） |
+|------|-----------|---------------|-------------------|
+| A6（armv7） | 73 MB | **32 MB** | 16 秒 → 0.25 秒 |
+| A4（arm64） | 95 MB | **40 MB** | 18 秒 → 亚秒级 |
+| A2（arm64） | 88 MB | **39 MB** | 8 秒 → 0.14 秒 |
+| PC（win-x64） | 90+ MB | **35 MB** | 5~13 秒 → ≈1 秒 |
 
-# 发布（arm64）
-dotnet publish StarAgent/StarAgent.csproj -c Release -f net10.0 -r linux-arm64 \
-  --self-contained true -p:PublishAot=true -p:TargetFrameworks=net10.0 \
-  -p:ObjCopyName=aarch64-linux-gnu-objcopy -p:CppCompilerAndLinker=aarch64-linux-gnu-gcc \
-  -o /tmp/aot/arm64
-```
+功能面与 JIT 版对齐：服务宿主、登录心跳、配置中心、Web 面板、本机 UDP RPC、子服务管理、指标采集均正常。
+线程数 17（JIT 版 23），虚拟内存 arm64 约 1.2 GB、armv7 约 230 MB。
 
-产物是**单个 48 MB 可执行文件**（现方案是 6 MB 多程序集 + 系统 .NET 运行时）。
+两个已知边界：外部插件 DLL 无法在 AOT 下加载（只能编译进代理本体）；平台自动升级下发的是托管程序集包，AOT 版已禁用自动覆盖并打印说明。
 
-### 9.3 实测结果：内存赢了，功能输了
+发布命令、跨仓库改造清单、部署与回滚步骤见 [NODE-StarAgent-AOT适配](NODE-StarAgent-AOT适配.md)。
 
-| 项 | .NET/JIT 版（A4） | NativeAOT（A4） |
-|----|------------------|----------------|
-| RSS | 92 MB | **29 MB** |
-| 线程 | 23 | 13 |
-| 包体积 | 6 MB 程序集（需装运行时） | 48 MB 单文件（不需运行时） |
-| 启动 | 13 秒 | 秒级（未细测，启动后插件立刻报错） |
-| 插件系统 | 正常 | ❌ `PlatformNotSupportedException` |
-| Web 面板 | 200 | ❌ 端口无响应 |
+### 9.3 与内存优化的关系
 
-两个硬阻塞：
-
-1. **`Assembly.GetReferencedAssemblies()` 在 NativeAOT 下不支持**。NewLife 的 `PluginManager` 靠它判断“哪个程序集引用了插件契约”，直接抛 `PlatformNotSupportedException`，插件全部加载失败。
-2. **嵌入式资源与反射路由失效**。`ApiServer.Register(Object, String)` 这类按运行时类型注册控制器的入口被 AOT 裁剪掉（编译期就有 `IL2026` 警告），面板因此不可用。
-
-### 9.4 结论
-
-内存诱人（29 MB → 比现在省 60 MB），但**目前不可用**，要上必须跨仓库改造：
-
-| 要改的地方 | 改法 |
-|-----------|------|
-| `NewLife.Model.PluginManager` | 不去查引用关系，改为按约定目录/显式注册扫描 |
-| `NewLife.Remoting.ApiServer` | 改为泛型 `Register<TService>()` 静态注册 |
-| 面板嵌入式资源 | 改为 AOT 可静态分析的资源访问 |
-| `Marshal.GetDelegateForFunctionPointer` | 换泛型重载（`TuneRuntime` 里就有一处） |
-
-工作量不小，且每加一处反射都要过一遍 AOT 兼容；建议先把**原生代理**（`StarAgent.Native`，7 MB）作为极小内存场景的答案，AOT 留作后续可选路线。
+JIT 版阶段的优化（关闭预编译镜像、关闭 ICU、`MALLOC_ARENA_MAX`、`LimitSTACK`）在 AOT 版里仍然保留：
+`TuneRuntime` 的 glibc 参数对原生可执行文件同样生效；关闭 ICU 改由 runtimeconfig 控制的部分
+在 AOT 下改为 `RuntimeHostConfigurationOption` 项目项。

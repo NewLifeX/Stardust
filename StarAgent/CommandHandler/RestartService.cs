@@ -68,7 +68,7 @@ public class RestartService : BaseCommandHandler
         try
         {
             // 通过 UDP RPC 重启服务
-            var response = client.Invoke<ServiceOperationResult>("RestartService", new { serviceName });
+            var response = client.Invoke<ServiceOperationResult>("RestartService", new Dictionary<String, Object?> { ["serviceName"] = serviceName });
 
             if (response == null)
             {

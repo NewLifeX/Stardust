@@ -35,6 +35,15 @@
   </PropertyGroup>
 
   <!--
+    NativeAOT 发布开关：用 -p:StarAgentAot=true 打开，避免把 PublishAot 作为全局属性传给所有被引用工程
+    （多目标库的 net45/net40 目标不支持 AOT，全局传递会直接报 NETSDK1207）。
+    仅在 net10.0 目标上生效。
+  -->
+  <PropertyGroup Condition="'$(StarAgentAot)' == 'true' and '$(TargetFramework)' == 'net10.0'">
+    <PublishAot>true</PublishAot>
+  </PropertyGroup>
+
+  <!--
     Linux 上默认不装载 ICU：
     1，省内存——ICU 三个共享库加内部缓存约占 8MB 常驻；
     2，能起得来——部分嵌入式发行版根本没装 ICU，.NET 默认会在缺少 ICU 时直接启动失败。
@@ -51,12 +60,38 @@
     <Compile Include="..\Stardust\Managers\ServiceController.cs" Link="Managers\ServiceController.cs" />
     <Compile Include="..\Stardust\Managers\ServiceManager.cs" Link="Managers\ServiceManager.cs" />
   </ItemGroup>
+
+  <!--
+    小内存设备的运行时开关。用 RuntimeHostConfigurationOption 而不是 runtimeconfig.template.json：
+    NativeAOT 发布不支持模板文件（ILC 会告警并忽略），写成项目项则 JIT 与 AOT 两种发布都生效。
+  -->
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="System.GC.HeapCount" Value="1" />
+    <RuntimeHostConfigurationOption Include="System.GC.HeapHardLimit" Value="209715200" />
+    <RuntimeHostConfigurationOption Include="System.GC.ConserveMemory" Value="9" />
+    <RuntimeHostConfigurationOption Include="System.GC.RetainVM" Value="false" />
+    <RuntimeHostConfigurationOption Include="System.Runtime.TieredCompilation" Value="false" />
+    <RuntimeHostConfigurationOption Include="System.Runtime.EnableWriteXorExecute" Value="false" />
+  </ItemGroup>
   
   <ItemGroup>
     <EmbeddedResource Include="WebPanel\wwwroot\**" />
   </ItemGroup>
 
-  <ItemGroup>
+  <!-- 本地联调：与 Stardust 的 UseLocalNewLifeSource 保持同一开关，见 Stardust.csproj 说明 -->
+  <PropertyGroup>
+    <NewLifeSourceRoot Condition="'$(NewLifeSourceRoot)' == ''">$(MSBuildProjectDirectory)\..\..</NewLifeSourceRoot>
+  </PropertyGroup>
+  <!-- 本地源码模式下启用上游最新 API（尚未发布的静态命令注册等） -->
+  <PropertyGroup Condition="'$(UseLocalNewLifeSource)' == 'true'">
+    <DefineConstants>$(DefineConstants);LOCAL_NEWLIFE_SOURCE</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(UseLocalNewLifeSource)' == 'true'">
+    <ProjectReference Include="$(NewLifeSourceRoot)\NewLife.Agent\NewLife.Agent\NewLife.Agent.csproj" GlobalPropertiesToRemove="PublishAot;PublishTrimmed;SelfContained" />
+    <!-- 本项目的配置类依赖 Core 源生成器生成成员访问器 -->
+    <ProjectReference Include="$(NewLifeSourceRoot)\NewLife.Core\NewLife.Core.SourceGenerator\NewLife.Core.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" SetTargetFramework="TargetFramework=netstandard2.0" Private="false" AdditionalProperties="PublishAot=false" GlobalPropertiesToRemove="PublishAot;PublishTrimmed;SelfContained;RuntimeIdentifier;RuntimeIdentifiers" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UseLocalNewLifeSource)' != 'true'">
     <PackageReference Include="NewLife.Agent" Version="10.18.2026.1107-beta1336" />
   </ItemGroup>
 
@@ -65,6 +100,6 @@
   </ItemGroup>
   <ItemGroup>
     <!-- Locales 目录由 NewLife.Core 源生成器编译期解析；本项目未直接引用 Core 包，显式挂载输入 -->
-    <AdditionalFiles Include="$(MSBuildProjectDirectory)\Locales\*.yml" />
+    <AdditionalFiles Include="$(MSBuildProjectDirectory)/Locales/*.yml" />
   </ItemGroup>
 </Project>
