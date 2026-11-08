@@ -290,6 +290,8 @@ Android/iOS 的 .NET 移动代理（`StarAgent.Mobile` + `StarAgent.Android` + `
 
 ## 8. 资源占用与内存优化
 
+> 每一项的原理、收益、代价与测量方法，见专题文档：[NODE-StarAgent内存优化](NODE-StarAgent内存优化.md)。本节只留结论。
+
 .NET 代理常驻内存由三部分组成：运行时与程序集文件页（可回收的干净页）、JIT 生成代码、以及原生分配器堆。其中原生堆在 Linux 上长期偏大，原因是 glibc 为每个线程准备独立竞技场（arena），并在竞技场内缓存空闲块不归还；代理常驻二十多个线程，竞技场本身就能占掉一成以上内存。
 
 代理启动时按以下顺序收紧（`Program.TuneRuntime`）：
@@ -299,7 +301,7 @@ Android/iOS 的 .NET 移动代理（`StarAgent.Mobile` + `StarAgent.Android` + `
 | `MALLOC_ARENA_MAX=1` | 单竞技场 | 竞技场数量只在进程初始化阶段由环境变量决定，运行时 `mallopt` 改不动，因此先 `setenv` 再 `execv` 原地重载自身镜像（PID 不变，systemd 无感知），新镜像立即 `unsetenv` 避免被托管的业务进程继承 |
 | `MALLOC_TRIM_THRESHOLD_` / `MALLOC_MMAP_THRESHOLD_` = 64KB，`MALLOC_TOP_PAD_` = 0 | 空闲堆及时归还 | 默认阈值偏大，空闲块长期留在进程里 |
 | `DOTNET_ReadyToRun=0` | 不装载预编译镜像 | 放弃直接执行 R2R 代码，改为全量 JIT 一份本地代码，程序集文件页从 43 MB 降到 29 MB（CoreLib 13 MB → 5.4 MB）；代价是启动变慢约 2 倍（armv7 实测 15 秒 → 31 秒）。与 `execv` 重载合并进行，不额外多一次启动 |
-| `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1` | 不装载 ICU | ICU 只提供区域性数据（日期格式、排序规则、`CultureInfo`），不参与文案翻译。关掉后 `libicudata`/`libicui18n`/`libicuuc` 与内部缓存共 7~8 MB 不再落地，日志回落英文、界面不受影响；运维显式设了该变量时以运维为准 |
+| `System.Globalization.Invariant=true`（runtimeconfig，仅非 Windows 包） | 不装载 ICU | ICU 只提供区域性数据（日期格式、排序规则、`CultureInfo`），不参与文案翻译。关掉后 `libicudata`/`libicui18n`/`libicuuc` 与内部缓存共 8 MB 不再落地，日志回落英文、界面不受影响。写在 runtimeconfig 而不是环境变量：有些嵌入式系统根本没装 ICU，靠环境变量注入时进程可能在重载镜像前就先崩了 |
 | `System.Runtime.TieredCompilation=false`（runtimeconfig） | 只保留一份全优化代码 | 关闭分层编译后不再同时持有 tier0 与 tier1 两份代码，省下 JIT 代码页 |
 | 关闭 HTTP/3（`System.Net.SocketsHttpHandler.Http3Support=false`） | 少装一套协议栈 | 代理只走 HTTP/1.1；不关闭时 .NET 探测 HTTP/3 会连带装载 `System.Net.Quic`（arm64 实测约 0.5~1.4 MB） |
 | `System.Runtime.EnableWriteXorExecute=false`（runtimeconfig） | 去掉代码的双重映射 | 默认用 memfd 给 JIT/预编译代码建读写别名，实测该项独占 **26 MB 共享内存**（`Pss_Shmem`，属 tmpfs，内核不能像干净文件页那样回收）；关掉后代码走单映射，RSS 再降 1~2 MB，`Pss_Shmem` 归零 |
@@ -382,4 +384,4 @@ ICU 已默认关闭（`libicudata`/`libicui18n`/`libicuuc` 均不再装载），
 
 ---
 
-> 详细子模块文档见：[NODE-9-指令下发](NODE-9-指令下发.md)、[NODE-15-StarAgent远程部署](NODE-15-StarAgent远程部署.md)、[NODE-14-防火墙管理](NODE-14-防火墙管理.md)
+> 详细子模块文档见：[NODE-StarAgent内存优化](NODE-StarAgent内存优化.md)、[NODE-9-指令下发](NODE-9-指令下发.md)、[NODE-15-StarAgent远程部署](NODE-15-StarAgent远程部署.md)、[NODE-14-防火墙管理](NODE-14-防火墙管理.md)
