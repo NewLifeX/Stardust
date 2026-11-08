@@ -41,7 +41,21 @@
   -->
   <PropertyGroup Condition="'$(StarAgentAot)' == 'true' and '$(TargetFramework)' == 'net10.0'">
     <PublishAot>true</PublishAot>
+    <!-- 体积优先：边缘设备 Flash 紧张，代理不是 CPU 密集型，用 Size 换 2~3MB -->
+    <OptimizationPreference Condition="'$(OptimizationPreference)' == ''">Size</OptimizationPreference>
+    <!-- 合并相同方法体、启用小体积 LINQ 实现；关闭热重载与调试器支持（生产环境不需要） -->
+    <IlcFoldIdenticalMethodBodies Condition="'$(IlcFoldIdenticalMethodBodies)' == ''">true</IlcFoldIdenticalMethodBodies>
+    <UseSizeOptimizedLinq Condition="'$(UseSizeOptimizedLinq)' == ''">true</UseSizeOptimizedLinq>
+    <MetadataUpdaterSupport Condition="'$(MetadataUpdaterSupport)' == ''">false</MetadataUpdaterSupport>
+    <DebuggerSupport Condition="'$(DebuggerSupport)' == ''">false</DebuggerSupport>
   </PropertyGroup>
+
+  <!--
+    精简发布（Slim 档）：由发布脚本设置环境变量（属性才会传到被引用工程），再省约 3.5MB：
+      $env:NewLifeLocalizationLanguages='zh-Hans;en'   # 日志/异常等消息词表只编译这两种语言
+    再配合 -p:StackTraceSupport=false 去掉异常堆栈符号（诊断信息减少，按需启用）。
+    词表裁剪后面板 /api/languages 只列出真正有词表的语言，不会出现“选了语言但界面没变”。
+  -->
 
   <!--
     Linux 上默认不装载 ICU：
@@ -90,6 +104,10 @@
     <ProjectReference Include="$(NewLifeSourceRoot)\NewLife.Agent\NewLife.Agent\NewLife.Agent.csproj" GlobalPropertiesToRemove="PublishAot;PublishTrimmed;SelfContained" />
     <!-- 本项目的配置类依赖 Core 源生成器生成成员访问器 -->
     <ProjectReference Include="$(NewLifeSourceRoot)\NewLife.Core\NewLife.Core.SourceGenerator\NewLife.Core.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" SetTargetFramework="TargetFramework=netstandard2.0" Private="false" AdditionalProperties="PublishAot=false" GlobalPropertiesToRemove="PublishAot;PublishTrimmed;SelfContained;RuntimeIdentifier;RuntimeIdentifiers" />
+    <!-- 项目引用模式缺少 Core 包的 props，显式声明源生成器可见属性 -->
+    <CompilerVisibleProperty Include="NewLifeLocalizationGenerateL" />
+    <CompilerVisibleProperty Include="NewLifeLocalizationOverwrite" />
+    <CompilerVisibleProperty Include="NewLifeLocalizationLanguages" />
   </ItemGroup>
   <ItemGroup Condition="'$(UseLocalNewLifeSource)' != 'true'">
     <PackageReference Include="NewLife.Agent" Version="10.18.2026.1107-beta1336" />

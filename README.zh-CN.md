@@ -75,9 +75,13 @@ dotnet publish -c Release -o publish
 # 仅 net10.0；不要把 PublishAot 作为全局属性传入
 dotnet publish StarAgent/StarAgent.csproj -c Release -f net10.0 -r linux-arm64 `
   --self-contained true -p:StarAgentAot=true -o publish
+
+# 或直接用发布脚本（含交叉编译参数与两档体积配置）
+pwsh Tools/Scripts/publish-aot.ps1 -Rid linux-arm64 -Compiler clang -ObjCopy aarch64-linux-gnu-objcopy
+pwsh Tools/Scripts/publish-aot.ps1 -Rid win-x64 -Slim      # 更小：仅中英词表、异常无行号
 ```
 
-PC / A2 / A4 / A6 实测：RSS 33~44 MB（JIT 版 73~95 MB），启动 0.14~1 秒。详见 [NODE-StarAgent-AOT适配](Doc/NODE-StarAgent-AOT适配.md)。
+PC / A2 / A4 / A6 实测：单文件 16.4 / 19.0 / 19.0 / 17.3 MB（Slim 12.9 / 15.4 / 15.4 / 13.5 MB），RSS 31~43 MB（JIT 版 73~95 MB），启动 0.14~1 秒。详见 [NODE-StarAgent-AOT适配](Doc/NODE-StarAgent-AOT适配.md)。
 
 #### 其它平台
 

@@ -207,7 +207,7 @@ LimitSTACK=4194304
 | 确认优化是否生效 | 看 `/proc/<pid>/environ` 是否有 `MALLOC_ARENA_MAX`；`pmap -x <pid> \| grep icu` 应无输出 |
 | 换版后核对 | `systemctl show StarAgent -p MainPID --value` 与 `ps -eo pid,etimes,args \| grep StarAgent.dll` 必须只有一个进程 |
 
-> ⚠️ **救援副本**：带固件的设备由 `newlifed` 看门狗守护代理，代理停止十几秒就会用固件内置的救援副本覆盖部署目录。换版时必须同时刷新救援副本，否则设备会悄悄回滚到老版本（实测 A6 曾这样退回 116 MB）。代理已接管这件事：`MyService.SyncRescueCopy` 在稳定运行 3 分钟后自动同步。
+> ⚠️ **救援副本**：带固件的设备由 `newlifed` 星尘自愈巡检守护代理（默认 15 分钟一轮）。新版 newlifed（2026-11-08 起）按 `ActiveState` 区分：`failed`/重启循环才恢复，`active`/`activating` 正常，`inactive` 且曾成功运行过给 30 分钟人工维护宽限；恢复前检查 `MainPID`/`pgrep` 存活进程，`failed` 或宽限到期的 `inactive` 先普通 `start` 60 秒，仍失败才还原；被覆盖的核心文件备份到 `/root/agent.broken-*`（保留 2 份，含 `manifest.txt`），`Config/` 与现场插件不动；运行时连续两轮异常才重装；支持 `newlifed guard-hold`/`guard-release`。A6 在旧版 newlifed 上曾因停止十几秒被救援、内存退回 116 MB；新版已修正。**救援副本归固件/newlifed 所有，StarAgent 不写该目录**。平台升级已在 Stardust 升级流程接入 `guard-hold`/`guard-release`（FIX-18）。
 
 > ⚠️ **部署要整包**：升级时务必带上同一份发布产物里的全部程序集与 `runtimeconfig.json`。只替换 `StarAgent.dll` 会出现 `TypeInitializationException: Could not load file or assembly 'Stardust, Version=...'` 的崩溃循环。
 
@@ -235,10 +235,12 @@ LimitSTACK=4194304
 
 | 设备 | JIT 版 RSS | NativeAOT RSS | 启动（JIT → AOT） |
 |------|-----------|---------------|-------------------|
-| A6（armv7） | 73 MB | **32 MB** | 16 秒 → 0.25 秒 |
-| A4（arm64） | 95 MB | **40 MB** | 18 秒 → 亚秒级 |
-| A2（arm64） | 88 MB | **39 MB** | 8 秒 → 0.14 秒 |
-| PC（win-x64） | 90+ MB | **35~44 MB** | 5~13 秒 → ≈1 秒 |
+| A6（armv7） | 73 MB | **31~34 MB** | 16 秒 → 0.25 秒 |
+| A4（arm64） | 95 MB | **39~43 MB** | 18 秒 → 亚秒级 |
+| A2（arm64） | 88 MB | **36~40 MB** | 8 秒 → 0.14 秒 |
+| PC（win-x64） | 90+ MB | **32~45 MB** | 5~13 秒 → ≈1 秒 |
+
+原生包体积（默认档）：win-x64 16.4 MB、linux-arm64 19.0 MB、linux-arm 17.3 MB；需要更小可用 Slim 档（12.9 / 15.4 / 13.5 MB），体积构成与开关收益见 [NODE-StarAgent-AOT适配](NODE-StarAgent-AOT适配.md) 第 7 节。
 
 功能面与 JIT 版对齐：服务宿主、登录心跳、配置中心、Web 面板、本机 UDP RPC、子服务管理、指标采集均正常。
 线程数 17（JIT 版 23），虚拟内存 arm64 约 1.2 GB、armv7 约 230 MB。
