@@ -11,20 +11,20 @@
 
 | 设备 | 架构 | 总内存 | 优化前 | 优化后 | 降幅 | 启动耗时 |
 |------|------|--------|--------|--------|------|----------|
-| A6 | armv7 4 核 | 486 MB | 140 MB | 64 MB | -54% | 15 秒 → 28 秒 |
-| A4 | arm64 2 核 | 481 MB | 173 MB | 90 MB | -48% | → 33 秒 |
-| A2 | arm64 4 核 | 949 MB | 150 MB | 87 MB | -42% | → 14 秒 |
+| A6 | armv7 4 核 | 486 MB | 140 MB | 73 MB | -48% | 15 秒 → 16 秒 |
+| A4 | arm64 2 核 | 481 MB | 173 MB | 94 MB | -46% | 33 秒 → 28 秒 |
+| A2 | arm64 4 核 | 949 MB | 150 MB | 88 MB | -41% | 14 秒 → 8 秒 |
 | C++ 原生代理（A4） | arm64 | — | — | 7 MB | — | — |
 
-分三批完成：
+分两步完成，另外试过一步又回退了：
 
 | 批次 | 手段 | armv7 效果 |
 |------|------|-----------|
 | 一 | glibc 竞技场、空闲堆阈值、分层编译、HTTP/3、W^X 双映射 | 140 → 83 MB |
-| 二 | 关闭预编译镜像（R2R） | 83 → 74 MB |
-| 三 | 关闭 ICU | 74 → 64 MB |
+| 二 | 关闭 ICU | 83 → 75 MB |
+| （已回退） | 关闭预编译镜像（R2R） | 只省 8 MB，启动却从 16 秒涨到 28 秒，不划算，详见 3.6 |
 
-只换启动时间，不换包体积：升级包还是同一批程序集，ICU 本就是系统共享库、从不随包分发。三批改完后 `StarAgent.dll` 只从 1.38 MB 涨到 1.40 MB。
+只换运行时行为，不换包体积：升级包还是同一批程序集，ICU 本就是系统共享库、从不随包分发。两步改完后 `StarAgent.dll` 只从 1.38 MB 涨到 1.40 MB。
 
 ## 2. 先讲怎么量，不然优化全是盲人摸象
 
@@ -77,13 +77,24 @@ glibc 默认的 trim/mmap 阈值偏大，空闲块长期留在进程里。设成
 
 代价：失去 W^X 防护（JIT 代码页可写可执行）。对受控的边缘设备可接受。
 
-### 3.6 关闭预编译镜像：`DOTNET_ReadyToRun=0`
+### 3.6 关闭预编译镜像：试过，已回退
 
-默认直接执行程序集里的 R2R 预编译代码，等于把整份程序集文件页驻留。关掉后改为全量 JIT 一份本地代码，程序集文件页从 43 MB 降到 29 MB（`System.Private.CoreLib` 从 13 MB 降到 5.4 MB）。
+默认直接执行程序集里的 R2R 预编译代码。把它关掉（`DOTNET_ReadyToRun=0`）后改为全量 JIT，程序集文件页变小：armv7 上 `System.Private.CoreLib` 从 13 MB 降到 5.4 MB。
 
-**代价是启动变慢约 2 倍**（armv7 15 秒 → 28 秒）。判断：常驻内存按天算，启动只在上电或升级时发生一次，这笔交易对边缘设备划算。稳态执行**不会**变慢——全量 JIT 出来的是优化代码，比分层编译等 tier1 重编译还早。
+**但代价与收益不匹配，已回退。** 真机实测：
 
-通过环境变量注入（与 3.1 合并进同一次 `execv` 重载，不额外多一次启动）。
+| 设备 | 预编译开启 | 预编译关闭 | 差值 |
+|------|-----------|-----------|------|
+| A6（armv7） | 73 MB / 启动 16 秒 | 64 MB / 启动 28 秒 | 省 9 MB，慢 12 秒 |
+| A4（arm64） | 94 MB / 启动 28 秒 | 90 MB / 启动 33 秒 | 省 4 MB，慢 5 秒 |
+| A2（arm64） | 88 MB / 启动 8 秒 | 87 MB / 启动 14 秒 | 省 1 MB，慢 6 秒 |
+
+两个结论：
+
+1. **省下的内存少**（armv7 9 MB、arm64 只 1~4 MB），换走的却是**接近一倍**的启动时间；
+2. 大头本来就落在可回收的干净文件页上（见第 2 节），压它只是让 RSS 数字好看，真实内存压力没降多少。
+
+> 这类“省下来的页本来就能被内核回收”的优化要格外谨慎：数字好看，体感变差。
 
 ### 3.7 关闭 ICU：`System.Globalization.Invariant=true`
 
@@ -149,7 +160,7 @@ glibc 默认的 trim/mmap 阈值偏大，空闲块长期留在进程里。设成
 | 主线程 + GC 后台 + Finalizer | 3~4 | 否 |
 | ThreadPool worker | 随 CPU 核数扩展（4 核设备常见 4~8） | 否，心跳、命令处理、HTTP 面板都靠它 |
 | ThreadPool IO 完成端口 | 1~2 | 否 |
-| 定时器与服务巡检 | 2~3 | 否，60 秒心跳与 10 分钟升级检查必需 |
+| 定时任务（60 秒心跳、10 分钟升级检查、服务巡检） | **1** | 否。所有 `TimerX` 共用一个 `TimerScheduler`，它内部只开一个 `new Thread(Process)` 轮流触发；异步回调才派到线程池 |
 | 诊断与事件管道 | 2 | 可以，但实测 `DOTNET_EnableDiagnostics=0` 只少两个线程、RSS 不变，得不偿失 |
 
 所以线程这块没有实质优化空间——它们都是干活的人，不是闲着占位。
@@ -193,7 +204,7 @@ LimitSTACK=4194304
 | 恢复完整区域性（要中文日志） | 服务单元加 `Environment=DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=0`，重启服务 |
 | 恢复预编译镜像（换更快的启动） | 服务单元加 `Environment=DOTNET_ReadyToRun=1` |
 | 压低虚拟内存（VIRT） | 服务单元加 `LimitSTACK=4194304`；注意该限制会传给被托管的业务进程，理由与风险见第 5 节 |
-| 确认优化是否生效 | 看 `/proc/<pid>/environ` 是否有 `MALLOC_ARENA_MAX`、`DOTNET_ReadyToRun`；`pmap -x <pid> \| grep icu` 应无输出 |
+| 确认优化是否生效 | 看 `/proc/<pid>/environ` 是否有 `MALLOC_ARENA_MAX`；`pmap -x <pid> \| grep icu` 应无输出 |
 | 换版后核对 | `systemctl show StarAgent -p MainPID --value` 与 `ps -eo pid,etimes,args \| grep StarAgent.dll` 必须只有一个进程 |
 
 > ⚠️ **救援副本**：带固件的设备由 `newlifed` 看门狗守护代理，代理停止十几秒就会用固件内置的救援副本覆盖部署目录。换版时必须同时刷新救援副本，否则设备会悄悄回滚到老版本（实测 A6 曾这样退回 116 MB）。代理已接管这件事：`MyService.SyncRescueCopy` 在稳定运行 3 分钟后自动同步。
@@ -207,3 +218,55 @@ LimitSTACK=4194304
 | `System.Linq.Expressions` | 2.1 MB | `NewLife.Reflection.DefaultReflect.RegisterAndCreate`，首次访问 `Config<T>.Current` 触发 | 对象工厂改为 `Activator.CreateInstance` 或缓存委托 |
 | `System.Reflection.Metadata` + `System.Collections.Immutable` | 1.7 MB | 异常堆栈解析源码行号，首次带文件信息的 `StackTrace` 触发 | 记录异常时不再请求文件行号 |
 | `System.Private.Xml` | 3.1 MB | `XmlConfigProvider` 读取 `*.config` | 配置文件改用 JSON（`FileConfigProvider` 按扩展名选解析器） |
+
+## 9. NativeAOT 实测（2026-11，A4）
+
+### 9.1 为什么要试
+
+NativeAOT 把 IL 在发布时就编译成机器码，运行时既不需要 JIT 也不需要加载程序集，理论上能一次性解决“启动慢”与“内存高”两个问题。
+
+### 9.2 怎么编出来的
+
+Windows 上无法交叉编译 Linux 原生二进制（`Cross-OS native compilation is not supported`），改在 WSL 里编：
+
+```bash
+# 工具链
+apt-get install -y clang zlib1g-dev binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu
+
+# 发布（arm64）
+dotnet publish StarAgent/StarAgent.csproj -c Release -f net10.0 -r linux-arm64 \
+  --self-contained true -p:PublishAot=true -p:TargetFrameworks=net10.0 \
+  -p:ObjCopyName=aarch64-linux-gnu-objcopy -p:CppCompilerAndLinker=aarch64-linux-gnu-gcc \
+  -o /tmp/aot/arm64
+```
+
+产物是**单个 48 MB 可执行文件**（现方案是 6 MB 多程序集 + 系统 .NET 运行时）。
+
+### 9.3 实测结果：内存赢了，功能输了
+
+| 项 | .NET/JIT 版（A4） | NativeAOT（A4） |
+|----|------------------|----------------|
+| RSS | 92 MB | **29 MB** |
+| 线程 | 23 | 13 |
+| 包体积 | 6 MB 程序集（需装运行时） | 48 MB 单文件（不需运行时） |
+| 启动 | 13 秒 | 秒级（未细测，启动后插件立刻报错） |
+| 插件系统 | 正常 | ❌ `PlatformNotSupportedException` |
+| Web 面板 | 200 | ❌ 端口无响应 |
+
+两个硬阻塞：
+
+1. **`Assembly.GetReferencedAssemblies()` 在 NativeAOT 下不支持**。NewLife 的 `PluginManager` 靠它判断“哪个程序集引用了插件契约”，直接抛 `PlatformNotSupportedException`，插件全部加载失败。
+2. **嵌入式资源与反射路由失效**。`ApiServer.Register(Object, String)` 这类按运行时类型注册控制器的入口被 AOT 裁剪掉（编译期就有 `IL2026` 警告），面板因此不可用。
+
+### 9.4 结论
+
+内存诱人（29 MB → 比现在省 60 MB），但**目前不可用**，要上必须跨仓库改造：
+
+| 要改的地方 | 改法 |
+|-----------|------|
+| `NewLife.Model.PluginManager` | 不去查引用关系，改为按约定目录/显式注册扫描 |
+| `NewLife.Remoting.ApiServer` | 改为泛型 `Register<TService>()` 静态注册 |
+| 面板嵌入式资源 | 改为 AOT 可静态分析的资源访问 |
+| `Marshal.GetDelegateForFunctionPointer` | 换泛型重载（`TuneRuntime` 里就有一处） |
+
+工作量不小，且每加一处反射都要过一遍 AOT 兼容；建议先把**原生代理**（`StarAgent.Native`，7 MB）作为极小内存场景的答案，AOT 留作后续可选路线。
