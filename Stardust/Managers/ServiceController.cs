@@ -411,7 +411,19 @@ public class ServiceController : DisposeBase
                 p.ForceKill();
             }
 
-            if (p.GetHasExited()) WriteLog("Process [PID={0}] has exited, ExitCode={1}", p.Id, p.ExitCode);
+            if (p.GetHasExited())
+            {
+                // 外部接管的进程（Process.GetProcessById）不允许读取 ExitCode，
+                // 不能因为拿不到退出码就把已正常退出误报为停止失败
+                try
+                {
+                    WriteLog("Process [PID={0}] has exited, ExitCode={1}", p.Id, p.ExitCode);
+                }
+                catch
+                {
+                    WriteLog("Process [PID={0}] has exited", p.Id);
+                }
+            }
         }
         catch (Exception ex)
         {
