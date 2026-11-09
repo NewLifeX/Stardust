@@ -601,18 +601,31 @@ public class ServiceManager : DisposeBase
             // 先下载到临时目录，再整体拷贝，避免进程退出
             var tmp = Path.GetTempFileName();
 
-            var http = new HttpClient();
-            await http.DownloadFileAsync(url, tmp);
-
-            WriteLog("Download completed; ready to overwrite: {0}", dst.FullName);
-
-            // 校验哈希
-            var ti = tmp.AsFile();
-            var hash = ti.MD5().ToHex();
-            if (!info.Hash.IsNullOrEmpty() && !hash.EqualIgnoreCase(info.Hash))
-                WriteLog("Download failed, verification error: {0} (local) != {1} (remote)", hash, info.Hash);
-            else
+            // 下载交给核心库：响应头 15 秒、响应体 300 秒，失败重试 2 次。
+            // AB 双机部署时，附件同步存在延迟，首次请求可能命中尚未同步完成的节点（404 或半截文件），
+            // 重试时通过工厂重建连接，新连接大概率路由到另一台，同时给附件同步留出时间。
+            // 哈希与 Content-Length 不完整校验也由核心库完成，校验失败同样触发重试。
+            var options = new HttpDownloadOptions
             {
+                HeaderTimeout = TimeSpan.FromSeconds(15),
+                DownloadTimeout = TimeSpan.FromSeconds(300),
+                RetryCount = 2,
+                RetryDelay = TimeSpan.FromSeconds(2),
+                ExpectedHash = info.Hash,
+                // 目标文件名由调用方决定，避免响应头 Content-Disposition 把文件写到临时目录的另一个文件名
+                UseContentDispositionFileName = false,
+                ClientFactory = () => new HttpClient(),
+            };
+            span?.AppendTag($"retry={options.RetryCount}");
+
+            try
+            {
+                // 超时完全由下载选项分段控制，客户端自身不再设置整体超时
+                using var http = new HttpClient { Timeout = System.Threading.Timeout.InfiniteTimeSpan };
+                await http.DownloadFileAsync(url, tmp, options).ConfigureAwait(false);
+
+                WriteLog("Download completed; ready to overwrite: {0}", dst.FullName);
+
                 // 删除原文件
                 if (dst.Exists)
                 {
@@ -628,21 +641,21 @@ public class ServiceManager : DisposeBase
 
                 // 创建目录，下载到临时目录的文件拷贝到这里
                 dst.FullName.EnsureDirectory(true);
-                ti.MoveTo(dst.FullName);
+                tmp.AsFile().MoveTo(dst.FullName);
 
                 svc.ZipFile = dst.FullName;
             }
+            catch (Exception ex)
+            {
+                span?.SetError(ex, null);
+                WriteLog("Download failed: {0}", ex.Message);
 
-            // 这里不能删除ti，否则会删除掉已经move到dst的文件
-            //// 删除临时文件
-            //try
-            //{
-            //    if (ti.Exists) ti.Delete();
-            //}
-            //catch
-            //{
-            //    ti.MoveTo(tmp + ".del");
-            //}
+                try
+                {
+                    File.Delete(tmp);
+                }
+                catch { }
+            }
         }
     }
 
