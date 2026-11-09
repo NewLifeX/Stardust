@@ -265,7 +265,7 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
             {
                 // 两次均失败，确认新版有致命缺陷，回滚 .del 恢复旧版文件
                 upgrade.Rollback();
-                this.WriteErrorEvent("Upgrade", L.TLog("The new version failed to start (smoke test failed); the old files have been rolled back and the current service keeps running. {0}", upgrade.LastErrorMessage));
+                FailUpgrade(L.TLog("The new version failed to start (smoke test failed); the old files have been rolled back and the current service keeps running. {0}", upgrade.LastErrorMessage));
             }
         }
         else
@@ -300,7 +300,7 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
             {
                 // 两次均失败，确认新版有致命缺陷，回滚 .del 恢复旧版文件
                 upgrade.Rollback();
-                this.WriteErrorEvent("Upgrade", L.TLog("The new version failed to start (smoke test failed); the old files have been rolled back and the current service keeps running. {0}", upgrade.LastErrorMessage));
+                FailUpgrade(L.TLog("The new version failed to start (smoke test failed); the old files have been rolled back and the current service keeps running. {0}", upgrade.LastErrorMessage));
             }
         }
     }
@@ -309,11 +309,18 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
     /// <remarks>
     /// 强制升级需要重启进程才算完成，基类不会在覆盖文件后上报 success；重启后上报的版本号又可能因为
     /// 安装包内容与当前版本一致（节点本来就在目标版本）而保持不变，服务端据此判定升级未完成，
-    /// 按 10min/30min/2h/6h/24h 反复下发同一份安装包。新进程已经拉起即代表文件覆盖成功，
-    /// 把 success 写入台账，经下一次心跳可靠上报，服务端收到后立即停止重试。台账落盘，进程退出也不丢事件。
+    /// 按 10min/30min/2h/6h/24h 反复下发同一份安装包。
+    /// <para>确认口径：拉起的新版进程存活 3 秒（冒烟测试通过）即视为升级成功——U 与新版是同一份二进制，
+    /// 它能起来就说明宿主与入口点可用，内部流程由发版测试保证。冒烟失败时回滚并写 error，服务端立即重试。</para>
+    /// <para>写入时机必须在冒烟通过之后、交接之前：拉起前写只证明“文件复制完成”，U 可能根本起不来；
+    /// 新版进程的 -upgrade 等待 6 秒再重启服务，为这里留出确定的落盘窗口，避免事件被重启打断。</para>
     /// </remarks>
     /// <param name="message">事件内容</param>
     private static void ConfirmUpgrade(String message) => EventLedger.Append(EventLedger.GetDirectory(), EventLedger.NodeEvents, "success", "Upgrade", message);
+
+    /// <summary>升级失败。写入本地事件台账，与 success 同批上报时最终结果为失败，服务端会清空指纹并允许立即重试</summary>
+    /// <param name="message">失败原因</param>
+    private static void FailUpgrade(String message) => EventLedger.Append(EventLedger.GetDirectory(), EventLedger.NodeEvents, "error", "Upgrade", message);
 
     /// <summary>兜底重启服务</summary>
     /// <remarks>

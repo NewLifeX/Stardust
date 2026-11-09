@@ -69,12 +69,15 @@ internal class Program
         var msWait = 3_000;
         if ("-upgrade".EqualIgnoreCase(args))
         {
-            XTrace.WriteLine("Update mode started; waiting {0} second(s)", msWait);
+            // 旧进程拉起新版后只等 3 秒就判定冒烟通过并落盘 success，这里多留 3 秒再交接（-restart 重启服务、
+            // -run 正式接管），避免重启动作把旧进程正在写入的事件打断
+            msWait = 6_000;
+            XTrace.WriteLine("Update mode started; waiting {0} second(s)", msWait / 1000);
             Thread.Sleep(msWait);
         }
         else if ("-delay".EqualIgnoreCase(args))
         {
-            XTrace.WriteLine("Delayed startup; waiting {0} second(s)", msWait);
+            XTrace.WriteLine("Delayed startup; waiting {0} second(s)", msWait / 1000);
             Thread.Sleep(msWait);
         }
 
