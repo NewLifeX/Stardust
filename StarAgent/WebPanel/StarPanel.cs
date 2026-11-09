@@ -82,8 +82,8 @@ public class StarPanel(ServiceBase service) : AgentWebPanel(service)
     /// 不直接依赖 <see cref="CultureInfo"/>：进程以 <c>DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1</c> 运行（不装 ICU）时，
     /// 具体区域性一个都创建不出来，<see cref="CultureInfo.CurrentUICulture"/> 恒为不变区域性，此时只能显示英文。
     /// 但词表本身是纯文本资源，与 ICU 无关，因此这里按下面的顺序自己识别语言：
-    /// 核心配置里显式选定的语言 → 浏览器声明的请求语言 → 系统 <c>LANG</c>/<c>LC_ALL</c> → 托管侧区域性。
-    /// 前两项都不依赖 ICU，无 ICU 的设备同样能显示中文。
+    /// 核心配置里显式选定的语言 → 浏览器声明的请求语言 → 平台下发的默认语言 → 系统 <c>LANG</c>/<c>LC_ALL</c> → 托管侧区域性。
+    /// 前几项都不依赖 ICU，无 ICU 的设备同样能显示中文。
     /// </remarks>
     private static String GetUiLanguage(IHttpContext ctx)
     {
@@ -95,14 +95,18 @@ public class StarPanel(ServiceBase service) : AgentWebPanel(service)
         name = StarLocalization.NormalizeCulture(ctx.Request.Headers["Accept-Language"]);
         if (name != null) return name;
 
-        // 3，系统界面语言来自环境变量。无 ICU 时这是唯一能拿到系统语言的途径
+        // 3，平台通过登录/心跳下发的默认语言，已由客户端保存到核心配置
+        name = StarLocalization.NormalizeCulture(Localization.DefaultCulture?.Name ?? NewLife.Setting.Current.DefaultLanguage);
+        if (name != null) return name;
+
+        // 4，系统界面语言来自环境变量。无 ICU 时这是唯一能拿到系统语言的途径
         foreach (var key in new[] { "LC_ALL", "LC_MESSAGES", "LANG" })
         {
             name = StarLocalization.NormalizeCulture(Environment.GetEnvironmentVariable(key));
             if (name != null) return name;
         }
 
-        // 4，最后才看托管侧的区域性（有 ICU 时才有效）
+        // 5，最后才看托管侧的区域性（有 ICU 时才有效）
         name = StarLocalization.NormalizeCulture((Localization.Culture ?? CultureInfo.CurrentUICulture).Name);
         if (name != null) return name;
 
