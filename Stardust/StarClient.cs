@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Reflection;
@@ -505,5 +505,39 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
     /// <param name="inf"></param>
     /// <returns></returns>
     public Task<Int32> AppPing(AppInfo inf) => InvokeAsync<Int32>("Deploy/Ping", inf);
+    #endregion
+
+    #region 升级
+    private Int32 _upgrading;
+    /// <summary>获取更新信息。如有更新，则下载解压覆盖并重启应用</summary>
+    /// <remarks>
+    /// 心跳定时检查与平台下发的 node/upgrade 命令可能同时触发升级。两个流程同时下载并覆盖同一批文件，
+    /// 会互相破坏安装目录（Linux 下正在运行的 dll 被覆盖还可能直接导致进程崩溃），因此后到者直接跳过。
+    /// </remarks>
+    /// <param name="channel">更新通道</param>
+    /// <param name="version">指定版本。用于手工升级到指定版本，为空时按通道策略匹配</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>更新信息；已有升级进行中时返回null</returns>
+    public override async Task<IUpgradeInfo?> Upgrade(String? channel, String? version, CancellationToken cancellationToken = default)
+    {
+        if (Interlocked.CompareExchange(ref _upgrading, 1, 0) != 0)
+        {
+            // 平台命令会把 null 解释成“无可用更新”，这里补一条事件，让节点历史能看出是“已有升级进行中”
+            var msg = L.T("Another upgrade is already in progress; skipping this request.");
+            WriteLog(msg);
+            WriteEvent("info", "Upgrade", msg);
+
+            return null;
+        }
+
+        try
+        {
+            return await base.Upgrade(channel, version, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            Interlocked.Exchange(ref _upgrading, 0);
+        }
+    }
     #endregion
 }
