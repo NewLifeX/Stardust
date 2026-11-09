@@ -47,7 +47,7 @@
   <ItemGroup>
     <PackageReference Include="NewLife.IP" Version="2.6.2026.1024" />
     <PackageReference Include="NewLife.Redis" Version="7.0.2026.1026-beta0931" />
-    <PackageReference Include="NewLife.Remoting.Extensions" Version="4.0.2026.1024" />
+    <PackageReference Include="NewLife.Remoting.Extensions" Version="4.0.2026.1109-beta0753" />
     <!-- 魔方 WebAPI 核心库，复用其 EntityController/ApiResponse/AuthController 等纯 API 能力 -->
     <PackageReference Include="NewLife.Cube" Version="6.16.2026.1105-beta0802" />
     <!-- 魔方 Swagger/Scalar 依赖的 OpenAPI 文档生成（AddCubeSwagger） -->

@@ -95,8 +95,8 @@ Stardust distributed core client library. One-line integration for configuration
     <AdditionalFiles Include="$(MSBuildProjectDirectory)/Locales/*.yml" />
   </ItemGroup>
   <ItemGroup Condition="'$(UseLocalNewLifeSource)' != 'true'">
-    <PackageReference Include="NewLife.Remoting" Version="4.0.2026.1024" />
-    <PackageReference Include="NewLife.Core" Version="12.0.2026.1029-beta1608" />
+    <PackageReference Include="NewLife.Remoting" Version="4.0.2026.1109-beta0753" />
+    <PackageReference Include="NewLife.Core" Version="12.0.2026.1109-beta0553" />
   </ItemGroup>
 
 </Project>
