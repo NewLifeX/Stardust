@@ -58,9 +58,9 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     [Description("Service port. Default 6600.")]
     public Int32 Port { get; set; } = 6600;
 
-    /// <summary>默认语言。平台下发给客户端的默认语言，留空时沿用核心配置 DefaultLanguage</summary>
+    /// <summary>默认语言。平台下发给客户端的默认语言，并作为无语言声明请求的界面兜底</summary>
     /// <remarks>
-    /// 仅影响登录/心跳下发给客户端的默认语言，不改变服务端界面与日志语言。
+    /// 请求未携带语言时作为服务端界面与消息的兜底，并随登录/心跳下发给客户端；不改变服务端日志语言。
     /// 支持 zh-Hans、zh-Hant、en 等词表语言，无法识别的值回退核心配置。
     /// </remarks>
     [Description("Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.")]

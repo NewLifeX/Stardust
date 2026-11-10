@@ -34,6 +34,24 @@ public class LanguageMiddlewareTests : IDisposable
         Assert.Equal("fr", LanguageMiddleware.GetLanguage(context));
     }
 
+    [Fact(DisplayName = "请求与请求头都没有语言时回退平台设置的默认语言")]
+    public void FallsBackToPlatformDefaultLanguage()
+    {
+        var set = StarServerSetting.Current;
+        var old = set.DefaultLanguage;
+        try
+        {
+            set.DefaultLanguage = "ja";
+
+            var context = new DefaultHttpContext();
+            Assert.Equal("ja", LanguageMiddleware.GetLanguage(context));
+        }
+        finally
+        {
+            set.DefaultLanguage = old;
+        }
+    }
+
     [Fact(DisplayName = "中间件按请求头设置界面语言并在请求结束后还原")]
     public async Task MiddlewareAppliesRequestCulture()
     {
