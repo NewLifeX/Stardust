@@ -164,6 +164,11 @@ async function onServiceSubmit(m: ServiceEditModel): Promise<void> {
   }
 }
 
+/** 打开平台设置编辑页（Cube 单对象配置页） */
+function openPlatformSettings(): void {
+  void router.push('/Platform/StarServer');
+}
+
 // 上下文（项目/环境）就绪后首轮取数，之后切换自动重取
 const { reload } = useContextReload(() => { void loadAll(); }, stardustContext);
 </script>
@@ -260,6 +265,7 @@ const { reload } = useContextReload(() => { void loadAll(); }, stardustContext);
       :loading="platform.loading"
       :error="platform.error"
       @retry="loadPlatform"
+      @edit="openPlatformSettings"
     />
 
     <!-- F13 服务详情 Drawer：编辑服务信息 + 提供者/消费者列表 -->

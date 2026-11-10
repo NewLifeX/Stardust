@@ -41,7 +41,7 @@ const props = withDefaults(
   { loading: false, error: '', members: () => [], projectInfo: null, projectId: null },
 );
 
-const emit = defineEmits<{ retry: [] }>();
+const emit = defineEmits<{ retry: []; edit: [] }>();
 
 const namePending = computed(() => props.members.some((m) => m.name.startsWith('#')));
 const contextBlock = computed(() => (props.projectId == null || props.projectId <= 0
@@ -183,28 +183,47 @@ async function runToggle(row: MemberRow): Promise<void> {
 
     <div
       v-else
-      class="grid grid-cols-2 gap-[12px] md:grid-cols-4"
     >
-      <div
-        v-for="t in tiles"
-        :key="t.key"
-        data-spec="platform-tile"
-        :data-tile="t.key"
-      >
-        <Card>
-          <KIcon
-            :name="t.icon as never"
-            :size="16"
-            class="mb-[8px]"
-          />
-          <div class="mb-[3px] block text-[12.5px] font-medium text-[var(--el-text-color-primary)]">
-            {{ t.title }}
-          </div>
-          <span
-            class="block text-[11.5px] leading-[1.5] text-[var(--el-text-color-secondary)]"
-            :data-pending="t.status === 'pending'"
-          >{{ t.detail }}</span>
-        </Card>
+      <div class="mb-[10px] flex items-center justify-between px-[4px]">
+        <span class="text-[12px] text-[var(--el-text-color-secondary)]">运行时、数据保留与级联设置</span>
+        <Btn
+          size="sm"
+          variant="primary"
+          data-spec="platform-edit"
+          @click="emit('edit')"
+        >
+          <template #icon>
+            <KIcon
+              name="Sliders"
+              :size="12"
+            />
+          </template>
+          编辑平台设置
+        </Btn>
+      </div>
+
+      <div class="grid grid-cols-2 gap-[12px] md:grid-cols-4">
+        <div
+          v-for="t in tiles"
+          :key="t.key"
+          data-spec="platform-tile"
+          :data-tile="t.key"
+        >
+          <Card>
+            <KIcon
+              :name="t.icon as never"
+              :size="16"
+              class="mb-[8px]"
+            />
+            <div class="mb-[3px] block text-[12.5px] font-medium text-[var(--el-text-color-primary)]">
+              {{ t.title }}
+            </div>
+            <span
+              class="block text-[11.5px] leading-[1.5] text-[var(--el-text-color-secondary)]"
+              :data-pending="t.status === 'pending'"
+            >{{ t.detail }}</span>
+          </Card>
+        </div>
       </div>
     </div>
 

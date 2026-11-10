@@ -32,3 +32,14 @@ for (const [path, title] of PAGES) {
     expect(true).toBe(true);
   });
 }
+
+test('平台设置页可进入编辑页', async ({ page }) => {
+  await page.goto('/mesh?tab=platform', { waitUntil: 'domcontentloaded' });
+
+  const edit = page.locator('[data-spec="platform-edit"]');
+  await expect(edit).toBeVisible({ timeout: 25_000 });
+  await edit.click();
+
+  await expect(page).toHaveURL(/\/Platform\/StarServer/i, { timeout: 25_000 });
+  await expect(page.locator('main.cosmic-content .object-page .form-content').first()).toBeVisible({ timeout: 25_000 });
+});
