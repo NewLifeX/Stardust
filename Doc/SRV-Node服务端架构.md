@@ -238,6 +238,7 @@ NodeController.SendCommand(model)
         POST /Node/CommandReply (HTTP)
             └─ nodeService.CommandReply(ctx, model)
                 ├─ NodeCommand.Status/Result 更新
+                ├─ node/restart、node/reboot 到达终态时写一条节点历史（动作 Restart，记录操作人）
                 └─ PublishResponseAsync → 广播回发起方
 ```
 
