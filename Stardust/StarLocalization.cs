@@ -11,6 +11,9 @@ namespace Stardust;
 public static class StarLocalization
 {
     #region 属性
+    /// <summary>自动语言。平台未配置默认语言时下发，客户端清除本机保存的平台语言并恢复系统语言</summary>
+    public const String AutoLanguage = "auto";
+
     /// <summary>可用词表语言。英文是源文与兜底，不需要单独的 en 词表文件</summary>
     public static String[] SupportedCultures { get; } =
     [

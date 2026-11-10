@@ -72,12 +72,50 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
     /// <remarks>
     /// 优先级为本地固定语言 &gt; 平台默认语言 &gt; 系统语言。客户端配置 <c>Star.Language</c> 已固定进程语言时，
     /// 平台下发的默认语言不能改动界面与日志，也不写入核心配置，避免下次启动被平台语言顶掉。
+    /// 平台下发 <see cref="StarLocalization.AutoLanguage"/> 时清除本机保存的平台语言，恢复系统语言。
     /// </remarks>
     protected override void ApplyDefaultLanguage(String? language, Boolean save = true)
     {
         if (Setting is StarSetting star && !star.Language.IsNullOrWhiteSpace()) return;
 
+        if (language.EqualIgnoreCase(StarLocalization.AutoLanguage))
+        {
+            ResetDefaultLanguage(save);
+            return;
+        }
+
         base.ApplyDefaultLanguage(language, save);
+    }
+
+    /// <summary>清除本机保存的平台默认语言，恢复系统语言</summary>
+    /// <param name="save">是否同步清除核心配置</param>
+    private static void ResetDefaultLanguage(Boolean save)
+    {
+        var core = NewLife.Setting.Current;
+        if (save && !core.DefaultLanguage.IsNullOrEmpty())
+        {
+            var old = core.DefaultLanguage;
+            core.DefaultLanguage = "";
+            try
+            {
+                // Save 内部会重新应用语言配置，顺带清空 DefaultCulture
+                core.Save();
+            }
+            catch
+            {
+                // 保存失败时回滚，下一次登录/心跳继续尝试
+                core.DefaultLanguage = old;
+            }
+        }
+
+        // 兼容 save=false、保存失败以及核心配置原本为空的情况
+        var cleared = Localization.DefaultCulture;
+        if (cleared != null)
+        {
+            Localization.SetDefaultLanguage(null);
+            if (Localization.ForcedLanguage == null && Localization.LogCulture?.Name == cleared.Name)
+                Localization.LogCulture = null;
+        }
     }
     #endregion
 

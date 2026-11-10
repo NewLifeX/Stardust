@@ -62,7 +62,7 @@ public class LocalizationTests : IDisposable
     {
         var set = new StarServerSetting();
         Assert.Equal("zh-CN", set.GetDefaultLanguage("zh-CN"));
-        Assert.Null(set.GetDefaultLanguage(null));
+        Assert.Equal("auto", set.GetDefaultLanguage(null));
 
         set.DefaultLanguage = "zh-TW";
         Assert.Equal("zh-Hant", set.GetDefaultLanguage("en"));

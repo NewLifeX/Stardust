@@ -72,4 +72,22 @@ public class StarClientLanguageTests
         // 默认语言只做兜底，不锁定界面
         Assert.Null(Localization.Culture);
     }
+
+    [Fact(DisplayName = "平台下发 auto 时清除本机默认语言")]
+    public void ResetsDefaultLanguageOnAuto()
+    {
+        using var state = new StateSnapshot();
+        Localization.SetLanguage(null);
+        Localization.SetDefaultLanguage("en-US");
+        NewLife.Setting.Current.DefaultLanguage = "en-US";
+
+        var set = new StarSetting { Server = "http://127.0.0.1:1" };
+        using var client = new TestStarClient(set);
+
+        client.Apply(StarLocalization.AutoLanguage);
+
+        Assert.Null(Localization.DefaultCulture);
+        // 日志语言回到系统语言，不再跟随已清除的平台语言
+        Assert.Equal(Localization.SystemCulture.Name, (Localization.LogCulture ?? Localization.SystemCulture).Name);
+    }
 }

@@ -62,6 +62,7 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     /// <remarks>
     /// 请求未携带语言时作为服务端界面与消息的兜底，并随登录/心跳下发给客户端；不改变服务端日志语言。
     /// 支持 zh-Hans、zh-Hant、en 等词表语言，无法识别的值回退核心配置。
+    /// 平台与核心都未配置默认语言时下发 auto，新版客户端据此清除本机保存的平台语言并恢复系统语言。
     /// </remarks>
     [Description("Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.")]
     public String DefaultLanguage { get; set; } = "";
@@ -279,13 +280,14 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     #region 方法
     /// <summary>获取下发给客户端的默认语言。平台设置优先于核心配置</summary>
     /// <param name="defaultLanguage">核心配置默认语言</param>
-    /// <returns>语言名称；均未配置时返回 null</returns>
+    /// <returns>语言名称；平台与核心都未配置时返回 auto，通知客户端清除本机保存的平台语言</returns>
     public String? GetDefaultLanguage(String? defaultLanguage)
     {
-        if (DefaultLanguage.IsNullOrWhiteSpace()) return defaultLanguage;
+        if (!DefaultLanguage.IsNullOrWhiteSpace())
+            return StarLocalization.NormalizeCulture(DefaultLanguage) ?? defaultLanguage;
 
-        // 归一化到词表语言，无法识别时回退核心配置，避免向客户端下发无效值
-        return StarLocalization.NormalizeCulture(DefaultLanguage) ?? defaultLanguage;
+        // 平台未配置且核心也未配置时下发 auto，让新版客户端恢复系统语言；旧客户端忽略该值
+        return defaultLanguage.IsNullOrEmpty() ? StarLocalization.AutoLanguage : defaultLanguage;
     }
 
     /// <summary>加载时触发</summary>
