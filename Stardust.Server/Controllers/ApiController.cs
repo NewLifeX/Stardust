@@ -48,13 +48,14 @@ public class ApiController : ControllerBase
             Remote = remote?.ToString(),
             Port = conn.LocalPort,
             Time = DateTime.Now,
+            ServerTime = DateTime.UtcNow.ToLong(),
             State = state,
         };
 
         // 公网健康探针：保留应用标识(name/title/version)便于域名/反代识别应用，隐藏OS/编译/端口/主机等环境指纹
         if (IsIntranet(HttpContext)) return rs;
 
-        return new { Name = asmx?.Name, asmx?.Title, Version = asmx?.FileVersion, Time = DateTime.Now, State = state };
+        return new { Name = asmx?.Name, asmx?.Title, Version = asmx?.FileVersion, Time = DateTime.Now, ServerTime = DateTime.UtcNow.ToLong(), State = state };
     }
 
     /// <summary>获取所有接口信息</summary>

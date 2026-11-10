@@ -93,9 +93,22 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
 
     #region 心跳
     private DateTime _lastSync;
+    private DateTime _lastClockWarn;
     protected override async Task OnPing(Object state)
     {
         await base.OnPing(state);
+
+        // 本机时钟偏差超过盐值窗口时，登录会因盐值过期失败。客户端已改用服务端时间生成盐值（无需修改系统时钟），
+        // 这里只上报一条限流告警，提示运维修 NTP——改系统时钟是特权操作，容器内还会影响宿主机与同机所有服务。
+        if (Span.TotalMilliseconds != 0 && Math.Abs(Span.TotalMilliseconds) > 60_000 && _lastClockWarn.AddHours(6) < DateTime.Now)
+        {
+            _lastClockWarn = DateTime.Now;
+
+            var msg = L.TLog("Clock skew {0:n0}ms exceeds the salt window; fix NTP on this node.", Span.TotalMilliseconds);
+            // 事件名与 Stardust.Data.HistoryAction.ClockSkew 保持一致，便于平台按动作筛选与翻译（StarAgent 不引用 Stardust.Data）
+            this.WriteEvent("warn", "Clock skew", msg);
+            WriteLog(msg);
+        }
 
         // 心跳成功后上报本地事件台账，上报失败的事件留在台账等下一次心跳
         await EventLedger.ReportAsync(this, EventLedger.GetDirectory(), EventLedger.NodeEvents, "StarAgentReportFailed");
@@ -517,6 +530,12 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
     }
 
     /// <summary>同步时间</summary>
+    /// <remarks>
+    /// 仅由平台/人工下发的 node/synctime 命令触发，代理不再自动修改系统时钟。
+    /// 鉴权已改用服务端时间生成盐值（<see cref="ServerTimePasswordProvider"/>），本机时钟偏差不会再导致登录失败。
+    /// </remarks>
+    /// <param name="argument">指令参数。可指定目标时间</param>
+    /// <returns>执行结果</returns>
     public String? SyncTime(String? argument = null)
     {
         var now = DateTime.Now;
@@ -534,21 +553,20 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
 
         var msg = L.TLog("Synchronized time: {0}, offset: {1}", time.ToFullString(), ts);
         WriteLog(msg);
-        WriteEvent("info", "SyncTime", msg);
-        time = time.ToUniversalTime();
 
+        var utc = time.ToUniversalTime();
         var rs = L.T("Unsupported system!");
         if (Runtime.Windows)
         {
             var st = new SYSTEMTIME
             {
-                Year = (Int16)time.Year,
-                Month = (Int16)time.Month,
-                Day = (Int16)time.Day,
-                Hour = (Int16)time.Hour,
-                Minute = (Int16)time.Minute,
-                Second = (Int16)time.Second,
-                Milliseconds = (Int16)time.Millisecond
+                Year = (Int16)utc.Year,
+                Month = (Int16)utc.Month,
+                Day = (Int16)utc.Day,
+                Hour = (Int16)utc.Hour,
+                Minute = (Int16)utc.Minute,
+                Second = (Int16)utc.Second,
+                Milliseconds = (Int16)utc.Millisecond
             };
 
             if (!SetSystemTime(ref st))
@@ -558,22 +576,26 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
         }
         else if (Runtime.Linux)
         {
-            rs = "date".Execute($"-u -s \"{time:yyyy-MM-dd HH:mm:ss}\"", 5_000);
-
-            // 时间偏差较大时，需要写入RTC时钟，否则时间会被硬件时钟覆盖
-            if (Math.Abs(ts.TotalSeconds) > 60)
-            {
-                rs += ", " + "hwclock".Execute("-u -w", 5_000);
-            }
+            rs = "date".Execute($"-u -s \"{utc:yyyy-MM-dd HH:mm:ss}\"", 5_000);
         }
         else if (Runtime.OSX)
         {
             // macOS 修改系统时间需要 root 权限，-n 禁止交互式密码输入，避免命令挂起
-            rs = "sudo".Execute($"-n date -u -s \"{time:yyyy-MM-dd HH:mm:ss}\"", 5_000);
-            if (rs.IsNullOrEmpty()) rs = L.T("Synchronization failed; root permission is required. Run manually: sudo date -u -s \"{0}\"", time.ToString("yyyy-MM-dd HH:mm:ss"));
+            rs = "sudo".Execute($"-n date -u -s \"{utc:yyyy-MM-dd HH:mm:ss}\"", 5_000);
+            if (rs.IsNullOrEmpty()) rs = L.T("Synchronization failed; root permission is required. Run manually: sudo date -u -s \"{0}\"", utc.ToString("yyyy-MM-dd HH:mm:ss"));
         }
 
-        WriteLog(rs);
+        // 以“时钟是否真的被改到目标时间”为准。date/sudo 失败时只返回错误文本而不抛异常，不能据此当成功
+        var ok = Math.Abs((DateTime.Now - time).TotalSeconds) < 5;
+
+        // 时间偏差较大时，需要写入RTC时钟，否则时间会被硬件时钟覆盖
+        if (ok && Runtime.Linux && Math.Abs(ts.TotalSeconds) > 60)
+        {
+            rs += ", " + "hwclock".Execute("-u -w", 5_000);
+        }
+
+        WriteEvent(ok ? "info" : "error", "SyncTime", ok ? msg : L.TLog("Time synchronization failed: {0}", rs));
+        WriteLog("{0}", rs);
 
         return rs;
     }

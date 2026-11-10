@@ -100,6 +100,9 @@ public static class HistoryAction
     /// <summary>同步时间</summary>
     public const String SyncTime = "SyncTime";
 
+    /// <summary>时钟偏差。本机时间与服务端相差过大，鉴权可能失败，需要运维校正 NTP</summary>
+    public const String ClockSkew = "Clock skew";
+
     /// <summary>执行 Bash</summary>
     public const String RunBash = "RunBash";
 
@@ -155,6 +158,7 @@ public static class HistoryAction
         [Rescue] = Rescue,
         [Upgrade] = Upgrade,
         [SyncTime] = SyncTime,
+        [ClockSkew] = ClockSkew,
         [RunBash] = RunBash,
         [RunCmd] = RunCmd,
         [Delete] = Delete,

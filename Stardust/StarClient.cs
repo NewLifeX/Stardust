@@ -87,7 +87,7 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
     {
         var provider = ServiceProvider ??= ObjectContainer.Provider;
 
-        PasswordProvider = new SaltPasswordProvider { Algorithm = "md5", SaltTime = 60 };
+        PasswordProvider = new ServerTimePasswordProvider(() => GetNow()) { Algorithm = "md5", SaltTime = 60 };
 
         // 找到容器，注册默认的模型实现，供后续InvokeAsync时自动创建正确的模型对象
         var container = ModelExtension.GetService<IObjectContainer>(provider) ?? ObjectContainer.Current;
@@ -108,6 +108,8 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
     /// <returns></returns>
     public override ILoginRequest BuildLoginRequest()
     {
+        EnsureServerTime();
+
         var request = new LoginInfo();
         FillLoginRequest(request);
 
@@ -115,6 +117,20 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
         request.Node = GetNodeInfo();
 
         return request;
+    }
+
+    /// <summary>登录前对齐服务端时间</summary>
+    /// <remarks>
+    /// 本机时钟偏差超过盐值窗口时，用本机时间生成的盐值会被服务端判定过期，登录失败并反复重试。
+    /// 登录前先用匿名接口取一次服务端时间，把偏移写入客户端，使盐值按服务端时间生成。
+    /// 探测失败不阻塞登录，保持原有行为。
+    /// </remarks>
+    private void EnsureServerTime()
+    {
+        if (Span != TimeSpan.Zero) return;
+
+        var time = ServerTimeProbe.GetServerTime(Server ?? Setting?.Server);
+        if (time > 0) FixTime(0, time);
     }
 
     /// <summary>获取设备信息</summary>
