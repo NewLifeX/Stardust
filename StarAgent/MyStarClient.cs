@@ -235,14 +235,20 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
         var p = Process.GetCurrentProcess();
         this.WriteInfoEvent("Upgrade", $"Restart: exeName={exeName} ProcessName={p.ProcessName} MainModule={p.MainModule?.FileName}");
 
+        // 预检：提前判断新版本能否在本机跑起来，用于记录具体原因、跳过注定失败的重试。
+        // 它不作为是否重启服务的依据——升级失败时唯一正确的动作是回滚旧版、保持当前进程运行
+        var unableToRun = UpgradePreflight.CheckRuntime(upgrade.DestinationPath, exeName);
+        if (unableToRun != null) WriteLog("Upgrade preflight failed: {0}", unableToRun);
+
         // 以服务方式运行时，重启服务，否则采取拉起进程的方式
         if (inService || Service.Host is DefaultHost host && host.InService)
         {
             this.WriteInfoEvent("Upgrade", L.TLog("Forced update completed; restarting the background service. PID={0}", pid));
 
             // 冒烟测试：尝试拉起新版，若失败等 5s 重试一次（应对慢速存储落盘 / JIT 预热）
+            // 预检已判定跑不起来时不再重试，避免无谓等待
             var rs = upgrade.Run(exeName, "-restart -upgrade", 3_000);
-            if (!rs)
+            if (!rs && unableToRun == null)
             {
                 var delay = 5_000;
                 this.WriteInfoEvent("Upgrade", L.TLog("The new version failed to start for the first time; retrying in {0}ms. {1}", delay, upgrade.LastErrorMessage));
@@ -255,13 +261,10 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
             {
                 this.WriteInfoEvent("Upgrade", L.TLog("Forced update completed; the new process has been launched, waiting for the current service to restart."));
             }
-            else if (TryRestartService(upgrade))
-            {
-                // 服务管理器重启不依赖可执行文件名，是名称解析失败时的兜底通道
-            }
             else
             {
-                // 两次均失败，确认新版有致命缺陷，回滚 .del 恢复旧版文件
+                // 冒烟失败说明新版有致命缺陷，回滚 .del 恢复旧版文件，当前进程继续运行。
+                // 不能改用重启服务兜底：服务重启会结束当前进程，而新版已证明跑不起来，节点将彻底失联且再无机会回滚
                 upgrade.Rollback();
                 this.WriteErrorEvent("Upgrade", L.TLog("The new version failed to start (smoke test failed); the old files have been rolled back and the current service keeps running. {0}", upgrade.LastErrorMessage));
             }
@@ -272,7 +275,7 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
 
             // 冒烟测试：尝试拉起新版，若失败等 5s 重试一次
             var rs = upgrade.Run(exeName, "-run -upgrade", 3_000);
-            if (!rs)
+            if (!rs && unableToRun == null)
             {
                 var delay = 5_000;
                 this.WriteInfoEvent("Upgrade", L.TLog("The new version failed to start for the first time; retrying in {0}ms. {1}", delay, upgrade.LastErrorMessage));
@@ -288,52 +291,12 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
 
                 upgrade.KillSelf();
             }
-            else if (TryRestartService(upgrade))
-            {
-                // 进程模式下拉起失败时，若本机存在后台服务，改由服务管理器重启
-            }
             else
             {
-                // 两次均失败，确认新版有致命缺陷，回滚 .del 恢复旧版文件
+                // 冒烟失败说明新版有致命缺陷，回滚 .del 恢复旧版文件，当前进程继续运行
                 upgrade.Rollback();
                 this.WriteErrorEvent("Upgrade", L.TLog("The new version failed to start (smoke test failed); the old files have been rolled back and the current service keeps running. {0}", upgrade.LastErrorMessage));
             }
-        }
-    }
-
-    /// <summary>兜底重启服务</summary>
-    /// <remarks>
-    /// 更新已经把新文件覆盖到位（旧文件改名为 .del），此时拉起新进程失败多半是名称/路径解析问题，
-    /// 由服务管理器重启不依赖可执行文件名，能直接把服务切到新版本。
-    /// 只在目标目录确实存在新主程序时才尝试，避免新版文件残缺导致服务反复拉起失败。
-    /// </remarks>
-    /// <param name="upgrade">升级对象</param>
-    /// <returns>是否已交给服务管理器重启</returns>
-    private Boolean TryRestartService(Upgrade upgrade)
-    {
-        try
-        {
-            var name = GetExecutableName();
-            var dest = upgrade.DestinationPath;
-            if (dest.IsNullOrEmpty()) return false;
-
-            var exe = Path.Combine(dest, name + ".exe");
-            var dll = Path.Combine(dest, name + ".dll");
-            if (!File.Exists(exe) && !File.Exists(dll)) return false;
-
-            var host = Service?.Host;
-            if (host == null) return false;
-
-            this.WriteInfoEvent("Upgrade", L.TLog("Failed to launch the new process; falling back to restarting the background service. {0}", upgrade.LastErrorMessage));
-            WriteLog("Fallback: restart service {0}", Service.ServiceName);
-
-            host.Restart(Service.ServiceName);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            this.WriteInfoEvent("Upgrade", L.TLog("Failed to restart the background service: {0}", ex.Message));
-            return false;
         }
     }
 
