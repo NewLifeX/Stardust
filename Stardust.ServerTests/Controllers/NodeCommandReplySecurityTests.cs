@@ -98,4 +98,31 @@ public class NodeCommandReplySecurityTests : StarTestBase
             node.Delete();
         }
     }
+
+    [Fact(DisplayName = "重启命令回包成功时写入节点历史，重复回包不重复记录")]
+    public async Task RestartReply_WritesNodeHistoryOnce()
+    {
+        var (token, node) = await LoginNodeAsync();
+        var cmd = new NodeCommand { NodeID = node.ID, Command = "node/restart", Status = CommandStatus.就绪, CreateUser = "tester" };
+        cmd.Insert();
+        try
+        {
+            Assert.DoesNotContain("越权", await CommandReplyAsync(token, cmd.Id));
+
+            // 网络重试导致的重复回包不应重复写历史
+            Assert.DoesNotContain("越权", await CommandReplyAsync(token, cmd.Id));
+
+            var list = NodeHistory.FindAll(NodeHistory._.NodeID == node.ID & NodeHistory._.Action == "Restart");
+            var his = Assert.Single(list);
+            Assert.True(his.Success);
+            Assert.Equal("tester", his.Creator);
+            Assert.Equal("node/restart", his.Remark);
+        }
+        finally
+        {
+            // NodeHistory 是只写的日志型数据，XCode 禁止删除，测试库中残留属正常
+            cmd.Delete();
+            node.Delete();
+        }
+    }
 }

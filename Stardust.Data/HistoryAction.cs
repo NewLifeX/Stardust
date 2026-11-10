@@ -114,6 +114,9 @@ public static class HistoryAction
 
     /// <summary>服务控制</summary>
     public const String ServiceController = "ServiceController";
+
+    /// <summary>重启节点</summary>
+    public const String Restart = "Restart";
     #endregion
 
     #region 属性
@@ -160,6 +163,7 @@ public static class HistoryAction
         [Delete] = Delete,
         [LocalProbe] = LocalProbe,
         [ServiceController] = ServiceController,
+        [Restart] = Restart,
 
         // 旧版本在写入时翻译成中文，历史数据需要等价归一化
         ["应用鉴权"] = ApplicationAuthentication,
@@ -179,6 +183,8 @@ public static class HistoryAction
         ["WebSocket连接"] = WebSocketConnected,
         ["WebSocket断开"] = WebSocketDisconnected,
         ["WebSocket发送"] = WebSocketSend,
+        ["重启"] = Restart,
+        ["重启服务"] = Restart,
     };
     #endregion
 
