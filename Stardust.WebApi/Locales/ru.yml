@@ -271,3 +271,4 @@
 "DotNetSyncService.Sync {0}": "DotNetSyncService синхронизирует {0}"
 "DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService не удалось синхронизировать {0}: {1}"
 "DotNetSyncService.Error {0}": "Ошибка DotNetSyncService: {0}"
+"Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "Язык по умолчанию. Передаётся клиентам при входе и heartbeat, например zh-Hans или en; пустое значение использует DefaultLanguage из основной конфигурации."

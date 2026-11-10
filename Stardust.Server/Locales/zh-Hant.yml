@@ -220,3 +220,4 @@
 "DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService 同步 {0} 失敗：{1}"
 "DotNetSyncService.Error {0}": "DotNetSyncService 異常：{0}"
 "Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open.": "預設重註冊模式。應用「重註冊模式=預設」時統一採用該策略：開放、可信接入、臨時放行或關閉，預設開放"
+"Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "預設語言。登入與心跳下發給用戶端的預設語言，如zh-Hans、en；留空時沿用核心設定DefaultLanguage"

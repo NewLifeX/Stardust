@@ -329,3 +329,4 @@
 "DotNetSyncService.Sync {0}": "DotNetSyncService menyinkronkan {0}"
 "DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService gagal menyinkronkan {0}: {1}"
 "DotNetSyncService.Error {0}": "Kesalahan DotNetSyncService: {0}"
+"Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "Bahasa default. Dikirim ke klien saat login dan heartbeat, mis. zh-Hans atau en; kosong berarti menggunakan DefaultLanguage dari konfigurasi inti."

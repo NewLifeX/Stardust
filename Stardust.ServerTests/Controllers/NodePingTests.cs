@@ -20,7 +20,7 @@ public class NodePingTests : StarTestBase
 {
     public NodePingTests(StarTestServer fixture) : base(fixture) { }
 
-    private async Task<(String token, Node node)> LoginNodeAsync(String machine)
+    private async Task<(LoginResponse rs, Node node)> LoginNodeAsync(String machine)
     {
         var client = _server.CreateClient();
 
@@ -39,17 +39,17 @@ public class NodePingTests : StarTestBase
         var node = Node.FindByCode(rs!.Code);
         Assert.NotNull(node);
 
-        return (rs.Token!, node!);
+        return (rs, node!);
     }
 
     [Fact(DisplayName = "节点登录后心跳成功并返回心跳周期")]
     public async Task Ping_AfterLogin_ReturnsPeriod()
     {
-        var (token, node) = await LoginNodeAsync("test_ping_" + Rand.NextString(6));
+        var (rs, node) = await LoginNodeAsync("test_ping_" + Rand.NextString(6));
         try
         {
             var client = _server.CreateClient();
-            client.DefaultRequestHeaders.Add("X-Token", token);
+            client.DefaultRequestHeaders.Add("X-Token", rs.Token);
 
             var model = new { MachineName = node.MachineName, Macs = node.MACs };
             var resp = await client.PostAsync("node/ping", JsonContent.Create(model));
@@ -61,6 +61,37 @@ public class NodePingTests : StarTestBase
         finally
         {
             node.Delete();
+        }
+    }
+
+    [Fact(DisplayName = "节点登录与心跳下发平台设置的默认语言")]
+    public async Task LoginAndPing_SendsPlatformDefaultLanguage()
+    {
+        var set = StarServerSetting.Current;
+        var old = set.DefaultLanguage;
+        Node node = null;
+        try
+        {
+            // 平台设置使用地区码，服务端归一化为词表语言后下发
+            set.DefaultLanguage = "zh-TW";
+
+            var (rs, node2) = await LoginNodeAsync("test_lang_" + Rand.NextString(6));
+            node = node2;
+            Assert.Equal("zh-Hant", rs.DefaultLanguage);
+
+            var client = _server.CreateClient();
+            client.DefaultRequestHeaders.Add("X-Token", rs.Token);
+
+            var resp = await client.PostAsync("node/ping", JsonContent.Create(new { MachineName = node.MachineName, Macs = node.MACs }));
+            var body = await resp.Content.ReadAsStringAsync();
+
+            Assert.True(resp.IsSuccessStatusCode, "心跳应成功，实际响应：" + body);
+            Assert.Contains("\"defaultLanguage\":\"zh-Hant\"", body, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            set.DefaultLanguage = old;
+            node?.Delete();
         }
     }
 

@@ -271,3 +271,4 @@
 "DotNetSyncService.Sync {0}": "DotNetSyncService 正在同步 {0}"
 "DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService 同步 {0} 失敗：{1}"
 "DotNetSyncService.Error {0}": "DotNetSyncService 異常：{0}"
+"Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "預設語言。登入與心跳下發給用戶端的預設語言，如zh-Hans、en；留空時沿用核心設定DefaultLanguage"

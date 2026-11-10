@@ -143,7 +143,8 @@ Authorization: Bearer <Token>
   "Token": "JWT",
   "Expire": 7200,
   "Time": 0,
-  "ServerTime": 1760000000000
+  "ServerTime": 1760000000000,
+  "DefaultLanguage": "可选，平台默认语言，如 zh-CN"
 }
 ```
 
@@ -153,6 +154,7 @@ Authorization: Bearer <Token>
 - 原生 Agent 必须持久化响应中的 `Code`/`Secret`；后续登录携带它们。
 - 服务端可能返回新的 `Code`/`Secret`（编码规则变化），收到后覆盖本地值。
 - `Expire` 单位为秒。
+- `DefaultLanguage` 为可选字段。有界面或日志本地化能力的客户端应保存该值并在下次启动时应用；无法识别的语言直接忽略，不阻断登录。
 - 登录失败返回 4xx/5xx；自动注册被禁止时不要反复重试，记录日志并退出或等待人工配置。
 
 ### 3.2 注销 `POST /node/logout?reason=...`
@@ -215,6 +217,7 @@ Authorization: Bearer <Token>
   "Period": 60,
   "Token": "可选，即将过期时下发新令牌",
   "NewServer": "可选，服务器迁移地址",
+  "DefaultLanguage": "可选，平台默认语言，在线调整语言时下发",
   "Commands": [
     {
       "Id": 123,

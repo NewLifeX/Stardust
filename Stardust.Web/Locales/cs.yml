@@ -329,3 +329,4 @@
 "DotNetSyncService.Sync {0}": "DotNetSyncService synchronizuje {0}"
 "DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService nedokázal synchronizovat {0}: {1}"
 "DotNetSyncService.Error {0}": "Chyba DotNetSyncService: {0}"
+"Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "Výchozí jazyk. Odesílá se klientům při přihlášení a srdečním tepu, např. zh-Hans nebo en; prázdná hodnota použije DefaultLanguage ze základní konfigurace."

@@ -58,6 +58,14 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     [Description("Service port. Default 6600.")]
     public Int32 Port { get; set; } = 6600;
 
+    /// <summary>默认语言。平台下发给客户端的默认语言，留空时沿用核心配置 DefaultLanguage</summary>
+    /// <remarks>
+    /// 仅影响登录/心跳下发给客户端的默认语言，不改变服务端界面与日志语言。
+    /// 支持 zh-Hans、zh-Hant、en 等词表语言，无法识别的值回退核心配置。
+    /// </remarks>
+    [Description("Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.")]
+    public String DefaultLanguage { get; set; } = "";
+
     /// <summary>令牌密钥。用于生成JWT令牌的算法和密钥，如HS256:ABCD1234</summary>
     [Description("Token secret. Algorithm and secret used to generate JWT tokens, e.g. HS256:ABCD1234")]
     public String TokenSecret { get; set; }
@@ -269,6 +277,17 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     #endregion
 
     #region 方法
+    /// <summary>获取下发给客户端的默认语言。平台设置优先于核心配置</summary>
+    /// <param name="defaultLanguage">核心配置默认语言</param>
+    /// <returns>语言名称；均未配置时返回 null</returns>
+    public String? GetDefaultLanguage(String? defaultLanguage)
+    {
+        if (DefaultLanguage.IsNullOrWhiteSpace()) return defaultLanguage;
+
+        // 归一化到词表语言，无法识别时回退核心配置，避免向客户端下发无效值
+        return StarLocalization.NormalizeCulture(DefaultLanguage) ?? defaultLanguage;
+    }
+
     /// <summary>加载时触发</summary>
     protected override void OnLoaded()
     {

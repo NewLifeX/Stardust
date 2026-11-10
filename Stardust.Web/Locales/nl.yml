@@ -329,3 +329,4 @@
 "DotNetSyncService.Sync {0}": "DotNetSyncService synchroniseert {0}"
 "DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService kon {0} niet synchroniseren: {1}"
 "DotNetSyncService.Error {0}": "Fout in DotNetSyncService: {0}"
+"Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "Standaardtaal. Wordt bij aanmelding en heartbeat naar clients verzonden, bijv. zh-Hans of en; leeg gebruikt DefaultLanguage uit de kernconfiguratie."

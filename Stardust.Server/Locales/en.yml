@@ -1,6 +1,7 @@
 # 英文词表。配置项的中文 XML 注释摘要可能被立方作为显示名回退使用，
 # 这里登记中文摘要首句的英文译文；描述本身（[Description]）已是英文源文。
 "服务端口": "Service port"
+"默认语言": "Default language"
 "令牌密钥": "Token secret"
 "令牌有效期": "Token validity period"
 "会话超时": "Session timeout"

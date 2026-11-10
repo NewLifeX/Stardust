@@ -329,3 +329,4 @@
 "DotNetSyncService.Sync {0}": "A DotNetSyncService szinkronizálja a következőt: {0}"
 "DotNetSyncService failed to sync {0}: {1}": "A DotNetSyncService nem tudta szinkronizálni a következőt: {0}: {1}"
 "DotNetSyncService.Error {0}": "DotNetSyncService hiba: {0}"
+"Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "Alapértelmezett nyelv. A bejelentkezéskor és szívveréskor kerül az ügyfelekhez, pl. zh-Hans vagy en; üres esetén a magkonfiguráció DefaultLanguage értéke érvényes."

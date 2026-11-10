@@ -79,7 +79,8 @@
         "Token": { "type": ["string", "null"] },
         "Expire": { "type": "integer", "minimum": 0 },
         "Time": { "type": "integer" },
-        "ServerTime": { "type": "integer" }
+        "ServerTime": { "type": "integer" },
+        "DefaultLanguage": { "type": ["string", "null"] }
       }
     },
     "PingInfo": {
@@ -147,6 +148,7 @@
         "Period": { "type": "integer", "minimum": 0 },
         "Token": { "type": ["string", "null"] },
         "NewServer": { "type": ["string", "null"] },
+        "DefaultLanguage": { "type": ["string", "null"] },
         "SyncTime": { "type": "integer", "minimum": 0 },
         "Commands": {
           "type": ["array", "null"],

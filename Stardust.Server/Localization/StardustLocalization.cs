@@ -42,6 +42,7 @@ public static class StardustLocalizationExtensions
     /// <remarks>
     /// 界面语言统一由核心库基础配置 <c>Core.config</c> 的 <c>Language</c> 决定，星尘不再单独提供配置项。
     /// <c>DefaultLanguage</c> 作为请求无受支持语言时的界面兜底，并作为日志、配置注释与登录/心跳下发的平台默认语言。
+    /// 平台设置 <c>StarServerSetting.DefaultLanguage</c> 非空时优先下发给客户端，为空时回退这里的核心配置语言。
     /// 请求语言识别期间，日志与配置文件注释固定为配置语言或宿主启动语言，避免同一日志文件随请求语言混杂。
     /// 词表由各组件编译期 <c>Locales/*.yml</c> 生成，英文为源文与兜底。
     /// </remarks>

@@ -68,6 +68,19 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
     //    return rs;
     //}
 
+    /// <summary>应用登录。平台设置的默认语言优先于核心配置</summary>
+    /// <param name="context">设备上下文</param>
+    /// <param name="request">登录请求</param>
+    /// <param name="source">来源</param>
+    /// <returns>登录响应</returns>
+    public override ILoginResponse Login(DeviceContext context, ILoginRequest request, String source)
+    {
+        var rs = base.Login(context, request, source);
+        if (rs is LoginResponse response) response.DefaultLanguage = _setting.GetDefaultLanguage(response.DefaultLanguage);
+
+        return rs;
+    }
+
     /// <summary>验证设备合法性</summary>
     public override Boolean Authorize(DeviceContext context, ILoginRequest request)
     {
@@ -551,6 +564,19 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
     #endregion
 
     #region 心跳保活
+    /// <summary>应用心跳。平台设置的默认语言优先于核心配置</summary>
+    /// <param name="context">设备上下文</param>
+    /// <param name="request">心跳请求</param>
+    /// <param name="response">心跳响应</param>
+    /// <returns>心跳响应</returns>
+    public override IPingResponse Ping(DeviceContext context, IPingRequest? request, IPingResponse? response)
+    {
+        var rs = base.Ping(context, request, response);
+        if (rs is PingResponse ping) ping.DefaultLanguage = _setting.GetDefaultLanguage(ping.DefaultLanguage);
+
+        return rs;
+    }
+
     //public override IOnlineModel OnPing(DeviceContext context, IPingRequest request)
     //{
     //    if (context.Device is not App app) return null;

@@ -329,3 +329,4 @@
 "DotNetSyncService.Sync {0}": "DotNetSyncService {0} को सिंक कर रहा है"
 "DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService {0} को सिंक नहीं कर सका: {1}"
 "DotNetSyncService.Error {0}": "DotNetSyncService त्रुटि: {0}"
+"Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "डिफ़ॉल्ट भाषा। लॉगिन और हार्टबीट पर क्लाइंट को भेजी जाती है, जैसे zh-Hans या en; खाली होने पर कोर कॉन्फ़िगरेशन का DefaultLanguage उपयोग होता है।"

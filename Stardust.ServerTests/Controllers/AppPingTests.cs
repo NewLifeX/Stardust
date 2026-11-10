@@ -57,6 +57,42 @@ public class AppPingTests : StarTestBase
         }
     }
 
+    [Fact(DisplayName = "应用登录与心跳下发平台设置的默认语言")]
+    public async Task LoginAndPing_SendsPlatformDefaultLanguage()
+    {
+        var set = StarServerSetting.Current;
+        var old = set.DefaultLanguage;
+        var name = "lang_" + Rand.NextString(8);
+        var app = new App { Name = name, Secret = "secret-" + Rand.NextString(8), Enable = true };
+        app.Insert();
+        try
+        {
+            set.DefaultLanguage = "ja";
+
+            var client = _server.CreateClient();
+
+            // 登录获取令牌，同时下发平台默认语言
+            var loginResp = await client.PostAsync("app/login", JsonContent.Create(new { AppId = name, Secret = app.Secret }));
+            var loginBody = await loginResp.Content.ReadAsStringAsync();
+            var token = ExtractToken(loginBody);
+            Assert.False(token.IsNullOrEmpty(), "登录应下发令牌：" + loginBody);
+            Assert.Contains("\"defaultLanguage\":\"ja\"", loginBody, StringComparison.OrdinalIgnoreCase);
+
+            // 携带令牌发起心跳，继续下发平台默认语言
+            client.DefaultRequestHeaders.Authorization = new("Bearer", token);
+            var pingResp = await client.PostAsync("app/ping", JsonContent.Create(new { Name = name, Version = "1.0.0", MachineName = "test-machine" }));
+            var pingBody = await pingResp.Content.ReadAsStringAsync();
+
+            Assert.True(pingResp.IsSuccessStatusCode, "心跳应成功，实际响应：" + pingBody);
+            Assert.Contains("\"defaultLanguage\":\"ja\"", pingBody, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            set.DefaultLanguage = old;
+            app.Delete();
+        }
+    }
+
     [Fact(DisplayName = "未携带令牌的心跳被拒绝且不下发心跳数据")]
     public async Task Ping_WithoutToken_Rejected()
     {

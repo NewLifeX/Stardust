@@ -271,3 +271,4 @@
 "DotNetSyncService.Sync {0}": "DotNetSyncService sincronizează {0}"
 "DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService nu a putut sincroniza {0}: {1}"
 "DotNetSyncService.Error {0}": "Eroare DotNetSyncService: {0}"
+"Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "Limba implicită. Trimisă clienților la autentificare și heartbeat, de ex. zh-Hans sau en; golit folosește DefaultLanguage din configurația de bază."

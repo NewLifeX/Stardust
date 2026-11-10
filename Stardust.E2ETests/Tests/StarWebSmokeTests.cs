@@ -84,14 +84,14 @@ public class StarWebSmokeTests : IAsyncLifetime
             $"管理后台标题应包含站点名称，实际：{title}");
     }
 
-    [Fact(DisplayName = "配置页与列表页随查询串语言切换，界面语言不再出现在平台设置")]
+    [Fact(DisplayName = "配置页与列表页随查询串语言切换，平台设置只提供客户端默认语言")]
     public async Task Language_SwitchesByQuery()
     {
         await _page!.GotoAsync("/Platform/StarServer?lang=en", new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 30_000 });
         var enConfig = await _page.Locator("body").InnerTextAsync();
         Assert.Contains("Service port", enConfig);
         Assert.DoesNotContain("服务端口", enConfig);
-        // 界面语言统一由核心库基础配置提供，平台设置不再暴露该配置项
+        // 界面语言统一由核心库基础配置提供；平台设置只暴露下发给客户端的默认语言
         Assert.DoesNotContain("界面配置", enConfig);
 
         await _page.GotoAsync("/Platform/StarServer?lang=zh-Hans", new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 30_000 });

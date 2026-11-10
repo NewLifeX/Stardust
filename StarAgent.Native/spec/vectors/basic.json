@@ -45,7 +45,8 @@
     "Token": "jwt-token",
     "Expire": 7200,
     "Time": 0,
-    "ServerTime": 1760000000000
+    "ServerTime": 1760000000000,
+    "DefaultLanguage": "zh-CN"
   },
   "pingRequest": {
     "Time": 1760000000000,

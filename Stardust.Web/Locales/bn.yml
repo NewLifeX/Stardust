@@ -329,3 +329,4 @@
 "DotNetSyncService.Sync {0}": "DotNetSyncService {0} সিঙ্ক করছে"
 "DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService {0} সিঙ্ক করতে ব্যর্থ: {1}"
 "DotNetSyncService.Error {0}": "DotNetSyncService ত্রুটি: {0}"
+"Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "ডিফল্ট ভাষা। লগইন এবং হার্টবিটে ক্লায়েন্টদের কাছে পাঠানো হয়, যেমন zh-Hans বা en; খালি রাখলে কোর কনফিগারেশনের DefaultLanguage ব্যবহার করা হয়।"

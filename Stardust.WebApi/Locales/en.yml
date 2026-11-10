@@ -1,5 +1,6 @@
 # 宿主通过 Compile Include 复用 Stardust.Server 源码，这里同步其运行时词条
 "服务端口": "Service port"
+"默认语言": "Default language"
 "令牌密钥": "Token secret"
 "令牌有效期": "Token validity period"
 "会话超时": "Session timeout"

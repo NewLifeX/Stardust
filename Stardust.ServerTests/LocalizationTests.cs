@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using NewLife;
+using Stardust.Server;
 using Xunit;
 
 namespace ServerTest;
@@ -54,6 +55,27 @@ public class LocalizationTests : IDisposable
 
         Localization.Culture = new CultureInfo("zh-Hant");
         Assert.Equal("必須指定節點", Localization.Translate("Node must be specified."));
+    }
+
+    [Fact(DisplayName = "平台默认语言优先于核心配置并归一化")]
+    public void PlatformDefaultLanguageOverridesCore()
+    {
+        var set = new StarServerSetting();
+        Assert.Equal("zh-CN", set.GetDefaultLanguage("zh-CN"));
+        Assert.Null(set.GetDefaultLanguage(null));
+
+        set.DefaultLanguage = "zh-TW";
+        Assert.Equal("zh-Hant", set.GetDefaultLanguage("en"));
+
+        set.DefaultLanguage = "en-US";
+        Assert.Equal("en", set.GetDefaultLanguage("zh-Hans"));
+
+        // 无法识别时回退核心配置，避免向客户端下发无效语言
+        set.DefaultLanguage = "xx-XX";
+        Assert.Equal("ja", set.GetDefaultLanguage("ja"));
+
+        set.DefaultLanguage = " ";
+        Assert.Equal("ja", set.GetDefaultLanguage("ja"));
     }
 
     [Fact(DisplayName = "启用多语言时应用核心默认语言并保留日志语言")]

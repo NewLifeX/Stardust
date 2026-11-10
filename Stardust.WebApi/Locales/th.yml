@@ -271,3 +271,4 @@
 "DotNetSyncService.Sync {0}": "DotNetSyncService กำลังซิงค์ {0}"
 "DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService ซิงค์ {0} ไม่สำเร็จ: {1}"
 "DotNetSyncService.Error {0}": "ข้อผิดพลาด DotNetSyncService: {0}"
+"Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "ภาษาเริ่มต้น ส่งให้ไคลเอนต์เมื่อเข้าสู่ระบบและ heartbeat เช่น zh-Hans หรือ en; หากเว้นว่างจะใช้ DefaultLanguage จากคอนฟิกหลัก"

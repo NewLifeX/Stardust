@@ -284,6 +284,7 @@
 "Stardust service platform": "星尘服务平台"
 "Backend core of the Stardust distributed service platform. Provides APIs for node management, application center, configuration center, registry and service discovery, monitoring and alerting, release center, gateway and MCP, together with metric aggregation, statistics and scheduled tasks; scales horizontally.": "星尘分布式服务平台后端核心。提供节点管理、应用中心、配置中心、注册中心与服务发现、监控与告警、发布中心、网关与 MCP 等 API，并负责指标聚合、统计计算与任务调度。"
 "Service port. Default 6600.": "服务端口。默认6600"
+"Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "默认语言。登录与心跳下发给客户端的默认语言，如zh-Hans、en；留空时沿用核心配置DefaultLanguage"
 "Token secret. Algorithm and secret used to generate JWT tokens, e.g. HS256:ABCD1234": "令牌密钥。用于生成JWT令牌的算法和密钥，如HS256:ABCD1234"
 "Token validity period. Default 2*3600 seconds.": "令牌有效期。默认2*3600秒"
 "Session timeout. Default 600 seconds": "会话超时。默认600秒"

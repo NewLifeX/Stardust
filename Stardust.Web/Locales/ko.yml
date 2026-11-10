@@ -329,3 +329,4 @@
 "DotNetSyncService.Sync {0}": "DotNetSyncService가 {0} 동기화 중입니다"
 "DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService가 {0} 동기화하지 못했습니다: {1}"
 "DotNetSyncService.Error {0}": "DotNetSyncService 오류: {0}"
+"Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "기본 언어. 로그인 및 하트비트 시 클라이언트에 전달됩니다(예: zh-Hans, en). 비워 두면 코어 구성의 DefaultLanguage를 사용합니다."
