@@ -65,6 +65,22 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
     public StarClient(String urls) : this() => Server = urls;
     #endregion
 
+    #region 多语言
+    /// <summary>应用平台下发的默认语言。本地配置固定语言时不接受平台默认语言</summary>
+    /// <param name="language">语言名称</param>
+    /// <param name="save">是否保存到核心配置</param>
+    /// <remarks>
+    /// 优先级为本地固定语言 &gt; 平台默认语言 &gt; 系统语言。客户端配置 <c>Star.Language</c> 已固定进程语言时，
+    /// 平台下发的默认语言不能改动界面与日志，也不写入核心配置，避免下次启动被平台语言顶掉。
+    /// </remarks>
+    protected override void ApplyDefaultLanguage(String? language, Boolean save = true)
+    {
+        if (Setting is StarSetting star && !star.Language.IsNullOrWhiteSpace()) return;
+
+        base.ApplyDefaultLanguage(language, save);
+    }
+    #endregion
+
     #region 方法
     /// <summary>初始化</summary>
     protected override void OnInit()

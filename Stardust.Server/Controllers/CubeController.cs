@@ -3,6 +3,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
+using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Remoting.Extensions;
 using Stardust.Data.Deployment;
@@ -122,6 +123,9 @@ public class CubeController(IFileStorage fileStorage, StarServerSetting setting,
             att.Downloads++;
             att.LastDownload = DateTime.Now;
             att.SaveAsync(5_000);
+
+            // 埋点：标记具体附件与大小，便于在调用链中定位慢下载
+            if (DefaultSpan.Current is { } span) span.AppendTag($"attachment={att.Id}; file={att.FileName}; size={att.Size}; downloads={att.Downloads}");
 
             // 设置文件哈希相关响应头
             Response.SetFileHashHeaders(att.Hash);

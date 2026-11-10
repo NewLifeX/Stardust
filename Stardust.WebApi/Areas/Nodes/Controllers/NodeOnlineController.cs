@@ -78,6 +78,13 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
         return JsonRefresh("已发送命令");
     }
 
+    /// <summary>批量升级错峰间隔（秒）</summary>
+    /// <remarks>
+    /// 升级包约 2MB，文件服务出口带宽有限，几十个节点同时下载会互相挤占带宽。
+    /// 把命令执行时间排到未来，接口立即返回，节点按各自时间点开始下载，避免并发送达引发集体超时。
+    /// </remarks>
+    private const Int32 UpgradeScheduleInterval = 3;
+
     [DisplayName("检查更新")]
     [EntityAuthorize((PermissionFlags)16)]
     public async Task<ActionResult> CheckUpgrade()
@@ -88,7 +95,10 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
             var online = NodeOnline.FindById(item.ToInt());
             if (online?.Node != null)
             {
-                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/upgrade", null, 0, 600, 3, HttpContext.RequestAborted)));
+                // 错峰执行：每个节点依次延后 3 秒开始，接口本身不等待
+                var startTime = (ts.Count + 1) * UpgradeScheduleInterval;
+
+                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/upgrade", null, startTime, 3600, 3, HttpContext.RequestAborted)));
             }
         }
 
@@ -130,9 +140,12 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
                     continue;
                 }
 
+                // 错峰执行：每个节点依次延后 3 秒开始，接口本身不等待
+                var startTime = (ts.Count + 1) * UpgradeScheduleInterval;
+
                 // 手工升级到指定版本：下发通道与版本，代理据此拉取指定版本，不受自动去重与通道限制
                 var args = $"channel={release.Channel}&version={release.Version}";
-                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/upgrade", args, 0, 600, 0, HttpContext.RequestAborted)));
+                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/upgrade", args, startTime, 3600, 0, HttpContext.RequestAborted)));
             }
         }
 

@@ -132,6 +132,12 @@ StarServer 通过 `Node.ProductCode` 区分产品：标准 .NET Agent 为 `StarA
 
 > 历史包袱：为解决旧版“用进程名拼出 `StarAgent.exe.del.exe`”导致 U 永远拉不起来的问题，曾加过“两次失败就把重启交给服务管理器”的兜底。该问题的根因已由“改用入口程序集名”修好，兜底在坏包场景下只会把 H 一起带走，现已删除。
 
+### 2.8 升级下载与完成确认
+
+升级包下载超时按两段控制：响应头 15 秒内未到达视为服务器不可达并快速失败，收到响应头后响应体允许 300 秒（NewLife.Remoting `Upgrade.CreateDownloadOptions` 的默认值）。下载失败最多重试 2 次，每次重建 HttpClient 强制新连接——平台 AB 双机部署时附件同步存在延迟，首次请求可能命中尚未同步完成的节点，换连接重试大概率落到另一台。批量升级由平台把命令执行时间排到未来（每节点递增 3 秒），接口立即返回，节点按各自时间点下载，避免几十个节点同时拉取同一个升级包挤爆文件服务出口带宽。
+
+强制升级的完成确认由代理主动上报：文件覆盖成功且新进程拉起后，把 `Upgrade` 的 success 事件写入本地事件台账（`Data/NodeEvents.csv`），随下一次心跳上报，服务端收到后停止按 10min/30min/2h/6h/24h 退避重复下发。不能只依赖重启后上报的版本号——节点本来就在目标版本时版本号不变，服务端会误判升级未完成而反复重装。
+
 ---
 
 ## 3. 通信架构
@@ -163,7 +169,7 @@ StarServer 通过 `Node.ProductCode` 区分产品：标准 .NET Agent 为 `StarA
 | **Hosted** | 宿主进程托管 | StarAgent → Host → 插件 |
 | **Task** | 一次性任务 | StarAgent → 任务进程（执行后退出） |
 
-> **运行环境**：.NET 版本在 Linux 上依赖 ICU（安装 `libicu`）。无 ICU 的老旧/嵌入式系统可设置 `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1` 降级运行，此时只有英文界面与日志。界面语言默认跟随系统/浏览器语言，可在面板右上角切换并写入 Core 全局配置 `NewLife.Setting.Language`，详见 [多语言本地化](多语言本地化.md)。
+> **运行环境**：.NET 版本在 Linux 上依赖 ICU（安装 `libicu`）。无 ICU 的老旧/嵌入式系统可设置 `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1` 降级运行，此时只有英文界面与日志。界面语言优先跟随平台下发的默认语言（`Setting.DefaultLanguage`，随登录/心跳到达），浏览器声明语言优先于它；也可在面板右上角切换并写入 Core 全局配置 `NewLife.Setting.Language` 固定，详见 [多语言本地化](多语言本地化.md)。
 
 ---
 

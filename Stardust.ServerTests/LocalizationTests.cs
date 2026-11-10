@@ -1,6 +1,8 @@
 using System;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
 using NewLife;
 using Xunit;
 
@@ -52,6 +54,40 @@ public class LocalizationTests : IDisposable
 
         Localization.Culture = new CultureInfo("zh-Hant");
         Assert.Equal("必須指定節點", Localization.Translate("Node must be specified."));
+    }
+
+    [Fact(DisplayName = "启用多语言时应用核心默认语言并保留日志语言")]
+    public void UseLocalizationAppliesDefaultLanguage()
+    {
+        var core = NewLife.Setting.Current;
+        var oldLanguage = core.Language;
+        var oldDefault = core.DefaultLanguage;
+        var oldForced = Localization.ForcedLanguage;
+        var oldLog = Localization.LogCulture;
+        var oldDefaultCulture = Localization.DefaultCulture;
+        try
+        {
+            core.Language = "";
+            core.DefaultLanguage = "zh-CN";
+
+            var app = new ApplicationBuilder(new ServiceCollection().BuildServiceProvider());
+            global::Stardust.Server.StardustLocalizationExtensions.UseStardustLocalization(app);
+
+            // DefaultLanguage 作为请求兜底，也是登录/心跳下发给客户端的平台默认语言
+            Assert.Equal("zh-CN", Localization.DefaultCulture?.Name);
+            // 日志语言跟随默认语言，不再被宿主语言覆盖
+            Assert.Equal("zh-CN", Localization.LogCulture?.Name);
+            // 界面语言仍按请求识别，不锁定
+            Assert.Null(Localization.Culture);
+        }
+        finally
+        {
+            core.Language = oldLanguage;
+            core.DefaultLanguage = oldDefault;
+            Localization.SetLanguage(oldForced);
+            Localization.LogCulture = oldLog;
+            Localization.SetDefaultLanguage(oldDefaultCulture?.Name);
+        }
     }
 }
 

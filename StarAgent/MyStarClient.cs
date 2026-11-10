@@ -259,7 +259,9 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
             //!! 这里不需要自杀，外部命令重启服务会结束当前进程
             if (rs)
             {
-                this.WriteInfoEvent("Upgrade", L.TLog("Forced update completed; the new process has been launched, waiting for the current service to restart."));
+                var msg = L.TLog("Forced update completed; the new process has been launched, waiting for the current service to restart.");
+                this.WriteInfoEvent("Upgrade", msg);
+                ConfirmUpgrade(msg);
             }
             else
             {
@@ -287,7 +289,9 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
             {
                 Service.StopWork("Upgrade");
 
-                this.WriteInfoEvent("Upgrade", L.TLog("Forced update completed; the new process has been launched and the current process is about to exit. PID={0}", pid));
+                var msg = L.TLog("Forced update completed; the new process has been launched and the current process is about to exit. PID={0}", pid);
+                this.WriteInfoEvent("Upgrade", msg);
+                ConfirmUpgrade(msg);
 
                 upgrade.KillSelf();
             }
@@ -300,6 +304,15 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
         }
     }
 
+    /// <summary>确认升级完成。写入本地事件台账，由心跳上报服务端，停止按退避间隔重复下发</summary>
+    /// <remarks>
+    /// 强制升级需要重启进程才算完成，基类不会在覆盖文件后上报 success；重启后上报的版本号又可能因为
+    /// 安装包内容与当前版本一致（节点本来就在目标版本）而保持不变，服务端据此判定升级未完成，
+    /// 按 10min/30min/2h/6h/24h 反复下发同一份安装包。新进程已经拉起即代表文件覆盖成功，
+    /// 把 success 写入台账，经下一次心跳可靠上报，服务端收到后立即停止重试。台账落盘，进程退出也不丢事件。
+    /// </remarks>
+    /// <param name="message">事件内容</param>
+    private static void ConfirmUpgrade(String message) => EventLedger.Append(EventLedger.GetDirectory(), EventLedger.NodeEvents, "success", "Upgrade", message);
     /// <summary>获取当前进程可执行文件名（不含扩展名），支持重命名场景。dotnet/mono 宿主下返回真正目标程序集名</summary>
     /// <remarks>
     /// 升级过程会把正在使用的 exe/dll 改名为 *.del，此后 <see cref="Process.ProcessName"/> 会带上 .del 后缀

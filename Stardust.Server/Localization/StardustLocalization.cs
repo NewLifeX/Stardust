@@ -1,4 +1,3 @@
-using System.Globalization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using NewLife;
@@ -42,19 +41,23 @@ public static class StardustLocalizationExtensions
     /// <returns>应用构建器</returns>
     /// <remarks>
     /// 界面语言统一由核心库基础配置 <c>Core.config</c> 的 <c>Language</c> 决定，星尘不再单独提供配置项。
-    /// 请求语言识别期间，日志与配置文件注释固定为宿主语言，避免同一日志文件随请求语言混杂。
+    /// <c>DefaultLanguage</c> 作为请求无受支持语言时的界面兜底，并作为日志、配置注释与登录/心跳下发的平台默认语言。
+    /// 请求语言识别期间，日志与配置文件注释固定为配置语言或宿主启动语言，避免同一日志文件随请求语言混杂。
     /// 词表由各组件编译期 <c>Locales/*.yml</c> 生成，英文为源文与兜底。
     /// </remarks>
     public static IApplicationBuilder UseStardustLocalization(this IApplicationBuilder app)
     {
+        // 应用核心配置的界面与默认语言（环境变量优先），确保 DefaultLanguage 在对外服务前生效
+        NewLife.Setting.Current.ApplyLanguage();
+
         // 核心配置已固定语言时，全进程直接生效，不再按请求识别
         if (Localization.ForcedLanguage != null) return app;
 
         // 界面语言跟随请求，由中间件写入 CurrentUICulture
         Localization.Culture = null;
 
-        // 日志与配置注释使用宿主语言
-        Localization.LogCulture = CultureInfo.CurrentUICulture;
+        // 日志与配置注释已由核心库按 Language/DefaultLanguage 固定，未配置时回退到宿主启动语言。
+        // 这里不再覆盖 LogCulture，否则平台默认语言（随登录/心跳下发）会被宿主语言冲掉。
 
         return app.UseMiddleware<LanguageMiddleware>();
     }
