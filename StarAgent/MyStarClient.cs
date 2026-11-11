@@ -248,14 +248,20 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
         var p = Process.GetCurrentProcess();
         this.WriteInfoEvent("Upgrade", $"Restart: exeName={exeName} ProcessName={p.ProcessName} MainModule={p.MainModule?.FileName}");
 
+        // 预检：提前判断新版本能否在本机跑起来，用于记录具体原因、跳过注定失败的重试。
+        // 它不作为是否重启服务的依据——升级失败时唯一正确的动作是回滚旧版、保持当前进程运行
+        var unableToRun = UpgradePreflight.CheckRuntime(upgrade.DestinationPath, exeName);
+        if (unableToRun != null) WriteLog("Upgrade preflight failed: {0}", unableToRun);
+
         // 以服务方式运行时，重启服务，否则采取拉起进程的方式
         if (inService || Service.Host is DefaultHost host && host.InService)
         {
             this.WriteInfoEvent("Upgrade", L.TLog("Forced update completed; restarting the background service. PID={0}", pid));
 
             // 冒烟测试：尝试拉起新版，若失败等 5s 重试一次（应对慢速存储落盘 / JIT 预热）
+            // 预检已判定跑不起来时不再重试，避免无谓等待
             var rs = upgrade.Run(exeName, "-restart -upgrade", 3_000);
-            if (!rs)
+            if (!rs && unableToRun == null)
             {
                 var delay = 5_000;
                 this.WriteInfoEvent("Upgrade", L.TLog("The new version failed to start for the first time; retrying in {0}ms. {1}", delay, upgrade.LastErrorMessage));
@@ -270,15 +276,12 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
                 this.WriteInfoEvent("Upgrade", msg);
                 ConfirmUpgrade(msg);
             }
-            else if (TryRestartService(upgrade))
-            {
-                // 服务管理器重启不依赖可执行文件名，是名称解析失败时的兜底通道
-            }
             else
             {
-                // 两次均失败，确认新版有致命缺陷，回滚 .del 恢复旧版文件
+                // 冒烟失败说明新版有致命缺陷，回滚 .del 恢复旧版文件，当前进程继续运行。
+                // 不能改用重启服务兜底：服务重启会结束当前进程，而新版已证明跑不起来，节点将彻底失联且再无机会回滚
                 upgrade.Rollback();
-                FailUpgrade(L.TLog("The new version failed to start (smoke test failed); the old files have been rolled back and the current service keeps running. {0}", upgrade.LastErrorMessage));
+                FailUpgrade(L.TLog("The new version failed to start (smoke test failed); the old files have been rolled back and the current service keeps running. {0}", BuildFailure(upgrade, unableToRun)));
             }
         }
         else
@@ -287,7 +290,7 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
 
             // 冒烟测试：尝试拉起新版，若失败等 5s 重试一次
             var rs = upgrade.Run(exeName, "-run -upgrade", 3_000);
-            if (!rs)
+            if (!rs && unableToRun == null)
             {
                 var delay = 5_000;
                 this.WriteInfoEvent("Upgrade", L.TLog("The new version failed to start for the first time; retrying in {0}ms. {1}", delay, upgrade.LastErrorMessage));
@@ -305,15 +308,11 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
 
                 upgrade.KillSelf();
             }
-            else if (TryRestartService(upgrade))
-            {
-                // 进程模式下拉起失败时，若本机存在后台服务，改由服务管理器重启
-            }
             else
             {
-                // 两次均失败，确认新版有致命缺陷，回滚 .del 恢复旧版文件
+                // 冒烟失败说明新版有致命缺陷，回滚 .del 恢复旧版文件，当前进程继续运行
                 upgrade.Rollback();
-                FailUpgrade(L.TLog("The new version failed to start (smoke test failed); the old files have been rolled back and the current service keeps running. {0}", upgrade.LastErrorMessage));
+                FailUpgrade(L.TLog("The new version failed to start (smoke test failed); the old files have been rolled back and the current service keeps running. {0}", BuildFailure(upgrade, unableToRun)));
             }
         }
     }
@@ -330,47 +329,26 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
     /// </remarks>
     /// <param name="message">事件内容</param>
     private static void ConfirmUpgrade(String message) => EventLedger.Append(EventLedger.GetDirectory(), EventLedger.NodeEvents, "success", "Upgrade", message);
-
-    /// <summary>升级失败。写入本地事件台账，与 success 同批上报时最终结果为失败，服务端会清空指纹并允许立即重试</summary>
+    /// <summary>升级失败。写入本地事件台账，服务端收到后清空指纹并允许立即重试</summary>
     /// <param name="message">失败原因</param>
     private static void FailUpgrade(String message) => EventLedger.Append(EventLedger.GetDirectory(), EventLedger.NodeEvents, "error", "Upgrade", message);
 
-    /// <summary>兜底重启服务</summary>
+    /// <summary>组装升级失败原因</summary>
     /// <remarks>
-    /// 更新已经把新文件覆盖到位（旧文件改名为 .del），此时拉起新进程失败多半是名称/路径解析问题，
-    /// 由服务管理器重启不依赖可执行文件名，能直接把服务切到新版本。
-    /// 只在目标目录确实存在新主程序时才尝试，避免新版文件残缺导致服务反复拉起失败。
+    /// 预检结论必须带上：缺运行时等场景冒烟测试只会得到“退出码150（无错误输出）”，
+    /// 平台节点历史里看不到根因，运维只能登录机器翻本地日志。
     /// </remarks>
     /// <param name="upgrade">升级对象</param>
-    /// <returns>是否已交给服务管理器重启</returns>
-    private Boolean TryRestartService(Upgrade upgrade)
+    /// <param name="preflight">预检结论，可为空</param>
+    /// <returns>失败原因</returns>
+    private static String BuildFailure(Upgrade upgrade, String? preflight)
     {
-        try
-        {
-            var name = GetExecutableName();
-            var dest = upgrade.DestinationPath;
-            if (dest.IsNullOrEmpty()) return false;
+        var reason = upgrade.LastErrorMessage + "";
+        if (preflight.IsNullOrEmpty()) return reason;
+        if (reason.IsNullOrEmpty()) return preflight;
 
-            var exe = Path.Combine(dest, name + ".exe");
-            var dll = Path.Combine(dest, name + ".dll");
-            if (!File.Exists(exe) && !File.Exists(dll)) return false;
-
-            var host = Service?.Host;
-            if (host == null) return false;
-
-            this.WriteInfoEvent("Upgrade", L.TLog("Failed to launch the new process; falling back to restarting the background service. {0}", upgrade.LastErrorMessage));
-            WriteLog("Fallback: restart service {0}", Service.ServiceName);
-
-            host.Restart(Service.ServiceName);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            this.WriteInfoEvent("Upgrade", L.TLog("Failed to restart the background service: {0}", ex.Message));
-            return false;
-        }
+        return $"{preflight}; {reason}";
     }
-
     /// <summary>获取当前进程可执行文件名（不含扩展名），支持重命名场景。dotnet/mono 宿主下返回真正目标程序集名</summary>
     /// <remarks>
     /// 升级过程会把正在使用的 exe/dll 改名为 *.del，此后 <see cref="Process.ProcessName"/> 会带上 .del 后缀

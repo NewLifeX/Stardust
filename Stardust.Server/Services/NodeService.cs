@@ -1078,15 +1078,26 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         if (node == null || cmd.NodeID != node.ID)
             throw new ApiException(ApiCode.Forbidden, L.T("[{0}] attempted to reply to command [{1}] that belongs to node [{2}]", node?.Name, cmd.Id, cmd.NodeID));
 
+        var ip = context.UserHost;
+        var oldStatus = cmd.Status;
+
         cmd.Status = model.Status;
         cmd.Result = model.Data;
         cmd.Update();
+
+        // 重启类命令回包时补写节点历史：命令回包只更新 NodeCommand，节点历史里原本看不到“谁在什么时候重启了节点”。
+        // 代理侧不再重复上报同一事件，避免一次重启出现两条记录；仅在状态真正变化时写，网络重试的重复回包不会重复记历史
+        if (oldStatus != model.Status && cmd.Command.EqualIgnoreCase("node/restart", "node/reboot") &&
+            (model.Status == CommandStatus.已完成 || model.Status == CommandStatus.错误))
+        {
+            var success = model.Status == CommandStatus.已完成;
+            NodeHistory.Create(node, HistoryAction.Restart, success, cmd.Command, cmd.CreateUser, ip).Insert();
+        }
 
         // 通过会话管理器内置的响应事件总线广播响应（跨实例广播不阻塞）
         _ = _sessionManager.PublishResponseAsync(model, default);
 
         // 流水线续跑：按命令回包事件驱动步骤/run 状态更新（不轮询、不等待）
-        var ip = context.UserHost;
         _ = Task.Run(() => ProcessPipelineReplyAsync(cmd, model, ip));
 
         return 1;
