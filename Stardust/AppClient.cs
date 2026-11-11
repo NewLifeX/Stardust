@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Net.NetworkInformation;
@@ -123,10 +123,10 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
     {
         var provider = ServiceProvider ??= ObjectContainer.Provider;
 
-        // 基类盐值取 Runtime.UtcNow，而 Runtime.UtcNow 又走下面的全局时间提供者，因此盐值与业务时间始终同源
+        // 基类盐值取 Runtime.UtcNow，而 Runtime.UtcNow 又走下面的全局时间提供者，因此盐值与业务时间同源
         PasswordProvider = new SaltPasswordProvider { Algorithm = "md5", SaltTime = 60 };
 
-        // 让进程内的 Runtime.UtcNow 跟随服务端时间差，业务代码不必关心本机时钟是否准确。时间差为0时等价于系统时间
+        // 接入星尘即为进程装上「本机时间 + 服务端时间差」的时间源，业务直接用 Runtime.UtcNow 就能屏蔽本机时钟误差
         if (TimerScheduler.GlobalTimeProvider is not ServerTimeProvider)
             TimerScheduler.GlobalTimeProvider = new ServerTimeProvider { Client = this };
 
@@ -177,7 +177,13 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
         var info = ServerProbe.GetServerInfo(Server ?? Setting?.Server);
         if (info == null) return;
 
-        if (info.ServerTime > 0) FixTime(0, info.ServerTime);
+        if (info.ServerTime > 0)
+        {
+            FixTime(0, info.ServerTime);
+
+            // 时间差跳变多少，按日历调度的定时逻辑就跳多少，写入日志便于解释定时任务的异常触发
+            if (Math.Abs(Span.TotalSeconds) >= 1) WriteLog("Server time offset applied: {0}", Span);
+        }
         if (!info.DefaultLanguage.IsNullOrWhiteSpace()) ApplyDefaultLanguage(info.DefaultLanguage);
     }
     #endregion
