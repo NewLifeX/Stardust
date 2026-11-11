@@ -509,8 +509,9 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
 
     /// <summary>同步时间</summary>
     /// <remarks>
-    /// 仅由平台/人工下发的 node/synctime 命令触发，代理不再自动修改系统时钟。
-    /// 鉴权已改用服务端时间生成盐值（<see cref="ServerTimePasswordProvider"/>），本机时钟偏差不会再导致登录失败。
+    /// 仅由平台/人工下发的 node/synctime 命令，或运维配置的同步周期触发，代理不会擅自修改系统时钟。
+    /// 鉴权已改用服务端时间生成盐值，本机时钟偏差不会再导致登录失败。
+    /// 改钟成功后立即重算客户端时间差，保证 GetNow() 与 Runtime.UtcNow 当场回到零偏差。
     /// </remarks>
     /// <param name="argument">指令参数。可指定目标时间</param>
     /// <returns>执行结果</returns>
@@ -571,6 +572,9 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
         {
             rs += ", " + "hwclock".Execute("-u -w", 5_000);
         }
+
+        // 系统时钟已被改成服务端时间，必须立刻重算时间差，否则 GetNow()/Runtime.UtcNow/鉴权盐值会把旧偏差再叠一次
+        if (ok) FixTime(0, time.ToUniversalTime().ToLong());
 
         WriteEvent(ok ? "info" : "error", "SyncTime", ok ? msg : L.TLog("Time synchronization failed: {0}", rs));
         WriteLog("{0}", rs);

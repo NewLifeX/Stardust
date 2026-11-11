@@ -24,6 +24,10 @@ public class ApiController : ControllerBase
     public ApiController(IEnumerable<EndpointDataSource> sources) => _sources = sources.ToList();
 
     /// <summary>服务器信息，用户健康检测</summary>
+    /// <remarks>
+    /// 除健康检测外，还作为客户端登录前的引导接口：返回服务端时间与平台默认语言，
+    /// 让本机时钟偏差较大的客户端在首次登录前就能校准时间差，并提前应用平台语言。
+    /// </remarks>
     /// <param name="state">状态信息</param>
     /// <returns></returns>
     [Route("[controller]")]
@@ -49,13 +53,14 @@ public class ApiController : ControllerBase
             Port = conn.LocalPort,
             Time = DateTime.Now,
             ServerTime = DateTime.UtcNow.ToLong(),
+            DefaultLanguage = StarServerSetting.Current.GetDefaultLanguage(null),
             State = state,
         };
 
         // 公网健康探针：保留应用标识(name/title/version)便于域名/反代识别应用，隐藏OS/编译/端口/主机等环境指纹
         if (IsIntranet(HttpContext)) return rs;
 
-        return new { Name = asmx?.Name, asmx?.Title, Version = asmx?.FileVersion, Time = DateTime.Now, ServerTime = DateTime.UtcNow.ToLong(), State = state };
+        return new { Name = asmx?.Name, asmx?.Title, Version = asmx?.FileVersion, Time = DateTime.Now, ServerTime = DateTime.UtcNow.ToLong(), DefaultLanguage = StarServerSetting.Current.GetDefaultLanguage(null), State = state };
     }
 
     /// <summary>获取所有接口信息</summary>

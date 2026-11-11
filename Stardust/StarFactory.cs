@@ -13,7 +13,6 @@ using NewLife.Remoting;
 using NewLife.Remoting.Clients;
 using NewLife.Remoting.Models;
 using NewLife.Security;
-using NewLife.Threading;
 using Stardust.Configs;
 using Stardust.Models;
 using Stardust.Monitors;
@@ -314,10 +313,7 @@ public class StarFactory : DisposeBase
                 Log = Log,
             };
 
-#if !NET40
-            // 设置全局定时调度器的时间提供者，借助服务器时间差，以获得更准确的时间。避免本地时间偏差导致定时任务执行时间不准确
-            TimerScheduler.GlobalTimeProvider = new StarTimeProvider { Client = client };
-#endif
+            // 全局时间提供者由客户端在 OnInit 中安装（见 StarClient/AppClient），此处不再重复设置
 
             var p = Process.GetCurrentProcess();
             client.WriteInfoEvent("AppStart", $"pid={p.Id}, Name={p.GetProcessName()}, FileName={p.MainModule?.FileName}");

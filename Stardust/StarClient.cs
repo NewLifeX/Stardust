@@ -13,6 +13,7 @@ using NewLife.Remoting;
 using NewLife.Remoting.Clients;
 using NewLife.Remoting.Models;
 using NewLife.Security;
+using NewLife.Threading;
 using Stardust.Managers;
 using Stardust.Models;
 using Stardust.Monitors;
@@ -125,7 +126,12 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
     {
         var provider = ServiceProvider ??= ObjectContainer.Provider;
 
-        PasswordProvider = new ServerTimePasswordProvider(() => GetNow()) { Algorithm = "md5", SaltTime = 60 };
+        // 基类盐值取 Runtime.UtcNow，而 Runtime.UtcNow 又走下面的全局时间提供者，因此盐值与业务时间始终同源
+        PasswordProvider = new SaltPasswordProvider { Algorithm = "md5", SaltTime = 60 };
+
+        // 让进程内的 Runtime.UtcNow 跟随服务端时间差，业务代码不必关心本机时钟是否准确。时间差为0时等价于系统时间
+        if (TimerScheduler.GlobalTimeProvider is not ServerTimeProvider)
+            TimerScheduler.GlobalTimeProvider = new ServerTimeProvider { Client = this };
 
         // 找到容器，注册默认的模型实现，供后续InvokeAsync时自动创建正确的模型对象
         var container = ModelExtension.GetService<IObjectContainer>(provider) ?? ObjectContainer.Current;
@@ -146,7 +152,7 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
     /// <returns></returns>
     public override ILoginRequest BuildLoginRequest()
     {
-        EnsureServerTime();
+        ApplyServerInfo();
 
         var request = new LoginInfo();
         FillLoginRequest(request);
@@ -157,18 +163,23 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
         return request;
     }
 
-    /// <summary>登录前对齐服务端时间</summary>
+    /// <summary>登录前对齐服务端时间与默认语言</summary>
     /// <remarks>
     /// 本机时钟偏差超过盐值窗口时，用本机时间生成的盐值会被服务端判定过期，登录失败并反复重试。
-    /// 登录前先用匿名接口取一次服务端时间，把偏移写入客户端，使盐值按服务端时间生成。
-    /// 探测失败不阻塞登录，保持原有行为。
+    /// 登录前先用匿名接口取一次服务端信息，把时间差写入客户端，使盐值按服务端时间生成；
+    /// 同时应用平台默认语言，让登录前的界面与提示也能用平台语言。
+    /// 探测最多等待 <see cref="ServerProbe.WaitTimeout"/>，失败不阻塞登录，保持原有行为。
     /// </remarks>
-    private void EnsureServerTime()
+    private void ApplyServerInfo()
     {
+        // 时间差已经就绪时无需再探测。进程内首次登录才会走到探测，之后由登录响应与心跳维护
         if (Span != TimeSpan.Zero) return;
 
-        var time = ServerTimeProbe.GetServerTime(Server ?? Setting?.Server);
-        if (time > 0) FixTime(0, time);
+        var info = ServerProbe.GetServerInfo(Server ?? Setting?.Server);
+        if (info == null) return;
+
+        if (info.ServerTime > 0) FixTime(0, info.ServerTime);
+        if (!info.DefaultLanguage.IsNullOrWhiteSpace()) ApplyDefaultLanguage(info.DefaultLanguage);
     }
 
     /// <summary>获取设备信息</summary>

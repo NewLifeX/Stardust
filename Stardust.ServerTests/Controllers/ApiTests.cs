@@ -49,6 +49,10 @@ public class ApiTests : StarTestBase
         else
             Assert.NotNull(rs["state"]);
         Assert.Equal(state + "", rs["state"] + "");
+
+        // 作为客户端登录前的引导接口，必须返回服务端时间与平台默认语言
+        Assert.True((rs["serverTime"] + "").ToLong() > 0);
+        Assert.False((rs["defaultLanguage"] + "").IsNullOrEmpty());
     }
 
     [Theory(DisplayName = "信息测试2")]
