@@ -1,5 +1,4 @@
 # Dutch translation. Keys are English source texts; missing entries fall back to English at runtime.
-"No permission to perform this operation.": "Geen toestemming om deze bewerking uit te voeren."
 "Invalid application token": "Ongeldig applicatietoken"
 "Node must be specified.": "Knooppunt moet worden opgegeven."
 "Invalid node.": "Ongeldig knooppunt."

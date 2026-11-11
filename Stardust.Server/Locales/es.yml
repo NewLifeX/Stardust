@@ -1,5 +1,4 @@
 # Spanish translation. Keys are English source texts; missing entries fall back to English at runtime.
-"No permission to perform this operation.": "No tiene permiso para realizar esta operación."
 "Invalid application token": "Token de aplicación no válido"
 "Node must be specified.": "Debe especificarse el nodo."
 "Invalid node.": "Nodo no válido."

@@ -75,7 +75,6 @@
 "Downloading {0}": "{0} をダウンロードしています"
 "Download: {0}": "ダウンロード: {0}"
 "Download [{0}]: {1} {2}": "ダウンロード [{0}]: {1} {2}"
-"Download failed, verification error: {0} (local) != {1} (remote)": "ダウンロードに失敗しました。検証エラー: {0}（ローカル）!= {1}（リモート）"
 "Download completed; ready to overwrite: {0}": "ダウンロードが完了しました。上書き可能: {0}"
 "Download file {0}, success: {1}": "ファイル {0} をダウンロードしました。成功: {1}"
 "Download file {0}, source: {1}": "ファイル {0} をダウンロードします。ソース: {1}"

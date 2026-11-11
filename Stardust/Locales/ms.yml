@@ -75,7 +75,6 @@
 "Downloading {0}": "Memuat turun {0}"
 "Download: {0}": "Muat turun: {0}"
 "Download [{0}]: {1} {2}": "Muat turun [{0}]: {1} {2}"
-"Download failed, verification error: {0} (local) != {1} (remote)": "Muat turun gagal, ralat pengesahan: {0} (setempat) != {1} (jauh)"
 "Download completed; ready to overwrite: {0}": "Muat turun selesai; sedia untuk menimpa: {0}"
 "Download file {0}, success: {1}": "Muat turun fail {0}, berjaya: {1}"
 "Download file {0}, source: {1}": "Muat turun fail {0}, sumber: {1}"

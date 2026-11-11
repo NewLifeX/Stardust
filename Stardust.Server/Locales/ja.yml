@@ -1,5 +1,4 @@
 # Japanese translation. Keys are English source texts; missing entries fall back to English at runtime.
-"No permission to perform this operation.": "この操作を実行する権限がありません。"
 "Invalid application token": "無効なアプリケーショントークン"
 "Node must be specified.": "ノードを指定する必要があります。"
 "Invalid node.": "無効なノードです。"

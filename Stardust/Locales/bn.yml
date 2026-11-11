@@ -75,7 +75,6 @@
 "Downloading {0}": "{0} ডাউনলোড করা হচ্ছে"
 "Download: {0}": "ডাউনলোড: {0}"
 "Download [{0}]: {1} {2}": "ডাউনলোড [{0}]: {1} {2}"
-"Download failed, verification error: {0} (local) != {1} (remote)": "ডাউনলোড ব্যর্থ, যাচাইকরণ ত্রুটি: {0} (স্থানীয়) != {1} (দূরবর্তী)"
 "Download completed; ready to overwrite: {0}": "ডাউনলোড সম্পন্ন; ওভাররাইট করার জন্য প্রস্তুত: {0}"
 "Download file {0}, success: {1}": "ফাইল {0} ডাউনলোড, সফল: {1}"
 "Download file {0}, source: {1}": "ফাইল {0} ডাউনলোড, উৎস: {1}"

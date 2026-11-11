@@ -1,5 +1,4 @@
 # Hungarian translation. Keys are English source texts; missing entries fall back to English at runtime.
-"No permission to perform this operation.": "Nincs jogosultsága ehhez a művelethez."
 "Invalid application token": "Érvénytelen alkalmazás-token"
 "Node must be specified.": "Meg kell adni a csomópontot."
 "Invalid node.": "Érvénytelen csomópont."

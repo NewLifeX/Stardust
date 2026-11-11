@@ -1,5 +1,4 @@
 # Greek translation. Keys are English source texts; missing entries fall back to English at runtime.
-"No permission to perform this operation.": "Δεν έχετε άδεια για αυτή τη λειτουργία."
 "Invalid application token": "Μη έγκυρο διακριτικό εφαρμογής"
 "Node must be specified.": "Πρέπει να καθοριστεί κόμβος."
 "Invalid node.": "Μη έγκυρος κόμβος."

@@ -1,5 +1,4 @@
 # Polish translation. Keys are English source texts; missing entries fall back to English at runtime.
-"No permission to perform this operation.": "Brak uprawnień do wykonania tej operacji."
 "Invalid application token": "Nieprawidłowy token aplikacji"
 "Node must be specified.": "Należy określić węzeł."
 "Invalid node.": "Nieprawidłowy węzeł."

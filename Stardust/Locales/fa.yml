@@ -75,7 +75,6 @@
 "Downloading {0}": "در حال دانلود {0}"
 "Download: {0}": "دانلود: {0}"
 "Download [{0}]: {1} {2}": "دانلود [{0}]: {1} {2}"
-"Download failed, verification error: {0} (local) != {1} (remote)": "دانلود ناموفق بود، خطای بررسی: {0} (محلی) != {1} (از راه دور)"
 "Download completed; ready to overwrite: {0}": "دانلود کامل شد؛ آماده بازنویسی: {0}"
 "Download file {0}, success: {1}": "دانلود فایل {0}، موفق: {1}"
 "Download file {0}, source: {1}": "دانلود فایل {0}، منبع: {1}"

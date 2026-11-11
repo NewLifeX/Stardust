@@ -1,5 +1,4 @@
 # Swedish translation. Keys are English source texts; missing entries fall back to English at runtime.
-"[McpToken] Token reset: Id={Id}, Name={Name}, old token={Masked}, IP={IP}": "[McpToken] Token återställd: Id={Id}, Name={Name}, gammal token={Masked}, IP={IP}"
 "Already the latest version.": "Redan den senaste versionen."
 "Application [{0}] forbids access from {1}.": "Applikationen [{0}] förbjuder åtkomst från {1}."
 "Application [{0}] has no secret configured and access is forbidden. Set a Secret for this application first.": "Applikationen [{0}] har ingen hemlighet konfigurerad och åtkomst är förbjuden. Ange först en hemlighet för denna applikation."
@@ -33,10 +32,6 @@
 "Invalid application [{0}]": "Ogiltig applikation [{0}]"
 "Legacy configuration compatibility: [StardustData] uses the connection settings from [{0}]; set the [StardustData] connection string directly instead.": "Kompatibilitet med äldre konfiguration: [StardustData] använder anslutningsinställningarna från [{0}]; ange i stället anslutningssträngen för [StardustData] direkt."
 "Matched online instance [id={0}]": "Matchade onlineinstans [id={0}]"
-"MCP action registered: {0} ({1})": "MCP-åtgärd registrerad: {0} ({1})"
-"MCP resource provider registered: {0} ({1})": "MCP-resursleverantör registrerad: {0} ({1})"
-"MCP service registered {0} action(s)": "MCP-tjänsten registrerade {0} åtgärd(er)"
-"MCP service registered {0} resource provider(s)": "MCP-tjänsten registrerade {0} resursleverantör(er)"
 "MySql node [{0}] refreshed successfully.": "MySql-noden [{0}] uppdaterades."
 "No matching domain provider configuration found for domain [{0}] (root domain: {1}); skipping update": "Ingen matchande domänleverantörskonfiguration hittades för domänen [{0}] (rotdomän: {1}); hoppar över uppdateringen"
 "Node [{0}] has no IP address; DNS cannot be updated": "Noden [{0}] har ingen IP-adress; DNS kan inte uppdateras"
@@ -72,10 +67,6 @@
 "Version is not set.": "Versionen är inte angiven."
 "Version not found.": "Versionen hittades inte."
 "Warning: Redis returned an array with an odd length {0}; the last element will be ignored": "Varning: Redis returnerade en array med udda längd {0}; det sista elementet ignoreras"
-"[McpService] Failed to update Token call statistics (ignored): {0}": "[McpService] Det gick inte att uppdatera tokenanropsstatistiken (ignorerat): {0}"
-"[McpService] MCP exception method={0} action={1} code={2} err={3}": "[McpService] MCP-undantag method={0} action={1} code={2} err={3}"
-"[McpService] Exception method={0} action={1} err={2}": "[McpService] Undantag method={0} action={1} err={2}"
-"[McpService] Failed to write the MCP audit log (ignored): {0}": "[McpService] Det gick inte att skriva MCP-revisionsloggen (ignorerat): {0}"
 # 运行时消息补充词条
 "Local execution in StarWeb is not implemented; use StarServer instead.": "Lokal körning i StarWeb är inte implementerad; använd StarServer i stället."
 "Deployment completed.": "Driftsättningen är klar."
@@ -150,7 +141,6 @@
 "Redis管理": "Redis-hantering"
 "Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open.": "Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open."
 # 宿主通过 Compile Include 复用 Stardust.Server 源码，这里同步其运行时词条
-"No permission to perform this operation.": "Ingen behörighet att utföra denna åtgärd."
 "Invalid application token": "Ogiltig applikationstoken"
 "Node must be specified.": "Nod måste anges."
 "Invalid node.": "Ogiltig nod."

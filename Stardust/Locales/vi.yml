@@ -75,7 +75,6 @@
 "Downloading {0}": "Đang tải xuống {0}"
 "Download: {0}": "Tải xuống: {0}"
 "Download [{0}]: {1} {2}": "Tải xuống [{0}]: {1} {2}"
-"Download failed, verification error: {0} (local) != {1} (remote)": "Tải xuống thất bại, lỗi xác minh: {0} (cục bộ) != {1} (từ xa)"
 "Download completed; ready to overwrite: {0}": "Tải xuống hoàn tất; sẵn sàng ghi đè: {0}"
 "Download file {0}, success: {1}": "Tải tệp {0} thành công: {1}"
 "Download file {0}, source: {1}": "Tải tệp {0}, nguồn: {1}"

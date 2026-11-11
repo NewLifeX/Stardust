@@ -1,5 +1,4 @@
 # 繁體中文譯文。鍵為英文源文，缺失時運行期回退英文。
-"No permission to perform this operation.": "無權操作！"
 "Invalid application token": "無效應用令牌"
 "Node must be specified.": "必須指定節點"
 "Invalid node.": "無效節點"

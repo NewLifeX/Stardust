@@ -1,5 +1,4 @@
 # Arabic translation. Keys are English source texts; missing entries fall back to English at runtime.
-"[McpToken] Token reset: Id={Id}, Name={Name}, old token={Masked}, IP={IP}": "[McpToken] إعادة تعيين الرمز: Id={Id}, Name={Name}, الرمز القديم={Masked}, IP={IP}"
 "Already the latest version.": "إنه أحدث إصدار بالفعل."
 "Application [{0}] forbids access from {1}.": "التطبيق [{0}] يمنع الوصول من {1}."
 "Application [{0}] has no secret configured and access is forbidden. Set a Secret for this application first.": "التطبيق [{0}] بلا سر مهيأ والوصول ممنوع. عيّن سرًا لهذا التطبيق أولاً."
@@ -33,10 +32,6 @@
 "Invalid application [{0}]": "تطبيق غير صالح [{0}]"
 "Legacy configuration compatibility: [StardustData] uses the connection settings from [{0}]; set the [StardustData] connection string directly instead.": "توافق التهيئة القديمة: يستخدم [StardustData] إعدادات الاتصال من [{0}]؛ عيّن سلسلة اتصال [StardustData] مباشرةً بدلاً من ذلك."
 "Matched online instance [id={0}]": "تمت مطابقة نسخة متصلة [id={0}]"
-"MCP action registered: {0} ({1})": "تم تسجيل إجراء MCP: {0} ({1})"
-"MCP resource provider registered: {0} ({1})": "تم تسجيل مزوّد موارد MCP: {0} ({1})"
-"MCP service registered {0} action(s)": "سجّلت خدمة MCP {0} إجراء"
-"MCP service registered {0} resource provider(s)": "سجّلت خدمة MCP {0} مزوّد موارد"
 "MySql node [{0}] refreshed successfully.": "تم تحديث عقدة MySql [{0}] بنجاح."
 "No matching domain provider configuration found for domain [{0}] (root domain: {1}); skipping update": "لم يتم العثور على تهيئة مزوّد نطاق مطابقة للنطاق [{0}] (النطاق الجذر: {1})؛ جارٍ تخطي التحديث"
 "Node [{0}] has no IP address; DNS cannot be updated": "العقدة [{0}] بلا عنوان IP؛ لا يمكن تحديث DNS"
@@ -72,10 +67,6 @@
 "Version is not set.": "لم يتم تعيين الإصدار."
 "Version not found.": "لم يتم العثور على الإصدار."
 "Warning: Redis returned an array with an odd length {0}; the last element will be ignored": "تحذير: أعاد Redis مصفوفة بطول فردي {0}؛ سيتم تجاهل العنصر الأخير"
-"[McpService] Failed to update Token call statistics (ignored): {0}": "[McpService] فشل تحديث إحصاءات استدعاء الرمز (تم التجاهل): {0}"
-"[McpService] MCP exception method={0} action={1} code={2} err={3}": "[McpService] استثناء MCP method={0} action={1} code={2} err={3}"
-"[McpService] Exception method={0} action={1} err={2}": "[McpService] استثناء method={0} action={1} err={2}"
-"[McpService] Failed to write the MCP audit log (ignored): {0}": "[McpService] فشل كتابة سجل تدقيق MCP (تم التجاهل): {0}"
 # 运行时消息补充词条
 "Local execution in StarWeb is not implemented; use StarServer instead.": "التنفيذ المحلي في StarWeb غير مُنفَّذ؛ استخدم StarServer بدلاً من ذلك."
 "Deployment completed.": "اكتمل النشر."
@@ -150,7 +141,6 @@
 "Redis管理": "إدارة Redis"
 "Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open.": "Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open."
 # 宿主通过 Compile Include 复用 Stardust.Server 源码，这里同步其运行时词条
-"No permission to perform this operation.": "لا توجد صلاحية لتنفيذ هذه العملية."
 "Invalid application token": "رمز التطبيق غير صالح"
 "Node must be specified.": "يجب تحديد العقدة."
 "Invalid node.": "عقدة غير صالحة."

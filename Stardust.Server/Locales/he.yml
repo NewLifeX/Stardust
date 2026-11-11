@@ -1,5 +1,4 @@
 # Hebrew translation. Keys are English source texts; missing entries fall back to English at runtime.
-"No permission to perform this operation.": "אין הרשאה לבצע פעולה זו."
 "Invalid application token": "אסימון היישום אינו חוקי"
 "Node must be specified.": "יש לציין צומת."
 "Invalid node.": "צומת לא חוקי."

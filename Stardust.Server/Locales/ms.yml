@@ -1,5 +1,4 @@
 # Malay translation. Keys are English source texts; missing entries fall back to English at runtime.
-"No permission to perform this operation.": "Tiada kebenaran untuk melakukan operasi ini."
 "Invalid application token": "Token aplikasi tidak sah"
 "Node must be specified.": "Nod mesti dinyatakan."
 "Invalid node.": "Nod tidak sah."

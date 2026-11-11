@@ -75,7 +75,6 @@
 "Downloading {0}": "下载 {0}"
 "Download: {0}": "下载：{0}"
 "Download [{0}]: {1} {2}": "下载[{0}]：{1} {2}"
-"Download failed, verification error: {0} (local) != {1} (remote)": "下载失败，校验错误！{0}（本地）!={1}（远程）"
 "Download completed; ready to overwrite: {0}": "下载完成，准备覆盖：{0}"
 "Download file {0}, success: {1}": "下载文件：{0}，成功：{1}"
 "Download file {0}, source: {1}": "下载文件：{0}，来源：{1}"

@@ -1,5 +1,4 @@
 # German translation. Keys are English source texts; missing entries fall back to English at runtime.
-"No permission to perform this operation.": "Keine Berechtigung zum Ausführen dieses Vorgangs."
 "Invalid application token": "Ungültiges Anwendungstoken"
 "Node must be specified.": "Der Knoten muss angegeben werden."
 "Invalid node.": "Ungültiger Knoten."

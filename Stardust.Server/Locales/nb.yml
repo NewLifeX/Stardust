@@ -1,5 +1,4 @@
 # Norwegian translation. Keys are English source texts; missing entries fall back to English at runtime.
-"No permission to perform this operation.": "Ingen tillatelse til å utføre denne handlingen."
 "Invalid application token": "Ugyldig applikasjonstoken"
 "Node must be specified.": "Node må angis."
 "Invalid node.": "Ugyldig node."

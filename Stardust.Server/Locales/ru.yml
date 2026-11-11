@@ -1,5 +1,4 @@
 # Russian translation. Keys are English source texts; missing entries fall back to English at runtime.
-"No permission to perform this operation.": "Нет прав для выполнения этой операции."
 "Invalid application token": "Недействительный токен приложения"
 "Node must be specified.": "Необходимо указать узел."
 "Invalid node.": "Недействительный узел."

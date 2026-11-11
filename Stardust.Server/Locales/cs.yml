@@ -1,5 +1,4 @@
 # Czech translation. Keys are English source texts; missing entries fall back to English at runtime.
-"No permission to perform this operation.": "Nemáte oprávnění k provedení této operace."
 "Invalid application token": "Neplatný token aplikace"
 "Node must be specified.": "Je nutné zadat uzel."
 "Invalid node.": "Neplatný uzel."

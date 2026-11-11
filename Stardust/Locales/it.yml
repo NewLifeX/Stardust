@@ -75,7 +75,6 @@
 "Downloading {0}": "Download di {0}"
 "Download: {0}": "Scaricamento: {0}"
 "Download [{0}]: {1} {2}": "Scaricamento [{0}]: {1} {2}"
-"Download failed, verification error: {0} (local) != {1} (remote)": "Download non riuscito, errore di verifica: {0} (locale) != {1} (remoto)"
 "Download completed; ready to overwrite: {0}": "Download completato; pronto a sovrascrivere: {0}"
 "Download file {0}, success: {1}": "Download del file {0}, esito positivo: {1}"
 "Download file {0}, source: {1}": "Download del file {0}, origine: {1}"

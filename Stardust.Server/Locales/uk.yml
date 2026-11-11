@@ -1,5 +1,4 @@
 # Ukrainian translation. Keys are English source texts; missing entries fall back to English at runtime.
-"No permission to perform this operation.": "Немає дозволу на виконання цієї операції."
 "Invalid application token": "Недійсний токен застосунку"
 "Node must be specified.": "Потрібно вказати вузол."
 "Invalid node.": "Недійсний вузол."

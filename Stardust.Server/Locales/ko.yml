@@ -1,5 +1,4 @@
 # Korean translation. Keys are English source texts; missing entries fall back to English at runtime.
-"No permission to perform this operation.": "이 작업을 수행할 권한이 없습니다."
 "Invalid application token": "잘못된 애플리케이션 토큰"
 "Node must be specified.": "노드를 지정해야 합니다."
 "Invalid node.": "잘못된 노드입니다."

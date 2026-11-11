@@ -1,5 +1,4 @@
 # Persian translation. Keys are English source texts; missing entries fall back to English at runtime.
-"No permission to perform this operation.": "اجازه انجام این عملیات وجود ندارد."
 "Invalid application token": "توکن برنامه نامعتبر است"
 "Node must be specified.": "باید گره مشخص شود."
 "Invalid node.": "گره نامعتبر است."

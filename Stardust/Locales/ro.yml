@@ -75,7 +75,6 @@
 "Downloading {0}": "Se descarcă {0}"
 "Download: {0}": "Descărcare: {0}"
 "Download [{0}]: {1} {2}": "Descărcare [{0}]: {1} {2}"
-"Download failed, verification error: {0} (local) != {1} (remote)": "Descărcarea a eșuat, eroare de verificare: {0} (local) != {1} (la distanță)"
 "Download completed; ready to overwrite: {0}": "Descărcare finalizată; gata de suprascriere: {0}"
 "Download file {0}, success: {1}": "Descărcare fișier {0}, succes: {1}"
 "Download file {0}, source: {1}": "Descărcare fișier {0}, sursă: {1}"

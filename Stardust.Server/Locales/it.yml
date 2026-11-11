@@ -1,5 +1,4 @@
 # Italian translation. Keys are English source texts; missing entries fall back to English at runtime.
-"No permission to perform this operation.": "Permesso negato per eseguire questa operazione."
 "Invalid application token": "Token applicazione non valido"
 "Node must be specified.": "È necessario specificare il nodo."
 "Invalid node.": "Nodo non valido."

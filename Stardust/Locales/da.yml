@@ -75,7 +75,6 @@
 "Downloading {0}": "Downloader {0}"
 "Download: {0}": "Henter: {0}"
 "Download [{0}]: {1} {2}": "Henter [{0}]: {1} {2}"
-"Download failed, verification error: {0} (local) != {1} (remote)": "Download mislykkedes, verifikationsfejl: {0} (lokal) != {1} (fjern)"
 "Download completed; ready to overwrite: {0}": "Download er fuldført; klar til at overskrive: {0}"
 "Download file {0}, success: {1}": "Downloadede filen {0}, lykkedes: {1}"
 "Download file {0}, source: {1}": "Downloadede filen {0}, kilde: {1}"

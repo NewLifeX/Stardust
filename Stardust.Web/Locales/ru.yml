@@ -1,5 +1,4 @@
 # Russian translation. Keys are English source texts; missing entries fall back to English at runtime.
-"[McpToken] Token reset: Id={Id}, Name={Name}, old token={Masked}, IP={IP}": "[McpToken] Сброс токена: Id={Id}, Name={Name}, старый token={Masked}, IP={IP}"
 "Already the latest version.": "Уже установлена последняя версия."
 "Application [{0}] forbids access from {1}.": "Приложение [{0}] запрещает доступ из {1}."
 "Application [{0}] has no secret configured and access is forbidden. Set a Secret for this application first.": "У приложения [{0}] не настроен секрет, доступ запрещён. Сначала задайте Secret для этого приложения."
@@ -33,10 +32,6 @@
 "Invalid application [{0}]": "Недействительное приложение [{0}]"
 "Legacy configuration compatibility: [StardustData] uses the connection settings from [{0}]; set the [StardustData] connection string directly instead.": "Совместимость со старой конфигурацией: [StardustData] использует параметры подключения из [{0}]; вместо этого задайте строку подключения [StardustData] напрямую."
 "Matched online instance [id={0}]": "Найден онлайн-экземпляр [id={0}]"
-"MCP action registered: {0} ({1})": "Действие MCP зарегистрировано: {0} ({1})"
-"MCP resource provider registered: {0} ({1})": "Поставщик ресурсов MCP зарегистрирован: {0} ({1})"
-"MCP service registered {0} action(s)": "Служба MCP зарегистрировала действий: {0}"
-"MCP service registered {0} resource provider(s)": "Служба MCP зарегистрировала поставщиков ресурсов: {0}"
 "MySql node [{0}] refreshed successfully.": "Узел MySql [{0}] успешно обновлён."
 "No matching domain provider configuration found for domain [{0}] (root domain: {1}); skipping update": "Для домена [{0}] не найдена подходящая конфигурация провайдера доменов (корневой домен: {1}); обновление пропущено"
 "Node [{0}] has no IP address; DNS cannot be updated": "У узла [{0}] нет IP-адреса; обновление DNS невозможно"
@@ -72,10 +67,6 @@
 "Version is not set.": "Версия не задана."
 "Version not found.": "Версия не найдена."
 "Warning: Redis returned an array with an odd length {0}; the last element will be ignored": "Предупреждение: Redis вернул массив нечётной длины {0}; последний элемент будет проигнорирован"
-"[McpService] Failed to update Token call statistics (ignored): {0}": "[McpService] Не удалось обновить статистику вызовов Token (проигнорировано): {0}"
-"[McpService] MCP exception method={0} action={1} code={2} err={3}": "[McpService] Исключение MCP method={0} action={1} code={2} err={3}"
-"[McpService] Exception method={0} action={1} err={2}": "[McpService] Исключение method={0} action={1} err={2}"
-"[McpService] Failed to write the MCP audit log (ignored): {0}": "[McpService] Не удалось записать журнал аудита MCP (проигнорировано): {0}"
 # 运行时消息补充词条
 "Local execution in StarWeb is not implemented; use StarServer instead.": "Локальное выполнение в StarWeb не реализовано; используйте StarServer."
 "Deployment completed.": "Развёртывание завершено."
@@ -150,7 +141,6 @@
 "Redis管理": "Управление Redis"
 "Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open.": "Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open."
 # 宿主通过 Compile Include 复用 Stardust.Server 源码，这里同步其运行时词条
-"No permission to perform this operation.": "Нет прав для выполнения этой операции."
 "Invalid application token": "Недействительный токен приложения"
 "Node must be specified.": "Необходимо указать узел."
 "Invalid node.": "Недействительный узел."

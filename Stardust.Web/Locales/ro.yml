@@ -1,5 +1,4 @@
 # Romanian translation. Keys are English source texts; missing entries fall back to English at runtime.
-"[McpToken] Token reset: Id={Id}, Name={Name}, old token={Masked}, IP={IP}": "[McpToken] Token resetat: Id={Id}, Name={Name}, token vechi={Masked}, IP={IP}"
 "Already the latest version.": "Este deja cea mai recentă versiune."
 "Application [{0}] forbids access from {1}.": "Aplicația [{0}] interzice accesul din {1}."
 "Application [{0}] has no secret configured and access is forbidden. Set a Secret for this application first.": "Aplicația [{0}] nu are un secret configurat și accesul este interzis. Setați mai întâi un secret pentru această aplicație."
@@ -33,10 +32,6 @@
 "Invalid application [{0}]": "Aplicație invalidă [{0}]"
 "Legacy configuration compatibility: [StardustData] uses the connection settings from [{0}]; set the [StardustData] connection string directly instead.": "Compatibilitate cu configurația veche: [StardustData] folosește setările de conexiune din [{0}]; setați direct șirul de conexiune [StardustData]."
 "Matched online instance [id={0}]": "Instanță online găsită [id={0}]"
-"MCP action registered: {0} ({1})": "Acțiune MCP înregistrată: {0} ({1})"
-"MCP resource provider registered: {0} ({1})": "Furnizor de resurse MCP înregistrat: {0} ({1})"
-"MCP service registered {0} action(s)": "Serviciul MCP a înregistrat {0} acțiune(i)"
-"MCP service registered {0} resource provider(s)": "Serviciul MCP a înregistrat {0} furnizor(i) de resurse"
 "MySql node [{0}] refreshed successfully.": "Nodul MySql [{0}] a fost reîmprospătat cu succes."
 "No matching domain provider configuration found for domain [{0}] (root domain: {1}); skipping update": "Nu a fost găsită nicio configurație de furnizor de domeniu pentru domeniul [{0}] (domeniu rădăcină: {1}); se omite actualizarea"
 "Node [{0}] has no IP address; DNS cannot be updated": "Nodul [{0}] nu are adresă IP; DNS-ul nu poate fi actualizat"
@@ -72,10 +67,6 @@
 "Version is not set.": "Versiunea nu este setată."
 "Version not found.": "Versiunea nu a fost găsită."
 "Warning: Redis returned an array with an odd length {0}; the last element will be ignored": "Avertisment: Redis a returnat o matrice cu lungime impară {0}; ultimul element va fi ignorat"
-"[McpService] Failed to update Token call statistics (ignored): {0}": "[McpService] Actualizarea statisticilor apelurilor Token a eșuat (ignorat): {0}"
-"[McpService] MCP exception method={0} action={1} code={2} err={3}": "[McpService] Excepție MCP method={0} action={1} code={2} err={3}"
-"[McpService] Exception method={0} action={1} err={2}": "[McpService] Excepție method={0} action={1} err={2}"
-"[McpService] Failed to write the MCP audit log (ignored): {0}": "[McpService] Scrierea jurnalului de audit MCP a eșuat (ignorat): {0}"
 # 运行时消息补充词条
 "Local execution in StarWeb is not implemented; use StarServer instead.": "Execuția locală în StarWeb nu este implementată; folosiți StarServer."
 "Deployment completed.": "Implementare finalizată."
@@ -150,7 +141,6 @@
 "Redis管理": "Administrare Redis"
 "Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open.": "Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open."
 # 宿主通过 Compile Include 复用 Stardust.Server 源码，这里同步其运行时词条
-"No permission to perform this operation.": "Nu aveți permisiunea de a efectua această operațiune."
 "Invalid application token": "Token de aplicație invalid"
 "Node must be specified.": "Nodul trebuie specificat."
 "Invalid node.": "Nod invalid."

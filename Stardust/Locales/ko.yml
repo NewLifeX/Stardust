@@ -75,7 +75,6 @@
 "Downloading {0}": "{0} 다운로드 중"
 "Download: {0}": "다운로드: {0}"
 "Download [{0}]: {1} {2}": "다운로드 [{0}]: {1} {2}"
-"Download failed, verification error: {0} (local) != {1} (remote)": "다운로드 실패, 검증 오류: {0}(로컬) != {1}(원격)"
 "Download completed; ready to overwrite: {0}": "다운로드가 완료되어 덮어쓸 준비가 되었습니다: {0}"
 "Download file {0}, success: {1}": "파일 {0} 다운로드, 성공: {1}"
 "Download file {0}, source: {1}": "파일 {0} 다운로드, 원본: {1}"

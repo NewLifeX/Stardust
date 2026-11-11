@@ -75,7 +75,6 @@
 "Downloading {0}": "{0} indiriliyor"
 "Download: {0}": "İndirme: {0}"
 "Download [{0}]: {1} {2}": "İndirme [{0}]: {1} {2}"
-"Download failed, verification error: {0} (local) != {1} (remote)": "İndirme başarısız, doğrulama hatası: {0} (yerel) != {1} (uzak)"
 "Download completed; ready to overwrite: {0}": "İndirme tamamlandı; üzerine yazmaya hazır: {0}"
 "Download file {0}, success: {1}": "Dosyayı indir {0}, başarılı: {1}"
 "Download file {0}, source: {1}": "Dosyayı indir {0}, kaynak: {1}"

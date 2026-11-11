@@ -1,5 +1,4 @@
 # 简体中文译文。键为英文源文，缺失时运行期回退英文。
-"[McpToken] Token reset: Id={Id}, Name={Name}, old token={Masked}, IP={IP}": "[McpToken] Token重置：Id={Id}, Name={Name}, 旧Token={Masked}, IP={IP}"
 "Already the latest version.": "已经是最新版本！"
 "Application [{0}] forbids access from {1}.": "应用[{0}]禁止{1}访问！"
 "Application [{0}] has no secret configured and access is forbidden. Set a Secret for this application first.": "应用[{0}]未配置密钥，禁止访问！请先为该应用设置Secret"
@@ -33,10 +32,6 @@
 "Invalid application [{0}]": "无效应用[{0}]"
 "Legacy configuration compatibility: [StardustData] uses the connection settings from [{0}]; set the [StardustData] connection string directly instead.": "兼容旧配置，[StardustData]使用[{0}]的连接配置，建议直接设置[StardustData]的连接字符串"
 "Matched online instance [id={0}]": "匹配到在线[id={0}]"
-"MCP action registered: {0} ({1})": "MCP动作注册：{0} ({1})"
-"MCP resource provider registered: {0} ({1})": "MCP资源Provider注册：{0} ({1})"
-"MCP service registered {0} action(s)": "MCP服务共注册 {0} 个动作"
-"MCP service registered {0} resource provider(s)": "MCP服务共注册 {0} 个资源Provider"
 "MySql node [{0}] refreshed successfully.": "刷新MySql节点[{0}]成功"
 "No matching domain provider configuration found for domain [{0}] (root domain: {1}); skipping update": "域名[{0}] 未找到匹配的域名供应商配置（根域名：{1}），跳过更新"
 "Node [{0}] has no IP address; DNS cannot be updated": "节点[{0}] 没有IP地址，无法更新DNS"
@@ -72,10 +67,6 @@
 "Version is not set.": "版本号未设置！"
 "Version not found.": "找不到版本！"
 "Warning: Redis returned an array with an odd length {0}; the last element will be ignored": "警告: Redis 返回的数组长度为奇数 {0}，最后一个元素将被忽略"
-"[McpService] Failed to update Token call statistics (ignored): {0}": "[McpService] 更新Token调用统计失败（已忽略）：{0}"
-"[McpService] MCP exception method={0} action={1} code={2} err={3}": "[McpService] MCP异常 method={0} action={1} code={2} err={3}"
-"[McpService] Exception method={0} action={1} err={2}": "[McpService] 异常 method={0} action={1} err={2}"
-"[McpService] Failed to write the MCP audit log (ignored): {0}": "[McpService] 写MCP审计日志失败（已忽略）：{0}"
 # 运行时消息补充词条
 "Local execution in StarWeb is not implemented; use StarServer instead.": "StarWeb本地执行功能暂未实现，请选择StarServer执行"
 "Deployment completed.": "部署完成"
@@ -149,7 +140,6 @@
 "Redis管理": "Redis管理"
 "Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open.": "默认重注册模式。应用“重注册模式=默认”时统一采用该策略：开放、可信接入、临时放行或关闭，默认开放"
 # 宿主通过 Compile Include 复用 Stardust.Server 源码，这里同步其运行时词条
-"No permission to perform this operation.": "无权操作！"
 "Invalid application token": "无效应用令牌"
 "Node must be specified.": "必须指定节点"
 "Invalid node.": "无效节点"

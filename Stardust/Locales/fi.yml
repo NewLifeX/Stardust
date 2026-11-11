@@ -75,7 +75,6 @@
 "Downloading {0}": "Ladataan {0}"
 "Download: {0}": "Lataus: {0}"
 "Download [{0}]: {1} {2}": "Lataus [{0}]: {1} {2}"
-"Download failed, verification error: {0} (local) != {1} (remote)": "Lataus epäonnistui, vahvistusvirhe: {0} (paikallinen) != {1} (etäinen)"
 "Download completed; ready to overwrite: {0}": "Lataus valmis; valmis korvaamaan: {0}"
 "Download file {0}, success: {1}": "Ladattiin tiedosto {0}, onnistui: {1}"
 "Download file {0}, source: {1}": "Ladattiin tiedosto {0}, lähde: {1}"

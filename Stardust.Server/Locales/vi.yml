@@ -1,5 +1,4 @@
 # Vietnamese translation. Keys are English source texts; missing entries fall back to English at runtime.
-"No permission to perform this operation.": "Không có quyền thực hiện thao tác này."
 "Invalid application token": "Token ứng dụng không hợp lệ"
 "Node must be specified.": "Phải chỉ định node."
 "Invalid node.": "Node không hợp lệ."

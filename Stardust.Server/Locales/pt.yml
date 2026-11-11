@@ -1,5 +1,4 @@
 # Portuguese translation. Keys are English source texts; missing entries fall back to English at runtime.
-"No permission to perform this operation.": "Sem permissão para realizar esta operação."
 "Invalid application token": "Token de aplicação inválido"
 "Node must be specified.": "O nó deve ser especificado."
 "Invalid node.": "Nó inválido."

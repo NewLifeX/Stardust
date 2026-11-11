@@ -75,7 +75,6 @@
 "Downloading {0}": "Λήψη {0}"
 "Download: {0}": "Λήψη: {0}"
 "Download [{0}]: {1} {2}": "Λήψη [{0}]: {1} {2}"
-"Download failed, verification error: {0} (local) != {1} (remote)": "Η λήψη απέτυχε, σφάλμα επαλήθευσης: {0} (τοπικό) != {1} (απομακρυσμένο)"
 "Download completed; ready to overwrite: {0}": "Η λήψη ολοκληρώθηκε· έτοιμο για αντικατάσταση: {0}"
 "Download file {0}, success: {1}": "Λήψη αρχείου {0}, επιτυχία: {1}"
 "Download file {0}, source: {1}": "Λήψη αρχείου {0}, πηγή: {1}"

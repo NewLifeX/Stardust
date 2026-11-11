@@ -75,7 +75,6 @@
 "Downloading {0}": "{0} downloaden"
 "Download: {0}": "Downloaden: {0}"
 "Download [{0}]: {1} {2}": "Downloaden [{0}]: {1} {2}"
-"Download failed, verification error: {0} (local) != {1} (remote)": "Download mislukt, verificatiefout: {0} (lokaal) != {1} (extern)"
 "Download completed; ready to overwrite: {0}": "Download voltooid; klaar om te overschrijven: {0}"
 "Download file {0}, success: {1}": "Bestand {0} gedownload, geslaagd: {1}"
 "Download file {0}, source: {1}": "Bestand {0} gedownload, bron: {1}"

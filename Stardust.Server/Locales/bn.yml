@@ -1,5 +1,4 @@
 # Bengali translation. Keys are English source texts; missing entries fall back to English at runtime.
-"No permission to perform this operation.": "এই কাজ করার অনুমতি নেই।"
 "Invalid application token": "অবৈধ অ্যাপ্লিকেশন টোকেন"
 "Node must be specified.": "নোড নির্দিষ্ট করতে হবে।"
 "Invalid node.": "অবৈধ নোড।"

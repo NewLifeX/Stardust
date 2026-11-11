@@ -1,5 +1,4 @@
 # Romanian translation. Keys are English source texts; missing entries fall back to English at runtime.
-"No permission to perform this operation.": "Nu aveți permisiunea de a efectua această operațiune."
 "Invalid application token": "Token de aplicație invalid"
 "Node must be specified.": "Nodul trebuie specificat."
 "Invalid node.": "Nod invalid."

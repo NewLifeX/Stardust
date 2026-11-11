@@ -1,5 +1,4 @@
 # Korean translation. Keys are English source texts; missing entries fall back to English at runtime.
-"[McpToken] Token reset: Id={Id}, Name={Name}, old token={Masked}, IP={IP}": "[McpToken] 토큰 재설정: Id={Id}, Name={Name}, 이전 토큰={Masked}, IP={IP}"
 "Already the latest version.": "이미 최신 버전입니다."
 "Application [{0}] forbids access from {1}.": "[{0}] 애플리케이션이 {1}에서의 액세스를 허용하지 않습니다."
 "Application [{0}] has no secret configured and access is forbidden. Set a Secret for this application first.": "[{0}] 애플리케이션에 비밀 키가 구성되지 않아 액세스가 금지됩니다. 먼저 이 애플리케이션의 Secret을 설정하세요."
@@ -33,10 +32,6 @@
 "Invalid application [{0}]": "잘못된 애플리케이션 [{0}]"
 "Legacy configuration compatibility: [StardustData] uses the connection settings from [{0}]; set the [StardustData] connection string directly instead.": "레거시 구성 호환: [StardustData]가 [{0}]의 연결 설정을 사용합니다. [StardustData] 연결 문자열을 직접 설정하세요."
 "Matched online instance [id={0}]": "온라인 인스턴스와 일치했습니다 [id={0}]"
-"MCP action registered: {0} ({1})": "MCP 작업 등록됨: {0} ({1})"
-"MCP resource provider registered: {0} ({1})": "MCP 리소스 공급자 등록됨: {0} ({1})"
-"MCP service registered {0} action(s)": "MCP 서비스가 {0}개 작업을 등록했습니다"
-"MCP service registered {0} resource provider(s)": "MCP 서비스가 {0}개 리소스 공급자를 등록했습니다"
 "MySql node [{0}] refreshed successfully.": "MySql 노드 [{0}]을 새로 고쳤습니다."
 "No matching domain provider configuration found for domain [{0}] (root domain: {1}); skipping update": "[{0}] 도메인에 맞는 도메인 공급자 구성을 찾지 못했습니다(루트 도메인: {1}). 업데이트를 건너뜁니다"
 "Node [{0}] has no IP address; DNS cannot be updated": "[{0}] 노드에 IP 주소가 없어 DNS를 업데이트할 수 없습니다"
@@ -72,10 +67,6 @@
 "Version is not set.": "버전이 설정되지 않았습니다."
 "Version not found.": "버전을 찾을 수 없습니다."
 "Warning: Redis returned an array with an odd length {0}; the last element will be ignored": "경고: Redis가 홀수 길이 {0}의 배열을 반환했습니다. 마지막 요소는 무시됩니다"
-"[McpService] Failed to update Token call statistics (ignored): {0}": "[McpService] 토큰 호출 통계를 업데이트하지 못했습니다(무시됨): {0}"
-"[McpService] MCP exception method={0} action={1} code={2} err={3}": "[McpService] MCP 예외 method={0} action={1} code={2} err={3}"
-"[McpService] Exception method={0} action={1} err={2}": "[McpService] 예외 method={0} action={1} err={2}"
-"[McpService] Failed to write the MCP audit log (ignored): {0}": "[McpService] MCP 감사 로그를 쓰지 못했습니다(무시됨): {0}"
 # 运行时消息补充词条
 "Local execution in StarWeb is not implemented; use StarServer instead.": "StarWeb의 로컬 실행은 구현되지 않았습니다. StarServer를 사용하세요."
 "Deployment completed.": "배포가 완료되었습니다."
@@ -150,7 +141,6 @@
 "Redis管理": "Redis 관리"
 "Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open.": "Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open."
 # 宿主通过 Compile Include 复用 Stardust.Server 源码，这里同步其运行时词条
-"No permission to perform this operation.": "이 작업을 수행할 권한이 없습니다."
 "Invalid application token": "잘못된 애플리케이션 토큰"
 "Node must be specified.": "노드를 지정해야 합니다."
 "Invalid node.": "잘못된 노드입니다."

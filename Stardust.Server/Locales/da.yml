@@ -1,5 +1,4 @@
 # Danish translation. Keys are English source texts; missing entries fall back to English at runtime.
-"No permission to perform this operation.": "Ingen tilladelse til at udføre denne handling."
 "Invalid application token": "Ugyldigt applikationstoken"
 "Node must be specified.": "Node skal angives."
 "Invalid node.": "Ugyldig node."

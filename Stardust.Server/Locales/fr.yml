@@ -1,5 +1,4 @@
 # French translation. Keys are English source texts; missing entries fall back to English at runtime.
-"No permission to perform this operation.": "Aucune autorisation pour effectuer cette opération."
 "Invalid application token": "Jeton d'application invalide"
 "Node must be specified.": "Le nœud doit être spécifié."
 "Invalid node.": "Nœud invalide."

@@ -75,7 +75,6 @@
 "Downloading {0}": "Laddar ner {0}"
 "Download: {0}": "Nedladdning: {0}"
 "Download [{0}]: {1} {2}": "Nedladdning [{0}]: {1} {2}"
-"Download failed, verification error: {0} (local) != {1} (remote)": "Nedladdningen misslyckades, verifieringsfel: {0} (lokal) != {1} (fjärr)"
 "Download completed; ready to overwrite: {0}": "Nedladdningen är klar; redo att skriva över: {0}"
 "Download file {0}, success: {1}": "Laddade ner filen {0}, lyckades: {1}"
 "Download file {0}, source: {1}": "Laddade ner filen {0}, källa: {1}"

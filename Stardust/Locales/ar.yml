@@ -75,7 +75,6 @@
 "Downloading {0}": "جارٍ تنزيل {0}"
 "Download: {0}": "التنزيل: {0}"
 "Download [{0}]: {1} {2}": "تنزيل [{0}]: {1} {2}"
-"Download failed, verification error: {0} (local) != {1} (remote)": "فشل التنزيل، خطأ في التحقق: {0} (محلي) != {1} (بعيد)"
 "Download completed; ready to overwrite: {0}": "اكتمل التنزيل؛ جاهز للكتابة فوق: {0}"
 "Download file {0}, success: {1}": "تنزيل الملف {0}، النجاح: {1}"
 "Download file {0}, source: {1}": "تنزيل الملف {0}، المصدر: {1}"

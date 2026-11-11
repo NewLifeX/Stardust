@@ -1,5 +1,4 @@
 # Thai translation. Keys are English source texts; missing entries fall back to English at runtime.
-"No permission to perform this operation.": "ไม่มีสิทธิ์ดำเนินการนี้"
 "Invalid application token": "โทเคนแอปพลิเคชันไม่ถูกต้อง"
 "Node must be specified.": "ต้องระบุโหนด"
 "Invalid node.": "โหนดไม่ถูกต้อง"

@@ -1,5 +1,4 @@
 # Turkish translation. Keys are English source texts; missing entries fall back to English at runtime.
-"No permission to perform this operation.": "Bu işlemi gerçekleştirme izniniz yok."
 "Invalid application token": "Geçersiz uygulama belirteci"
 "Node must be specified.": "Düğüm belirtilmelidir."
 "Invalid node.": "Geçersiz düğüm."

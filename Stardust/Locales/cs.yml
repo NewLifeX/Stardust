@@ -75,7 +75,6 @@
 "Downloading {0}": "Stahování {0}"
 "Download: {0}": "Stahování: {0}"
 "Download [{0}]: {1} {2}": "Stahování [{0}]: {1} {2}"
-"Download failed, verification error: {0} (local) != {1} (remote)": "Stahování selhalo, chyba ověření: {0} (místní) != {1} (vzdálený)"
 "Download completed; ready to overwrite: {0}": "Stahování dokončeno; připraveno k přepsání: {0}"
 "Download file {0}, success: {1}": "Stahování souboru {0}, úspěch: {1}"
 "Download file {0}, source: {1}": "Stahování souboru {0}, zdroj: {1}"
