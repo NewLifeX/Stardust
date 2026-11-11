@@ -68,6 +68,15 @@ public class UpgradeHealerTests
             Assert.Contains("/usr/share/dotnet/dotnet", shim);
             Assert.Contains("StarAgent.dll", shim);
             Assert.False(File.Exists(app + ".new"));
+
+            // 启动脚本必须可执行，否则 init 脚本调用时报 Permission denied，节点再也起不来
+            // net6 没有 File.SetUnixFileMode，老框架走 chmod 兜底，这里在 Linux 上统一校验结果
+            if (OperatingSystem.IsLinux())
+            {
+                var mode = File.GetUnixFileMode(app);
+                Assert.True(mode.HasFlag(UnixFileMode.UserExecute));
+                Assert.True(mode.HasFlag(UnixFileMode.OtherExecute));
+            }
         }
         finally
         {

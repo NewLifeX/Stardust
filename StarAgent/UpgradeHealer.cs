@@ -162,21 +162,7 @@ public static class UpgradeHealer
 
         var tmp = app + ".new";
         File.WriteAllText(tmp, shim);
-#if NET7_0_OR_GREATER
-        if (!Runtime.Windows)
-        {
-            // 脚本必须可执行，否则 init 脚本调用时权限不足
-            try
-            {
-                File.SetUnixFileMode(tmp, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
-                    UnixFileMode.GroupRead | UnixFileMode.GroupExecute | UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
-            }
-            catch (Exception ex)
-            {
-                log?.Debug("Upgrade self-heal: set executable mode failed: {0}", ex.Message);
-            }
-        }
-#endif
+        if (!Runtime.Windows) SetExecutable(tmp, log);
         // 覆盖式改名，失败时旧文件仍在，不影响启动
 #if NETFRAMEWORK
         File.Delete(app);
@@ -188,6 +174,31 @@ public static class UpgradeHealer
         log?.Info("Upgrade self-heal: startup entry {0} replaced by dotnet shim {1}", app, host);
 
         return L.TLog("startup entry {0} repaired", Path.GetFileName(app));
+    }
+
+    /// <summary>给启动脚本加执行权限</summary>
+    /// <remarks>
+    /// net6 没有 File.SetUnixFileMode，而 StarAgent 仍多目标 net6.0：脚本按默认 0644 覆盖启动入口后，
+    /// SysVinit/systemd 再启动就会报 Permission denied，节点彻底起不来。老框架退回调用 chmod。
+    /// </remarks>
+    /// <param name="file">脚本文件</param>
+    /// <param name="log">日志</param>
+    private static void SetExecutable(String file, ILog? log)
+    {
+        try
+        {
+#if NET7_0_OR_GREATER
+            File.SetUnixFileMode(file, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
+                UnixFileMode.GroupRead | UnixFileMode.GroupExecute | UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
+#else
+            var p = Process.Start(new ProcessStartInfo("/bin/chmod", "+x " + file) { UseShellExecute = false });
+            p?.WaitForExit(5_000);
+#endif
+        }
+        catch (Exception ex)
+        {
+            log?.Debug("Upgrade self-heal: set executable mode failed: {0}", ex.Message);
+        }
     }
 
     /// <summary>按当前进程的实际文件构造服务定义</summary>
