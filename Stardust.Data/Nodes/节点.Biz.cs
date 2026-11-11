@@ -564,7 +564,7 @@ public partial class Node : Entity<Node>, IDeviceModel2, ILogProvider
             {
                 // 升级生效，停止自动重试
                 node.UpgradeAttempts = MaxUpgradeAttempts;
-                node.WriteHistory(HistoryAction.Upgrade, true, $"升级生效 {node.Version} => {info.Version}", node.UpdateIP);
+                node.WriteHistory(HistoryAction.Upgrade, true, L.TLog("Upgrade effective: {0} => {1}", node.Version, info.Version), node.UpdateIP);
             }
             else
             {

@@ -920,7 +920,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         node.UpgradeAttempts = attempts;
         node.Update();
 
-        node.WriteHistory(HistoryAction.AutoUpdate, true, $"channel={channel} from={node.Version} last={last} attempts={attempts} => {detail}（已下发，待节点确认）", ip);
+        node.WriteHistory(HistoryAction.AutoUpdate, true, L.TLog("Auto update dispatched: channel={0} from={1} last={2} attempts={3} => {4}; awaiting node confirmation", channel, node.Version, last, attempts, detail), ip);
     }
 
     /// <summary>检查节点是否符合规则，并推送dotNet运行时安装指令</summary>

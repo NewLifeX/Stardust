@@ -207,12 +207,12 @@ public class DashboardController(DashboardService service) : ControllerBaseX
     {
         var record = AlarmRecord.FindByKey(id);
         if (record == null) return NotFound();
-        if (record.Status == AlarmStatuses.Recovered) return StatusCode(400, new { message = "报警已恢复" });
+        if (record.Status == AlarmStatuses.Recovered) return StatusCode(400, new { message = "The alarm has already recovered." });
 
         if (!CanOperateAlarm(record, out var message)) return StatusCode(403, new { message });
 
         var user = ManageProvider.User?.Name ?? "";
-        if (!record.Ack(user)) return StatusCode(500, new { message = "确认失败" });
+        if (!record.Ack(user)) return StatusCode(500, new { message = "Failed to acknowledge the alarm." });
 
         _service.ClearCache();
         return Json(new { success = true, ackUser = record.AckUser, ackTime = record.AckTime.ToString("MM-dd HH:mm") });
@@ -229,12 +229,12 @@ public class DashboardController(DashboardService service) : ControllerBaseX
     {
         var record = AlarmRecord.FindByKey(id);
         if (record == null) return NotFound();
-        if (record.Status == AlarmStatuses.Recovered) return StatusCode(400, new { message = "报警已恢复" });
+        if (record.Status == AlarmStatuses.Recovered) return StatusCode(400, new { message = "The alarm has already recovered." });
 
         if (!CanOperateAlarm(record, out var message)) return StatusCode(403, new { message });
 
         hours = Math.Clamp(hours, 1, 24 * 7);
-        if (!record.Silence(hours)) return StatusCode(500, new { message = "静默失败" });
+        if (!record.Silence(hours)) return StatusCode(500, new { message = "Failed to silence the alarm." });
 
         _service.ClearCache();
         return Json(new { success = true, hours, silenceTime = record.SilenceTime.ToString("MM-dd HH:mm") });
@@ -250,20 +250,20 @@ public class DashboardController(DashboardService service) : ControllerBaseX
 
         if (ManageProvider.User == null)
         {
-            message = "未登录";
+            message = "Not logged in.";
             return false;
         }
 
         if (!HasAlarmPermission())
         {
-            message = "没有告警操作权限";
+            message = "No permission to operate alarms.";
             return false;
         }
 
         var scope = ResolveScope();
         if (!_service.CanOperateAlarm(scope, record))
         {
-            message = "无权操作该项目的告警";
+            message = "No permission to operate alarms of this project.";
             return false;
         }
 

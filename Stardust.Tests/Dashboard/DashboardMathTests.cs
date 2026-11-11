@@ -183,10 +183,10 @@ public class DashboardMathTests
     public void Duration_Formats()
     {
         Assert.Equal("—", DashboardMath.Duration(0));
-        Assert.Equal("45 秒", DashboardMath.Duration(45));
-        Assert.Equal("2 分 5 秒", DashboardMath.Duration(125));
-        Assert.Equal("1 小时 2 分", DashboardMath.Duration(3720));
-        Assert.Equal("2 天 3 小时", DashboardMath.Duration(2 * 86400 + 3 * 3600));
+        Assert.Equal("45s", DashboardMath.Duration(45));
+        Assert.Equal("2m 5s", DashboardMath.Duration(125));
+        Assert.Equal("1h 2m", DashboardMath.Duration(3720));
+        Assert.Equal("2d 3h", DashboardMath.Duration(2 * 86400 + 3 * 3600));
     }
 
     [Fact(DisplayName = "百分比：分母为零返回零")]

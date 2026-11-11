@@ -20,16 +20,16 @@ public static class DashboardMath
 
     /// <summary>把秒数格式化为人类可读时长</summary>
     /// <param name="seconds">秒数</param>
-    /// <returns>如「3 小时 12 分」</returns>
+    /// <returns>如「3h 12m」</returns>
     public static String Duration(Int32 seconds)
     {
         if (seconds <= 0) return "—";
 
         var ts = TimeSpan.FromSeconds(seconds);
-        if (ts.TotalDays >= 1) return $"{(Int32)ts.TotalDays} 天 {ts.Hours} 小时";
-        if (ts.TotalHours >= 1) return $"{(Int32)ts.TotalHours} 小时 {ts.Minutes} 分";
-        if (ts.TotalMinutes >= 1) return $"{(Int32)ts.TotalMinutes} 分 {ts.Seconds} 秒";
-        return $"{ts.Seconds} 秒";
+        if (ts.TotalDays >= 1) return $"{(Int32)ts.TotalDays}d {ts.Hours}h";
+        if (ts.TotalHours >= 1) return $"{(Int32)ts.TotalHours}h {ts.Minutes}m";
+        if (ts.TotalMinutes >= 1) return $"{(Int32)ts.TotalMinutes}m {ts.Seconds}s";
+        return $"{ts.Seconds}s";
     }
 
     /// <summary>计算项目健康度。在线率与错误率越低扣分越多，告警额外扣分</summary>

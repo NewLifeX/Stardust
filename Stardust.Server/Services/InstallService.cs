@@ -257,7 +257,7 @@ curl -fsSL '{{url}}'"$ARCH" | bash
     private static String BuildRuntimeBlock(DotNetPackage? runtime, Boolean isWindows)
     {
         if (runtime == null || runtime.Source.IsNullOrEmpty())
-            return "# 无需安装 .NET 运行时（自包含发布包或已安装）";
+            return "# No .NET runtime installation required (self-contained package or already installed)";
 
         if (isWindows)
         {

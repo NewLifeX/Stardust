@@ -25,7 +25,7 @@ public class McpOperations : IMcpOperations
 
     public Task<Int32> SetConfigAsync(Int32 configId, IDictionary<String, Object> configs)
     {
-        var cfg = AppConfig.FindById(configId) ?? throw new InvalidOperationException("配置不存在");
+        var cfg = AppConfig.FindById(configId) ?? throw new InvalidOperationException("Configuration does not exist.");
         return Task.FromResult(_config.SetConfigs(cfg, configs));
     }
 
@@ -33,9 +33,9 @@ public class McpOperations : IMcpOperations
 
     public async Task<String> UseVersionAsync(Int32 versionId, String ip)
     {
-        var ver = AppDeployVersion.FindById(versionId) ?? throw new InvalidOperationException("版本不存在");
+        var ver = AppDeployVersion.FindById(versionId) ?? throw new InvalidOperationException("Version does not exist.");
         if (!ver.Enable || ver.Version.IsNullOrEmpty() || ver.Url.IsNullOrEmpty())
-            throw new InvalidOperationException("版本未启用、没有版本号或没有包地址");
+            throw new InvalidOperationException("The version is disabled, or has no version number or package URL.");
         var app = ver.Deploy ?? AppDeploy.FindById(ver.DeployId);
         app.Version = ver.Version;
         app.Update();
@@ -43,9 +43,9 @@ public class McpOperations : IMcpOperations
         {
             foreach (var node in AppDeployNode.FindAllByAppId(app.Id).Where(e => e.Enable))
                 await _deploy.Control(app, node, "install", ip, node.Delay, 0);
-            return "已切换版本，并按自动发布向启用节点下发安装";
+            return "Version switched and installation dispatched to enabled nodes by auto publish.";
         }
-        return "已切换版本号，未开启自动发布，未下发节点";
+        return "Version switched; auto publish is disabled, so no nodes were dispatched.";
     }
 
     public async Task<Int32> ControlDeployAsync(Int32 deployId, Int32 deployNodeId, String action, String ip)
