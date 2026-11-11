@@ -577,7 +577,7 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
         if (Interlocked.CompareExchange(ref _upgrading, 1, 0) != 0)
         {
             // 平台命令会把 null 解释成“无可用更新”，这里补一条事件，让节点历史能看出是“已有升级进行中”
-            var msg = L.T("Another upgrade is already in progress; skipping this request.");
+            var msg = L.TLog("Another upgrade is already in progress; skipping this request.");
             WriteLog(msg);
             WriteEvent("info", "Upgrade", msg);
 
