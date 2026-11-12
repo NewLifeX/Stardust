@@ -33,13 +33,14 @@ client.Start();
 ```
 
 <details>
-<summary><b>Funktionen</b> (6)</summary>
+<summary><b>Funktionen</b> (7)</summary>
 
 - Knotenverwaltung und Anwendungs-Onboarding in einer Konsole
 - Konfigurationszentrale mit automatischer Auslieferung; Registry und Diensterkennung
 - Tracing und APM mit Alarmen und geschichteten Dashboards
 - Release-Center: Pipelines, Canary-Releases und Rollback mit einem Klick
 - Gateway, MySQL/Redis-Datenmiddleware und MCP-Tool-Service
+- KI-Chatdienst: Nachgelagerte Anwendungen rufen über das Stardust-Anmeldetoken große Sprachmodelle auf
 - Einzeilige SDKs für .NET und weitere Sprachen, leichtgewichtig und selbst gehostet
 
 </details>

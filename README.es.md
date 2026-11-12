@@ -33,13 +33,14 @@ client.Start();
 ```
 
 <details>
-<summary><b>Características</b> (6)</summary>
+<summary><b>Características</b> (7)</summary>
 
 - Gestión de nodos y alta de aplicaciones en una sola consola
 - Centro de configuración con entrega automática; registro y descubrimiento de servicios
 - Trazas y APM con alertas y paneles por niveles
 - Centro de despliegues: canalizaciones, despliegue gradual y reversión con un clic
 - Pasarela, middleware de datos MySQL/Redis y servicio de herramientas MCP
+- Servicio de chat con IA: las aplicaciones descendentes reutilizan el token de inicio de sesión de Stardust para llamar a modelos de lenguaje
 - SDK de una línea para .NET y varios lenguajes, ligero y autoalojado
 
 </details>

@@ -220,3 +220,10 @@
 "The application [{0}] carried by the token does not exist. Check that the application exists and is enabled in the registry.": "The application [{0}] carried by the token does not exist. Check that the application exists and is enabled in the registry."
 "The current connection has no valid application identity. Application commands require an application token.": "The current connection has no valid application identity. Application commands require an application token."
 "Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "Alapértelmezett nyelv. A bejelentkezéskor és szívveréskor kerül az ügyfelekhez, pl. zh-Hans vagy en; üres esetén a magkonfiguráció DefaultLanguage értéke érvényes."
+# 运行时消息补充词条
+"AI chat is disabled.": "Az AI csevegés le van tiltva"
+"The AI service is not configured. Set AIUrl and AIModel in the platform settings.": "Az AI szolgáltatás nincs beállítva. Állítsa be az AIUrl és AIModel értékét a platform beállításaiban"
+"AI request contains no valid message.": "Az AI kérés nem tartalmaz érvényes üzenetet"
+"AI model [{0}] is not allowed.": "Az AI modell [{0}] nem engedélyezett"
+"AI upstream request failed: {0}": "Az AI felsőbb szolgáltatás kérése sikertelen: {0}"
+"AI upstream returned an invalid response: {0}": "Az AI szolgáltatás érvénytelen választ adott: {0}"

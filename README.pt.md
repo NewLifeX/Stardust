@@ -33,13 +33,14 @@ client.Start();
 ```
 
 <details>
-<summary><b>Recursos</b> (6)</summary>
+<summary><b>Recursos</b> (7)</summary>
 
 - Gestão de nós e integração de aplicações em um único console
 - Central de configuração com entrega automática; registro e descoberta de serviços
 - Rastreamento e APM com alertas e painéis em camadas
 - Central de releases: pipelines, implantação gradual e reversão com um clique
 - Gateway, middleware de dados MySQL/Redis e serviço de ferramentas MCP
+- Serviço de chat com IA: aplicações downstream reutilizam o token de login do Stardust para chamar modelos de linguagem
 - SDK de uma linha para .NET e várias linguagens, leve e auto-hospedado
 
 </details>

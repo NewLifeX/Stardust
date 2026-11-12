@@ -220,3 +220,10 @@
 "The application [{0}] carried by the token does not exist. Check that the application exists and is enabled in the registry.": "The application [{0}] carried by the token does not exist. Check that the application exists and is enabled in the registry."
 "The current connection has no valid application identity. Application commands require an application token.": "The current connection has no valid application identity. Application commands require an application token."
 "Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "Προεπιλεγμένη γλώσσα. Αποστέλλεται στους πελάτες κατά τη σύνδεση και το heartbeat, π.χ. zh-Hans ή en· κενή σημαίνει χρήση του DefaultLanguage από τη βασική ρύθμιση παραμέτρων."
+# 运行时消息补充词条
+"AI chat is disabled.": "Η συνομιλία AI είναι απενεργοποιημένη"
+"The AI service is not configured. Set AIUrl and AIModel in the platform settings.": "Η υπηρεσία AI δεν έχει ρυθμιστεί. Ορίστε τα AIUrl και AIModel στις ρυθμίσεις της πλατφόρμας"
+"AI request contains no valid message.": "Το αίτημα AI δεν περιέχει έγκυρο μήνυμα"
+"AI model [{0}] is not allowed.": "Το μοντέλο AI [{0}] δεν επιτρέπεται"
+"AI upstream request failed: {0}": "Το αίτημα προς την υπηρεσία AI απέτυχε: {0}"
+"AI upstream returned an invalid response: {0}": "Η υπηρεσία AI επέστρεψε μη έγκυρη απάντηση: {0}"

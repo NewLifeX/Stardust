@@ -220,3 +220,11 @@
 "DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService 同步 {0} 失败：{1}"
 "DotNetSyncService.Error {0}": "DotNetSyncService 异常：{0}"
 "Default re-registration mode for applications that follow the global setting: open, trusted access, temporary, or off. Default open.": "默认重注册模式。应用“重注册模式=默认”时统一采用该策略：开放、可信接入、临时放行或关闭，默认开放"
+
+# AI对话运行时消息
+"AI chat is disabled.": "AI对话未启用"
+"The AI service is not configured. Set AIUrl and AIModel in the platform settings.": "AI服务未配置，请在平台设置中配置AIUrl和AIModel"
+"AI request contains no valid message.": "AI请求中没有有效消息"
+"AI model [{0}] is not allowed.": "不允许使用AI模型[{0}]"
+"AI upstream request failed: {0}": "AI上游请求失败：{0}"
+"AI upstream returned an invalid response: {0}": "AI上游返回无效响应：{0}"

@@ -33,13 +33,14 @@ client.Start();
 ```
 
 <details>
-<summary><b>Fonctionnalités</b> (6)</summary>
+<summary><b>Fonctionnalités</b> (7)</summary>
 
 - Gestion des nœuds et intégration des applications dans une seule console
 - Centre de configuration avec diffusion automatique ; registre et découverte de services
 - Traçage et APM avec alertes et tableaux de bord à plusieurs niveaux
 - Centre de déploiement : pipelines, déploiement progressif et retour arrière en un clic
 - Passerelle, intergiciel de données MySQL/Redis et service d'outils MCP
+- Service de chat IA : les applications en aval réutilisent le jeton de connexion Stardust pour appeler de grands modèles de langage
 - SDK en une ligne pour .NET et plusieurs langages, léger et auto-hébergé
 
 </details>

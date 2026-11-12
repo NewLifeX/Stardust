@@ -220,3 +220,10 @@
 "The application [{0}] carried by the token does not exist. Check that the application exists and is enabled in the registry.": "The application [{0}] carried by the token does not exist. Check that the application exists and is enabled in the registry."
 "The current connection has no valid application identity. Application commands require an application token.": "The current connection has no valid application identity. Application commands require an application token."
 "Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "Lingua predefinita. Inviata ai client al login e all'heartbeat, ad es. zh-Hans o en; vuoto usa DefaultLanguage dalla configurazione principale."
+# 运行时消息补充词条
+"AI chat is disabled.": "La chat IA è disattivata"
+"The AI service is not configured. Set AIUrl and AIModel in the platform settings.": "Il servizio IA non è configurato. Impostare AIUrl e AIModel nelle impostazioni della piattaforma"
+"AI request contains no valid message.": "La richiesta IA non contiene messaggi validi"
+"AI model [{0}] is not allowed.": "Il modello IA [{0}] non è consentito"
+"AI upstream request failed: {0}": "Richiesta al servizio IA non riuscita: {0}"
+"AI upstream returned an invalid response: {0}": "Il servizio IA ha restituito una risposta non valida: {0}"

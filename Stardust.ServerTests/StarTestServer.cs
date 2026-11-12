@@ -3,6 +3,7 @@ using System.IO;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
+using NewLife.Model;
 using Stardust.Server;
 using Xunit;
 
@@ -92,7 +93,15 @@ public sealed class StarTestServer : IDisposable
     }
 
     /// <summary>销毁测试服务器</summary>
-    public void Dispose() => Server.Dispose();
+    public void Dispose()
+    {
+        Server.Dispose();
+
+        // StarServer 启动时把全局容器的内层提供者桥接到测试宿主，宿主释放后全局容器仍指向已释放实例，
+        // 后续不依赖宿主的测试（如 WebhookParserTests）反序列化时会抛 ObjectDisposedException。
+        // 这里恢复默认容器，保证测试之间的全局状态干净。
+        ObjectContainer.Provider = ObjectContainer.Current.BuildServiceProvider();
+    }
 }
 
 /// <summary>共享进程内 StarServer 的测试集合</summary>

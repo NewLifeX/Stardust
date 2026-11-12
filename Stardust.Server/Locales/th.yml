@@ -220,3 +220,10 @@
 "The application [{0}] carried by the token does not exist. Check that the application exists and is enabled in the registry.": "The application [{0}] carried by the token does not exist. Check that the application exists and is enabled in the registry."
 "The current connection has no valid application identity. Application commands require an application token.": "The current connection has no valid application identity. Application commands require an application token."
 "Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "ภาษาเริ่มต้น ส่งให้ไคลเอนต์เมื่อเข้าสู่ระบบและ heartbeat เช่น zh-Hans หรือ en; หากเว้นว่างจะใช้ DefaultLanguage จากคอนฟิกหลัก"
+# 运行时消息补充词条
+"AI chat is disabled.": "แชท AI ถูกปิดใช้งาน"
+"The AI service is not configured. Set AIUrl and AIModel in the platform settings.": "ยังไม่ได้กำหนดค่าบริการ AI โปรดตั้งค่า AIUrl และ AIModel ในการตั้งค่าแพลตฟอร์ม"
+"AI request contains no valid message.": "คำขอ AI ไม่มีข้อความที่ถูกต้อง"
+"AI model [{0}] is not allowed.": "ไม่อนุญาตให้ใช้โมเดล AI [{0}]"
+"AI upstream request failed: {0}": "คำขอไปยังบริการ AI ล้มเหลว: {0}"
+"AI upstream returned an invalid response: {0}": "บริการ AI ส่งคืนการตอบสนองที่ไม่ถูกต้อง: {0}"

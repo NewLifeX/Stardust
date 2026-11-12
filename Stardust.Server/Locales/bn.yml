@@ -220,3 +220,10 @@
 "The application [{0}] carried by the token does not exist. Check that the application exists and is enabled in the registry.": "The application [{0}] carried by the token does not exist. Check that the application exists and is enabled in the registry."
 "The current connection has no valid application identity. Application commands require an application token.": "The current connection has no valid application identity. Application commands require an application token."
 "Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "ডিফল্ট ভাষা। লগইন এবং হার্টবিটে ক্লায়েন্টদের কাছে পাঠানো হয়, যেমন zh-Hans বা en; খালি রাখলে কোর কনফিগারেশনের DefaultLanguage ব্যবহার করা হয়।"
+# 运行时消息补充词条
+"AI chat is disabled.": "AI চ্যাট নিষ্ক্রিয় আছে"
+"The AI service is not configured. Set AIUrl and AIModel in the platform settings.": "AI পরিষেবা কনফিগার করা হয়নি। প্ল্যাটফর্ম সেটিংসে AIUrl এবং AIModel সেট করুন"
+"AI request contains no valid message.": "AI অনুরোধে কোনো বৈধ বার্তা নেই"
+"AI model [{0}] is not allowed.": "AI মডেল [{0}] অনুমোদিত নয়"
+"AI upstream request failed: {0}": "AI আপস্ট্রিম অনুরোধ ব্যর্থ হয়েছে: {0}"
+"AI upstream returned an invalid response: {0}": "AI আপস্ট্রিম একটি অবৈধ প্রতিক্রিয়া দিয়েছে: {0}"

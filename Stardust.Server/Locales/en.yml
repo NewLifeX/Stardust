@@ -55,3 +55,14 @@
 "附件下载鉴权": "Attachment download authentication"
 "免登录公开附件分类": "Public attachment categories that require no login"
 "附件下载令牌有效期": "Attachment download token validity"
+
+# AI对话设置项
+"启用AI对话": "Enable AI chat"
+"AI对话地址": "AI chat endpoint"
+"AI访问密钥": "AI access key"
+"AI默认模型": "Default AI model"
+"AI允许模型清单": "Allowed AI models"
+"AI默认系统提示词": "Default AI system prompt"
+"AI请求超时": "AI request timeout"
+"AI默认采样温度": "Default AI temperature"
+"AI默认最大输出令牌数": "Default AI max tokens"

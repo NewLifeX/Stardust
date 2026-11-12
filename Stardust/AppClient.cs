@@ -1,9 +1,13 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
+using System.Net.Http.Headers;
 using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Runtime;
+using System.Runtime.CompilerServices;
+using System.Text;
 using NewLife;
 using NewLife.Data;
 using NewLife.Log;
@@ -108,6 +112,8 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
     protected override void Dispose(Boolean disposing)
     {
         base.Dispose(disposing);
+
+        lock (_chatLock) _httpClient.TryDispose();
 
         foreach (var item in _publishServices)
         {
@@ -626,6 +632,281 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
         var msg = $"event#{topic}#{ActualClientId}#{message}";
 
         return SendAsync((ArrayPacket)msg.GetBytes(), cancellationToken);
+    }
+    #endregion
+
+    #region AI对话
+    private readonly Object _chatLock = new();
+    private HttpClient? _httpClient;
+    private String? _httpServer;
+
+    /// <summary>AI对话超时时间。默认120_000ms</summary>
+    /// <remarks>大模型生成耗时远高于普通接口，独立使用自己的Http客户端，避免把普通接口的15秒超时放大；流式对话由调用方取消令牌控制</remarks>
+    public Int32 ChatTimeout { get; set; } = 120_000;
+
+    /// <summary>AI对话。一次性返回完整回复，与服务端共用登录令牌</summary>
+    /// <param name="prompt">用户提示词</param>
+    /// <param name="systemPrompt">系统提示词。为空时使用服务端默认提示词</param>
+    /// <param name="cancellationToken">取消通知</param>
+    /// <returns>对话响应</returns>
+    /// <exception cref="ArgumentNullException">提示词为空时抛出</exception>
+    /// <remarks>
+    /// 服务端只维护一份上游大模型密钥，应用登录星尘后即可使用AI能力，接口遵循 OpenAI Chat Completions 协议。
+    /// 需要多轮对话时，由调用方自行维护历史消息并调用 <see cref="ChatAsync(AIChatRequest, CancellationToken)"/>；
+    /// 需要边生成边展示时使用 <see cref="ChatStreamAsync(AIChatRequest, CancellationToken)"/>。
+    /// </remarks>
+    public Task<AIChatResponse?> ChatAsync(String prompt, String? systemPrompt = null, CancellationToken cancellationToken = default)
+    {
+        if (prompt.IsNullOrEmpty()) throw new ArgumentNullException(nameof(prompt));
+
+        var request = new AIChatRequest
+        {
+            Messages = [new AIChatMessage { Content = prompt }],
+            SystemPrompt = systemPrompt,
+        };
+
+        return ChatAsync(request, cancellationToken);
+    }
+
+    /// <summary>AI对话。一次性返回完整回复，与服务端共用登录令牌</summary>
+    /// <param name="request">对话请求。携带完整消息列表</param>
+    /// <param name="cancellationToken">取消通知</param>
+    /// <returns>对话响应</returns>
+    /// <exception cref="ArgumentNullException">请求为空时抛出</exception>
+    public async Task<AIChatResponse?> ChatAsync(AIChatRequest request, CancellationToken cancellationToken = default)
+    {
+        if (request == null) throw new ArgumentNullException(nameof(request));
+
+        // 首次调用前完成初始化，确保JsonHost与主客户端就绪
+        Init();
+        if (!Logined && Features.HasFlag(Features.Login)) await Login(nameof(ChatAsync), cancellationToken).ConfigureAwait(false);
+
+        var sw = Stopwatch.StartNew();
+        for (var retry = 0; ; retry++)
+        {
+            using var source = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            if (ChatTimeout > 0) source.CancelAfter(ChatTimeout);
+
+            using var msg = CreateChatRequest(request, false);
+            using var response = await GetChatClient().SendAsync(msg, source.Token).ConfigureAwait(false);
+
+            // 令牌过期时重新登录，再重试一次
+            if (response.StatusCode == HttpStatusCode.Unauthorized && retry == 0 && Logined)
+            {
+                Status = LoginStatus.Ready;
+                await Login(nameof(ChatAsync), cancellationToken).ConfigureAwait(false);
+                continue;
+            }
+
+            var text = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode) throw CreateChatException(text, response.StatusCode);
+
+            var dto = JsonHost.Read<OpenAIChatResponse>(text, null) ?? throw new ApiException(ApiCode.InternalServerError, "Empty AI response");
+            var choice = dto.Choices?.FirstOrDefault();
+            sw.Stop();
+
+            return new AIChatResponse
+            {
+                Content = choice?.Message?.Content,
+                Model = dto.Model,
+                FinishReason = choice?.FinishReason,
+                Usage = dto.Usage == null ? null : new AIChatUsage
+                {
+                    InputTokens = dto.Usage.PromptTokens,
+                    OutputTokens = dto.Usage.CompletionTokens,
+                    TotalTokens = dto.Usage.TotalTokens,
+                },
+                Elapsed = sw.ElapsedMilliseconds,
+            };
+        }
+    }
+
+    /// <summary>AI流式对话。逐段返回回复内容，与服务端共用登录令牌</summary>
+    /// <param name="prompt">用户提示词</param>
+    /// <param name="systemPrompt">系统提示词。为空时使用服务端默认提示词</param>
+    /// <param name="cancellationToken">取消通知</param>
+    /// <returns>增量序列。最后一段带 <see cref="AIChatDelta.FinishReason"/></returns>
+    /// <exception cref="ArgumentNullException">提示词为空时抛出</exception>
+    public IAsyncEnumerable<AIChatDelta> ChatStreamAsync(String prompt, String? systemPrompt = null, CancellationToken cancellationToken = default)
+    {
+        if (prompt.IsNullOrEmpty()) throw new ArgumentNullException(nameof(prompt));
+
+        var request = new AIChatRequest
+        {
+            Messages = [new AIChatMessage { Content = prompt }],
+            SystemPrompt = systemPrompt,
+        };
+
+        return ChatStreamAsync(request, cancellationToken);
+    }
+
+    /// <summary>AI流式对话。逐段返回回复内容，与服务端共用登录令牌</summary>
+    /// <param name="request">对话请求。携带完整消息列表</param>
+    /// <param name="cancellationToken">取消通知</param>
+    /// <returns>增量序列。最后一段带 <see cref="AIChatDelta.FinishReason"/></returns>
+    /// <exception cref="ArgumentNullException">请求为空时抛出</exception>
+    /// <remarks>事件流由服务端以 OpenAI 兼容的 SSE 下发，客户端逐行解析；调用方取消时立即结束并释放连接</remarks>
+    public async IAsyncEnumerable<AIChatDelta> ChatStreamAsync(AIChatRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        if (request == null) throw new ArgumentNullException(nameof(request));
+
+        // 首次调用前完成初始化，确保JsonHost与主客户端就绪
+        Init();
+        if (!Logined && Features.HasFlag(Features.Login)) await Login(nameof(ChatStreamAsync), cancellationToken).ConfigureAwait(false);
+
+        var sw = Stopwatch.StartNew();
+        for (var retry = 0; ; retry++)
+        {
+            using var msg = CreateChatRequest(request, true);
+            using var response = await GetChatClient().SendAsync(msg, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+
+            // 令牌过期时重新登录，再重试一次
+            if (response.StatusCode == HttpStatusCode.Unauthorized && retry == 0 && Logined)
+            {
+                Status = LoginStatus.Ready;
+                await Login(nameof(ChatStreamAsync), cancellationToken).ConfigureAwait(false);
+                continue;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var text = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                throw CreateChatException(text, response.StatusCode);
+            }
+
+            using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+            using var reader = new StreamReader(stream, Encoding.UTF8);
+
+            while (true)
+            {
+                String? line;
+#if NET7_0_OR_GREATER
+                line = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
+#else
+                line = await reader.ReadLineAsync().ConfigureAwait(false);
+#endif
+                if (line == null) yield break;
+                if (line.Length == 0) continue;
+                if (!line.StartsWith("data:")) continue;
+
+                var data = line[5..].Trim();
+                if (data == "[DONE]") yield break;
+
+                var dto = JsonHost.Read<OpenAIChatResponse>(data, null);
+                if (dto == null) continue;
+
+                // 流式错误分片
+                if (dto.Error != null) throw new ApiException(ApiCode.InternalServerError, dto.Error.Message + "");
+
+                var choice = dto.Choices?.FirstOrDefault();
+                var delta = new AIChatDelta
+                {
+                    Content = choice?.Delta?.Content,
+                    Model = dto.Model,
+                    FinishReason = choice?.FinishReason,
+                    Usage = dto.Usage == null ? null : new AIChatUsage
+                    {
+                        InputTokens = dto.Usage.PromptTokens,
+                        OutputTokens = dto.Usage.CompletionTokens,
+                        TotalTokens = dto.Usage.TotalTokens,
+                    },
+                };
+
+                // 角色分片等非文本增量不向下游转发
+                if (delta.Content == null && delta.FinishReason == null && delta.Usage == null) continue;
+
+                if (delta.FinishReason != null) delta.Elapsed = sw.ElapsedMilliseconds;
+
+                yield return delta;
+            }
+        }
+    }
+
+    /// <summary>获取AI对话客户端。使用独立长连接与无限超时，由取消令牌控制生命周期</summary>
+    /// <returns>HTTP客户端</returns>
+    private HttpClient GetChatClient()
+    {
+        var server = Server ?? Setting?.Server;
+        if (server.IsNullOrEmpty()) throw new InvalidOperationException("Server address is not specified.");
+        if (!server.StartsWithIgnoreCase("http://", "https://")) throw new NotSupportedException("AI chat requires an HTTP server address.");
+
+        var url = server.Split(',')[0].Trim();
+
+        lock (_chatLock)
+        {
+            if (_httpClient != null && _httpServer == url) return _httpClient;
+
+            _httpClient?.Dispose();
+            _httpClient = new HttpClient
+            {
+                BaseAddress = new Uri(url.TrimEnd('/') + "/"),
+                Timeout = System.Threading.Timeout.InfiniteTimeSpan,
+            };
+            _httpServer = url;
+
+            return _httpClient;
+        }
+    }
+
+    /// <summary>创建OpenAI兼容对话请求。携带与普通接口相同的登录令牌</summary>
+    /// <param name="model">对话请求</param>
+    /// <param name="stream">是否流式</param>
+    /// <returns>HTTP请求消息</returns>
+    private HttpRequestMessage CreateChatRequest(AIChatRequest model, Boolean stream)
+    {
+        var messages = new List<OpenAIChatMessage>();
+        if (!model.SystemPrompt.IsNullOrWhiteSpace()) messages.Add(new OpenAIChatMessage { Role = "system", Content = model.SystemPrompt });
+        foreach (var item in model.Messages ?? [])
+        {
+            messages.Add(new OpenAIChatMessage { Role = item.Role, Content = item.Content });
+        }
+
+        var body = new OpenAIChatRequest
+        {
+            Model = model.Model,
+            Messages = messages,
+            Temperature = model.Temperature,
+            MaxTokens = model.MaxTokens,
+            Stream = stream ? true : null,
+        };
+
+        var msg = new HttpRequestMessage(HttpMethod.Post, "v1/chat/completions")
+        {
+            Content = new StringContent(JsonHost.Write(body, false, false), Encoding.UTF8, "application/json"),
+        };
+        msg.Headers.Authorization = new AuthenticationHeaderValue("Bearer", ((IApiClient)this).Token);
+
+        return msg;
+    }
+
+    /// <summary>从错误响应构造异常。优先取 OpenAI 错误体的 error.message</summary>
+    /// <param name="body">响应正文</param>
+    /// <param name="status">HTTP状态码</param>
+    /// <returns>API异常</returns>
+    private static ApiException CreateChatException(String? body, HttpStatusCode status)
+    {
+        var code = (Int32)status;
+        var message = body + "";
+        if (!message.IsNullOrEmpty())
+        {
+            try
+            {
+                if (JsonParser.Decode(message) is { } dic)
+                {
+                    if (dic.TryGetValue("error", out var error) && error is IDictionary<String, Object?> err &&
+                        err.TryGetValue("message", out var msg1))
+                        message = msg1 + "";
+                    else if (dic.TryGetValue("message", out var msg2))
+                        message = msg2 + "";
+
+                    if (dic.TryGetValue("code", out var value) && Int32.TryParse(value + "", out var number)) code = number;
+                }
+            }
+            catch { }
+        }
+        if (code is < 400 or >= 600) code = ApiCode.InternalServerError;
+
+        return new ApiException(code, message);
     }
     #endregion
 

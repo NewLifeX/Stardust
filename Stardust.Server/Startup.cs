@@ -101,6 +101,7 @@ public class Startup
         services.AddSingleton<MonitorService>();
         services.AddSingleton<AgentDeployService>();
         services.AddSingleton<GatewayService>();
+        services.AddSingleton<AIService>();
         services.AddSingleton<DownloadTokenService>();
         services.AddSingleton<InstallService>();
         services.AddSingleton<HomeService>();

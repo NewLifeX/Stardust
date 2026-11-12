@@ -220,3 +220,10 @@
 "The application [{0}] carried by the token does not exist. Check that the application exists and is enabled in the registry.": "The application [{0}] carried by the token does not exist. Check that the application exists and is enabled in the registry."
 "The current connection has no valid application identity. Application commands require an application token.": "The current connection has no valid application identity. Application commands require an application token."
 "Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "既定の言語。ログインとハートビートでクライアントに送信します（例: zh-Hans、en）。空の場合はコア構成の DefaultLanguage を使用します。"
+# 运行时消息补充词条
+"AI chat is disabled.": "AI チャットは無効です"
+"The AI service is not configured. Set AIUrl and AIModel in the platform settings.": "AI サービスが設定されていません。プラットフォーム設定で AIUrl と AIModel を設定してください"
+"AI request contains no valid message.": "AI リクエストに有効なメッセージがありません"
+"AI model [{0}] is not allowed.": "AI モデル[{0}]は許可されていません"
+"AI upstream request failed: {0}": "AI 上流リクエストが失敗しました: {0}"
+"AI upstream returned an invalid response: {0}": "AI 上流が無効な応答を返しました: {0}"

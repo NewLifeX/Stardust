@@ -220,3 +220,10 @@
 "The application [{0}] carried by the token does not exist. Check that the application exists and is enabled in the registry.": "The application [{0}] carried by the token does not exist. Check that the application exists and is enabled in the registry."
 "The current connection has no valid application identity. Application commands require an application token.": "The current connection has no valid application identity. Application commands require an application token."
 "Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "Ngôn ngữ mặc định. Gửi đến máy khách khi đăng nhập và heartbeat, ví dụ zh-Hans hoặc en; để trống sẽ dùng DefaultLanguage từ cấu hình lõi."
+# 运行时消息补充词条
+"AI chat is disabled.": "Trò chuyện AI đã bị tắt"
+"The AI service is not configured. Set AIUrl and AIModel in the platform settings.": "Dịch vụ AI chưa được cấu hình. Hãy đặt AIUrl và AIModel trong cài đặt nền tảng"
+"AI request contains no valid message.": "Yêu cầu AI không có tin nhắn hợp lệ"
+"AI model [{0}] is not allowed.": "Mô hình AI [{0}] không được phép"
+"AI upstream request failed: {0}": "Yêu cầu đến dịch vụ AI thất bại: {0}"
+"AI upstream returned an invalid response: {0}": "Dịch vụ AI trả về phản hồi không hợp lệ: {0}"

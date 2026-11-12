@@ -220,3 +220,10 @@
 "The application [{0}] carried by the token does not exist. Check that the application exists and is enabled in the registry.": "The application [{0}] carried by the token does not exist. Check that the application exists and is enabled in the registry."
 "The current connection has no valid application identity. Application commands require an application token.": "The current connection has no valid application identity. Application commands require an application token."
 "Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "기본 언어. 로그인 및 하트비트 시 클라이언트에 전달됩니다(예: zh-Hans, en). 비워 두면 코어 구성의 DefaultLanguage를 사용합니다."
+# 运行时消息补充词条
+"AI chat is disabled.": "AI 채팅이 비활성화되었습니다"
+"The AI service is not configured. Set AIUrl and AIModel in the platform settings.": "AI 서비스가 구성되지 않았습니다. 플랫폼 설정에서 AIUrl과 AIModel을 설정하세요"
+"AI request contains no valid message.": "AI 요청에 유효한 메시지가 없습니다"
+"AI model [{0}] is not allowed.": "AI 모델[{0}]은(는) 허용되지 않습니다"
+"AI upstream request failed: {0}": "AI 업스트림 요청이 실패했습니다: {0}"
+"AI upstream returned an invalid response: {0}": "AI 업스트림이 잘못된 응답을 반환했습니다: {0}"

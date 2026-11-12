@@ -220,3 +220,10 @@
 "The application [{0}] carried by the token does not exist. Check that the application exists and is enabled in the registry.": "The application [{0}] carried by the token does not exist. Check that the application exists and is enabled in the registry."
 "The current connection has no valid application identity. Application commands require an application token.": "The current connection has no valid application identity. Application commands require an application token."
 "Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "Мова за замовчуванням. Передається клієнтам під час входу та heartbeat, наприклад zh-Hans або en; порожнє значення використовує DefaultLanguage з основної конфігурації."
+# 运行时消息补充词条
+"AI chat is disabled.": "Чат ШІ вимкнено"
+"The AI service is not configured. Set AIUrl and AIModel in the platform settings.": "Службу ШІ не налаштовано. Укажіть AIUrl та AIModel у налаштуваннях платформи"
+"AI request contains no valid message.": "Запит ШІ не містить допустимих повідомлень"
+"AI model [{0}] is not allowed.": "Модель ШІ [{0}] не дозволена"
+"AI upstream request failed: {0}": "Помилка запиту до служби ШІ: {0}"
+"AI upstream returned an invalid response: {0}": "Служба ШІ повернула неприпустиму відповідь: {0}"

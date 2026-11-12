@@ -220,3 +220,10 @@
 "The application [{0}] carried by the token does not exist. Check that the application exists and is enabled in the registry.": "The application [{0}] carried by the token does not exist. Check that the application exists and is enabled in the registry."
 "The current connection has no valid application identity. Application commands require an application token.": "The current connection has no valid application identity. Application commands require an application token."
 "Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "Standardspråk. Skickas till klienter vid inloggning och heartbeat, t.ex. zh-Hans eller en; tomt använder DefaultLanguage från kärnkonfigurationen."
+# 运行时消息补充词条
+"AI chat is disabled.": "AI-chatten är inaktiverad"
+"The AI service is not configured. Set AIUrl and AIModel in the platform settings.": "AI-tjänsten är inte konfigurerad. Ange AIUrl och AIModel i plattformsinställningarna"
+"AI request contains no valid message.": "AI-begäran innehåller inget giltigt meddelande"
+"AI model [{0}] is not allowed.": "AI-modellen [{0}] är inte tillåten"
+"AI upstream request failed: {0}": "Begäran till AI-tjänsten misslyckades: {0}"
+"AI upstream returned an invalid response: {0}": "AI-tjänsten returnerade ett ogiltigt svar: {0}"

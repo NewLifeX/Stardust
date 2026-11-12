@@ -220,3 +220,10 @@
 "The application [{0}] carried by the token does not exist. Check that the application exists and is enabled in the registry.": "The application [{0}] carried by the token does not exist. Check that the application exists and is enabled in the registry."
 "The current connection has no valid application identity. Application commands require an application token.": "The current connection has no valid application identity. Application commands require an application token."
 "Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "Limba implicită. Trimisă clienților la autentificare și heartbeat, de ex. zh-Hans sau en; golit folosește DefaultLanguage din configurația de bază."
+# 运行时消息补充词条
+"AI chat is disabled.": "Chatul AI este dezactivat"
+"The AI service is not configured. Set AIUrl and AIModel in the platform settings.": "Serviciul AI nu este configurat. Setați AIUrl și AIModel în setările platformei"
+"AI request contains no valid message.": "Cererea AI nu conține niciun mesaj valid"
+"AI model [{0}] is not allowed.": "Modelul AI [{0}] nu este permis"
+"AI upstream request failed: {0}": "Cererea către serviciul AI a eșuat: {0}"
+"AI upstream returned an invalid response: {0}": "Serviciul AI a returnat un răspuns nevalid: {0}"

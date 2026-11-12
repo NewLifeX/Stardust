@@ -18,7 +18,7 @@
 🌐 [简体中文](https://github.com/NewLifeX/Stardust/blob/master/README.zh-CN.md) | [繁體中文](https://github.com/NewLifeX/Stardust/blob/master/README.zh-TW.md) | [Español](https://github.com/NewLifeX/Stardust/blob/master/README.es.md) | [Deutsch](https://github.com/NewLifeX/Stardust/blob/master/README.de.md) | [日本語](https://github.com/NewLifeX/Stardust/blob/master/README.ja.md) | [Français](https://github.com/NewLifeX/Stardust/blob/master/README.fr.md) | [Português](https://github.com/NewLifeX/Stardust/blob/master/README.pt.md) | [Русский](https://github.com/NewLifeX/Stardust/blob/master/README.ru.md) | [한국어](https://github.com/NewLifeX/Stardust/blob/master/README.ko.md) | [العربية](https://github.com/NewLifeX/Stardust/blob/master/README.ar.md)
 <!-- lang:end -->
 
-**Stardust** is an all-in-one distributed service and operations platform: node management, application center, configuration center, registry and service discovery, monitoring center (tracing and APM) and release center (pipelines, canary releases and rollback), together with gateway management, layered dashboards and an MCP tool service, with automatic service registration and discovery, load balancing, dynamic scaling and failover. Application services are like dust in the universe, and the computer nodes that host them are the stars; stars and dust together form the vast starry sky, which is Stardust.
+**Stardust** is an all-in-one distributed service and operations platform: node management, application center, configuration center, registry and service discovery, monitoring center (tracing and APM) and release center (pipelines, canary releases and rollback), together with gateway management, layered dashboards, an MCP tool service and an AI chat service, with automatic service registration and discovery, load balancing, dynamic scaling and failover. Application services are like dust in the universe, and the computer nodes that host them are the stars; stars and dust together form the vast starry sky, which is Stardust.
 
 ![Stardust](https://github.com/NewLifeX/Stardust/blob/master/Doc/星尘分布式.png)
 
@@ -182,7 +182,7 @@ dotnet run
 
 | Advantage | What it gives you |
 | --- | --- |
-| All-in-one | Node management / application center / configuration center / registry / service discovery / monitoring (APM) / release center / gateway / dashboards / MCP, with a unified model and UI |
+| All-in-one | Node management / application center / configuration center / registry / service discovery / monitoring (APM) / release center / gateway / dashboards / MCP / AI chat, with a unified model and UI |
 | Ultra-lightweight | The core library has no heavy third-party dependencies and runs in a single process, with automatic database and table creation |
 | Strong compatibility | One ecosystem covers .NET Framework 4.5 through the latest .NET 10, across multiple platforms (Windows/Linux/macOS/Android/iOS/ARM/IoT) |
 | Multi-language agents | Lightweight Go/Rust/C++ native agents can connect directly to StarServer, covering scenarios without a .NET runtime, embedded systems, and OpenWrt |
@@ -193,7 +193,7 @@ dotnet run
 </details>
 
 <details>
-<summary><b>Platform Core</b> (16)</summary>
+<summary><b>Platform Core</b> (17)</summary>
 
 | Feature | Key Characteristics |
 | --- | --- |
@@ -211,6 +211,7 @@ dotnet run
 | Dashboards | System / project / application / node dashboards plus a 16:9 wallboard mode, with drill-down links, event streams and personalized layouts |
 | Data middleware | Manage MySQL and Redis nodes and data (slow queries, keys, message queues) from the same console |
 | MCP tool service | An MCP HTTP endpoint for LLMs and agents, with token credentials, resource authorization and audit logs |
+| AI chat service | Downstream applications call large language models through an OpenAI-compatible endpoint (`POST /v1/chat/completions`) using their Stardust sign-in token as the `api_key`; the platform keeps one upstream endpoint and key and supports both non-streaming and SSE streaming responses |
 | [Multi-provider DNS DDNS](https://github.com/NewLifeX/Stardust/blob/master/Doc/NODE-16-阿里云DNS动态域名解析.md) | StarAgent supports dynamic DNS (DDNS), automatically registering the node's public IP with DNS (Alibaba Cloud/Tencent Cloud (DNSPod)/UCloud (UDNS)/AWS Route53), suitable for dynamic IP environments |
 | .NET runtime management | StarServer automatically synchronizes official .NET release information, and StarAgent can install .NET runtime versions on demand, working with upgrade commands to enable automatic upgrades and smoke-test rollback |
 
@@ -490,6 +491,7 @@ NewLife is a layered ecosystem of independently versioned open-source projects. 
 | [MCP-1-Token Management](https://github.com/NewLifeX/Stardust/blob/master/Doc/MCP-1-token管理.md) | MCP token credential management |
 | [MCP-2-Action Extension](https://github.com/NewLifeX/Stardust/blob/master/Doc/MCP-2-action扩展.md) | MCP action extension guide |
 | [MCP-3-Client Integration](https://github.com/NewLifeX/Stardust/blob/master/Doc/MCP-3-客户端接入.md) | MCP client integration guide |
+| [AI-AI Chat Interface](https://github.com/NewLifeX/Stardust/blob/master/Doc/AI-AI对话接口.md) | OpenAI-compatible LLM chat endpoint for downstream apps (sign-in token as api_key, non-streaming and SSE streaming) |
 
 ## Contributing
 
