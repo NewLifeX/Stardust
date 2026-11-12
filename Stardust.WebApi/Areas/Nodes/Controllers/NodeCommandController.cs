@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
 using NewLife.Cube;
@@ -5,6 +7,8 @@ using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data.Nodes;
+using Stardust.Models;
+using XCode.Membership;
 
 namespace Stardust.Web.Areas.Nodes.Controllers;
 
@@ -13,6 +17,8 @@ namespace Stardust.Web.Areas.Nodes.Controllers;
 [NodesArea]
 public class NodeCommandController : NodesEntityController<NodeCommand>
 {
+    private readonly StarFactory _starFactory;
+
     static NodeCommandController()
     {
         ListFields.RemoveField("StartTime", "Expire", "UpdateUserId");
@@ -27,6 +33,8 @@ public class NodeCommandController : NodesEntityController<NodeCommand>
         }
         ListFields.TraceUrl();
     }
+
+    public NodeCommandController(StarFactory starFactory) => _starFactory = starFactory;
 
     protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
     {
@@ -53,5 +61,34 @@ public class NodeCommandController : NodesEntityController<NodeCommand>
         var end = p["dtEnd"].ToDateTime();
 
         return NodeCommand.Search(nodeId, command, start, end, p["Q"], p);
+    }
+
+    /// <summary>下发命令。校验参数后经 StarFactory 发送命令给在线节点</summary>
+    /// <param name="model"></param>
+    /// <returns></returns>
+    [DisplayName("下发命令")]
+    [EntityAuthorize((PermissionFlags)16)]
+    public async Task<ActionResult> Send([FromBody] NodeCommandSendModel model)
+    {
+        var nodeId = model?.NodeId ?? 0;
+        var command = model?.Command;
+
+        if (nodeId <= 0) return Json(400, "节点编号无效");
+        if (command.IsNullOrEmpty()) return Json(400, "命令不能为空");
+
+        var node = Node.FindByID(nodeId);
+        if (node == null) return Json(400, $"节点不存在（{nodeId}）");
+
+        try
+        {
+            var reply = await _starFactory.SendNodeCommandAsync(node.Code, command, null, 0, 3600, 5, HttpContext.RequestAborted);
+            if (reply == null) return Json(500, "命令下发超时或连接不可用");
+        }
+        catch (Exception ex)
+        {
+            return Json(500, ex.Message);
+        }
+
+        return JsonRefresh($"指令已下发：{command}");
     }
 }
