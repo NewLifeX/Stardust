@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -78,6 +78,14 @@ public partial class AppDeployNode
     [DataObjectField(false, false, true, 50)]
     [BindColumn("Version", "版本。当前使用的部署版本，开启MultiVersion时可能不同节点使用不同版本", "")]
     public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
+
+    private String _AppVersion;
+    /// <summary>应用程序版本。该节点上应用在线实例上报的文件版本（应用入口程序集FileVersion），随心跳自动更新</summary>
+    [DisplayName("应用程序版本")]
+    [Description("应用程序版本。该节点上应用在线实例上报的文件版本（应用入口程序集FileVersion），随心跳自动更新")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("AppVersion", "应用程序版本。该节点上应用在线实例上报的文件版本（应用入口程序集FileVersion），随心跳自动更新", "")]
+    public String AppVersion { get => _AppVersion; set { if (OnPropertyChanging("AppVersion", value)) { _AppVersion = value; OnPropertyChanged("AppVersion"); } } }
 
     private Int32 _Port;
     /// <summary>应用端口。应用自身监听的端口，如果是dotnet应用会增加urls参数</summary>
@@ -355,6 +363,7 @@ public partial class AppDeployNode
             "IP" => _IP,
             "Enable" => _Enable,
             "Version" => _Version,
+            "AppVersion" => _AppVersion,
             "Port" => _Port,
             "FileName" => _FileName,
             "Arguments" => _Arguments,
@@ -397,6 +406,7 @@ public partial class AppDeployNode
                 case "IP": _IP = Convert.ToString(value); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
                 case "Version": _Version = Convert.ToString(value); break;
+                case "AppVersion": _AppVersion = Convert.ToString(value); break;
                 case "Port": _Port = value.ToInt(); break;
                 case "FileName": _FileName = Convert.ToString(value); break;
                 case "Arguments": _Arguments = Convert.ToString(value); break;
@@ -494,6 +504,9 @@ public partial class AppDeployNode
 
         /// <summary>版本。当前使用的部署版本，开启MultiVersion时可能不同节点使用不同版本</summary>
         public static readonly Field Version = FindByName("Version");
+
+        /// <summary>应用程序版本。该节点上应用在线实例上报的文件版本（应用入口程序集FileVersion），随心跳自动更新</summary>
+        public static readonly Field AppVersion = FindByName("AppVersion");
 
         /// <summary>应用端口。应用自身监听的端口，如果是dotnet应用会增加urls参数</summary>
         public static readonly Field Port = FindByName("Port");

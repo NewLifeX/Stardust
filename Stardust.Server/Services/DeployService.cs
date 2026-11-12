@@ -1,4 +1,4 @@
-﻿using NewLife;
+using NewLife;
 using NewLife.Remoting.Models;
 using Stardust.Data;
 using Stardust.Data.Deployment;
@@ -19,97 +19,13 @@ public class DeployService
         _registryService = registryService;
     }
 
-    /// <summary>获取应用的最新部署版本。支持多版本匹配（按操作系统/架构/框架运行时筛选）</summary>
+    /// <summary>获取应用的最新部署版本。支持多版本匹配（按操作系统/架构/框架运行时筛选）。
+    /// 实现已下沉到 AppDeploy.GetDeployVersion（Stardust.Data 共享层，2026-11-12），此处保持 API 兼容转发；
+    /// 控制台（Stardust.Web）install 下发回填节点版本使用同一实现。</summary>
     /// <param name="app">应用部署配置</param>
     /// <param name="node">目标节点</param>
     /// <returns>匹配的部署版本，未找到时返回 null</returns>
-    public AppDeployVersion GetDeployVersion(AppDeploy app, Node node)
-    {
-        if (app.MultiVersion)
-        {
-            // 查找最新的一批版本，挑选符合目标节点的最新版本
-            var vers = AppDeployVersion.FindAllByDeployId(app.Id, 100);
-            vers = vers.Where(e => e.Enable).OrderByDescending(e => e.Id).ToList();
-
-            // 目标节点的操作系统和架构
-            var (nodeOS, nodeArch) = GetNodePlatform(node);
-
-            // 可能有多个版本，挑选最新的适合目标节点操作系统、指令集和框架运行时的版本
-            var fms = node.Frameworks?.Split(',', StringSplitOptions.RemoveEmptyEntries) ?? [];
-            foreach (var ver in vers)
-            {
-                // 检查操作系统和架构是否匹配
-                if (!MatchPlatform(ver.OS, ver.Arch, nodeOS, nodeArch)) continue;
-
-                if (!ver.TargetFramework.IsNullOrEmpty() && fms.Length > 0)
-                {
-                    var tfm = ver.TargetFramework.TrimPrefix("netcoreapp").TrimPrefix("net").TrimPrefix("v");
-
-                    // 特殊处理4.x，例如net4.6.1可以运行在net4.7/net4.8上
-                    if (tfm.StartsWith("4."))
-                    {
-                        var v = new Version(tfm);
-                        if (!fms.Any(e => e.StartsWith("4.") && new Version(e) >= v))
-                            continue;
-                    }
-                    else if (!fms.Any(e => e.StartsWith(tfm)))
-                        continue;
-                }
-
-                return ver;
-            }
-
-            return null;
-        }
-
-        return AppDeployVersion.FindByDeployIdAndVersion(app.Id, app.Version);
-    }
-
-    /// <summary>获取节点的操作系统和架构</summary>
-    private static (OSKind, CpuArch) GetNodePlatform(Node node)
-    {
-        var os = node.OSKind switch
-        {
-            >= OSKinds.iOS => OSKind.iOS,
-            >= OSKinds.Android => OSKind.Android,
-            >= OSKinds.MacOSX => OSKind.OSX,
-            // Linux 各发行版（100+）属于 glibc，必须排在 Alpine（90）之前判断，
-            // 否则 Ubuntu/CentOS 等会被误判为 musl，导致多版本部署选不到 Linux 包
-            >= OSKinds.Linux or OSKinds.SmartOS => OSKind.Linux,
-            >= OSKinds.Alpine => OSKind.LinuxMusl,
-            >= OSKinds.Win10 => OSKind.Windows,
-            _ => OSKind.Any,
-        };
-
-        var arch = node.Architecture?.ToLower() switch
-        {
-            "x86" => CpuArch.X86,
-            "x64" => CpuArch.X64,
-            "arm" => CpuArch.Arm,
-            "arm64" => CpuArch.Arm64,
-            "loongarch64" => CpuArch.LA64,
-            "riscv64" => CpuArch.RiscV64,
-            "mips64" => CpuArch.Mips64,
-            _ => CpuArch.Any,
-        };
-
-        return (os, arch);
-    }
-
-    /// <summary>检查版本的平台是否匹配目标节点</summary>
-    private static Boolean MatchPlatform(OSKind verOS, CpuArch verArch, OSKind nodeOS, CpuArch nodeArch)
-    {
-        // 版本未指定平台，匹配所有
-        if (verOS == OSKind.Any && verArch == CpuArch.Any) return true;
-
-        // 操作系统匹配：版本未指定或与节点相同
-        if (verOS != OSKind.Any && verOS != nodeOS) return false;
-
-        // 架构匹配：版本未指定或与节点相同
-        if (verArch != CpuArch.Any && verArch != nodeArch) return false;
-
-        return true;
-    }
+    public AppDeployVersion GetDeployVersion(AppDeploy app, Node node) => app.GetDeployVersion(node);
 
 
     public DeployInfo BuildDeployInfo(AppDeployNode item, Node node)

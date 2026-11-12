@@ -1,4 +1,4 @@
-﻿@model IList<AppDeployNode>
+@model IList<AppDeployNode>
 @using Stardust.Data.Deployment
 @using NewLife;
 @using NewLife.Web;
@@ -39,7 +39,8 @@
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Enable"))">@L.T("启用")</a></th>
             <th class="text-center" title="@L.T("进程")"><a href="@Html.Raw(page.GetSortUrl("ProcessId"))">@L.T("进程")</a></th>
             <th class="text-center" title="@L.T("进程时间")"><a href="@Html.Raw(page.GetSortUrl("StartTime"))">@L.T("进程时间")</a></th>
-            <th class="text-center" title="@L.T("版本。客户端")"><a href="@Html.Raw(page.GetSortUrl("Version"))">@L.T("版本")</a></th>
+            <th class="text-center" title="@L.T("版本。当前使用的部署版本，点击发布后记录本次下发的版本，开启MultiVersion时可能不同节点使用不同版本")"><a href="@Html.Raw(page.GetSortUrl("Version"))">@L.T("版本")</a></th>
+            <th class="text-center" title="@L.T("应用程序版本。该节点上应用在线实例上报的文件版本（应用入口程序集FileVersion），随心跳自动更新")"><a href="@Html.Raw(page.GetSortUrl("AppVersion"))">@L.T("应用程序版本")</a></th>
             <th class="text-center" title="@L.T("编译时间。客户端")"><a href="@Html.Raw(page.GetSortUrl("Compile"))">@L.T("编译时间")</a></th>
             <th class="text-center" title="@L.T("最后活跃。最后一次上报心跳的时间")"><a href="@Html.Raw(page.GetSortUrl("LastActive"))">@L.T("最后活跃")</a></th>
             <th class="text-center">@L.T("远程操作")</th>
@@ -77,6 +78,7 @@
                 <td>@entity.ProcessId</td>
                 <td>@entity.StartTime.ToFullString("")</td>
                 <td>@entity.Version</td>
+                <td>@entity.AppVersion</td>
                 <td>@entity.Compile.ToFullString("")</td>
                 <td>@entity.LastActive.ToFullString("")</td>
                 <td class="text-center">

@@ -146,17 +146,19 @@ public partial class AppDeployNode : Entity<AppDeployNode>
     }
 
     /// <summary>高级查询</summary>
-    /// <param name="appIds">应用。原始应用</param>
+    /// <param name="setIds">部署集 Id 数组。AppDeployNode.DeployId 指向部署集而非应用；按应用查询请先经 AppDeploy.FindAllByAppId 换取部署集 Id</param>
     /// <param name="nodeId">节点。节点服务器</param>
+    /// <param name="enable"></param>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns></returns>
-    public static IList<AppDeployNode> Search(Int32[] appIds, Int32 nodeId, String key, PageParameter page)
+    public static IList<AppDeployNode> Search(Int32[] setIds, Int32 nodeId, Boolean? enable, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
-        if (appIds != null && appIds.Length > 0) exp &= _.DeployId.In(appIds);
+        if (setIds != null && setIds.Length > 0) exp &= _.DeployId.In(setIds);
         if (nodeId >= 0) exp &= _.NodeId == nodeId;
+        if (enable != null) exp &= _.Enable == enable;
         if (!key.IsNullOrEmpty()) exp &= _.CreateIP.Contains(key);
 
         return FindAll(exp, page);
@@ -190,6 +192,38 @@ public partial class AppDeployNode : Entity<AppDeployNode>
 
         return 0;
     }
+
+    #region 写入拦截（D3：实体层落库后回修所属部署集节点计数）
+    /// <summary>插入后回修所属部署集的节点计数</summary>
+    public override Int32 Insert()
+    {
+        var rs = base.Insert();
+
+        Deploy?.Fix();
+
+        return rs;
+    }
+
+    /// <summary>更新后回修所属部署集的节点计数</summary>
+    public override Int32 Update()
+    {
+        var rs = base.Update();
+
+        Deploy?.Fix();
+
+        return rs;
+    }
+
+    /// <summary>删除后回修所属部署集的节点计数</summary>
+    public override Int32 Delete()
+    {
+        var rs = base.Delete();
+
+        Deploy?.Fix();
+
+        return rs;
+    }
+    #endregion
 
     /// <summary>
     /// 转应用服务信息
@@ -264,7 +298,8 @@ public partial class AppDeployNode : Entity<AppDeployNode>
         ProcessId = inf.Id;
         ProcessName = inf.Name;
         ProcessUser = inf.UserName;
-        //Version = inf.Version;
+        // 应用程序版本：客户端上报的应用自身文件版本（Deploy/Ping 代上报链路当前不带版本，内嵌 SDK 链路有值）
+        if (!inf.Version.IsNullOrEmpty()) AppVersion = inf.Version;
         StartTime = inf.StartTime;
         Listens = inf.Listens;
     }
@@ -277,7 +312,10 @@ public partial class AppDeployNode : Entity<AppDeployNode>
         ProcessUser = online.UserName;
         StartTime = online.StartTime;
         Listens = online.Listens;
-        //Version = online.Version;
+        // 应用程序版本：登录时登记的应用自身文件版本（RegistryService.OnRegister 写入 AppOnline.Version）。
+        // 2026-01-15 2d70fa91 曾注释掉「Version = online.Version」——版本字段改义为部署版本后不再回填客户端版本；
+        // 应用自身版本改由 AppVersion 承载，与部署版本（Version，install 下发时回填）语义分开。
+        if (!online.Version.IsNullOrEmpty()) AppVersion = online.Version;
         Compile = online.Compile;
         LastActive = online.UpdateTime;
     }

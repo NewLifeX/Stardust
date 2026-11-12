@@ -266,6 +266,19 @@ public class DeployService(StarFactory starFactory, ITracer tracer)
     public void Install(AppDeployNode deployNode)
     {
         deployNode.Enable = true;
+
+        // 记录本次下发的部署版本（2026-11-12 用户裁定方案C）：install 即发布，节点版本=本次下发将使用的版本，
+        // 供节点列表版本列与前端「与部署集一致」比对展示。多版本模式取平台匹配版本，单版本取部署集当前版本；
+        // 版本表缺行时兜底部署集版本（与服务端 BuildDeployInfo 同一口径），无值则不回填。
+        var app = deployNode.Deploy;
+        if (app != null)
+        {
+            var ver = app.GetDeployVersion(deployNode.Node);
+            var v = ver?.Version;
+            if (v.IsNullOrEmpty()) v = app.Version;
+            if (!v.IsNullOrEmpty()) deployNode.Version = v;
+        }
+
         deployNode.Update();
     }
 
