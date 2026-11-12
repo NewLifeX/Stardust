@@ -1,4 +1,4 @@
-﻿using NewLife.Cube.Swagger;
+using NewLife.Cube.Swagger;
 using NewLife.Log;
 using Stardust;
 using Stardust.Web;
@@ -12,6 +12,14 @@ StarHost.InitLogPath("../LogWebApi");
 XTrace.UseConsole();
 
 var builder = WebApplication.CreateBuilder(args);
+
+// 宿主稳定性防护（wave4⑩：Kestrel Heartbeat.TimerLoop 自毙主修——EventLog 写路径断根+BackgroundService 异常不停宿主）
+HostStabilityGuard.Apply(builder);
+
+// 宿主未处理异常取证钩子：XTrace 文件日志独立于 MS 日志管道，进程终止前尽力落档
+// （2026-11-10 20:24 6681 自毙定谳依赖 host-err 重定向尾栈，此钩子为双保险取证通道）
+AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+    XTrace.WriteLine("UnhandledException IsTerminating={0} {1}", e.IsTerminating, e.ExceptionObject);
 
 // 桥接现有 Startup（ConfigureServices / Configure）
 var startup = new Startup(builder.Configuration);
