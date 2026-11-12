@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using NewLife.Cube;
 using Xunit;
 using Xunit.Abstractions;
@@ -16,8 +17,32 @@ namespace Stardust.WebApiTests.Fixtures;
 /// </remarks>
 public sealed class ApiClient
 {
-    /// <summary>与 HttpClient 的 ReadFromJsonAsync 默认行为一致（Web 约定：小驼峰 + 大小写不敏感）。</summary>
-    private static readonly JsonSerializerOptions _json = new(JsonSerializerDefaults.Web);
+    /// <summary>与 HttpClient 的 ReadFromJsonAsync 默认行为一致（Web 约定：小驼峰 + 大小写不敏感）。
+    /// 追加宽松 DateTime 转换：XCode 实体序列化用 "yyyy-MM-dd HH:mm:ss"，.NET 内建解析不认。</summary>
+    private static readonly JsonSerializerOptions _json = new(JsonSerializerDefaults.Web)
+    {
+        Converters = { LooseDateTimeConverter.Instance },
+    };
+
+    /// <summary>System.Text.Json 宽松 DateTime 读取器：兼容 XCode 的 "yyyy-MM-dd HH:mm:ss"。</summary>
+    private sealed class LooseDateTimeConverter : JsonConverter<DateTime>
+    {
+        public static readonly LooseDateTimeConverter Instance = new();
+
+        public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            if (reader.TokenType == JsonTokenType.String)
+            {
+                var s = reader.GetString();
+                if (DateTime.TryParse(s, out var dt)) return dt;
+                throw new JsonException($"无法解析日期时间：{s}");
+            }
+            return reader.GetDateTime();
+        }
+
+        public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options) =>
+            writer.WriteStringValue(value.ToString("yyyy-MM-dd HH:mm:ss"));
+    }
 
     private readonly WebApiTestFactory _factory;
     private readonly ITestOutputHelper _output;
@@ -37,6 +62,8 @@ public sealed class ApiClient
     [
         // [Route("[controller]/[action]")]
         ("Auth/", "/"),
+        // ConfigController（根级，配置拉取 /Config/GetAll）同为特性路由，无 /api 前缀
+        ("Config/", "/"),
         // [Route("[area]/[controller]/[action]")]
         ("Deployment/PipelineWebhook/", "/"),
         // Lov 控制器位于 Admin 区域，测试中简写为 Lov/...
@@ -66,6 +93,10 @@ public sealed class ApiClient
     public async Task<HttpResponseMessage> PostAsJsonAsync<T>(String endpoint, T payload, Boolean auth = true) =>
         await SendAsync(client => client.PostAsJsonAsync(NormalizeUrl(endpoint), payload, _json), "POST", endpoint, auth);
 
+    /// <summary>PUT JSON 请求。auth 同上。</summary>
+    public async Task<HttpResponseMessage> PutAsJsonAsync<T>(String endpoint, T payload, Boolean auth = true) =>
+        await SendAsync(client => client.PutAsJsonAsync(NormalizeUrl(endpoint), payload, _json), "PUT", endpoint, auth);
+
     /// <summary>GET 并校验统一信封，返回强类型响应供测试做业务断言。</summary>
     public async Task<ApiResponse<T>> GetApiAsync<T>(String endpoint, Boolean auth = true)
     {
@@ -78,6 +109,27 @@ public sealed class ApiClient
     {
         var resp = await PostAsJsonAsync(endpoint, payload, auth);
         return await ToApiResponseAsync<T>(resp, endpoint);
+    }
+
+    /// <summary>PUT JSON 并校验统一信封，返回强类型响应供测试做业务断言。</summary>
+    public async Task<ApiResponse<T>> PutApiAsync<T>(String endpoint, Object? payload, Boolean auth = true)
+    {
+        var resp = await PutAsJsonAsync(endpoint, payload, auth);
+        return await ToApiResponseAsync<T>(resp, endpoint);
+    }
+
+    /// <summary>PUT JSON 仅供失败路径断言：要求 HTTP 成功且信封可反序列化，但不校验 Code。</summary>
+    public async Task<ApiResponse<T>> PutApiEnvelopeAsync<T>(String endpoint, Object? payload, Boolean auth = true)
+    {
+        var resp = await PutAsJsonAsync(endpoint, payload, auth);
+        var url = NormalizeUrl(endpoint);
+        var raw = await resp.Content.ReadAsStringAsync();
+
+        Assert.True(resp.IsSuccessStatusCode, $"[{url}] HTTP 状态码 {(Int32)resp.StatusCode} 非成功：{raw}");
+
+        var api = JsonSerializer.Deserialize<ApiResponse<T>>(raw, _json);
+        Assert.NotNull(api);
+        return api!;
     }
 
     /// <summary>data 结构不固定的端点（页面、字段列表等）：用 JsonElement 承载。</summary>

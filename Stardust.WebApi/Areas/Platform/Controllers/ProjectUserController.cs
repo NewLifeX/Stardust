@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Web;
@@ -62,5 +63,41 @@ public class ProjectUserController : WebEntityController<ProjectUser>
     {
         entity.EnsureLink();
         return base.OnInsert(entity);
+    }
+
+    /// <summary>启用/停用（走查 C06/C07 修复，j-config 排程令 2026-11-10）。
+    /// 前端 Stardust.Web.Vue projectMember.logic.ts:206-222 契约=PUT 集合路径 body{id,enable} 部分更新；
+    /// NewLife.Cube(API版) 泛型 Update 要求主键在路径 {id}，集合路径 PUT 无路由匹配返回 404，
+    /// 故按 McpTokenController.Reset 先例补显式集合路径路由。仅更新 Enable，未提交字段保持原值。
+    /// 与 Web 宿主不对称说明：MVC 编辑页走表单 POST（Cube MVC Update 模板含 {id}），无此缺口，Web 侧无需对等动作。</summary>
+    /// <param name="model">绑定自 body 的部分更新载荷，仅 Id 与 Enable 有效</param>
+    /// <returns>统一信封，Code=0 更新成功（Data=更新后实体），否则更新失败</returns>
+    [EntityAuthorize(PermissionFlags.Update)]
+    [HttpPut("/api/[area]/[controller]")]
+    public ApiResponse<ProjectUser> UpdateEnable(ProjectUser model)
+    {
+        var rs = new ApiResponse<ProjectUser>();
+        try
+        {
+            if (model == null || model.Id == 0) throw new ArgumentException("请传入编号");
+
+            var old = ProjectUser.FindById(model.Id);
+            if (old == null) throw new ArgumentException($"记录 #{model.Id} 不存在");
+
+            // 契约式部分更新：仅复制 Enable，未提交字段保持库中原值（绑定模型其它属性为默认值，不可整体落库）
+            old.Enable = model.Enable;
+            old.Update();
+
+            rs.Code = 0;
+            rs.Message = "更新成功！";
+            rs.Data = old;
+        }
+        catch (Exception ex)
+        {
+            rs.Code = 500;
+            rs.Message = "更新失败！ " + ex.Message;
+            rs.Data = model;
+        }
+        return rs;
     }
 }
