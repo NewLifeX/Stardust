@@ -136,4 +136,10 @@ public class TraceItemController : WebEntityController<TraceItem>
 
         return JsonRefresh("成功！");
     }
+
+        /// <summary>类别列表。取跟踪项全部种类（Kind→展示名词典），供前端类别下拉与展示（CARD-MON-12）。</summary>
+        /// <remarks>数据源 TraceItem.GetKinds()（跟踪项.Biz.cs:152，FieldCache 近一年数据 10 分钟过期）。
+        /// 范式先例 NodeFrameworkController.GetVersionList：只读 action 无 [EntityAuthorize]，登录可见。</remarks>
+        [DisplayName("类别列表")]
+        public ActionResult GetKinds() => Json(0, null, TraceItem.GetKinds());
 }
