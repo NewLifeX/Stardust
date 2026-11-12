@@ -168,13 +168,14 @@ function testConnection() {
     $.ajax({
         url: '/Nodes/AgentDeploy/TestConnection',
         type: 'POST',
-        data: {
+        contentType: 'application/json',
+        data: JSON.stringify({
             host: host,
             port: data.port,
             userName: data.userName,
             password: data.password,
             executeOn: executeOn
-        },
+        }),
         success: function(response) {
             if (response.code === 0 && response.data && response.data.success) {
                 alert('@L.T("连接测试成功！")');

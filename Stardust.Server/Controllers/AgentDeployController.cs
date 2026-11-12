@@ -70,16 +70,19 @@ public class AgentDeployController(AgentDeployService deployService, ITokenServi
         }
     }
 
-    /// <summary>测试连接</summary>
-    /// <param name="host">目标主机</param>
-    /// <param name="port">SSH端口</param>
-    /// <param name="userName">用户名</param>
-    /// <param name="password">密码</param>
+    /// <summary>测试连接。凭据改走 POST JSON body（task-95 二期 N3，2026-11-12 lead 批：与 WebApi 宿主同语义）；
+    /// 旧行为=query-only 简单参数绑定，凭据随 URL 落访问日志/链路。DTO 同文件定义（Stardust.Models 共享模型不涉）。</summary>
+    /// <param name="model">连接参数（body）</param>
     /// <returns>连接测试结果</returns>
     [HttpPost]
-    public Object TestConnection(String host, Int32 port, String userName, String password)
+    public Object TestConnection([FromBody] TestConnectionModel model)
     {
         Valid();
+
+        var host = model?.Host;
+        var port = model?.Port ?? 0;
+        var userName = model?.UserName;
+        var password = model?.Password;
 
         if (host.IsNullOrEmpty()) throw new ArgumentNullException(nameof(host));
         if (userName.IsNullOrEmpty()) throw new ArgumentNullException(nameof(userName));
@@ -127,4 +130,20 @@ public class AgentDeployController(AgentDeployService deployService, ITokenServi
             return new { success = false, message = ex.Message };
         }
     }
+}
+
+/// <summary>连接测试参数（task-95 二期 N3：凭据走 body 不入查询串；WebApi 宿主转发同 JSON 形态）</summary>
+public class TestConnectionModel
+{
+    /// <summary>目标主机</summary>
+    public String Host { get; set; } = null!;
+
+    /// <summary>SSH端口</summary>
+    public Int32 Port { get; set; }
+
+    /// <summary>用户名</summary>
+    public String UserName { get; set; } = null!;
+
+    /// <summary>密码</summary>
+    public String Password { get; set; } = null!;
 }

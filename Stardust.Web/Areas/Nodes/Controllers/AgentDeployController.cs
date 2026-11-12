@@ -66,7 +66,12 @@ public class AgentDeployController : ControllerBaseX
                 var token = _starFactory?.Client?.Token;
                 if (!token.IsNullOrEmpty())
                     httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                var serverUrl = $"http://{Request.Host}";
+
+                // task-95 自环修复（2026-11-12 证实的独立 bug）：转发目标必须是 StarServer（配置键），
+                // 原 Request.Host=StarWeb 自身，自调用自收=递归；StarWeb 宿主不承载 AgentDeploy 真实现
+                var serverUrl = _starFactory?.Server;
+                if (serverUrl.IsNullOrEmpty())
+                    return Json(new { code = 500, message = L.T("StarServer 地址未配置（appsettings StarServer 键），无法转发部署请求。") });
 
                 var json = JsonSerializer.Serialize(model);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -94,16 +99,20 @@ public class AgentDeployController : ControllerBaseX
         }
     }
 
-    /// <summary>测试连接</summary>
-    /// <param name="host">主机</param>
-    /// <param name="port">端口</param>
-    /// <param name="userName">用户名</param>
-    /// <param name="password">密码</param>
-    /// <param name="executeOn">执行位置</param>
-    /// <returns></returns>
+    /// <summary>测试连接。凭据改走 POST JSON body（task-95 二期 N3·MVC 宿主同刀：查询串密码随访问日志/链路明文落盘，根治=body）。
+    /// 兼容窗：查询串提交凭据的旧调用方得到明确改道指引（不静默断）。</summary>
+    /// <param name="model">连接参数（body）</param>
+    /// <param name="executeOn">执行位置（查询串，非敏感）</param>
+    /// <returns>连接测试结果</returns>
     [HttpPost]
-    public async Task<ActionResult> TestConnection(String host, Int32 port, String userName, String password, String executeOn = "server")
+    public async Task<ActionResult> TestConnection([FromBody] TestConnectionModel? model, String executeOn = "server")
     {
+        // 兼容窗：旧调用以查询串提交凭据（如 ?password=xxx），返回明确指引而非静默失败
+        if (Request.Query.ContainsKey("password"))
+            return Json(new { code = 400, message = L.T("TestConnection 凭据已改走 POST JSON body {host,port,userName,password,executeOn}；查询串提交密码已停用（安全 N3）。") });
+
+        if (model == null) return Json(new { code = 400, message = L.T("缺少请求体：请以 JSON {host,port,userName,password,executeOn} 提交。") });
+
         try
         {
             Object? result;
@@ -115,13 +124,18 @@ public class AgentDeployController : ControllerBaseX
                 var token = _starFactory?.Client?.Token;
                 if (!token.IsNullOrEmpty())
                     httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                var serverUrl = $"http://{Request.Host}";
 
-                var param = new { host, port, userName, password };
-                var json = JsonSerializer.Serialize(param);
-                var content = new StringContent(json, Encoding.UTF8, "application/x-www-form-urlencoded");
+                // task-95 自环修复（2026-11-12 证实的独立 bug）：转发目标必须是 StarServer（配置键），
+                // 原 Request.Host=StarWeb 自身，自调用自收=递归；StarWeb 宿主不承载 AgentDeploy 真实现
+                var serverUrl = _starFactory?.Server;
+                if (serverUrl.IsNullOrEmpty())
+                    return Json(new { code = 500, message = L.T("StarServer 地址未配置（appsettings StarServer 键），无法转发连接测试。") });
 
-                var response = await httpClient.PostAsync($"{serverUrl}/AgentDeploy/TestConnection?host={host}&port={port}&userName={userName}&password={password}", content);
+                // N3 落地（2026-11-12 lead 批）：与 StarWebApi 同刀，转发纯 JSON body，凭据零经查询串
+                var json = JsonSerializer.Serialize(new { model.Host, model.Port, model.UserName, model.Password });
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await httpClient.PostAsync($"{serverUrl}/AgentDeploy/TestConnection", content);
                 response.EnsureSuccessStatusCode();
 
                 var resultJson = await response.Content.ReadAsStringAsync();
@@ -141,4 +155,23 @@ public class AgentDeployController : ControllerBaseX
             return Json(new { code = 500, message = ex.Message });
         }
     }
+}
+
+/// <summary>连接测试参数（task-95 N3·MVC 宿主：凭据走 body，不入查询串/访问日志；与 StarWebApi 同形）</summary>
+public class TestConnectionModel
+{
+    /// <summary>主机</summary>
+    public String Host { get; set; } = null!;
+
+    /// <summary>端口</summary>
+    public Int32 Port { get; set; }
+
+    /// <summary>用户名</summary>
+    public String UserName { get; set; } = null!;
+
+    /// <summary>密码</summary>
+    public String Password { get; set; } = null!;
+
+    /// <summary>执行位置：server 或 web</summary>
+    public String ExecuteOn { get; set; } = "server";
 }

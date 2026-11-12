@@ -42,8 +42,9 @@ public class AgentDeploySecurityTests : StarTestBase
         if (!token.IsNullOrEmpty())
             client.DefaultRequestHeaders.Add("X-Token", token);
 
-        var query = "host=127.0.0.1&port=22&userName=root&password=test-pass";
-        var response = await client.PostAsync($"/AgentDeploy/TestConnection?{query}", null);
+        // task-95 二期 N3：StarServer TestConnection 改 [FromBody] DTO（凭据不入查询串），测试同步 body 化
+        var response = await client.PostAsJsonAsync("/AgentDeploy/TestConnection",
+            new { host = "127.0.0.1", port = 22, userName = "root", password = "test-pass" });
         return await response.Content.ReadAsStringAsync();
     }
 
