@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
@@ -103,6 +103,10 @@ public partial class StarClient
 
     private static Double GetProcessorQueueLength()
     {
+#if NET5_0_OR_GREATER
+        // CA1416 守卫：非 Windows 直接短路（PDH/WMIC 均 Windows-only），平台分析器据此消音
+        if (!OperatingSystem.IsWindows()) return 0;
+#endif
         // 优先使用 PDH API 获取处理器队列长度
         try
         {
@@ -134,6 +138,10 @@ public partial class StarClient
     /// <returns>IOPS和活动时间百分比</returns>
     private static (Int32 IOPS, Double ActiveTime) GetDiskStatsWindows()
     {
+#if NET5_0_OR_GREATER
+        // CA1416 守卫：非 Windows 直接短路（PDH/WMIC 均 Windows-only），平台分析器据此消音
+        if (!OperatingSystem.IsWindows()) return (0, 0);
+#endif
         // 优先使用 PDH API
         try
         {

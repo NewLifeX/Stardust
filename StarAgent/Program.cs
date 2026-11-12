@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -332,7 +332,12 @@ internal class Program
         set.UserName = Environment.UserName;
 
         var info = new NodeInfo();
+#if NET5_0_OR_GREATER
+        // OperatingSystem.IsWindows() 为平台分析器认可的守卫，与 Runtime.Windows 与或后行为等价
+        if (OperatingSystem.IsWindows() && Runtime.Windows) StarClient.FillOnWindows(info);
+#else
         if (Runtime.Windows) StarClient.FillOnWindows(info);
+#endif
         if (Runtime.Linux) StarClient.FillOnLinux(info);
 
         set.Dpi = info.Dpi;

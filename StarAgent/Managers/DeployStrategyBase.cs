@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using NewLife;
@@ -408,7 +408,12 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
         Process? p = null;
 
         // Windows桌面用户运行
+#if NET5_0_OR_GREATER
+        // OperatingSystem.IsWindows() 为平台分析器认可的守卫，Runtime.Windows 为业务级判定，两者与或后行为等价
+        if (OperatingSystem.IsWindows() && Runtime.Windows && (user == "$" || user == "$$"))
+#else
         if (Runtime.Windows && (user == "$" || user == "$$"))
+#endif
         {
             // 交互模式直接运行
             if (Environment.UserInteractive)
