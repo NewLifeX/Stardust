@@ -30,7 +30,10 @@ public class AgentController : ControllerBase
 
     /// <summary>代理安装页面。配置了 StarServer 安装页地址时跳转，否则返回本站下载目录 JSON</summary>
     /// <returns></returns>
+    // 裁定A(2026-11-10 lead/j-config双裁)：双路由并存。裸 /Agent 保存量客户端承诺（SVR-安装引导页.md:125），
+    // api/Agent 为 WebApi 惯例别名，供前端 routeToApiPrefix 按 api/[controller] 拼接可达（修 F-NODE-AGENT-ROUTE 404）。
     [Route("/Agent")]
+    [Route("/api/Agent")]
     public ActionResult Index()
     {
         // 清单以 StarServer 安装引导页为准，配置了地址后本站只做跳转，避免维护第二份清单。
@@ -50,6 +53,7 @@ public class AgentController : ControllerBase
     /// <summary>探测本机StarAgent。等价 MVC 安装页的浏览器探测（localhost:5500/info），由 API 宿主代为执行</summary>
     /// <returns>online 表示是否探测到；data 为 StarAgent 的 info 数据</returns>
     [Route("/Agent/Probe")]
+    [Route("/api/Agent/Probe")]
     public async Task<ActionResult> Probe()
     {
         var online = false;
