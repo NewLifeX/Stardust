@@ -200,6 +200,9 @@ public class Startup
             endpoints.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=CubeHome}/{action=Index}/{id?}");
+
+            // 映射特性路由（含 NuGet 包 CubeController 的 /Cube/AreaChilds、/Cube/AreaParents；约定路由不动）
+            endpoints.MapControllers();
         });
 
         // 发布服务到星尘注册中心，需要指定服务名

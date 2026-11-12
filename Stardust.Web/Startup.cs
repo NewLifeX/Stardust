@@ -198,6 +198,11 @@ public class Startup
         // MCP 协议端点：在 Cube 之前短路 /mcp，避免 Web 中间件影响机器 API
         app.UseStardustMcp();
 
+        // 在 UseCube 之前显式启用端点路由：UseCube 内 UseRouter 检测到端点路由已启用后，
+        // 将 CubeAreas 约定路由（api/{area}/{controller}/{action}）直接注册进端点路由；
+        // 否则走旧式 IRouter，而下方 MapControllers 激活端点路由后旧式约定路由会失效（/api 404）。
+        app.UseRouting();
+
         app.UseCube(env);
 
         // Cube 菜单扫描完成后才能定位父菜单，避免启动竞态导致看板入口丢失
@@ -209,9 +214,26 @@ public class Startup
 
         app.UseEndpoints(endpoints =>
         {
+            // 与 CubeService.UseCube 内旧式 IRouter 同模式的 CubeAreas 约定路由：
+            // MapControllers 激活端点路由后，旧式 IRouter 里的约定路由失效（/api 404），
+            // 须在端点路由内注册等价模式（UseRouting 已前置于 UseCube，本源优先匹配）。
+            endpoints.MapControllerRoute(
+                name: "CubeAreas",
+                pattern: "api/{area}/{controller=Index}/{action=Index}/{id?}");
+
             endpoints.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=CubeHome}/{action=Index}/{id?}");
+
+            // 映射特性路由（含 NuGet 包 CubeController 的 /Cube/AreaChilds、/Cube/AreaParents；约定路由不动）
+            endpoints.MapControllers();
+
+            // 未匹配的 /api 请求返回 404，避免被 SPA 回退（MapFallbackToFile）当成前端路由返回 index.html
+            endpoints.MapFallback("/api/{**path}", context =>
+            {
+                context.Response.StatusCode = 404;
+                return Task.CompletedTask;
+            });
         });
 
         // 发布服务到星尘注册中心，需要指定服务名
