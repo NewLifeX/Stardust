@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Reflection;
 using NewLife.Model;
 using Stardust.Data.Monitors;
@@ -24,6 +25,7 @@ public class TraceStatServiceTests
         {
             AppId = appId,
             Name = name,
+            ItemId = 881003,
             StatDate = now.Date,
             StatHour = now.Date.AddHours(now.Hour),
             StatMinute = now.Date.AddHours(now.Hour).AddMinutes(now.Minute / 5 * 5),
@@ -366,6 +368,56 @@ public class TraceStatServiceTests
         }
     }
 
+    /// <summary>分钟批算跳过 ItemId=0 的行：跟踪项未建立的上报数据不产 item-0 分钟统计（与小时/日守卫对称）</summary>
+    [Fact]
+    [Trait("Category", "Monitor")]
+    public void ProcessMinute_SkipsItemId0()
+    {
+        var svc = CreateService();
+
+        var now = DateTime.Now;
+        var statMinute = now.Date.AddHours(now.Hour).AddMinutes(now.Minute / 5 * 5);
+        var statHour = now.Date.AddHours(now.Hour);
+
+        // 临时应用，避免 ProcessMinute 内部 AppTracer.FindByID 空引用；Name 加随机段规避唯一索引残留冲突
+        var tracer = new AppTracer { Name = "test-item0-app-" + Guid.NewGuid().ToString("n")[..6], Enable = true };
+        tracer.Insert();
+        var appId = tracer.ID;
+
+        // 构造含 ItemId=0 的原始跟踪数据（跟踪项未建立时的上报形态）与正常行对照
+        var raw0 = new TraceData { AppId = appId, Name = "test-item0-" + Guid.NewGuid().ToString("n")[..8], ItemId = 0, StatDate = now.Date, StatHour = statHour, StatMinute = statMinute, Total = 10, Errors = 0, TotalCost = 100, MaxCost = 20, MinCost = 5 };
+        var raw1 = new TraceData { AppId = appId, Name = "test-item1-" + Guid.NewGuid().ToString("n")[..8], ItemId = 881003, StatDate = now.Date, StatHour = statHour, StatMinute = statMinute, Total = 20, Errors = 1, TotalCost = 200, MaxCost = 30, MinCost = 8 };
+        raw0.Insert();
+        raw1.Insert();
+
+        try
+        {
+            var method = typeof(TraceStatService).GetMethod("ProcessMinute", BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.NotNull(method);
+            method.Invoke(svc, [appId, statMinute, statMinute.AddMinutes(5)]);
+
+            // 强制落盘批算队列，验证分钟统计实际产物
+            svc.Flush();
+
+            var list = TraceMinuteStat.FindAll(TraceMinuteStat._.AppId == appId);
+            Assert.DoesNotContain(list, e => e.ItemId == 0);
+            Assert.Contains(list, e => e.ItemId == 881003);
+        }
+        finally
+        {
+            // 各清理步骤独立容错，避免单项失败跳过后续清理造成残留
+            try { svc.Flush(); } catch { }
+            try
+            {
+                foreach (var e in TraceMinuteStat.FindAll(TraceMinuteStat._.AppId == appId)) e.Delete();
+                foreach (var e in AppMinuteStat.FindAll(AppMinuteStat._.AppId == appId)) e.Delete();
+            }
+            catch { }
+            try { foreach (var e in TraceData.FindAll(TraceData._.AppId == appId)) e.Delete(); } catch { }
+            try { tracer.Delete(); } catch { }
+        }
+    }
+
     /// <summary>清理指定应用的统计测试数据，避免污染共享测试库</summary>
     private static void CleanupStats(Int32 appId)
     {
@@ -373,5 +425,59 @@ public class TraceStatServiceTests
         foreach (var e in TraceDayStat.FindAll(TraceDayStat._.AppId == appId)) e.Delete();
         foreach (var e in TraceMinuteStat.FindAll(TraceMinuteStat._.AppId == appId)) e.Delete();
         foreach (var e in AppMinuteStat.FindAll(AppMinuteStat._.AppId == appId)) e.Delete();
+    }
+
+    /// <summary>流式链跳过 ItemId=0 的行：跟踪项未建立的上报不产 item-0 分钟统计（与分钟批算守卫同族）</summary>
+    [Fact]
+    [Trait("Category", "Monitor")]
+    public void DoFlowStat_SkipsItemId0()
+    {
+        var svc = CreateService();
+
+        var now = DateTime.Now;
+        var statMinute = now.Date.AddHours(now.Hour).AddMinutes(now.Minute);
+        var statHour = now.Date.AddHours(now.Hour);
+
+        // 临时应用，避免 IsHotApp 外键语义空挂；Name 加随机段规避唯一索引残留冲突
+        var tracer = new AppTracer { Name = "test-flow0-app-" + Guid.NewGuid().ToString("n")[..6], Enable = true };
+        tracer.Insert();
+        var appId = tracer.ID;
+
+        // 流式输入来自内存队列，TraceData 无需落库；ItemId=0 行 Name 非空以通过 AppId/Name 门控
+        var raw0 = new TraceData { AppId = appId, Name = "test-flow0-" + Guid.NewGuid().ToString("n")[..8], ItemId = 0, StatDate = now.Date, StatHour = statHour, StatMinute = statMinute, Total = 10, Errors = 0, TotalCost = 100, MaxCost = 20, MinCost = 5 };
+        var raw1 = new TraceData { AppId = appId, Name = "test-flow1-" + Guid.NewGuid().ToString("n")[..8], ItemId = 881003, StatDate = now.Date, StatHour = statHour, StatMinute = statMinute, Total = 20, Errors = 1, TotalCost = 200, MaxCost = 30, MinCost = 8 };
+
+        try
+        {
+            var queueField = typeof(TraceStatService).GetField("_queue", BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.NotNull(queueField);
+            var queue = (ConcurrentQueue<TraceData>)queueField.GetValue(svc);
+            queue.Enqueue(raw0);
+            queue.Enqueue(raw1);
+
+            var method = typeof(TraceStatService).GetMethod("DoFlowStat", BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.NotNull(method);
+            method.Invoke(svc, [null]);
+
+            // 强制落盘分钟队列，验证流式链实际产物
+            svc.Flush();
+
+            var list = TraceMinuteStat.FindAll(TraceMinuteStat._.AppId == appId);
+            Assert.DoesNotContain(list, e => e.ItemId == 0);
+            Assert.Contains(list, e => e.ItemId == 881003);
+        }
+        finally
+        {
+            // 各清理步骤独立容错，避免单项失败跳过后续清理造成残留
+            try { svc.Flush(); } catch { }
+            try
+            {
+                foreach (var e in TraceMinuteStat.FindAll(TraceMinuteStat._.AppId == appId)) e.Delete();
+                foreach (var e in AppMinuteStat.FindAll(AppMinuteStat._.AppId == appId)) e.Delete();
+            }
+            catch { }
+            try { foreach (var e in TraceData.FindAll(TraceData._.AppId == appId)) e.Delete(); } catch { }
+            try { tracer.Delete(); } catch { }
+        }
     }
 }

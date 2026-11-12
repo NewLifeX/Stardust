@@ -376,7 +376,7 @@ public partial class TraceData : Entity<TraceData>
     /// <returns></returns>
     public static IList<TraceData> SearchGroupAppAndName(Int32 appId, DateTime start, DateTime end)
     {
-        var selects = _.Total.Sum() & _.Errors.Sum() & _.TotalCost.Sum() & _.MaxCost.Max() & _.MinCost.Min() & _.TotalValue.Sum() & _.AppId & _.Name & _.StatMinute;
+        var selects = _.Total.Sum() & _.Errors.Sum() & _.TotalCost.Sum() & _.MaxCost.Max() & _.MinCost.Min() & _.TotalValue.Sum() & _.AppId & _.Name & _.ItemId & _.StatMinute;
 
         var exp = new WhereExpression();
         exp &= _.AppId == appId;
@@ -384,7 +384,8 @@ public partial class TraceData : Entity<TraceData>
 
         using var split = Meta.CreateShard(start);
 
-        return FindAll(exp.GroupBy(_.AppId, _.Name, _.StatMinute), null, selects);
+        // 分组带上 ItemId，跟踪项未建立的行（ItemId=0）与正常行各自成组，供上层按 ItemId 守卫
+        return FindAll(exp.GroupBy(_.AppId, _.Name, _.ItemId, _.StatMinute), null, selects);
     }
 
     /// <summary>根据应用分组统计</summary>

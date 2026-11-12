@@ -28,6 +28,7 @@ public class TraceMinuteStatController : WebReadOnlyEntityController<TraceMinute
         var itemId = p["itemId"].ToInt(-1);
         var name = p["name"];
         var minError = p["minError"].ToInt(-1);
+        var type = p["type"];
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
@@ -54,7 +55,23 @@ public class TraceMinuteStatController : WebReadOnlyEntityController<TraceMinute
         // 标记热门应用，缩短统计计算周期
         if (appId > 0) _hotApp.SetHotAppAsync(appId);
 
-        var list = TraceMinuteStat.Search(appId, itemId, name, minError, start, end, p["Q"], p);
+        IList<TraceMinuteStat> list;
+        if (!type.IsNullOrEmpty())
+        {
+            // CARD-MON-0506（task-71）：type 种类过滤（A1 方案 Minute 对称补，j-config 定稿闸裁补——三粒度行为一致）。
+            // Minute 实体无 Type 列，由 TraceItem.GetKind(Name) 派生种类判定筛出 ItemId 集，
+            // 交实体集合重载 In 过滤。EqualIgnoreCase 对齐 Day 先例。
+            // 空集短路：无匹配埋点返回空列表，非退化全量。
+            var items = appId >= 0 ? TraceItem.FindAll(TraceItem._.AppId == appId) : TraceItem.FindAll();
+            var itemIds = items.Where(e => TraceItem.GetKind(e.Name).EqualIgnoreCase(type)).Select(e => e.Id).ToArray();
+            if (itemIds.Length == 0) return Array.Empty<TraceMinuteStat>();
+
+            list = TraceMinuteStat.Search(appId, itemIds, name, minError, start, end, p["Q"], p);
+        }
+        else
+        {
+            list = TraceMinuteStat.Search(appId, itemId, name, minError, start, end, p["Q"], p);
+        }
 
         if (list.Count > 0 && appId >= 0 && itemId > 0)
         {

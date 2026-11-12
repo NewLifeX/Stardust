@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -139,11 +139,25 @@ public static IList<TraceHourStat> FindAllByAppIdAndItemId(Int32 appId, Int32 it
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
     public static IList<TraceHourStat> Search(Int32 appId, Int32 itemId, String name, DateTime start, DateTime end, String key, PageParameter page)
+        => Search(appId, itemId > 0 ? new[] { itemId } : null, name, start, end, key, page);
+
+    /// <summary>高级查询。埋点集合版：CARD-MON-0506（task-71）type 种类过滤 A1 方案——
+    /// 控制器由 TraceItem.GetKind(Name) 派生种类内存判定筛出 ItemId 集，此处 In 过滤。
+    /// itemIds 为 null 或空数组 = 不按埋点过滤（原单值 itemId&lt;=0 语义不变；空集短路由调用方负责）</summary>
+    /// <param name="appId">应用</param>
+    /// <param name="itemIds">跟踪项集合</param>
+    /// <param name="name">操作名。接口名或埋点名</param>
+    /// <param name="start">统计日期开始</param>
+    /// <param name="end">统计日期结束</param>
+    /// <param name="key">关键字</param>
+    /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+    /// <returns>实体列表</returns>
+    public static IList<TraceHourStat> Search(Int32 appId, Int32[] itemIds, String name, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
         if (appId >= 0) exp &= _.AppId == appId;
-        if (itemId > 0) exp &= _.ItemId == itemId;
+        if (itemIds != null && itemIds.Length > 0) exp &= _.ItemId.In(itemIds);
         if (!name.IsNullOrEmpty()) exp &= _.Name == name;
         exp &= _.StatTime.Between(start, end);
         if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key);

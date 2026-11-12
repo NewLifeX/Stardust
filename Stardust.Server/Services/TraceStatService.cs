@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using NewLife;
 using NewLife.Log;
 using NewLife.Threading;
@@ -275,8 +275,8 @@ public class TraceStatService : ITraceStatService
             if (!_queue.TryDequeue(out var td)) break;
             Interlocked.Decrement(ref _count);
 
-            // 过滤异常数据
-            if (td.AppId <= 0 || td.Name.IsNullOrEmpty()) continue;
+            // 过滤异常数据；跳过跟踪项未建立的行，不产 ItemId=0 统计（与分钟/小时/日批算守卫对称）
+            if (td.AppId <= 0 || td.ItemId == 0 || td.Name.IsNullOrEmpty()) continue;
 
             // 热门门控：仅热门应用（监控中心正在查看）保留小时/日统计的流式实时累加，
             // 非热门应用由巡检按 PatrolPeriod 兜底重算，显著降低统计写放大
@@ -690,6 +690,9 @@ public class TraceStatService : ITraceStatService
         // 聚合
         foreach (var item in list)
         {
+            // 跳过跟踪项未建立的行，不产 ItemId=0 统计（与小时/日守卫对称）
+            if (item.ItemId == 0) continue;
+
             var st = queue.GetOrAdd(item.StatMinute, appId, item.ItemId, out var key);
 
             st.Total = item.Total;
