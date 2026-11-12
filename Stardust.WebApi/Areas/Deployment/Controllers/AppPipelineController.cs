@@ -63,7 +63,64 @@ public class AppPipelineController : DeploymentEntityController<AppPipeline>
             (deployId < 0 ? null : AppPipeline._.DeployId == deployId) &
             (enable == null ? null : AppPipeline._.Enable == enable.Value) &
             AppPipeline._.UpdateTime.Between(p["dtStart"].ToDateTime(), p["dtEnd"].ToDateTime()),
-            p);
+            p).Select(CropRow);
+    }
+
+    /// <summary>查看单行。出参投影裁剪 Token/Secret 明文（task-94 一期脱敏，OBS-3 CropPfx 同款语义：值级置 null）</summary>
+    /// <param name="id">主键</param>
+    /// <returns>裁剪后的单行数据</returns>
+    public override ApiResponse<AppPipeline> Detail(String id)
+    {
+        var res = base.Detail(id);
+        if (res?.Data != null) res.Data = CropRow(res.Data);
+        return res;
+    }
+
+    /// <summary>添加数据。响应快照裁剪 Token/Secret 明文（task-94；前端 webhook 复制走 CopyWebhook 专用端点，无回显需求）</summary>
+    /// <param name="model">提交的模型</param>
+    /// <returns>裁剪后的新增结果</returns>
+    public override async Task<ApiResponse<AppPipeline>> Insert(AppPipeline model)
+    {
+        var res = await base.Insert(model);
+        if (res?.Data != null) res.Data = CropRow(res.Data);
+        return res;
+    }
+
+    /// <summary>更新数据。响应快照裁剪 Token/Secret 明文（task-94；新提交值与旧存量值都不得回显）</summary>
+    /// <param name="id">主键</param>
+    /// <param name="model">提交的模型</param>
+    /// <returns>裁剪后的更新结果</returns>
+    public override async Task<ApiResponse<AppPipeline>> Update(String id, AppPipeline model)
+    {
+        var res = await base.Update(id, model);
+        if (res?.Data != null) res.Data = CropRow(res.Data);
+        return res;
+    }
+
+    /// <summary>删除数据。响应快照裁剪 Token/Secret 明文（task-94；存量密钥不得随删除回显）</summary>
+    /// <param name="id">主键</param>
+    /// <returns>裁剪后的删除结果</returns>
+    public override ApiResponse<AppPipeline> Delete(String id)
+    {
+        var res = base.Delete(id);
+        if (res?.Data != null) res.Data = CropRow(res.Data);
+        return res;
+    }
+
+    /// <summary>出参投影：克隆实体并置空 Token/Secret 明文，杜绝列表/详情/写响应泄漏（task-94 一期脱敏）。
+    /// 克隆为全新实例，不原地改写共享缓存中的原实体；CopyWebhook 走 FindById 原实体读 Token，不受影响。</summary>
+    /// <param name="src">原始实体</param>
+    /// <returns>不含密钥明文的克隆实体</returns>
+    private static AppPipeline CropRow(AppPipeline src)
+    {
+        var dst = new AppPipeline();
+        foreach (var fi in AppPipeline.Meta.Fields)
+        {
+            dst[fi.Name] = src[fi.Name];
+        }
+        dst.Token = null;
+        dst.Secret = null;
+        return dst;
     }
 
     /// <summary>复制 webhook URL 到剪贴板</summary>

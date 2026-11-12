@@ -63,7 +63,22 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
 
         p.RetrieveState = true;
 
-        return NodeOnline.Search(projectId, nodeId, provinceId, cityId, category, start, end, p["Q"], p);
+        return NodeOnline.Search(projectId, nodeId, provinceId, cityId, category, start, end, p["Q"], p).Select(CropRow);
+    }
+
+    /// <summary>出参投影：克隆实体并置空 Token 明文，杜绝列表行泄漏（task-94 一期脱敏，OBS-3 CropPfx 同款语义：值级置 null）。
+    /// 克隆为全新实例，不原地改写共享缓存中的原实体。</summary>
+    /// <param name="src">原始实体</param>
+    /// <returns>不含 Token 明文的克隆实体</returns>
+    private static NodeOnline CropRow(NodeOnline src)
+    {
+        var dst = new NodeOnline();
+        foreach (var fi in NodeOnline.Meta.Fields)
+        {
+            dst[fi.Name] = src[fi.Name];
+        }
+        dst.Token = null;
+        return dst;
     }
 
     public async Task<ActionResult> Trace(Int32 id)

@@ -92,7 +92,7 @@ public class NodeController : NodesEntityController<Node>
         if (nodeId > 0)
         {
             var node = Node.FindByKey(nodeId);
-            if (node != null) return new[] { node };
+            if (node != null) return new[] { CropRow(node) };
         }
 
         var rids = p["areaId"].SplitAsInt("/");
@@ -118,7 +118,44 @@ public class NodeController : NodesEntityController<Node>
             if (!Enum.TryParse(osKind, out kind)) kind = (OSKinds)(-1);
         }
 
-        return Node.Search(projectId, provinceId, cityId, category, product, kind, version, runtime, framework, arch, enable, start, end, p["Q"], p);
+        return Node.Search(projectId, provinceId, cityId, category, product, kind, version, runtime, framework, arch, enable, start, end, p["Q"], p).Select(CropRow);
+    }
+
+    /// <summary>查看单行。出参投影裁剪 WebHook 明文（task-95 二期刀0/N1）。
+    /// Secret 保守保留（节点详情/注册流程在用，一期裁定）；WebHook 告警回调凭据不得出户。
+    /// MVC 编辑表单走服务端实体绑定（非本 API Detail），无 F1 静默清库面。</summary>
+    /// <param name="id">主键</param>
+    /// <returns>裁剪后的单行数据</returns>
+    public override ApiResponse<Node> Detail(String id)
+    {
+        var res = base.Detail(id);
+        if (res?.Data != null)
+        {
+            var dst = new Node();
+            foreach (var fi in Node.Meta.Fields)
+            {
+                dst[fi.Name] = res.Data[fi.Name];
+            }
+            dst.WebHook = null;
+            res.Data = dst;
+        }
+        return res;
+    }
+
+    /// <summary>出参投影：克隆实体并置空 Secret/WebHook 明文，杜绝列表行泄漏（task-94 一期 + task-95 二期刀0/N1 增 WebHook）。
+    /// 仅裁列表出参；Detail 见上（Secret 保守保留、WebHook 裁剪），克隆为全新实例，不原地改写共享缓存中的原实体。</summary>
+    /// <param name="src">原始实体</param>
+    /// <returns>不含 Secret/WebHook 明文的克隆实体</returns>
+    private static Node CropRow(Node src)
+    {
+        var dst = new Node();
+        foreach (var fi in Node.Meta.Fields)
+        {
+            dst[fi.Name] = src[fi.Name];
+        }
+        dst.Secret = null;
+        dst.WebHook = null;
+        return dst;
     }
 
     /// <summary>搜索</summary>

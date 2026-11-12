@@ -88,7 +88,7 @@ public class AppTracerController : WebEntityController<AppTracer>
         if (id > 0)
         {
             var app = AppTracer.FindByKey(id);
-            if (app != null) return [app];
+            if (app != null) return [CropRow(app)];
         }
         var appId = p["appId"].ToInt(-1);
         if (appId > 0)
@@ -120,7 +120,7 @@ public class AppTracerController : WebEntityController<AppTracer>
 
         p.RetrieveState = true;
 
-        return AppTracer.Search(projectId, appId, category, enable, start, end, p["Q"], p);
+        return AppTracer.Search(projectId, appId, category, enable, start, end, p["Q"], p).Select(CropRow);
     }
 
     protected override Int32 OnDelete(AppTracer entity)
@@ -143,6 +143,27 @@ public class AppTracerController : WebEntityController<AppTracer>
 
     protected override Boolean Valid(AppTracer entity, DataObjectMethodType type, Boolean post)
     {
+        if (!post)
+        {
+            // task-95 二期刀4：GET 查询后编辑表单回显掩码
+            if (type == DataObjectMethodType.Update && !entity.WebHook.IsNullOrEmpty()) entity.WebHook = MaskPlaceholder;
+
+            return base.Valid(entity, type, post);
+        }
+
+        // task-95 二期刀4：POST 保存前哨兵恢复原值——必须先于既有 Fix/Update 链，
+        // 否则掩码哨兵会随 entity.Update() 写库（F2 消解：前端行回填+PUT 恒带键）
+        var ent = entity as IEntity;
+        if (ent.Dirtys[nameof(AppTracer._.WebHook)] && entity.WebHook == MaskPlaceholder)
+        {
+            var old = AppTracer.FindByKey(entity.ID);
+            if (old != null)
+            {
+                entity.WebHook = old.WebHook;
+                ent.Dirtys[nameof(AppTracer._.WebHook)] = false;
+            }
+        }
+
         if (post)
         {
             // 更新时关联应用
@@ -257,5 +278,64 @@ public class AppTracerController : WebEntityController<AppTracer>
         }
 
         return JsonRefresh("成功！");
+    }
+
+    /// <summary>查看单行。出参投影掩码 WebHook（task-95 二期刀4）</summary>
+    /// <param name="id">主键</param>
+    /// <returns>掩码后的单行数据</returns>
+    public override ApiResponse<AppTracer> Detail(String id)
+    {
+        var res = base.Detail(id);
+        if (res?.Data != null) res.Data = CropRow(res.Data);
+        return res;
+    }
+
+    /// <summary>添加数据。响应快照掩码 WebHook（task-95 刀4）</summary>
+    /// <param name="model">提交的模型</param>
+    /// <returns>掩码后的新增结果</returns>
+    public override async Task<ApiResponse<AppTracer>> Insert(AppTracer model)
+    {
+        var res = await base.Insert(model);
+        if (res?.Data != null) res.Data = CropRow(res.Data);
+        return res;
+    }
+
+    /// <summary>更新数据。响应快照掩码 WebHook（task-95 刀4）</summary>
+    /// <param name="id">主键</param>
+    /// <param name="model">提交的模型</param>
+    /// <returns>掩码后的更新结果</returns>
+    public override async Task<ApiResponse<AppTracer>> Update(String id, AppTracer model)
+    {
+        var res = await base.Update(id, model);
+        if (res?.Data != null) res.Data = CropRow(res.Data);
+        return res;
+    }
+
+    /// <summary>删除数据。响应快照掩码 WebHook（task-95 刀4）</summary>
+    /// <param name="id">主键</param>
+    /// <returns>掩码后的删除结果</returns>
+    public override ApiResponse<AppTracer> Delete(String id)
+    {
+        var res = base.Delete(id);
+        if (res?.Data != null) res.Data = CropRow(res.Data);
+        return res;
+    }
+
+    /// <summary>WebHook 掩码哨兵（lead 刀6 同款定值；非部分明文，回填提交由 Valid 守卫识别还原）</summary>
+    private const String MaskPlaceholder = "••••••";
+
+    /// <summary>出参投影：克隆实体并置 WebHook 为掩码哨兵，杜绝列表/详情/写响应泄漏（task-95 二期刀4）。
+    /// 刀3/4 偏离一期「值级 null」惯例：F2 编辑回填（tracerPutBody 恒带 webHook）需要哨兵语义（null 回填→PUT 空→静默清库），已随小步报披露。</summary>
+    /// <param name="src">原始实体</param>
+    /// <returns>WebHook 掩码的克隆实体</returns>
+    private static AppTracer CropRow(AppTracer src)
+    {
+        var dst = new AppTracer();
+        foreach (var fi in AppTracer.Meta.Fields)
+        {
+            dst[fi.Name] = src[fi.Name];
+        }
+        dst.WebHook = src.WebHook.IsNullOrEmpty() ? null : MaskPlaceholder;
+        return dst;
     }
 }

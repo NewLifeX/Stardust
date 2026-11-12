@@ -47,6 +47,21 @@ public class RedisMessageQueueController : WebEntityController<RedisMessageQueue
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return RedisMessageQueue.Search(redisId, category, start, end, p["Q"], p);
+        return RedisMessageQueue.Search(redisId, category, start, end, p["Q"], p).Select(CropRow);
+    }
+
+    /// <summary>出参投影：克隆实体并置空 WebHook 明文，杜绝列表行泄漏（task-94 一期脱敏，OBS-3 CropPfx 同款语义：值级置 null）。
+    /// 前端对该行 WebHook 零消费（RedisQueueCard 注释实证）；克隆为全新实例，不原地改写共享缓存中的原实体。</summary>
+    /// <param name="src">原始实体</param>
+    /// <returns>不含 WebHook 明文的克隆实体</returns>
+    private static RedisMessageQueue CropRow(RedisMessageQueue src)
+    {
+        var dst = new RedisMessageQueue();
+        foreach (var fi in RedisMessageQueue.Meta.Fields)
+        {
+            dst[fi.Name] = src[fi.Name];
+        }
+        dst.WebHook = null;
+        return dst;
     }
 }

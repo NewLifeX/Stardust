@@ -68,6 +68,33 @@ public class DomainProviderController : NodesEntityController<DomainProvider>
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return DomainProvider.Search(domain, enable, start, end, p["Q"], p);
+        return DomainProvider.Search(domain, enable, start, end, p["Q"], p).Select(CropRow);
+    }
+
+    /// <summary>查看单行。出参投影裁剪 AppKey/AppSecret 明文（task-95 二期刀5，OBS-3 CropPfx 同款语义：值级置 null）。
+    /// MVC 回显已核实：StarWeb 编辑表单取数=meta+实体路径（自家 EntityController），与 API Detail 独立，本裁剪不影响 MVC 回显。</summary>
+    /// <param name="id">主键</param>
+    /// <returns>裁剪后的单行数据</returns>
+    public override ApiResponse<DomainProvider> Detail(String id)
+    {
+        var res = base.Detail(id);
+        if (res?.Data != null) res.Data = CropRow(res.Data);
+        return res;
+    }
+
+    /// <summary>出参投影：克隆实体并置空 AppKey/AppSecret 明文，杜绝列表行泄漏（task-94 一期脱敏，OBS-3 CropPfx 同款语义：值级置 null）。
+    /// 刀5 起同裁 Detail；克隆为全新实例，不原地改写共享缓存中的原实体。</summary>
+    /// <param name="src">原始实体</param>
+    /// <returns>不含 AppKey/AppSecret 明文的克隆实体</returns>
+    private static DomainProvider CropRow(DomainProvider src)
+    {
+        var dst = new DomainProvider();
+        foreach (var fi in DomainProvider.Meta.Fields)
+        {
+            dst[fi.Name] = src[fi.Name];
+        }
+        dst.AppKey = null;
+        dst.AppSecret = null;
+        return dst;
     }
 }

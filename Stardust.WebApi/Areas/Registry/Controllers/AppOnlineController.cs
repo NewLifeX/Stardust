@@ -88,7 +88,23 @@ public class AppOnlineController : RegistryEntityController<AppOnline>
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return AppOnline.Search(projectId, appId, nodeId, category, start, end, p["Q"], p);
+        return AppOnline.Search(projectId, appId, nodeId, category, start, end, p["Q"], p).Select(CropRow);
+    }
+
+    /// <summary>出参投影：克隆实体并置空 Token/UserName 明文，杜绝列表行泄漏（task-94 一期脱敏，OBS-3 CropPfx 同款语义：值级置 null）。
+    /// 克隆为全新实例，不原地改写共享缓存中的原实体。</summary>
+    /// <param name="src">原始实体</param>
+    /// <returns>不含 Token/UserName 明文的克隆实体</returns>
+    private static AppOnline CropRow(AppOnline src)
+    {
+        var dst = new AppOnline();
+        foreach (var fi in AppOnline.Meta.Fields)
+        {
+            dst[fi.Name] = src[fi.Name];
+        }
+        dst.Token = null;
+        dst.UserName = null;
+        return dst;
     }
 
     /// <summary>实例快照。按应用返回所有在线实例及其最近一条性能数据</summary>

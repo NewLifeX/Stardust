@@ -8,6 +8,7 @@ using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data.Deployment;
 using Stardust.Web.Services;
+using XCode;
 using XCode.Membership;
 
 namespace Stardust.Web.Areas.Deployment.Controllers;
@@ -22,6 +23,10 @@ public class AppDeployNodeController : DeploymentEntityController<AppDeployNode>
         ListFields.RemoveCreateField();
         AddFormFields.RemoveCreateField();
         ListFields.TraceUrl();
+
+        // 应用程序版本由心跳自动回填（AppDeployNode.Fill(AppOnline)/Fill(AppInfo)），install 发布回填部署版本（Version），均不开放手工编辑（与 Stardust.Web 同步）
+        AddFormFields.RemoveField("AppVersion");
+        EditFormFields.RemoveField("AppVersion");
 
         LogOnChange = true;
 
@@ -46,23 +51,78 @@ public class AppDeployNodeController : DeploymentEntityController<AppDeployNode>
         if (id > 0)
         {
             var entity = AppDeployNode.FindById(id);
-            if (entity != null) return [entity];
+            if (entity != null) return [CropRow(entity)];
         }
 
-        var appId = p["deployId"].ToInt(-1);
-        if (appId <= 0) appId = p["appId"].ToInt(-1);
+        var deployId = p["deployId"].ToInt(-1);
+        var appId = p["appId"].ToInt(-1);
         var nodeId = p["nodeId"].ToInt(-1);
         var enable = p["enable"]?.ToBoolean();
 
-        PageSetting.EnableAdd = appId > 0;
+        PageSetting.EnableAdd = deployId > 0 || appId > 0;
         PageSetting.EnableNavbar = false;
 
-        return AppDeployNode.Search(appId, nodeId, enable, p["Q"], p);
+        // 部署集优先：按部署集直接过滤其节点
+        if (deployId > 0) return AppDeployNode.Search(deployId, nodeId, enable, p["Q"], p).Select(CropRow);
+
+        // 按应用：先换取该应用全部部署集 Id，再按集合过滤；应用无部署集即无节点
+        if (appId > 0)
+        {
+            var setIds = AppDeploy.FindAllByAppId(appId).Select(e => e.Id).ToArray();
+            if (setIds.Length == 0) return [];
+
+            return AppDeployNode.Search(setIds, nodeId, enable, p["Q"], p).Select(CropRow);
+        }
+
+        return AppDeployNode.Search(-1, nodeId, enable, p["Q"], p).Select(CropRow);
     }
 
+    /// <summary>查看单行。UserName 掩码回显 "*****"（task-95 二期刀8/N2：Vue 编辑抽屉走 Detail 取数，掩码回显防 F1 静默清库）。
+    /// 克隆后改写，不原地污染共享缓存中的原实体（原实体仍是 Valid 守卫的恢复源）。</summary>
+    /// <param name="id">主键</param>
+    /// <returns>掩码回显后的单行数据</returns>
+    public override ApiResponse<AppDeployNode> Detail(String id)
+    {
+        var res = base.Detail(id);
+        if (res?.Data != null)
+        {
+            var dst = new AppDeployNode();
+            foreach (var fi in AppDeployNode.Meta.Fields)
+            {
+                dst[fi.Name] = res.Data[fi.Name];
+            }
+            if (!dst.UserName.IsNullOrEmpty()) dst.UserName = "*****";
+            res.Data = dst;
+        }
+        return res;
+    }
+
+    /// <summary>写入校验：POST 守卫（task-95 二期刀8/N2，MySqlNode 刀0 同款）。前端编辑抽屉以 Detail 全量展开为 PUT 提交体（F1 形态），
+    /// Detail 掩码回显 "*****"，未修改即原样提交，此处从库中恢复原值并清脏标记，杜绝静默清库；
+    /// 空串放行=显式清空（允许移除运行身份用户名）。</summary>
+    /// <param name="entity">实体</param>
+    /// <param name="type">操作类型</param>
+    /// <param name="post">是否提交</param>
+    /// <returns>校验结果</returns>
     protected override Boolean Valid(AppDeployNode entity, DataObjectMethodType type, Boolean post)
     {
         if (!post) return base.Valid(entity, type, post);
+
+        // POST 保存前：掩码值恢复原值，防 Detail 掩码回显经 PUT 全量展开造成静默清库
+        if ((entity as IEntity).Dirtys[nameof(AppDeployNode._.UserName)])
+        {
+            if (entity.UserName == "*****")
+            {
+                // 未修改用户名：从数据库读取原值回填，清除脏标记
+                var old = AppDeployNode.FindById(entity.Id);
+                if (old != null)
+                {
+                    entity.UserName = old.UserName;
+                    (entity as IEntity).Dirtys[nameof(AppDeployNode._.UserName)] = false;
+                }
+            }
+            // 空串：保持空值，显式清空放行
+        }
 
         var node = entity.Node;
         if (node != null) entity.IP = node.IP;
@@ -168,5 +228,20 @@ public class AppDeployNodeController : DeploymentEntityController<AppDeployNode>
         {
             return Json(500, ex.Message);
         }
+    }
+
+    /// <summary>出参投影：克隆实体并置空 UserName 明文，杜绝列表行泄漏（task-95 二期刀8/N2，一期 CropRow 同款语义：值级置 null，键不删）。
+    /// 克隆为全新实例，不原地改写共享缓存中的原实体；Valid 守卫链路走原实体，写路径语义不变。</summary>
+    /// <param name="src">原始实体</param>
+    /// <returns>不含 UserName 明文的克隆实体</returns>
+    private static AppDeployNode CropRow(AppDeployNode src)
+    {
+        var dst = new AppDeployNode();
+        foreach (var fi in AppDeployNode.Meta.Fields)
+        {
+            dst[fi.Name] = src[fi.Name];
+        }
+        dst.UserName = null;
+        return dst;
     }
 }

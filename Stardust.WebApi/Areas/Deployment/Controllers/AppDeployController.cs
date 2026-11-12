@@ -90,7 +90,7 @@ public class AppDeployController : DeploymentEntityController<AppDeploy>
         if (id > 0)
         {
             var entity = AppDeploy.FindByKey(id);
-            if (entity != null) return [entity];
+            if (entity != null) return [CropRow(entity)];
         }
         var appId = p["appId"].ToInt(-1);
         if (appId > 0)
@@ -121,7 +121,66 @@ public class AppDeployController : DeploymentEntityController<AppDeploy>
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return AppDeploy.Search(projectId, appId, category, enable, start, end, p["Q"], p);
+        return AppDeploy.Search(projectId, appId, category, enable, start, end, p["Q"], p).Select(CropRow);
+    }
+
+    /// <summary>查看单行。出参投影裁剪 RepoPassword/RepoUserName/DeployKey/UserName 明文（task-94 一期脱敏，OBS-3 CropPfx 同款语义：值级置 null）</summary>
+    /// <param name="id">主键</param>
+    /// <returns>裁剪后的单行数据</returns>
+    public override ApiResponse<AppDeploy> Detail(String id)
+    {
+        var res = base.Detail(id);
+        if (res?.Data != null) res.Data = CropRow(res.Data);
+        return res;
+    }
+
+    /// <summary>添加数据。响应快照裁剪敏感四键（task-94；编辑表单写式回显留空=不修改，无回显需求）</summary>
+    /// <param name="model">提交的模型</param>
+    /// <returns>裁剪后的新增结果</returns>
+    public override async Task<ApiResponse<AppDeploy>> Insert(AppDeploy model)
+    {
+        var res = await base.Insert(model);
+        if (res?.Data != null) res.Data = CropRow(res.Data);
+        return res;
+    }
+
+    /// <summary>更新数据。响应快照裁剪敏感四键（task-94；新提交值与旧存量值都不得回显）</summary>
+    /// <param name="id">主键</param>
+    /// <param name="model">提交的模型</param>
+    /// <returns>裁剪后的更新结果</returns>
+    public override async Task<ApiResponse<AppDeploy>> Update(String id, AppDeploy model)
+    {
+        var res = await base.Update(id, model);
+        if (res?.Data != null) res.Data = CropRow(res.Data);
+        return res;
+    }
+
+    /// <summary>删除数据。响应快照裁剪敏感四键（task-94；存量凭据不得随删除回显）</summary>
+    /// <param name="id">主键</param>
+    /// <returns>裁剪后的删除结果</returns>
+    public override ApiResponse<AppDeploy> Delete(String id)
+    {
+        var res = base.Delete(id);
+        if (res?.Data != null) res.Data = CropRow(res.Data);
+        return res;
+    }
+
+    /// <summary>出参投影：克隆实体并置空 RepoPassword/RepoUserName/DeployKey/UserName 明文，杜绝列表/详情/写响应泄漏（task-94 一期脱敏）。
+    /// 克隆为全新实例，不原地改写共享缓存中的原实体；Valid 的 GET 掩码/POST 回填链路走原实体，写路径语义不变。</summary>
+    /// <param name="src">原始实体</param>
+    /// <returns>不含凭据明文的克隆实体</returns>
+    private static AppDeploy CropRow(AppDeploy src)
+    {
+        var dst = new AppDeploy();
+        foreach (var fi in AppDeploy.Meta.Fields)
+        {
+            dst[fi.Name] = src[fi.Name];
+        }
+        dst.RepoPassword = null;
+        dst.RepoUserName = null;
+        dst.DeployKey = null;
+        dst.UserName = null;
+        return dst;
     }
 
     protected override Boolean Valid(AppDeploy entity, DataObjectMethodType type, Boolean post)

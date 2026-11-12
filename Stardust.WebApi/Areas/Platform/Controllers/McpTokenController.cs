@@ -49,7 +49,33 @@ public class McpTokenController : WebEntityController<McpToken>
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return McpToken.Search(token, enable, start, end, p["Q"], p);
+        return McpToken.Search(token, enable, start, end, p["Q"], p).Select(CropRow);
+    }
+
+    /// <summary>查看单行。出参投影裁剪 Token 明文（task-94 一期脱敏，OBS-3 CropPfx 同款语义：值级置 null）。
+    /// 注意：Insert/Update/Reset 写响应不裁——create/reset 的一次性 Token 揭示 UX 依赖写响应回传明文。</summary>
+    /// <param name="id">主键</param>
+    /// <returns>裁剪后的单行数据</returns>
+    public override ApiResponse<McpToken> Detail(String id)
+    {
+        var res = base.Detail(id);
+        if (res?.Data != null) res.Data = CropRow(res.Data);
+        return res;
+    }
+
+    /// <summary>出参投影：克隆实体并置空 Token 明文，杜绝列表/详情泄漏（task-94 一期脱敏）。
+    /// 克隆为全新实例，不原地改写共享缓存中的原实体；写路径（OnInsert/OnUpdate/Reset）走原实体，语义不变。</summary>
+    /// <param name="src">原始实体</param>
+    /// <returns>不含 Token 明文的克隆实体</returns>
+    private static McpToken CropRow(McpToken src)
+    {
+        var dst = new McpToken();
+        foreach (var fi in McpToken.Meta.Fields)
+        {
+            dst[fi.Name] = src[fi.Name];
+        }
+        dst.Token = null;
+        return dst;
     }
 
     /// <summary>插入时自动生成Token字符串并同步资源授权</summary>
