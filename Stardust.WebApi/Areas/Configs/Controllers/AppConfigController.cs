@@ -62,7 +62,8 @@ public class AppConfigController : ConfigsEntityController<AppConfig>
             df.Header = "预览";
             df.DisplayName = "预览";
             df.Title = "查看该应用的配置数据";
-            df.Url = "/config/getall?appId={Name}&secret={appSecret}";
+            // task-95 二期刀1：Secret 内化（GetAllByApp 服务端解析），URL 不再携带 {appSecret}（明文出户/入日志面）
+            df.Url = "/Config/GetAllByApp?appId={Id}";
             df.Target = "_blank";
         }
 

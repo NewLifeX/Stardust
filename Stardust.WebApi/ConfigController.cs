@@ -57,6 +57,26 @@ public class ConfigController(ConfigService configService, AppTokenService token
         };
     }
 
+    /// <summary>按应用 Id 拉取全部配置（配置中心「预览」专用，task-95 二期刀1）。
+    /// 服务端内解析 App.Secret 后走与 GetAll 完全相同的校验/心跳/计算链，浏览器与访问日志零经手 Secret；
+    /// 旧 /config/getall?appId={Name}&amp;secret={appSecret} 路由保留兼容一窗（wave-close 清理批统一删，调用方清单见 Doc/安全-02 §4 刀1）。</summary>
+    /// <param name="appId">应用 Id（Registry/App 行主键）</param>
+    /// <param name="scope">作用域</param>
+    /// <param name="version">客户端已知版本</param>
+    /// <returns>配置全集</returns>
+    [ApiFilter]
+    public ConfigInfo GetAllByApp(Int32 appId, String scope, Int32 version)
+    {
+        if (appId <= 0) throw new ArgumentNullException(nameof(appId));
+        if (ManageProvider.User == null) throw new ApiException(ApiCode.Unauthorized, L.T("Not logged in."));
+
+        var app = App.FindById(appId);
+        if (app == null) throw new ArgumentOutOfRangeException(nameof(appId), L.T("Application [{0}] does not exist.", appId));
+
+        // 同类复用：Secret 服务端内解析，不跨任何网络边界
+        return GetAll(app.Name, app.Secret, scope, version);
+    }
+
     private AppConfig Valid(String appId, String secret, out AppOnline online)
     {
         var ip = HttpContext.GetUserHost();
