@@ -1,4 +1,4 @@
-﻿// 手动刷新状态机单测（Vitest）：时钟与 sleep 注入，不依赖真实计时器。
+// 手动刷新状态机单测（Vitest）：时钟与 sleep 注入，不依赖真实计时器。
 import { describe, it, expect } from 'vitest';
 import { useManualRefresh } from './useManualRefresh.ts';
 import type { RefreshOutcome } from './ship.logic.ts';
@@ -6,12 +6,13 @@ import type { RefreshOutcome } from './ship.logic.ts';
 const OK: RefreshOutcome = { loadError: '', versionsFailed: false, nodesFailed: false, historyFailed: false };
 
 /** 每个 it 自己调用，拿到独立的时钟与记录 */
-function setup(opts: { loadMs?: number; outcome?: RefreshOutcome; loadThrows?: string } = {}) {
+function setup(opts: { loadMs?: number; outcome?: RefreshOutcome; loadThrows?: string; watchdogMs?: number } = {}) {
   let t = 1000;
   const slept: number[] = [];
   const notices: Array<{ ok: boolean; text: string }> = [];
   let loadCalls = 0;
   let release: () => void = () => {};
+  let fireWatchdog: (() => void) | null = null;
   const gate = new Promise<void>((resolve) => {
     release = resolve;
   });
@@ -29,8 +30,16 @@ function setup(opts: { loadMs?: number; outcome?: RefreshOutcome; loadThrows?: s
       slept.push(ms);
       t += ms;
     },
+    watchdogMs: opts.watchdogMs,
+    // 看门狗调度注入：单测手动触发，不依赖真实计时器；load 结束的 cancel 会清掉钩子
+    watchdogSchedule: (fire) => {
+      fireWatchdog = fire;
+      return () => {
+        fireWatchdog = null;
+      };
+    },
   });
-  return { r, slept, notices, release, calls: () => loadCalls };
+  return { r, slept, notices, release, calls: () => loadCalls, fireWatchdog: () => fireWatchdog?.() };
 }
 
 describe('useManualRefresh', () => {
@@ -112,5 +121,30 @@ describe('useManualRefresh', () => {
     expect(s.r.refreshing.value).toBe(false);
     await s.r.refresh();
     expect(s.calls()).toBe(2);
+  });
+
+  it('CARD-MON-08：load 挂起超看门狗时限，强复位 refreshing 并提示超时（防旋转永挂）', async () => {
+    const s = setup({ loadMs: 0, watchdogMs: 30 });
+    const p = s.r.refresh();
+    expect(s.r.refreshing.value).toBe(true);
+    // 不 release gate（load 永不回=6681 挂起窗），手动触发看门狗到点
+    s.fireWatchdog();
+    expect(s.r.refreshing.value).toBe(false);
+    expect(s.notices).toHaveLength(1);
+    expect(s.notices[0].ok).toBe(false);
+    expect(s.notices[0].text).toContain('刷新超时');
+    s.release();
+    await p;
+  });
+
+  it('CARD-MON-08：看门狗触发后迟回的 load 被静默丢弃，不重复提示', async () => {
+    const s = setup({ loadMs: 0, watchdogMs: 30 });
+    const p = s.r.refresh();
+    s.fireWatchdog();
+    expect(s.notices).toHaveLength(1); // 仅看门狗通知
+    s.release(); // load 此刻才回
+    await p;
+    expect(s.notices).toHaveLength(1); // 不追加成功/失败提示
+    expect(s.r.refreshing.value).toBe(false);
   });
 });
