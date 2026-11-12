@@ -21,6 +21,7 @@ import {
   buildHealthChecks,
   buildRuntimeSpecs,
   buildNodeTimeline,
+  mapCommandRows,
   nodeStatus,
   resourceWarning,
   relTime,
@@ -149,13 +150,8 @@ async function reload(): Promise<void> {
       appName: String(r.AppName ?? r.appName ?? '—'),
       enable: r.Enable !== false,
     }))
-    commands.value = ((cmr?.data ?? []) as Record<string, unknown>[]).map((r) => ({
-      id: Number(r.Id ?? r.id ?? 0),
-      name: String(r.Name ?? r.name ?? ''),
-      role: String(r.Role ?? r.role ?? ''),
-      status: Number(r.Status ?? r.status ?? 0),
-      result: String(r.Result ?? r.result ?? ''),
-    }))
+    // task-70 修复：映射收敛至 mapCommandRows（command 字段真源，REG-01 同族 camelCase 错位）
+    commands.value = mapCommandRows((cmr?.data ?? []) as Record<string, unknown>[])
   } catch (e: unknown) {
     ElMessage.error(e instanceof Error ? e.message : '加载节点详情失败')
   } finally {

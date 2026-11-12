@@ -4,7 +4,7 @@
  * 真实数据来源：
  *  - /Nodes/Node              节点记录（Id/Name/IP/Enable/ProjectId/Category/Product/Version/LastActive/cpu/memory/disk）
  *  - /Deployment/AppDeployNode 节点关联的部署应用（AppId/AppName/NodeId/Enable）
- *  - /Nodes/NodeCommand       节点可执行指令（Name/Command/Role/Status/...）
+ *  - /Nodes/NodeCommand       节点可执行指令（command/status/result 等，camelCase；2026-11-09 走查实锤）
  *
  * 纪律：所有数值均由真实字段推导；字段缺失一律呈现「—」，不编造数字。
  */
@@ -237,11 +237,23 @@ export interface DeployAppRow {
   enable: boolean
 }
 
-/** 指令行（/Nodes/NodeCommand） */
+/**
+ * 指令行（/Nodes/NodeCommand 列表 → 下拉/表格行）
+ *
+ * 2026-11-09 task-70 修复：原内联映射 `r.Name ?? r.name` 无此字段（真实返回=command，
+ * camelCase）→ 下拉 option 全空 → Send UI 链不可达（REG-01 同族 camelCase 错位）。
+ * 现收敛为纯函数：camelCase 真源优先、PascalCase 兜底、空名行剔除（防全空再现）。
+ */
 export interface CommandRow {
   id: number
   name: string
-  role: string
-  status: number
-  result: string
+}
+
+export function mapCommandRows(rows: Record<string, unknown>[]): CommandRow[] {
+  return rows
+    .map((r) => ({
+      id: Number(r.id ?? r.Id ?? 0),
+      name: String(r.command ?? r.Command ?? ''),
+    }))
+    .filter((c) => c.name !== '')
 }
