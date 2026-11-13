@@ -55,6 +55,13 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
     /// </remarks>
     public Int32 WatchdogTimeout { get; set; }
 
+    /// <summary>接受平台下发的默认语言。默认true</summary>
+    /// <remarks>
+    /// 设为 false 后忽略登录、心跳与匿名 /api 下发的默认语言，保持系统或本地配置。
+    /// 桌面应用通常设为 false；Web、控制台与后台服务保持默认 true。
+    /// </remarks>
+    public Boolean AcceptPlatformLanguage { get; set; } = true;
+
     /// <summary>星尘工厂</summary>
     public StarFactory? Factory { get; set; }
 
@@ -168,11 +175,11 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
         return request;
     }
 
-    /// <summary>登录前对齐服务端时间与默认语言</summary>
+    /// <summary>登录前对齐服务端时间与进程内语言</summary>
     /// <remarks>
     /// 本机时钟偏差超过盐值窗口时，用本机时间生成的盐值会被服务端判定过期，应用登录失败。
-    /// 登录前先用匿名接口取一次服务端信息，把时间差写入客户端，使盐值按服务端时间生成；
-    /// 同时应用平台默认语言，让登录前的界面与提示也能用平台语言。
+    /// 登录前先用匿名接口取一次服务端信息，把时间差写入客户端，使盐值按服务端时间生成。
+    /// 匿名接口的语言只写入当前进程，不保存到核心配置；登录/心跳下发的语言才会持久化。
     /// 探测最多等待 <see cref="ServerProbe.WaitTimeout"/>，失败不阻塞登录，保持原有行为。
     /// </remarks>
     private void ApplyServerInfo()
@@ -190,7 +197,31 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
             // 时间差跳变多少，按日历调度的定时逻辑就跳多少，写入日志便于解释定时任务的异常触发
             if (Math.Abs(Span.TotalSeconds) >= 1) WriteLog("Server time offset applied: {0}", Span);
         }
-        if (!info.DefaultLanguage.IsNullOrWhiteSpace()) ApplyDefaultLanguage(info.DefaultLanguage);
+        if (!info.DefaultLanguage.IsNullOrWhiteSpace()) ApplyDefaultLanguage(info.DefaultLanguage, false);
+    }
+    #endregion
+
+    #region 多语言
+    /// <summary>应用平台下发的默认语言。本地固定语言或关闭接受时不接受平台默认语言</summary>
+    /// <param name="language">语言名称。为空时不改动</param>
+    /// <param name="save">是否保存到核心配置。匿名 /api 传入 false，只影响当前进程</param>
+    /// <remarks>
+    /// 优先级为本地固定语言 &gt; 平台默认语言 &gt; 系统语言。关闭 <see cref="AcceptPlatformLanguage"/> 后完全忽略平台语言。
+    /// 平台下发 <see cref="StarLocalization.AutoLanguage"/> 时清除本机保存的平台语言，恢复系统语言；匿名 /api 传入 save=false 时只清进程内。
+    /// </remarks>
+    protected override void ApplyDefaultLanguage(String? language, Boolean save = true)
+    {
+        if (language.IsNullOrWhiteSpace()) return;
+        if (!AcceptPlatformLanguage) return;
+        if (StarLocalization.HasFixedLanguage()) return;
+
+        if (language.EqualIgnoreCase(StarLocalization.AutoLanguage))
+        {
+            StarLocalization.ResetDefaultLanguage(save);
+            return;
+        }
+
+        base.ApplyDefaultLanguage(language, save);
     }
     #endregion
 

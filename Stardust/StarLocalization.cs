@@ -86,12 +86,58 @@ public static class StarLocalization
         return null;
     }
 
+    /// <summary>本地是否已固定语言。固定后不接受平台下发的默认语言</summary>
+    /// <returns>已通过核心配置或环境变量固定语言时返回 true</returns>
+    /// <remarks>
+    /// 核心配置 <c>Language</c>、环境变量 <c>Language</c> 与代码显式调用 <see cref="Localization.SetLanguage"/> 都视为本地固定语言。
+    /// 平台默认语言只作为未固定语言时的兜底，不能覆盖本地锁定。
+    /// </remarks>
+    public static Boolean HasFixedLanguage()
+    {
+        if (Localization.ForcedLanguage != null) return true;
+
+        return !NewLife.Setting.Current.GetEffectiveLanguage().IsNullOrWhiteSpace();
+    }
+
+    /// <summary>清除本机保存的平台默认语言，恢复系统语言</summary>
+    /// <param name="save">是否同步清除核心配置</param>
+    /// <remarks>平台下发 <see cref="AutoLanguage"/> 时调用，只清理平台写入的默认语言，不影响本地固定的 <c>Language</c>。</remarks>
+    public static void ResetDefaultLanguage(Boolean save = true)
+    {
+        var core = NewLife.Setting.Current;
+        if (save && !core.DefaultLanguage.IsNullOrEmpty())
+        {
+            var old = core.DefaultLanguage;
+            core.DefaultLanguage = "";
+            try
+            {
+                // Save 内部会重新应用语言配置，顺带清空 DefaultCulture
+                core.Save();
+            }
+            catch
+            {
+                // 保存失败时回滚，下一次登录/心跳继续尝试
+                core.DefaultLanguage = old;
+            }
+        }
+
+        // 兼容 save=false、保存失败以及核心配置原本为空的情况
+        var cleared = Localization.DefaultCulture;
+        if (cleared != null)
+        {
+            Localization.SetDefaultLanguage(null);
+            if (Localization.ForcedLanguage == null && Localization.LogCulture?.Name == cleared.Name)
+                Localization.LogCulture = null;
+        }
+    }
+
     /// <summary>按语言名称固定进程界面与日志语言</summary>
     /// <param name="language">语言名称，为空时不改动</param>
     /// <returns>实际生效的语言名称；未设置或无法识别时返回 null</returns>
     /// <remarks>
     /// 同时写入 <see cref="Localization.Culture"/> 与 <see cref="Localization.LogCulture"/>，请求级语言识别因
-    /// <see cref="Localization.Culture"/> 非空而跳过。平台下发的默认语言由 <c>StarClient</c> 拦截，本地固定语言优先。
+    /// <see cref="Localization.Culture"/> 非空而跳过。常规本地固定语言建议使用核心配置 <c>Language</c>；
+    /// 本方法供宿主或测试在代码中显式固定进程语言。
     /// </remarks>
     public static String? UseLanguage(String? language)
     {

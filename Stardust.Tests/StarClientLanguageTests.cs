@@ -23,15 +23,17 @@ public class StarClientLanguageTests
         private readonly CultureInfo? _logCulture = Localization.LogCulture;
         private readonly String? _forced = Localization.ForcedLanguage;
         private readonly CultureInfo? _default = Localization.DefaultCulture;
+        private readonly String? _coreLanguage = NewLife.Setting.Current.Language;
         private readonly String? _coreDefault = NewLife.Setting.Current.DefaultLanguage;
 
         public void Dispose()
         {
+            NewLife.Setting.Current.Language = _coreLanguage ?? "";
+            NewLife.Setting.Current.DefaultLanguage = _coreDefault ?? "";
             Localization.SetLanguage(_forced);
             Localization.Culture = _culture;
             Localization.LogCulture = _logCulture;
             Localization.SetDefaultLanguage(_default?.Name);
-            NewLife.Setting.Current.DefaultLanguage = _coreDefault ?? "";
         }
     }
 
@@ -39,19 +41,38 @@ public class StarClientLanguageTests
     public void LocalLanguageWins()
     {
         using var state = new StateSnapshot();
-        Localization.SetLanguage(null);
+        Localization.SetLanguage("en-US");
         Localization.SetDefaultLanguage(null);
+        NewLife.Setting.Current.Language = "";
         NewLife.Setting.Current.DefaultLanguage = "";
 
-        var set = new StarSetting { Server = "http://127.0.0.1:1", Language = "zh-Hans" };
+        var set = new StarSetting { Server = "http://127.0.0.1:1" };
         using var client = new TestStarClient(set);
 
-        client.Apply("en-US");
+        client.Apply("zh-Hans");
 
-        // 本地配置的 zh-Hans 已锁定界面与日志，平台默认语言不能改动
-        Assert.Equal("zh-Hans", Localization.Culture?.Name);
-        Assert.Equal("zh-Hans", Localization.LogCulture?.Name);
+        // 本地锁定 en-US 后，平台默认语言不能改动
+        Assert.Equal("en-US", Localization.Culture?.Name);
+        Assert.Equal("en-US", Localization.LogCulture?.Name);
         Assert.Null(Localization.DefaultCulture);
+    }
+
+    [Fact(DisplayName = "核心配置 Language 存在时忽略平台下发的默认语言")]
+    public void CoreLanguageWins()
+    {
+        using var state = new StateSnapshot();
+        Localization.SetLanguage(null);
+        Localization.SetDefaultLanguage(null);
+        NewLife.Setting.Current.Language = "en-US";
+        NewLife.Setting.Current.DefaultLanguage = "";
+
+        var set = new StarSetting { Server = "http://127.0.0.1:1" };
+        using var client = new TestStarClient(set);
+
+        client.Apply("zh-Hans");
+
+        Assert.Null(Localization.DefaultCulture);
+        Assert.Null(Localization.Culture);
     }
 
     [Fact(DisplayName = "未固定语言时应用平台下发的默认语言")]
@@ -60,6 +81,7 @@ public class StarClientLanguageTests
         using var state = new StateSnapshot();
         Localization.SetLanguage(null);
         Localization.SetDefaultLanguage(null);
+        NewLife.Setting.Current.Language = "";
         NewLife.Setting.Current.DefaultLanguage = "";
 
         var set = new StarSetting { Server = "http://127.0.0.1:1" };
@@ -73,12 +95,31 @@ public class StarClientLanguageTests
         Assert.Null(Localization.Culture);
     }
 
-    [Fact(DisplayName = "平台下发 auto 时清除本机默认语言")]
+    [Fact(DisplayName = "StarClient /api 语言只影响进程内不写核心配置")]
+    public void InMemoryOnlyDoesNotPersist()
+    {
+        using var state = new StateSnapshot();
+        Localization.SetLanguage(null);
+        Localization.SetDefaultLanguage(null);
+        NewLife.Setting.Current.Language = "";
+        NewLife.Setting.Current.DefaultLanguage = "";
+
+        var set = new StarSetting { Server = "http://127.0.0.1:1" };
+        using var client = new TestStarClient(set);
+
+        client.Apply("en-US");
+
+        Assert.Equal("en-US", Localization.DefaultCulture?.Name);
+        Assert.Equal("", NewLife.Setting.Current.DefaultLanguage);
+    }
+
+    [Fact(DisplayName = "StarClient /api auto 只清进程内语言")]
     public void ResetsDefaultLanguageOnAuto()
     {
         using var state = new StateSnapshot();
         Localization.SetLanguage(null);
         Localization.SetDefaultLanguage("en-US");
+        NewLife.Setting.Current.Language = "";
         NewLife.Setting.Current.DefaultLanguage = "en-US";
 
         var set = new StarSetting { Server = "http://127.0.0.1:1" };
@@ -87,6 +128,8 @@ public class StarClientLanguageTests
         client.Apply(StarLocalization.AutoLanguage);
 
         Assert.Null(Localization.DefaultCulture);
+        // /api 的 auto 只清进程内，不写核心配置
+        Assert.Equal("en-US", NewLife.Setting.Current.DefaultLanguage);
         // 日志语言回到系统语言，不再跟随已清除的平台语言
         Assert.Equal(Localization.SystemCulture.Name, (Localization.LogCulture ?? Localization.SystemCulture).Name);
     }

@@ -56,9 +56,6 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
     public StarClient(IClientSetting setting) : base(setting)
     {
         SetDefault();
-
-        // 配置了语言时固定本进程的界面与日志语言
-        if (setting is StarSetting star) StarLocalization.UseLanguage(star.Language);
     }
 
     /// <summary>实例化</summary>
@@ -67,56 +64,26 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
     #endregion
 
     #region 多语言
-    /// <summary>应用平台下发的默认语言。本地配置固定语言时不接受平台默认语言</summary>
-    /// <param name="language">语言名称</param>
-    /// <param name="save">是否保存到核心配置</param>
+    /// <summary>应用平台下发的默认语言。本地固定语言时不接受平台默认语言</summary>
+    /// <param name="language">语言名称。为空时不改动</param>
+    /// <param name="save">是否保存到核心配置。匿名 /api 传入 false，只影响当前进程</param>
     /// <remarks>
-    /// 优先级为本地固定语言 &gt; 平台默认语言 &gt; 系统语言。客户端配置 <c>Star.Language</c> 已固定进程语言时，
-    /// 平台下发的默认语言不能改动界面与日志，也不写入核心配置，避免下次启动被平台语言顶掉。
-    /// 平台下发 <see cref="StarLocalization.AutoLanguage"/> 时清除本机保存的平台语言，恢复系统语言。
+    /// 优先级为本地固定语言 &gt; 平台默认语言 &gt; 系统语言。核心配置 <c>Language</c> 或环境变量
+    /// <c>Language</c> 已固定进程语言时，平台下发的默认语言不能改动界面与日志，也不写入核心配置。
+    /// 平台下发 <see cref="StarLocalization.AutoLanguage"/> 时清除本机保存的平台语言，恢复系统语言；匿名 /api 传入 save=false 时只清进程内。
     /// </remarks>
     protected override void ApplyDefaultLanguage(String? language, Boolean save = true)
     {
-        if (Setting is StarSetting star && !star.Language.IsNullOrWhiteSpace()) return;
+        if (language.IsNullOrWhiteSpace()) return;
+        if (StarLocalization.HasFixedLanguage()) return;
 
         if (language.EqualIgnoreCase(StarLocalization.AutoLanguage))
         {
-            ResetDefaultLanguage(save);
+            StarLocalization.ResetDefaultLanguage(save);
             return;
         }
 
         base.ApplyDefaultLanguage(language, save);
-    }
-
-    /// <summary>清除本机保存的平台默认语言，恢复系统语言</summary>
-    /// <param name="save">是否同步清除核心配置</param>
-    private static void ResetDefaultLanguage(Boolean save)
-    {
-        var core = NewLife.Setting.Current;
-        if (save && !core.DefaultLanguage.IsNullOrEmpty())
-        {
-            var old = core.DefaultLanguage;
-            core.DefaultLanguage = "";
-            try
-            {
-                // Save 内部会重新应用语言配置，顺带清空 DefaultCulture
-                core.Save();
-            }
-            catch
-            {
-                // 保存失败时回滚，下一次登录/心跳继续尝试
-                core.DefaultLanguage = old;
-            }
-        }
-
-        // 兼容 save=false、保存失败以及核心配置原本为空的情况
-        var cleared = Localization.DefaultCulture;
-        if (cleared != null)
-        {
-            Localization.SetDefaultLanguage(null);
-            if (Localization.ForcedLanguage == null && Localization.LogCulture?.Name == cleared.Name)
-                Localization.LogCulture = null;
-        }
     }
     #endregion
 
@@ -168,7 +135,7 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
     /// <remarks>
     /// 本机时钟偏差超过盐值窗口时，用本机时间生成的盐值会被服务端判定过期，登录失败并反复重试。
     /// 登录前先用匿名接口取一次服务端信息，把时间差写入客户端，使盐值按服务端时间生成；
-    /// 同时应用平台默认语言，让登录前的界面与提示也能用平台语言。
+    /// 同时应用平台默认语言，让登录前的界面与提示也能用平台语言。匿名接口的语言只影响当前进程，不保存配置。
     /// 探测最多等待 <see cref="ServerProbe.WaitTimeout"/>，失败不阻塞登录，保持原有行为。
     /// </remarks>
     private void ApplyServerInfo()
@@ -186,7 +153,7 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
             // 时间差跳变多少，按日历调度的定时逻辑就跳多少，写入日志便于解释定时任务的异常触发
             if (Math.Abs(Span.TotalSeconds) >= 1) WriteLog("Server time offset applied: {0}", Span);
         }
-        if (!info.DefaultLanguage.IsNullOrWhiteSpace()) ApplyDefaultLanguage(info.DefaultLanguage);
+        if (!info.DefaultLanguage.IsNullOrWhiteSpace()) ApplyDefaultLanguage(info.DefaultLanguage, false);
     }
 
     /// <summary>获取设备信息</summary>
