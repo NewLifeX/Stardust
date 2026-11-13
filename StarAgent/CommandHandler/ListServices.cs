@@ -1,3 +1,4 @@
+using Stardust.Managers;
 ﻿using Stardust.Models;
 using NewLife.Agent;
 using NewLife.Agent.Command;
@@ -26,7 +27,7 @@ public class ListServices : BaseCommandHandler
         try
         {
             // 通过 UDP RPC 获取服务列表
-            var response = client.Invoke<ServicesInfo>("GetServices");
+            var response = client.Invoke<ServicesInfo>("GetServices", new Dictionary<String, Object?> { ["token"] = LocalApiToken.Read() });
 
             if (response == null || response.Services == null)
             {

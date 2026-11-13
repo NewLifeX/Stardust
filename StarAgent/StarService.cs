@@ -52,6 +52,9 @@ public class StarService : DisposeBase, IApi
     #region 构造
     public StarService()
     {
+        // 本机 RPC 共享令牌，代理启动时生成并写入 local.token，供本机调用方读取
+        LocalApiToken.Ensure();
+
         // 获取本地进程名比较慢，平均200ms，有时候超过500ms
         //Task.Run(() =>
         //{
@@ -137,10 +140,15 @@ public class StarService : DisposeBase, IApi
     }
 
     /// <summary>设置星尘服务端地址</summary>
+    /// <param name="server">服务端地址</param>
+    /// <param name="token">本机 RPC 令牌。只允许本机特权调用方改写服务端配置</param>
     /// <returns></returns>
     [Api(nameof(SetServer))]
-    public String SetServer(String server)
+    public String SetServer(String server, String? token)
     {
+        CheckLocal();
+        CheckToken(token);
+
         var set = StarSetting;
         if (set.Server.IsNullOrEmpty() && !server.IsNullOrEmpty())
         {
@@ -165,11 +173,13 @@ public class StarService : DisposeBase, IApi
     }
 
     /// <summary>获取所有服务列表</summary>
+    /// <param name="token">本机 RPC 令牌</param>
     /// <returns></returns>
     [Api(nameof(GetServices))]
-    public ServicesInfo GetServices()
+    public ServicesInfo GetServices(String? token)
     {
         CheckLocal();
+        CheckToken(token);
 
         var list = Manager.Services;
         var runningList = Manager.RunningServices;
@@ -185,11 +195,13 @@ public class StarService : DisposeBase, IApi
 
     /// <summary>启动服务</summary>
     /// <param name="serviceName">服务名称</param>
+    /// <param name="token">本机 RPC 令牌</param>
     /// <returns></returns>
     [Api("StartService")]
-    public ServiceOperationResult StartService(String serviceName)
+    public ServiceOperationResult StartService(String serviceName, String? token)
     {
         CheckLocal();
+        CheckToken(token);
 
         if (serviceName.IsNullOrEmpty())
         {
@@ -219,11 +231,13 @@ public class StarService : DisposeBase, IApi
 
     /// <summary>停止服务</summary>
     /// <param name="serviceName">服务名称</param>
+    /// <param name="token">本机 RPC 令牌</param>
     /// <returns></returns>
     [Api("StopService")]
-    public ServiceOperationResult StopService(String serviceName)
+    public ServiceOperationResult StopService(String serviceName, String? token)
     {
         CheckLocal();
+        CheckToken(token);
 
         if (serviceName.IsNullOrEmpty())
         {
@@ -253,11 +267,13 @@ public class StarService : DisposeBase, IApi
 
     /// <summary>重启服务</summary>
     /// <param name="serviceName">服务名称</param>
+    /// <param name="token">本机 RPC 令牌</param>
     /// <returns></returns>
     [Api("RestartService")]
-    public ServiceOperationResult RestartService(String serviceName)
+    public ServiceOperationResult RestartService(String serviceName, String? token)
     {
         CheckLocal();
+        CheckToken(token);
 
         if (serviceName.IsNullOrEmpty())
         {
@@ -326,6 +342,15 @@ public class StarService : DisposeBase, IApi
     private void CheckLocal()
     {
         if (Session is INetSession ns && !ns.Remote.Address.IsLocal()) throw new InvalidOperationException(Localization.Translate("Operations from remote hosts are not allowed."));
+    }
+
+    /// <summary>校验本机 RPC 令牌</summary>
+    /// <remarks>来源地址判定挡不住同机低权限进程，启停受管服务与改写服务端地址必须带 local.token 中的令牌</remarks>
+    /// <param name="token">调用方携带的令牌</param>
+    private static void CheckToken(String? token)
+    {
+        if (!LocalApiToken.Verify(token))
+            throw new InvalidOperationException(Localization.Translate("Local RPC requires a valid token. Read local.token from the StarAgent directory, or set STAR_LOCAL_TOKEN."));
     }
 
     ///// <summary>杀死并启动进程</summary>

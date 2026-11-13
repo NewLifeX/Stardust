@@ -3,6 +3,7 @@ using NewLife.Agent;
 using NewLife.Agent.Command;
 using NewLife.Log;
 using NewLife.Remoting;
+using Stardust.Managers;
 using Stardust.Models;
 
 namespace StarAgent.CommandHandler;
@@ -25,7 +26,7 @@ public class RestartService : BaseCommandHandler
         };
         
         // 获取服务列表
-        var services = client.Invoke<ServicesInfo>("GetServices");
+        var services = client.Invoke<ServicesInfo>("GetServices", new Dictionary<String, Object?> { ["token"] = LocalApiToken.Read() });
         if (services == null || services.Services == null || services.Services.Length == 0)
         {
             XTrace.WriteLine("No child services found");
@@ -68,7 +69,7 @@ public class RestartService : BaseCommandHandler
         try
         {
             // 通过 UDP RPC 重启服务
-            var response = client.Invoke<ServiceOperationResult>("RestartService", new Dictionary<String, Object?> { ["serviceName"] = serviceName });
+            var response = client.Invoke<ServiceOperationResult>("RestartService", new Dictionary<String, Object?> { ["serviceName"] = serviceName, ["token"] = LocalApiToken.Read() });
 
             if (response == null)
             {

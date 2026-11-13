@@ -20,6 +20,7 @@ using NewLife.Remoting;
 using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust;
+using Stardust.Managers;
 using Stardust.Models;
 using Stardust.Data.Deployment;
 using Stardust.Data.Gateway;
@@ -730,7 +731,7 @@ public class HttpReverseProxy : ProxyServer
             {
                 Timeout = 5_000,
             };
-            var rs = await client.InvokeAsync<ServiceOperationResult>("StartService", new { serviceName });
+            var rs = await client.InvokeAsync<ServiceOperationResult>("StartService", new Dictionary<String, Object?> { ["serviceName"] = serviceName, ["token"] = LocalApiToken.Read() });
             AdminLog?.Info("StarAgent StartService {0}: {1}", serviceName, rs?.Message);
             return rs?.Success == true;
         }
@@ -750,7 +751,7 @@ public class HttpReverseProxy : ProxyServer
             {
                 Timeout = 5_000,
             };
-            var rs = await client.InvokeAsync<ServiceOperationResult>("StopService", new { serviceName });
+            var rs = await client.InvokeAsync<ServiceOperationResult>("StopService", new Dictionary<String, Object?> { ["serviceName"] = serviceName, ["token"] = LocalApiToken.Read() });
             AdminLog?.Info("StarAgent StopService {0}: {1}", serviceName, rs?.Message);
             return rs?.Success == true;
         }
