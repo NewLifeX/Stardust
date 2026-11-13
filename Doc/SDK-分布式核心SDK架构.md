@@ -150,6 +150,7 @@ await client.Login();
 | 方法 | 说明 |
 |------|------|
 | `AddStardust()` | 一行接入：注入 StarClient、StarTracer、配置服务，并自动注册追踪中间件与启动服务 |
+| `AddStardust(StarOptions)` | 以启动选项接入，集中配置服务端地址、应用标识、密钥、延迟启动与客户端行为 |
 | `UseStardust()` | 显式启用追踪中间件，自动创建 Span；`AddStardust` 已自动调用，通常无需重复 |
 | `RegisterService()` | 注册当前应用为服务提供者 |
 | `ConsumeService()` | 消费指定服务，返回可用地址列表 |

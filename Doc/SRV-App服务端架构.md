@@ -121,6 +121,8 @@ AppController.Ping(inf)
 - 不更新 App 表（Node 需要更新 Frameworks）
 - 额外写 `AppMeter` 性能数据
 - `Ping` 请求体中包含服务注册信息（`Service` 数组）
+- 服务端始终按平台设置下发 `DefaultLanguage`，不区分应用；客户端可通过 `StarOptions.AcceptPlatformLanguage=false` 忽略
+- 匿名 `/api` 的语言由客户端只应用到当前进程，不写入 `Core.config`；登录/心跳下发的语言才持久化
 
 客户端侧的 `AppClient.OnPing` 在心跳成功后，取走 `Data/AppEvents.csv` 台账分批上报，成功后删除；上报失败时保留台账并追加失败事件，等待下一次心跳重试。节点与应用各用各的台账文件（`Data/NodeEvents.csv` / `Data/AppEvents.csv`），互不串扰。
 

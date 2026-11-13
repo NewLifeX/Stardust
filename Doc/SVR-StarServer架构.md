@@ -110,7 +110,7 @@ StarServer（`Stardust.Server`）是星尘平台的服务端核心，提供所�
 | 配置项 | 默认值 | 说明 |
 |--------|--------|------|
 | Port | 6600 | 服务端口 |
-| DefaultLanguage | — | 登录/心跳下发给客户端的默认语言，留空时沿用核心配置 DefaultLanguage |
+| DefaultLanguage | — | 登录/心跳/`/api` 下发的默认语言，留空时沿用核心配置 DefaultLanguage；客户端可用 `StarOptions.AcceptPlatformLanguage=false` 忽略，`/api` 语言只影响进程内 |
 | TokenSecret | — | JWT 令牌密钥 |
 | TokenExpire | 7200 | 令牌有效期（秒） |
 | SessionTimeout | 600 | 会话超时（秒） |
