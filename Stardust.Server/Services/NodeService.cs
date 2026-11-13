@@ -710,6 +710,35 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
 
         return online;
     }
+
+    /// <summary>弱网重连宽限期（秒）。默认900秒。会话标识随进程重启或网络切换变化</summary>
+    public Int32 OnlineReuseSeconds { get; set; } = 900;
+
+    /// <summary>获取在线。会话标识未命中时，宽限期内沿用同一节点的上一条在线记录</summary>
+    /// <remarks>
+    /// 弱网节点或代理重启会带来新的会话标识。若每次重连都新建在线记录，在线时长与心跳计数会被切成多段，
+    /// 历史查询噪声大。宽限期内沿用同一记录，只刷新会话标识，登录时间由登录流程重设。
+    /// </remarks>
+    /// <param name="context">上下文</param>
+    /// <returns>在线对象，需要新建时返回空</returns>
+    public override IOnlineModel? GetOnline(DeviceContext context)
+    {
+        var online = base.GetOnline(context);
+        if (online != null) return online;
+
+        if (context.Device is not Node node || node.ID <= 0) return null;
+
+        var last = NodeOnline.FindAllByNodeId(node.ID).OrderByDescending(e => e.UpdateTime).FirstOrDefault();
+        if (last == null) return null;
+
+        // 超过宽限期视为真正离线，等超时清理后重新建记录
+        if ((DateTime.Now - last.UpdateTime).TotalSeconds > OnlineReuseSeconds) return null;
+
+        var sid = GetSessionId(context);
+        if (!sid.IsNullOrEmpty()) last.SessionID = sid;
+
+        return last;
+    }
     #endregion
 
     #region 升级更新
