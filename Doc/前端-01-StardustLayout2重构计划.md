@@ -1,6 +1,6 @@
 # 前端-01 StardustLayout2 重构计划（方案B / v2 交接包）
 
-- 状态：进行中（M1 骨架、交互层、应用列表、应用工作台壳、发布页已有代码，多数未经浏览器验证，进度以 `TODO.md` 为准）。**第 10 节是最新结论，与前文冲突处以第 10 节为准**（输入4-1026 起）；**第 11 节（2026-10-28 追加）中 11.1 发布页组件化、11.3 项目过滤有效；11.2 概览并排已于 2026-10-29 作废，以 11.4 为准；11.4 页签方案与 11.5 顶栏「变更」均已由用户 2026-10-29 确认，其中 11.5 先落文档、暂不实现**
+- 状态：进行中（M1 骨架、交互层、应用列表、应用工作台壳、发布页已有代码，多数未经浏览器验证，进度以 `TODO.md` 为准）。**第 10 节是最新结论，与前文冲突处以第 10 节为准**（输入4-1026 起）；**第 11 节（2026-10-28 追加）中 11.1 发布页组件化、11.3 项目过滤有效；11.2 概览并排已于 2026-10-29 作废，以 11.4 为准；11.4 页签方案与 11.5 顶栏「变更」均已由用户 2026-10-29 确认，其中 11.5 先落文档、暂不实现**；**第 12 节（2026-11-13 追加）为现状核对，目录与路由已按实现收敛，与本文件第 3、4 节冲突处以第 12 节为准**
 - 来源：输入1-1026（按原型重构）、输入2-1026（增加 StardustLayout2，全新实现，页面与路由均在前端注册）
 - 权威规格：`Doc/Design/Stardust/design2/README.md` + `console/kit.css` + `colors_and_type.css`
 - 视觉参照：`Doc/Design/Stardust/ui_kits/console/index.html`（浏览器打开对照）
@@ -702,3 +702,14 @@ Notification.ts、UserAvatar.vue、UserMenu.vue、LogoutButton.vue、Tailwind �
 顶栏：事件驱动与最短路径在原型里由「此刻」（§4.1）承担，不另开「待办」入口。「发布」位推荐换成「变更」：跨应用时间线，行是 D 发布 / C 配置，点行直达应用对应页签并定位；「此刻」右栏「最近变更」取该页前 5 条。风险：`AppDeployHistory`、`AppPipelineRun` 能否不带 appId、pipelineId 按项目取，配置变更来源接口，均未核实；退路是只汇总当前项目前 N 个应用，或顶栏只留四项。
 
 已决：顶栏换「变更」（用户 2026-10-29 选定）。待决：`/ship` 取消后重定向去哪；最高频旅程（发完版本确认结果、告警后定位原因、日常看应用状态、改配置并发布，为推断，非用量数据）哪条优先。详见 `TODO.md` 停点 20。
+
+## 12. 现状核对（2026-11-13，以代码为准）
+
+本节按代码实际形态核对第 3、4 节的目录与里程碑，**冲突处以本节为准**。早前章节引用的 `TODO.md`、`TODO2.md`、`.forgeself/memory/*` 不在本仓库内，进度证据改为代码与测试。
+
+- **布局注册**：`src/main.ts` 中 `stardust2` 以第二参 `true` 注册为当前布局，旧 `stardust` 仅注册、可在布局切换器切回，符合第 2 节决策。
+- **路由**（`src/layouts/StardustLayout2/routes.ts`，全部走 `externalRoutes`，优先级高于框架路由）：`/now`、`/apps`、`/app/:tab/:id`、`/nodes`、`/mesh`、`/configs`、`/alarms`、`/trace/:traceId?`；`/ship` 整页按 11.5 取消并重定向到 `/changes`，旧 `/Trace/:id` 按命名路由重定向到 `ConsoleTrace`（避免路径打分引发的重定向递归）。
+- **页面形态收敛**：`apps/stardust/src/views/Console/` 只保留路由入口的薄壳（`Now/Apps/App/Nodes/Mesh/Ship/Changes/Configs/Alarms/TraceDetail`），真实页面与页签在 `src/layouts/StardustLayout2/`：`NowPage`、`NodesPage`、`MeshPage`、`AppTabs` + 九类页签（`AppObserve`、`TraceList`、`AppLog`、`AppConfigTable`、`AppInstances`、`DeployVersionList`、`DeployNodes`、`DeployHistory`、`DeployPipelineRuns`），与 11.4 的九页签方案一致，第 3 节的 `Now/`、`AppWorkspace/` 等多级目录未采用。
+- **偏差**：第 4 节 M4 的星图 canvas（`SkyCanvas`）未实现，节点页由表格 + 抽屉（`NodesPage`、`NodeFormDrawer`）承载；`Ship.vue` 文件保留但不再被路由引用。
+- **交互层（M2）已落地**：`KIcon`、`Drawer`、`GuardModal`、`CommandPalette`、`Toast`/`useToast`、`dock`、`useGlobalHotkeys`（P/C/L/N/A 与 `` ` ``、Esc 逐层关闭）均在 `src/layouts/StardustLayout2/`，并配逻辑单测与组件测试（`*.logic.test.ts`、`*.ct.spec.ts`）与 Storybook 故事。
+- **验证门禁**：`e2e/` 下 `acceptance-app-feature-smoke`、`acceptance-prod-readonly-walk`、`stardust-real` 覆盖新控制台路径；M7 要求的「浏览器 5188 全屏对照 + 断点 1180/1080/900 人工核查」仍属人工项，未在自动化里覆盖。
