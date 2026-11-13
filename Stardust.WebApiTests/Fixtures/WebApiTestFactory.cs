@@ -33,6 +33,23 @@ public class WebApiTestFactory : WebApplicationFactory<Program>
     private readonly Dictionary<String, String?> _savedEnv = [];
     private readonly Lazy<Task<String>> _token;
 
+    /// <summary>Mvc.Testing 以「解决方案目录+入口程序集名」推导 contentRoot，程序集名 StarWebApi 与工程目录
+    /// Stardust.WebApi 名字失配，推导必落空并抛 DirectoryNotFoundException。受支持改法：在 StartServer 推导前
+    /// 设置第一优先级环境变量 ASPNETCORE_TEST_CONTENTROOT_STARWEBAPI 指向真实工程目录。</summary>
+    static WebApiTestFactory()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        for (var i = 0; dir != null && i < 10; i++, dir = dir.Parent)
+        {
+            if (File.Exists(Path.Combine(dir.FullName, "Stardust.WebApi", "Stardust.WebApi.csproj")))
+            {
+                Environment.SetEnvironmentVariable("ASPNETCORE_TEST_CONTENTROOT_STARWEBAPI",
+                    Path.Combine(dir.FullName, "Stardust.WebApi"));
+                break;
+            }
+        }
+    }
+
     public WebApiTestFactory()
     {
         // 关闭 XCode 的 SQL 与调试日志：测试会大量建表与查询，SQL 日志是日志体积和耗时的主要来源
