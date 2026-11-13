@@ -28,7 +28,7 @@ public static class StarFactoryExtensions
     /// <param name="services"></param>
     /// <param name="appId"></param>
     /// <returns></returns>
-    public static StarFactory AddStardust(this IServiceCollection services, String? appId) => AddStardust(services, null, appId, null);
+    public static StarFactory AddStardust(this IServiceCollection services, String? appId) => AddStardust(services, new StarOptions { AppId = appId });
 
     /// <summary>添加星尘，提供监控、配置和服务注册发现能力。先后从参数配置和本机StarAgent读取星尘平台地址</summary>
     /// <param name="services"></param>
@@ -43,7 +43,7 @@ public static class StarFactoryExtensions
     /// <para>需要自定义中间件顺序时，仍可显式调用 <c>app.UseStardust()</c>；重复调用是幂等的。</para>
     /// </remarks>
     public static StarFactory AddStardust(this IServiceCollection services, String? server = null, String? appId = null, String? secret = null)
-        => AddStardust(services, server, appId, secret, false);
+        => AddStardust(services, new StarOptions { Server = server, AppId = appId, Secret = secret });
 
     /// <summary>添加星尘，可延迟登录服务端。自举服务端（StarServer）在主机开始监听之前登录自己必然失败，应先延迟</summary>
     /// <param name="services"></param>
@@ -53,8 +53,18 @@ public static class StarFactoryExtensions
     /// <param name="delayStart">延迟启动。为 true 时不立即登录服务端，由宿主在服务端就绪后调用 <c>StarFactory.Open()</c></param>
     /// <returns></returns>
     public static StarFactory AddStardust(this IServiceCollection services, String? server, String? appId, String? secret, Boolean delayStart)
+        => AddStardust(services, new StarOptions { Server = server, AppId = appId, Secret = secret, DelayStart = delayStart });
+
+    /// <summary>添加星尘，并指定启动选项</summary>
+    /// <param name="services"></param>
+    /// <param name="options">启动选项。包含服务端地址、应用标识、密钥、延迟启动与客户端行为</param>
+    /// <returns></returns>
+    public static StarFactory AddStardust(this IServiceCollection services, StarOptions options)
+        => AddStardustCore(services, options);
+
+    private static StarFactory AddStardustCore(this IServiceCollection services, StarOptions options)
     {
-        var star = new StarFactory(server, appId, secret, delayStart);
+        var star = new StarFactory(options);
 
         // 替换为混合配置提供者，优先本地配置
         var old = services.LastOrDefault(e => e.ServiceType == typeof(IConfigProvider))?.ImplementationInstance as IConfigProvider;

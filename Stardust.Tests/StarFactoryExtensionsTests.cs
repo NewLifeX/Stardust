@@ -24,4 +24,36 @@ public class StarFactoryExtensionsTests
         Assert.Contains(services, e => e.ServiceType == typeof(IHostedService) && e.ImplementationType?.Name == "StardustTracerHostedService");
         Assert.Contains(services, e => e.ServiceType == typeof(IStartupFilter) && e.ImplementationType?.Name == "StartupFilter");
     }
+
+    /// <summary>AddStardust 传入选项后可关闭平台语言。</summary>
+    [Fact]
+    [DisplayName("AddStardust 选项可关闭平台语言")]
+    public void AddStardustOptions()
+    {
+        var services = new ServiceCollection();
+        services.AddStardust(new StarOptions
+        {
+            AppId = "Stardust.Tests.NoPlatformLanguage",
+            AcceptPlatformLanguage = false,
+            DelayStart = true,
+        });
+
+        var star = services.First(e => e.ServiceType == typeof(StarFactory)).ImplementationInstance as StarFactory;
+        Assert.NotNull(star);
+        Assert.False(star!.Options.AcceptPlatformLanguage);
+        Assert.Equal("Stardust.Tests.NoPlatformLanguage", star.AppId);
+        Assert.True(star.DelayStart);
+    }
+
+    [Fact]
+    [DisplayName("AddStardust 默认接受平台语言")]
+    public void AddStardustDefaultOptions()
+    {
+        var services = new ServiceCollection();
+        services.AddStardust(null, "Stardust.Tests.DefaultLanguage", null);
+
+        var star = services.First(e => e.ServiceType == typeof(StarFactory)).ImplementationInstance as StarFactory;
+        Assert.NotNull(star);
+        Assert.True(star!.Options.AcceptPlatformLanguage);
+    }
 }

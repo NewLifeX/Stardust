@@ -39,16 +39,16 @@ public class StarFactory : DisposeBase
 {
     #region 属性
     /// <summary>服务器地址</summary>
-    public String? Server { get; set; }
+    public String? Server { get => Options.Server; set => Options.Server = value; }
 
     /// <summary>应用</summary>
-    public String? AppId { get; set; }
+    public String? AppId { get => Options.AppId; set => Options.AppId = value; }
 
     /// <summary>应用名</summary>
     public String? AppName { get; set; }
 
     /// <summary>应用密钥</summary>
-    public String? Secret { get; set; }
+    public String? Secret { get => Options.Secret; set => Options.Secret = value; }
 
     private String? _clientId;
     /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
@@ -78,7 +78,10 @@ public class StarFactory : DisposeBase
     /// 自举场景（StarServer 自身也是本平台的客户端）在 Web 主机开始监听之前登录自己必然失败，
     /// 先延迟再启动，可避免一串连接失败与超时日志。
     /// </remarks>
-    public Boolean DelayStart { get; set; }
+    public Boolean DelayStart { get => Options.DelayStart; set => Options.DelayStart = value; }
+
+    /// <summary>启动选项。包含连接信息、延迟启动与客户端行为，Init 补全后的实际值可从这里读取</summary>
+    public StarOptions Options { get; private set; } = new();
 
     private AppClient? _client;
     #endregion
@@ -89,29 +92,30 @@ public class StarFactory : DisposeBase
     /// </summary>
     public StarFactory() => Init();
 
+    /// <summary>实例化星尘工厂，并指定启动选项</summary>
+    /// <param name="options">启动选项。为空时使用默认选项；传入后会复制一份，避免工厂补全空值时修改调用方实例</param>
+    public StarFactory(StarOptions? options)
+    {
+        Options = options?.Clone() ?? new();
+
+        Init();
+    }
+
     /// <summary>实例化星尘工厂，指定地址、应用和密钥，创建工厂</summary>
     /// <param name="server">服务端地址。为空时先后读取appsettings.json、本地StarAgent、star.config，初始值为空，不连接服务端</param>
     /// <param name="appId">应用标识。为空时读取star.config，初始值为入口程序集名称</param>
     /// <param name="secret">应用密钥。为空时读取star.config，初始值为空</param>
     /// <returns></returns>
-    public StarFactory(String? server, String? appId, String? secret) => Init(server, appId, secret, false);
+    public StarFactory(String? server, String? appId, String? secret)
+        : this(new StarOptions { Server = server, AppId = appId, Secret = secret }) { }
 
     /// <summary>实例化星尘工厂，可延迟登录服务端</summary>
     /// <param name="server">服务端地址。为空时先后读取appsettings.json、本地StarAgent、star.config，初始值为空，不连接服务端</param>
     /// <param name="appId">应用标识。为空时读取star.config，初始值为入口程序集名称</param>
     /// <param name="secret">应用密钥。为空时读取star.config，初始值为空</param>
     /// <param name="delayStart">延迟启动。为 true 时创建客户端后不立即登录，等待宿主调用 <see cref="Open"/> 启动</param>
-    public StarFactory(String? server, String? appId, String? secret, Boolean delayStart) => Init(server, appId, secret, delayStart);
-
-    private void Init(String? server, String? appId, String? secret, Boolean delayStart)
-    {
-        Server = server;
-        AppId = appId;
-        Secret = secret;
-        DelayStart = delayStart;
-
-        Init();
-    }
+    public StarFactory(String? server, String? appId, String? secret, Boolean delayStart)
+        : this(new StarOptions { Server = server, AppId = appId, Secret = secret, DelayStart = delayStart }) { }
 
     /// <summary>销毁</summary>
     /// <param name="disposing"></param>
@@ -309,6 +313,7 @@ public class StarFactory : DisposeBase
                 Secret = Secret,
                 NodeCode = Local?.Info?.Code,
                 Setting = set,
+                AcceptPlatformLanguage = Options.AcceptPlatformLanguage,
 
                 Log = Log,
             };
