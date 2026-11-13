@@ -189,6 +189,10 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         // 登录历史
         WriteHistory(context, HistoryAction.NodeAuthentication, true, L.TLog("[{0}/{1}] authenticated {2}", node.Name, node.Code, inf.ToJson(false, false, false)));
 
+        // 旧版客户端在网络未就绪时上报 @pid 形式的客户端标识，无法按主机归组，且进程重启就换一个
+        if (!context.ClientId.IsNullOrEmpty() && context.ClientId[0] == '@')
+            XTrace.WriteLine("Node [{0}] logged in with a host-less client id [{1}], which cannot be grouped by host; upgrade the agent to report a stable instance identity", node.Code, context.ClientId);
+
         // 检查节点上线恢复
         NodeOnlineService.CheckOnline(node);
 

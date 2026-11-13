@@ -1,3 +1,5 @@
+using System;
+using NewLife;
 ﻿using NewLife.Configuration;
 using NewLife.Model;
 
@@ -6,6 +8,20 @@ namespace Stardust;
 /// <summary>星尘辅助类</summary>
 public static class StarHelper
 {
+    /// <summary>修正客户端标识。缺少主机段（形如 <c>@1234</c>）时用机器名补足</summary>
+    /// <remarks>
+    /// <c>Runtime.ClientId</c> 为 <c>ip@pid</c>，网络未就绪时退化为 <c>@pid</c>。
+    /// 没有主机段的标识无法按主机归组在线实例，进程重启后也完全变样，服务端会把每次重连当成新实例。
+    /// </remarks>
+    /// <param name="clientId">原始客户端标识</param>
+    /// <returns>补齐主机段后的标识</returns>
+    public static String? FixClientId(String? clientId)
+    {
+        if (clientId.IsNullOrEmpty() || clientId[0] != '@') return clientId;
+
+        return $"{Environment.MachineName}{clientId}";
+    }
+
     /// <summary>添加星尘，提供监控、配置和服务注册发现能力。先后从参数配置和本机StarAgent读取星尘平台地址</summary>
     /// <param name="services"></param>
     /// <param name="appId"></param>

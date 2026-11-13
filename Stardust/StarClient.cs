@@ -131,6 +131,20 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
         return request;
     }
 
+    /// <summary>填充登录请求。网络未就绪时 Runtime.ClientId 缺少主机段，改用机器名补足</summary>
+    /// <remarks>
+    /// <c>Runtime.ClientId</c> 为 <c>ip@pid</c>，拿不到本机 IPv4 时退化为 <c>@pid</c>。
+    /// 这种标识既无法按主机归组在线实例，进程重启后也完全变样，服务端会把每次重连当成新实例。
+    /// 这里用机器名补足主机段，保持标识可读且稳定。
+    /// </remarks>
+    /// <param name="request">登录请求</param>
+    protected override void FillLoginRequest(ILoginRequest request)
+    {
+        base.FillLoginRequest(request);
+
+        request.ClientId = StarHelper.FixClientId(request.ClientId);
+    }
+
     /// <summary>登录前对齐服务端时间与默认语言</summary>
     /// <remarks>
     /// 本机时钟偏差超过盐值窗口时，用本机时间生成的盐值会被服务端判定过期，登录失败并反复重试。
