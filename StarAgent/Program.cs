@@ -817,7 +817,14 @@ internal class MyService : ServiceBase, IServiceProvider
             var server = StarSetting.Server;
             if (!server.IsNullOrEmpty())
             {
-                _factory = new StarFactory(server, "StarAgent", null);
+                // StarAgent 同时有节点客户端与内置应用客户端，平台默认语言只由节点客户端应用，
+                // 避免两个客户端在登录/心跳时重复写入同一个进程级语言设置
+                _factory = new StarFactory(new StarOptions
+                {
+                    Server = server,
+                    AppId = "StarAgent",
+                    AcceptPlatformLanguage = false,
+                });
                 _factory.Register(_container);
 
                 // 激活配置中心，获取PluginServer
