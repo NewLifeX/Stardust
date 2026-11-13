@@ -206,6 +206,7 @@ StarAgent 基于 NewLife.Agent 内置的 `AgentWebPanel` 框架，提供了轻�
 - **前端**：嵌入式 `index.html` SPA（单页应用）
 - **监听端口**：默认 5500（`staragent.config` 中 `LocalPort`，启动时覆盖 `agent.config` 的 `WebPort`）
 - **本地 UDP API**：同一端口承载本机 UDP RPC 与局域网广播搜索（`Api/Info`），固定使用 PascalCase 字段名（如 `LocalIP`、`FileVersion`），不受面板全局 camelCase 策略影响，供码神工具 ApiServer 搜索与本地命令行解析。每次 `Info` 探测都作为 `LocalProbe` 事件写入节点历史；无请求体的广播探测在事件备注与本地日志中记录来源地址
+- **本机 RPC 令牌**：`Info` 匿名只读（局域网发现与健康探测），`GetServices`/`StartService`/`StopService`/`RestartService`/`SetServer` 除了来源地址必须是本机，还必须携带 `local.token` 中的令牌，避免同机低权限进程借代理以 root/SYSTEM 身份启停受管服务。代理启动时生成随机令牌并写入自身目录（Linux `0600`、Windows 仅 SYSTEM/管理员/当前用户可读），同时尽力复制到系统共享位置（`/etc/staragent/local.token`、`%ProgramData%\StarAgent\local.token`）；调用方按“`STAR_LOCAL_TOKEN` 环境变量 → 代理同目录 → 共享位置”解析，读不到令牌即无法调用
 
 ### 6.2 面板功能
 

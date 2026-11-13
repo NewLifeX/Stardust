@@ -448,6 +448,8 @@ curl http://127.0.0.1:8800/api/status
 | **冷启动唤醒**   | 请求进来发现目标端口未监听，返回 503 并通知 Agent 启动进程，客户端重试后恢复 |
 | **空闲自动回收** | 节点超过 15 分钟无流量，通知 Agent 停止进程释放内存                          |
 
+> 唤醒与回收走本机 UDP RPC，需携带 `local.token` 中的共享令牌（与代理同目录或系统共享位置读取，也可用 `STAR_LOCAL_TOKEN` / `STAR_LOCAL_TOKEN_FILE` 环境变量指定）。读不到令牌时日志会提示 `Local RPC requires a valid token`，此时把 Gateway 与 StarAgent 部署到同一目录、或把令牌放到共享位置即可。
+
 ---
 
 ## 常见问题
