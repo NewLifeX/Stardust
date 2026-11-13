@@ -10,6 +10,7 @@ using NewLife.Log;
 using NewLife.Remoting.Extensions;
 using NewLife.Serialization;
 using Stardust.Data;
+using Stardust.Data.Deployment;
 using Stardust.Data.Nodes;
 using Stardust.Extensions.Caches;
 using Stardust.Monitors;
@@ -215,6 +216,10 @@ public class Startup
 
         // 检查数据库表结构，阻塞主线程。在数据库检查完成之前，不提供对外服务，也不执行IHostedService
         EntityFactory.InitAll();
+
+        // 服务启动时全量回修部署集节点计数与真实启用节点数的偏差
+        var fixedDeploys = AppDeploy.FixAll();
+        if (fixedDeploys > 0) XTrace.WriteLine("AppDeploy.FixAll 修正了 {0} 个部署集的节点计数", fixedDeploys);
 
         // 多语言。配置了固定语言时全进程生效，否则按请求语言识别
         app.UseStardustLocalization();

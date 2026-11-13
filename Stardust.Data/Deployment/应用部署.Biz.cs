@@ -179,6 +179,21 @@ public partial class AppDeploy : Entity<AppDeploy>
         return rs;
     }
 
+    /// <summary>修正所有部署集的节点计数。服务启动或修复任务时调用，重建 Nodes 与真实启用节点数的偏差</summary>
+    /// <returns>发生变化的部署集个数</returns>
+    public static Int32 FixAll()
+    {
+        var count = 0;
+        foreach (var set in FindAll())
+        {
+            var old = set.Nodes;
+            set.Fix();
+            if (set.Nodes != old) count++;
+        }
+
+        return count;
+    }
+
     /// <summary>刷新</summary>
     public void Refresh()
     {
