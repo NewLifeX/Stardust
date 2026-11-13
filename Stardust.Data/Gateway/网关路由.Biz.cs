@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -158,6 +158,21 @@ public partial class GatewayRoute : Entity<GatewayRoute>
         }
 
         return false;
+    }
+
+    /// <summary>构建域名过滤条件。Domain 列以逗号分隔存储多域名，须按段匹配而非整串等值</summary>
+    /// <param name="domain">域名，支持逗号分隔多值（多值 AND 语义）</param>
+    /// <returns>过滤表达式</returns>
+    public static WhereExpression BuildDomainWhere(String domain)
+    {
+        var exp = new WhereExpression();
+        foreach (var v in domain.Split(',', StringSplitOptions.RemoveEmptyEntries))
+        {
+            // 段内 OR：整列等值 / 段首（后随逗号）/ 段尾（前随逗号）/ 段中（两侧逗号）
+            var segExp = (_.Domain == v) | (_.Domain.StartsWith(v + ",")) | (_.Domain.EndsWith("," + v)) | (_.Domain.Contains("," + v + ","));
+            exp &= segExp;
+        }
+        return exp;
     }
 
     private Boolean MatchPath(String path)

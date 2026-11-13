@@ -183,4 +183,117 @@ public class GatewayRouteTests
             r2.Delete();
         }
     }
+
+    /// <summary>构造带域名的路由并确保清理（Domain 多段逗号分隔）</summary>
+    private static GatewayRoute InsertRoute(string domain)
+    {
+        var entity = new GatewayRoute
+        {
+            Name = "test-route-dom" + Guid.NewGuid().ToString("n")[..8],
+            ClusterId = 1,
+            Path = "/api/dom/*",
+            Domain = domain,
+            Enable = true,
+        };
+        entity.Insert();
+        return entity;
+    }
+
+    private static IList<GatewayRoute> SearchByDomain(string domain)
+    {
+        // 对齐控制器调用（GatewayRouteController.Search L48）：未传条件全部置空/跳过
+        return GatewayRoute.Search(-1, -1, -1, domain, null, null, null, null, null, null,
+            DateTime.MinValue, DateTime.MinValue, null, null);
+    }
+
+    [Fact(DisplayName = "域名搜索-单段域名精确命中（基线：等值过滤须继续可用）")]
+    public void Search_Domain_SingleSegment_ExactMatch()
+    {
+        var stamp = Guid.NewGuid().ToString("n")[..8];
+        var domain = $"t{stamp}.ut.example.com";
+        var entity = InsertRoute(domain);
+
+        try
+        {
+            var list = SearchByDomain(domain);
+            Assert.Contains(list, e => e.Id == entity.Id);
+        }
+        finally
+        {
+            entity.Delete();
+        }
+    }
+
+    [Fact(DisplayName = "域名搜索-多段路由按末段命中（整串等值导致搜索不到）")]
+    public void Search_Domain_MultiSegment_LastSegment()
+    {
+        var stamp = Guid.NewGuid().ToString("n")[..8];
+        var target = $"t{stamp}.ut.example.com";
+        var entity = InsertRoute($"*.x{stamp}.com,{target},*.y{stamp}.org");
+
+        try
+        {
+            var list = SearchByDomain(target);
+            Assert.Contains(list, e => e.Id == entity.Id);
+        }
+        finally
+        {
+            entity.Delete();
+        }
+    }
+
+    [Fact(DisplayName = "域名搜索-多段路由按首段命中（逗号边界）")]
+    public void Search_Domain_MultiSegment_FirstSegment()
+    {
+        var stamp = Guid.NewGuid().ToString("n")[..8];
+        var target = $"t{stamp}.ut.example.com";
+        var entity = InsertRoute($"{target},*.x{stamp}.com");
+
+        try
+        {
+            var list = SearchByDomain(target);
+            Assert.Contains(list, e => e.Id == entity.Id);
+        }
+        finally
+        {
+            entity.Delete();
+        }
+    }
+
+    [Fact(DisplayName = "域名搜索-多段路由按中间段命中（两侧逗号边界）")]
+    public void Search_Domain_MultiSegment_MiddleSegment()
+    {
+        var stamp = Guid.NewGuid().ToString("n")[..8];
+        var target = $"t{stamp}.ut.example.com";
+        var entity = InsertRoute($"*.x{stamp}.com,{target},*.y{stamp}.org");
+
+        // 与末段用例同构，但以第二段为目标，覆盖「%,段,%」分支
+        var list = SearchByDomain(target);
+        try
+        {
+            Assert.Contains(list, e => e.Id == entity.Id);
+        }
+        finally
+        {
+            entity.Delete();
+        }
+    }
+
+    [Fact(DisplayName = "域名搜索-子串不得整段误伤（护栏：禁止退化成 LIKE %v%）")]
+    public void Search_Domain_SubstringSegment_NoOverreach()
+    {
+        var stamp = Guid.NewGuid().ToString("n")[..8];
+        var entity = InsertRoute($"t{stamp}.ut.example.com");
+
+        try
+        {
+            // ut.example.com 是目标的段内子串，但不是完整段，不得命中
+            var list = SearchByDomain("ut.example.com");
+            Assert.DoesNotContain(list, e => e.Id == entity.Id);
+        }
+        finally
+        {
+            entity.Delete();
+        }
+    }
 }

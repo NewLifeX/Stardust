@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -407,7 +407,7 @@ public partial class GatewayRoute
         if (projectId >= 0) exp &= _.ProjectId == projectId;
         if (priority >= 0) exp &= _.Priority == priority;
         if (clusterId >= 0) exp &= _.ClusterId == clusterId;
-        if (!domain.IsNullOrEmpty()) exp &= _.Domain == domain;
+        if (!domain.IsNullOrEmpty()) exp &= BuildDomainWhere(domain);
         if (stripPrefix != null) exp &= _.StripPrefix == stripPrefix;
         if (webSocket != null) exp &= _.WebSocket == webSocket;
         if (directoryBrowse != null) exp &= _.DirectoryBrowse == directoryBrowse;
