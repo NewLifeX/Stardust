@@ -1,12 +1,18 @@
 using System;
+using System.Linq;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
+using Stardust.Data.Platform;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Stardust.McpClientTests;
 
-/// <summary>MCP 查询类动作端到端测试。覆盖网关与监控两个模块的动作调用（MCP-10 / MCP-11）</summary>
+/// <summary>MCP 查询类工具端到端测试</summary>
+/// <remarks>
+/// v1 直出工具集：旧版二段式 <c>invoke_action</c> 已废弃，网关域工具按 MCP-4 设计推迟到 v2。
+/// 这里覆盖仍保留的查询域（告警、调用链）与「不再注册的工具」契约。
+/// </remarks>
 [Collection(nameof(McpTestCollection))]
 public class McpQueryActionTests
 {
@@ -20,38 +26,44 @@ public class McpQueryActionTests
         _output = output;
     }
 
-    /// <summary>调用动作并取出返回内容</summary>
-    private static async Task<JsonNode?> InvokeAsync(RawMcpClient client, String action, Object parameters)
+    /// <summary>调用工具并取出返回内容</summary>
+    private static async Task<JsonNode?> InvokeAsync(RawMcpClient client, String tool, Object parameters)
     {
-        var resp = await client.CallToolAsync("invoke_action", new { action_name = action, @params = parameters });
-        Assert.False(RawMcpClient.HasError(resp), $"{action} 调用失败：{RawMcpClient.GetErrorMessage(resp)}");
+        var resp = await client.CallToolAsync(tool, parameters);
+        Assert.False(RawMcpClient.HasError(resp), $"{tool} 调用失败：{RawMcpClient.GetErrorMessage(resp)}");
 
         var content = RawMcpClient.GetToolContent(resp);
-        Assert.True(content != null, $"{action} 未返回内容：{resp.ToJsonString()}");
+        Assert.True(content != null, $"{tool} 未返回内容：{resp.ToJsonString()}");
 
         return content;
     }
 
-    [Fact(DisplayName = "网关模块：查询路由与集群列表成功返回分页结构")]
-    public async Task GatewayActions_ReturnPagedList()
+    /// <summary>创建已绑定项目并授予监控读取的令牌。查询类工具严格要求单项目边界与域授权</summary>
+    private static (McpToken token, String tokenString) CreateProjectToken(String name, Int32 projectId)
     {
-        var (token, tokenStr) = McpTestHelper.CreateTestToken("mcp-gateway");
+        var (token, tokenString) = McpTestHelper.CreateTestToken(name);
+        token.ProjectId = projectId;
+        token.Scopes = "monitor:read,apps:read";
+        token.Update();
+
+        return (token, tokenString);
+    }
+
+    [Fact(DisplayName = "告警列表：按令牌绑定项目返回分页结构")]
+    public async Task AlarmList_ReturnsPagedEnvelope()
+    {
+        var (token, tokenStr) = CreateProjectToken("mcp-alarm", 900001);
         try
         {
-            // 未绑定任何资源的 Token 不允许 invoke_action（-32003），这里授权全部项目
-            McpTestHelper.AuthorizeAllProjects(token.Id);
-
             var client = new RawMcpClient(_fixture.CreateClient(), Endpoint, tokenStr);
 
-            var routes = await InvokeAsync(client, "gateway_list_routes", new { page = 1, page_size = 5 });
-            Assert.NotNull(routes!["total"]);
-            Assert.NotNull(routes["records"]);
+            var content = await InvokeAsync(client, "stardust_alarm_list", new { page_size = 5 });
 
-            var clusters = await InvokeAsync(client, "gateway_list_clusters", new { page = 1, page_size = 5 });
-            Assert.NotNull(clusters!["total"]);
-            Assert.NotNull(clusters["records"]);
-
-            _output.WriteLine($"路由 {routes["total"]} 条，集群 {clusters["total"]} 个");
+            var pagination = content!["pagination"];
+            Assert.NotNull(pagination);
+            Assert.NotNull(pagination!["total"]);
+            Assert.NotNull(content["data"]?["records"]);
+            _output.WriteLine($"告警 {pagination["total"]} 条");
         }
         finally
         {
@@ -59,27 +71,39 @@ public class McpQueryActionTests
         }
     }
 
-    [Fact(DisplayName = "监控模块：调用链搜索与告警列表成功返回分页结构")]
-    public async Task MonitorActions_ReturnPagedList()
+    [Fact(DisplayName = "调用链搜索：缺少应用编号时拒绝访问")]
+    public async Task TraceSearch_WithoutApp_ReturnsAccessDenied()
     {
-        var (token, tokenStr) = McpTestHelper.CreateTestToken("mcp-monitor");
+        var (token, tokenStr) = CreateProjectToken("mcp-trace", 900001);
         try
         {
-            McpTestHelper.AuthorizeAllProjects(token.Id);
-
             var client = new RawMcpClient(_fixture.CreateClient(), Endpoint, tokenStr);
 
-            // 不传 app_id 时不做应用授权校验，走"最近1小时"默认时间窗
-            var traces = await InvokeAsync(client, "monitor_trace_search", new { kind = "day", page = 1, page_size = 5 });
-            Assert.Equal("day", traces!["kind"]?.GetValue<String>());
-            Assert.NotNull(traces["total"]);
-            Assert.NotNull(traces["records"]);
+            var resp = await client.CallToolAsync("stardust_trace_search", new { });
 
-            var alarms = await InvokeAsync(client, "monitor_alarm_list", new { page = 1, page_size = 5 });
-            Assert.NotNull(alarms!["total"]);
-            Assert.NotNull(alarms["records"]);
+            Assert.Equal(-32003, RawMcpClient.GetErrorCode(resp));
+        }
+        finally
+        {
+            McpTestHelper.CleanupToken(token.Id);
+        }
+    }
 
-            _output.WriteLine($"追踪 {traces["total"]} 条，告警 {alarms["total"]} 条");
+    [Fact(DisplayName = "网关域工具推迟到 v2，v1 不注册 invoke_action 与 gateway 工具")]
+    public async Task GatewayTools_DeferredToV2()
+    {
+        var (token, tokenStr) = CreateProjectToken("mcp-gateway", 900001);
+        try
+        {
+            var client = new RawMcpClient(_fixture.CreateClient(), Endpoint, tokenStr);
+
+            var list = await client.ListToolsAsync();
+            var names = list["result"]?["tools"]?.AsArray()?.Select(t => t!["name"]?.GetValue<String>()).Where(e => e != null).ToArray()
+                ?? [];
+
+            Assert.DoesNotContain("invoke_action", names);
+            Assert.DoesNotContain(names, e => e!.StartsWith("stardust_gateway_", StringComparison.OrdinalIgnoreCase));
+            Assert.Contains("stardust_alarm_list", names);
         }
         finally
         {
