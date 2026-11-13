@@ -28,8 +28,14 @@ public class AppDayStatService : IAppDayStatService
     /// <summary>长连接埋点类型。其“耗时”是连接存活时长，不是请求耗时</summary>
     public const String WebSocketKind = "ws";
 
+    /// <summary>阻塞类命令埋点类型。其“耗时”是等待队列或键可用的时长，不是服务处理耗时</summary>
+    public const String BlockingKind = "block";
+
     /// <summary>统计时排除长连接埋点。默认true，避免连接时长污染应用平均耗时与最大耗时</summary>
     public Boolean ExcludeWebSocket { get; set; } = true;
+
+    /// <summary>统计时排除阻塞类命令埋点。默认true，避免等待时长污染应用平均耗时与最大耗时</summary>
+    public Boolean ExcludeBlocking { get; set; } = true;
 
     private TimerX _timer;
     private readonly ConcurrentBag<DateTime> _bag = [];
@@ -96,8 +102,8 @@ public class AppDayStatService : IAppDayStatService
             var appId = item.Key;
             if (appId <= 0) continue;
 
-            // WebSocket 长连接的“耗时”是连接存活时长，计入应用平均值会掩盖真实接口耗时
-            var ds = item.Where(e => !ExcludeWebSocket || e.Type != WebSocketKind).ToList();
+            // WebSocket 长连接与阻塞类命令的“耗时”都不是请求处理时长，计入应用平均值会掩盖真实接口耗时
+            var ds = item.Where(e => !(ExcludeWebSocket && e.Type == WebSocketKind) && !(ExcludeBlocking && e.Type == BlockingKind)).ToList();
             if (ds.Count == 0) continue;
             var st = sts.FirstOrDefault(e => e.AppId == appId);
             if (st == null)

@@ -20,6 +20,7 @@ public class AppStatExcludeWebSocketTests
         Assert.False(TraceItem.IsWebSocket("/App/Ping"));
         Assert.Equal("api", TraceItem.GetKind("/App/Ping"));
         Assert.False(TraceItem.IsWebSocket("NewLife.Redis:XREADGROUP-GROUP"));
-        Assert.Equal("NewLife.Redis", TraceItem.GetKind("NewLife.Redis:XREADGROUP-GROUP"));
+        // Redis 阻塞读另归 block（见阻塞类命令测试），不算长连接
+        Assert.Equal("block", TraceItem.GetKind("NewLife.Redis:XREADGROUP-GROUP"));
     }
 }

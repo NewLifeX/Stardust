@@ -89,6 +89,9 @@ public class TraceStatService : ITraceStatService
     /// <summary>应用级统计时排除长连接埋点。默认true，避免连接时长污染应用平均耗时与最大耗时</summary>
     public Boolean ExcludeWebSocket { get; set; } = true;
 
+    /// <summary>应用级统计时排除阻塞类命令埋点。默认true，阻塞时长是队列等待而不是服务处理耗时</summary>
+    public Boolean ExcludeBlocking { get; set; } = true;
+
     /// <summary>热门应用有效窗口（秒）。查看页面后该窗口内保持流式实时统计</summary>
     private const Int32 HotWindow = 600;
 
@@ -705,8 +708,9 @@ public class TraceStatService : ITraceStatService
         // 聚合应用分钟统计
         foreach (var item in list.GroupBy(e => e.AppId + "#" + e.StatMinute))
         {
-            // WebSocket 长连接的“耗时”是连接存活时长，计入应用平均值会掩盖真实接口耗时
-            var traces = ExcludeWebSocket ? item.Where(e => !TraceItem.IsWebSocket(e.Name)).ToList() : item.ToList();
+            // WebSocket 长连接与阻塞类命令的“耗时”都不是请求处理时长，计入应用平均值会掩盖真实接口耗时
+            var traces = item.Where(e => (!ExcludeWebSocket || !TraceItem.IsWebSocket(e.Name)) &&
+                                         (!ExcludeBlocking || !TraceItem.IsBlocking(e.Name))).ToList();
             if (traces.Count == 0) continue;
 
             var st = queue2.GetOrAdd(traces[0].StatMinute, traces[0].AppId, out var key);

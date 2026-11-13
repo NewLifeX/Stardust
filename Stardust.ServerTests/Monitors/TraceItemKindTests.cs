@@ -31,4 +31,31 @@ public class TraceItemKindTests
         Assert.False(TraceItem.IsWebSocket("AppStart"));
         Assert.False(TraceItem.IsWebSocket(null));
     }
+
+    [Fact]
+    [DisplayName("阻塞类命令单独归类，等待时长不混入依赖与应用耗时")]
+    public void GetKind_ClassifiesBlockingCommand()
+    {
+        Assert.Equal("block", TraceItem.GetKind("NewLife.Redis:XREADGROUP-GROUP"));
+        Assert.Equal("block", TraceItem.GetKind("NewLife.Redis:XREAD"));
+        Assert.Equal("block", TraceItem.GetKind("NewLife.Redis:BLPOP"));
+        Assert.Equal("block", TraceItem.GetKind("NewLife.Redis:BZPOPMIN"));
+
+        // 普通命令与非阻塞命名不受影响
+        Assert.Equal("NewLife.Redis", TraceItem.GetKind("NewLife.Redis:GET"));
+        Assert.Equal("rpc", TraceItem.GetKind("rpc:Broadcast"));
+        Assert.Equal("other", TraceItem.GetKind("BLPOP"));
+    }
+
+    [Fact]
+    [DisplayName("阻塞类命令判定识别参数后缀且不受大小写影响")]
+    public void IsBlocking_HandlesSuffixAndCase()
+    {
+        Assert.True(TraceItem.IsBlocking("NewLife.Redis:xreadgroup-group"));
+        Assert.True(TraceItem.IsBlocking("NewLife.Redis:BRPOPLPUSH"));
+        Assert.False(TraceItem.IsBlocking("NewLife.Redis:GET"));
+        Assert.False(TraceItem.IsBlocking("rpc:Broadcast"));
+        Assert.False(TraceItem.IsBlocking(null));
+        Assert.False(TraceItem.IsBlocking(""));
+    }
 }

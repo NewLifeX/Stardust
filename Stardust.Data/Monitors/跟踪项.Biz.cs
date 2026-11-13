@@ -44,6 +44,9 @@ public partial class TraceItem : Entity<TraceItem>
 
         if (Kind.IsNullOrEmpty() || Kind == "redismq") Kind = GetKind(Name);
 
+        // 归类规则升级：阻塞类命令（队列阻塞读等）改为独立的 block，历史记录在下次保存时纠正
+        if (Kind != "block" && IsBlocking(Name)) Kind = "block";
+
         if (!Rules.IsNullOrEmpty() && !Rules.Contains("=")) Rules = $"name={Rules}";
     }
 
@@ -189,6 +192,7 @@ public partial class TraceItem : Entity<TraceItem>
         if (name.IsNullOrEmpty()) return "other";
 
         if (IsWebSocket(name)) return "ws";
+        if (IsBlocking(name)) return "block";
         if (name.StartsWithIgnoreCase("/")) return "api";
         if (name.StartsWithIgnoreCase("http://", "https://")) return "http";
         if (name.StartsWithIgnoreCase("redismq:")) return "mq";
@@ -208,6 +212,29 @@ public partial class TraceItem : Entity<TraceItem>
         if (name.IsNullOrEmpty()) return false;
 
         return name.StartsWithIgnoreCase("ws:") || name.EqualIgnoreCase("/app/notify", "/node/notify");
+    }
+
+    /// <summary>阻塞类命令名单。这些命令的耗时主要是等待队列或键可用，不是服务处理本身</summary>
+    private static readonly String[] _BlockingCommands = ["BLPOP", "BRPOP", "BLMOVE", "BLMPOP", "BRPOPLPUSH", "BZPOPMIN", "BZPOPMAX", "BZMPOP", "XREAD", "XREADGROUP"];
+
+    /// <summary>判断是否阻塞类命令埋点</summary>
+    /// <remarks>如 <c>NewLife.Redis:XREADGROUP-GROUP</c>（队列阻塞读）、<c>NewLife.Redis:BLPOP</c> 等，
+    /// 其耗时是等待时长。按依赖耗时统计会把基础设施等待算成应用变慢，需独立归类并从应用均值中排除</remarks>
+    /// <param name="name">埋点名称，形如 <c>来源:命令</c></param>
+    /// <returns>是否阻塞类命令</returns>
+    public static Boolean IsBlocking(String name)
+    {
+        if (name.IsNullOrEmpty()) return false;
+
+        // 命令在最后一节冒号之后，可能带参数后缀，如 XREADGROUP-GROUP
+        var p = name.LastIndexOf(':');
+        if (p < 0 || p == name.Length - 1) return false;
+
+        var cmd = name[(p + 1)..];
+        var p2 = cmd.IndexOf('-');
+        if (p2 > 0) cmd = cmd[..p2];
+
+        return _BlockingCommands.Any(e => cmd.EqualIgnoreCase(e));
     }
 
     /// <summary>
