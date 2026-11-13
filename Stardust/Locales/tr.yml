@@ -200,7 +200,6 @@
 "Trace name prefixes. Variable URL path segments are detected automatically; separate prefixes with semicolons and adjust manually if needed": "İzleme adı önekleri. Değişken URL yol parçaları otomatik algılanır; önekleri noktalı virgülle ayırın ve gerekirse elle uyarlayın"
 "Stardust settings": "Stardust ayarları"
 # 运行时消息补充词条
-"UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "Arayüz dili, örneğin zh-Hans, zh-Hant, en veya ja; sistem dilini izlemek için boş bırakın"
 "Service removed or disabled": "Hizmet kaldırıldı veya devre dışı bırakıldı"
 "Configuration changed": "Yapılandırma değişti"
 "Unsupported health check protocol: {0}": "Desteklenmeyen sistem durumu denetimi protokolü: {0}"

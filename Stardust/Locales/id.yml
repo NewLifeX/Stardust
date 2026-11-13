@@ -200,7 +200,6 @@
 "Trace name prefixes. Variable URL path segments are detected automatically; separate prefixes with semicolons and adjust manually if needed": "Prefiks nama trace. Segmen jalur URL variabel dideteksi otomatis; pisahkan prefiks dengan titik koma dan sesuaikan bila perlu"
 "Stardust settings": "Pengaturan Stardust"
 # 运行时消息补充词条
-"UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "Bahasa UI, misalnya zh-Hans, zh-Hant, en, atau ja; kosongkan untuk mengikuti bahasa sistem"
 "Service removed or disabled": "Layanan dihapus atau dinonaktifkan"
 "Configuration changed": "Konfigurasi berubah"
 "Unsupported health check protocol: {0}": "Protokol pemeriksaan kesehatan tidak didukung: {0}"

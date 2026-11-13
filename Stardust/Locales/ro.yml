@@ -200,7 +200,6 @@
 "Trace name prefixes. Variable URL path segments are detected automatically; separate prefixes with semicolons and adjust manually if needed": "Prefixe de nume de urmărire. Segmentele variabile din calea URL sunt detectate automat; separați prefixele cu punct și virgulă și ajustați manual dacă este necesar"
 "Stardust settings": "Setări Stardust"
 # 运行时消息补充词条
-"UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "Limba interfeței, de exemplu zh-Hans, zh-Hant, en sau ja; lăsați gol pentru a urma limba sistemului"
 "Service removed or disabled": "Serviciu eliminat sau dezactivat"
 "Configuration changed": "Configurația s-a modificat"
 "Unsupported health check protocol: {0}": "Protocol de verificare a stării neacceptat: {0}"

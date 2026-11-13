@@ -200,7 +200,6 @@
 "Trace name prefixes. Variable URL path segments are detected automatically; separate prefixes with semicolons and adjust manually if needed": "Präfixe für Trace-Namen. Variable Segmente im URL-Pfad werden automatisch erkannt; mehrere Präfixe durch Semikolons trennen und bei Bedarf manuell anpassen"
 "Stardust settings": "Stardust-Einstellungen"
 # 运行时消息补充词条
-"UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "UI-Sprache, zum Beispiel zh-Hans, zh-Hant, en oder ja; leer lassen, um der Systemsprache zu folgen"
 "Service removed or disabled": "Dienst entfernt oder deaktiviert"
 "Configuration changed": "Konfiguration geändert"
 "Unsupported health check protocol: {0}": "Nicht unterstütztes Integritätsprüfungsprotokoll: {0}"

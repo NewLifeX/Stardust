@@ -200,7 +200,6 @@
 "Trace name prefixes. Variable URL path segments are detected automatically; separate prefixes with semicolons and adjust manually if needed": "קידומות של שמות מעקב. מקטעי נתיב URL משתנים מזוהים אוטומטית; הפרידו קידומות בנקודה-פסיק והתאימו ידנית לפי הצורך"
 "Stardust settings": "הגדרות Stardust"
 # 运行时消息补充词条
-"UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "שפת ממשק המשתמש, לדוגמה zh-Hans, zh-Hant, en או ja; השאירו ריק כדי לעקוב אחר שפת המערכת"
 "Service removed or disabled": "השירות הוסר או הושבת"
 "Configuration changed": "התצורה השתנתה"
 "Unsupported health check protocol: {0}": "פרוטוקול בדיקת תקינות אינו נתמך: {0}"

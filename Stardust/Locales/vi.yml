@@ -200,7 +200,6 @@
 "Trace name prefixes. Variable URL path segments are detected automatically; separate prefixes with semicolons and adjust manually if needed": "Tiền tố tên trace. Các đoạn đường dẫn URL biến đổi được phát hiện tự động; phân tách tiền tố bằng dấu chấm phẩy và điều chỉnh khi cần"
 "Stardust settings": "Cài đặt Stardust"
 # 运行时消息补充词条
-"UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "Ngôn ngữ giao diện, ví dụ zh-Hans, zh-Hant, en hoặc ja; để trống để theo ngôn ngữ hệ thống"
 "Service removed or disabled": "Dịch vụ đã bị xóa hoặc tắt"
 "Configuration changed": "Cấu hình đã thay đổi"
 "Unsupported health check protocol: {0}": "Giao thức kiểm tra tình trạng không được hỗ trợ: {0}"

@@ -200,7 +200,6 @@
 "Trace name prefixes. Variable URL path segments are detected automatically; separate prefixes with semicolons and adjust manually if needed": "Префікси назв трасування. Змінні сегменти шляху URL визначаються автоматично; розділяйте префікси крапкою з комою та за потреби коригуйте вручну"
 "Stardust settings": "Параметри Stardust"
 # 运行时消息补充词条
-"UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "Мова інтерфейсу, наприклад zh-Hans, zh-Hant, en або ja; залиште порожнім, щоб дотримуватися системної мови"
 "Service removed or disabled": "Службу видалено або вимкнено"
 "Configuration changed": "Конфігурацію змінено"
 "Unsupported health check protocol: {0}": "Непідтримуваний протокол перевірки працездатності: {0}"

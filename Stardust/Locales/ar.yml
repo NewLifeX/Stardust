@@ -200,7 +200,6 @@
 "Trace name prefixes. Variable URL path segments are detected automatically; separate prefixes with semicolons and adjust manually if needed": "بادئات أسماء التتبع. تُكتشف مقاطع مسار URL المتغيرة تلقائيًا؛ افصل البادئات بفواصل منقوطة واضبطها يدويًا عند الحاجة"
 "Stardust settings": "إعدادات Stardust"
 # 运行时消息补充词条
-"UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "لغة واجهة المستخدم، مثل zh-Hans أو zh-Hant أو en أو ja؛ اتركها فارغة لاتباع لغة النظام"
 "Service removed or disabled": "أُزيلت الخدمة أو تم تعطيلها"
 "Configuration changed": "تم تغيير التهيئة"
 "Unsupported health check protocol: {0}": "بروتوكول فحص السلامة غير مدعوم: {0}"

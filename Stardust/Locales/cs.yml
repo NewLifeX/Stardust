@@ -200,7 +200,6 @@
 "Trace name prefixes. Variable URL path segments are detected automatically; separate prefixes with semicolons and adjust manually if needed": "Předpony názvů trasování. Proměnné segmenty cesty URL se zjišťují automaticky; oddělujte předpony středníky a v případě potřeby je upravte ručně"
 "Stardust settings": "Nastavení Stardust"
 # 运行时消息补充词条
-"UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "Jazyk rozhraní, například zh-Hans, zh-Hant, en nebo ja; ponechte prázdné pro použití systémového jazyka"
 "Service removed or disabled": "Služba odebrána nebo zakázána"
 "Configuration changed": "Konfigurace změněna"
 "Unsupported health check protocol: {0}": "Nepodporovaný protokol kontroly stavu: {0}"

@@ -200,7 +200,6 @@
 "Trace name prefixes. Variable URL path segments are detected automatically; separate prefixes with semicolons and adjust manually if needed": "Præfikser for sporingsnavne. Variable URL-stisegmenter registreres automatisk; adskil præfikser med semikolon, og juster manuelt efter behov"
 "Stardust settings": "Stardust-indstillinger"
 # 运行时消息补充词条
-"UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "UI-sprog, for eksempel zh-Hans, zh-Hant, en eller ja; lad feltet være tomt for at følge systemsproget"
 "Service removed or disabled": "Tjeneste fjernet eller deaktiveret"
 "Configuration changed": "Konfiguration ændret"
 "Unsupported health check protocol: {0}": "Ikke-understøttet protokol til tilstandskontrol: {0}"

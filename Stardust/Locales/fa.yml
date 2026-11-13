@@ -200,7 +200,6 @@
 "Trace name prefixes. Variable URL path segments are detected automatically; separate prefixes with semicolons and adjust manually if needed": "پیشوندهای نام ردیابی. بخش‌های متغیر مسیر URL به‌طور خودکار شناسایی می‌شوند؛ پیشوندها را با نقطه‌ویرگول جدا کنید و در صورت نیاز دستی تنظیم کنید"
 "Stardust settings": "تنظیمات Stardust"
 # 运行时消息补充词条
-"UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "زبان رابط کاربری، مثلاً zh-Hans، zh-Hant، en یا ja؛ برای پیروی از زبان سیستم خالی بگذارید"
 "Service removed or disabled": "سرویس حذف یا غیرفعال شد"
 "Configuration changed": "پیکربندی تغییر کرد"
 "Unsupported health check protocol: {0}": "پروتکل بررسی سلامت پشتیبانی نمی‌شود: {0}"

@@ -200,7 +200,6 @@
 "Trace name prefixes. Variable URL path segments are detected automatically; separate prefixes with semicolons and adjust manually if needed": "추적 이름 접두사입니다. 가변 URL 경로 세그먼트는 자동으로 감지하며, 접두사는 세미콜론으로 구분하고 필요하면 직접 조정하세요"
 "Stardust settings": "Stardust 설정"
 # 运行时消息补充词条
-"UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "UI 언어입니다(예: zh-Hans, zh-Hant, en, ja). 비워 두면 시스템 언어를 따릅니다"
 "Service removed or disabled": "서비스가 제거되었거나 사용 안 함으로 설정됨"
 "Configuration changed": "구성이 변경됨"
 "Unsupported health check protocol: {0}": "지원되지 않는 상태 검사 프로토콜: {0}"

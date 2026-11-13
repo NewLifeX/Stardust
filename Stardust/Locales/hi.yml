@@ -200,7 +200,6 @@
 "Trace name prefixes. Variable URL path segments are detected automatically; separate prefixes with semicolons and adjust manually if needed": "ट्रेस नाम उपसर्ग। परिवर्तनीय URL पथ खंड स्वचालित रूप से पहचाने जाते हैं; उपसर्गों को अर्धविराम से अलग करें और आवश्यकता होने पर मैन्युअल रूप से समायोजित करें"
 "Stardust settings": "Stardust सेटिंग्स"
 # 运行时消息补充词条
-"UI language, for example zh-Hans, zh-Hant, en, or ja; leave empty to follow the system language": "UI भाषा, उदाहरण zh-Hans, zh-Hant, en या ja; सिस्टम भाषा का पालन करने के लिए खाली छोड़ें"
 "Service removed or disabled": "सेवा हटाई या अक्षम की गई"
 "Configuration changed": "कॉन्फ़िगरेशन बदला गया"
 "Unsupported health check protocol: {0}": "असमर्थित स्वास्थ्य जाँच प्रोटोकॉल: {0}"
