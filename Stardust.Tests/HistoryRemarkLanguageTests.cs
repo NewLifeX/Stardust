@@ -2,12 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Runtime.CompilerServices;
 using NewLife;
 using Xunit;
 
 namespace Stardust.Tests;
 
 /// <summary>历史备注语言约定测试。历史备注是事件快照，跟随服务器日志语言（L.TLog），不随触发者的界面语言变化</summary>
+/// <remarks>Localization.Culture/LogCulture 是进程级全局状态，与其它多语言测试同集合串行，避免并行互踩（run1 红/重跑绿 flake 根因）</remarks>
+[Collection("Localization")]
 public class HistoryRemarkLanguageTests
 {
     /// <summary>从测试输出目录向上定位仓库根目录</summary>
@@ -74,6 +77,14 @@ public class HistoryRemarkLanguageTests
     [Fact(DisplayName = "日志语言独立于界面语言")]
     public void LogLanguageIsIndependent()
     {
+        // 自预热：词表注册是进程级懒加载，本测试不再依赖同集合其它测试先跑（跨进程测试类发现序抖动会导致本测试先执行时词表未注册，TranslateForLog 原文回退——run1 绿/重跑红 flake 根因，对齐 LocalizationTests.LoadAssemblies 先例）
+        RuntimeHelpers.RunModuleConstructor(typeof(global::Stardust.StarClient).Module.ModuleHandle);
+        RuntimeHelpers.RunModuleConstructor(typeof(global::StarAgent.StarService).Module.ModuleHandle);
+        RuntimeHelpers.RunModuleConstructor(typeof(global::StarAgent.Mobile.MobileAgent).Module.ModuleHandle);
+        RuntimeHelpers.RunModuleConstructor(typeof(global::Microsoft.Extensions.DependencyInjection.StarFactoryExtensions).Module.ModuleHandle);
+        // 本测试断言键「应用鉴权」注册在 Data 词表（源生成器编译期解析 Locales/*.yml；测试工程仅引用 Data/Client/Agent 面，Server/Web 词表不在进程），补触 Data 模块构造器
+        RuntimeHelpers.RunModuleConstructor(typeof(global::Stardust.Data.HistoryAction).Module.ModuleHandle);
+
         var oldCulture = Localization.Culture;
         var oldLog = Localization.LogCulture;
         try
