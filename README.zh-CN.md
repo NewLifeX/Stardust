@@ -81,7 +81,7 @@ pwsh Tools/Scripts/publish-aot.ps1 -Rid linux-arm64 -Compiler clang -ObjCopy aar
 pwsh Tools/Scripts/publish-aot.ps1 -Rid win-x64 -Slim      # 更小：仅中英词表、异常无行号
 ```
 
-PC / A2 / A4 / A6 实测：单文件 16.4 / 19.0 / 19.0 / 17.3 MB（Slim 12.9 / 15.4 / 15.4 / 13.5 MB），RSS 31~43 MB（JIT 版 73~95 MB），启动 0.14~1 秒。详见 [NODE-StarAgent-AOT适配](Doc/NODE-StarAgent-AOT适配.md)。
+PC / A2 / A4 / A6 实测：单文件 16.4 / 19.0 / 19.0 / 17.3 MB（Slim 12.9 / 15.4 / 15.4 / 13.5 MB），RSS 31~45 MB（JIT 版 73~95 MB），启动 0.14~1 秒。详见 [NODE-StarAgent-AOT适配](Doc/NODE-StarAgent-AOT适配.md)。
 
 #### 其它平台
 
