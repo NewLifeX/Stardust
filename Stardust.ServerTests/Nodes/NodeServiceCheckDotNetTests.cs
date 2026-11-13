@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Hosting;
 using NewLife;
 using NewLife.Caching;
+using Stardust.Data;
 using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Services;
@@ -121,7 +122,7 @@ public class NodeServiceCheckDotNetTests
 
     private static List<NodeHistory> FindPushHistories(Int32 nodeId) =>
         NodeHistory.FindAll(NodeHistory._.NodeID == nodeId)
-            .Where(e => e.Action == "推送dotNet").ToList();
+            .Where(e => e.Action == HistoryAction.PushDotNet).ToList();
 
     private static void CleanupNode(Int32 nodeId)
     {

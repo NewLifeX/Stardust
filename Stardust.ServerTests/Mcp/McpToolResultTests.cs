@@ -30,6 +30,40 @@ public class McpToolResultTests
 
     private static JsonElement ToArgs(String json) => JsonSerializer.Deserialize<JsonElement>(json);
 
+    /// <summary>哨兵项目编号。共享测试库里的应用多为 ProjectId=0，MCP 工具要求令牌绑定项目，需自建数据</summary>
+    private const Int32 SentinelProjectId = 900001;
+
+    /// <summary>创建哨兵应用（归属哨兵项目）</summary>
+    private static App CreateSentinelApp() 
+    {
+        var app = new App
+        {
+            Name = "mcpt_" + Guid.NewGuid().ToString("N")[..8],
+            Secret = "mcpt-secret",
+            Enable = true,
+            ProjectId = SentinelProjectId,
+        };
+        app.Insert();
+
+        return app;
+    }
+
+    /// <summary>创建哨兵应用对应的配置记录</summary>
+    private static AppConfig CreateSentinelConfig(Int32 appId)
+    {
+        var cfg = new AppConfig
+        {
+            Name = "mcpc_" + Guid.NewGuid().ToString("N")[..8],
+            AppId = appId,
+            ProjectId = SentinelProjectId,
+            Version = 1,
+            Enable = true,
+        };
+        cfg.Insert();
+
+        return cfg;
+    }
+
     [Fact(DisplayName = "M1a: McpResult.Ok 带 rollbackHint 时序列化含 rollback_hint 字段")]
     public void Ok_WithRollbackHint_SerializesField()
     {
@@ -59,82 +93,101 @@ public class McpToolResultTests
     [Fact(DisplayName = "M1b: app_list 返回含 pagination.total")]
     public async Task AppList_ReturnsPagination()
     {
-        // 找一个有应用的项目
-        var app = Stardust.Data.App.FindAll().FirstOrDefault();
-        Assert.NotNull(app);
-
-        var ctx = new McpContext
+        // 哨兵项目内放一个应用，保证列表非空且项目匹配
+        var app = CreateSentinelApp();
+        try
         {
-            TokenId = 999997,
-            ProjectId = app.ProjectId,
-            UserId = 0,
-            Scopes = new HashSet<String>(StringComparer.OrdinalIgnoreCase) { "apps:read" },
-        };
+            var ctx = new McpContext
+            {
+                TokenId = 999997,
+                ProjectId = app.ProjectId,
+                UserId = 0,
+                Scopes = new HashSet<String>(StringComparer.OrdinalIgnoreCase) { "apps:read" },
+            };
 
-        var tool = new AppListTool();
-        var result = await tool.InvokeAsync(ToArgs("{}"), ctx);
-        var node = JsonSerializer.SerializeToNode(result)!;
+            var tool = new AppListTool();
+            var result = await tool.InvokeAsync(ToArgs("{}"), ctx);
+            var node = JsonSerializer.SerializeToNode(result)!;
 
-        var pagination = node["pagination"];
-        Assert.NotNull(pagination);
-        Assert.True(pagination["total"]!.GetValue<Int32>() >= 0);
+            var pagination = node["pagination"];
+            Assert.NotNull(pagination);
+            Assert.True(pagination["total"]!.GetValue<Int32>() >= 1);
+        }
+        finally
+        {
+            app.Delete();
+        }
     }
 
     [Fact(DisplayName = "M1a: config_set 返回含 rollback_hint")]
     public async Task ConfigSet_ReturnsRollbackHint()
     {
-        // 找一个真实 AppConfig
-        var cfg = AppConfig.FindAll().FirstOrDefault();
-        Assert.NotNull(cfg);
-
-        var mockOps = new Mock<IMcpOperations>();
-        mockOps.Setup(o => o.SetConfigAsync(It.IsAny<Int32>(), It.IsAny<IDictionary<String, Object>>()))
-              .ReturnsAsync(1);
-
-        var provider = new SimpleProvider(new Dictionary<Type, Object>
+        // 自建哨兵应用与配置，避免依赖共享测试库中哪个应用先落库
+        var app = CreateSentinelApp();
+        var cfg = CreateSentinelConfig(app.Id);
+        try
         {
-            [typeof(IMcpOperations)] = mockOps.Object,
-        });
+            var mockOps = new Mock<IMcpOperations>();
+            mockOps.Setup(o => o.SetConfigAsync(It.IsAny<Int32>(), It.IsAny<IDictionary<String, Object>>()))
+                  .ReturnsAsync(1);
 
-        var ctx = new McpContext
+            var provider = new SimpleProvider(new Dictionary<Type, Object>
+            {
+                [typeof(IMcpOperations)] = mockOps.Object,
+            });
+
+            var ctx = new McpContext
+            {
+                TokenId = 999997,
+                ProjectId = cfg.ProjectId,
+                UserId = 0,
+                Scopes = new HashSet<String>(StringComparer.OrdinalIgnoreCase) { "config:write" },
+                Services = provider,
+            };
+
+            var args = ToArgs("{\"config_id\":" + cfg.Id + ",\"configs\":{\"TestKey\":\"TestValue\"}}");
+            var tool = new ConfigSetTool();
+            var result = await tool.InvokeAsync(args, ctx);
+            var node = JsonSerializer.SerializeToNode(result)!;
+
+            var rollbackHint = node["rollback_hint"];
+            Assert.NotNull(rollbackHint);
+            Assert.False(String.IsNullOrEmpty(rollbackHint!.GetValue<String>()));
+        }
+        finally
         {
-            TokenId = 999997,
-            ProjectId = cfg.ProjectId,
-            UserId = 0,
-            Scopes = new HashSet<String>(StringComparer.OrdinalIgnoreCase) { "config:write" },
-            Services = provider,
-        };
-
-        var args = ToArgs("{\"config_id\":" + cfg.Id + ",\"configs\":{\"TestKey\":\"TestValue\"}}");
-        var tool = new ConfigSetTool();
-        var result = await tool.InvokeAsync(args, ctx);
-        var node = JsonSerializer.SerializeToNode(result)!;
-
-        var rollbackHint = node["rollback_hint"];
-        Assert.NotNull(rollbackHint);
-        Assert.False(String.IsNullOrEmpty(rollbackHint!.GetValue<String>()));
+            cfg.Delete();
+            app.Delete();
+        }
     }
 
     [Fact(DisplayName = "M1a: 写工具未注册 IMcpOperations 时抛 32000")]
     public async Task ConfigSet_NoOperations_Throws32000()
     {
-        var cfg = AppConfig.FindAll().FirstOrDefault();
-        Assert.NotNull(cfg);
-
-        var provider = new SimpleProvider(new Dictionary<Type, Object>());
-
-        var ctx = new McpContext
+        var app = CreateSentinelApp();
+        var cfg = CreateSentinelConfig(app.Id);
+        try
         {
-            TokenId = 999997,
-            ProjectId = cfg.ProjectId,
-            UserId = 0,
-            Scopes = new HashSet<String>(StringComparer.OrdinalIgnoreCase) { "config:write" },
-            Services = provider,
-        };
+            var provider = new SimpleProvider(new Dictionary<Type, Object>());
 
-        var args = ToArgs("{\"config_id\":" + cfg.Id + ",\"configs\":{\"K\":\"V\"}}");
-        var tool = new ConfigSetTool();
-        var ex = await Assert.ThrowsAsync<McpException>(() => tool.InvokeAsync(args, ctx));
-        Assert.Equal(-32000, ex.Code);
+            var ctx = new McpContext
+            {
+                TokenId = 999997,
+                ProjectId = cfg.ProjectId,
+                UserId = 0,
+                Scopes = new HashSet<String>(StringComparer.OrdinalIgnoreCase) { "config:write" },
+                Services = provider,
+            };
+
+            var args = ToArgs("{\"config_id\":" + cfg.Id + ",\"configs\":{\"K\":\"V\"}}");
+            var tool = new ConfigSetTool();
+            var ex = await Assert.ThrowsAsync<McpException>(() => tool.InvokeAsync(args, ctx));
+            Assert.Equal(-32000, ex.Code);
+        }
+        finally
+        {
+            cfg.Delete();
+            app.Delete();
+        }
     }
 }

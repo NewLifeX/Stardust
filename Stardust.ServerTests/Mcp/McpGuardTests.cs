@@ -146,37 +146,56 @@ public class McpGuardTests
 
     #region CheckResource 白名单（D-2b，经 App 入口间接测）
 
+    /// <summary>创建归属于哨兵项目的测试应用。共享测试库里其它用例建的应用 ProjectId 多为 0，不能直接复用</summary>
+    private static App CreateSentinelApp()
+    {
+        var app = new App
+        {
+            Name = "mcpg_" + Guid.NewGuid().ToString("N")[..8],
+            Secret = "mcpg-secret",
+            Enable = true,
+            ProjectId = SentinelProjectId,
+        };
+        app.Insert();
+
+        return app;
+    }
+
     [Fact(DisplayName = "CheckResource-无资源记录时向后兼容放行")]
     public void App_NoResourceRecords_PassesThrough()
     {
-        // 找一个真实存在的应用
-        var app = Stardust.Data.App.FindAll().FirstOrDefault();
-        Assert.NotNull(app);
+        foreach (var e in McpTokenResource.FindAllByTokenId(SentinelTokenId)) e.Delete();
 
-        // TokenId=SentinelTokenId 不对应任何 McpTokenResource 记录
-        var ctx = new McpContext
+        var app = CreateSentinelApp();
+        try
         {
-            TokenId = SentinelTokenId,
-            ProjectId = app.ProjectId,
-            UserId = 0,
-        };
+            // TokenId=SentinelTokenId 不对应任何 McpTokenResource 记录
+            var ctx = new McpContext
+            {
+                TokenId = SentinelTokenId,
+                ProjectId = app.ProjectId,
+                UserId = 0,
+            };
 
-        // 无资源记录 → 不应因 CheckResource 抛异常
-        // 可能因 ProjectId 不匹配抛，但我们用 app.ProjectId
-        var result = McpGuard.App(ctx, app.Id);
-        Assert.Equal(app.Id, result.Id);
+            // 无资源记录 → 不应因 CheckResource 抛异常
+            var result = McpGuard.App(ctx, app.Id);
+            Assert.Equal(app.Id, result.Id);
+        }
+        finally
+        {
+            app.Delete();
+        }
     }
 
     [Fact(DisplayName = "CheckResource-资源记录存在但不匹配抛32003")]
     public void App_ResourceWhitelistMismatch_Throws()
     {
-        var app = Stardust.Data.App.FindAll().FirstOrDefault();
-        Assert.NotNull(app);
+        var app = CreateSentinelApp();
 
         // 清理残留
         foreach (var e in McpTokenResource.FindAllByTokenId(SentinelTokenId)) e.Delete();
 
-        // 建一条白名单：只授权 app.Id + 1（肯定不匹配当前 app）
+        // 建一条白名单：只授权 app.Id + 1000（肯定不匹配当前 app）
         var res = new McpTokenResource
         {
             TokenId = SentinelTokenId,
@@ -203,14 +222,14 @@ public class McpGuardTests
         finally
         {
             res.Delete();
+            app.Delete();
         }
     }
 
     [Fact(DisplayName = "CheckResource-ResourceType大小写不敏感匹配")]
     public void App_ResourceTypeCaseInsensitive_Passes()
     {
-        var app = Stardust.Data.App.FindAll().FirstOrDefault();
-        Assert.NotNull(app);
+        var app = CreateSentinelApp();
 
         foreach (var e in McpTokenResource.FindAllByTokenId(SentinelTokenId)) e.Delete();
 
@@ -241,14 +260,14 @@ public class McpGuardTests
         finally
         {
             res.Delete();
+            app.Delete();
         }
     }
 
     [Fact(DisplayName = "CheckResource-IsAll=true时类型匹配即放行")]
     public void App_IsAllTypeMatch_Passes()
     {
-        var app = Stardust.Data.App.FindAll().FirstOrDefault();
-        Assert.NotNull(app);
+        var app = CreateSentinelApp();
 
         foreach (var e in McpTokenResource.FindAllByTokenId(SentinelTokenId)) e.Delete();
 
@@ -277,25 +296,31 @@ public class McpGuardTests
         finally
         {
             res.Delete();
+            app.Delete();
         }
     }
 
     [Fact(DisplayName = "CheckResource-跨项目应用拒绝")]
     public void App_WrongProject_Throws()
     {
-        var app = Stardust.Data.App.FindAll().FirstOrDefault();
-        Assert.NotNull(app);
-
-        var ctx = new McpContext
+        var app = CreateSentinelApp();
+        try
         {
-            TokenId = SentinelTokenId,
-            ProjectId = app.ProjectId + 9999, // 故意不匹配
-            UserId = 0,
-        };
+            var ctx = new McpContext
+            {
+                TokenId = SentinelTokenId,
+                ProjectId = app.ProjectId + 9999, // 故意不匹配
+                UserId = 0,
+            };
 
-        var ex = Assert.Throws<McpException>(() => McpGuard.App(ctx, app.Id));
-        Assert.Equal(-32003, ex.Code);
-        Assert.Contains("不属于当前令牌绑定的项目", ex.Message);
+            var ex = Assert.Throws<McpException>(() => McpGuard.App(ctx, app.Id));
+            Assert.Equal(-32003, ex.Code);
+            Assert.Contains("不属于当前令牌绑定的项目", ex.Message);
+        }
+        finally
+        {
+            app.Delete();
+        }
     }
 
     #endregion
