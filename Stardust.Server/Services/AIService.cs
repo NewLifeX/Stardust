@@ -6,6 +6,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Unicode;
 using NewLife;
+using NewLife.Common;
 using NewLife.Log;
 using NewLife.Remoting;
 using Stardust.Models;
@@ -16,9 +17,13 @@ namespace Stardust.Server.Services;
 /// <remarks>
 /// 服务端只保存一份上游密钥，下游应用使用星尘登录令牌调用，无需各自申请大模型密钥。
 /// 支持星语网关、DeepSeek、OpenAI 等遵守 /v1/chat/completions 协议的服务，提供非流式与 SSE 流式两种输出。
+/// 转发前统一注入一条系统消息，携带平台、应用与团队信息，让模型理解当前调用方。
 /// </remarks>
 public class AIService
 {
+    /// <summary>上游请求超时时间。单位秒。大模型生成耗时较长，流式模式为整条流的总时限</summary>
+    public const Int32 DefaultTimeout = 120;
+
     private static readonly JsonSerializerOptions _jsonOptions = new() { Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) };
 
     private readonly IHttpClientFactory _httpClientFactory;
@@ -31,12 +36,13 @@ public class AIService
     /// <param name="model">对话请求</param>
     /// <param name="appId">调用方应用标识，作为上游 user 字段并写入埋点</param>
     /// <param name="ip">调用方地址，仅用于埋点</param>
+    /// <param name="appContext">应用与团队上下文，作为系统消息注入上游</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>对话响应</returns>
     /// <exception cref="ApiException">未启用、未配置、参数非法或上游调用失败时抛出</exception>
-    public async Task<AIChatResponse> ChatAsync(AIChatRequest model, String? appId, String? ip, CancellationToken cancellationToken)
+    public async Task<AIChatResponse> ChatAsync(AIChatRequest model, String? appId, String? ip, AIChatContext? appContext, CancellationToken cancellationToken)
     {
-        var context = Prepare(model);
+        var context = Prepare(model, appContext);
         var payload = BuildPayload(context, appId, false);
 
         using var span = DefaultTracer.Instance?.NewSpan("AI/Chat", new { appId, ip, model = context.Model, messages = context.Messages.Count });
@@ -81,12 +87,13 @@ public class AIService
     /// <param name="model">对话请求</param>
     /// <param name="appId">调用方应用标识，作为上游 user 字段并写入埋点</param>
     /// <param name="ip">调用方地址，仅用于埋点</param>
+    /// <param name="appContext">应用与团队上下文，作为系统消息注入上游</param>
     /// <param name="cancellationToken">取消令牌。客户端断开时中止上游请求</param>
     /// <returns>增量序列。结束段带 <see cref="AIChatDelta.FinishReason"/></returns>
     /// <exception cref="ApiException">未启用、未配置、参数非法或上游调用失败时抛出</exception>
-    public async IAsyncEnumerable<AIChatDelta> StreamAsync(AIChatRequest model, String? appId, String? ip, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public async IAsyncEnumerable<AIChatDelta> StreamAsync(AIChatRequest model, String? appId, String? ip, AIChatContext? appContext, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        var context = Prepare(model);
+        var context = Prepare(model, appContext);
         var payload = BuildPayload(context, appId, true);
 
         using var span = DefaultTracer.Instance?.NewSpan("AI/ChatStream", new { appId, ip, model = context.Model, messages = context.Messages.Count });
@@ -212,17 +219,18 @@ public class AIService
         public String Url { get; init; } = null!;
         public String Model { get; init; } = null!;
         public List<AIChatMessage> Messages { get; init; } = null!;
-        public Double Temperature { get; init; }
-        public Int32 MaxTokens { get; init; }
+        public Double? Temperature { get; init; }
+        public Int32? MaxTokens { get; init; }
         public Int32 Timeout { get; init; }
         public String? Key { get; init; }
     }
 
     /// <summary>校验开关与配置，组装上游请求上下文</summary>
     /// <param name="model">对话请求</param>
+    /// <param name="appContext">应用与团队上下文，为空时只注入平台信息</param>
     /// <returns>请求上下文</returns>
     /// <exception cref="ApiException">未启用、未配置或参数非法时抛出</exception>
-    private static ChatContext Prepare(AIChatRequest model)
+    private static ChatContext Prepare(AIChatRequest model, AIChatContext? appContext)
     {
         if (model == null) throw new ApiException(ApiCode.BadRequest, L.T("AI request contains no valid message."));
 
@@ -230,8 +238,13 @@ public class AIService
         if (!set.EnableAI) throw new ApiException(ApiCode.Forbidden, L.T("AI chat is disabled."));
 
         var url = ResolveUrl(set.AIUrl);
-        if (url.IsNullOrEmpty() || set.AIModel.IsNullOrWhiteSpace())
-            throw new ApiException(ApiCode.InternalServerError, L.T("The AI service is not configured. Set AIUrl and AIModel in the platform settings."));
+        if (url.IsNullOrEmpty() || set.AIModels.IsNullOrWhiteSpace())
+            throw new ApiException(ApiCode.InternalServerError, L.T("The AI service is not configured. Set AIUrl and AIModels in the platform settings."));
+
+        // 模型清单首项即默认模型，同时充当白名单；清单为空时视为未配置，避免无限制放行
+        var allowed = (set.AIModels ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+        if (allowed.Count == 0)
+            throw new ApiException(ApiCode.InternalServerError, L.T("The AI service is not configured. Set AIUrl and AIModels in the platform settings."));
 
         // 校验消息并组装上下文。角色统一小写，空内容直接拒绝，避免把脏数据转给上游
         var messages = new List<AIChatMessage>();
@@ -248,18 +261,16 @@ public class AIService
         }
         if (messages.Count == 0) throw new ApiException(ApiCode.BadRequest, L.T("AI request contains no valid message."));
 
-        // 请求自带系统提示词优先，其次平台默认提示词；消息列表中已有 system 消息时不重复插入
-        if (!messages.Any(e => e.Role.EqualIgnoreCase("system")))
-        {
-            var system = !model.SystemPrompt.IsNullOrWhiteSpace() ? model.SystemPrompt : set.AISystemPrompt;
-            if (!system.IsNullOrWhiteSpace()) messages.Insert(0, new AIChatMessage { Role = "system", Content = system });
-        }
+        // 平台上下文始终注入，消息列表中已有 system 消息时不再追加平台默认提示词，避免覆盖调用方意图
+        var prompt = !messages.Any(e => e.Role.EqualIgnoreCase("system"))
+            ? (!model.SystemPrompt.IsNullOrWhiteSpace() ? model.SystemPrompt : set.AISystemPrompt)
+            : null;
+        var system = BuildSystemPrompt(appContext, prompt);
+        if (!system.IsNullOrEmpty()) messages.Insert(0, new AIChatMessage { Role = "system", Content = system });
 
         // 请求指定模型时必须落在允许清单内，防止下游误用高成本模型
-        var code = model.Model.IsNullOrWhiteSpace() ? set.AIModel : model.Model.Trim();
-        var allowed = (set.AIModels ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
-        if (!set.AIModel.IsNullOrWhiteSpace() && !allowed.Any(e => e.EqualIgnoreCase(set.AIModel))) allowed.Add(set.AIModel);
-        if (allowed.Count > 0 && !allowed.Any(e => e.EqualIgnoreCase(code)))
+        var code = model.Model.IsNullOrWhiteSpace() ? allowed[0] : model.Model.Trim();
+        if (!allowed.Any(e => e.EqualIgnoreCase(code)))
             throw new ApiException(ApiCode.BadRequest, L.T("AI model [{0}] is not allowed.", code));
 
         return new ChatContext
@@ -267,12 +278,57 @@ public class AIService
             Url = url,
             Model = code,
             Messages = messages,
-            Temperature = model.Temperature ?? set.AITemperature,
-            MaxTokens = model.MaxTokens is > 0 ? model.MaxTokens.Value : set.AIMaxTokens,
-            Timeout = set.AITimeout > 0 ? set.AITimeout : 120,
+            Temperature = model.Temperature,
+            MaxTokens = model.MaxTokens is > 0 ? model.MaxTokens.Value : null,
+            Timeout = DefaultTimeout,
             Key = set.AIKey,
         };
     }
+
+    /// <summary>组装注入给上游的系统消息。平台、应用与团队信息帮助模型理解当前调用方</summary>
+    /// <param name="appContext">应用与团队上下文</param>
+    /// <param name="prompt">平台默认提示词或调用方指定的系统提示词</param>
+    /// <returns>系统消息内容</returns>
+    /// <remarks>提示词固定使用英文：不面向终端用户，模型对英文指令稳定，输出语言由最后一句约束；应用名等来自数据库，需先清理换行避免破坏结构</remarks>
+    private static String BuildSystemPrompt(AIChatContext? appContext, String? prompt)
+    {
+        var sys = SysConfig.Current;
+        var platform = !sys.DisplayName.IsNullOrWhiteSpace() ? sys.DisplayName : sys.Name;
+        if (platform.IsNullOrWhiteSpace()) platform = "Stardust";
+
+        var lines = new List<String>
+        {
+            "You are the built-in AI assistant of the Stardust platform.",
+            "Context:",
+            $"- Platform: {platform} {sys.Version}, server time {DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss zzz}",
+        };
+
+        if (appContext != null)
+        {
+            var title = !appContext.DisplayName.IsNullOrWhiteSpace() ? appContext.DisplayName : appContext.AppName;
+            if (!title.IsNullOrWhiteSpace())
+            {
+                var line = $"- Application: {Clean(title)}";
+                if (!appContext.AppName.IsNullOrWhiteSpace() && !appContext.AppName.EqualIgnoreCase(title)) line += $" ({Clean(appContext.AppName)})";
+                if (!appContext.Category.IsNullOrWhiteSpace()) line += $", category {Clean(appContext.Category)}";
+                if (!appContext.Version.IsNullOrWhiteSpace()) line += $", version {Clean(appContext.Version)}";
+                lines.Add(line);
+            }
+            if (!appContext.TeamName.IsNullOrWhiteSpace()) lines.Add($"- Team: {Clean(appContext.TeamName)}");
+        }
+
+        lines.Add("Answer in the same language as the user's latest message.");
+
+        var text = lines.Join(Environment.NewLine);
+        if (!prompt.IsNullOrWhiteSpace()) text += Environment.NewLine + Environment.NewLine + prompt.Trim();
+
+        return text;
+    }
+
+    /// <summary>清理注入字段。去掉换行与多余空白，避免破坏提示词结构</summary>
+    /// <param name="text">原始文本</param>
+    /// <returns>单行文本</returns>
+    private static String Clean(String? text) => (text + "").Replace("\r", " ").Replace("\n", " ").Trim();
 
     /// <summary>组装 OpenAI 兼容请求体</summary>
     /// <param name="context">请求上下文</param>
@@ -291,8 +347,8 @@ public class AIService
             }).ToList(),
             ["stream"] = stream,
         };
-        if (context.Temperature > 0) payload["temperature"] = context.Temperature;
-        if (context.MaxTokens > 0) payload["max_tokens"] = context.MaxTokens;
+        if (context.Temperature is > 0) payload["temperature"] = context.Temperature;
+        if (context.MaxTokens is > 0) payload["max_tokens"] = context.MaxTokens;
         if (!appId.IsNullOrEmpty()) payload["user"] = appId;
 
         return payload;

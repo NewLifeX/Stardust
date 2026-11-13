@@ -20,7 +20,8 @@ namespace Stardust.Server.Controllers;
 /// <param name="appId">调用方应用标识</param>
 /// <param name="ip">调用方地址</param>
 /// <param name="model">请求指定的模型编码</param>
-public sealed class OpenAIStreamResult(AIService service, AIChatRequest request, String? appId, String? ip, String? model) : IActionResult
+/// <param name="appContext">应用与团队上下文，作为系统消息注入上游</param>
+public sealed class OpenAIStreamResult(AIService service, AIChatRequest request, String? appId, String? ip, String? model, AIChatContext? appContext) : IActionResult
 {
     private static readonly JsonSerializerOptions _options = new()
     {
@@ -49,7 +50,7 @@ public sealed class OpenAIStreamResult(AIService service, AIChatRequest request,
         try
         {
             var hasRole = false;
-            await foreach (var delta in service.StreamAsync(request, appId, ip, cancellationToken))
+            await foreach (var delta in service.StreamAsync(request, appId, ip, appContext, cancellationToken))
             {
                 if (!delta.Model.IsNullOrEmpty()) code = delta.Model;
 

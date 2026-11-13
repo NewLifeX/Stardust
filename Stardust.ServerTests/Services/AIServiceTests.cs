@@ -1,5 +1,4 @@
 using System.Net;
-using System.Text;
 using System.Text.Json;
 using NewLife.Remoting;
 using Stardust.Models;
@@ -9,7 +8,7 @@ using Xunit;
 
 namespace ServerTest.Services;
 
-/// <summary>AI对话服务单元测试。覆盖地址解析、开关与配置校验、模型白名单、上游请求组装与响应解析</summary>
+/// <summary>AI对话服务单元测试。覆盖地址解析、开关与配置校验、模型白名单与默认模型、平台上下文注入、上游请求组装与响应解析</summary>
 public class AIServiceTests
 {
     private static AIChatRequest NewRequest(String content = "hello", String system = null) => new()
@@ -23,12 +22,8 @@ public class AIServiceTests
         s.EnableAI = true;
         s.AIUrl = "https://ai.example.com";
         s.AIKey = "sk-test";
-        s.AIModel = "deepseek-chat";
-        s.AIModels = "";
+        s.AIModels = "deepseek-chat";
         s.AISystemPrompt = "";
-        s.AITimeout = 30;
-        s.AITemperature = 0.7;
-        s.AIMaxTokens = 1024;
     });
 
     private const String SuccessBody = """
@@ -60,21 +55,29 @@ public class AIServiceTests
         StarServerSetting.Current.EnableAI = false;
 
         var service = new AIService(new AIStubFactory(new AIStubHandler()));
-        var ex = await Assert.ThrowsAsync<ApiException>(() => service.ChatAsync(NewRequest(), "app1", "127.0.0.1", CancellationToken.None));
+        var ex = await Assert.ThrowsAsync<ApiException>(() => service.ChatAsync(NewRequest(), "app1", "127.0.0.1", null, CancellationToken.None));
 
         Assert.Equal(ApiCode.Forbidden, ex.Code);
     }
 
-    [Fact(DisplayName = "未配置上游地址或默认模型时拒绝调用")]
+    [Fact(DisplayName = "未配置上游地址或模型清单时拒绝调用")]
     public async Task Chat_NotConfigured_Throws()
     {
-        using var scope = UseDefaultSettings();
-        StarServerSetting.Current.AIUrl = "";
-
         var service = new AIService(new AIStubFactory(new AIStubHandler()));
-        var ex = await Assert.ThrowsAsync<ApiException>(() => service.ChatAsync(NewRequest(), "app1", null, CancellationToken.None));
 
-        Assert.Equal(ApiCode.InternalServerError, ex.Code);
+        using (var scope = UseDefaultSettings())
+        {
+            StarServerSetting.Current.AIUrl = "";
+            var ex = await Assert.ThrowsAsync<ApiException>(() => service.ChatAsync(NewRequest(), "app1", null, null, CancellationToken.None));
+            Assert.Equal(ApiCode.InternalServerError, ex.Code);
+        }
+
+        using (var scope = UseDefaultSettings())
+        {
+            StarServerSetting.Current.AIModels = "";
+            var ex = await Assert.ThrowsAsync<ApiException>(() => service.ChatAsync(NewRequest(), "app1", null, null, CancellationToken.None));
+            Assert.Equal(ApiCode.InternalServerError, ex.Code);
+        }
     }
 
     [Fact(DisplayName = "消息为空时拒绝调用")]
@@ -83,7 +86,7 @@ public class AIServiceTests
         using var scope = UseDefaultSettings();
 
         var service = new AIService(new AIStubFactory(new AIStubHandler()));
-        var ex = await Assert.ThrowsAsync<ApiException>(() => service.ChatAsync(new AIChatRequest(), "app1", null, CancellationToken.None));
+        var ex = await Assert.ThrowsAsync<ApiException>(() => service.ChatAsync(new AIChatRequest(), "app1", null, null, CancellationToken.None));
 
         Assert.Equal(ApiCode.BadRequest, ex.Code);
     }
@@ -95,7 +98,7 @@ public class AIServiceTests
 
         var service = new AIService(new AIStubFactory(new AIStubHandler()));
         var request = new AIChatRequest { Messages = [new AIChatMessage { Content = " " }] };
-        var ex = await Assert.ThrowsAsync<ApiException>(() => service.ChatAsync(request, "app1", null, CancellationToken.None));
+        var ex = await Assert.ThrowsAsync<ApiException>(() => service.ChatAsync(request, "app1", null, null, CancellationToken.None));
 
         Assert.Equal(ApiCode.BadRequest, ex.Code);
     }
@@ -110,9 +113,23 @@ public class AIServiceTests
         var request = NewRequest();
         request.Model = "gpt-5";
 
-        var ex = await Assert.ThrowsAsync<ApiException>(() => service.ChatAsync(request, "app1", null, CancellationToken.None));
+        var ex = await Assert.ThrowsAsync<ApiException>(() => service.ChatAsync(request, "app1", null, null, CancellationToken.None));
 
         Assert.Equal(ApiCode.BadRequest, ex.Code);
+    }
+
+    [Fact(DisplayName = "未指定模型时使用模型清单首项")]
+    public async Task Chat_DefaultModel_FromFirstItem()
+    {
+        var handler = new AIStubHandler { ResponseBody = SuccessBody };
+        using var scope = UseDefaultSettings();
+        StarServerSetting.Current.AIModels = "glm-4,deepseek-chat";
+
+        var service = new AIService(new AIStubFactory(handler));
+        await service.ChatAsync(NewRequest(), "app1", null, null, CancellationToken.None);
+
+        using var doc = JsonDocument.Parse(handler.RequestBody!);
+        Assert.Equal("glm-4", doc.RootElement.GetProperty("model").GetString());
     }
 
     [Fact(DisplayName = "调用成功时按OpenAI协议组装请求并解析回复")]
@@ -127,7 +144,7 @@ public class AIServiceTests
         request.Temperature = 0.2;
         request.MaxTokens = 256;
 
-        var rs = await service.ChatAsync(request, "coder", "10.0.0.1", CancellationToken.None);
+        var rs = await service.ChatAsync(request, "coder", "10.0.0.1", null, CancellationToken.None);
 
         Assert.Equal("https://ai.example.com/v1/chat/completions", handler.RequestUri);
         Assert.Equal("Bearer sk-test", handler.Authorization);
@@ -140,11 +157,14 @@ public class AIServiceTests
         Assert.Equal(0.2, root.GetProperty("temperature").GetDouble(), 3);
         Assert.Equal(256, root.GetProperty("max_tokens").GetInt32());
 
-        // 平台默认系统提示词插入到消息最前面
+        // 首条为注入的平台上下文系统消息，平台默认提示词追加其后
         var messages = root.GetProperty("messages");
         Assert.Equal(2, messages.GetArrayLength());
         Assert.Equal("system", messages[0].GetProperty("role").GetString());
-        Assert.Equal("你是星尘助手", messages[0].GetProperty("content").GetString());
+        var system = messages[0].GetProperty("content").GetString();
+        Assert.Contains("Stardust platform", system);
+        Assert.Contains("Answer in the same language as the user's latest message.", system);
+        Assert.Contains("你是星尘助手", system);
         Assert.Equal("user", messages[1].GetProperty("role").GetString());
         Assert.Equal("写一个快速排序", messages[1].GetProperty("content").GetString());
 
@@ -157,6 +177,20 @@ public class AIServiceTests
         Assert.True(rs.Elapsed >= 0);
     }
 
+    [Fact(DisplayName = "未指定温度与最大令牌时不向上游发送这两个参数")]
+    public async Task Chat_OmitsSamplingAndLimit_WhenNotProvided()
+    {
+        var handler = new AIStubHandler { ResponseBody = SuccessBody };
+        using var scope = UseDefaultSettings();
+
+        var service = new AIService(new AIStubFactory(handler));
+        await service.ChatAsync(NewRequest(), "app1", null, null, CancellationToken.None);
+
+        using var doc = JsonDocument.Parse(handler.RequestBody!);
+        Assert.False(doc.RootElement.TryGetProperty("temperature", out _));
+        Assert.False(doc.RootElement.TryGetProperty("max_tokens", out _));
+    }
+
     [Fact(DisplayName = "请求自带系统提示词时覆盖平台默认提示词")]
     public async Task Chat_RequestSystemPrompt_Wins()
     {
@@ -165,12 +199,68 @@ public class AIServiceTests
         StarServerSetting.Current.AISystemPrompt = "平台默认";
 
         var service = new AIService(new AIStubFactory(handler));
-        await service.ChatAsync(NewRequest("hi", "自定义系统提示词"), "app1", null, CancellationToken.None);
+        await service.ChatAsync(NewRequest("hi", "自定义系统提示词"), "app1", null, null, CancellationToken.None);
 
         using var doc = JsonDocument.Parse(handler.RequestBody!);
         var messages = doc.RootElement.GetProperty("messages");
-        Assert.Equal("自定义系统提示词", messages[0].GetProperty("content").GetString());
+        var system = messages[0].GetProperty("content").GetString();
+        Assert.Contains("自定义系统提示词", system);
+        Assert.DoesNotContain("平台默认", system);
         Assert.Equal(2, messages.GetArrayLength());
+    }
+
+    [Fact(DisplayName = "消息自带系统消息时仍注入平台上下文且不追加平台提示词")]
+    public async Task Chat_ClientSystemMessage_KeepsOwnPrompt()
+    {
+        var handler = new AIStubHandler { ResponseBody = SuccessBody };
+        using var scope = UseDefaultSettings();
+        StarServerSetting.Current.AISystemPrompt = "平台默认";
+
+        var service = new AIService(new AIStubFactory(handler));
+        var request = new AIChatRequest
+        {
+            Messages =
+            [
+                new AIChatMessage { Role = "system", Content = "客户端系统" },
+                new AIChatMessage { Role = "user", Content = "hi" },
+            ],
+        };
+
+        await service.ChatAsync(request, "app1", null, null, CancellationToken.None);
+
+        using var doc = JsonDocument.Parse(handler.RequestBody!);
+        var messages = doc.RootElement.GetProperty("messages");
+        Assert.Equal(3, messages.GetArrayLength());
+        Assert.Equal("system", messages[0].GetProperty("role").GetString());
+        Assert.Contains("Stardust platform", messages[0].GetProperty("content").GetString());
+        Assert.DoesNotContain("平台默认", messages[0].GetProperty("content").GetString());
+        Assert.Equal("客户端系统", messages[1].GetProperty("content").GetString());
+        Assert.Equal("hi", messages[2].GetProperty("content").GetString());
+    }
+
+    [Fact(DisplayName = "注入的系统消息包含应用与团队信息")]
+    public async Task Chat_Context_ContainsAppAndTeam()
+    {
+        var handler = new AIStubHandler { ResponseBody = SuccessBody };
+        using var scope = UseDefaultSettings();
+
+        var appContext = new AIChatContext
+        {
+            AppName = "CrazyCoder",
+            DisplayName = "码神",
+            Category = "Web",
+            Version = "1.2.3",
+            TeamName = "新生命",
+        };
+
+        var service = new AIService(new AIStubFactory(handler));
+        await service.ChatAsync(NewRequest(), "CrazyCoder", null, appContext, CancellationToken.None);
+
+        using var doc = JsonDocument.Parse(handler.RequestBody!);
+        var system = doc.RootElement.GetProperty("messages")[0].GetProperty("content").GetString();
+
+        Assert.Contains("- Application: 码神 (CrazyCoder), category Web, version 1.2.3", system);
+        Assert.Contains("- Team: 新生命", system);
     }
 
     [Fact(DisplayName = "上游返回错误状态码时抛出带错误信息的异常")]
@@ -184,7 +274,7 @@ public class AIServiceTests
         using var scope = UseDefaultSettings();
 
         var service = new AIService(new AIStubFactory(handler));
-        var ex = await Assert.ThrowsAsync<ApiException>(() => service.ChatAsync(NewRequest(), "app1", null, CancellationToken.None));
+        var ex = await Assert.ThrowsAsync<ApiException>(() => service.ChatAsync(NewRequest(), "app1", null, null, CancellationToken.None));
 
         Assert.Equal(ApiCode.InternalServerError, ex.Code);
         Assert.Contains("invalid api key", ex.Message);
@@ -227,7 +317,7 @@ data: [DONE]
         var service = new AIService(new AIStubFactory(handler));
 
         var list = new List<AIChatDelta>();
-        await foreach (var item in service.StreamAsync(NewRequest("hi"), "app1", null, CancellationToken.None))
+        await foreach (var item in service.StreamAsync(NewRequest("hi"), "app1", null, null, CancellationToken.None))
         {
             list.Add(item);
         }
@@ -256,7 +346,7 @@ data: [DONE]
 
         var ex = await Assert.ThrowsAsync<ApiException>(async () =>
         {
-            await foreach (var _ in service.StreamAsync(NewRequest(), "app1", null, CancellationToken.None)) { }
+            await foreach (var _ in service.StreamAsync(NewRequest(), "app1", null, null, CancellationToken.None)) { }
         });
 
         Assert.Equal(ApiCode.InternalServerError, ex.Code);
@@ -276,7 +366,7 @@ data: [DONE]
 
         var ex = await Assert.ThrowsAsync<ApiException>(async () =>
         {
-            await foreach (var _ in service.StreamAsync(NewRequest(), "app1", null, CancellationToken.None)) { }
+            await foreach (var _ in service.StreamAsync(NewRequest(), "app1", null, null, CancellationToken.None)) { }
         });
 
         Assert.Equal(ApiCode.InternalServerError, ex.Code);

@@ -222,8 +222,12 @@
 "Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "Varsayılan dil. Oturum açma ve heartbeat sırasında istemcilere gönderilir, örn. zh-Hans veya en; boşsa çekirdek yapılandırmadaki DefaultLanguage kullanılır."
 # 运行时消息补充词条
 "AI chat is disabled.": "AI sohbeti devre dışı"
-"The AI service is not configured. Set AIUrl and AIModel in the platform settings.": "AI hizmeti yapılandırılmamış. Platform ayarlarında AIUrl ve AIModel değerlerini ayarlayın"
+"The AI service is not configured. Set AIUrl and AIModels in the platform settings.": "AI hizmeti yapılandırılmamış. Platform ayarlarında AIUrl ve AIModels değerlerini ayarlayın"
 "AI request contains no valid message.": "AI isteği geçerli bir mesaj içermiyor"
 "AI model [{0}] is not allowed.": "AI modeli [{0}] izin verilmiyor"
 "AI upstream request failed: {0}": "AI üst akış isteği başarısız oldu: {0}"
 "AI upstream returned an invalid response: {0}": "AI üst akışı geçersiz bir yanıt döndürdü: {0}"
+
+# AI分类与默认分组
+"AI对话": "AI sohbet"
+"默认": "Varsayılan"

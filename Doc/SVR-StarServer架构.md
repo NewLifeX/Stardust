@@ -125,12 +125,8 @@ StarServer（`Stardust.Server`）是星尘平台的服务端核心，提供所�
 | EnableAI | false | 启用 AI 对话接口，已登录应用可调用 `/v1/chat/completions` |
 | AIUrl | — | OpenAI 兼容上游地址，可填基础地址、`/v1` 地址或完整 chat/completions 地址 |
 | AIKey | — | 上游访问密钥，作为 Bearer 令牌发送；留空表示上游免鉴权 |
-| AIModel | — | 默认模型编码，请求未指定模型时使用 |
-| AIModels | — | 允许的模型清单，逗号分隔；默认模型始终允许，留空只允许默认模型 |
-| AISystemPrompt | — | 默认系统提示词，请求未带系统提示词时插入 |
-| AITimeout | 120 | AI 请求超时（秒） |
-| AITemperature | 0.7 | 默认采样温度，0 表示不发送该参数 |
-| AIMaxTokens | 1024 | 默认最大输出令牌数，0 表示不限制 |
+| AIModels | — | 允许的模型清单，逗号分隔；首个为默认模型，请求未指定时使用；留空视为未配置 |
+| AISystemPrompt | — | 默认系统提示词，消息未带 system 时追加到平台上下文之后 |
 
 ---
 
@@ -184,6 +180,6 @@ StarServer（`Stardust.Server`）是星尘平台的服务端核心，提供所�
 错误: 未开始输出时回退 OpenAI 错误 JSON；已开始输出时写 data: { error }
 ```
 
-> 上游地址与密钥由平台设置统一维护，详见 [AI-AI对话接口](AI-AI对话接口.md)。
+> 上游地址与密钥由平台设置统一维护；转发前统一注入一条携带平台、应用与团队信息的 `system` 消息，详见 [AI-AI对话接口](AI-AI对话接口.md)。
 
 > 详见各子模块架构文档。

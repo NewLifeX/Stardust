@@ -52,12 +52,8 @@ internal sealed class AISettingScope : IDisposable
     private readonly Boolean _enable;
     private readonly String _url;
     private readonly String _key;
-    private readonly String _model;
     private readonly String _models;
     private readonly String _system;
-    private readonly Int32 _timeout;
-    private readonly Double _temperature;
-    private readonly Int32 _maxTokens;
 
     /// <summary>实例化并应用设置</summary>
     /// <param name="apply">设置修改委托</param>
@@ -66,12 +62,8 @@ internal sealed class AISettingScope : IDisposable
         _enable = _set.EnableAI;
         _url = _set.AIUrl;
         _key = _set.AIKey;
-        _model = _set.AIModel;
         _models = _set.AIModels;
         _system = _set.AISystemPrompt;
-        _timeout = _set.AITimeout;
-        _temperature = _set.AITemperature;
-        _maxTokens = _set.AIMaxTokens;
 
         apply(_set);
     }
@@ -82,11 +74,7 @@ internal sealed class AISettingScope : IDisposable
         _set.EnableAI = _enable;
         _set.AIUrl = _url;
         _set.AIKey = _key;
-        _set.AIModel = _model;
         _set.AIModels = _models;
         _set.AISystemPrompt = _system;
-        _set.AITimeout = _timeout;
-        _set.AITemperature = _temperature;
-        _set.AIMaxTokens = _maxTokens;
     }
 }

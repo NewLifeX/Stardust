@@ -10,6 +10,7 @@ using NewLife.Remoting.Extensions;
 using NewLife.Remoting.Services;
 using NewLife.Security;
 using Stardust.Data;
+using Stardust.Data.Platform;
 using Stardust.Models;
 using Stardust.Server.Services;
 
@@ -57,12 +58,13 @@ public class OpenAIController(AIService aiService, ITokenService tokenService) :
             }).ToList(),
         };
         var ip = HttpContext.GetUserHost();
+        var appContext = CreateContext(app);
 
-        if (model.Stream == true) return new OpenAIStreamResult(aiService, request, app.Name, ip, model.Model);
+        if (model.Stream == true) return new OpenAIStreamResult(aiService, request, app.Name, ip, model.Model, appContext);
 
         try
         {
-            var rs = await aiService.ChatAsync(request, app.Name, ip, cancellationToken).ConfigureAwait(false);
+            var rs = await aiService.ChatAsync(request, app.Name, ip, appContext, cancellationToken).ConfigureAwait(false);
             return JsonContent(ToResponse(rs, model.Model));
         }
         catch (Exception ex)
@@ -96,6 +98,23 @@ public class OpenAIController(AIService aiService, ITokenService tokenService) :
         if (ex != null) return null;
 
         return App.FindByName(jwt?.Subject);
+    }
+
+    /// <summary>组装应用与团队上下文。团队名称来自应用所属星系项目，供注入系统提示词</summary>
+    /// <param name="app">登录令牌对应的应用</param>
+    /// <returns>对话上下文</returns>
+    private static AIChatContext CreateContext(App app)
+    {
+        var project = app.ProjectId > 0 ? GalaxyProject.FindById(app.ProjectId) : null;
+
+        return new AIChatContext
+        {
+            AppName = app.Name,
+            DisplayName = app.DisplayName,
+            Category = app.Category,
+            Version = app.Version,
+            TeamName = project?.Name,
+        };
     }
 
     /// <summary>转换为 OpenAI 非流式响应</summary>

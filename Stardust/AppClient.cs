@@ -671,9 +671,9 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
     private HttpClient? _httpClient;
     private String? _httpServer;
 
-    /// <summary>AI对话超时时间。默认120_000ms</summary>
+    /// <summary>AI对话超时时间。默认180_000ms，比服务端的120秒上限留出余量</summary>
     /// <remarks>大模型生成耗时远高于普通接口，独立使用自己的Http客户端，避免把普通接口的15秒超时放大；流式对话由调用方取消令牌控制</remarks>
-    public Int32 ChatTimeout { get; set; } = 120_000;
+    public Int32 ChatTimeout { get; set; } = 180_000;
 
     /// <summary>AI对话。一次性返回完整回复，与服务端共用登录令牌</summary>
     /// <param name="prompt">用户提示词</param>

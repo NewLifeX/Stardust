@@ -222,8 +222,12 @@
 "Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "Standaardtaal. Wordt bij aanmelding en heartbeat naar clients verzonden, bijv. zh-Hans of en; leeg gebruikt DefaultLanguage uit de kernconfiguratie."
 # 运行时消息补充词条
 "AI chat is disabled.": "AI-chat is uitgeschakeld"
-"The AI service is not configured. Set AIUrl and AIModel in the platform settings.": "De AI-service is niet geconfigureerd. Stel AIUrl en AIModel in bij de platforminstellingen"
+"The AI service is not configured. Set AIUrl and AIModels in the platform settings.": "De AI-service is niet geconfigureerd. Stel AIUrl en AIModels in bij de platforminstellingen"
 "AI request contains no valid message.": "Het AI-verzoek bevat geen geldig bericht"
 "AI model [{0}] is not allowed.": "AI-model [{0}] is niet toegestaan"
 "AI upstream request failed: {0}": "AI-upstreamverzoek mislukt: {0}"
 "AI upstream returned an invalid response: {0}": "AI-upstream gaf een ongeldig antwoord: {0}"
+
+# AI分类与默认分组
+"AI对话": "AI-chat"
+"默认": "Standaard"

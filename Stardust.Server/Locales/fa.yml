@@ -222,8 +222,12 @@
 "Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "زبان پیش‌فرض. هنگام ورود و ضربان قلب به کلاینت‌ها ارسال می‌شود، مانند zh-Hans یا en؛ خالی یعنی استفاده از DefaultLanguage از پیکربندی اصلی."
 # 运行时消息补充词条
 "AI chat is disabled.": "گفتگوی هوش مصنوعی غیرفعال است"
-"The AI service is not configured. Set AIUrl and AIModel in the platform settings.": "سرویس هوش مصنوعی پیکربندی نشده است. AIUrl و AIModel را در تنظیمات پلتفرم تنظیم کنید"
+"The AI service is not configured. Set AIUrl and AIModels in the platform settings.": "سرویس هوش مصنوعی پیکربندی نشده است. AIUrl و AIModels را در تنظیمات پلتفرم تنظیم کنید"
 "AI request contains no valid message.": "درخواست هوش مصنوعی هیچ پیام معتبری ندارد"
 "AI model [{0}] is not allowed.": "مدل هوش مصنوعی [{0}] مجاز نیست"
 "AI upstream request failed: {0}": "درخواست به سرویس هوش مصنوعی ناموفق بود: {0}"
 "AI upstream returned an invalid response: {0}": "سرویس هوش مصنوعی پاسخ نامعتبری برگرداند: {0}"
+
+# AI分类与默认分组
+"AI对话": "گفتگوی هوش مصنوعی"
+"默认": "پیشفرض"

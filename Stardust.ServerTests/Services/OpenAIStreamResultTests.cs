@@ -20,12 +20,8 @@ public class OpenAIStreamResultTests
         s.EnableAI = true;
         s.AIUrl = "https://ai.example.com";
         s.AIKey = "sk-test";
-        s.AIModel = "deepseek-chat";
-        s.AIModels = "";
+        s.AIModels = "deepseek-chat";
         s.AISystemPrompt = "";
-        s.AITimeout = 30;
-        s.AITemperature = 0.7;
-        s.AIMaxTokens = 1024;
     });
 
     private sealed class TestResponseFeature : IHttpResponseFeature
@@ -66,7 +62,7 @@ public class OpenAIStreamResultTests
         };
         using var scope = UseDefaultSettings();
         var service = new AIService(new AIStubFactory(handler));
-        var result = new OpenAIStreamResult(service, NewRequest(), "app", null, "deepseek-chat");
+        var result = new OpenAIStreamResult(service, NewRequest(), "app", null, "deepseek-chat", null);
 
         var (context, body) = CreateContext();
         await result.ExecuteResultAsync(NewActionContext(context));
@@ -87,7 +83,7 @@ public class OpenAIStreamResultTests
         StarServerSetting.Current.EnableAI = false;
 
         var service = new AIService(new AIStubFactory(new AIStubHandler()));
-        var result = new OpenAIStreamResult(service, NewRequest(), "app", null, "deepseek-chat");
+        var result = new OpenAIStreamResult(service, NewRequest(), "app", null, "deepseek-chat", null);
 
         var (context, body) = CreateContext();
         await result.ExecuteResultAsync(NewActionContext(context));
@@ -109,7 +105,7 @@ public class OpenAIStreamResultTests
         };
         using var scope = UseDefaultSettings();
         var service = new AIService(new AIStubFactory(handler));
-        var result = new OpenAIStreamResult(service, NewRequest(), "app", null, "deepseek-chat");
+        var result = new OpenAIStreamResult(service, NewRequest(), "app", null, "deepseek-chat", null);
 
         var (context, body) = CreateContext(started: true);
         await result.ExecuteResultAsync(NewActionContext(context));

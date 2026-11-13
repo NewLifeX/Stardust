@@ -223,8 +223,12 @@
 
 # AI对话运行时消息
 "AI chat is disabled.": "AI对话未启用"
-"The AI service is not configured. Set AIUrl and AIModel in the platform settings.": "AI服务未配置，请在平台设置中配置AIUrl和AIModel"
+"The AI service is not configured. Set AIUrl and AIModels in the platform settings.": "AI服务未配置，请在平台设置中配置AIUrl和AIModels"
 "AI request contains no valid message.": "AI请求中没有有效消息"
 "AI model [{0}] is not allowed.": "不允许使用AI模型[{0}]"
 "AI upstream request failed: {0}": "AI上游请求失败：{0}"
 "AI upstream returned an invalid response: {0}": "AI上游返回无效响应：{0}"
+
+# AI分类与默认分组
+"AI对话": "AI对话"
+"默认": "默认"

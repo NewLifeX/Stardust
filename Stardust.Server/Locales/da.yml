@@ -222,8 +222,12 @@
 "Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "Standardsprog. Sendes til klienter ved login og heartbeat, f.eks. zh-Hans eller en; tom betyder brug DefaultLanguage fra kernekonfigurationen."
 # 运行时消息补充词条
 "AI chat is disabled.": "AI-chat er deaktiveret"
-"The AI service is not configured. Set AIUrl and AIModel in the platform settings.": "AI-tjenesten er ikke konfigureret. Angiv AIUrl og AIModel i platformindstillingerne"
+"The AI service is not configured. Set AIUrl and AIModels in the platform settings.": "AI-tjenesten er ikke konfigureret. Angiv AIUrl og AIModels i platformindstillingerne"
 "AI request contains no valid message.": "AI-anmodningen indeholder ingen gyldig besked"
 "AI model [{0}] is not allowed.": "AI-modellen [{0}] er ikke tilladt"
 "AI upstream request failed: {0}": "Anmodning til AI-tjenesten mislykkedes: {0}"
 "AI upstream returned an invalid response: {0}": "AI-tjenesten returnerede et ugyldigt svar: {0}"
+
+# AI分类与默认分组
+"AI对话": "AI-chat"
+"默认": "Standard"

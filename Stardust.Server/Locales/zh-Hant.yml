@@ -222,8 +222,12 @@
 "Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "預設語言。登入與心跳下發給用戶端的預設語言，如zh-Hans、en；留空時沿用核心設定DefaultLanguage"
 # 运行时消息补充词条
 "AI chat is disabled.": "AI 對話未啟用"
-"The AI service is not configured. Set AIUrl and AIModel in the platform settings.": "AI 服務未設定，請在平台設定中設定 AIUrl 與 AIModel"
+"The AI service is not configured. Set AIUrl and AIModels in the platform settings.": "AI 服務未設定，請在平台設定中設定 AIUrl 與 AIModels"
 "AI request contains no valid message.": "AI 請求中沒有有效訊息"
 "AI model [{0}] is not allowed.": "不允許使用 AI 模型[{0}]"
 "AI upstream request failed: {0}": "AI 上游請求失敗：{0}"
 "AI upstream returned an invalid response: {0}": "AI 上游傳回無效回應：{0}"
+
+# AI分类与默认分组
+"AI对话": "AI 對話"
+"默认": "預設"

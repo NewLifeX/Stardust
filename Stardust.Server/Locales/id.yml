@@ -222,8 +222,12 @@
 "Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "Bahasa default. Dikirim ke klien saat login dan heartbeat, mis. zh-Hans atau en; kosong berarti menggunakan DefaultLanguage dari konfigurasi inti."
 # 运行时消息补充词条
 "AI chat is disabled.": "Obrolan AI dinonaktifkan"
-"The AI service is not configured. Set AIUrl and AIModel in the platform settings.": "Layanan AI belum dikonfigurasi. Atur AIUrl dan AIModel di pengaturan platform"
+"The AI service is not configured. Set AIUrl and AIModels in the platform settings.": "Layanan AI belum dikonfigurasi. Atur AIUrl dan AIModels di pengaturan platform"
 "AI request contains no valid message.": "Permintaan AI tidak berisi pesan yang valid"
 "AI model [{0}] is not allowed.": "Model AI [{0}] tidak diizinkan"
 "AI upstream request failed: {0}": "Permintaan ke layanan AI gagal: {0}"
 "AI upstream returned an invalid response: {0}": "Layanan AI mengembalikan respons yang tidak valid: {0}"
+
+# AI分类与默认分组
+"AI对话": "Obrolan AI"
+"默认": "Bawaan"

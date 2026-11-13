@@ -12,6 +12,7 @@ using NewLife;
 using NewLife.Security;
 using ServerTest.Services;
 using Stardust.Data;
+using Stardust.Data.Platform;
 using Xunit;
 
 namespace ServerTest.Controllers;
@@ -85,9 +86,17 @@ public class OpenAIChatEndpointTests : StarTestBase
         });
     }
 
-    private static async Task<(HttpClient client, App app)> LoginAsync(TestServer server, String name)
+    private static async Task<(HttpClient client, App app)> LoginAsync(TestServer server, String name, Int32 projectId = 0)
     {
-        var app = new App { Name = name, Secret = "secret-" + Rand.NextString(8), Enable = true };
+        var app = new App
+        {
+            Name = name,
+            Secret = "secret-" + Rand.NextString(8),
+            Enable = true,
+            ProjectId = projectId,
+            DisplayName = "码神",
+            Category = "Web",
+        };
         app.Insert();
 
         var client = server.CreateClient();
@@ -105,6 +114,8 @@ public class OpenAIChatEndpointTests : StarTestBase
     {
         var upstream = await StartUpstream(ChatResponse, "application/json");
         var name = "ai_" + Rand.NextString(8);
+        var project = new GalaxyProject { Name = "team_" + Rand.NextString(8), Enable = true };
+        project.Insert();
         App app = null;
         try
         {
@@ -113,15 +124,11 @@ public class OpenAIChatEndpointTests : StarTestBase
                 s.EnableAI = true;
                 s.AIUrl = upstream.prefix;
                 s.AIKey = "sk-test";
-                s.AIModel = "stub-model";
-                s.AIModels = "";
+                s.AIModels = "stub-model";
                 s.AISystemPrompt = "";
-                s.AITimeout = 20;
-                s.AITemperature = 0.7;
-                s.AIMaxTokens = 1024;
             });
 
-            var (client, entity) = await LoginAsync(_server, name);
+            var (client, entity) = await LoginAsync(_server, name, project.Id);
             app = entity;
 
             var payload = """{"model":"stub-model","messages":[{"role":"user","content":"hi"}],"temperature":0.2,"max_tokens":64}""";
@@ -143,11 +150,17 @@ public class OpenAIChatEndpointTests : StarTestBase
             Assert.Contains("\"content\":\"hi\"", sent);
             Assert.Contains("\"user\":\"" + name + "\"", sent);
             Assert.Contains("\"stream\":false", sent);
+
+            // 注入的平台上下文系统消息带上应用与团队信息
+            Assert.Contains("\"role\":\"system\"", sent);
+            Assert.Contains("- Application: 码神 (" + name + "), category Web", sent);
+            Assert.Contains("- Team: " + project.Name, sent);
         }
         finally
         {
             upstream.stop();
             app?.Delete();
+            project.Delete();
         }
     }
 
@@ -164,12 +177,8 @@ public class OpenAIChatEndpointTests : StarTestBase
                 s.EnableAI = true;
                 s.AIUrl = upstream.prefix;
                 s.AIKey = "sk-test";
-                s.AIModel = "stub-model";
-                s.AIModels = "";
+                s.AIModels = "stub-model";
                 s.AISystemPrompt = "";
-                s.AITimeout = 20;
-                s.AITemperature = 0.7;
-                s.AIMaxTokens = 1024;
             });
 
             var (client, entity) = await LoginAsync(_server, name);
