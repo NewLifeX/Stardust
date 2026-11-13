@@ -65,6 +65,10 @@ public static class LocalApiToken
     /// <returns>令牌字符串</returns>
     public static String Ensure()
     {
+        // 显式指定令牌时不落盘，调用方按同一环境变量读取
+        var env = Environment.GetEnvironmentVariable(EnvToken);
+        if (!env.IsNullOrEmpty()) return env.Trim();
+
         var file = Environment.GetEnvironmentVariable(EnvFile);
         if (file.IsNullOrEmpty()) file = Path.Combine(BaseDirectory, FileName);
 
