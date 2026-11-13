@@ -69,6 +69,20 @@ dotnet publish -c Release -o publish
 
 After configuring the StarServer address, the node will appear on the platform.
 
+#### NativeAOT (single-file native binary, recommended for small-memory nodes)
+
+```
+# net10.0 only; do not pass PublishAot as a global property
+dotnet publish StarAgent/StarAgent.csproj -c Release -f net10.0 -r linux-arm64 `
+  --self-contained true -p:StarAgentAot=true -o publish
+
+# or use the publish script (cross-compile args + two size profiles)
+pwsh Tools/Scripts/publish-aot.ps1 -Rid linux-arm64 -Compiler clang -ObjCopy aarch64-linux-gnu-objcopy
+pwsh Tools/Scripts/publish-aot.ps1 -Rid win-x64 -Slim      # smaller: zh/en word tables only, no stack line numbers
+```
+
+Measured on PC / A2 / A4 / A6: 16.4 / 19.0 / 19.0 / 17.3 MB single file (Slim 12.9 / 15.4 / 15.4 / 13.5 MB), RSS 31–43 MB (JIT build 73–95 MB), startup 0.14–1 s. See [NODE-StarAgent-AOT适配](https://github.com/NewLifeX/Stardust/blob/master/Doc/NODE-StarAgent-AOT适配.md).
+
 #### Other platforms
 
 ```
