@@ -177,5 +177,11 @@
   "Version is not set",
   "Version is not set.",
   "Version not found",
-  "Version not found."
+  "Version not found.",
+  "启用AI对话",
+  "AI对话",
+  "AI对话地址",
+  "AI访问密钥",
+  "AI允许模型清单",
+  "AI默认系统提示词"
 ]

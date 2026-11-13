@@ -55,3 +55,11 @@
 "可信接入": "Trusted access"
 "临时放行": "Temporary"
 "关闭": "Off"
+
+# AI对话设置项
+"启用AI对话": "Enable AI chat"
+"AI对话地址": "AI chat endpoint"
+"AI访问密钥": "AI access key"
+"AI允许模型清单": "Allowed AI models"
+"AI默认系统提示词": "Default AI system prompt"
+"AI对话": "AI chat"

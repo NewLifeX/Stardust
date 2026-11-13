@@ -517,5 +517,11 @@
   "Version not found.",
   "Windows ZIP 压缩包",
   "Windows系统下载zip包",
-  "Windows系统下载zip包，解压后运行 StarAgent.exe 即可安装"
+  "Windows系统下载zip包，解压后运行 StarAgent.exe 即可安装",
+  "启用AI对话",
+  "AI对话",
+  "AI对话地址",
+  "AI访问密钥",
+  "AI允许模型清单",
+  "AI默认系统提示词"
 ]
