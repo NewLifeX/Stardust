@@ -11,29 +11,26 @@
  *   └ 居中 1080×660 毛玻璃卡片，左右两栏（1.1fr / 0.9fr）
  *     ├ 左栏：顶部 logo + 版本徽章 → 中间轨道核心 220×220（三层同心圆 r=105/82/56
  *     │        + 3 发光轨道点 + 中心 96 圆 + logo-mark）→ 底部 ticker（4 段 / 3200ms）
- *     └ 右栏：标题 → SSO 双按钮 → 分隔线 → 密码/OTP 段切换 → 邮箱 + 密码（或 6 格 OTP）
+ *     └ 右栏：标题 → 用户名 + 密码 → 第三方登录
  *              → 保持登录 + 集群标签 → 主按钮（品牌紫渐变）→ 底部帮助链
  *   固定页脚：© 2026 Stardust Labs / 隐私 / 服务条款 / 状态
  *
- * 行为约定：
- *   - 真实登录：走框架 loginApi.loginByPassword（api-core 统一处理 RSA 挑战 / 字段归一化），
- *     成功后 setAccessToken 写入并 router.replace(redirect)。
- *   - method（password / otp）持久化到 localStorage['stardust-login-method']（对齐设计稿）。
- *   - OTP 通道：后端当前无独立「验证码登录」端点，本页只实现交互与版式，
- *     提交时明确提示未接入，不伪造登录成功。
+ * 行为约定（皮在本页，能力复用 Cube LoginPage）：
+ *   配置来自 fetchLoginConfig。第三方只渲染 oauth，不写死 GitHub / SAML。
+ *   跳转与 Cube handleOAuth 相同：/Sso/Login/{name}?source=front-end&redirect_uri=
+ *   密码规则复用 usePasswordRules；成功条件与 handleLogin 相同（code 0 且有 accessToken）。
  *
  * 样式纪律：颜色零硬编码 —— 全部取 tokens.stardust.css 的令牌（--brand-* / --surface-*
  *          / --fg-* / --border-* / --success-500 / --sd-*）；SVG 图形仅用令牌色。
  */
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { fetchLoginConfig, loginByPassword } from '@newlifex/cube-vue/core/utils/loginApi'
-import { setAccessToken } from '@newlifex/cube-vue/core/utils/token'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { fetchLoginConfig, loginByPassword, registerByForm, sendActivateCode, sendCode } from '@newlifex/cube-vue/core/utils/loginApi'
+import { setAccessToken, setRefreshToken } from '@newlifex/cube-vue/core/utils/token'
+import { usePasswordRules } from '@newlifex/cube-vue/core/composables/usePasswordRules'
 import StarfieldBg from '@/layouts/StardustLayout/starfield/StarfieldBg.vue'
 import logoMark from '@/assets/brand/logo-mark.svg'
-
-type LoginMethod = 'password' | 'otp'
 
 const router = useRouter()
 const route = useRoute()
@@ -46,20 +43,32 @@ const HIGHLIGHTS = [
   { label: '性能监控', sub: 'OpenTelemetry 原生兼容' },
 ]
 
-/** 设计稿右栏集群标签（视觉占位，非后端事实） */
-const CLUSTER_LABEL = 'prod-tokyo'
+type RegMode = 'password' | 'mail' | 'mobile'
 
-const METHOD_KEY = 'stardust-login-method'
-
-const method = ref<LoginMethod>('password')
-const email = ref('')
+const panel = ref<'login' | 'register'>('login')
+const regMode = ref<RegMode>('password')
+const regUsername = ref('')
+const regEmail = ref('')
+const regMobile = ref('')
+const regCode = ref('')
+const regPassword = ref('')
+const regConfirm = ref('')
+const showRegPw = ref(false)
+const username = ref('')
 const password = ref('')
 const showPw = ref(false)
 const remember = ref(true)
-const otp = ref<string[]>(['', '', '', '', '', ''])
-const otpRefs = ref<HTMLInputElement[]>([])
 const loading = ref(false)
 const errorText = ref('')
+const notActivated = ref(false)
+const notActivatedAccount = ref('')
+const pendingActivation = ref<{ channels?: string[]; targets?: string[] } | null>(null)
+
+const tenant = computed(() => {
+  const value = route.query.tenant
+  const text = Array.isArray(value) ? value[0] : value
+  return text || undefined
+})
 const tickerIdx = ref(0)
 
 let tickerTimer: ReturnType<typeof setInterval> | null = null
@@ -73,20 +82,57 @@ const oauthProviders = computed<any[]>(() => {
   return Array.isArray(list) ? list : []
 })
 
-onMounted(async () => {
-  const saved = localStorage.getItem(METHOD_KEY)
-  if (saved === 'password' || saved === 'otp') method.value = saved
+/** 与 LoginForm 同一套规则：强度正则来自 security.passwordStrength */
+/** Cube register：password / mail / sms 各自一种方式，没开任何一种时走用户名密码 */
+const registerModes = computed<RegMode[]>(() => {
+  const ability = loginConfig.value?.register
+  const modes: RegMode[] = []
+  if (ability?.password === true) modes.push('password')
+  if (ability?.mail === true) modes.push('mail')
+  if (ability?.sms === true) modes.push('mobile')
+  if (!modes.length) modes.push('password')
+  return modes
+})
+const requireMailVerify = computed(() => loginConfig.value?.register?.requireMailVerify === true)
+const requireMobileVerify = computed(() => loginConfig.value?.register?.requireMobileVerify === true)
 
+const { passwordRuleDefs, passwordRules, showPasswordHints } = usePasswordRules(
+  () => loginConfig.value?.security?.passwordStrength,
+  () => password.value,
+  () => loginConfig.value?.security?.passwordComplexity !== false,
+)
+const {
+  passwordRuleDefs: regRuleDefs,
+  passwordRules: regPasswordRules,
+  showPasswordHints: showRegPasswordHints,
+} = usePasswordRules(
+  () => loginConfig.value?.security?.passwordStrength,
+  () => regPassword.value,
+  () => loginConfig.value?.security?.passwordComplexity !== false,
+)
+
+onMounted(async () => {
   tickerTimer = setInterval(() => {
     tickerIdx.value = (tickerIdx.value + 1) % HIGHLIGHTS.length
   }, 3200)
 
   try {
-    const res: any = await fetchLoginConfig()
-    loginConfig.value = res?.data ?? null
+    const res: any = await fetchLoginConfig(tenant.value)
+    if (res?.code === 0 && res.data) {
+      loginConfig.value = res.data
+      const providers = Array.isArray(res.data.oauth) ? res.data.oauth : []
+      // Cube：密码未开且只有一个第三方时直接跳转
+      if (res.data.login?.password !== true && providers.length === 1) {
+        startOAuth(providers[0])
+      }
+    } else {
+      loginConfig.value = null
+      errorText.value = res?.message || '获取登录配置失败'
+    }
   } catch {
     // 拉取配置失败不阻塞登录表单（后端不可达时仍可尝试密码登录）
     loginConfig.value = null
+    errorText.value = '获取登录配置失败'
   }
 })
 
@@ -94,62 +140,71 @@ onBeforeUnmount(() => {
   if (tickerTimer) clearInterval(tickerTimer)
 })
 
-/** 切换登录方式并持久化（对齐设计稿 localStorage 约定） */
-function setMethod(next: LoginMethod) {
-  method.value = next
-  errorText.value = ''
-  localStorage.setItem(METHOD_KEY, next)
-  if (next === 'otp') {
-    nextTick(() => otpRefs.value[0]?.focus())
-  }
-}
-
-/** OTP 单格输入：仅数字、自动跳下一格、退格回退 */
-function onOtpInput(i: number, val: string) {
-  const digit = val.replace(/\D/g, '').slice(0, 1)
-  const next = [...otp.value]
-  next[i] = digit
-  otp.value = next
-  if (digit && i < 5) otpRefs.value[i + 1]?.focus()
-}
-
-function onOtpKeydown(i: number, e: KeyboardEvent) {
-  if (e.key === 'Backspace' && !otp.value[i] && i > 0) {
-    otpRefs.value[i - 1]?.focus()
-  }
-}
-
 /** 未接入的入口：明确提示，不伪造成功 */
 function notifyNotWired(label: string) {
   ElMessage.info(`${label}：当前版本沿用框架既有能力，本页未接入`)
 }
 
+/** 与 Cube resolveLogo 相同。开发时静态图在后端主机上，相对路径拼上 VITE_APP_BASE_API。 */
+function apiOrigin(): string {
+  return String(import.meta.env.VITE_APP_BASE_API ?? '').replace(/\/$/, '')
+}
+
+function resolveLogo(logo: string): string {
+  if (!logo) return ''
+  if (/^https?:\/\//i.test(logo)) return logo
+  if (logo.startsWith('//')) return `${window.location.protocol}${logo}`
+  return logo.startsWith('/') ? `${apiOrigin()}${logo}` : logo
+}
+
+function providerName(p: any): string {
+  return String(p?.name ?? p?.scheme ?? '')
+}
+
+function isGithub(p: any): boolean {
+  return providerName(p).toLowerCase() === 'github'
+}
+
+function providerLabel(p: any): string {
+  return String(p?.nickName || p?.name || '')
+}
+
+/** 与 Cube handleOAuth / buildOAuthUrl 相同。默认回跳星尘总览。 */
 function startOAuth(p: any) {
-  const name = p?.name ?? p?.scheme ?? ''
+  const name = providerName(p)
   if (!name) {
     notifyNotWired('SSO 登录')
     return
   }
-  const redirect = String(route.query.redirect ?? '/stardust/overview')
-  window.location.href = `/Sso/Login/${encodeURIComponent(name)}?source=front-end&redirect_uri=${encodeURIComponent(redirect)}`
+  const raw = route.query.redirect
+  const text = typeof raw === 'string' ? raw : ''
+  const path = text.startsWith('/') ? text : '/stardust/overview'
+  const redirectUri = /^https?:\/\//i.test(text) ? text : `${window.location.origin}${path}`
+  window.location.href = `${apiOrigin()}/Sso/Login/${name}?source=front-end&redirect_uri=${encodeURIComponent(redirectUri)}`
 }
 
 async function submit() {
   if (loading.value) return
   errorText.value = ''
 
-  if (method.value === 'otp') {
-    const code = otp.value.join('')
-    if (code.length < 6) {
-      errorText.value = '请输入 6 位验证码'
-      return
-    }
-    notifyNotWired('一次性验证码登录')
+  if (!passwordEnabled.value) {
+    errorText.value = '当前未开放密码登录'
     return
   }
 
-  if (!email.value.trim() || !password.value) {
-    errorText.value = '请输入工作邮箱与密码'
+  const name = username.value.trim()
+  if (!name || !password.value) {
+    errorText.value = '请输入用户名与密码'
+    return
+  }
+  if (name.length < 2) {
+    errorText.value = '用户名至少 2 个字符'
+    return
+  }
+
+  const failed = passwordRuleDefs.value.find((rule) => !rule.test(password.value))
+  if (failed) {
+    errorText.value = `密码需${failed.label}`
     return
   }
 
@@ -157,20 +212,209 @@ async function submit() {
   try {
     // loginByPassword(username, password, captchaId?, captchaCode?, remember?)
     const res: any = await loginByPassword(
-      email.value.trim(),
+      name,
       password.value,
       undefined,
       undefined,
       remember.value,
     )
-    const token = res?.data?.accessToken ?? res?.data?.access_token ?? ''
-    if (token) setAccessToken(token)
+    const token = res?.data?.accessToken ?? ''
+    if (res?.code !== 0 || !token) {
+      const message = res?.message ? String(res.message) : '登录失败，请检查用户名与密码'
+      if (message.includes('未激活')) {
+        notActivated.value = true
+        notActivatedAccount.value = name
+      }
+      errorText.value = message
+      return
+    }
+    setAccessToken(token)
+    if (res.data?.refreshToken) setRefreshToken(res.data.refreshToken)
+    ElMessage.success('登录成功，正在跳转...')
     const redirect = String(route.query.redirect ?? '/stardust/overview')
     await router.replace(redirect)
   } catch (e: any) {
-    errorText.value = e?.message ? String(e.message) : '登录失败，请检查邮箱与密码'
+    const message = e?.message ? String(e.message) : '登录失败，请检查用户名与密码'
+    if (message.includes('未激活')) {
+      notActivated.value = true
+      notActivatedAccount.value = name
+    }
+    errorText.value = message
   } finally {
     loading.value = false
+  }
+}
+
+function showRegister() {
+  panel.value = 'register'
+  errorText.value = ''
+  notActivated.value = false
+  regMode.value = registerModes.value[0]
+}
+
+function showLogin() {
+  panel.value = 'login'
+  errorText.value = ''
+  pendingActivation.value = null
+}
+
+function isMail(value: string): boolean {
+  return /^[\w.+-]+@[\w-]+(\.[\w-]+)+$/.test(value)
+}
+
+function isMobile(value: string): boolean {
+  return /^1[3-9]\d{9}$/.test(value)
+}
+
+/** 与 Cube RegisterForm 相同的类别和校验，一次只提交当前方式 */
+async function submitRegister() {
+  if (loading.value) return
+  errorText.value = ''
+  const mode = regMode.value
+  const name = regUsername.value.trim()
+  const email = regEmail.value.trim()
+  const mobile = regMobile.value.trim()
+  const code = regCode.value.trim()
+
+  if (mode === 'password') {
+    if (!name) {
+      errorText.value = '请输入用户名'
+      return
+    }
+    if (name.length < 2) {
+      errorText.value = '用户名至少 2 个字符'
+      return
+    }
+  }
+  if (mode === 'mail' || (mode === 'password' && requireMailVerify.value)) {
+    if (!email) {
+      errorText.value = '请输入邮箱'
+      return
+    }
+    if (!isMail(email)) {
+      errorText.value = '邮箱格式不正确'
+      return
+    }
+  }
+  if (mode === 'mobile' || (mode === 'password' && requireMobileVerify.value)) {
+    if (!mobile) {
+      errorText.value = '请输入手机号'
+      return
+    }
+    if (!isMobile(mobile)) {
+      errorText.value = '手机号格式不正确'
+      return
+    }
+  }
+  if ((mode === 'mail' || mode === 'mobile') && !code) {
+    errorText.value = '请输入验证码'
+    return
+  }
+  if (!regPassword.value) {
+    errorText.value = '请输入密码'
+    return
+  }
+  const failed = regRuleDefs.value.find((rule) => !rule.test(regPassword.value))
+  if (failed) {
+    errorText.value = `密码需${failed.label}`
+    return
+  }
+  if (regPassword.value !== regConfirm.value) {
+    errorText.value = '两次密码不一致'
+    return
+  }
+
+  loading.value = true
+  try {
+    const res: any = await registerByForm({
+      category: mode === 'password' ? undefined : mode,
+      username: mode === 'password' ? name : undefined,
+      email: email || undefined,
+      mobile: mobile || undefined,
+      password: regPassword.value,
+      confirmPassword: regConfirm.value,
+      code: mode === 'mail' || mode === 'mobile' ? code : undefined,
+    })
+    if (res?.code === 0 && res.data?.accessToken) {
+      setAccessToken(res.data.accessToken)
+      if (res.data.refreshToken) setRefreshToken(res.data.refreshToken)
+      ElMessage.success('注册成功')
+      await router.replace(String(route.query.redirect ?? '/stardust/overview'))
+      return
+    }
+    if (res?.code === 0 && res.data?.pendingActivation) {
+      pendingActivation.value = res.data
+      return
+    }
+    if (res?.code === 0) {
+      ElMessage.success(res.message || '注册成功')
+      showLogin()
+      return
+    }
+    ElMessage.error(res?.message || '注册失败')
+  } catch (e: any) {
+    ElMessage.error(e?.message ? String(e.message) : '注册失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+function detectChannel(account: string): 'mail' | 'sms' {
+  return /^1[3-9]\d{9}$/.test(account) ? 'sms' : 'mail'
+}
+
+async function doResend(channel: 'mail' | 'sms', account: string) {
+  try {
+    const res: any = await sendActivateCode(channel === 'mail' ? 'Mail' : 'Sms', account)
+    if (res?.code === 0) ElMessage.success(res.message || '激活邮件/短信已重新发送，请查收')
+    else ElMessage.error(res?.message || '重新发送失败')
+  } catch (e: any) {
+    ElMessage.error(e?.message ? String(e.message) : '重新发送失败')
+  }
+}
+
+/** 与 Cube openResend 相同：弹出输入邮箱或手机号 */
+async function openResend() {
+  try {
+    const { value } = await ElMessageBox.prompt(
+      '请输入注册时填写的邮箱或手机号',
+      '重新发送激活',
+      {
+        inputValue: notActivatedAccount.value || '',
+        inputPattern: /^([\w.+-]+@[\w-]+(\.[\w-]+)+|1[3-9]\d{9})$/,
+        inputErrorMessage: '请输入正确的邮箱或手机号',
+        confirmButtonText: '发送',
+        cancelButtonText: '取消',
+      },
+    )
+    if (value) await doResend(detectChannel(value), value.trim())
+  } catch {
+    // 用户取消
+  }
+}
+
+async function resendPending() {
+  const account = pendingActivation.value?.targets?.[0]
+  if (!account) return
+  await doResend(detectChannel(account), account)
+}
+
+/** 与 Cube LoginPage.handleSendCode 相同 */
+async function sendRegisterCode(channel: 'mail' | 'sms', account: string) {
+  if (channel === 'mail' && !isMail(account)) {
+    errorText.value = account ? '邮箱格式不正确' : '请输入邮箱'
+    return
+  }
+  if (channel === 'sms' && !isMobile(account)) {
+    errorText.value = account ? '手机号格式不正确' : '请输入手机号'
+    return
+  }
+  try {
+    const res: any = await sendCode(channel === 'mail' ? 'Mail' : 'Sms', account, 'register')
+    if (res?.code === 0) ElMessage.success('验证码已发送')
+    else ElMessage.error(res?.message || '验证码发送失败')
+  } catch (e: any) {
+    ElMessage.error(e?.message ? String(e.message) : '验证码发送失败')
   }
 }
 </script>
@@ -345,138 +589,60 @@ async function submit() {
       >
         <div class="sd-form__head">
           <h1 class="sd-form__title">
-            登录 {{ systemName }} 控制台
+            {{ panel === 'login' ? '登录' : '注册' }} {{ systemName }} 控制台
           </h1>
-          <p class="sd-form__sub">
-            使用工作邮箱或 SSO 继续
-          </p>
         </div>
 
-        <!-- SSO 双按钮 -->
-        <div class="sd-sso">
-          <button
-            v-for="p in oauthProviders.slice(0, 2)"
-            :key="p.name ?? p.title"
-            type="button"
-            class="sd-sso__btn"
-            data-spec="login-sso-btn"
-            @click="startOAuth(p)"
-          >
-            <span class="sd-sso__label">{{ p.title ?? p.displayName ?? p.name }}</span>
-          </button>
-          <template v-if="!oauthProviders.length">
-            <button
-              type="button"
-              class="sd-sso__btn"
-              data-spec="login-sso-btn"
-              @click="notifyNotWired('GitHub 登录')"
-            >
-              <svg
-                class="sd-ico"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"
-                />
-              </svg>
-              <span class="sd-sso__label">GitHub</span>
-            </button>
-            <button
-              type="button"
-              class="sd-sso__btn"
-              data-spec="login-sso-btn"
-              @click="notifyNotWired('SAML SSO')"
-            >
-              <svg
-                class="sd-ico"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"
-                />
-              </svg>
-              <span class="sd-sso__label">SAML SSO</span>
-            </button>
-          </template>
-        </div>
-
-        <!-- 分隔线 -->
-        <div class="sd-divider">
-          <span>或使用凭证</span>
-        </div>
-
-        <!-- 密码 / OTP 段切换 -->
+        <div class="sd-form__panels">
         <div
-          class="sd-switch"
-          data-spec="login-method-switch"
+          class="sd-form__panel"
+          :class="{ 'is-off': panel !== 'login' }"
+          :inert="panel !== 'login'"
         >
-          <button
-            type="button"
-            class="sd-switch__btn"
-            :class="{ 'is-active': method === 'password' }"
-            data-spec="login-method-btn"
-            :disabled="!passwordEnabled"
-            @click="setMethod('password')"
-          >
-            密码登录
-          </button>
-          <button
-            type="button"
-            class="sd-switch__btn"
-            :class="{ 'is-active': method === 'otp' }"
-            data-spec="login-method-btn"
-            @click="setMethod('otp')"
-          >
-            一次性验证码
-          </button>
-        </div>
-
         <form
           class="sd-fields"
           novalidate
           @submit.prevent="submit"
         >
           <label class="sd-field-group">
-            <span class="sd-field-label">工作邮箱</span>
+            <span class="sd-field-label">用户名</span>
             <span class="sd-field">
               <svg
                 class="sd-ico"
                 viewBox="0 0 24 24"
                 aria-hidden="true"
               >
-                <rect
-                  x="2"
-                  y="4"
-                  width="20"
-                  height="16"
-                  rx="2"
+                <circle
+                  cx="12"
+                  cy="8"
+                  r="4"
                 />
-                <path d="M22 6l-10 7L2 6" />
+                <path d="M20 21a8 8 0 0 0-16 0" />
               </svg>
               <input
-                v-model="email"
-                type="email"
+                v-model="username"
+                type="text"
                 class="sd-field__input"
-                placeholder="you@company.com"
+                placeholder="请输入用户名"
                 autocomplete="username"
               >
             </span>
           </label>
 
-          <template v-if="method === 'password'">
-            <label class="sd-field-group">
-              <span class="sd-field-label">
-                密码
-                <button
-                  type="button"
-                  class="sd-field-link"
-                  @click="notifyNotWired('忘记密码')"
-                >
-                  忘记密码?
-                </button>
-              </span>
+          <label
+            v-if="passwordEnabled"
+            class="sd-field-group"
+          >
+            <span class="sd-field-label">
+              密码
+              <button
+                type="button"
+                class="sd-field-link"
+                @click="notifyNotWired('忘记密码')"
+              >
+                忘记密码?
+              </button>
+            </span>
               <span class="sd-field">
                 <svg
                   class="sd-ico"
@@ -496,7 +662,7 @@ async function submit() {
                   v-model="password"
                   :type="showPw ? 'text' : 'password'"
                   class="sd-field__input"
-                  placeholder="至少 12 位,含大小写与数字"
+                  placeholder="请输入密码"
                   autocomplete="current-password"
                 >
                 <button
@@ -520,40 +686,22 @@ async function submit() {
                   </svg>
                 </button>
               </span>
-            </label>
-          </template>
-
-          <template v-else>
-            <div class="sd-field-group">
-              <span class="sd-field-label">
-                一次性验证码
-                <button
-                  type="button"
-                  class="sd-field-link"
-                  @click="notifyNotWired('重新发送验证码')"
-                >
-                  重新发送
-                </button>
-              </span>
+            <div
+              v-if="showPasswordHints"
+              class="password-hints"
+              data-spec="password-hints"
+            >
               <div
-                class="sd-otp"
-                data-spec="login-otp"
+                v-for="(rule, idx) in passwordRules"
+                :key="idx"
+                class="password-hint-item"
+                :class="{ satisfied: rule.satisfied }"
               >
-                <input
-                  v-for="(d, i) in otp"
-                  :key="i"
-                  :ref="(el) => (otpRefs[i] = el as HTMLInputElement)"
-                  class="sd-otp__cell"
-                  data-spec="login-otp-cell"
-                  :value="d"
-                  maxlength="1"
-                  inputmode="numeric"
-                  @input="onOtpInput(i, ($event.target as HTMLInputElement).value)"
-                  @keydown="onOtpKeydown(i, $event)"
-                >
+                <span class="hint-icon">{{ rule.satisfied ? '✓' : '○' }}</span>
+                <span class="hint-text">{{ rule.label }}</span>
               </div>
             </div>
-          </template>
+          </label>
 
           <div class="sd-remember">
             <button
@@ -575,11 +723,7 @@ async function submit() {
             <span
               class="sd-remember__text"
               @click="remember = !remember"
-            >保持 7 天登录</span>
-            <span class="sd-remember__spacer" />
-            <span class="sd-remember__cluster">
-              集群 <span class="sd-mono">{{ CLUSTER_LABEL }}</span>
-            </span>
+            >记住我</span>
           </div>
 
           <p
@@ -588,6 +732,20 @@ async function submit() {
             data-spec="login-error"
           >
             {{ errorText }}
+          </p>
+          <p
+            v-if="notActivated"
+            class="sd-error"
+            data-spec="login-not-activated"
+          >
+            账号未激活，请先激活后再登录
+            <button
+              type="button"
+              class="sd-field-link"
+              @click="openResend"
+            >
+              重新发送激活
+            </button>
           </p>
 
           <button
@@ -611,20 +769,228 @@ async function submit() {
               <button
                 type="button"
                 class="sd-field-link"
-                @click="notifyNotWired('申请试用')"
+                @click="showRegister"
               >
-                申请试用
+                去注册
               </button>
-            </span>
-            <span class="sd-help__status">
-              <span
-                class="sd-help__dot"
-                aria-hidden="true"
-              />
-              所有系统正常
             </span>
           </div>
         </form>
+
+        <!-- 第三方在凭证下方，只渲染 LoginConfig.oauth -->
+        <template v-if="oauthProviders.length">
+          <div class="sd-divider">
+            <span>或第三方登录</span>
+          </div>
+          <div class="sd-sso">
+            <button
+              v-for="p in oauthProviders"
+              :key="providerName(p)"
+              type="button"
+              class="sd-sso__btn"
+              data-spec="login-sso-btn"
+              :aria-label="providerLabel(p)"
+              :title="providerLabel(p)"
+              @click="startOAuth(p)"
+            >
+              <img
+                v-if="p.logo"
+                class="sd-sso__logo"
+                :src="resolveLogo(p.logo)"
+                alt=""
+              >
+              <svg
+                v-else-if="isGithub(p)"
+                class="sd-ico"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"
+                />
+              </svg>
+              <span
+                v-else
+                class="sd-sso__mark"
+              >{{ providerLabel(p).slice(0, 1) }}</span>
+            </button>
+          </div>
+        </template>
+        </div>
+
+        <div
+          class="sd-register sd-form__panel"
+          :class="{ 'is-off': panel !== 'register' }"
+          :inert="panel !== 'register'"
+          data-spec="register-panel"
+        >
+          <div
+            v-if="pendingActivation"
+            class="sd-fields"
+            data-spec="register-pending"
+          >
+            <p class="sd-field-label">
+              注册成功，请激活账号
+            </p>
+            <p class="sd-error">
+              激活{{ pendingActivation.channels?.includes('mail') ? '邮件' : '短信' }}已发送至 {{ pendingActivation.targets?.join(', ') }}，请查收并完成激活。激活前无法登录。
+            </p>
+            <button
+              type="button"
+              class="sd-submit"
+              @click="showLogin"
+            >
+              返回登录
+            </button>
+            <button
+              v-if="pendingActivation.targets?.length"
+              type="button"
+              class="sd-field-link"
+              @click="resendPending"
+            >
+              重新发送
+            </button>
+          </div>
+          <div
+            v-if="!pendingActivation && registerModes.length > 1"
+            class="sd-switch"
+            :style="{ gridTemplateColumns: `repeat(${registerModes.length}, 1fr)` }"
+          >
+            <button
+              v-for="mode in registerModes"
+              :key="mode"
+              type="button"
+              class="sd-switch__btn"
+              :class="{ 'is-active': regMode === mode }"
+              @click="regMode = mode; errorText = ''"
+            >
+              {{ mode === 'password' ? '用户名' : mode === 'mail' ? '邮箱' : '手机' }}
+            </button>
+          </div>
+          <form
+            v-if="!pendingActivation"
+            class="sd-fields"
+            novalidate
+            @submit.prevent="submitRegister"
+          >
+            <label
+              v-if="regMode === 'password'"
+              class="sd-field-group"
+            >
+              <span class="sd-field-label">用户名</span>
+              <span class="sd-field">
+                <svg class="sd-ico" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="8" r="4" />
+                  <path d="M20 21a8 8 0 0 0-16 0" />
+                </svg>
+                <input v-model="regUsername" type="text" class="sd-field__input" placeholder="请输入用户名" autocomplete="username">
+              </span>
+            </label>
+            <label
+              v-if="regMode === 'mail' || (regMode === 'password' && requireMailVerify)"
+              class="sd-field-group"
+            >
+              <span class="sd-field-label">
+                邮箱
+                <button
+                  v-if="regMode === 'mail'"
+                  type="button"
+                  class="sd-field-link"
+                  @click="sendRegisterCode('mail', regEmail.trim())"
+                >
+                  发送验证码
+                </button>
+              </span>
+              <span class="sd-field">
+                <svg class="sd-ico" viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="2" y="4" width="20" height="16" rx="2" />
+                  <path d="M22 6l-10 7L2 6" />
+                </svg>
+                <input v-model="regEmail" type="email" class="sd-field__input" placeholder="请输入邮箱" autocomplete="email">
+              </span>
+            </label>
+            <label
+              v-if="regMode === 'mobile' || (regMode === 'password' && requireMobileVerify)"
+              class="sd-field-group"
+            >
+              <span class="sd-field-label">
+                手机号
+                <button
+                  v-if="regMode === 'mobile'"
+                  type="button"
+                  class="sd-field-link"
+                  @click="sendRegisterCode('sms', regMobile.trim())"
+                >
+                  发送验证码
+                </button>
+              </span>
+              <span class="sd-field">
+                <input v-model="regMobile" type="tel" class="sd-field__input" placeholder="请输入手机号" autocomplete="tel">
+              </span>
+            </label>
+            <label
+              v-if="regMode !== 'password'"
+              class="sd-field-group"
+            >
+              <span class="sd-field-label">验证码</span>
+              <span class="sd-field">
+                <input v-model="regCode" type="text" class="sd-field__input" placeholder="请输入验证码" maxlength="6" inputmode="numeric">
+              </span>
+            </label>
+            <label class="sd-field-group">
+              <span class="sd-field-label">密码</span>
+              <span class="sd-field">
+                <svg class="sd-ico" viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="3" y="11" width="18" height="11" rx="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                <input v-model="regPassword" :type="showRegPw ? 'text' : 'password'" class="sd-field__input" placeholder="请输入密码" autocomplete="new-password">
+              </span>
+            </label>
+            <label class="sd-field-group">
+              <span class="sd-field-label">确认密码</span>
+              <span class="sd-field">
+                <svg class="sd-ico" viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="3" y="11" width="18" height="11" rx="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                <input v-model="regConfirm" :type="showRegPw ? 'text' : 'password'" class="sd-field__input" placeholder="再次输入密码" autocomplete="new-password">
+              </span>
+            </label>
+            <div
+              v-if="showRegPasswordHints"
+              class="password-hints"
+              data-spec="register-password-hints"
+            >
+              <div
+                v-for="(rule, idx) in regPasswordRules"
+                :key="idx"
+                class="password-hint-item"
+                :class="{ satisfied: rule.satisfied }"
+              >
+                <span class="hint-icon">{{ rule.satisfied ? '✓' : '○' }}</span>
+                <span class="hint-text">{{ rule.label }}</span>
+              </div>
+            </div>
+            <p v-if="errorText" class="sd-error" data-spec="login-error">{{ errorText }}</p>
+            <button type="submit" class="sd-submit" data-spec="register-submit" :disabled="loading">
+              <span>{{ loading ? '提交中…' : '注册' }}</span>
+            </button>
+          </form>
+          <div class="sd-help">
+            <span>
+              已有账户?
+              <button
+                type="button"
+                class="sd-field-link"
+                @click="showLogin"
+              >
+                去登录
+              </button>
+            </span>
+          </div>
+        </div>
+        </div>
       </section>
     </div>
 
@@ -921,6 +1287,45 @@ async function submit() {
   justify-content: center;
   padding: var(--space-6);
   min-width: 0;
+  min-height: 0;
+}
+.sd-form__panels {
+  display: grid;
+}
+.sd-form__panel {
+  grid-area: 1 / 1;
+  align-self: start;
+  min-width: 0;
+}
+.sd-form__panel.is-off {
+  visibility: hidden;
+  pointer-events: none;
+}
+.sd-register {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+.password-hints {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.password-hint-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--fg-3);
+}
+.password-hint-item.satisfied {
+  color: var(--success-500);
+}
+.hint-icon {
+  width: 14px;
 }
 .sd-form__head {
   margin-bottom: var(--space-6);
@@ -937,26 +1342,25 @@ async function submit() {
   color: var(--fg-3);
 }
 
-/* SSO */
+/* SSO：每家一个圆，整组居中，不拉成长条 */
 .sd-sso {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 10px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
   margin-bottom: var(--space-5);
 }
 .sd-sso__btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  min-height: 48px;
-  padding: 10px 12px;
-  border-radius: var(--radius-md);
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
   background: var(--surface-1);
   border: 1px solid var(--border-2);
   color: var(--fg-1);
-  font-size: 13px;
-  font-weight: 500;
   cursor: pointer;
   transition: background var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out);
 }
@@ -964,10 +1368,19 @@ async function submit() {
   background: var(--surface-2);
   border-color: var(--brand-500);
 }
-.sd-sso__label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.sd-sso__logo {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+.sd-sso__btn .sd-ico {
+  width: 20px;
+  height: 20px;
+}
+.sd-sso__mark {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
 }
 
 /* 分隔线 */
