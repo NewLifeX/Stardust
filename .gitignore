@@ -116,3 +116,7 @@ nul
 Doc/Design/Stardust/
 Doc/MVC功能真源/
 Doc/design-spec/
+temp/
+.specify/
+.claude/
+openwiki/

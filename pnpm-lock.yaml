@@ -18,9 +18,9 @@ importers:
       '@element-plus/icons-vue':
         specifier: ^2.3.1
         version: 2.3.2(vue@3.5.41(typescript@5.8.3))
-      '@newlifex/api-core':
+      '@newlifex/cube':
         specifier: workspace:*
-        version: link:../../packages/api-core
+        version: link:../../packages/cube
       '@vueuse/core':
         specifier: ^13.0.0
         version: 13.9.0(vue@3.5.41(typescript@5.8.3))
@@ -191,7 +191,7 @@ importers:
         specifier: ^2.2.8
         version: 2.2.12(typescript@5.8.3)
 
-  Cube/packages/api-core:
+  Cube/packages/cube:
     dependencies:
       axios:
         specifier: ^1.20.0
@@ -203,87 +203,21 @@ importers:
       '@types/qs':
         specifier: ^6.9.0
         version: 6.15.1
-      tsup:
-        specifier: ^8.0.0
-        version: 8.5.1(jiti@2.7.0)(postcss@8.5.25)(typescript@5.8.3)
-      typescript:
-        specifier: ^5.6.0
-        version: 5.8.3
-
-  Cube/packages/auth-logic:
-    dependencies:
-      '@newlifex/api-core':
-        specifier: workspace:*
-        version: link:../api-core
-      '@newlifex/page-utils':
-        specifier: workspace:*
-        version: link:../page-utils
-    devDependencies:
       pinia:
         specifier: ^3.0.0
-        version: 3.0.4(typescript@5.8.3)(vue@3.5.41(typescript@5.8.3))
+        version: 3.0.4(typescript@5.7.3)(vue@3.5.41(typescript@5.7.3))
       tsup:
         specifier: ^8.0.0
-        version: 8.5.1(jiti@2.7.0)(postcss@8.5.25)(typescript@5.8.3)
+        version: 8.5.1(jiti@2.7.0)(postcss@8.5.25)(typescript@5.7.3)
       typescript:
-        specifier: ^5.6.0
-        version: 5.8.3
+        specifier: 5.7.3
+        version: 5.7.3
       vue:
         specifier: ^3.5.33
-        version: 3.5.41(typescript@5.8.3)
+        version: 3.5.41(typescript@5.7.3)
       zustand:
         specifier: ^5.0.0
         version: 5.0.14(immer@9.0.21)
-
-  Cube/packages/field-mapping:
-    dependencies:
-      '@newlifex/api-core':
-        specifier: workspace:*
-        version: link:../api-core
-    devDependencies:
-      tsup:
-        specifier: ^8.0.0
-        version: 8.5.1(jiti@2.7.0)(postcss@8.5.25)(typescript@5.8.3)
-      typescript:
-        specifier: ^5.6.0
-        version: 5.8.3
-
-  Cube/packages/page-logic:
-    dependencies:
-      '@newlifex/api-core':
-        specifier: workspace:*
-        version: link:../api-core
-      '@newlifex/field-mapping':
-        specifier: workspace:*
-        version: link:../field-mapping
-      '@newlifex/page-utils':
-        specifier: workspace:*
-        version: link:../page-utils
-    devDependencies:
-      pinia:
-        specifier: ^3.0.0
-        version: 3.0.4(typescript@5.8.3)(vue@3.5.41(typescript@5.8.3))
-      tsup:
-        specifier: ^8.0.0
-        version: 8.5.1(jiti@2.7.0)(postcss@8.5.25)(typescript@5.8.3)
-      typescript:
-        specifier: ^5.6.0
-        version: 5.8.3
-      vue:
-        specifier: ^3.5.33
-        version: 3.5.41(typescript@5.8.3)
-      zustand:
-        specifier: ^5.0.0
-        version: 5.0.14(immer@9.0.21)
-
-  Cube/packages/page-utils:
-    devDependencies:
-      tsup:
-        specifier: ^8.0.0
-        version: 8.5.1(jiti@2.7.0)(postcss@8.5.25)(typescript@5.8.3)
-      typescript:
-        specifier: ^5.6.0
-        version: 5.8.3
 
   Stardust.Web.Vue:
     dependencies:
@@ -4200,6 +4134,11 @@ packages:
       eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
       typescript: '>=4.8.4 <6.1.0'
 
+  typescript@5.7.3:
+    resolution: {integrity: sha512-84MVSjMEHP+FQRPy3pX9sTVV/INIex71s9TL2Gm5FG/WG1SqXeKyZ0k7/blY/4FdOzI12CBy1vGc4og/eus0fw==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+
   typescript@5.8.3:
     resolution: {integrity: sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ==}
     engines: {node: '>=14.17'}
@@ -7986,6 +7925,13 @@ snapshots:
 
   pify@2.3.0: {}
 
+  pinia@3.0.4(typescript@5.7.3)(vue@3.5.41(typescript@5.7.3)):
+    dependencies:
+      '@vue/devtools-api': 7.7.10
+      vue: 3.5.41(typescript@5.7.3)
+    optionalDependencies:
+      typescript: 5.7.3
+
   pinia@3.0.4(typescript@5.8.3)(vue@3.5.41(typescript@5.8.3)):
     dependencies:
       '@vue/devtools-api': 7.7.10
@@ -8465,7 +8411,7 @@ snapshots:
 
   tslib@2.8.1: {}
 
-  tsup@8.5.1(jiti@2.7.0)(postcss@8.5.25)(typescript@5.8.3):
+  tsup@8.5.1(jiti@2.7.0)(postcss@8.5.25)(typescript@5.7.3):
     dependencies:
       bundle-require: 5.1.0(esbuild@0.27.7)
       cac: 6.7.14
@@ -8486,7 +8432,7 @@ snapshots:
       tree-kill: 1.2.2
     optionalDependencies:
       postcss: 8.5.25
-      typescript: 5.8.3
+      typescript: 5.7.3
     transitivePeerDependencies:
       - jiti
       - supports-color
@@ -8511,6 +8457,8 @@ snapshots:
       typescript: 5.8.3
     transitivePeerDependencies:
       - supports-color
+
+  typescript@5.7.3: {}
 
   typescript@5.8.3: {}
 
@@ -8834,6 +8782,16 @@ snapshots:
     dependencies:
       '@vue/compiler-sfc': 2.7.16
       csstype: 3.2.3
+
+  vue@3.5.41(typescript@5.7.3):
+    dependencies:
+      '@vue/compiler-dom': 3.5.41
+      '@vue/compiler-sfc': 3.5.41
+      '@vue/runtime-dom': 3.5.41
+      '@vue/server-renderer': 3.5.41
+      '@vue/shared': 3.5.41
+    optionalDependencies:
+      typescript: 5.7.3
 
   vue@3.5.41(typescript@5.8.3):
     dependencies:
