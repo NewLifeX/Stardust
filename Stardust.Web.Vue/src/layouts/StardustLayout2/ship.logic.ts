@@ -56,7 +56,12 @@ export async function fetchDeploy(request: Req, appId: number): Promise<DeployLo
   if (!appId || appId <= 0) return { status: 'none' };
   try {
     const res = await request({ url: '/Deployment/AppDeploy', method: 'GET', params: { appId, PageSize: 20 } });
-    const hit = listOf(res).find((r) => num(pick(r, 'AppId', 'appId')) === appId);
+    const rows = listOf(res);
+    // 后端按 appId 过滤（应用部署.Biz.cs Search 的 _.AppId == appId），但列表输出去掉了 AppId 字段
+    // （AppDeployController 的 ListFields.RemoveField("AppId", …)），行内通常没有 appId 可比对。
+    // 此时直接采用后端过滤结果的第一个（Id 倒序，即最新部署集）；行内带 appId 时仍严格比对，避免拿错应用。
+    const hasAppId = rows.some((r) => pick(r, 'AppId', 'appId') !== undefined);
+    const hit = hasAppId ? rows.find((r) => num(pick(r, 'AppId', 'appId')) === appId) : rows[0];
     if (!hit) return { status: 'none' };
     return {
       status: 'ok',

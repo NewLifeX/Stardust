@@ -86,6 +86,21 @@ describe('fetchDeploy · 部署集', () => {
     expect(r2).toEqual({ status: 'ok', deploy: deploy() });
   });
 
+  it('列表行内没有 appId（后端把它从输出字段里移除）时采用过滤结果首行', async () => {
+    // 远端 6681 实测返回（AppDeployController.ListFields.RemoveField("AppId", …)）：没有 appId 键
+    const row = { id: 25, name: 'MindHub.Api', enable: true, nodes: 3, version: 'v20261105-121311', autoPublish: false };
+    const r = await fetchDeploy(mk(() => ({ data: [row] })), 30);
+    expect(r).toEqual({
+      status: 'ok',
+      deploy: deploy({ id: 25, appId: 30, version: 'v20261105-121311', enable: true, autoPublish: false }),
+    });
+  });
+
+  it('列表为空时是 none', async () => {
+    const r = await fetchDeploy(mk(() => ({ data: [] })), 30);
+    expect(r).toEqual({ status: 'none' });
+  });
+
   it('列表里没有该 appId 时是 none，不取第一行', async () => {
     const r = await fetchDeploy(mk(() => ({ data: [{ Id: 8, AppId: 4 }] })), 3);
     expect(r).toEqual({ status: 'none' });
