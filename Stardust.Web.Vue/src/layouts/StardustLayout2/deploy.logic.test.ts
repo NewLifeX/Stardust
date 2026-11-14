@@ -45,7 +45,7 @@ function stubReq(responder: (cfg: Cfg) => unknown = () => ({ code: 200, data: nu
 const deployForm = {
   name: '发布集A', category: 'web', enable: true, packageName: 'star.zip', autoPublish: true, multiVersion: false,
   repository: 'https://git/x', repoUserName: 'u', repoPassword: '', branch: 'main', projectPath: 'src',
-  buildArgs: '', packageFilters: '*.zip', remark: 'r',
+  buildArgs: '', packageFilters: '*.zip', logDirectory: '', logFilePattern: '*.log', remark: 'r',
 };
 
 describe('F06 部署集编辑', () => {
@@ -56,6 +56,16 @@ describe('F06 部署集编辑', () => {
     expect(m.autoPublish).toBe(true);
     expect(m.multiVersion).toBe(false);
     expect(m.repoPassword).toBe('');
+    expect(m.logFilePattern).toBe('*.log');
+  });
+
+  it('toDeployEditModel / deployPutBody：部署集日志目录与匹配规则', () => {
+    const m = toDeployEditModel({ Name: 'd', LogDirectory: 'logs', LogFilePattern: 'app*.log' });
+    expect(m.logDirectory).toBe('logs');
+    expect(m.logFilePattern).toBe('app*.log');
+    const body = deployPutBody(m);
+    expect(body.logDirectory).toBe('logs');
+    expect(body.logFilePattern).toBe('app*.log');
   });
 
   it('deployPutBody：repoPassword 留空不进 body（留空=不修改）', () => {

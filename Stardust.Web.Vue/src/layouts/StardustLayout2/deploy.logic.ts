@@ -60,6 +60,10 @@ export interface DeployEditModel {
   projectPath: string;
   buildArgs: string;
   packageFilters: string;
+  /** 部署集默认日志目录；节点未填时继承 */
+  logDirectory: string;
+  /** 部署集默认日志匹配；空时后端按 *.log */
+  logFilePattern: string;
   remark: string;
 }
 
@@ -79,6 +83,8 @@ export function toDeployEditModel(r: Rec): DeployEditModel {
     projectPath: str(pick(r, 'ProjectPath', 'projectPath')),
     buildArgs: str(pick(r, 'BuildArgs', 'buildArgs')),
     packageFilters: str(pick(r, 'PackageFilters', 'packageFilters')),
+    logDirectory: str(pick(r, 'LogDirectory', 'logDirectory')),
+    logFilePattern: str(pick(r, 'LogFilePattern', 'logFilePattern')) || '*.log',
     remark: str(pick(r, 'Remark', 'remark')),
   };
 }
@@ -98,6 +104,8 @@ export function deployPutBody(m: DeployEditModel): Rec {
     projectPath: m.projectPath,
     buildArgs: m.buildArgs,
     packageFilters: m.packageFilters,
+    logDirectory: m.logDirectory,
+    logFilePattern: m.logFilePattern,
     remark: m.remark,
   };
   if (m.repoPassword) body.repoPassword = m.repoPassword;

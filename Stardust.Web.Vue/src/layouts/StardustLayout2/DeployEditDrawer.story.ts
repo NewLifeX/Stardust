@@ -15,6 +15,8 @@ const initial: DeployEditModel = {
   projectPath: 'src/ioc',
   buildArgs: '-c Release',
   packageFilters: '*.dll;*.exe',
+  logDirectory: 'logs',
+  logFilePattern: '*.log',
   remark: '',
 };
 

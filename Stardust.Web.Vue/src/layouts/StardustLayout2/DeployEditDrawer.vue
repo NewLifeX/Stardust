@@ -27,7 +27,7 @@ const emit = defineEmits<{ close: []; submit: [m: DeployEditModel] }>();
 const form = reactive<DeployEditModel>({
   name: '', category: '', enable: false, packageName: '', autoPublish: false, multiVersion: false,
   repository: '', repoUserName: '', repoPassword: '', branch: '', projectPath: '', buildArgs: '',
-  packageFilters: '', remark: '',
+  packageFilters: '', logDirectory: '', logFilePattern: '*.log', remark: '',
 });
 const formError = ref('');
 
@@ -39,7 +39,7 @@ watch(
     Object.assign(form, {
       name: '', category: '', enable: false, packageName: '', autoPublish: false, multiVersion: false,
       repository: '', repoUserName: '', repoPassword: '', branch: '', projectPath: '', buildArgs: '',
-      packageFilters: '', remark: '',
+      packageFilters: '', logDirectory: '', logFilePattern: '*.log', remark: '',
     }, init ?? {});
   },
   { immediate: true },
@@ -187,6 +187,30 @@ function onSubmit(): void {
             :class="inputCls"
             placeholder="*.dll;*.exe;*.json"
             data-spec="deploy-form-packagefilters"
+          >
+        </label>
+      </div>
+
+      <p class="m-0 border-t border-[var(--el-border-color-light)] pt-[10px] text-[12px] font-medium text-[var(--el-text-color-secondary)]">
+        节点文件日志默认（部署节点未填时继承；相对路径基于节点工作目录）
+      </p>
+      <div class="grid grid-cols-2 gap-[10px]">
+        <label class="flex flex-col gap-[4px]">
+          <span class="text-[12px] text-[var(--el-text-color-secondary)]">日志目录</span>
+          <input
+            v-model="form.logDirectory"
+            :class="inputCls"
+            placeholder="如 logs 或 D:/app/logs"
+            data-spec="deploy-form-logdir"
+          >
+        </label>
+        <label class="flex flex-col gap-[4px]">
+          <span class="text-[12px] text-[var(--el-text-color-secondary)]">日志文件匹配</span>
+          <input
+            v-model="form.logFilePattern"
+            :class="inputCls"
+            placeholder="*.log"
+            data-spec="deploy-form-logpattern"
           >
         </label>
       </div>
