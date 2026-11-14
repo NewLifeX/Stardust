@@ -42,7 +42,14 @@ test('AppLog 暂停/恢复：按钮文案切换', async ({ page }) => {
   await expect(page.locator('[data-spec="log-pause"]')).toContainText('暂停实时');
 });
 
-test('AppLog 空态：今天没有日志记录', async ({ page }) => {
+test('AppLog 空态：文案带日期范围', async ({ page }) => {
   await openStory(page, 'AppLog/Empty');
-  await expect(page.locator('[data-spec="log-empty"]')).toContainText('该应用今天没有日志记录');
+  await expect(page.locator('[data-spec="log-empty"]')).toContainText('没有日志记录');
+});
+
+test('AppLog 工具栏：日期范围与关键字控件存在', async ({ page }) => {
+  await openStory(page, 'AppLog/WithLogs');
+  await expect(page.locator('[data-spec="log-date-start"]')).toHaveValue(/\d{4}-\d{2}-\d{2}/);
+  await expect(page.locator('[data-spec="log-date-end"]')).toHaveValue(/\d{4}-\d{2}-\d{2}/);
+  await expect(page.locator('[data-spec="log-q"]')).toBeVisible();
 });

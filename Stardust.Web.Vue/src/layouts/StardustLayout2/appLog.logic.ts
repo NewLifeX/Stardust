@@ -113,8 +113,8 @@ export function kindParam(level: 'all' | LogLevel): string | undefined {
 }
 
 /**
- * GET /Registry/AppClientLog?appId=&kind=&dtStart=&dtEnd=
- * appId/kind 服务端过滤（appId 是分表感知必填）；时间窗默认当天。
+ * GET /Registry/AppClientLog?appId=&kind=&dtStart=&dtEnd=&q=
+ * appId/kind 服务端过滤（appId 是分表感知必填）；时间窗默认当天；q 为消息关键字（服务端 Q 模糊匹配）。
  * 失败返回 null。
  */
 export async function fetchAppLogs(
@@ -123,6 +123,7 @@ export async function fetchAppLogs(
   range: LogRange,
   kind: 'all' | LogLevel = 'all',
   pageSize = 200,
+  keyword = '',
 ): Promise<LogRow[] | null> {
   if (!appId || appId <= 0) return [];
   try {
@@ -134,6 +135,7 @@ export async function fetchAppLogs(
         kind: kindParam(kind),
         dtStart: range.dtStart,
         dtEnd: range.dtEnd,
+        q: keyword.trim() || undefined,
         PageSize: pageSize,
       },
     });

@@ -126,6 +126,20 @@ describe('fetchAppLogs：取数（request 注入；F17 服务端 appId/kind 过�
     expect(await fetchAppLogs(req, 0, todayRange(new Date(2026, 9, 29)))).toEqual([]);
     expect(called).toBe(0);
   });
+
+  it('关键字作为 q 服务端过滤；空串/纯空白不发 q', async () => {
+    const seen: Array<Record<string, unknown>> = [];
+    const req = fakeRequest((_url, params) => {
+      seen.push({ ...params });
+      return [];
+    });
+    await fetchAppLogs(req, 32, todayRange(new Date(2026, 9, 29)), 'all', 200, 'timeout');
+    await fetchAppLogs(req, 32, todayRange(new Date(2026, 9, 29)), 'all', 200, '  ');
+    await fetchAppLogs(req, 32, todayRange(new Date(2026, 9, 29)));
+    expect(seen[0].q).toBe('timeout');
+    expect(seen[1].q).toBeUndefined();
+    expect(seen[2].q).toBeUndefined();
+  });
 });
 
 describe('F17 kindParam：chip → 服务端 kind 精确匹配值', () => {
