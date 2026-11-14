@@ -127,7 +127,7 @@ describe('请求', () => {
   });
 
   it('保存走 PUT /{id}', async () => {
-    const req = vi.fn<Req>(async () => ({ code: 0 }));
+    const req = vi.fn<Req>(async () => ({ code: 0, data: null }));
     const r = await savePipeline(req, 5, form());
     expect(r).toMatchObject({ ok: true, message: '流水线已保存' });
     expect(req).toHaveBeenCalledWith(expect.objectContaining({ url: '/Deployment/AppPipeline/5', method: 'PUT' }));

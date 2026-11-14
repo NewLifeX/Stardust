@@ -459,7 +459,7 @@ describe('useDeployData · F06/F07/F08 新操作', () => {
     const saveDeploy = vi.fn<DeployDeps['saveDeploy']>(async () => ({ ok: true, message: '部署集已保存' }));
     const s = setup({ saveDeploy });
     await settle();
-    const ok = await s.d.saveDeployEdit({ name: 'x', category: '', enable: true, packageName: '', autoPublish: false, multiVersion: false, repository: '', repoUserName: '', repoPassword: '', branch: '', projectPath: '', buildArgs: '', packageFilters: '', remark: '' });
+    const ok = await s.d.saveDeployEdit({ name: 'x', category: '', enable: true, packageName: '', autoPublish: false, multiVersion: false, repository: '', repoUserName: '', repoPassword: '', branch: '', projectPath: '', buildArgs: '', packageFilters: '', logDirectory: '', logFilePattern: '', remark: '' });
     expect(ok).toBe(true);
     expect(s.d.busyKey.value).toBe('');
     expect(saveDeploy.mock.calls[0][1]).toBe(10); // dep() 里 id = appId*10
