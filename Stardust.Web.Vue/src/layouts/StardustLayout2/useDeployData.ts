@@ -3,7 +3,7 @@
 // 取数函数、request、通知、时钟都由调用方注入，便于在 Vitest 里不 mock 模块直接单测。
 // 二次确认弹窗（openGuard）是 UI，留在容器里：用户确认后才调用这里的 applyVersion / operate。
 import { computed, onScopeDispose, ref, watch } from 'vue';
-import { fetchPipelines, fetchRunHistory, isRunActive } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
+import { fetchRunHistory, isRunActive } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
 import type { Req, RunHistoryRow } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
 import {
   actionInfo,
@@ -31,6 +31,15 @@ import {
 } from './deploy.logic.ts';
 import type { BuildNodeForm, DeployEditModel, DeployNodeForm } from './deploy.logic.ts';
 import { useManualRefresh } from './useManualRefresh.ts';
+import {
+  cardToPipelineRow,
+  createPipeline as createPipelineReq,
+  fetchPipelineCards,
+  reprocessPipelineRun,
+  savePipeline as savePipelineReq,
+  triggerPipelineRun,
+} from './pipelineForm.logic.ts';
+import type { PipelineCard, PipelineForm } from './pipelineForm.logic.ts';
 
 /** 可注入的取数与操作函数，类型直接取自真实实现 */
 export interface DeployDeps {
@@ -38,8 +47,12 @@ export interface DeployDeps {
   fetchVersions: typeof fetchVersions;
   fetchShipNodes: typeof fetchShipNodes;
   fetchDeployHistory: typeof fetchDeployHistory;
-  fetchPipelines: typeof fetchPipelines;
+  fetchPipelineCards: typeof fetchPipelineCards;
   fetchRunHistory: typeof fetchRunHistory;
+  createPipeline: typeof createPipelineReq;
+  savePipeline: typeof savePipelineReq;
+  triggerPipelineRun: typeof triggerPipelineRun;
+  reprocessPipelineRun: typeof reprocessPipelineRun;
   fetchRunSteps: typeof fetchRunSteps;
   useVersion: typeof useVersion;
   operateNode: typeof operateNode;
@@ -60,8 +73,12 @@ export const DEFAULT_DEPLOY_DEPS: DeployDeps = {
   fetchVersions,
   fetchShipNodes,
   fetchDeployHistory,
-  fetchPipelines,
+  fetchPipelineCards,
   fetchRunHistory,
+  createPipeline: createPipelineReq,
+  savePipeline: savePipelineReq,
+  triggerPipelineRun,
+  reprocessPipelineRun,
   fetchRunSteps,
   useVersion,
   operateNode,
@@ -110,6 +127,8 @@ export function useDeployData(opt: DeployDataOptions) {
   const nodesFailed = ref(false);
   // null：历史加载失败
   const history = ref<HistoryRow[] | null>([]);
+  const pipelines = ref<PipelineCard[]>([]);
+  const pipelinesFailed = ref(false);
   const runs = ref<RunHistoryRow[]>([]);
   const selectedRunId = ref(0);
   // undefined：未加载；null：加载失败
@@ -164,6 +183,8 @@ export function useDeployData(opt: DeployDataOptions) {
     if (token !== loadToken) return;
     if (d.status === 'failed') {
       loadError.value = '部署集加载失败';
+      pipelines.value = [];
+      pipelinesFailed.value = false;
       loading.value = false;
       return;
     }
@@ -172,19 +193,21 @@ export function useDeployData(opt: DeployDataOptions) {
       versions.value = [];
       nodes.value = [];
       history.value = [];
+      pipelines.value = [];
+      pipelinesFailed.value = false;
       runs.value = [];
       loading.value = false;
       schedulePoll();
       return;
     }
     const dep = d.deploy;
-    const [vs, ns, pipelines, hs] = await Promise.all([
+    const [vs, ns, cards, hs] = await Promise.all([
       deps.fetchVersions(opt.request, dep.id, dep.version),
       deps.fetchShipNodes(opt.request, dep.id),
-      deps.fetchPipelines(opt.request, dep.id),
+      deps.fetchPipelineCards(opt.request, dep.id),
       deps.fetchDeployHistory(opt.request, dep.id),
     ]);
-    const rs = await deps.fetchRunHistory(opt.request, pipelines);
+    const rs = await deps.fetchRunHistory(opt.request, (cards ?? []).map(cardToPipelineRow));
     if (token !== loadToken) return;
     deploy.value = dep;
     versionsFailed.value = vs === null;
@@ -192,6 +215,8 @@ export function useDeployData(opt: DeployDataOptions) {
     versions.value = vs ?? [];
     nodes.value = ns ?? [];
     history.value = hs;
+    pipelinesFailed.value = cards === null;
+    pipelines.value = cards ?? [];
     runs.value = rs;
     loading.value = false;
     schedulePoll();
@@ -375,6 +400,57 @@ export function useDeployData(opt: DeployDataOptions) {
     refreshSoon();
   }
 
+  /** 新建流水线。成功返回 true 供容器关抽屉 */
+  async function createPipeline(form: PipelineForm): Promise<boolean> {
+    const deployId = deploy.value?.id ?? 0;
+    if (!deployId || busyKey.value) return false;
+    busyKey.value = 'pipe:new';
+    busyText.value = '正在创建流水线…';
+    const r = await deps.createPipeline(opt.request, deployId, form);
+    busyKey.value = '';
+    busyText.value = '';
+    pushFeedback(r.ok, r.ok ? `${opt.appName()}：${r.message}` : `${opt.appName()} 创建流水线失败：${r.message}`);
+    refreshSoon();
+    return r.ok;
+  }
+
+  /** 保存流水线编辑。成功返回 true 供容器关抽屉 */
+  async function savePipeline(id: number, form: PipelineForm): Promise<boolean> {
+    if (!id || busyKey.value) return false;
+    busyKey.value = `pipe-save:${id}`;
+    busyText.value = '正在保存流水线…';
+    const r = await deps.savePipeline(opt.request, id, form);
+    busyKey.value = '';
+    busyText.value = '';
+    pushFeedback(r.ok, r.ok ? `${opt.appName()}：${r.message}` : `${opt.appName()} 保存流水线失败：${r.message}`);
+    refreshSoon();
+    return r.ok;
+  }
+
+  /** 手动触发。调用前由容器完成二次确认 */
+  async function triggerPipeline(id: number, name: string): Promise<void> {
+    if (!id || busyKey.value) return;
+    busyKey.value = `pipe:${id}`;
+    busyText.value = `正在触发流水线 ${name}…`;
+    const r = await deps.triggerPipelineRun(opt.request, id);
+    busyKey.value = '';
+    busyText.value = '';
+    pushFeedback(r.ok, r.ok ? `${name}：${r.message}` : `${name} 触发失败：${r.message}`);
+    refreshSoon();
+  }
+
+  /** 重跑失败或已取消的运行。调用前由容器完成二次确认 */
+  async function reprocessRun(id: number): Promise<void> {
+    if (!id || busyKey.value) return;
+    busyKey.value = `run:${id}`;
+    busyText.value = `正在重跑运行 #${id}…`;
+    const r = await deps.reprocessPipelineRun(opt.request, id);
+    busyKey.value = '';
+    busyText.value = '';
+    pushFeedback(r.ok, r.ok ? r.message : `运行 #${id} 重跑失败：${r.message}`);
+    refreshSoon();
+  }
+
   /** 选中一条运行记录并拉取步骤；再点同一条取消选中 */
   async function selectRun(id: number): Promise<void> {
     if (!id) return;
@@ -398,6 +474,8 @@ export function useDeployData(opt: DeployDataOptions) {
     nodes,
     nodesFailed,
     history,
+    pipelines,
+    pipelinesFailed,
     runs,
     selectedRunId,
     steps,
@@ -419,5 +497,9 @@ export function useDeployData(opt: DeployDataOptions) {
     removeNode,
     saveBuildNode,
     removeBuildNode,
+    createPipeline,
+    savePipeline,
+    triggerPipeline,
+    reprocessRun,
   };
 }

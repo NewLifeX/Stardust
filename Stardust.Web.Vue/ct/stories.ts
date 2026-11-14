@@ -21,6 +21,8 @@ import { stories as deployNodesStories } from '../src/layouts/StardustLayout2/De
 import { stories as buildNodesStories } from '../src/layouts/StardustLayout2/BuildNodes.story';
 import { stories as deployHistoryStories } from '../src/layouts/StardustLayout2/DeployHistory.story';
 import { stories as deployPipelineRunsStories } from '../src/layouts/StardustLayout2/DeployPipelineRuns.story';
+import { stories as pipelineBoardStories } from '../src/layouts/StardustLayout2/PipelineBoard.story';
+import { stories as pipelineFormDrawerStories } from '../src/layouts/StardustLayout2/PipelineFormDrawer.story';
 import { stories as attentionListStories } from '../src/layouts/StardustLayout2/AttentionList.story';
 import { stories as traceListStories } from '../src/layouts/StardustLayout2/TraceList.story';
 import { stories as appLogStories } from '../src/layouts/StardustLayout2/AppLog.story';
@@ -74,6 +76,8 @@ export const stories: Array<{
   ...buildNodesStories,
   ...deployHistoryStories,
   ...deployPipelineRunsStories,
+  ...pipelineBoardStories,
+  ...pipelineFormDrawerStories,
   ...attentionListStories,
   ...traceListStories,
   ...appLogStories,

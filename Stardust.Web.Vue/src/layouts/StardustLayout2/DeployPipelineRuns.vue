@@ -15,7 +15,7 @@ import { CELL_BASE, CELL_CLASS, DOT_BASE, DOT_CLASS, STEP_BASE, STEP_CLASS } fro
 import type { PipelineView, StageItem } from './deployPipeline.styles.ts';
 import type { NodeCell, ShipRunRow } from './ship.logic.ts';
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   runRows: ShipRunRow[];
   /** 当前选中的运行 Id，没有选中为 null */
   selectedRunId: number | null;
@@ -27,9 +27,17 @@ const props = defineProps<{
   rollbackTitle: string;
   /** 回滚请求进行中 */
   rollingBack: boolean;
-}>();
+  /** 选中的运行不是失败/已取消，或正在忙时置灰 */
+  reprocessDisabled?: boolean;
+  reprocessTitle?: string;
+  reprocessing?: boolean;
+}>(), {
+  reprocessDisabled: true,
+  reprocessTitle: '先选择一条失败或已取消的运行',
+  reprocessing: false,
+});
 
-const emit = defineEmits<{ select: [runId: number]; rollback: [] }>();
+const emit = defineEmits<{ select: [runId: number]; rollback: []; reprocess: [] }>();
 
 const selectedRow = computed(() => props.runRows.find((r) => r.id === props.selectedRunId));
 
@@ -71,6 +79,24 @@ const legend = computed(() => {
           </span>
         </template>
         {{ rollingBack ? '回滚中…' : '一键回滚' }}
+      </Btn>
+      <Btn
+        size="sm"
+        variant="default"
+        :disabled="reprocessDisabled || reprocessing"
+        :title="reprocessTitle || '先选择一条失败或已取消的运行'"
+        data-spec="ship-reprocess"
+        @click="emit('reprocess')"
+      >
+        <template #icon>
+          <span :class="reprocessing ? 'inline-flex animate-spin' : 'inline-flex'">
+            <KIcon
+              name="Rotate"
+              :size="12"
+            />
+          </span>
+        </template>
+        {{ reprocessing ? '重跑中…' : '重跑' }}
       </Btn>
     </div>
 

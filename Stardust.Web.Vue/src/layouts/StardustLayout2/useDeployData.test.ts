@@ -5,6 +5,7 @@ import { useDeployData } from './useDeployData.ts';
 import type { DeployDeps } from './useDeployData.ts';
 import type { DeployInfo, HistoryRow, ShipNode, StepRow, VersionOption } from './ship.logic.ts';
 import type { Req, RunHistoryRow } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
+import type { PipelineCard, PipelineForm } from './pipelineForm.logic.ts';
 
 const request: Req = async () => ({});
 
@@ -22,6 +23,13 @@ const HIST: HistoryRow = {
   success: true, remark: '', traceId: '', at: '', time: '', ip: '',
 };
 const RUNS: RunHistoryRow[] = [{ id: 11 }, { id: 12 }];
+const PIPE: PipelineCard = {
+  id: 5, name: 'build-main', deployId: 10, projectId: 2, branch: 'main', buildNodeId: 2,
+  deployNodeIds: null, autoDeploy: true, enable: true, remark: '',
+};
+const PIPE_FORM: PipelineForm = {
+  name: 'build-main', branch: 'main', buildNodeId: 2, deployNodeIds: [1], autoDeploy: true, enable: true, remark: '',
+};
 
 function baseDeps(): DeployDeps {
   return {
@@ -29,7 +37,11 @@ function baseDeps(): DeployDeps {
     fetchVersions: async () => [ver(2, 'v2'), ver(1, 'v1')],
     fetchShipNodes: async () => [node(1, 'n1')],
     fetchDeployHistory: async () => [HIST],
-    fetchPipelines: async () => [{ id: 5 }],
+    fetchPipelineCards: async () => [PIPE],
+    createPipeline: async () => ({ ok: true, message: '流水线已创建' }),
+    savePipeline: async () => ({ ok: true, message: '流水线已保存' }),
+    triggerPipelineRun: async () => ({ ok: true, message: '流水线已触发' }),
+    reprocessPipelineRun: async () => ({ ok: true, message: '流水线已重新触发' }),
     fetchRunHistory: async () => RUNS,
     fetchRunSteps: async () => [] as StepRow[],
     useVersion: async () => ({ ok: true, message: '已下发部署命令' }),
@@ -516,5 +528,33 @@ describe('useDeployData · F06/F07/F08 新操作', () => {
     expect(createBuildNode).toHaveBeenCalledTimes(1);
     await s.d.removeBuildNode(4, 'bn');
     expect(deleteBuildNode.mock.calls[0][1]).toBe(4);
+  });
+});
+
+describe('useDeployData · 流水线', () => {
+  it('取数写入流水线列表；加载失败与空列表分开', async () => {
+    const s = setup();
+    await settle();
+    expect(s.d.pipelines.value.map((p) => p.id)).toEqual([5]);
+    expect(s.d.pipelinesFailed.value).toBe(false);
+    s.scope.stop();
+
+    const failed = setup({ fetchPipelineCards: async () => null });
+    await settle();
+    expect(failed.d.pipelinesFailed.value).toBe(true);
+    expect(failed.d.pipelines.value).toEqual([]);
+    failed.scope.stop();
+  });
+
+  it('触发与重跑把结果写进反馈', async () => {
+    const s = setup();
+    await settle();
+    await s.d.triggerPipeline(5, 'build-main');
+    expect(s.toasts.at(-1)?.text).toContain('流水线已触发');
+    await s.d.reprocessRun(11);
+    expect(s.toasts.at(-1)?.text).toContain('重新触发');
+    expect(await s.d.createPipeline(PIPE_FORM)).toBe(true);
+    expect(await s.d.savePipeline(5, PIPE_FORM)).toBe(true);
+    s.scope.stop();
   });
 });
