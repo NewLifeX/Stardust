@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>星尘 Stardust · 应用</title>
+<style>
+:root{
+  --bg:#16202A; --surface:#1F2A33; --surface2:#26333F;
+  --blue:#6673FF; --blue2:#8C5CF5; --cyan:#6FE3EC;
+  --green:#43E8A3; --warn:#FFC208; --red:#FF4545;
+  --text:#E6EDF3; --muted:#8A97A6; --line:rgba(255,255,255,.08);
+  --glass:rgba(31,42,51,.55);
+  --r4:4px;--r6:6px;--r12:12px;--r16:16px; --r8:8px;
+  --shadow:0 8px 24px rgba(0,0,0,.35);
+  --tb:64px; --sb:72px;
+  --font:"Inter","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;background:var(--bg);font-family:var(--font);color:var(--text);overflow:hidden;}
+.stage{position:absolute;top:0;left:0;width:1440px;height:900px;transform-origin:top left;
+  background:url('../assets/images/2_2.png') center/cover no-repeat;}
+
+.topbar{position:absolute;top:0;left:0;width:1440px;height:64px;display:flex;align-items:center;gap:20px;padding:0 24px;background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line);box-shadow:var(--shadow);z-index:20;}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;}
+.logo .mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--blue),var(--blue2));display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 0 14px rgba(102,115,255,.55);}
+.proj{display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:8px;font-size:13px;cursor:pointer;}
+.proj .caret{color:var(--muted);font-size:10px;}
+.search{flex:1;max-width:420px;display:flex;align-items:center;gap:8px;padding:9px 14px;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:20px;color:var(--muted);font-size:13px;}
+.search input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:13px;}
+.search input::placeholder{color:var(--muted);}
+.spacer{flex:1;}
+.act{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.05);border:1px solid var(--line);cursor:pointer;color:var(--text);}
+.avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--blue));display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;cursor:pointer;}
+
+.sidebar{position:absolute;top:64px;left:0;width:72px;height:836px;background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:18px;z-index:15;}
+.nav{width:48px;height:48px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--muted);cursor:pointer;font-size:10px;transition:.2s;text-decoration:none;}
+.nav svg{width:20px;height:20px;}
+.nav:hover{background:rgba(255,255,255,.06);color:var(--text);}
+.nav.active{background:linear-gradient(135deg,rgba(102,115,255,.22),rgba(140,92,245,.18));color:#fff;box-shadow:0 0 0 1px rgba(102,115,255,.55),0 0 18px rgba(102,115,255,.35);}
+.nav.active svg{color:var(--blue);}
+
+.main{position:absolute;top:64px;left:72px;width:1368px;height:836px;padding:24px;display:flex;gap:0;}
+.content{flex:1;display:flex;flex-direction:column;gap:16px;overflow:hidden;}
+.pagehead{display:flex;align-items:center;justify-content:space-between;}
+.pagehead h1{font-size:22px;font-weight:700;}
+.pagehead .sub{font-size:12px;color:var(--muted);margin-top:2px;}
+.btn{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(102,115,255,.4);}
+
+.kpibar{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+.kpi{background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:var(--r12);padding:14px 16px;}
+.kpi .v{font-size:26px;font-weight:700;} .kpi .l{font-size:12px;color:var(--muted);margin-top:2px;}
+.kpi .v.g{color:var(--green);} .kpi .v.w{color:var(--warn);} .kpi .v.r{color:var(--red);} .kpi .v.b{color:var(--blue);}
+
+.chips{display:flex;gap:10px;align-items:center;}
+.chip{padding:7px 14px;border-radius:18px;font-size:13px;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--muted);cursor:pointer;}
+.chip.active{background:rgba(102,115,255,.18);color:#fff;border-color:rgba(102,115,255,.5);}
+.chip .d{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;}
+
+.list{overflow:auto;display:flex;flex-direction:column;gap:10px;padding-right:4px;}
+.arow{display:flex;align-items:center;gap:16px;background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:var(--r12);padding:14px 18px;cursor:pointer;transition:.15s;}
+.arow:hover{border-color:rgba(102,115,255,.4);transform:translateX(2px);}
+.arow .ic{width:42px;height:42px;border-radius:12px;background:rgba(102,115,255,.15);display:flex;align-items:center;justify-content:center;color:var(--blue);font-size:18px;}
+.arow .nm{font-size:15px;font-weight:600;} .arow .id{font-size:11px;color:var(--muted);margin-top:2px;}
+.arow .meta{display:flex;gap:18px;font-size:11px;color:var(--muted);margin-left:auto;text-align:center;}
+.arow .meta b{display:block;color:var(--text);font-size:14px;}
+.st{font-size:11px;padding:4px 10px;border-radius:10px;white-space:nowrap;}
+.st.g{background:rgba(67,232,163,.15);color:var(--green);} .st.w{background:rgba(255,194,8,.15);color:var(--warn);} .st.r{background:rgba(255,69,69,.15);color:var(--red);}
+
+/* 抽屉 */
+.drawer{position:absolute;top:64px;right:0;width:560px;height:836px;background:rgba(20,28,36,.94);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-left:1px solid rgba(102,115,255,.35);box-shadow:-12px 0 40px rgba(0,0,0,.5);transform:translateX(100%);transition:transform .28s ease;z-index:30;display:flex;flex-direction:column;padding:20px;}
+.drawer.open{transform:translateX(0);}
+.drawer .dh{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.drawer .dh .nm{font-size:18px;font-weight:700;} .drawer .dh .id{font-size:11px;color:var(--muted);margin-top:2px;}
+.drawer .dh .close{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid var(--line);cursor:pointer;color:var(--muted);}
+.banner{padding:10px 14px;border-radius:var(--r8);font-size:12px;margin-bottom:14px;}
+.banner.g{background:rgba(67,232,163,.12);color:var(--green);border:1px solid rgba(67,232,163,.3);}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px;border-bottom:1px solid var(--line);padding-bottom:8px;}
+.tab{padding:6px 11px;font-size:12px;border-radius:8px;color:var(--muted);cursor:pointer;background:none;border:none;}
+.tab.active{background:rgba(102,115,255,.2);color:#fff;}
+.dbody{flex:1;overflow:auto;font-size:13px;}
+.info{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.info .it{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:var(--r8);padding:10px;}
+.info .it .k{font-size:11px;color:var(--muted);} .info .it .v{font-size:14px;margin-top:3px;}
+.svc{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:var(--r8);margin-bottom:8px;}
+.svc .role{font-size:10px;padding:2px 7px;border-radius:8px;}
+.svc .role.p{background:rgba(67,232,163,.15);color:var(--green);} .svc .role.c{background:rgba(102,115,255,.15);color:var(--blue);}
+.svc .nm{font-size:13px;font-weight:600;} .svc .mt{font-size:11px;color:var(--muted);}
+.kv{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px;}
+.kv .k{color:var(--muted);} .kv .v{font-family:monospace;color:var(--cyan);}
+.mode{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:12px;}
+.mode button{padding:6px 14px;font-size:12px;background:none;border:none;color:var(--muted);cursor:pointer;}
+.mode button.active{background:rgba(102,115,255,.2);color:#fff;}
+.hist{display:flex;gap:12px;margin-bottom:12px;}
+.hcard{flex:1;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:var(--r8);padding:12px;}
+.hcard .ver{font-size:14px;font-weight:600;} .hcard .t{font-size:11px;color:var(--muted);}
+.hcard .rb{margin-top:10px;font-size:12px;color:var(--blue);cursor:pointer;}
+.pipe{display:flex;align-items:center;gap:0;margin:18px 0;}
+.pstep{flex:1;text-align:center;position:relative;}
+.pstep .c{width:54px;height:54px;margin:0 auto;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;border:2px solid var(--green);color:var(--green);}
+.pstep.done .c{background:rgba(67,232,163,.15);}
+.pstep.run .c{border-color:var(--blue);color:var(--blue);background:rgba(102,115,255,.15);box-shadow:0 0 14px rgba(102,115,255,.4);}
+.pstep.wait .c{border-color:var(--muted);color:var(--muted);opacity:.5;}
+.pstep .lab{font-size:12px;margin-top:8px;color:var(--text);}
+.pstep .sub{font-size:10px;color:var(--muted);}
+.arrow{color:var(--muted);font-size:18px;padding:0 4px;}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <div class="topbar">
+    <div class="logo"><span class="mark">✦</span> 星尘 Stardust</div>
+    <div class="proj">电商微服务平台 <span class="caret">▼</span></div>
+    <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input placeholder="搜索节点、服务、应用..."></div>
+    <div class="spacer"></div>
+    <div class="act" title="通知"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div>
+    <div class="avatar">笑</div>
+  </div>
+  <div class="sidebar">
+    <a class="nav" href="home.html" title="概览"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12l9-9 9 9"/><path d="M5 10v10h14V10"/></svg>概览</a>
+    <a class="nav" href="node.html" title="节点"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><circle cx="7" cy="7.5" r="1"/><circle cx="7" cy="17" r="1"/></svg>节点</a>
+    <a class="nav active" href="app.html" title="应用"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>应用</a>
+    <a class="nav" href="settings.html" title="设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.3 1a7 7 0 0 0-1.7-1l-.3-2.5h-4l-.3 2.5a7 7 0 0 0-1.7 1l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 1.7 1l.3 2.5h4l.3-2.5a7 7 0 0 0 1.7-1l2.3 1 2-3.4-2-1.5c.1-.3.1-.7.1-1z"/></svg>设置</a>
+  </div>
+
+  <div class="main">
+    <div class="content">
+      <div class="pagehead">
+        <div><h1>应用管理</h1><div class="sub">应用是配置 / 监控 / 发布 / 服务 的归属主体 — 点击应用查看其收敛的全部能力</div></div>
+        <button class="btn">+ 新建应用</button>
+      </div>
+      <div class="kpibar">
+        <div class="kpi"><div class="v b">18</div><div class="l">应用总数</div></div>
+        <div class="kpi"><div class="v g">14</div><div class="l">在线</div></div>
+        <div class="kpi"><div class="v w">2</div><div class="l">告警</div></div>
+        <div class="kpi"><div class="v r">2</div><div class="l">离线</div></div>
+      </div>
+      <div class="chips">
+        <div class="chip active" data-f="all">全部 18</div>
+        <div class="chip" data-f="g"><span class="d" style="background:var(--green)"></span>在线 14</div>
+        <div class="chip" data-f="w"><span class="d" style="background:var(--warn)"></span>告警 2</div>
+        <div class="chip" data-f="r"><span class="d" style="background:var(--red)"></span>离线 2</div>
+      </div>
+      <div class="list" id="list">
+        <div class="arow" data-st="g" data-nm="order-service" data-id="app-1024 · 订单服务"><div class="ic">🛒</div><div><div class="nm">order-service</div><div class="id">app-1024 · 订单服务</div></div><div class="meta"><div>实例<b>6</b></div><div>服务<b>4</b></div><div>版本<b>v2.3.1</b></div></div><span class="st g">在线</span></div>
+        <div class="arow" data-st="w" data-nm="payment-gateway" data-id="app-1025 · 支付网关"><div class="ic">💳</div><div><div class="nm">payment-gateway</div><div class="id">app-1025 · 支付网关</div></div><div class="meta"><div>实例<b>3</b></div><div>服务<b>2</b></div><div>版本<b>v1.8.0</b></div></div><span class="st w">告警</span></div>
+        <div class="arow" data-st="r" data-nm="user-center" data-id="app-1026 · 用户中心"><div class="ic">👤</div><div><div class="nm">user-center</div><div class="id">app-1026 · 用户中心</div></div><div class="meta"><div>实例<b>0</b></div><div>服务<b>1</b></div><div>版本<b>v3.0.2</b></div></div><span class="st r">离线</span></div>
+        <div class="arow" data-st="g" data-nm="search-index" data-id="app-1027 · 搜索索引"><div class="ic">🔍</div><div><div class="nm">search-index</div><div class="id">app-1027 · 搜索索引</div></div><div class="meta"><div>实例<b>4</b></div><div>服务<b>3</b></div><div>版本<b>v1.2.4</b></div></div><span class="st g">在线</span></div>
+      </div>
+    </div>
+
+    <!-- 应用详情抽屉：收敛 配置/发布/监控/服务 -->
+    <div class="drawer" id="drawer">
+      <div class="dh"><div><div class="nm" id="dname">order-service</div><div class="id" id="did">app-1024 · 订单服务</div></div><div class="close" id="dclose">✕</div></div>
+      <div class="banner g" id="dbanner">● 在线 · 6/6 实例健康 · v2.3.1</div>
+      <div class="tabs" id="dtabs">
+        <button class="tab active" data-t="overview">概览</button>
+        <button class="tab" data-t="instance">实例</button>
+        <button class="tab" data-t="config">配置</button>
+        <button class="tab" data-t="deploy">发布</button>
+        <button class="tab" data-t="monitor">监控</button>
+        <button class="tab" data-t="service">服务</button>
+      </div>
+      <div class="dbody" id="dbody"></div>
+    </div>
+  </div>
+</div>
+<script>
+function fitStage(){const s=document.getElementById('stage');const sc=Math.min(innerWidth/1440,innerHeight/900);s.style.transform='scale('+sc+')';s.style.left=((innerWidth-1440*sc)/2)+'px';s.style.top=((innerHeight-900*sc)/2)+'px';}
+addEventListener('resize',fitStage);fitStage();
+
+document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
+  document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');
+  const f=c.dataset.f;
+  document.querySelectorAll('.arow').forEach(n=>{n.style.display=(f==='all'||n.dataset.st===f)?'':'none';});
+});
+
+const APP={
+  overview:`<div class="info"><div class="it"><div class="k">应用 ID</div><div class="v" id="i_id">—</div></div><div class="it"><div class="k">语言 / 框架</div><div class="v">.NET 9 · Stardust</div></div><div class="it"><div class="k">实例数</div><div class="v">6</div></div><div class="it"><div class="k">当前版本</div><div class="v">v2.3.1</div></div><div class="it"><div class="k">负责人</div><div class="v">电商研发组</div></div><div class="it"><div class="k">注册服务</div><div class="v">4 提供 / 1 消费</div></div></div><p style="color:var(--muted);margin-top:8px">配置、监控、发布、服务 均归属本应用，点击下方标签查看。</p>`,
+  instance:`<div class="svc"><span class="role p">运行</span><span class="nm">order-service-1</span><span class="mt" style="margin-left:auto">node-02 · 10.12.3.12</span></div><div class="svc"><span class="role p">运行</span><span class="nm">order-service-2</span><span class="mt" style="margin-left:auto">node-02 · 10.12.3.12</span></div><div class="svc"><span class="role p">运行</span><span class="nm">order-service-3</span><span class="mt" style="margin-left:auto">node-09 · 10.12.3.19</span></div><div class="svc"><span class="role c">离线</span><span class="nm">order-service-4</span><span class="mt" style="margin-left:auto">node-15 · 10.12.3.25</span></div>`,
+  config:`<div class="mode"><button class="active" data-m="table">表格</button><button data-m="text">文本</button></div>
+    <div id="cfg-table">
+      <div class="kv"><span class="k">ServerHost</span><span class="v">star.server.local</span></div>
+      <div class="kv"><span class="k">ServerPort</span><span class="v">6600</span></div>
+      <div class="kv"><span class="k">AppId</span><span class="v">1024</span></div>
+      <div class="kv"><span class="k">Secret</span><span class="v">****</span></div>
+      <div class="kv"><span class="k">LogLevel</span><span class="v">Info</span></div>
+    </div>
+    <div id="cfg-text" style="display:none;font-family:monospace;font-size:12px;white-space:pre;background:rgba(0,0,0,.25);padding:12px;border-radius:8px;color:var(--cyan)">ServerHost=star.server.local
+ServerPort=6600
+AppId=1024
+Secret=****
+LogLevel=Info</div>
+    <div class="hist" style="margin-top:16px">
+      <div class="hcard"><div class="ver">v2.3.1</div><div class="t">当前 · 2h 前</div><div class="rb" onclick="alert('已对比上一版本 DIFF')">对比上一版 ⟲</div></div>
+      <div class="hcard"><div class="ver">v2.3.0</div><div class="t">上一版 · 3d 前</div><div class="rb" onclick="alert('已发起回滚到 v2.3.0')">回滚到此版本 ⤺</div></div>
+    </div>`,
+  deploy:`<div class="pipe">
+      <div class="pstep done"><div class="c">✓</div><div class="lab">构建</div><div class="sub">success</div></div><span class="arrow">→</span>
+      <div class="pstep done"><div class="c">✓</div><div class="lab">上传</div><div class="sub">success</div></div><span class="arrow">→</span>
+      <div class="pstep done"><div class="c">✓</div><div class="lab">分发</div><div class="sub">success</div></div><span class="arrow">→</span>
+      <div class="pstep run"><div class="c">●</div><div class="lab">部署</div><div class="sub">running 60%</div></div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:12px">图例：✓ 完成 · ● 进行中 · ○ 等待</div>
+    <div class="svc"><span class="role p">完成</span><span class="nm">v2.3.1 构建上传</span><span class="mt" style="margin-left:auto">2h 前</span></div>
+    <div class="svc"><span class="role p">完成</span><span class="nm">v2.3.0 全量发布</span><span class="mt" style="margin-left:auto">3d 前</span></div>`,
+  monitor:`<div class="info" style="grid-template-columns:repeat(4,1fr)"><div class="it" style="text-align:center"><div class="k">QPS</div><div class="v" style="color:var(--green)">1.2k</div></div><div class="it" style="text-align:center"><div class="k">P99</div><div class="v">42ms</div></div><div class="it" style="text-align:center"><div class="k">错误率</div><div class="v" style="color:var(--warn)">0.8%</div></div><div class="it" style="text-align:center"><div class="k">在线率</div><div class="v" style="color:var(--green)">100%</div></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin:12px 0 6px"><span>近 1 小时</span><span><span style="color:var(--green)">●</span> 自动刷新 · 15s</span></div>
+    <svg viewBox="0 0 520 160" style="width:100%"><polyline fill="none" stroke="var(--green)" stroke-width="2" points="0,120 50,110 100,115 150,80 200,90 250,60 300,70 350,45 400,55 450,40 520,48"/><polyline fill="none" stroke="var(--blue)" stroke-width="2" points="0,140 50,135 100,130 150,120 200,118 250,108 300,100 350,92 400,88 450,80 520,75"/></svg>`,
+  service:`<p style="color:var(--muted);margin-bottom:10px">本应用<span style="color:var(--green)"> 提供 </span>的服务 与 <span style="color:var(--blue)">消费 </span>的服务</p>
+    <div class="svc"><span class="role p">提供</span><span class="nm">order-api</span><span class="mt" style="margin-left:auto">REST · :8080</span></div>
+    <div class="svc"><span class="role p">提供</span><span class="nm">order-mq</span><span class="mt" style="margin-left:auto">Kafka · topic/order</span></div>
+    <div class="svc"><span class="role p">提供</span><span class="nm">order-query</span><span class="mt" style="margin-left:auto">gRPC · :9090</span></div>
+    <div class="svc"><span class="role p">提供</span><span class="nm">order-callback</span><span class="mt" style="margin-left:auto">WebHook</span></div>
+    <div class="svc" style="margin-top:14px"><span class="role c">消费</span><span class="nm">user-profile</span><span class="mt" style="margin-left:auto">via 注册发现</span></div>
+    <div class="svc"><span class="role c">消费</span><span class="nm">inventory-svc</span><span class="mt" style="margin-left:auto">via 注册发现</span></div>`
+};
+function openDrawer(row){
+  const st=row.dataset.st,nm=row.dataset.nm,id=row.dataset.id;
+  document.getElementById('dname').textContent=nm;
+  document.getElementById('did').textContent=id;
+  const b=document.getElementById('dbanner');
+  if(st==='g'){b.className='banner g';b.textContent='● 在线 · 实例健康 · 版本 v2.3.1';}
+  else if(st==='w'){b.className='banner g';b.style.background='rgba(255,194,8,.12)';b.style.color='var(--warn)';b.style.border='1px solid rgba(255,194,8,.3)';b.textContent='▲ 告警 · 错误率升高 · 需关注';}
+  else{b.className='banner g';b.style.background='rgba(255,69,69,.12)';b.style.color='var(--red)';b.style.border='1px solid rgba(255,69,69,.3)';b.textContent='■ 离线 · 实例全不可用';}
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('dbody').innerHTML=APP.overview;
+  document.getElementById('i_id').textContent=id;
+}
+document.querySelectorAll('.arow').forEach(n=>n.onclick=()=>openDrawer(n));
+document.getElementById('dclose').onclick=()=>document.getElementById('drawer').classList.remove('open');
+document.querySelectorAll('#dtabs .tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('#dtabs .tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
+  const key=t.dataset.t;
+  document.getElementById('dbody').innerHTML=APP[key]||'';
+  if(key==='overview'){document.getElementById('i_id').textContent=document.getElementById('did').textContent;}
+  if(key==='config'){bindConfigMode();}
+});
+function bindConfigMode(){
+  document.querySelectorAll('#cfg-table ~ * , .mode button').forEach(b=>{});
+  const btns=document.querySelectorAll('.mode button');
+  btns.forEach(btn=>btn.onclick=()=>{
+    btns.forEach(x=>x.classList.remove('active'));btn.classList.add('active');
+    const m=btn.dataset.m;
+    document.getElementById('cfg-table').style.display=(m==='table')?'':'none';
+    document.getElementById('cfg-text').style.display=(m==='text')?'':'none';
+  });
+}
+</script>
+</body>
+</html>

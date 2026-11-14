@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>星尘 · 银河视角 / Galaxy View</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="cosmic.css" />
+<style>
+  /* 银河视角专属：星图缩放/平移容器 */
+  #viewport { position: absolute; inset: 0; transform-origin: center; transition: transform .6s cubic-bezier(.2,.8,.2,1); }
+  .starmap .star-glow { animation: breathe 4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes breathe { 0%,100%{ transform: scale(1);} 50%{ transform: scale(1.06);} }
+  .starmap .dust { fill: var(--star-2); opacity: .85; }
+  .coord .blink { animation: pulse 2.6s ease-in-out infinite; }
+  .coord-tools { display:flex; gap:10px; margin-top:10px; align-items:center; flex-wrap:wrap; }
+  .realm-pill { font-size:12px; color:var(--ink-2); padding:5px 12px; border-radius:999px; background:var(--glass-2); border:1px solid var(--line); }
+  .realm-pill b { color:var(--star); }
+  .console-btn { font-size:12px; color:var(--bg-abyss); font-weight:600; text-decoration:none; padding:6px 13px; border-radius:999px;
+    background:linear-gradient(135deg,var(--star),var(--accent)); box-shadow:var(--glow-soft); transition:.18s; }
+  .console-btn:hover { filter:brightness(1.08); }
+</style>
+</head>
+<body class="theme-serene">
+
+<!-- 宇宙背景 -->
+<div class="cosmos" id="cosmos">
+  <div class="starfield" id="sfFar"><div class="layer"></div></div>
+  <div class="starfield" id="sfMid"><div class="layer"></div></div>
+  <div class="starfield" id="sfNear"><div class="layer"></div></div>
+  <div class="nebula a"></div>
+  <div class="nebula b"></div>
+
+  <div id="viewport">
+    <svg class="starmap" id="map" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice"></svg>
+  </div>
+  <div class="vignette"></div>
+</div>
+
+<!-- 坐标指示器 -->
+<header class="coord">
+  <div class="title">银河视角 <span class="blink">·</span> <span id="clusterName">生产集群</span></div>
+  <div class="sub"><b id="nodeCount">12</b> 节点 · <b id="svcCount">47</b> 服务 · <span id="envTag">全环境</span></div>
+  <div class="coord-tools">
+    <span class="realm-pill" id="realmPill">🌐 星域：<b>核心星域</b></span>
+    <a class="console-btn" id="consoleBtn" href="prototype-console.html">🛰 星舰控制台 →</a>
+  </div>
+</header>
+
+<!-- 健康脉冲灯 -->
+<div class="health">
+  <span class="dot" id="healthDot"></span>
+  <span class="txt" id="healthTxt">集群宁静</span>
+</div>
+
+<!-- 主题切换（色彩搭配切换寓意） -->
+<div class="theme-switch">
+  <span class="ttl">环境状态 · 色彩寓意</span>
+  <div class="theme-row" id="themeRow">
+    <div class="theme-btn active" data-t="serene"    title="宁静 · 全部健康"></div>
+    <div class="theme-btn" data-t="attention" title="微澜 · 存在告警"></div>
+    <div class="theme-btn" data-t="crisis"    title="危机 · 严重故障"></div>
+    <div class="theme-btn" data-t="supernova" title="超新星 · 发布中"></div>
+    <div class="theme-btn" data-t="genesis"   title="扩容 · 弹性伸缩"></div>
+  </div>
+</div>
+
+<!-- 寓意图例 -->
+<div class="legend glass" id="legend">
+  <div class="lh"><span class="sw" id="legSw" style="color:var(--ok)"></span><span id="legTitle">宁静 · Serene</span></div>
+  <div class="row"><span class="c" style="background:var(--ok)"></span> 健康恒星 — 资源充足</div>
+  <div class="row"><span class="c" style="background:var(--warn)"></span> 关注恒星 — 负载偏高</div>
+  <div class="row"><span class="c" style="background:var(--danger)"></span> 危机恒星 — 故障塌陷</div>
+  <div class="desc" id="legDesc">整片宇宙蓝紫静谧，星点缓慢呼吸，粒子匀速流动。</div>
+</div>
+
+<!-- 星港坞 -->
+<nav class="stardock" id="dock">
+  <div class="dock-pt active" data-go="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/></svg><span class="lbl">总览</span></div>
+  <div class="dock-pt" data-go="monitor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg><span class="lbl">监控</span></div>
+  <div class="dock-pt" data-go="config"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg><span class="lbl">配置</span></div>
+  <div class="dock-pt" data-go="monitor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg><span class="lbl">发布</span></div>
+  <div class="dock-pt" data-go="config"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span class="lbl">日志</span></div>
+  <div class="dock-pt" data-go="monitor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8 7l8 9"/></svg><span class="lbl">治理</span></div>
+</nav>
+<div class="dock-hint" id="dockHint"></div>
+
+<!-- 曲速命令面板 -->
+<div class="warp-scrim" id="warp">
+  <div class="warp">
+    <input id="warpInput" placeholder="曲速跃迁 · 搜索星体 / 服务 / 配置 / 指令…" />
+    <div class="warp-list" id="warpList"></div>
+    <div class="warp-foot">
+      <span><kbd>↑</kbd><kbd>↓</kbd> 选择</span>
+      <span><kbd>Enter</kbd> 跃迁</span>
+      <span><kbd>Esc</kbd> 收起</span>
+      <span style="margin-left:auto;color:var(--star)">Ctrl + K</span>
+    </div>
+  </div>
+</div>
+
+<div class="fx-layer" id="fx"></div>
+<div class="tip" id="tip"></div>
+<div class="warp-flash" id="flash"></div>
+
+<script>
+/* ===================== 数据模型 ===================== */
+// 星域（项目）参数：沉浸式星图按项目切片
+const PARAMS = new URLSearchParams(location.search);
+const PROJ = PARAMS.get('project') || 'galaxy-core';
+const PROJ_NAME = { 'galaxy-core':'核心星域', 'payment':'支付星域', 'iot':'物联星域', 'ml-train':'训练星域' }[PROJ] || '核心星域';
+document.getElementById('clusterName').textContent = '生产集群 · ' + PROJ_NAME;
+document.getElementById('realmPill').innerHTML = '🌐 星域：<b>' + PROJ_NAME + '</b>';
+document.getElementById('consoleBtn').href = 'prototype-console.html?project=' + PROJ;
+
+// 节点 = 计算节点（恒星）；services = 服务实例（尘埃）；env = 环境分组（星云）
+const NODES = [
+  { id:'n1',  name:'web-gw-01',   cores:32, load:18, env:'prod',  x:300, y:240, svc:6 },
+  { id:'n2',  name:'web-gw-02',   cores:32, load:24, env:'prod',  x:520, y:160, svc:5 },
+  { id:'n3',  name:'api-core-01', cores:64, load:62, env:'prod',  x:760, y:300, svc:8 },
+  { id:'n4',  name:'api-core-02', cores:64, load:71, env:'prod',  x:980, y:230, svc:7 },
+  { id:'n5',  name:'db-master',   cores:48, load:44, env:'prod',  x:1180,y:360, svc:4 },
+  { id:'n6',  name:'cache-01',    cores:16, load:33, env:'prod',  x:640, y:480, svc:3 },
+  { id:'n7',  name:'mq-broker',   cores:24, load:55, env:'prod',  x:900, y:520, svc:4 },
+  { id:'n8',  name:'job-worker',  cores:16, load:88, env:'prod',  x:1140,y:560, svc:5 },
+  { id:'n9',  name:'staging-01',  cores:16, load:21, env:'stag',  x:420, y:640, svc:4 },
+  { id:'n10', name:'staging-02',  cores:16, load:12, env:'stag',  x:700, y:700, svc:3 },
+  { id:'n11', name:'dev-sandbox', cores:8,  load:9,  env:'dev',   x:1080,y:720, svc:3 },
+  { id:'n12', name:'edge-cn',     cores:24, load:76, env:'prod',  x:1340,y:220, svc:5 },
+];
+// 引力光束（调用关系）
+const BEAMS = [
+  ['n1','n3'],['n2','n3'],['n3','n4'],['n3','n5'],['n4','n5'],
+  ['n6','n3'],['n7','n4'],['n7','n8'],['n5','n8'],['n1','n12'],
+  ['n4','n12'],['n9','n3'],['n10','n7'],['n11','n4'],['n2','n6'],
+];
+
+const SVGNS = 'http://www.w3.org/2000/svg';
+const map = document.getElementById('map');
+const byId = Object.fromEntries(NODES.map(n=>[n.id,n]));
+
+function loadColor(load){
+  if(load>=80) return getComputedStyle(document.body).getPropertyValue('--danger');
+  if(load>=55) return getComputedStyle(document.body).getPropertyValue('--warn');
+  return getComputedStyle(document.body).getPropertyValue('--ok');
+}
+function el(tag, attrs){ const e=document.createElementNS(SVGNS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); return e; }
+
+/* ===================== 绘制星图 ===================== */
+function drawMap(){
+  map.innerHTML='';
+  // 星云色雾分组（环境）
+  const envColors = { prod:'rgba(124,160,255,.10)', stag:'rgba(156,124,255,.10)', dev:'rgba(92,224,200,.10)' };
+  // 光束
+  BEAMS.forEach(([a,b],i)=>{
+    const A=byId[a], B=byId[b];
+    const mx=(A.x+B.x)/2 + (B.y-A.y)*0.12, my=(A.y+B.y)/2 - (B.x-A.x)*0.12;
+    const p = el('path',{ id:'beam'+i, class:'beam', d:`M${A.x} ${A.y} Q${mx} ${my} ${B.x} ${B.y}` });
+    map.appendChild(p);
+    // 数据粒子流动
+    for(let k=0;k<2;k++){
+      const dot = el('circle',{ class:'flow-dot', r:2.4 });
+      const am = el('animateMotion',{ dur:(3+k)+'s', repeatCount:'indefinite', begin:(k*1.3)+'s', keyPoints:'0;1', keyTimes:'0;1', calcMode:'linear' });
+      const mp = el('mpath',{}); mp.setAttributeNS('http://www.w3.org/1999/xlink','href','#beam'+i); mp.setAttribute('href','#beam'+i);
+      am.appendChild(mp); dot.appendChild(am); map.appendChild(dot);
+    }
+  });
+  // 恒星
+  NODES.forEach(n=>{
+    const g = el('g',{ class:'star-node', 'data-id':n.id });
+    g.setAttribute('transform',`translate(${n.x},${n.y})`);
+    const r = 10 + n.cores/4;
+    // 光晕
+    const glow = el('circle',{ class:'star-glow', r:r*2.4, fill:loadColor(n.load), opacity:.12 });
+    // 核心
+    const core = el('circle',{ class:'star-core', r, fill:loadColor(n.load) });
+    core.style.filter = 'drop-shadow(0 0 10px '+loadColor(n.load)+')';
+    // 悬停光环
+    const halo = el('circle',{ class:'halo-ring', r:r+14, opacity:0 });
+    halo.dataset.halo='1';
+    g.appendChild(glow); g.appendChild(halo); g.appendChild(core);
+    // 尘埃（服务）轨道
+    const dustN = n.svc;
+    for(let d=0; d<dustN; d++){
+      const ang = (d/dustN)*Math.PI*2;
+      const rx = r+18+ (d%3)*10, ry = (r+18+(d%3)*10)*0.6;
+      const cx = Math.cos(ang)*rx, cy = Math.sin(ang)*ry;
+      const dust = el('circle',{ class:'dust', r:1.8+ (d%2) });
+      const am = el('animateMotion',{ dur:(9+d*1.5)+'s', repeatCount:'indefinite', begin:(d*0.4)+'s', rotate:'auto' });
+      const path = `M ${cx} ${cy} A ${rx} ${ry} 0 1 1 ${cx-0.1} ${cy} A ${rx} ${ry} 0 1 1 ${cx} ${cy}`;
+      am.setAttribute('path', path);
+      dust.appendChild(am); g.appendChild(dust);
+    }
+    g.addEventListener('mouseenter',()=>showHalo(g,true,n));
+    g.addEventListener('mouseleave',()=>showHalo(g,false,n));
+    g.addEventListener('click',()=>jumpTo(n.id));
+    map.appendChild(g);
+  });
+}
+function showHalo(g,on,n){
+  const halo = g.querySelector('[data-halo]');
+  halo.setAttribute('opacity', on?0.6:0);
+  if(on){
+    const tip=document.getElementById('tip');
+    tip.innerHTML = `<b style="color:${loadColor(n.load)}">${n.name}</b> · 核数 ${n.cores} · 负载 ${n.load}% · 服务 ${n.svc}`;
+    tip.classList.add('show');
+    const rect = g.getBoundingClientRect();
+    tip.style.left = rect.left+rect.width/2+'px';
+    tip.style.top = rect.top+'px';
+  } else { document.getElementById('tip').classList.remove('show'); }
+}
+
+/* ===================== 视差星空 ===================== */
+function buildStars(layerId, count, sizeMax, opMin){
+  const layer = document.querySelector('#'+layerId+' .layer');
+  layer.innerHTML='';
+  for(let i=0;i<count;i++){
+    const s=document.createElement('div'); s.className='star';
+    const sz=Math.random()*sizeMax+1;
+    s.style.width=s.style.height=sz+'px';
+    s.style.left=Math.random()*100+'%'; s.style.top=Math.random()*100+'%';
+    s.style.setProperty('--tw',(2+Math.random()*3).toFixed(1)+'s');
+    s.style.opacity=opMin+Math.random()*0.6;
+    layer.appendChild(s);
+  }
+}
+buildStars('sfFar',120,1.4,0.15); buildStars('sfMid',70,2.2,0.25); buildStars('sfNear',36,3,0.4);
+
+document.addEventListener('mousemove',e=>{
+  const dx=(e.clientX/window.innerWidth-0.5), dy=(e.clientY/window.innerHeight-0.5);
+  document.getElementById('sfFar').style.transform =`translate(${dx*8}px,${dy*8}px)`;
+  document.getElementById('sfMid').style.transform =`translate(${dx*18}px,${dy*18}px)`;
+  document.getElementById('sfNear').style.transform=`translate(${dx*34}px,${dy*34}px)`;
+});
+
+/* ===================== 星港坞 ===================== */
+const dock=document.getElementById('dock'), dockHint=document.getElementById('dockHint');
+dockHint.addEventListener('mouseenter',()=>dock.classList.add('show'));
+dock.addEventListener('mouseleave',()=>dock.classList.remove('show'));
+document.addEventListener('mousemove',e=>{ if(e.clientY > window.innerHeight-60) dock.classList.add('show'); });
+dock.querySelectorAll('.dock-pt').forEach(p=>p.addEventListener('click',()=>{
+  const go=p.dataset.go; if(go==='overview') return; jumpFlash(go+'.html');
+}));
+
+/* ===================== 曲速命令 ===================== */
+const warp=document.getElementById('warp'), warpInput=document.getElementById('warpInput'), warpList=document.getElementById('warpList');
+const COMMANDS = [
+  ...NODES.map(n=>({ ic:'★', k:'星体', t:n.name, go:`monitor.html?node=${n.id}&project=${PROJ}` })),
+  { ic:'⟳', k:'指令', t:'切换环境状态：宁静', go:'#theme:serene' },
+  { ic:'⟳', k:'指令', t:'切换环境状态：危机', go:'#theme:crisis' },
+  { ic:'⟳', k:'指令', t:'发布配置到 api-core-01', go:`config.html?svc=api-core-01&project=${PROJ}` },
+  { ic:'⌘', k:'视图', t:'跃迁至恒星系', go:`monitor.html?node=n3&project=${PROJ}` },
+];
+let warpSel=0;
+function renderWarp(q=''){
+  const list=COMMANDS.filter(c=>c.t.toLowerCase().includes(q.toLowerCase())||c.k.includes(q));
+  warpList.innerHTML = list.map((c,i)=>`<div class="warp-item ${i===warpSel?'sel':''}" data-go="${c.go}">
+    <span class="ic">${c.ic}</span><span style="flex:1">${c.t}</span><span class="k">${c.k}</span></div>`).join('') || '<div class="warp-item">无匹配星体</div>';
+  warpList.querySelectorAll('.warp-item').forEach(it=>it.onclick=()=>execGo(it.dataset.go));
+}
+function execGo(go){
+  if(go && go.startsWith('#theme:')){ setTheme(go.split(':')[1]); closeWarp(); return; }
+  jumpFlash(go);
+}
+function openWarp(){ warp.classList.add('show'); document.getElementById('cosmos').classList.add('warp-fold'); renderWarp(); warpInput.value=''; warpInput.focus(); warpSel=0; }
+function closeWarp(){ warp.classList.remove('show'); document.getElementById('cosmos').classList.remove('warp-fold'); }
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){ e.preventDefault(); warp.classList.contains('show')?closeWarp():openWarp(); }
+  if(e.key==='Escape'){ closeWarp(); }
+  if(warp.classList.contains('show')){
+    const items=COMMANDS.filter(c=>c.t.toLowerCase().includes(warpInput.value.toLowerCase()));
+    if(e.key==='ArrowDown'){ warpSel=Math.min(warpSel+1,items.length-1); renderWarp(warpInput.value); }
+    if(e.key==='ArrowUp'){ warpSel=Math.max(warpSel-1,0); renderWarp(warpInput.value); }
+    if(e.key==='Enter'){ const it=warpList.querySelector('.sel'); if(it) execGo(it.dataset.go); }
+  }
+});
+warpInput.addEventListener('input',()=>{ warpSel=0; renderWarp(warpInput.value); });
+warp.addEventListener('click',e=>{ if(e.target===warp) closeWarp(); });
+
+/* ===================== 跃迁 ===================== */
+function jumpTo(id){ jumpFlash(`monitor.html?node=${id}&project=${PROJ}`); }
+function jumpFlash(go){
+  const f=document.getElementById('flash'); f.classList.add('go');
+  document.getElementById('cosmos').classList.add('warp-fold');
+  setTimeout(()=>{ location.href=go; }, 520);
+}
+
+/* ===================== 环境状态主题（色彩寓意） ===================== */
+const THEMES = {
+  serene:    { title:'宁静 · Serene',    color:'var(--ok)',     desc:'整片宇宙蓝紫静谧，星点缓慢呼吸，粒子匀速流动。' },
+  attention: { title:'微澜 · Attention',  color:'var(--warn)',   desc:'暮色琥珀泛起，关注星体规律脉冲，空间微微泛暖。' },
+  crisis:    { title:'危机 · Crisis',     color:'var(--danger)', desc:'故障恒星塌陷为黑洞，红色吸积盘旋转，背景透出赤红。' },
+  supernova: { title:'超新星 · Supernova', color:'var(--star)',   desc:'目标恒星爆发光波，粒子加速向外扩散，炽金铺满星海。' },
+  genesis:   { title:'扩容 · Genesis',    color:'var(--ok)',     desc:'新恒星自远方飞入，引力波涟漪荡开，星海泛起新绿。' },
+};
+function setTheme(t){
+  document.body.className='theme-'+t;
+  document.querySelectorAll('.theme-btn').forEach(b=>b.classList.toggle('active',b.dataset.t===t));
+  const info=THEMES[t];
+  document.getElementById('legTitle').textContent=info.title;
+  document.getElementById('legSw').style.color=info.color;
+  document.getElementById('legDesc').textContent=info.desc;
+  // 健康灯同步语义
+  const dot=document.getElementById('healthDot'), txt=document.getElementById('healthTxt');
+  const map2={serene:['var(--ok)','集群宁静'],attention:['var(--warn)','存在告警'],crisis:['var(--danger)','严重故障'],supernova:['var(--star)','发布中'],genesis:['var(--ok)','扩容中']};
+  dot.style.background=map2[t][0]; dot.style.boxShadow='0 0 12px '+map2[t][0]; txt.textContent=map2[t][1];
+  drawMap(); // 重绘以刷新恒星健康色（loadColor 读取最新 var）
+}
+document.getElementById('themeRow').querySelectorAll('.theme-btn').forEach(b=>b.onclick=()=>setTheme(b.dataset.t));
+
+/* ===================== 启动 ===================== */
+drawMap(); setTheme('serene');
+</script>
+</body>
+</html>

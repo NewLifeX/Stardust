@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>星尘 Stardust · 控制台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  /* ===== 设计令牌（源自 stardust-design-tokens.md + Ardot 读取值） ===== */
+  :root{
+    --bg-page:#050812;            /* 页面底 r:0.02,g:0.03,b:0.07 */
+    --bg-elevated:rgba(5,10,23,.7);/* 顶栏/浮层 r:0.02,g:0.04,b:0.09 @.7 */
+    --bg-sidebar:rgba(5,10,23,.6); /* 侧栏 */
+    --bg-panel:rgba(8,15,36,.6);   /* 卡片/面板 r:0.03,g:0.06,b:0.14 @.6 */
+    --bg-panel-strong:rgba(8,15,36,.7);/* 抽屉 @.7 */
+    --bg-panel-faint:rgba(8,15,36,.4);
+    --stroke:rgba(255,255,255,.08);
+    --stroke-2:rgba(255,255,255,.10);
+    --stroke-3:rgba(255,255,255,.12);
+    --text-1:#E0F2FF;            /* r:0.88,g:0.95,b:1 */
+    --text-2:#94A3B8;            /* r:0.58,g:0.64,b:0.72 */
+    --text-3:#64748B;            /* r:0.39,g:0.45,b:0.55 */
+    --text-mute:#C9D4E0;         /* 次级标题 r:0.75,.78,.82 */
+    --accent:#6673FF;            /* r:0.4,g:0.45,b:1 星尘蓝/活动态 */
+    --accent-2:#8C5CF5;          /* r:0.55,g:0.36,b:0.96 */
+    --green:#43E8A3;             /* 在线 r:0.26,g:0.91,b:0.64 */
+    --yellow:#FFC208;            /* 告警 r:1,g:0.76,b:0.03 */
+    --red:#FF4545;               /* 离线 r:1,g:0.27,b:0.27 */
+    --cyan:#6FE3EC;
+    --grad:linear-gradient(to top,#6673FF,#8C5CF5);
+    --shadow-card:0 6px 16px rgba(0,0,0,.15);
+    --shadow-strong:0 12px 32px rgba(0,0,0,.25);
+    --shadow-top:0 4px 20px rgba(0,0,0,.2);
+    --shadow-side:4px 0 16px rgba(0,0,0,.2);
+    --radius-s:4px; --radius-m:6px; --radius-l:12px; --radius-xl:16px;
+    --font:"Inter","PingFang SC","Microsoft YaHei","Helvetica Neue",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%;height:100%;background:#03050b;overflow:hidden;font-family:var(--font);color:var(--text-1)}
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:4px}
+  ::-webkit-scrollbar-track{background:transparent}
+
+  /* ===== 等比缩放舞台 ===== */
+  #viewport{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(1200px 800px at 50% 30%,#0a1326 0%,#03050b 70%)}
+  #stage{position:relative;width:1440px;height:900px;transform-origin:top left;background:var(--bg-page);overflow:hidden;border-radius:14px;box-shadow:0 40px 120px rgba(0,0,0,.6)}
+
+  /* ===== 顶栏 ===== */
+  .topbar{position:absolute;left:0;top:0;width:1440px;height:64px;display:flex;align-items:center;justify-content:space-between;
+    padding:0 16px;background:var(--bg-elevated);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    border-bottom:1px solid var(--stroke);box-shadow:var(--shadow-top) inset 0 1px 0 rgba(255,255,255,.08);z-index:50}
+  .left-group{display:flex;align-items:center;gap:24px}
+  .logo-group{display:flex;align-items:center;gap:10px}
+  .logo-mark{width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:var(--cyan)}
+  .logo-text{font-size:18px;font-weight:700;letter-spacing:.5px;color:var(--text-1)}
+  .logo-text span{color:var(--cyan)}
+  .project-selector{display:flex;align-items:center;gap:8px;height:33px;padding:0 12px;background:rgba(255,255,255,.08);border:1px solid var(--stroke-3);border-radius:8px;color:var(--text-1);font-size:13px;cursor:pointer}
+  .project-selector svg{width:14px;height:14px;color:var(--text-2)}
+  .search-bar{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;width:320px;height:36px;padding:0 12px;
+    background:rgba(5,13,30,.8);border:1px solid var(--stroke-3);border-radius:24px}
+  .search-bar svg{width:16px;height:16px;color:var(--text-3);flex:none}
+  .search-bar input{flex:1;background:none;border:none;outline:none;color:var(--text-2);font-size:13px;font-family:var(--font)}
+  .search-bar input::placeholder{color:var(--text-3)}
+  .right-actions{display:flex;align-items:center;gap:16px}
+  .icon-btn{width:36px;height:36px;border-radius:18px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);color:var(--text-2);cursor:pointer;position:relative}
+  .icon-btn:hover{background:rgba(255,255,255,.14)}
+  .icon-btn svg{width:18px;height:18px}
+  .icon-btn .dot{position:absolute;top:8px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 6px var(--red)}
+  .avatar{width:36px;height:36px;border-radius:18px;background:var(--grad);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:600}
+
+  /* ===== 侧栏 ===== */
+  .sidebar{position:absolute;left:0;top:64px;width:72px;height:836px;display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:12px;
+    background:var(--bg-sidebar);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-right:1px solid var(--stroke);box-shadow:var(--shadow-side);z-index:40}
+  .nav-item{width:48px;height:52px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;color:var(--text-2);transition:.15s}
+  .nav-item svg{width:20px;height:20px}
+  .nav-item .lbl{font-size:10px;line-height:1}
+  .nav-item:hover{background:rgba(255,255,255,.05)}
+  .nav-item.active{background:rgba(102,115,255,.2);color:var(--accent);box-shadow:0 0 12px rgba(102,115,255,.4);border:1px solid rgba(102,115,255,.4)}
+  .nav-item.active .lbl{color:var(--text-1)}
+
+  /* ===== 内容区 ===== */
+  .content{position:absolute;left:72px;top:64px;width:1368px;height:836px;overflow:hidden}
+  .page{position:absolute;inset:0;display:none}
+  .page.active{display:block}
+
+  /* 通用面板 */
+  .panel{background:var(--bg-panel);border:1px solid var(--stroke);border-radius:var(--radius-xl);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:var(--shadow-card)}
+  .panel-strong{background:var(--bg-panel-strong);border:1px solid rgba(102,115,255,.2);box-shadow:var(--shadow-strong)}
+  .section-title{font-size:14px;font-weight:600;color:var(--text-1)}
+
+  /* 页头 */
+  .page-header{position:absolute;left:24px;top:24px;width:1320px;height:46px;display:flex;align-items:center;justify-content:space-between}
+  .page-header .title-block{display:flex;flex-direction:column;gap:4px}
+  .page-header h1{font-size:22px;font-weight:700;color:var(--text-1);line-height:1.1}
+  .page-header .sub{font-size:12px;color:var(--text-3)}
+  .btn-grad{display:flex;align-items:center;gap:6px;height:36px;padding:0 16px;background:var(--grad);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:500;cursor:pointer;box-shadow:0 4px 14px rgba(102,115,255,.4)}
+  .btn-grad:hover{filter:brightness(1.08)}
+  .btn-grad svg{width:16px;height:16px}
+
+  .body-area{position:absolute;left:24px;top:86px;width:1320px;height:726px}
+
+  /* ===== 首页 ===== */
+  #page-home .content-wrap{position:absolute;left:24px;top:24px;width:1320px;height:788px;display:flex;gap:24px}
+  .star-map{position:relative;width:920px;height:788px;background:var(--bg-panel);border:1px solid var(--stroke);border-radius:var(--radius-xl);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:var(--shadow-strong);overflow:hidden}
+  #page-home{background:url('assets/images/2_2.png') center/cover no-repeat;background-color:var(--bg-page)}
+  .star-lines{position:absolute;inset:0;width:920px;height:788px;pointer-events:none}
+  .star-title{position:absolute;left:20px;top:20px;width:300px;padding:14px;background:var(--bg-elevated);border:1px solid var(--stroke-2);border-radius:var(--radius-l);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:var(--shadow-card)}
+  .star-title h2{font-size:20px;font-weight:700;color:var(--text-1)}
+  .star-title p{font-size:12px;color:var(--text-2);margin-top:4px}
+  .star-title .hint{font-size:11px;color:var(--text-3);margin-top:6px}
+  .feature-bar{position:absolute;left:140px;bottom:20px;display:flex;align-items:center;justify-content:center;gap:16px;height:44px;padding:0 22px;background:var(--bg-sidebar);border:1px solid var(--stroke-2);border-radius:22px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:var(--shadow-card)}
+  .feature{display:flex;align-items:center;gap:6px;color:var(--text-1);font-size:12px}
+  .feature svg{width:16px;height:16px;color:var(--cyan)}
+  .map-node{position:absolute;display:flex;flex-direction:column;align-items:center;gap:0;cursor:pointer}
+  .map-node .ring{width:60px;height:60px;border-radius:50%;background:rgba(8,15,36,.75);border:1px solid rgba(67,232,163,.5);display:flex;align-items:center;justify-content:center;box-shadow:0 0 12px rgba(67,232,163,.5);transition:.15s}
+  .map-node .ring svg{width:26px;height:26px;color:var(--green)}
+  .map-node:hover .ring{transform:scale(1.08)}
+  .map-node .nlabel{font-size:12px;color:#D9E6FF;margin-top:6px;white-space:nowrap}
+  .map-node .ndot{position:absolute;top:2px;right:14px;width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
+  .map-node.warn .ring{border-color:rgba(255,194,8,.6);box-shadow:0 0 12px rgba(255,194,8,.5)}
+  .map-node.warn .ring svg{color:var(--yellow)}
+  .map-node.warn .ndot{background:var(--yellow);box-shadow:0 0 6px var(--yellow)}
+  .hub-core{position:absolute;width:88px;height:88px;border-radius:50%;background:rgba(102,115,255,.92);border:1px solid rgba(255,255,255,.35);box-shadow:0 0 22px rgba(102,115,255,.7);display:flex;align-items:center;justify-content:center;color:#fff}
+  .hub-core svg{width:36px;height:36px}
+  .hub-label{position:absolute;font-size:13px;font-weight:600;color:var(--text-1);white-space:nowrap;text-align:center}
+
+  .right-panel{width:400px;height:788px;display:flex;flex-direction:column;gap:16px}
+  .kpi-section{display:grid;grid-template-columns:1fr 1fr;gap:12px;height:188px}
+  .kpi-card{background:var(--bg-panel);border:1px solid var(--stroke);border-radius:var(--radius-l);padding:14px;display:flex;flex-direction:column;gap:6px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:var(--shadow-card)}
+  .kpi-card .k-label{font-size:12px;color:var(--text-2)}
+  .kpi-card .k-value{font-size:24px;font-weight:700;color:var(--text-1);line-height:1.1}
+  .kpi-card .k-trend{font-size:11px;color:var(--green)}
+  .health-section,.events-section{background:var(--bg-panel);border:1px solid var(--stroke);border-radius:var(--radius-xl);padding:16px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:var(--shadow-card)}
+  .health-section{height:155px}
+  .events-section{flex:1;min-height:0;display:flex;flex-direction:column}
+  .head-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .head-row .h-title{font-size:14px;font-weight:600;color:var(--text-1)}
+  .head-row .h-meta{font-size:11px;color:var(--green)}
+  .health-list{display:flex;flex-direction:column;gap:10px}
+  .health-item{display:flex;align-items:center;justify-content:space-between;font-size:12px}
+  .health-item .hi-left{display:flex;align-items:center;gap:8px;color:var(--text-1)}
+  .health-item .sdot{width:8px;height:8px;border-radius:50%}
+  .health-item .hi-metric{color:var(--text-2)}
+  .events-list{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;overflow:auto}
+  .event{display:flex;align-items:center;gap:10px;padding:10px;border-radius:var(--radius-l);background:rgba(255,255,255,.02);height:100px}
+  .event .e-icon{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none}
+  .event .e-icon svg{width:14px;height:14px;color:#fff}
+  .event .e-content{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .event .e-title{font-size:13px;color:var(--text-1);font-weight:500}
+  .event .e-desc{font-size:11px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .event .e-time{font-size:11px;color:var(--text-3);flex:none}
+
+  /* ===== 节点页 ===== */
+  #page-node .node-main{position:absolute;left:24px;top:24px;width:980px;height:788px;display:flex;flex-direction:column;gap:16px}
+  .kpi-bar{display:flex;gap:16px;height:80px}
+  .kpi-bar .kpi-card{height:80px;width:230px;flex:none}
+  .filter-bar{display:flex;align-items:center;justify-content:space-between;height:48px}
+  .chips{display:flex;gap:0}
+  .chip{height:32px;min-width:64px;padding:0 16px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text-2);background:rgba(255,255,255,.08);border:1px solid var(--stroke-3);border-radius:16px;cursor:pointer;margin-right:8px}
+  .chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .filter-search{display:flex;align-items:center;gap:8px;width:240px;height:36px;padding:0 12px;background:rgba(5,13,30,.8);border:1px solid var(--stroke-3);border-radius:24px}
+  .filter-search svg{width:16px;height:16px;color:var(--text-3)}
+  .filter-search input{flex:1;background:none;border:none;outline:none;color:var(--text-2);font-size:13px;font-family:var(--font)}
+  .topo-area{position:relative;flex:1;min-height:0}
+  .topo-grid{display:grid;grid-template-columns:repeat(3,300px);grid-auto-rows:140px;gap:20px;padding:20px}
+  .node-card{background:var(--bg-panel);border-radius:var(--radius-l);padding:14px;display:flex;flex-direction:column;justify-content:space-between;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:var(--shadow-card);cursor:pointer;transition:.15s}
+  .node-card:hover{transform:translateY(-2px)}
+  .node-card .nc-top{display:flex;align-items:center;justify-content:space-between}
+  .node-card .nc-name{font-size:14px;font-weight:600;color:var(--text-1)}
+  .node-card .nc-status{font-size:11px;padding:3px 8px;border-radius:10px}
+  .node-card .nc-meta{font-size:12px;color:var(--text-2);display:flex;flex-direction:column;gap:4px}
+  .node-card .nc-meta .row{display:flex;justify-content:space-between}
+  .st-online{border:1px solid var(--green);box-shadow:0 0 0 1px rgba(67,232,163,.3)}
+  .st-online .nc-status{background:rgba(67,232,163,.15);color:var(--green)}
+  .st-warn{border:1px solid var(--yellow);box-shadow:0 0 0 1px rgba(255,194,8,.3)}
+  .st-warn .nc-status{background:rgba(255,194,8,.15);color:var(--yellow)}
+  .st-offline{border:1px solid var(--red);box-shadow:0 0 0 1px rgba(255,69,69,.3)}
+  .st-offline .nc-status{background:rgba(255,69,69,.15);color:var(--red)}
+
+  .detail-panel{position:absolute;right:24px;top:24px;width:348px;height:812px;background:var(--bg-panel-strong);border:1px solid rgba(102,115,255,.2);border-radius:var(--radius-xl);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:var(--shadow-strong);padding:18px;display:flex;flex-direction:column;gap:16px}
+  .detail-header{display:flex;align-items:center;justify-content:space-between}
+  .detail-header .d-title{font-size:18px;font-weight:600;color:#fff}
+  .detail-header .d-close{width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:var(--text-2);cursor:pointer;font-size:16px}
+  .tab-bar{display:flex;flex-wrap:wrap;gap:8px}
+  .tab{height:30px;min-width:48px;padding:0 12px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text-2);background:transparent;border-radius:8px;cursor:pointer}
+  .tab.active{background:var(--accent);color:#fff}
+  .tab-content{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .status-banner{display:flex;align-items:center;gap:12px;height:56px;padding:0 14px;background:rgba(67,232,163,.1);border:1px solid rgba(67,232,163,.3);border-radius:var(--radius-l)}
+  .status-banner .sb-dot{width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+  .status-banner .sb-text{font-size:14px;color:var(--green);font-weight:500}
+  .info-box{background:var(--bg-panel-faint);border-radius:var(--radius-l);padding:14px;display:flex;flex-direction:column;gap:8px}
+  .info-box .info-row{display:flex;justify-content:space-between;font-size:12px}
+  .info-box .info-row .k{color:var(--text-2)}
+  .info-box .info-row .v{color:var(--text-1)}
+  .rings{display:flex;gap:16px}
+  .ring-stat{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+  .ring-stat .r-num{font-size:18px;font-weight:700;color:var(--text-1)}
+  .ring-stat .r-lbl{font-size:11px;color:var(--text-2)}
+  .sub-title{font-size:13px;font-weight:500;color:var(--text-mute)}
+  .app-line{display:flex;align-items:center;justify-content:space-between;font-size:12px;padding:6px 0;border-bottom:1px solid var(--stroke)}
+  .app-line .a-name{color:var(--text-1)}
+  .app-line .a-state{color:var(--green)}
+  .perf-chart{width:100%;height:82px}
+
+  /* ===== 应用 / 服务 主从 ===== */
+  .master-body{position:absolute;left:24px;top:86px;width:1320px;height:726px;display:flex;gap:16px}
+  .list-panel{flex:1;min-width:0;display:flex;flex-direction:column;gap:16px}
+  .detail-drawer{width:336px;flex:none;background:var(--bg-panel-strong);border:1px solid rgba(102,115,255,.2);border-radius:var(--radius-xl);box-shadow:var(--shadow-strong);padding:18px;display:flex;flex-direction:column;gap:16px;overflow:hidden}
+  .list-card{flex:1;min-height:0;background:var(--bg-panel);border:1px solid var(--stroke);border-radius:var(--radius-xl);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:var(--shadow-card);display:flex;flex-direction:column;overflow:hidden}
+  .list-card .lc-head{display:flex;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid var(--stroke)}
+  .list-rows{flex:1;min-height:0;overflow:auto}
+  .list-row{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--stroke);cursor:pointer}
+  .list-row:hover{background:rgba(255,255,255,.03)}
+  .list-row.selected{background:rgba(102,115,255,.12);box-shadow:inset 3px 0 0 var(--accent)}
+  .list-row .lr-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none;background:rgba(255,255,255,.05);color:var(--cyan)}
+  .list-row .lr-icon svg{width:18px;height:18px}
+  .list-row .lr-main{flex:1;min-width:0}
+  .list-row .lr-name{font-size:14px;color:var(--text-1);font-weight:500}
+  .list-row .lr-meta{font-size:12px;color:var(--text-2);margin-top:2px}
+  .list-row .lr-state{font-size:11px;padding:3px 10px;border-radius:10px;flex:none}
+  .list-row .lr-chev{color:var(--text-3);font-size:18px;flex:none}
+  .pill-online{background:rgba(67,232,163,.15);color:var(--green)}
+  .pill-warn{background:rgba(255,194,8,.15);color:var(--yellow)}
+  .pill-offline{background:rgba(255,69,69,.15);color:var(--red)}
+  .pill-provider{background:rgba(102,115,255,.15);color:var(--accent)}
+  .pill-consumer{background:rgba(111,227,236,.15);color:var(--cyan)}
+
+  /* ===== 配置 ===== */
+  #page-config .kv-card{flex:1;min-height:0;display:flex;flex-direction:column}
+  .kv-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--stroke)}
+  .mode-toggle{display:flex;background:rgba(255,255,255,.06);border-radius:8px;padding:2px}
+  .mode-toggle .mt{height:28px;padding:0 14px;display:flex;align-items:center;font-size:12px;color:var(--text-2);border-radius:6px;cursor:pointer}
+  .mode-toggle .mt.active{background:var(--accent);color:#fff}
+  .kv-actions{display:flex;gap:8px}
+  .btn-ghost{height:30px;padding:0 12px;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.06);border:1px solid var(--stroke-3);border-radius:8px;color:var(--text-1);font-size:12px;cursor:pointer}
+  .btn-ghost:hover{background:rgba(255,255,255,.1)}
+  .btn-ghost.primary{border-color:rgba(102,115,255,.5);color:var(--accent)}
+  .kv-body{flex:1;min-height:0;overflow:auto;padding:8px 16px}
+  .kv-table{width:100%;border-collapse:collapse;font-size:13px}
+  .kv-table th{text-align:left;color:var(--text-3);font-weight:500;padding:10px 8px;border-bottom:1px solid var(--stroke);font-size:12px}
+  .kv-table td{padding:10px 8px;border-bottom:1px solid var(--stroke);color:var(--text-1)}
+  .kv-table td .key{color:var(--cyan);font-family:ui-monospace,monospace}
+  .kv-text{white-space:pre-wrap;font-family:ui-monospace,monospace;font-size:12px;color:var(--text-1);line-height:1.7;background:rgba(0,0,0,.2);padding:12px;border-radius:8px}
+  .history-row{display:flex;gap:12px}
+  .history-card{flex:1;background:var(--bg-panel);border:1px solid var(--stroke);border-radius:var(--radius-l);padding:14px;display:flex;flex-direction:column;gap:8px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:var(--shadow-card)}
+  .history-card .h-ver{font-size:13px;font-weight:600;color:var(--text-1)}
+  .history-card .h-time{font-size:11px;color:var(--text-3)}
+  .history-card .h-actions{display:flex;gap:8px;margin-top:auto}
+
+  /* ===== 监控 ===== */
+  #page-monitor .mon-kpis{display:flex;gap:12px;height:76px}
+  #page-monitor .mon-kpis .kpi-card{height:76px}
+  .mon-controls{display:flex;align-items:center;gap:14px}
+  .time-select{display:flex;align-items:center;gap:8px;height:32px;padding:0 12px;background:rgba(255,255,255,.06);border:1px solid var(--stroke-3);border-radius:8px;color:var(--text-1);font-size:13px;cursor:pointer}
+  .time-select svg{width:14px;height:14px;color:var(--text-2)}
+  .auto-refresh{display:flex;align-items:center;gap:8px;height:32px;padding:0 12px;background:rgba(255,255,255,.06);border:1px solid var(--stroke-3);border-radius:8px;font-size:13px;color:var(--text-1);cursor:pointer}
+  .live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 1.4s infinite}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+  .mon-chart{position:absolute;left:24px;top:178px;width:1320px;height:634px;background:var(--bg-panel);border:1px solid var(--stroke);border-radius:var(--radius-xl);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:var(--shadow-card);overflow:hidden}
+  .mon-chart svg{width:100%;height:100%}
+
+  /* ===== 发布 ===== */
+  .pipeline{display:flex;align-items:center;justify-content:space-between;padding:24px;height:140px}
+  .pipe-step{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px}
+  .pipe-step .ps-icon{width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;background:rgba(102,115,255,.12);border:1px solid rgba(102,115,255,.4);color:var(--accent)}
+  .pipe-step .ps-icon svg{width:26px;height:26px}
+  .pipe-step .ps-name{font-size:13px;color:var(--text-1);font-weight:500}
+  .pipe-step .ps-state{font-size:11px;color:var(--green)}
+  .pipe-step.done .ps-icon{background:rgba(67,232,163,.12);border-color:rgba(67,232,163,.4);color:var(--green)}
+  .pipe-arrow{color:var(--text-3);font-size:22px;flex:none;padding:0 4px}
+  .legend{display:flex;gap:18px;margin-top:12px}
+  .legend .lg{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2)}
+  .legend .lg .d{width:10px;height:10px;border-radius:50%}
+  .deploy-history{flex:1;min-height:0;overflow:auto;padding:16px}
+  .dh-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--stroke)}
+  .dh-row .dh-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex:none;background:rgba(255,255,255,.05);color:var(--cyan)}
+  .dh-row .dh-icon svg{width:16px;height:16px}
+  .dh-row .dh-main{flex:1;min-width:0}
+  .dh-row .dh-name{font-size:13px;color:var(--text-1)}
+  .dh-row .dh-meta{font-size:11px;color:var(--text-2);margin-top:2px}
+  .dh-row .dh-state{font-size:11px;padding:3px 10px;border-radius:10px;flex:none}
+
+  /* ===== 设置 ===== */
+  .settings-grid{flex:1;min-height:0;display:flex;gap:16px}
+  .settings-col{flex:1;display:flex;flex-direction:column;gap:16px;overflow:auto}
+  .form-card{background:var(--bg-panel);border:1px solid var(--stroke);border-radius:var(--radius-xl);padding:18px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:var(--shadow-card)}
+  .form-card .fc-title{font-size:14px;font-weight:600;color:var(--text-1);margin-bottom:14px}
+  .form-field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+  .form-field label{font-size:12px;color:var(--text-2)}
+  .form-field input,.form-field select{height:36px;padding:0 12px;background:rgba(5,13,30,.8);border:1px solid var(--stroke-3);border-radius:8px;color:var(--text-1);font-size:13px;font-family:var(--font);outline:none}
+  .form-field input:focus,.form-field select:focus{border-color:var(--accent)}
+  .form-field .hint{font-size:11px;color:var(--text-3)}
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0}
+  .toggle-row .tr-label{font-size:13px;color:var(--text-1)}
+  .switch{width:40px;height:22px;border-radius:11px;background:rgba(255,255,255,.12);position:relative;cursor:pointer;transition:.2s}
+  .switch.on{background:var(--accent)}
+  .switch .knob{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}
+  .switch.on .knob{left:20px}
+</style>
+</head>
+<body>
+<div id="viewport">
+  <div id="stage">
+
+    <!-- ============ 顶栏 ============ -->
+    <div class="topbar">
+      <div class="left-group">
+        <div class="logo-group">
+          <span class="logo-mark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/><circle cx="5" cy="6" r="1.4" fill="currentColor" stroke="none"/><circle cx="19" cy="6" r="1.4" fill="currentColor" stroke="none"/><circle cx="5" cy="18" r="1.4" fill="currentColor" stroke="none"/><circle cx="19" cy="18" r="1.4" fill="currentColor" stroke="none"/><path d="M12 12 5 6M12 12l7-6M12 12l-7 6M12 12l7 6"/></svg>
+          </span>
+          <span class="logo-text">星尘<span>·</span>Stardust</span>
+        </div>
+        <div class="project-selector">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          <span>电商微服务平台</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+      </div>
+      <div class="search-bar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input placeholder="搜索节点、服务、应用..." />
+      </div>
+      <div class="right-actions">
+        <div class="icon-btn"><span class="dot"></span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        </div>
+        <div class="avatar">笑</div>
+      </div>
+    </div>
+
+    <!-- ============ 侧栏 ============ -->
+    <div class="sidebar" id="sidebar">
+      <div class="nav-item active" data-page="home" title="概览">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="7" height="7" rx="1.5" fill="currentColor" stroke="none"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        <span class="lbl">概览</span>
+      </div>
+      <div class="nav-item" data-page="node" title="节点">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><path d="M7 7h.01M7 17h.01"/></svg>
+        <span class="lbl">节点</span>
+      </div>
+      <div class="nav-item" data-page="app" title="应用">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>
+        <span class="lbl">应用</span>
+      </div>
+      <div class="nav-item" data-page="service" title="服务">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="12" r="2.2"/><circle cx="18" cy="6" r="2.2"/><circle cx="18" cy="18" r="2.2"/><path d="M8 11l8-4M8 13l8 4"/></svg>
+        <span class="lbl">服务</span>
+      </div>
+      <div class="nav-item" data-page="config" title="配置">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>
+        <span class="lbl">配置</span>
+      </div>
+      <div class="nav-item" data-page="monitor" title="监控">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12h4l2 6 4-14 2 8h6"/></svg>
+        <span class="lbl">监控</span>
+      </div>
+      <div class="nav-item" data-page="deploy" title="发布">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2c3 2 5 5 5 9l-5 3-5-3c0-4 2-7 5-9z"/><path d="M12 14v8M9 19h6"/></svg>
+        <span class="lbl">发布</span>
+      </div>
+      <div class="nav-item" data-page="settings" title="设置">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h16M4 12h10M4 17h6"/><circle cx="18" cy="12" r="2.4" fill="currentColor" stroke="none"/><circle cx="14" cy="17" r="2.4" fill="currentColor" stroke="none"/></svg>
+        <span class="lbl">设置</span>
+      </div>
+    </div>
+
+    <!-- ============ 内容区 ============ -->
+    <div class="content">
+
+      <!-- ---------- 首页 ---------- -->
+      <section class="page active" id="page-home">
+        <div class="content-wrap">
+          <div class="star-map">
+            <svg class="star-lines" viewBox="0 0 920 788" preserveAspectRatio="none">
+              <g stroke="rgba(67,232,163,.4)" stroke-width="1">
+                <line x1="440" y1="400" x2="440" y2="180"/>
+                <line x1="440" y1="400" x2="637" y2="223"/>
+                <line x1="440" y1="400" x2="710" y2="400"/>
+                <line x1="440" y1="400" x2="637" y2="577"/>
+                <line x1="440" y1="400" x2="440" y2="620"/>
+                <line x1="440" y1="400" x2="283" y2="577"/>
+                <line x1="440" y1="400" x2="220" y2="400"/>
+                <line x1="440" y1="400" x2="283" y2="223"/>
+              </g>
+            </svg>
+            <div class="star-title">
+              <h2>服务星图</h2>
+              <p>应用如尘，节点如星</p>
+              <div class="hint">点击模块节点进入对应管理页</div>
+            </div>
+            <!-- Hub -->
+            <div class="hub-core" style="left:396px;top:356px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="3" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="21" r="1.6" fill="currentColor" stroke="none"/><circle cx="3" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="21" cy="12" r="1.6" fill="currentColor" stroke="none"/><path d="M12 9V6M12 15v3M9 12H6M15 12h3"/></svg>
+            </div>
+            <div class="hub-label" style="left:380px;top:454px;width:120px">星尘核心</div>
+            <!-- 模块节点 -->
+            <div class="map-node" data-page="config" style="left:410px;top:150px"><div class="ring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></div><span class="nlabel">配置中心</span><span class="ndot"></span></div>
+            <div class="map-node" data-page="service" style="left:607px;top:193px"><div class="ring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="12" r="2.2"/><circle cx="18" cy="6" r="2.2"/><circle cx="18" cy="18" r="2.2"/><path d="M8 11l8-4M8 13l8 4"/></svg></div><span class="nlabel">注册发现</span><span class="ndot"></span></div>
+            <div class="map-node" data-page="node" style="left:680px;top:370px"><div class="ring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/></svg></div><span class="nlabel">节点集群</span><span class="ndot"></span></div>
+            <div class="map-node" data-page="app" style="left:607px;top:547px"><div class="ring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></div><span class="nlabel">应用</span><span class="ndot"></span></div>
+            <div class="map-node" data-page="deploy" style="left:410px;top:590px"><div class="ring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2c3 2 5 5 5 9l-5 3-5-3c0-4 2-7 5-9z"/><path d="M12 14v8"/></svg></div><span class="nlabel">网关</span><span class="ndot"></span></div>
+            <div class="map-node warn" data-page="monitor" style="left:253px;top:547px"><div class="ring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12h4l2 6 4-14 2 8h6"/></svg></div><span class="nlabel">监控 APM</span><span class="ndot"></span></div>
+            <div class="map-node" data-page="node" style="left:190px;top:370px"><div class="ring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 5h16v12H4z"/><path d="M8 21h8M12 17v4"/></svg></div><span class="nlabel">日志中心</span><span class="ndot"></span></div>
+            <div class="map-node" data-page="deploy" style="left:253px;top:193px"><div class="ring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2c3 2 5 5 5 9l-5 3-5-3c0-4 2-7 5-9z"/><path d="M12 14v8M9 19h6"/></svg></div><span class="nlabel">发布流水线</span><span class="ndot"></span></div>
+
+            <div class="feature-bar">
+              <div class="feature"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M7 7l4 9M17 7l-4 9"/></svg>去中心化</div>
+              <div class="feature"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z"/></svg>高可用</div>
+              <div class="feature"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></svg>可观测</div>
+              <div class="feature"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>安全</div>
+              <div class="feature"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 9h6V4M20 15h-6v5"/><path d="M10 4l6 6M14 20l-6-6"/></svg>可扩展</div>
+            </div>
+          </div>
+
+          <div class="right-panel">
+            <div class="kpi-section">
+              <div class="kpi-card"><div class="k-label">节点总数</div><div class="k-value">128</div><div class="k-trend">↑ 4 新增</div></div>
+              <div class="kpi-card"><div class="k-label">在线服务</div><div class="k-value">42</div><div class="k-trend">↑ 2 新增</div></div>
+              <div class="kpi-card"><div class="k-label">活跃告警</div><div class="k-value" style="color:var(--red)">3</div><div class="k-trend">↓ 2 已恢复</div></div>
+              <div class="kpi-card"><div class="k-label">今日请求</div><div class="k-value">2.4M</div><div class="k-trend">↑ 12%</div></div>
+            </div>
+            <div class="health-section">
+              <div class="head-row"><span class="h-title">服务健康</span><span class="h-meta">7/7 正常</span></div>
+              <div class="health-list">
+                <div class="health-item"><div class="hi-left"><span class="sdot" style="background:var(--green)"></span>ORDER</div><span class="hi-metric">12ms · 99.99%</span></div>
+                <div class="health-item"><div class="hi-left"><span class="sdot" style="background:var(--green)"></span>PAYMENT</div><span class="hi-metric">8ms · 99.95%</span></div>
+                <div class="health-item"><div class="hi-left"><span class="sdot" style="background:var(--green)"></span>GATEWAY</div><span class="hi-metric">5ms · 99.98%</span></div>
+                <div class="health-item"><div class="hi-left"><span class="sdot" style="background:var(--yellow)"></span>ANALYTICS</div><span class="hi-metric">45ms · 99.20%</span></div>
+              </div>
+            </div>
+            <div class="events-section">
+              <div class="head-row"><span class="h-title">近期事件</span><span class="h-meta" style="color:var(--cyan);cursor:pointer">查看全部 →</span></div>
+              <div class="events-list">
+                <div class="event">
+                  <div class="e-icon" style="background:rgba(255,69,69,.15)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg></div>
+                  <div class="e-content"><div class="e-title">inventory-node07 CPU 告警</div><div class="e-desc">CPU 使用率持续高于 85%，已触发阈值</div></div>
+                  <div class="e-time">2m</div>
+                </div>
+                <div class="event">
+                  <div class="e-icon" style="background:rgba(102,115,255,.15)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v18M3 12h18"/></svg></div>
+                  <div class="e-content"><div class="e-title">payment-gateway 扩容完成</div><div class="e-desc">节点实例由 2 扩容至 4，负载已均衡</div></div>
+                  <div class="e-time">15m</div>
+                </div>
+                <div class="event">
+                  <div class="e-icon" style="background:rgba(67,232,163,.15)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 6 9 17l-5-5"/></svg></div>
+                  <div class="e-content"><div class="e-title">order-service v2.3.1 发布</div><div class="e-desc">新版本已灰度至 30% 流量，运行稳定</div></div>
+                  <div class="e-time">32m</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- 节点页 ---------- -->
+      <section class="page" id="page-node">
+        <div class="node-main">
+          <div class="kpi-bar">
+            <div class="kpi-card"><div class="k-label">节点总数</div><div class="k-value">128</div><div class="k-trend">↑ 4 新增</div></div>
+            <div class="kpi-card"><div class="k-label">在线节点</div><div class="k-value">121</div><div class="k-trend">↑ 3 新增</div></div>
+            <div class="kpi-card"><div class="k-label">告警节点</div><div class="k-value" style="color:var(--yellow)">4</div><div class="k-trend">↓ 1 恢复</div></div>
+            <div class="kpi-card"><div class="k-label">离线节点</div><div class="k-value" style="color:var(--red)">3</div><div class="k-trend">— 持平</div></div>
+          </div>
+          <div class="filter-bar">
+            <div class="chips">
+              <div class="chip active" data-filter="all">全部</div>
+              <div class="chip" data-filter="online">在线</div>
+              <div class="chip" data-filter="warning">告警</div>
+              <div class="chip" data-filter="offline">离线</div>
+            </div>
+            <div class="filter-search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+              <input placeholder="搜索节点名称、IP..." />
+            </div>
+          </div>
+          <div class="topo-area">
+            <div class="topo-grid">
+              <div class="node-card st-online"><div class="nc-top"><span class="nc-name">iocdb-node01</span><span class="nc-status">在线</span></div><div class="nc-meta"><div class="row"><span>IP 10.0.1.21</span><span>Linux</span></div><div class="row"><span>CPU 32%</span><span>内存 58%</span></div></div></div>
+              <div class="node-card st-online"><div class="nc-top"><span class="nc-name">gateway-node03</span><span class="nc-status">在线</span></div><div class="nc-meta"><div class="row"><span>IP 10.0.1.33</span><span>Linux</span></div><div class="row"><span>CPU 21%</span><span>内存 44%</span></div></div></div>
+              <div class="node-card st-warn"><div class="nc-top"><span class="nc-name">inventory-node07</span><span class="nc-status">告警</span></div><div class="nc-meta"><div class="row"><span>IP 10.0.1.57</span><span>Linux</span></div><div class="row"><span>CPU 87%</span><span>内存 72%</span></div></div></div>
+              <div class="node-card st-offline"><div class="nc-top"><span class="nc-name">pay-node02</span><span class="nc-status">离线</span></div><div class="nc-meta"><div class="row"><span>IP 10.0.1.22</span><span>Windows</span></div><div class="row"><span>CPU —</span><span>内存 —</span></div></div></div>
+              <div class="node-card st-online"><div class="nc-top"><span class="nc-name">analytics-node05</span><span class="nc-status">在线</span></div><div class="nc-meta"><div class="row"><span>IP 10.0.1.45</span><span>Linux</span></div><div class="row"><span>CPU 45%</span><span>内存 61%</span></div></div></div>
+              <div class="node-card st-online"><div class="nc-top"><span class="nc-name">worker-node09</span><span class="nc-status">在线</span></div><div class="nc-meta"><div class="row"><span>IP 10.0.1.69</span><span>Linux</span></div><div class="row"><span>CPU 28%</span><span>内存 39%</span></div></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-panel">
+          <div class="detail-header"><span class="d-title">iocdb-node01</span><span class="d-close">✕</span></div>
+          <div class="tab-bar">
+            <div class="tab active" data-tab="online">在线</div>
+            <div class="tab" data-tab="history">历史</div>
+            <div class="tab" data-tab="command">指令</div>
+            <div class="tab" data-tab="performance">性能</div>
+            <div class="tab" data-tab="framework">框架推荐</div>
+            <div class="tab" data-tab="apps">应用在线</div>
+            <div class="tab" data-tab="deploy">应用发布</div>
+          </div>
+          <div class="tab-content">
+            <div class="status-banner"><span class="sb-dot"></span><span class="sb-text">● 节点在线 · 心跳正常</span></div>
+            <div class="info-box">
+              <div class="info-row"><span class="k">节点地址</span><span class="v">10.0.1.21</span></div>
+              <div class="info-row"><span class="k">操作系统</span><span class="v">Linux x64</span></div>
+              <div class="info-row"><span class="k">运行时长</span><span class="v">42 天 6 小时</span></div>
+              <div class="info-row"><span class="k">版本</span><span class="v">StarAgent 10.2.1</span></div>
+            </div>
+            <div class="sub-title">实时资源</div>
+            <div class="rings">
+              <div class="ring-stat"><span class="r-num">32%</span><span class="r-lbl">CPU</span></div>
+              <div class="ring-stat"><span class="r-num">58%</span><span class="r-lbl">内存</span></div>
+              <div class="ring-stat"><span class="r-num">12%</span><span class="r-lbl">磁盘</span></div>
+            </div>
+            <div class="sub-title">应用在线</div>
+            <div class="app-line"><span class="a-name">order-service</span><span class="a-state">● 2 实例</span></div>
+            <div class="app-line"><span class="a-name">user-center</span><span class="a-state">● 1 实例</span></div>
+            <div class="sub-title">性能趋势 (最近1小时)</div>
+            <svg class="perf-chart" viewBox="0 0 312 82" preserveAspectRatio="none">
+              <defs><linearGradient id="pg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#43E8A3" stop-opacity=".35"/><stop offset="1" stop-color="#43E8A3" stop-opacity="0"/></linearGradient></defs>
+              <path d="M0 60 C40 50 60 30 90 36 C120 42 140 18 170 26 C200 34 230 12 260 20 C290 28 300 16 312 22 L312 82 L0 82 Z" fill="url(#pg)"/>
+              <path d="M0 60 C40 50 60 30 90 36 C120 42 140 18 170 26 C200 34 230 12 260 20 C290 28 300 16 312 22" fill="none" stroke="#43E8A3" stroke-width="2"/>
+            </svg>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- 应用页 ---------- -->
+      <section class="page" id="page-app">
+        <div class="page-header">
+          <div class="title-block"><h1>应用管理</h1><span class="sub">管理被治理的应用实例与配置</span></div>
+          <button class="btn-grad"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>新建应用</button>
+        </div>
+        <div class="master-body">
+          <div class="list-panel">
+            <div class="list-card">
+              <div class="lc-head">
+                <div class="chips">
+                  <div class="chip active" data-filter="all">全部</div>
+                  <div class="chip" data-filter="online">在线</div>
+                  <div class="chip" data-filter="warning">告警</div>
+                  <div class="chip" data-filter="offline">离线</div>
+                </div>
+                <div class="filter-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input placeholder="搜索应用..." /></div>
+              </div>
+              <div class="list-rows" id="app-rows">
+                <div class="list-row selected" data-app="order-service"><div class="lr-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></div><div class="lr-main"><div class="lr-name">order-service</div><div class="lr-meta">电商订单服务 · 4 实例</div></div><span class="lr-state pill-online">在线</span><span class="lr-chev">›</span></div>
+                <div class="list-row" data-app="payment-gateway"><div class="lr-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></div><div class="lr-main"><div class="lr-name">payment-gateway</div><div class="lr-meta">支付网关 · 3 实例</div></div><span class="lr-state pill-warn">告警</span><span class="lr-chev">›</span></div>
+                <div class="list-row" data-app="user-center"><div class="lr-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></div><div class="lr-main"><div class="lr-name">user-center</div><div class="lr-meta">用户中心 · 2 实例</div></div><span class="lr-state pill-offline">离线</span><span class="lr-chev">›</span></div>
+                <div class="list-row" data-app="search-index"><div class="lr-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></div><div class="lr-main"><div class="lr-name">search-index</div><div class="lr-meta">搜索索引服务 · 5 实例</div></div><span class="lr-state pill-online">在线</span><span class="lr-chev">›</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="detail-drawer">
+            <div class="detail-header"><span class="d-title" id="app-drawer-title">order-service</span><span class="d-close">✕</span></div>
+            <div class="tab-bar">
+              <div class="tab active" data-tab="overview">概览</div>
+              <div class="tab" data-tab="instances">实例</div>
+              <div class="tab" data-tab="config">配置</div>
+              <div class="tab" data-tab="release">发布</div>
+            </div>
+            <div class="tab-content">
+              <div class="status-banner"><span class="sb-dot"></span><span class="sb-text">● 运行中 · 4 个实例在线</span></div>
+              <div class="info-box">
+                <div class="info-row"><span class="k">应用ID</span><span class="v">app-order-001</span></div>
+                <div class="info-row"><span class="k">分类</span><span class="v">电商核心</span></div>
+                <div class="info-row"><span class="k">端口</span><span class="v">8080</span></div>
+                <div class="info-row"><span class="k">心跳</span><span class="v">15s</span></div>
+              </div>
+              <div class="sub-title">实时指标</div>
+              <div class="rings">
+                <div class="ring-stat"><span class="r-num">12ms</span><span class="r-lbl">平均延迟</span></div>
+                <div class="ring-stat"><span class="r-num">2400</span><span class="r-lbl">QPS</span></div>
+                <div class="ring-stat"><span class="r-num">99.99%</span><span class="r-lbl">可用率</span></div>
+              </div>
+              <div class="sub-title">性能趋势 (最近1小时)</div>
+              <svg class="perf-chart" viewBox="0 0 312 82" preserveAspectRatio="none">
+                <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6673FF" stop-opacity=".35"/><stop offset="1" stop-color="#6673FF" stop-opacity="0"/></linearGradient></defs>
+                <path d="M0 50 C40 40 60 55 90 45 C120 35 140 20 170 30 C200 40 230 18 260 26 C290 34 300 22 312 28 L312 82 L0 82 Z" fill="url(#ag)"/>
+                <path d="M0 50 C40 40 60 55 90 45 C120 35 140 20 170 30 C200 40 230 18 260 26 C290 34 300 22 312 28" fill="none" stroke="#6673FF" stroke-width="2"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- 服务页 ---------- -->
+      <section class="page" id="page-service">
+        <div class="page-header">
+          <div class="title-block"><h1>服务管理</h1><span class="sub">注册发现 · 服务提供者与消费者</span></div>
+        </div>
+        <div class="master-body">
+          <div class="list-panel">
+            <div class="list-card">
+              <div class="lc-head">
+                <div class="chips">
+                  <div class="chip active" data-filter="all">全部</div>
+                  <div class="chip" data-filter="provider">提供者</div>
+                  <div class="chip" data-filter="consumer">消费者</div>
+                </div>
+                <div class="filter-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input placeholder="搜索服务、接口..." /></div>
+              </div>
+              <div class="list-rows">
+                <div class="list-row selected"><div class="lr-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="12" r="2.2"/><circle cx="18" cy="6" r="2.2"/><circle cx="18" cy="18" r="2.2"/><path d="M8 11l8-4M8 13l8 4"/></svg></div><div class="lr-main"><div class="lr-name">order-service</div><div class="lr-meta">订单服务 · 8 接口</div></div><span class="lr-state pill-provider">提供者</span><span class="lr-chev">›</span></div>
+                <div class="list-row"><div class="lr-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="12" r="2.2"/><circle cx="18" cy="6" r="2.2"/><circle cx="18" cy="18" r="2.2"/><path d="M8 11l8-4M8 13l8 4"/></svg></div><div class="lr-main"><div class="lr-name">payment-api</div><div class="lr-meta">支付接口 · 5 接口</div></div><span class="lr-state pill-consumer">消费者</span><span class="lr-chev">›</span></div>
+                <div class="list-row"><div class="lr-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="12" r="2.2"/><circle cx="18" cy="6" r="2.2"/><circle cx="18" cy="18" r="2.2"/><path d="M8 11l8-4M8 13l8 4"/></svg></div><div class="lr-main"><div class="lr-name">user-profile</div><div class="lr-meta">用户档案 · 6 接口</div></div><span class="lr-state pill-provider">提供者</span><span class="lr-chev">›</span></div>
+                <div class="list-row"><div class="lr-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="12" r="2.2"/><circle cx="18" cy="6" r="2.2"/><circle cx="18" cy="18" r="2.2"/><path d="M8 11l8-4M8 13l8 4"/></svg></div><div class="lr-main"><div class="lr-name">inventory-svc</div><div class="lr-meta">库存服务 · 7 接口</div></div><span class="lr-state pill-consumer">消费者</span><span class="lr-chev">›</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="detail-drawer">
+            <div class="detail-header"><span class="d-title">order-service</span><span class="d-close">✕</span></div>
+            <div class="tab-bar">
+              <div class="tab active" data-tab="overview">概览</div>
+              <div class="tab" data-tab="providers">提供者</div>
+              <div class="tab" data-tab="consumers">消费者</div>
+              <div class="tab" data-tab="topology">拓扑</div>
+            </div>
+            <div class="tab-content">
+              <div class="status-banner"><span class="sb-dot"></span><span class="sb-text">● 已注册 · 健康</span></div>
+              <div class="info-box">
+                <div class="info-row"><span class="k">服务名</span><span class="v">order-service</span></div>
+                <div class="info-row"><span class="k">角色</span><span class="v">提供者 / 消费者</span></div>
+                <div class="info-row"><span class="k">接口数</span><span class="v">8</span></div>
+                <div class="info-row"><span class="k">实例数</span><span class="v">4</span></div>
+              </div>
+              <div class="sub-title">调用拓扑</div>
+              <svg class="perf-chart" viewBox="0 0 312 120" preserveAspectRatio="xMidYMid meet" style="height:120px">
+                <g stroke="rgba(102,115,255,.5)" stroke-width="1.2" fill="none">
+                  <line x1="156" y1="60" x2="60" y2="30"/><line x1="156" y1="60" x2="252" y2="30"/><line x1="156" y1="60" x2="60" y2="90"/><line x1="156" y1="60" x2="252" y2="90"/>
+                </g>
+                <circle cx="156" cy="60" r="14" fill="rgba(102,115,255,.2)" stroke="#6673FF"/><text x="156" y="64" text-anchor="middle" fill="#E0F2FF" font-size="9">本服务</text>
+                <circle cx="60" cy="30" r="9" fill="rgba(67,232,163,.2)" stroke="#43E8A3"/><circle cx="252" cy="30" r="9" fill="rgba(67,232,163,.2)" stroke="#43E8A3"/>
+                <circle cx="60" cy="90" r="9" fill="rgba(111,227,236,.2)" stroke="#6FE3EC"/><circle cx="252" cy="90" r="9" fill="rgba(111,227,236,.2)" stroke="#6FE3EC"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- 配置页 ---------- -->
+      <section class="page" id="page-config">
+        <div class="page-header"><div class="title-block"><h1>配置中心</h1><span class="sub">应用 × 环境 × 项目 配置下发</span></div></div>
+        <div class="body-area" style="display:flex;flex-direction:column;gap:16px">
+          <div class="panel kv-card" style="height:578px">
+            <div class="kv-head">
+              <div class="mode-toggle">
+                <div class="mt active" data-mode="table">表格</div>
+                <div class="mt" data-mode="text">文本</div>
+              </div>
+              <div class="kv-actions">
+                <button class="btn-ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>导出</button>
+                <button class="btn-ghost primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3h18v14H3z"/><path d="M8 21h8M12 17v4"/></svg>对比上一版</button>
+              </div>
+            </div>
+            <div class="kv-body">
+              <table class="kv-table" id="kv-table">
+                <thead><tr><th style="width:240px">键</th><th>值</th><th style="width:160px">环境</th><th style="width:120px">状态</th></tr></thead>
+                <tbody>
+                  <tr><td><span class="key">ConnectionStrings:Default</span></td><td>Server=10.0.1.10;Database=shop</td><td>生产</td><td><span class="pill-online" style="padding:2px 8px;border-radius:8px">已生效</span></td></tr>
+                  <tr><td><span class="key">Cache:Redis</span></td><td>10.0.1.20:6379</td><td>生产</td><td><span class="pill-online" style="padding:2px 8px;border-radius:8px">已生效</span></td></tr>
+                  <tr><td><span class="key">Jwt:Secret</span></td><td>••••••••••••</td><td>生产</td><td><span class="pill-warn" style="padding:2px 8px;border-radius:8px">待发布</span></td></tr>
+                  <tr><td><span class="key">Feature:NewUI</span></td><td>true</td><td>预发</td><td><span class="pill-online" style="padding:2px 8px;border-radius:8px">已生效</span></td></tr>
+                  <tr><td><span class="key">Limit:Qps</span></td><td>2000</td><td>生产</td><td><span class="pill-online" style="padding:2px 8px;border-radius:8px">已生效</span></td></tr>
+                  <tr><td><span class="key">Log:Level</span></td><td>Information</td><td>生产</td><td><span class="pill-online" style="padding:2px 8px;border-radius:8px">已生效</span></td></tr>
+                </tbody>
+              </table>
+              <div class="kv-text" id="kv-text" style="display:none">
+{
+  "ConnectionStrings:Default": "Server=10.0.1.10;Database=shop",
+  "Cache:Redis": "10.0.1.20:6379",
+  "Jwt:Secret": "******",
+  "Feature:NewUI": true,
+  "Limit:Qps": 2000,
+  "Log:Level": "Information"
+}
+              </div>
+            </div>
+          </div>
+          <div class="history-row" style="height:132px">
+            <div class="history-card">
+              <div class="h-ver">v2.3.1</div>
+              <div class="h-time">2026-08-08 14:22 · 笑笑</div>
+              <div class="h-actions"><button class="btn-ghost primary">回滚到此版本</button></div>
+            </div>
+            <div class="history-card">
+              <div class="h-ver">v2.3.0</div>
+              <div class="h-time">2026-08-07 09:10 · 系统</div>
+              <div class="h-actions"><button class="btn-ghost primary">回滚到此版本</button></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- 监控页 ---------- -->
+      <section class="page" id="page-monitor">
+        <div class="page-header">
+          <div class="title-block"><h1>监控中心 APM</h1><span class="sub">应用性能与链路追踪</span></div>
+          <div class="mon-controls">
+            <div class="time-select"><span>近 1 小时</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+            <div class="auto-refresh"><span class="live-dot"></span><span>自动刷新 · 15s</span></div>
+          </div>
+        </div>
+        <div class="mon-kpis">
+          <div class="kpi-card"><div class="k-label">平均响应</div><div class="k-value">18ms</div><div class="k-trend">↓ 3ms</div></div>
+          <div class="kpi-card"><div class="k-label">错误率</div><div class="k-value" style="color:var(--green)">0.02%</div><div class="k-trend">— 持平</div></div>
+          <div class="kpi-card"><div class="k-label">吞吐</div><div class="k-value">12.4K/s</div><div class="k-trend">↑ 8%</div></div>
+          <div class="kpi-card"><div class="k-label">活跃实例</div><div class="k-value">42</div><div class="k-trend">↑ 2</div></div>
+        </div>
+        <div class="mon-chart">
+          <svg viewBox="0 0 1320 634" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="mg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#43E8A3" stop-opacity=".3"/><stop offset="1" stop-color="#43E8A3" stop-opacity="0"/></linearGradient>
+              <linearGradient id="mg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6673FF" stop-opacity=".3"/><stop offset="1" stop-color="#6673FF" stop-opacity="0"/></linearGradient>
+            </defs>
+            <g stroke="rgba(255,255,255,.06)" stroke-width="1">
+              <line x1="0" y1="120" x2="1320" y2="120"/><line x1="0" y1="260" x2="1320" y2="260"/><line x1="0" y1="400" x2="1320" y2="400"/><line x1="0" y1="540" x2="1320" y2="540"/>
+            </g>
+            <path d="M0 480 C120 460 200 380 320 400 C440 420 520 300 640 320 C760 340 840 200 960 240 C1080 280 1200 180 1320 210 L1320 634 L0 634 Z" fill="url(#mg)"/>
+            <path d="M0 480 C120 460 200 380 320 400 C440 420 520 300 640 320 C760 340 840 200 960 240 C1080 280 1200 180 1320 210" fill="none" stroke="#43E8A3" stroke-width="2.5"/>
+            <path d="M0 540 C120 520 200 500 320 510 C440 520 520 460 640 470 C760 480 840 420 960 440 C1080 460 1200 430 1320 450 L1320 634 L0 634 Z" fill="url(#mg2)" opacity=".6"/>
+            <path d="M0 540 C120 520 200 500 320 510 C440 520 520 460 640 470 C760 480 840 420 960 440 C1080 460 1200 430 1320 450" fill="none" stroke="#6673FF" stroke-width="2.5" opacity=".8"/>
+          </svg>
+        </div>
+      </section>
+
+      <!-- ---------- 发布页 ---------- -->
+      <section class="page" id="page-deploy">
+        <div class="page-header"><div class="title-block"><h1>远程发布</h1><span class="sub">构建 · 打包 · 分发 · 部署</span></div></div>
+        <div class="body-area" style="display:flex;flex-direction:column;gap:16px">
+          <div class="panel pipeline">
+            <div class="pipe-step done"><div class="ps-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h16v10H4z"/><path d="M8 12h8"/></svg></div><div class="ps-name">构建</div><div class="ps-state">✓ 完成</div></div>
+            <div class="pipe-arrow">→</div>
+            <div class="pipe-step done"><div class="ps-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v4h16v-4"/></svg></div><div class="ps-name">上传</div><div class="ps-state">✓ 完成</div></div>
+            <div class="pipe-arrow">→</div>
+            <div class="pipe-step done"><div class="ps-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8 11l8-4M8 13l8 4"/></svg></div><div class="ps-name">分发</div><div class="ps-state">✓ 完成</div></div>
+            <div class="pipe-arrow">→</div>
+            <div class="pipe-step"><div class="ps-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2c3 2 5 5 5 9l-5 3-5-3c0-4 2-7 5-9z"/><path d="M12 14v8"/></svg></div><div class="ps-name">部署</div><div class="ps-state" style="color:var(--yellow)">● 进行中</div></div>
+            <div style="position:absolute;left:24px;bottom:14px" class="legend">
+              <div class="lg"><span class="d" style="background:var(--green)"></span>完成</div>
+              <div class="lg"><span class="d" style="background:var(--accent)"></span>进行中</div>
+              <div class="lg"><span class="d" style="background:rgba(255,255,255,.2)"></span>等待</div>
+            </div>
+          </div>
+          <div class="panel" style="flex:1;display:flex;flex-direction:column">
+            <div class="deploy-history">
+              <div class="dh-row"><div class="dh-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2c3 2 5 5 5 9l-5 3-5-3c0-4 2-7 5-9z"/></svg></div><div class="dh-main"><div class="dh-name">order-service v2.3.1</div><div class="dh-meta">笑笑 · 2026-08-08 14:22 · 4 节点</div></div><span class="dh-state pill-online">成功</span></div>
+              <div class="dh-row"><div class="dh-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2c3 2 5 5 5 9l-5 3-5-3c0-4 2-7 5-9z"/></svg></div><div class="dh-main"><div class="dh-name">payment-gateway v1.8.0</div><div class="dh-meta">系统 · 2026-08-08 11:05 · 3 节点</div></div><span class="dh-state pill-warn">灰度中</span></div>
+              <div class="dh-row"><div class="dh-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2c3 2 5 5 5 9l-5 3-5-3c0-4 2-7 5-9z"/></svg></div><div class="dh-main"><div class="dh-name">user-center v3.1.2</div><div class="dh-meta">笑笑 · 2026-08-07 18:40 · 2 节点</div></div><span class="dh-state pill-online">成功</span></div>
+              <div class="dh-row"><div class="dh-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2c3 2 5 5 5 9l-5 3-5-3c0-4 2-7 5-9z"/></svg></div><div class="dh-main"><div class="dh-name">search-index v2.0.5</div><div class="dh-meta">系统 · 2026-08-07 10:12 · 5 节点</div></div><span class="dh-state pill-offline">回滚</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- 设置页 ---------- -->
+      <section class="page" id="page-settings">
+        <div class="page-header">
+          <div class="title-block"><h1>系统设置</h1><span class="sub">平台参数与通知配置</span></div>
+          <button class="btn-grad">保存更改</button>
+        </div>
+        <div class="body-area">
+          <div class="settings-grid">
+            <div class="settings-col">
+              <div class="form-card">
+                <div class="fc-title">基础信息</div>
+                <div class="form-field"><label>平台名称</label><input value="电商微服务平台" /></div>
+                <div class="form-field"><label>默认环境</label><select><option>生产</option><option>预发</option><option>测试</option></select></div>
+                <div class="form-field"><label>数据保留天数</label><input value="30" /><div class="hint">指标 / 追踪 / 日志归档周期</div></div>
+              </div>
+              <div class="form-card">
+                <div class="fc-title">通知</div>
+                <div class="toggle-row"><span class="tr-label">节点离线告警</span><div class="switch on"><div class="knob"></div></div></div>
+                <div class="toggle-row"><span class="tr-label">发布结果通知</span><div class="switch on"><div class="knob"></div></div></div>
+                <div class="toggle-row"><span class="tr-label">每日健康报告</span><div class="switch"><div class="knob"></div></div></div>
+              </div>
+            </div>
+            <div class="settings-col">
+              <div class="form-card">
+                <div class="fc-title">安全</div>
+                <div class="form-field"><label>会话超时（分钟）</label><input value="30" /></div>
+                <div class="form-field"><label>API 速率限制</label><input value="2000" /></div>
+                <div class="toggle-row"><span class="tr-label">启用双因素认证</span><div class="switch"><div class="knob"></div></div></div>
+              </div>
+              <div class="form-card">
+                <div class="fc-title">外观</div>
+                <div class="toggle-row"><span class="tr-label">深色主题</span><div class="switch on"><div class="knob"></div></div></div>
+                <div class="form-field"><label>主题强调色</label><select><option>星尘青</option><option>生命绿</option><option>默认蓝</option></select></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /content -->
+  </div><!-- /stage -->
+</div><!-- /viewport -->
+
+<script>
+  // ===== 等比缩放 =====
+  function fitStage(){
+    const stage=document.getElementById('stage');
+    const s=Math.min(window.innerWidth/1440, window.innerHeight/900);
+    stage.style.transform='scale('+s+')';
+    const w=1440*s,h=900*s;
+    stage.style.left=((window.innerWidth-w)/2)+'px';
+    stage.style.top=((window.innerHeight-h)/2)+'px';
+    stage.style.position='absolute';
+  }
+  window.addEventListener('resize',fitStage); fitStage();
+
+  // ===== 页面切换 =====
+  const navItems=document.querySelectorAll('.nav-item');
+  const pages=document.querySelectorAll('.page');
+  function showPage(name){
+    pages.forEach(p=>p.classList.toggle('active',p.id==='page-'+name));
+    navItems.forEach(n=>n.classList.toggle('active',n.dataset.page===name));
+  }
+  navItems.forEach(n=>n.addEventListener('click',()=>showPage(n.dataset.page)));
+  document.querySelectorAll('.map-node').forEach(m=>m.addEventListener('click',()=>showPage(m.dataset.page)));
+
+  // ===== 节点筛选 chips =====
+  document.querySelectorAll('#page-node .chip').forEach(c=>c.addEventListener('click',()=>{
+    c.parentElement.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
+    c.classList.add('active');
+  }));
+
+  // ===== 应用列表行选择 =====
+  const appRows=document.getElementById('app-rows');
+  if(appRows){
+    appRows.querySelectorAll('.list-row').forEach(r=>r.addEventListener('click',()=>{
+      appRows.querySelectorAll('.list-row').forEach(x=>x.classList.remove('selected'));
+      r.classList.add('selected');
+      document.getElementById('app-drawer-title').textContent=r.dataset.app;
+    }));
+  }
+  // 应用页筛选 chips
+  const appChips=document.querySelectorAll('#page-app .chip');
+  appChips.forEach(c=>c.addEventListener('click',()=>{
+    appChips.forEach(x=>x.classList.remove('active')); c.classList.add('active');
+  }));
+
+  // ===== 通用 Tab 切换（详情抽屉）=====
+  document.querySelectorAll('.tab-bar').forEach(bar=>{
+    bar.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+      bar.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+    }));
+  });
+
+  // ===== 配置 模式切换 =====
+  const kvTable=document.getElementById('kv-table');
+  const kvText=document.getElementById('kv-text');
+  document.querySelectorAll('#page-config .mt').forEach(m=>m.addEventListener('click',()=>{
+    document.querySelectorAll('#page-config .mt').forEach(x=>x.classList.remove('active'));
+    m.classList.add('active');
+    const isText=m.dataset.mode==='text';
+    kvTable.style.display=isText?'none':'table';
+    kvText.style.display=isText?'block':'none';
+  }));
+
+  // ===== 设置 开关 =====
+  document.querySelectorAll('.switch').forEach(s=>s.addEventListener('click',()=>s.classList.toggle('on')));
+</script>
+</body>
+</html>

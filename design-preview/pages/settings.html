@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>星尘 Stardust · 设置</title>
+<style>
+:root{
+  --bg:#16202A; --surface:#1F2A33; --surface2:#26333F;
+  --blue:#6673FF; --blue2:#8C5CF5; --cyan:#6FE3EC;
+  --green:#43E8A3; --warn:#FFC208; --red:#FF4545;
+  --text:#E6EDF3; --muted:#8A97A6; --line:rgba(255,255,255,.08);
+  --glass:rgba(31,42,51,.55);
+  --r4:4px;--r6:6px;--r12:12px;--r16:16px; --r8:8px;
+  --shadow:0 8px 24px rgba(0,0,0,.35);
+  --tb:64px; --sb:72px;
+  --font:"Inter","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;background:var(--bg);font-family:var(--font);color:var(--text);overflow:hidden;}
+.stage{position:absolute;top:0;left:0;width:1440px;height:900px;transform-origin:top left;
+  background:url('../assets/images/2_2.png') center/cover no-repeat;}
+
+.topbar{position:absolute;top:0;left:0;width:1440px;height:64px;display:flex;align-items:center;gap:20px;padding:0 24px;background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line);box-shadow:var(--shadow);z-index:20;}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;}
+.logo .mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--blue),var(--blue2));display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 0 14px rgba(102,115,255,.55);}
+.proj{display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:8px;font-size:13px;cursor:pointer;}
+.proj .caret{color:var(--muted);font-size:10px;}
+.search{flex:1;max-width:420px;display:flex;align-items:center;gap:8px;padding:9px 14px;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:20px;color:var(--muted);font-size:13px;}
+.search input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:13px;}
+.search input::placeholder{color:var(--muted);}
+.spacer{flex:1;}
+.act{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.05);border:1px solid var(--line);cursor:pointer;color:var(--text);}
+.avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--blue));display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;cursor:pointer;}
+
+.sidebar{position:absolute;top:64px;left:0;width:72px;height:836px;background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:18px;z-index:15;}
+.nav{width:48px;height:48px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--muted);cursor:pointer;font-size:10px;transition:.2s;text-decoration:none;}
+.nav svg{width:20px;height:20px;}
+.nav:hover{background:rgba(255,255,255,.06);color:var(--text);}
+.nav.active{background:linear-gradient(135deg,rgba(102,115,255,.22),rgba(140,92,245,.18));color:#fff;box-shadow:0 0 0 1px rgba(102,115,255,.55),0 0 18px rgba(102,115,255,.35);}
+.nav.active svg{color:var(--blue);}
+
+.main{position:absolute;top:64px;left:72px;width:1368px;height:836px;padding:24px;overflow:auto;}
+.pagehead{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.pagehead h1{font-size:22px;font-weight:700;}
+.pagehead .sub{font-size:12px;color:var(--muted);margin-top:2px;}
+.btn{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(102,115,255,.4);}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.card{background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:var(--r12);padding:20px;}
+.card h3{font-size:15px;font-weight:600;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--line);}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;}
+.field input,.field select{width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:8px;color:var(--text);font-size:13px;outline:none;}
+.field input:focus{border-color:var(--blue);}
+.sw{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);}
+.sw .t{font-size:13px;} .sw .d{font-size:11px;color:var(--muted);}
+.toggle{width:42px;height:24px;border-radius:12px;background:rgba(255,255,255,.1);position:relative;cursor:pointer;transition:.2s;border:none;}
+.toggle.on{background:var(--blue);}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s;}
+.toggle.on::after{left:21px;}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <div class="topbar">
+    <div class="logo"><span class="mark">✦</span> 星尘 Stardust</div>
+    <div class="proj">电商微服务平台 <span class="caret">▼</span></div>
+    <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input placeholder="搜索节点、服务、应用..."></div>
+    <div class="spacer"></div>
+    <div class="act" title="通知"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div>
+    <div class="avatar">笑</div>
+  </div>
+  <div class="sidebar">
+    <a class="nav" href="home.html" title="概览"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12l9-9 9 9"/><path d="M5 10v10h14V10"/></svg>概览</a>
+    <a class="nav" href="node.html" title="节点"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><circle cx="7" cy="7.5" r="1"/><circle cx="7" cy="17" r="1"/></svg>节点</a>
+    <a class="nav" href="app.html" title="应用"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>应用</a>
+    <a class="nav active" href="settings.html" title="设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.3 1a7 7 0 0 0-1.7-1l-.3-2.5h-4l-.3 2.5a7 7 0 0 0-1.7 1l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 1.7 1l.3 2.5h4l.3-2.5a7 7 0 0 0 1.7-1l2.3 1 2-3.4-2-1.5c.1-.3.1-.7.1-1z"/></svg>设置</a>
+  </div>
+
+  <div class="main">
+    <div class="pagehead">
+      <div><h1>设置</h1><div class="sub">全局配置 · 修改后点击「保存更改」生效</div></div>
+      <button class="btn" onclick="alert('已保存更改')">保存更改</button>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h3>基础信息</h3>
+        <div class="field"><label>平台名称</label><input value="星尘 Stardust"></div>
+        <div class="field"><label>默认项目</label><input value="电商微服务平台"></div>
+        <div class="field"><label>数据保留期</label><select><option>30 天</option><option>90 天</option><option>180 天</option></select></div>
+      </div>
+      <div class="card">
+        <h3>通知</h3>
+        <div class="sw"><div><div class="t">节点告警通知</div><div class="d">节点离线 / 超阈时推送</div></div><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+        <div class="sw"><div><div class="t">发布结果通知</div><div class="d">发布成功 / 失败推送</div></div><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+        <div class="sw"><div><div class="t">每日健康报告</div><div class="d">每日 09:00 汇总</div></div><button class="toggle" onclick="this.classList.toggle('on')"></button></div>
+      </div>
+      <div class="card">
+        <h3>安全</h3>
+        <div class="field"><label>Token 有效期</label><select><option>7 天</option><option>30 天</option><option>90 天</option></select></div>
+        <div class="sw"><div><div class="t">双因子认证</div><div class="d">登录需二次验证</div></div><button class="toggle" onclick="this.classList.toggle('on')"></button></div>
+        <div class="sw"><div><div class="t">操作审计日志</div><div class="d">记录所有管理操作</div></div><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+      </div>
+      <div class="card">
+        <h3>外观</h3>
+        <div class="field"><label>主题</label><select><option>暗色（宇宙）</option><option>暗色（深空）</option><option>亮色</option></select></div>
+        <div class="sw"><div><div class="t">星座背景动效</div><div class="d">首页星图缓慢流动</div></div><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+        <div class="sw"><div><div class="t">玻璃拟态面板</div><div class="d">面板背景模糊</div></div><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function fitStage(){const s=document.getElementById('stage');const sc=Math.min(innerWidth/1440,innerHeight/900);s.style.transform='scale('+sc+')';s.style.left=((innerWidth-1440*sc)/2)+'px';s.style.top=((innerHeight-900*sc)/2)+'px';}
+addEventListener('resize',fitStage);fitStage();
+</script>
+</body>
+</html>

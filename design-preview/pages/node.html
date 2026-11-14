@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>星尘 Stardust · 节点</title>
+<style>
+:root{
+  --bg:#16202A; --surface:#1F2A33; --surface2:#26333F;
+  --blue:#6673FF; --blue2:#8C5CF5; --cyan:#6FE3EC;
+  --green:#43E8A3; --warn:#FFC208; --red:#FF4545;
+  --text:#E6EDF3; --muted:#8A97A6; --line:rgba(255,255,255,.08);
+  --glass:rgba(31,42,51,.55);
+  --r4:4px;--r6:6px;--r12:12px;--r16:16px;
+  --shadow:0 8px 24px rgba(0,0,0,.35);
+  --tb:64px; --sb:72px;
+  --font:"Inter","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;background:var(--bg);font-family:var(--font);color:var(--text);overflow:hidden;}
+.stage{position:absolute;top:0;left:0;width:1440px;height:900px;transform-origin:top left;
+  background:url('../assets/images/2_2.png') center/cover no-repeat;}
+
+.topbar{position:absolute;top:0;left:0;width:1440px;height:64px;display:flex;align-items:center;
+  gap:20px;padding:0 24px;background:var(--glass);backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line);box-shadow:var(--shadow);z-index:20;}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;}
+.logo .mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--blue),var(--blue2));
+  display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 0 14px rgba(102,115,255,.55);}
+.proj{display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(255,255,255,.05);
+  border:1px solid var(--line);border-radius:8px;font-size:13px;cursor:pointer;}
+.proj .caret{color:var(--muted);font-size:10px;}
+.search{flex:1;max-width:420px;display:flex;align-items:center;gap:8px;padding:9px 14px;
+  background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:20px;color:var(--muted);font-size:13px;}
+.search input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:13px;}
+.search input::placeholder{color:var(--muted);}
+.spacer{flex:1;}
+.act{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.05);border:1px solid var(--line);cursor:pointer;color:var(--text);}
+.avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--blue));
+  display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;cursor:pointer;}
+
+.sidebar{position:absolute;top:64px;left:0;width:72px;height:836px;background:var(--glass);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-right:1px solid var(--line);
+  display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:18px;z-index:15;}
+.nav{width:48px;height:48px;border-radius:14px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;color:var(--muted);cursor:pointer;font-size:10px;transition:.2s;text-decoration:none;}
+.nav svg{width:20px;height:20px;}
+.nav:hover{background:rgba(255,255,255,.06);color:var(--text);}
+.nav.active{background:linear-gradient(135deg,rgba(102,115,255,.22),rgba(140,92,245,.18));
+  color:#fff;box-shadow:0 0 0 1px rgba(102,115,255,.55),0 0 18px rgba(102,115,255,.35);}
+.nav.active svg{color:var(--blue);}
+
+.main{position:absolute;top:64px;left:72px;width:1368px;height:836px;padding:24px;display:flex;gap:0;}
+.content{flex:1;display:flex;flex-direction:column;gap:16px;overflow:hidden;}
+.pagehead{display:flex;align-items:center;justify-content:space-between;}
+.pagehead h1{font-size:22px;font-weight:700;}
+.pagehead .sub{font-size:12px;color:var(--muted);margin-top:2px;}
+
+/* KPI 条 */
+.kpibar{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+.kpi{background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:var(--r12);padding:14px 16px;}
+.kpi .v{font-size:26px;font-weight:700;} .kpi .l{font-size:12px;color:var(--muted);margin-top:2px;}
+.kpi .v.g{color:var(--green);} .kpi .v.w{color:var(--warn);} .kpi .v.r{color:var(--red);} .kpi .v.b{color:var(--blue);}
+
+/* 筛选 */
+.chips{display:flex;gap:10px;align-items:center;}
+.chip{padding:7px 14px;border-radius:18px;font-size:13px;background:rgba(255,255,255,.05);
+  border:1px solid var(--line);color:var(--muted);cursor:pointer;}
+.chip.active{background:rgba(102,115,255,.18);color:#fff;border-color:rgba(102,115,255,.5);}
+.chip .d{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;}
+
+/* 拓扑卡网格 */
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;overflow:auto;padding-right:4px;}
+.ncard{background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:var(--r12);
+  padding:16px;cursor:pointer;position:relative;transition:.15s;overflow:hidden;}
+.ncard:hover{transform:translateY(-2px);border-color:rgba(102,115,255,.4);}
+.ncard .bar{position:absolute;left:0;top:0;bottom:0;width:4px;}
+.ncard.g .bar{background:var(--green);} .ncard.w .bar{background:var(--warn);} .ncard.r .bar{background:var(--red);}
+.ncard .top{display:flex;justify-content:space-between;align-items:center;}
+.ncard .name{font-size:15px;font-weight:600;}
+.ncard .ip{font-size:11px;color:var(--muted);margin-top:2px;}
+.ncard .meta{display:flex;gap:14px;margin-top:12px;font-size:11px;color:var(--muted);}
+.ncard .meta b{color:var(--text);font-size:13px;display:block;}
+.st{font-size:11px;padding:3px 8px;border-radius:10px;}
+.st.g{background:rgba(67,232,163,.15);color:var(--green);} .st.w{background:rgba(255,194,8,.15);color:var(--warn);}
+.st.r{background:rgba(255,69,69,.15);color:var(--red);}
+
+/* 详情抽屉 */
+.drawer{position:absolute;top:64px;right:0;width:420px;height:836px;background:rgba(20,28,36,.92);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-left:1px solid rgba(102,115,255,.35);
+  box-shadow:-12px 0 40px rgba(0,0,0,.5);transform:translateX(100%);transition:transform .28s ease;z-index:30;
+  display:flex;flex-direction:column;padding:20px;}
+.drawer.open{transform:translateX(0);}
+.drawer .dh{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.drawer .dh .nm{font-size:18px;font-weight:700;}
+.drawer .dh .close{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid var(--line);cursor:pointer;color:var(--muted);}
+.banner{padding:10px 14px;border-radius:var(--r8,8px);font-size:12px;margin-bottom:14px;}
+.banner.g{background:rgba(67,232,163,.12);color:var(--green);border:1px solid rgba(67,232,163,.3);}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px;border-bottom:1px solid var(--line);padding-bottom:8px;}
+.tab{padding:6px 11px;font-size:12px;border-radius:8px;color:var(--muted);cursor:pointer;background:none;border:none;}
+.tab.active{background:rgba(102,115,255,.2);color:#fff;}
+.dbody{flex:1;overflow:auto;font-size:13px;}
+.info{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.info .it{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:var(--r8,8px);padding:10px;}
+.info .it .k{font-size:11px;color:var(--muted);} .info .it .v{font-size:14px;margin-top:3px;}
+.ring{display:flex;gap:16px;margin:14px 0;}
+.ring .r{text-align:center;}
+.ring .r .c{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;}
+.svc{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid var(--line);
+  border-radius:var(--r8,8px);margin-bottom:8px;}
+.svc .role{font-size:10px;padding:2px 7px;border-radius:8px;}
+.svc .role.p{background:rgba(67,232,163,.15);color:var(--green);}
+.svc .role.c{background:rgba(102,115,255,.15);color:var(--blue);}
+.svc .nm{font-size:13px;font-weight:600;} .svc .mt{font-size:11px;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <div class="topbar">
+    <div class="logo"><span class="mark">✦</span> 星尘 Stardust</div>
+    <div class="proj">电商微服务平台 <span class="caret">▼</span></div>
+    <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input placeholder="搜索节点、服务、应用..."></div>
+    <div class="spacer"></div>
+    <div class="act" title="通知"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div>
+    <div class="avatar">笑</div>
+  </div>
+  <div class="sidebar">
+    <a class="nav" href="home.html" title="概览"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12l9-9 9 9"/><path d="M5 10v10h14V10"/></svg>概览</a>
+    <a class="nav active" href="node.html" title="节点"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><circle cx="7" cy="7.5" r="1"/><circle cx="7" cy="17" r="1"/></svg>节点</a>
+    <a class="nav" href="app.html" title="应用"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>应用</a>
+    <a class="nav" href="settings.html" title="设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.3 1a7 7 0 0 0-1.7-1l-.3-2.5h-4l-.3 2.5a7 7 0 0 0-1.7 1l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 1.7 1l.3 2.5h4l.3-2.5a7 7 0 0 0 1.7-1l2.3 1 2-3.4-2-1.5c.1-.3.1-.7.1-1z"/></svg>设置</a>
+  </div>
+
+  <div class="main">
+    <div class="content">
+      <div class="pagehead">
+        <div><h1>节点管理</h1><div class="sub">集群节点状态 · 点击节点查看详情（含本节点提供的服务）</div></div>
+        <div class="search" style="max-width:260px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input placeholder="搜索节点 IP / 名称"></div>
+      </div>
+      <div class="kpibar">
+        <div class="kpi"><div class="v b">24</div><div class="l">节点总数</div></div>
+        <div class="kpi"><div class="v g">18</div><div class="l">在线</div></div>
+        <div class="kpi"><div class="v w">3</div><div class="l">告警</div></div>
+        <div class="kpi"><div class="v r">3</div><div class="l">离线</div></div>
+      </div>
+      <div class="chips">
+        <div class="chip active" data-f="all">全部 <span style="opacity:.6">24</span></div>
+        <div class="chip" data-f="g"><span class="d" style="background:var(--green)"></span>在线 18</div>
+        <div class="chip" data-f="w"><span class="d" style="background:var(--warn)"></span>告警 3</div>
+        <div class="chip" data-f="r"><span class="d" style="background:var(--red)"></span>离线 3</div>
+      </div>
+      <div class="grid" id="grid">
+        <div class="ncard g" data-st="g" data-name="node-01 · 网关集群-A"><div class="bar"></div><div class="top"><div><div class="name">node-01</div><div class="ip">10.12.3.11 · 网关集群-A</div></div><span class="st g">在线</span></div><div class="meta"><div>CPU<b>32%</b></div><div>内存<b>54%</b></div><div>服务<b>6</b></div></div></div>
+        <div class="ncard g" data-st="g" data-name="node-02 · 订单集群"><div class="bar"></div><div class="top"><div><div class="name">node-02</div><div class="ip">10.12.3.12 · 订单集群</div></div><span class="st g">在线</span></div><div class="meta"><div>CPU<b>41%</b></div><div>内存<b>60%</b></div><div>服务<b>8</b></div></div></div>
+        <div class="ncard w" data-st="w" data-name="node-07 · 支付集群"><div class="bar"></div><div class="top"><div><div class="name">node-07</div><div class="ip">10.12.3.17 · 支付集群</div></div><span class="st w">告警</span></div><div class="meta"><div>CPU<b>87%</b></div><div>内存<b>78%</b></div><div>服务<b>5</b></div></div></div>
+        <div class="ncard g" data-st="g" data-name="node-09 · 用户集群"><div class="bar"></div><div class="top"><div><div class="name">node-09</div><div class="ip">10.12.3.19 · 用户集群</div></div><span class="st g">在线</span></div><div class="meta"><div>CPU<b>28%</b></div><div>内存<b>47%</b></div><div>服务<b>4</b></div></div></div>
+        <div class="ncard r" data-st="r" data-name="node-13 · 日志集群"><div class="bar"></div><div class="top"><div><div class="name">node-13</div><div class="ip">10.12.3.23 · 日志集群</div></div><span class="st r">离线</span></div><div class="meta"><div>CPU<b>—</b></div><div>内存<b>—</b></div><div>服务<b>0</b></div></div></div>
+        <div class="ncard g" data-st="g" data-name="node-15 · 搜索集群"><div class="bar"></div><div class="top"><div><div class="name">node-15</div><div class="ip">10.12.3.25 · 搜索集群</div></div><span class="st g">在线</span></div><div class="meta"><div>CPU<b>36%</b></div><div>内存<b>52%</b></div><div>服务<b>7</b></div></div></div>
+      </div>
+    </div>
+
+    <!-- 详情抽屉 -->
+    <div class="drawer" id="drawer">
+      <div class="dh"><div><div class="nm" id="dname">node-01</div><div class="ip" style="font-size:11px;color:var(--muted);margin-top:2px;" id="dip">10.12.3.11 · 网关集群-A</div></div><div class="close" id="dclose">✕</div></div>
+      <div class="banner g" id="dbanner">● 在线 · 心跳正常 · 最后上报 3s 前</div>
+      <div class="tabs" id="dtabs">
+        <button class="tab active" data-t="overview">概览</button>
+        <button class="tab" data-t="online">在线</button>
+        <button class="tab" data-t="history">历史</button>
+        <button class="tab" data-t="cmd">指令</button>
+        <button class="tab" data-t="perf">性能</button>
+        <button class="tab" data-t="framework">框架推荐</button>
+        <button class="tab" data-t="apponline">应用在线</button>
+        <button class="tab" data-t="appdeploy">应用发布</button>
+        <button class="tab" data-t="service">服务</button>
+      </div>
+      <div class="dbody" id="dbody"></div>
+    </div>
+  </div>
+</div>
+<script>
+function fitStage(){const s=document.getElementById('stage');const sc=Math.min(innerWidth/1440,innerHeight/900);s.style.transform='scale('+sc+')';s.style.left=((innerWidth-1440*sc)/2)+'px';s.style.top=((innerHeight-900*sc)/2)+'px';}
+addEventListener('resize',fitStage);fitStage();
+
+// 筛选
+document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
+  document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');
+  const f=c.dataset.f;
+  document.querySelectorAll('.ncard').forEach(n=>{n.style.display=(f==='all'||n.dataset.st===f)?'':'none';});
+});
+
+// 抽屉内容
+const TAB={
+  overview:`<div class="info"><div class="it"><div class="k">节点名称</div><div class="v" id="i_name">—</div></div><div class="it"><div class="k">IP 地址</div><div class="v" id="i_ip">—</div></div><div class="it"><div class="k">集群</div><div class="v">网关集群-A</div></div><div class="it"><div class="k">系统</div><div class="v">Linux 6.2 x64</div></div><div class="it"><div class="k">运行时长</div><div class="v">42d 6h</div></div><div class="it"><div class="k">Agent 版本</div><div class="v">v3.8.1</div></div></div><div class="ring"><div class="r"><div class="c" style="background:conic-gradient(var(--green) 32%,rgba(255,255,255,.08) 0)">32%</div><div style="font-size:11px;color:var(--muted);margin-top:6px;">CPU</div></div><div class="r"><div class="c" style="background:conic-gradient(var(--blue) 54%,rgba(255,255,255,.08) 0)">54%</div><div style="font-size:11px;color:var(--muted);margin-top:6px;">内存</div></div><div class="r"><div class="c" style="background:conic-gradient(var(--cyan) 28%,rgba(255,255,255,.08) 0)">28%</div><div style="font-size:11px;color:var(--muted);margin-top:6px;">磁盘</div></div></div>`,
+  online:`<p style="color:var(--muted)">实时资源 · 近 1 分钟</p><div class="ring"><div class="r"><div class="c" style="background:conic-gradient(var(--green) 32%,rgba(255,255,255,.08) 0)">32%</div><div style="font-size:11px;color:var(--muted);margin-top:6px;">CPU</div></div><div class="r"><div class="c" style="background:conic-gradient(var(--blue) 54%,rgba(255,255,255,.08) 0)">54%</div><div style="font-size:11px;color:var(--muted);margin-top:6px;">内存</div></div><div class="r"><div class="c" style="background:conic-gradient(var(--cyan) 28%,rgba(255,255,255,.08) 0)">28%</div><div style="font-size:11px;color:var(--muted);margin-top:6px;">磁盘</div></div></div>`,
+  history:`<p style="color:var(--muted)">最近状态变更</p><div class="ev" style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)"><span class="dot g" style="width:8px;height:8px;border-radius:50%;background:var(--green);margin-top:5px"></span><div><div>重启后恢复在线</div><div style="color:var(--muted);font-size:11px">2h 前</div></div></div><div class="ev" style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)"><span class="dot w" style="width:8px;height:8px;border-radius:50%;background:var(--warn);margin-top:5px"></span><div><div>CPU 短暂超阈告警</div><div style="color:var(--muted);font-size:11px">5h 前</div></div></div>`,
+  cmd:`<p style="color:var(--muted)">可下发指令</p><div class="svc"><span class="role p">重启</span><span class="nm">Restart</span></div><div class="svc"><span class="role p">更新</span><span class="nm">Upgrade Agent</span></div><div class="svc"><span class="role c">采集</span><span class="nm">Trigger Metrics</span></div>`,
+  perf:`<p style="color:var(--muted)">性能趋势（24h）</p><svg viewBox="0 0 360 120" style="width:100%;margin-top:10px"><polyline fill="none" stroke="var(--green)" stroke-width="2" points="0,90 40,80 80,84 120,60 160,70 200,45 240,55 280,40 320,48 360,38"/><polyline fill="none" stroke="var(--blue)" stroke-width="2" points="0,100 40,95 80,92 120,88 160,82 200,78 240,70 280,66 320,60 360,55"/></svg>`,
+  framework:`<p style="color:var(--muted)">推荐部署框架</p><div class="svc"><span class="role p">建议</span><span class="nm">.NET 9 运行时</span><span class="mt" style="margin-left:auto">匹配度 96%</span></div><div class="svc"><span class="role p">建议</span><span class="nm">NewLife.Cube</span><span class="mt" style="margin-left:auto">匹配度 92%</span></div>`,
+  apponline:`<p style="color:var(--muted)">已部署应用</p><div class="svc"><span class="role p">在线</span><span class="nm">gateway-edge</span><span class="mt" style="margin-left:auto">2 实例</span></div><div class="svc"><span class="role p">在线</span><span class="nm">rate-limiter</span><span class="mt" style="margin-left:auto">1 实例</span></div>`,
+  appdeploy:`<p style="color:var(--muted)">最近发布</p><div class="svc"><span class="role p">完成</span><span class="nm">gateway-edge v1.4.0</span><span class="mt" style="margin-left:auto">2h 前</span></div>`,
+  service:`<p style="color:var(--muted);margin-bottom:10px">本节点提供 / 消费的服务</p>
+    <div class="svc"><span class="role p">提供</span><span class="nm">gateway-http</span><span class="mt" style="margin-left:auto">:8080 · 8 实例</span></div>
+    <div class="svc"><span class="role p">提供</span><span class="nm">rate-limit</span><span class="mt" style="margin-left:auto">:9090 · 3 实例</span></div>
+    <div class="svc"><span class="role c">消费</span><span class="nm">order-service</span><span class="mt" style="margin-left:auto">via 注册发现</span></div>
+    <div class="svc"><span class="role c">消费</span><span class="nm">user-profile</span><span class="mt" style="margin-left:auto">via 注册发现</span></div>`
+};
+function openDrawer(card){
+  const st=card.dataset.st, name=card.dataset.name;
+  document.getElementById('dname').textContent=name.split(' · ')[0];
+  document.getElementById('dip').textContent=name.split(' · ')[1]||'';
+  const b=document.getElementById('dbanner');
+  if(st==='g'){b.className='banner g';b.textContent='● 在线 · 心跳正常 · 最后上报 3s 前';}
+  else if(st==='w'){b.className='banner w';b.style.background='rgba(255,194,8,.12)';b.style.color='var(--warn)';b.style.border='1px solid rgba(255,194,8,.3)';b.textContent='▲ 告警 · CPU 超阈 · 需关注';}
+  else{b.className='banner r';b.style.background='rgba(255,69,69,.12)';b.style.color='var(--red)';b.style.border='1px solid rgba(255,69,69,.3)';b.textContent='■ 离线 · 心跳丢失 12m';}
+  document.getElementById('i_name')&&0;
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('dbody').innerHTML=TAB.overview;
+  document.getElementById('i_name').textContent=name.split(' · ')[0];
+  document.getElementById('i_ip').textContent=name.split(' · ')[1]||'';
+}
+document.querySelectorAll('.ncard').forEach(n=>n.onclick=()=>openDrawer(n));
+document.getElementById('dclose').onclick=()=>document.getElementById('drawer').classList.remove('open');
+document.querySelectorAll('#dtabs .tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('#dtabs .tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
+  const key=t.dataset.t;
+  document.getElementById('dbody').innerHTML=TAB[key]||'';
+  if(key==='overview'){document.getElementById('i_name').textContent=document.getElementById('dname').textContent;
+    document.getElementById('i_ip').textContent=document.getElementById('dip').textContent;}
+});
+</script>
+</body>
+</html>

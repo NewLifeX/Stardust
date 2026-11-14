@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>星尘 Stardust · 概览</title>
+<style>
+:root{
+  --bg:#16202A; --surface:#1F2A33; --surface2:#26333F;
+  --blue:#6673FF; --blue2:#8C5CF5; --cyan:#6FE3EC;
+  --green:#43E8A3; --warn:#FFC208; --red:#FF4545;
+  --text:#E6EDF3; --muted:#8A97A6; --line:rgba(255,255,255,.08);
+  --glass:rgba(31,42,51,.55);
+  --r4:4px;--r6:6px;--r12:12px;--r16:16px;
+  --shadow:0 8px 24px rgba(0,0,0,.35);
+  --tb:64px; --sb:72px;
+  --font:"Inter","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;background:var(--bg);font-family:var(--font);color:var(--text);overflow:hidden;}
+.stage{position:absolute;top:0;left:0;width:1440px;height:900px;transform-origin:top left;
+  background:url('../assets/images/2_2.png') center/cover no-repeat;}
+
+/* 顶栏 */
+.topbar{position:absolute;top:0;left:0;width:1440px;height:64px;display:flex;align-items:center;
+  gap:20px;padding:0 24px;background:var(--glass);backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line);box-shadow:var(--shadow);z-index:20;}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;}
+.logo .mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--blue),var(--blue2));
+  display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 0 14px rgba(102,115,255,.55);}
+.proj{display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(255,255,255,.05);
+  border:1px solid var(--line);border-radius:var(--r8,8px);font-size:13px;cursor:pointer;}
+.proj .caret{color:var(--muted);font-size:10px;}
+.search{flex:1;max-width:420px;display:flex;align-items:center;gap:8px;padding:9px 14px;
+  background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:20px;color:var(--muted);font-size:13px;}
+.search input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:13px;}
+.search input::placeholder{color:var(--muted);}
+.spacer{flex:1;}
+.act{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.05);border:1px solid var(--line);cursor:pointer;color:var(--text);}
+.avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--blue));
+  display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;cursor:pointer;}
+
+/* 侧栏 */
+.sidebar{position:absolute;top:64px;left:0;width:72px;height:836px;background:var(--glass);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-right:1px solid var(--line);
+  display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:18px;z-index:15;}
+.nav{width:48px;height:48px;border-radius:14px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;color:var(--muted);cursor:pointer;font-size:10px;transition:.2s;
+  text-decoration:none;}
+.nav svg{width:20px;height:20px;}
+.nav:hover{background:rgba(255,255,255,.06);color:var(--text);}
+.nav.active{background:linear-gradient(135deg,rgba(102,115,255,.22),rgba(140,92,245,.18));
+  color:#fff;box-shadow:0 0 0 1px rgba(102,115,255,.55),0 0 18px rgba(102,115,255,.35);}
+.nav.active svg{color:var(--blue);}
+
+/* 主区 */
+.main{position:absolute;top:64px;left:72px;width:1368px;height:836px;padding:24px;display:flex;gap:24px;}
+.starmap{flex:1;position:relative;border-radius:var(--r16);background:rgba(15,22,30,.45);
+  border:1px solid var(--line);overflow:hidden;}
+.starmap .hint{position:absolute;top:16px;left:20px;font-size:13px;color:var(--muted);}
+.starmap .hint b{color:var(--text);}
+.right{width:400px;display:flex;flex-direction:column;gap:16px;}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.kpi{background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:var(--r12);
+  padding:16px;}
+.kpi .v{font-size:28px;font-weight:700;}
+.kpi .l{font-size:12px;color:var(--muted);margin-top:4px;}
+.kpi .v.green{color:var(--green);} .kpi .v.warn{color:var(--warn);} .kpi .v.blue{color:var(--blue);}
+.card{background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:var(--r12);padding:16px;}
+.card h3{font-size:13px;font-weight:600;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;}
+.card h3 .tag{font-size:11px;color:var(--muted);font-weight:400;}
+.ev{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line);font-size:12px;}
+.ev:last-child{border:none;}
+.dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex:none;}
+.dot.g{background:var(--green);} .dot.w{background:var(--warn);} .dot.r{background:var(--red);}
+.ev .t{color:var(--text);} .ev .time{color:var(--muted);font-size:11px;}
+.feat{display:flex;gap:10px;flex-wrap:wrap;}
+.feat .f{flex:1;min-width:80px;text-align:center;padding:10px 6px;background:rgba(255,255,255,.04);
+  border:1px solid var(--line);border-radius:var(--r8,8px);font-size:11px;color:var(--muted);}
+
+/* 星座节点 */
+.node-c{position:absolute;width:104px;transform:translate(-50%,-50%);text-align:center;cursor:pointer;}
+.node-c .circ{width:60px;height:60px;margin:0 auto;border-radius:50%;background:rgba(31,42,51,.85);
+  border:1.5px solid var(--green);display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 16px rgba(67,232,163,.35);color:var(--green);}
+.node-c.blue .circ{border-color:var(--blue);color:var(--blue);box-shadow:0 0 16px rgba(102,115,255,.4);}
+.node-c.warn .circ{border-color:var(--warn);color:var(--warn);box-shadow:0 0 16px rgba(255,194,8,.35);}
+.node-c .lab{margin-top:8px;font-size:12px;color:var(--text);}
+.node-c .sub{font-size:10px;color:var(--muted);}
+.hub{position:absolute;left:50%;top:50%;width:96px;height:96px;transform:translate(-50%,-50%);
+  border-radius:50%;background:radial-gradient(circle,rgba(102,115,255,.55),rgba(102,115,255,.08));
+  border:2px solid var(--blue);display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 36px rgba(102,115,255,.5);color:#fff;font-weight:700;font-size:15px;cursor:pointer;}
+.fold{position:absolute;width:90px;transform:translate(-50%,-50%);text-align:center;}
+.fold .circ{width:46px;height:46px;margin:0 auto;border-radius:14px;background:rgba(38,51,63,.9);
+  border:1px dashed rgba(140,92,245,.6);display:flex;align-items:center;justify-content:center;color:var(--blue2);}
+.fold .lab{margin-top:6px;font-size:11px;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <!-- 顶栏 -->
+  <div class="topbar">
+    <div class="logo"><span class="mark">✦</span> 星尘 Stardust</div>
+    <div class="proj">电商微服务平台 <span class="caret">▼</span></div>
+    <div class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+      <input placeholder="搜索节点、服务、应用...">
+    </div>
+    <div class="spacer"></div>
+    <div class="act" title="通知"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div>
+    <div class="avatar">笑</div>
+  </div>
+
+  <!-- 侧栏 -->
+  <div class="sidebar">
+    <a class="nav active" href="home.html" title="概览">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12l9-9 9 9"/><path d="M5 10v10h14V10"/></svg>概览</a>
+    <a class="nav" href="node.html" title="节点">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><circle cx="7" cy="7.5" r="1"/><circle cx="7" cy="17" r="1"/></svg>节点</a>
+    <a class="nav" href="app.html" title="应用">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>应用</a>
+    <a class="nav" href="settings.html" title="设置">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.3 1a7 7 0 0 0-1.7-1l-.3-2.5h-4l-.3 2.5a7 7 0 0 0-1.7 1l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 1.7 1l.3 2.5h4l.3-2.5a7 7 0 0 0 1.7-1l2.3 1 2-3.4-2-1.5c.1-.3.1-.7.1-1z"/></svg>设置</a>
+  </div>
+
+  <!-- 主区 -->
+  <div class="main">
+    <div class="starmap">
+      <div class="hint">服务星座 · <b>点击模块节点进入对应管理页</b>（配置 / 监控 / 发布 / 服务 已收拢至「应用」，服务同时挂在「节点」下）</div>
+      <svg style="position:absolute;inset:0;width:100%;height:100%;" id="edges"></svg>
+      <div class="hub" style="left:50%;top:50%;">星尘<br>核心</div>
+
+      <!-- 4 个主枢纽 -->
+      <a class="node-c blue" href="node.html" style="left:50%;top:20%;"><div class="circ">⬡</div><div class="lab">节点</div><div class="sub">集群 · 服务</div></a>
+      <a class="node-c blue" href="app.html" style="left:82%;top:50%;"><div class="circ">◈</div><div class="lab">应用</div><div class="sub">配置·监控·发布·服务</div></a>
+      <a class="node-c" href="home.html" style="left:50%;top:82%;"><div class="circ">✦</div><div class="lab">概览</div><div class="sub">健康 · 事件</div></a>
+      <a class="node-c" href="settings.html" style="left:18%;top:50%;"><div class="circ">⚙</div><div class="lab">设置</div><div class="sub">全局配置</div></a>
+
+      <!-- 收敛卫星（视觉提示，归属应用 / 节点） -->
+      <a class="fold" href="app.html" style="left:74%;top:30%;"><div class="circ">⚙</div><div class="lab">配置</div></a>
+      <a class="fold" href="app.html" style="left:74%;top:70%;"><div class="circ">📈</div><div class="lab">监控</div></a>
+      <a class="fold" href="app.html" style="left:62%;top:84%;"><div class="circ">🚀</div><div class="lab">发布</div></a>
+      <a class="fold" href="app.html" style="left:26%;top:30%;"><div class="circ">⇄</div><div class="lab">服务</div></a>
+      <a class="fold" href="node.html" style="left:26%;top:70%;"><div class="circ">⇄</div><div class="lab">节点·服务</div></a>
+    </div>
+
+    <div class="right">
+      <div class="kpis">
+        <div class="kpi"><div class="v blue">24</div><div class="l">节点总数</div></div>
+        <div class="kpi"><div class="v green">18</div><div class="l">在线应用</div></div>
+        <div class="kpi"><div class="v warn">3</div><div class="l">告警</div></div>
+        <div class="kpi"><div class="v">42</div><div class="l">注册服务</div></div>
+      </div>
+      <div class="card">
+        <h3>集群健康 <span class="tag">实时</span></h3>
+        <div style="display:flex;gap:12px;align-items:center;">
+          <div style="flex:1;height:8px;border-radius:4px;background:linear-gradient(90deg,var(--green) 72%,var(--warn) 18%,var(--red) 10%);"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:8px;">
+          <span><span style="color:var(--green)">●</span> 在线 72%</span><span><span style="color:var(--warn)">●</span> 告警 18%</span><span><span style="color:var(--red)">●</span> 离线 10%</span>
+        </div>
+      </div>
+      <div class="card" style="flex:1;overflow:auto;">
+        <h3>最近事件 <span class="tag">12 条</span></h3>
+        <div class="ev"><span class="dot g"></span><div><div class="t">payment-gateway 已恢复在线</div><div class="time">2 分钟前 · 应用</div></div></div>
+        <div class="ev"><span class="dot w"></span><div><div class="t">node-07 CPU 持续 &gt;85%</div><div class="time">8 分钟前 · 节点</div></div></div>
+        <div class="ev"><span class="dot r"></span><div><div class="t">user-center 实例全离线</div><div class="time">15 分钟前 · 应用</div></div></div>
+        <div class="ev"><span class="dot g"></span><div><div class="t">order-service 发布 v2.3.1 成功</div><div class="time">23 分钟前 · 发布</div></div></div>
+        <div class="ev"><span class="dot w"></span><div><div class="t">config-center 配置变更待审核</div><div class="time">31 分钟前 · 配置</div></div></div>
+      </div>
+      <div class="feat">
+        <div class="f">配置中心</div><div class="f">注册发现</div><div class="f">网关</div><div class="f">日志中心</div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function fitStage(){
+  const s=document.getElementById('stage');
+  const sc=Math.min(window.innerWidth/1440,window.innerHeight/900);
+  s.style.transform='scale('+sc+')';
+  s.style.left=((window.innerWidth-1440*sc)/2)+'px';
+  s.style.top=((window.innerHeight-900*sc)/2)+'px';
+}
+window.addEventListener('resize',fitStage);fitStage();
+
+// 星座连线（仅装饰）
+(function(){
+  const svg=document.getElementById('edges');
+  const cx=684,cy=418; // 星图中心（相对 main 区内）
+  const pts=[[684,168],[1116,418],[684,668],[252,418],[1020,251],[1020,585],[860,727],[378,251],[378,585]];
+  let d='';
+  pts.forEach(p=>{d+='M'+cx+' '+cy+'L'+p[0]+' '+p[1]+' ';});
+  const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+  path.setAttribute('d',d);
+  path.setAttribute('stroke','rgba(102,115,255,.25)');
+  path.setAttribute('stroke-width','1.2');
+  path.setAttribute('fill','none');
+  svg.appendChild(path);
+})();
+</script>
+</body>
+</html>

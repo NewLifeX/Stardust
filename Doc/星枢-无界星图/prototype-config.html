@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>尘埃视角 · 奇点坍缩舱 — 星尘 Stardust</title>
+<link rel="stylesheet" href="cosmic.css" />
+<style>
+  /* ===== 本页专属：奇点坍缩舱（不依赖任何既有令牌，沿用 cosmic.css 宇宙系统）===== */
+  .stage { position: fixed; inset: 0; }
+  #singularity { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: crosshair; }
+
+  /* 维度罗盘：四个悬浮锚点环绕奇点 */
+  .dim-orb {
+    position: absolute; z-index: 30; width: 66px; height: 66px; margin: -33px 0 0 -33px; border-radius: 50%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    cursor: pointer; color: var(--ink-2);
+    background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--star) 20%, transparent), var(--glass-2) 72%);
+    border: 1px solid var(--line); backdrop-filter: blur(14px);
+    box-shadow: 0 6px 22px rgba(0,0,0,.4);
+    transition: transform .25s ease, color .25s ease, box-shadow .25s ease, border-color .25s;
+  }
+  .dim-orb .ic { font-size: 20px; line-height: 1; }
+  .dim-orb .lb { font-size: 10px; letter-spacing: .04em; }
+  .dim-orb:hover { transform: scale(1.12); color: var(--ink); }
+  .dim-orb.active { color: var(--bg-abyss); background: linear-gradient(135deg, var(--star), var(--accent));
+    box-shadow: var(--glow-star); border-color: transparent; transform: scale(1.06); }
+  .dim-orb[data-d="monitor"] { left: 50%; top: 86px; }
+  .dim-orb[data-d="config"]  { right: 40px; top: 50%; margin: -33px 0 0 0; }
+  .dim-orb[data-d="logs"]    { left: 50%; bottom: 132px; }
+  .dim-orb[data-d="topology"]{ left: 40px;  top: 50%; margin: -33px 0 0 0; }
+
+  /* 信息读出条（数据读出器，非卡片堆叠） */
+  .readout {
+    position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%);
+    width: min(680px, 86vw); max-height: 168px; overflow: auto; z-index: 25;
+    padding: 12px 16px; font-size: 12.5px; line-height: 1.6;
+  }
+  .readout .rh { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-2); margin-bottom: 6px; }
+  .readout .rh b { color: var(--star); }
+
+  /* 引力透镜编辑环 —— 从星核浮出，区别于普通卡片 */
+  #lens { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%) scale(.4);
+    width: min(440px, 90vw); z-index: 70; display: none; opacity: 0; padding: 0; }
+  #lens.open { display: block; animation: lensIn .42s cubic-bezier(.2,.9,.3,1) forwards; }
+  @keyframes lensIn { to { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
+  #lens.closing { animation: lensOut .3s ease forwards; }
+  @keyframes lensOut { to { opacity: 0; transform: translate(-50%,-50%) scale(.7); } }
+  /* 透镜两侧旋转光环 */
+  #lens::before, #lens::after { content: ""; position: absolute; border-radius: 50%; pointer-events: none; }
+  #lens::before { inset: -26px; border: 1px dashed color-mix(in srgb, var(--star) 50%, transparent);
+    animation: spin 14s linear infinite; opacity: .5; }
+  #lens::after { inset: -40px; border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+    border-top-color: transparent; border-bottom-color: transparent; animation: spin 9s linear infinite reverse; opacity: .35; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .lens-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line-2); }
+  .lens-head .badge { font-size: 10px; letter-spacing: .2em; color: var(--star); border: 1px solid var(--line); padding: 2px 8px; border-radius: 999px; }
+  .lens-head .k { font-size: 15px; font-weight: 700; color: var(--ink); flex: 1; }
+  .lens-body { padding: 16px; }
+  .lens-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+  .lens-row label { font-size: 11px; color: var(--ink-3); letter-spacing: .1em; }
+  .lens-row .old { font-size: 11px; color: var(--ink-3); }
+  .lens-row .old s { color: var(--danger); }
+  .lens-foot { display: flex; gap: 10px; padding: 12px 16px; border-top: 1px solid var(--line-2); }
+  .lens-foot .btn { flex: 1; justify-content: center; }
+
+  /* 时间晶体（版本回溯控件） */
+  .timecrystal {
+    position: fixed; right: 24px; bottom: 96px; z-index: 40; width: 220px; padding: 12px 14px;
+  }
+  .timecrystal .tc-h { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-2); margin-bottom: 10px; }
+  .tc-gem { width: 14px; height: 14px; transform: rotate(45deg); border: 1px solid var(--accent);
+    background: linear-gradient(135deg, var(--star), var(--accent)); box-shadow: var(--glow-soft); animation: pulse 3s ease-in-out infinite; }
+  .tc-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 9px; cursor: pointer;
+    font-size: 12px; color: var(--ink-2); transition: .15s; }
+  .tc-item:hover { background: color-mix(in srgb, var(--star) 12%, transparent); color: var(--ink); }
+  .tc-item.cur { color: var(--star); background: color-mix(in srgb, var(--star) 10%, transparent); }
+  .tc-item .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 8px currentColor; }
+  .tc-item .vn { font-weight: 600; } .tc-item .vt { margin-left: auto; font-size: 10px; color: var(--ink-3); }
+
+  /* 控制台（超新星发布） */
+  .console { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 45;
+    display: flex; gap: 10px; }
+  .pubbtn { padding: 11px 22px; font-size: 13px; font-weight: 700; }
+</style>
+</head>
+<body class="theme-serene">
+  <!-- 宇宙背景 -->
+  <div class="cosmos" id="cosmos">
+    <div class="starfield" id="starfield"></div>
+    <div class="nebula a"></div>
+    <div class="nebula b"></div>
+    <div class="vignette"></div>
+  </div>
+
+  <!-- 面包屑：回到恒星系 -->
+  <div class="crumbs">
+    <a href="#" id="crumbRealm">星域</a><span class="sep">→</span>
+    <a href="prototype-overview.html" id="crumbGalaxy">银河</a><span class="sep">→</span>
+    <a href="prototype-monitor.html" id="crumbSys">恒星系</a><span class="sep">→</span>
+    <span class="cur" id="crumbsSvc">尘埃 · order-svc</span>
+  </div>
+
+  <!-- 主题切换 + 寓意图例 -->
+  <div class="theme-switch">
+    <div class="ttl">环境状态</div>
+    <div class="theme-row" id="themeRow">
+      <div class="theme-btn active" data-t="serene"    title="宁静 · 全部健康"></div>
+      <div class="theme-btn" data-t="attention" title="微澜 · 存在告警"></div>
+      <div class="theme-btn" data-t="crisis"    title="危机 · 严重故障"></div>
+      <div class="theme-btn" data-t="supernova" title="超新星 · 发布中"></div>
+      <div class="theme-btn" data-t="genesis"   title="扩容 · 弹性伸缩"></div>
+    </div>
+  </div>
+  <div class="legend glass" id="legend"></div>
+
+  <!-- 奇点坍缩舱舞台 -->
+  <div class="stage">
+    <canvas id="singularity"></canvas>
+
+    <!-- 维度罗盘 -->
+    <div class="dim-orb active" data-d="config"><span class="ic">◍</span><span class="lb">配置</span></div>
+    <div class="dim-orb" data-d="monitor"><span class="ic">◉</span><span class="lb">监控</span></div>
+    <div class="dim-orb" data-d="logs"><span class="ic">❈</span><span class="lb">日志</span></div>
+    <div class="dim-orb" data-d="topology"><span class="ic">⊕</span><span class="lb">拓扑</span></div>
+
+    <!-- 信息读出条 -->
+    <div class="readout glass" id="readout"></div>
+
+    <!-- 引力透镜编辑环 -->
+    <div id="lens" class="holo">
+      <div class="lens-head">
+        <span class="badge">引力透镜</span>
+        <span class="k" id="lensKey">key</span>
+        <span class="holo-btn" id="lensClose" title="关闭">✕</span>
+      </div>
+      <div class="lens-body">
+        <div class="lens-row">
+          <label>当前值</label>
+          <input id="lensVal" />
+          <div class="old" id="lensOld"></div>
+        </div>
+        <div class="lens-row" id="lensDiffRow" style="display:none">
+          <label>变更预览</label>
+          <div class="diff" id="lensDiff"></div>
+        </div>
+      </div>
+      <div class="lens-foot">
+        <span class="btn ghost" id="lensCancel">取消</span>
+        <span class="btn primary" id="lensConfirm">注入奇点</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 时间晶体 -->
+  <div class="timecrystal glass">
+    <div class="tc-h"><span class="tc-gem"></span><span>时间晶体 · 版本回溯</span></div>
+    <div id="tcList"></div>
+  </div>
+
+  <!-- 控制台 -->
+  <div class="console">
+    <span class="btn primary pubbtn" id="pubBtn">✦ 超新星发布</span>
+  </div>
+
+  <!-- 星港坞 + 曲速命令 -->
+  <div class="dock-hint" id="dockHint"></div>
+  <nav class="stardock" id="dock">
+    <div class="dock-pt" data-go="overview"><span>✦</span><span class="lbl">银河</span></div>
+    <div class="dock-pt" data-go="monitor"><span>◉</span><span class="lbl">恒星系</span></div>
+    <div class="dock-pt active" data-go="config"><span>◍</span><span class="lbl">尘埃</span></div>
+  </nav>
+  <div class="warp-scrim" id="warp">
+    <div class="warp">
+      <input id="warpInput" placeholder="曲速跃迁 · 搜索星体 / 服务 / 指令…" />
+      <div class="warp-list" id="warpList"></div>
+      <div class="warp-foot"><span><kbd>↑</kbd><kbd>↓</kbd> 导航</span><span><kbd>↵</kbd> 跃迁</span><span><kbd>Esc</kbd> 关闭</span></div>
+    </div>
+  </div>
+  <div class="warp-flash" id="flash"></div>
+  <div class="fx-layer" id="fx"></div>
+  <div class="tip" id="tip"></div>
+
+<script>
+/* ===================== 数据（星尘真实风格示例） ===================== */
+const qs=new URLSearchParams(location.search);
+const svc=qs.get('svc')||'order-svc';
+document.getElementById('crumbsSvc').textContent='尘埃 · '+svc;
+// 星域（项目）参数：面包屑串接
+const PROJ2=qs.get('project')||'galaxy-core';
+const PNAME={'galaxy-core':'核心星域','payment':'支付星域','iot':'物联星域','ml-train':'训练星域'}[PROJ2]||'核心星域';
+document.getElementById('crumbRealm').textContent='星域：'+PNAME;
+document.getElementById('crumbRealm').href='prototype-console.html?project='+PROJ2;
+document.getElementById('crumbGalaxy').href='prototype-overview.html?project='+PROJ2;
+document.getElementById('crumbSys').href='prototype-monitor.html?node='+(qs.get('node')||'n3')+'&project='+PROJ2;
+
+// 配置快照（不同版本的配置值用于时间晶体回溯）
+const VERSION_CONFIG={
+  'v3.4.0':[
+    {key:'ConnString',val:'Server=pg-order;Database=order',group:'db'},
+    {key:'Redis',val:'order-cache:6379',group:'cache'},
+    {key:'LogLevel',val:'Information',group:'log'},
+    {key:'MaxPool',val:'128',group:'perf'},
+    {key:'Timeout',val:'30s',group:'perf'},
+    {key:'Feature.NewUI',val:'true',group:'feature'},
+    {key:'RateLimit',val:'5000',group:'perf'},
+    {key:'Consul',val:'http://consul:8500',group:'disc'},
+  ],
+  'v3.3.2':[
+    {key:'ConnString',val:'Server=pg-order;Database=order',group:'db'},
+    {key:'Redis',val:'order-cache:6379',group:'cache'},
+    {key:'LogLevel',val:'Warning',group:'log'},
+    {key:'MaxPool',val:'64',group:'perf'},
+    {key:'Timeout',val:'15s',group:'perf'},
+    {key:'Feature.NewUI',val:'false',group:'feature'},
+    {key:'RateLimit',val:'2000',group:'perf'},
+    {key:'Consul',val:'http://consul:8500',group:'disc'},
+  ],
+  'v3.2.0':[
+    {key:'ConnString',val:'Server=pg-old;Database=order',group:'db'},
+    {key:'Redis',val:'redis-old:6379',group:'cache'},
+    {key:'LogLevel',val:'Information',group:'log'},
+    {key:'MaxPool',val:'32',group:'perf'},
+    {key:'Timeout',val:'10s',group:'perf'},
+    {key:'Feature.NewUI',val:'false',group:'feature'},
+    {key:'RateLimit',val:'800',group:'perf'},
+    {key:'Consul',val:'http://consul-old:8500',group:'disc'},
+  ],
+  'v3.0.1':[
+    {key:'ConnString',val:'Server=pg-old;Database=order',group:'db'},
+    {key:'Redis',val:'redis-old:6379',group:'cache'},
+    {key:'LogLevel',val:'Error',group:'log'},
+    {key:'MaxPool',val:'16',group:'perf'},
+    {key:'Timeout',val:'10s',group:'perf'},
+    {key:'Feature.NewUI',val:'false',group:'feature'},
+    {key:'RateLimit',val:'300',group:'perf'},
+    {key:'Consul',val:'http://consul-old:8500',group:'disc'},
+  ],
+};
+const VERSIONS=[
+  {v:'v3.4.0',when:'2 分钟前',by:'笑笑',cur:true},
+  {v:'v3.3.2',when:'3 天前',by:'构建机'},
+  {v:'v3.2.0',when:'2 周前',by:'阿强'},
+  {v:'v3.0.1',when:'1 个月前',by:'阿强'},
+];
+const DEPS=[
+  {name:'pg-order',kind:'数据库'},{name:'order-cache',kind:'缓存'},
+  {name:'consul',kind:'注册中心'},{name:'payment-svc',kind:'支付'},
+  {name:'notify-svc',kind:'通知'},
+];
+const METRICS=[
+  {name:'CPU',val:42,unit:'%',color:'star'},{name:'内存',val:61,unit:'%',color:'accent'},
+  {name:'QPS',val:1280,unit:'',color:'ok'},{name:'P99',val:86,unit:'ms',color:'warn'},
+];
+const LOGS=[
+  {lv:'ok',ts:'12:04:21',msg:'配置热更新生效 ConnString'},
+  {lv:'w',ts:'12:03:58',msg:'连接池使用率 78%，接近阈值'},
+  {lv:'ok',ts:'12:02:10',msg:'心跳上报成功 节点 order-07'},
+  {lv:'e',ts:'11:58:33',msg:'payment-svc 调用超时 1 次，已剔除'},
+  {lv:'ok',ts:'11:55:02',msg:'版本 v3.4.0 部署完成'},
+];
+const GROUP_COLOR={db:'star',cache:'ok',log:'accent',perf:'warn',feature:'star2',disc:'beam'};
+
+/* ===================== 主题 / 寓意 / 公共件 ===================== */
+const THEME_LEGEND={
+  serene:    {c:'var(--ok)',t:'集群宁静',d:'蓝紫星海如呼吸般缓慢。所有节点健康，引力场稳定，可安心观测。'},
+  attention: {c:'var(--warn)',t:'存在告警',d:'暮色琥珀亮起。部分服务微澜，引力场出现扰动涟漪，需留意。'},
+  crisis:    {c:'var(--danger)',t:'严重故障',d:'黑洞红吸积盘揭示危机。奇点坍缩加剧，光束断裂，立即处置。'},
+  supernova: {c:'var(--star)',t:'发布中',d:'炽金爆发。超新星发布冲击波正在重组星核，配置向全集群扩散。'},
+  genesis:   {c:'var(--ok)',t:'扩容中',d:'星海新绿泛起引力波。弹性扩容涟漪展开，新节点正被吸入轨道。'},
+};
+function setTheme(t){
+  document.body.className='theme-'+t;
+  document.querySelectorAll('.theme-btn').forEach(b=>b.classList.toggle('active',b.dataset.t===t));
+  const L=THEME_LEGEND[t];
+  document.getElementById('legend').innerHTML=
+    `<div class="lh"><span class="sw" style="background:${L.c};color:${L.c}"></span><span>色彩寓意 · ${L.t}</span></div>
+     <div class="desc">${L.d}</div>`;
+  C=readColors();
+}
+document.getElementById('themeRow').querySelectorAll('.theme-btn').forEach(b=>b.onclick=()=>setTheme(b.dataset.t));
+
+/* ===================== 颜色读取（canvas 用） ===================== */
+function readColors(){
+  const s=getComputedStyle(document.body); const g=n=>s.getPropertyValue(n).trim();
+  return {star:g('--star'),star2:g('--star-2'),accent:g('--accent'),beam:g('--beam'),
+    ink2:g('--ink-2'),ink3:g('--ink-3'),ok:g('--ok'),warn:g('--warn'),danger:g('--danger'),
+    line:g('--line'),line2:g('--line-2'),bg:g('--bg-abyss')};
+}
+let C=readColors();
+
+/* ===================== 星空 / 星港坞 / 曲速 / 闪屏（复用体系） ===================== */
+(function buildStars(){
+  const sf=document.getElementById('starfield');
+  for(let i=0;i<140;i++){
+    const s=document.createElement('div'); s.className='star';
+    const sz=Math.random()*2+0.5;
+    s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;width:${sz}px;height:${sz}px;--tw:${2+Math.random()*3}s;opacity:${.3+Math.random()*.7}`;
+    sf.appendChild(s);
+  }
+})();
+const dock=document.getElementById('dock'),dockHint=document.getElementById('dockHint');
+dockHint.addEventListener('mouseenter',()=>dock.classList.add('show'));
+document.addEventListener('mousemove',e=>{ if(e.clientY>window.innerHeight-60) dock.classList.add('show'); });
+dock.querySelectorAll('.dock-pt').forEach(p=>p.onclick=()=>{ const g=p.dataset.go; if(g==='config')return; jumpFlash(g+'.html?project='+PROJ2); });
+
+const warp=document.getElementById('warp'),warpInput=document.getElementById('warpInput'),warpList=document.getElementById('warpList');
+const COMMANDS=[
+  {ic:'✦',k:'视图',t:'返回银河视角',go:'prototype-overview.html?project='+PROJ2},
+  {ic:'◉',k:'视图',t:'返回恒星系',go:'prototype-monitor.html?project='+PROJ2},
+  {ic:'⌘',k:'指令',t:'切换主题 · 宁静',go:'#theme:serene'},
+  {ic:'⌘',k:'指令',t:'切换主题 · 微澜',go:'#theme:attention'},
+  {ic:'⌘',k:'指令',t:'切换主题 · 危机',go:'#theme:crisis'},
+  {ic:'⌘',k:'指令',t:'切换主题 · 超新星',go:'#theme:supernova'},
+  {ic:'⌘',k:'指令',t:'切换主题 · 扩容',go:'#theme:genesis'},
+  {ic:'✦',k:'指令',t:'超新星发布 '+svc,go:'#publish'},
+];
+let warpSel=0;
+function renderWarp(q=''){
+  const list=COMMANDS.filter(c=>c.t.toLowerCase().includes(q.toLowerCase()));
+  warpList.innerHTML=list.map((c,i)=>`<div class="warp-item ${i===warpSel?'sel':''}" data-go="${c.go}">
+    <span class="ic">${c.ic}</span><span style="flex:1">${c.t}</span><span class="k">${c.k}</span></div>`).join('')||'<div class="warp-item">无匹配</div>';
+  warpList.querySelectorAll('.warp-item').forEach(it=>it.onclick=()=>execGo(it.dataset.go));
+}
+function execGo(go){
+  if(go && go.startsWith('#theme:')){ setTheme(go.split(':')[1]); closeWarp(); return; }
+  if(go==='#publish'){ closeWarp(); publish(); return; }
+  jumpFlash(go);
+}
+function openWarp(){ warp.classList.add('show'); document.getElementById('cosmos').classList.add('warp-fold'); renderWarp(); warpInput.value=''; warpInput.focus(); warpSel=0; }
+function closeWarp(){ warp.classList.remove('show'); document.getElementById('cosmos').classList.remove('warp-fold'); }
+warpInput.addEventListener('keydown',e=>{
+  const items=COMMANDS.filter(c=>c.t.toLowerCase().includes(warpInput.value.toLowerCase()));
+  if(e.key==='ArrowDown'){ warpSel=Math.min(warpSel+1,items.length-1); renderWarp(warpInput.value); }
+  else if(e.key==='ArrowUp'){ warpSel=Math.max(warpSel-1,0); renderWarp(warpInput.value); }
+  else if(e.key==='Enter'){ const it=warpList.querySelector('.sel'); if(it) execGo(it.dataset.go); }
+  else if(e.key==='Escape'){ closeWarp(); }
+});
+warpInput.addEventListener('input',()=>{ warpSel=0; renderWarp(warpInput.value); });
+warp.addEventListener('click',e=>{ if(e.target===warp) closeWarp(); });
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){ e.preventDefault(); warp.classList.contains('show')?closeWarp():openWarp(); }
+});
+function jumpFlash(go){ const f=document.getElementById('flash'); f.classList.add('go');
+  document.getElementById('cosmos').classList.add('warp-fold');
+  setTimeout(()=>location.href=go,520); }
+
+/* ===================== 奇点坍缩舱 Canvas ===================== */
+const cv=document.getElementById('singularity'),ctx=cv.getContext('2d');
+let W,H,DPR,cx,cy,R;
+function resize(){
+  DPR=Math.min(window.devicePixelRatio||1,2);
+  const r=cv.getBoundingClientRect(); W=r.width; H=r.height;
+  cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
+  cx=W/2; cy=H/2; R=Math.min(W,H)*0.26;
+}
+window.addEventListener('resize',resize); resize();
+
+let paused=false;
+const mouse={x:-9999,y:-9999,on:false};
+cv.addEventListener('mousemove',e=>{ const r=cv.getBoundingClientRect(); mouse.x=e.clientX-r.left; mouse.y=e.clientY-r.top; mouse.on=true; });
+cv.addEventListener('mouseleave',()=>{ mouse.on=false; mouse.x=-9999; mouse.y=-9999; });
+
+// 配置节点（沿环公转）
+let cfgNodes=[];
+function buildNodes(ver){
+  const src=VERSION_CONFIG[ver]||VERSION_CONFIG['v3.4.0'];
+  cfgNodes=src.map((c,i)=>({...c,
+    ang:i/src.length*Math.PI*2,
+    rad:R*0.62+(i%3)*20,
+    spd:0.05+(i%4)*0.01,
+    x:0,y:0,tx:0,ty:0,hov:false,changed:false}));
+}
+buildNodes('v3.4.0');
+
+let dim='config';
+document.querySelectorAll('.dim-orb').forEach(o=>o.onclick=()=>{
+  dim=o.dataset.d;
+  document.querySelectorAll('.dim-orb').forEach(x=>x.classList.toggle('active',x===o));
+  updateReadout();
+});
+
+// 时间晶体
+function buildCrystal(){
+  const el=document.getElementById('tcList');
+  el.innerHTML=VERSIONS.map(v=>`<div class="tc-item ${v.cur?'cur':''}" data-v="${v.v}">
+    <span class="dot"></span><span class="vn">${v.v}</span><span class="vt">${v.when}</span></div>`).join('');
+  el.querySelectorAll('.tc-item').forEach(it=>it.onclick=()=>rollback(it.dataset.v));
+}
+function rollback(ver){
+  VERSIONS.forEach(v=>v.cur=(v.v===ver));
+  buildCrystal(); buildNodes(ver); paused=false; closeLens();
+  setTheme(ver==='v3.4.0'?'serene':'genesis');
+  shock(cx,cy,180); updateReadout();
+}
+buildCrystal();
+
+/* ---------- 绘制：吸积盘（透视椭圆 + 旋转尘埃） ---------- */
+let dust=Array.from({length:160},()=>({a:Math.random()*Math.PI*2,r:Math.random(),s:Math.random()*0.4+0.1,z:Math.random()*0.5+0.5}));
+function drawAccretion(now){
+  const rx=R*1.9, ry=R*0.62;
+  // 三道椭圆环
+  for(let i=0;i<3;i++){
+    ctx.save(); ctx.translate(cx,cy); ctx.scale(1, ry/rx);
+    ctx.beginPath(); ctx.arc(0,0,rx*(0.7+i*0.18),0,Math.PI*2);
+    ctx.strokeStyle=C.line2; ctx.lineWidth=1; ctx.globalAlpha=0.5-i*0.12; ctx.stroke();
+    ctx.restore();
+  }
+  // 旋转尘埃
+  const t=now/1000;
+  dust.forEach(d=>{
+    const a=d.a+t*d.s*0.3; const rr=rx*(0.55+d.r*0.5);
+    const x=cx+Math.cos(a)*rr, y=cy+Math.sin(a)*rr*(ry/rx);
+    ctx.globalAlpha=0.08+d.z*0.22;
+    ctx.fillStyle=C.star2;
+    ctx.beginPath(); ctx.arc(x,y,d.z*1.4,0,Math.PI*2); ctx.fill();
+  });
+  ctx.globalAlpha=1;
+}
+
+/* ---------- 绘制：奇点（核心） ---------- */
+function drawSingularity(now){
+  const t=now/600;
+  const pulse=1+Math.sin(t)*0.04;
+  const r=R*0.20*pulse;
+  // 外辉光
+  const g=ctx.createRadialGradient(cx,cy,0,cx,cy,r*4);
+  g.addColorStop(0,C.star); g.addColorStop(0.2,C.star); g.addColorStop(1,'transparent');
+  ctx.globalAlpha=0.5; ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,r*4,0,Math.PI*2); ctx.fill();
+  ctx.globalAlpha=1;
+  // 事件视界（暗核）
+  ctx.fillStyle='rgba(2,4,10,0.96)'; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle=C.star; ctx.lineWidth=2; ctx.shadowBlur=24; ctx.shadowColor=C.star;
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke(); ctx.shadowBlur=0;
+  // 自转光纹
+  ctx.save(); ctx.translate(cx,cy); ctx.rotate(t*0.6);
+  ctx.strokeStyle=C.accent; ctx.globalAlpha=0.6; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.arc(0,0,r*1.25,0.4,2.2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,0,r*1.25,Math.PI+0.4,Math.PI+2.2); ctx.stroke();
+  ctx.restore(); ctx.globalAlpha=1;
+}
+
+/* ---------- 绘制：配置节点（公转 + 引力扰动） ---------- */
+function drawConfigNodes(dt,now){
+  cfgNodes.forEach(n=>{
+    if(!paused) n.ang+=n.spd*dt;
+    const bx=cx+Math.cos(n.ang)*n.rad, by=cy+Math.sin(n.ang)*n.rad;
+    // 引力扰动：鼠标吸引节点产生涟漪（透镜开启时冻结聚焦）
+    let tx=bx,ty=by;
+    if(mouse.on && !paused){
+      const dx=mouse.x-bx, dy=mouse.y-by, d=Math.hypot(dx,dy);
+      if(d<140){ const pull=(1-d/140)*34; tx=bx+dx/d*pull; ty=by+dy/d*pull; }
+    }
+    n.x+=(tx-n.x)*0.18; n.y+=(ty-n.y)*0.18;
+    n.tx=tx; n.ty=ty;
+    const col=C[GROUP_COLOR[n.group]||'star'];
+    const hov=Math.hypot(mouse.x-n.x,mouse.y-n.y)<16; n.hov=hov;
+    const sz=hov?7:5;
+    ctx.shadowBlur=hov?22:14; ctx.shadowColor=col;
+    ctx.fillStyle=col; ctx.beginPath(); ctx.arc(n.x,n.y,sz,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0;
+    if(n.changed){ ctx.strokeStyle=C.warn; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(n.x,n.y,sz+5,0,Math.PI*2); ctx.stroke(); }
+    if(hov||paused){ ctx.fillStyle=C.ink2; ctx.font='11px Inter, sans-serif'; ctx.textAlign='center';
+      ctx.fillText(n.key,n.x,n.y-sz-8); }
+  });
+  // 引力光束：鼠标到最近节点的牵引线
+  if(mouse.on){
+    let best=null,bd=1e9;
+    cfgNodes.forEach(n=>{ const d=Math.hypot(mouse.x-n.x,mouse.y-n.y); if(d<bd){bd=d;best=n;} });
+    if(best && bd<140){
+      ctx.strokeStyle=C.beam; ctx.globalAlpha=0.4; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(mouse.x,mouse.y); ctx.lineTo(best.x,best.y); ctx.stroke(); ctx.globalAlpha=1;
+    }
+  }
+}
+
+/* ---------- 绘制：监控（环形仪表 + 流动粒子） ---------- */
+function drawMonitor(now){
+  const t=now/1000;
+  METRICS.forEach((m,i)=>{
+    const a=i/METRICS.length*Math.PI*2 + Math.PI/4;
+    const mx=cx+Math.cos(a)*R*0.95, my=cy+Math.sin(a)*R*0.95;
+    const rad=34, col=C[m.color];
+    const frac=m.val/ (m.unit==='ms'?200:(m.unit===''?2000:100));
+    ctx.strokeStyle=C.line2; ctx.lineWidth=5; ctx.beginPath(); ctx.arc(mx,my,rad,0,Math.PI*2); ctx.stroke();
+    ctx.strokeStyle=col; ctx.lineWidth=5; ctx.lineCap='round'; ctx.shadowBlur=12; ctx.shadowColor=col;
+    ctx.beginPath(); ctx.arc(mx,my,rad,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(frac,1)); ctx.stroke();
+    ctx.shadowBlur=0;
+    // 流动粒子
+    const pa=-Math.PI/2+Math.PI*2*((t*0.3)%1)*Math.min(frac,1);
+    ctx.fillStyle=col; ctx.beginPath(); ctx.arc(mx+Math.cos(pa)*rad,my+Math.sin(pa)*rad,3,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=C.ink2; ctx.font='10px Inter'; ctx.textAlign='center';
+    ctx.fillText(m.name,mx,my-rad-8);
+    ctx.fillStyle=C.ink; ctx.font='bold 13px Inter'; ctx.fillText(m.val+m.unit,mx,my+4);
+  });
+}
+
+/* ---------- 绘制：日志（螺旋粒子喷流） ---------- */
+let logParts=Array.from({length:60},()=>({a:Math.random()*Math.PI*2,r:Math.random(),s:Math.random()*0.5+0.3}));
+function drawLogs(dt){
+  logParts.forEach(p=>{
+    p.r+=p.s*dt*0.4; if(p.r>1){p.r=0;p.a=Math.random()*Math.PI*2;}
+    const rr=R*0.3+p.r*R*1.7; const x=cx+Math.cos(p.a+p.r*6)*rr, y=cy+Math.sin(p.a+p.r*6)*rr*0.6;
+    ctx.globalAlpha=(1-p.r)*0.7; ctx.fillStyle=C.ok; ctx.shadowBlur=8; ctx.shadowColor=C.ok;
+    ctx.beginPath(); ctx.arc(x,y,1.6,0,Math.PI*2); ctx.fill();
+  });
+  ctx.globalAlpha=1; ctx.shadowBlur=0;
+}
+
+/* ---------- 绘制：拓扑（依赖连线 + 流动） ---------- */
+function drawTopology(dt,now){
+  const t=now/1000;
+  DEPS.forEach((d,i)=>{
+    const a=i/DEPS.length*Math.PI*2 - Math.PI/2;
+    const dx=cx+Math.cos(a)*R*1.5, dy=cy+Math.sin(a)*R*1.5*0.7;
+    const col=C.beam;
+    ctx.strokeStyle=C.line; ctx.lineWidth=1; ctx.globalAlpha=0.5;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(dx,dy); ctx.stroke(); ctx.globalAlpha=1;
+    // 流动调用粒子
+    const f=((t*0.4+i*0.2)%1);
+    const px=cx+(dx-cx)*f, py=cy+(dy-cy)*f;
+    ctx.fillStyle=C.accent; ctx.shadowBlur=8; ctx.shadowColor=C.accent;
+    ctx.beginPath(); ctx.arc(px,py,3,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+    const hov=Math.hypot(mouse.x-dx,mouse.y-dy)<18;
+    ctx.fillStyle=hov?C.star:C.ink2; ctx.font=(hov?'bold ':'')+'11px Inter'; ctx.textAlign='center';
+    ctx.fillText(d.name,dx,dy+ (dy>cy?22:-14));
+    if(hov){ ctx.fillStyle=C.ink3; ctx.font='10px Inter'; ctx.fillText(d.kind,dx,dy+(dy>cy?34:-26)); }
+    d._x=dx; d._y=dy;
+  });
+  // 中心本服务标记
+  ctx.fillStyle=C.star; ctx.font='bold 12px Inter'; ctx.textAlign='center';
+  ctx.fillText(svc,cx,cy+R*0.2+18);
+}
+
+/* ---------- 主循环 ---------- */
+let last=performance.now();
+function frame(now){
+  const dt=Math.min((now-last)/1000,0.05); last=now;
+  ctx.clearRect(0,0,W,H);
+  drawAccretion(now);
+  if(dim==='config') drawConfigNodes(dt,now);
+  else if(dim==='monitor') drawMonitor(now);
+  else if(dim==='logs') drawLogs(dt);
+  else if(dim==='topology') drawTopology(dt,now);
+  drawSingularity(now);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+/* ---------- 点击：配置节点 → 引力透镜 ---------- */
+cv.addEventListener('click',e=>{
+  const r=cv.getBoundingClientRect(); const mx=e.clientX-r.left, my=e.clientY-r.top;
+  if(dim==='config'){
+    let hit=null,bd=18;
+    cfgNodes.forEach(n=>{ const d=Math.hypot(mx-n.x,my-n.y); if(d<bd){bd=d;hit=n;} });
+    if(hit) openLens(hit);
+  } else if(dim==='topology'){
+    let hit=null,bd=18;
+    DEPS.forEach(d=>{ if(d._x==null)return; const dd=Math.hypot(mx-d._x,my-d._y); if(dd<bd){bd=dd;hit=d;} });
+    if(hit) showReadoutDep(hit);
+  }
+});
+
+/* ---------- 引力透镜编辑 ---------- */
+const lens=document.getElementById('lens');
+let lensNode=null, lensOriginal='';
+function openLens(n){
+  lensNode=n; paused=true; lensOriginal=n.val;
+  document.getElementById('lensKey').textContent=n.key;
+  const lv=document.getElementById('lensVal'); lv.value=n.val;
+  document.getElementById('lensOld').innerHTML='原始值：<s>'+n.val+'</s>';
+  document.getElementById('lensDiffRow').style.display='none';
+  lens.classList.remove('closing'); lens.classList.add('open');
+}
+function closeLens(){
+  lens.classList.add('closing'); lens.classList.remove('open');
+  setTimeout(()=>{ lens.classList.remove('closing'); },300);
+  paused=false;
+}
+document.getElementById('lensClose').onclick=closeLens;
+document.getElementById('lensCancel').onclick=closeLens;
+document.getElementById('lensVal').addEventListener('input',e=>{
+  const nv=e.target.value;
+  if(nv!==lensOriginal){
+    document.getElementById('lensDiffRow').style.display='block';
+    document.getElementById('lensDiff').textContent=lensOriginal+'  →  '+nv;
+  } else document.getElementById('lensDiffRow').style.display='none';
+});
+document.getElementById('lensConfirm').onclick=()=>{
+  if(lensNode){ lensNode.val=document.getElementById('lensVal').value; lensNode.changed=true; }
+  shock(lensNode?lensNode.x:cx, lensNode?lensNode.y:cy, 90);
+  // 奇点闪光
+  shock(cx,cy,120);
+  closeLens();
+};
+
+/* ---------- 信息读出条 ---------- */
+const readout=document.getElementById('readout');
+function updateReadout(){
+  if(dim==='config'){
+    const ch=cfgNodes.filter(n=>n.changed).length;
+    readout.innerHTML=`<div class="rh">◍ <b>配置星盘</b> · ${svc} · 共 ${cfgNodes.length} 项${ch?` · <span style="color:var(--warn)">${ch} 项待发布</span>`:''}</div>
+      拖拽鼠标牵引配置质点产生引力涟漪；点击发光质点唤起<b>引力透镜</b>就地编辑并注入奇点。`;
+  } else if(dim==='monitor'){
+    readout.innerHTML=`<div class="rh">◉ <b>实时监控</b> · ${svc}</div>`+
+      METRICS.map(m=>`${m.name} <b style="color:var(--${m.color})">${m.val}${m.unit}</b>`).join('　·　');
+  } else if(dim==='logs'){
+    readout.innerHTML=`<div class="rh">❈ <b>日志喷流</b> · ${svc}</div>`+
+      LOGS.slice().reverse().map(l=>`<div class="logline"><span class="ts">${l.ts}</span> <span class="lv${l.lv==='w'?' lv-w':l.lv==='e'?' lv-e':''}">${l.lv.toUpperCase()}</span> ${l.msg}</div>`).join('');
+  } else if(dim==='topology'){
+    readout.innerHTML=`<div class="rh">⊕ <b>依赖拓扑</b> · ${svc}</div>中心为本服务，外环为上下游依赖，光束沿调用方向流动；点击外环节点查看类型。`;
+  }
+}
+function showReadoutDep(d){
+  readout.innerHTML=`<div class="rh">⊕ <b>${d.name}</b> · ${d.kind}</div>该依赖当前链路健康，调用粒子正沿引力光束流入本服务奇点。`;
+}
+updateReadout();
+
+/* ---------- 超新星发布 ---------- */
+const fx=document.getElementById('fx');
+function shock(x,y,max){
+  const s=document.createElement('div'); s.className='shock';
+  s.style.left=x+'px'; s.style.top=y+'px'; s.style.width=s.style.height=max+'px';
+  fx.appendChild(s); setTimeout(()=>s.remove(),1200);
+}
+document.getElementById('pubBtn').onclick=publish;
+function publish(){
+  setTheme('supernova');
+  // 多次冲击波 + 节点抛射
+  for(let i=0;i<4;i++) setTimeout(()=>shock(cx,cy,120+i*120),i*140);
+  cfgNodes.forEach(n=>{ n.changed=false; n.rad+=60; n.spd*=2.4; });
+  setTimeout(()=>cfgNodes.forEach(n=>{ n.rad-=60; n.spd/=2.4; }),900);
+  updateReadout();
+}
+
+/* 初始 */
+setTheme('serene');
+</script>
+</body>
+</html>

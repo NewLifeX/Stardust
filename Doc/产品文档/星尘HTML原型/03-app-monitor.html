@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>星尘 Stardust · 应用监控 / 调用链</title>
+<style>
+  :root{
+    --bg:#0B1120; --surface:rgba(30,41,59,.72); --surface-2:rgba(51,65,85,.5);
+    --border:rgba(148,163,184,.18); --border-soft:rgba(148,163,184,.1);
+    --text:#E6EAF2; --text-dim:#94A3B8; --text-faint:#64748B;
+    --accent:#6366F1; --accent-2:#38BDF8; --accent-soft:rgba(99,102,241,.16);
+    --green:#34D399; --amber:#FBBF24; --red:#F87171; --purple:#A78BFA;
+    --radius:16px; --radius-sm:10px; --blur:blur(20px);
+    --font:'Geist','Satoshi','HarmonyOS Sans SC','PingFang SC',system-ui,sans-serif;
+    --mono:'Geist Mono','JetBrains Mono',ui-monospace,'SF Mono',Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex;font-size:14px;-webkit-font-smoothing:antialiased;overflow:hidden}
+  .cosmic{position:fixed;inset:0;z-index:-2;background:
+    radial-gradient(ellipse at 16% 20%, rgba(139,92,246,.20), transparent 45%),
+    radial-gradient(ellipse at 82% 12%, rgba(56,189,248,.18), transparent 45%),
+    radial-gradient(ellipse at 68% 86%, rgba(16,185,129,.12), transparent 45%),
+    radial-gradient(ellipse at 28% 82%, rgba(99,102,241,.16), transparent 45%),
+    linear-gradient(160deg,#0B1120,#0A0E1A);}
+  .nebula{position:fixed;border-radius:50%;filter:blur(60px);opacity:.14;z-index:-1;animation:neb 24s ease-in-out infinite alternate}
+  .nebula.n1{width:380px;height:380px;background:var(--purple);top:8%;left:6%}
+  .nebula.n2{width:420px;height:420px;background:var(--accent-2);bottom:4%;right:8%;animation-delay:-8s}
+  @keyframes neb{to{transform:translate(90px,46px) scale(1.18)}}
+  .star-field{position:fixed;inset:0;z-index:-1;pointer-events:none}
+  .star{position:absolute;background:#fff;border-radius:50%;animation:tw 3s infinite alternate}
+  @keyframes tw{0%,100%{opacity:.18}50%{opacity:.95}}
+  .sidebar{width:230px;flex-shrink:0;height:100vh;z-index:3;background:rgba(13,19,33,.55);backdrop-filter:var(--blur);border-right:1px solid var(--border-soft);padding:20px 14px;display:flex;flex-direction:column;gap:6px}
+  .brand{display:flex;align-items:center;gap:11px;padding:4px 8px 18px}
+  .brand .logo{width:34px;height:34px;border-radius:10px;background:conic-gradient(from 0deg,var(--accent),var(--accent-2),var(--purple),var(--accent));animation:spin 18s linear infinite;position:relative;box-shadow:0 0 18px rgba(99,102,241,.4)}
+  .brand .logo::after{content:'★';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .brand b{font-size:15px;letter-spacing:.5px}.brand span{font-size:10px;color:var(--text-faint);display:block;letter-spacing:1px}
+  .nav-group{font-size:11px;color:var(--text-faint);padding:14px 10px 6px;letter-spacing:1px}
+  .nav-item{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:var(--radius-sm);color:var(--text-dim);cursor:pointer;font-size:13.5px;transition:.18s;position:relative}
+  .nav-item:hover{background:var(--surface);color:var(--text)}
+  .nav-item.active{background:var(--accent-soft);color:#c7d2fe}
+  .nav-item.active::before{content:'';position:absolute;left:-14px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:var(--accent)}
+  .nav-item .ico{width:17px;height:17px;opacity:.9}
+  .nav-more{margin-top:auto;font-size:11.5px;color:var(--text-faint);padding:9px 11px;border-top:1px solid var(--border-soft);cursor:pointer}
+  .main{flex:1;min-width:0;height:100vh;overflow-y:auto;position:relative;z-index:1}
+  .topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:16px;padding:13px 28px;background:rgba(11,17,32,.7);backdrop-filter:var(--blur);border-bottom:1px solid var(--border-soft)}
+  .proj-switch{display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--border);padding:7px 12px;border-radius:var(--radius-sm);cursor:pointer}
+  .proj-switch .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+  .proj-switch b{font-size:13.5px}.proj-switch .caret{color:var(--text-faint);font-size:10px}
+  .search{flex:1;max-width:400px;display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--border);padding:8px 13px;border-radius:var(--radius-sm);color:var(--text-faint);transition:.2s}
+  .search:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .search input{background:none;border:none;outline:none;color:var(--text);font-size:13px;width:100%}
+  .top-actions{margin-left:auto;display:flex;align-items:center;gap:12px}
+  .icon-btn{width:34px;height:34px;border-radius:9px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-dim);transition:.18s}
+  .icon-btn:hover{color:#fff;border-color:var(--accent)}
+  .avatar{width:34px;height:34px;border-radius:50%;background:conic-gradient(from 0deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px}
+  .content{padding:26px 28px 50px;max-width:1340px}
+  .crumb{font-size:12.5px;color:var(--text-faint);margin-bottom:6px}.crumb b{color:var(--text-dim)}
+  .page-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:18px}
+  .page-head h1{font-size:22px;font-weight:650}.page-head p{color:var(--text-dim);font-size:13px;margin-top:4px}
+  .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border-radius:var(--radius-sm);font-size:13px;font-weight:550;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);transition:.18s}
+  .btn:hover{transform:translateY(-2px);border-color:var(--accent)}
+  .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;border:none}
+  .btn.primary:hover{box-shadow:0 8px 24px rgba(99,102,241,.4)}
+  .glass{background:var(--surface);backdrop-filter:var(--blur);border:1px solid var(--border);border-radius:var(--radius);transition:.22s}
+  .glass:hover{border-color:rgba(99,102,241,.5);box-shadow:0 18px 44px rgba(0,0,0,.4),0 0 0 1px rgba(99,102,241,.12)}
+  .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:18px}
+  .kpi{padding:16px 18px}
+  .kpi .label{color:var(--text-dim);font-size:12.5px}
+  .kpi .val{font-family:var(--mono);font-size:26px;font-weight:600;margin-top:8px}
+  .kpi .sub{font-size:11.5px;color:var(--text-faint);margin-top:3px}
+  .kpi.alert .val{color:var(--red)}.kpi.warn .val{color:var(--amber)}
+  .grid{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+  .card{padding:20px}
+  .card-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .card-h h3{font-size:15px;font-weight:600}.card-h .link{color:var(--accent-2);font-size:12.5px;cursor:pointer}
+  .wf{position:relative;padding-top:6px}
+  .wf .axis{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10.5px;color:var(--text-faint);border-bottom:1px dashed var(--border);padding-bottom:6px;margin-bottom:10px}
+  .span{display:flex;align-items:center;gap:12px;padding:6px 0;position:relative}
+  .span .name{width:190px;flex-shrink:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .span .name .svc{color:var(--text-faint);font-size:11px;font-family:var(--mono)}
+  .span .track{flex:1;position:relative;height:22px}
+  .span .bar{position:absolute;height:14px;top:4px;border-radius:5px;display:flex;align-items:center;padding:0 8px;font-family:var(--mono);font-size:10.5px;color:#04121C;font-weight:600;min-width:30px;transition:.3s;cursor:pointer}
+  .span .bar:hover{filter:brightness(1.15);box-shadow:0 0 14px rgba(99,102,241,.4)}
+  .b-accent{background:linear-gradient(90deg,#818cf8,var(--accent))}
+  .b-green{background:linear-gradient(90deg,#5eead4,var(--green))}
+  .b-purple{background:linear-gradient(90deg,#c4b5fd,var(--purple))}
+  .b-amber{background:linear-gradient(90deg,#fcd34d,var(--amber))}
+  .b-red{background:linear-gradient(90deg,#fca5a5,var(--red))}
+  .topo{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0}
+  .topo .node{background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:8px 14px;font-size:12.5px;width:100%;text-align:center}
+  .topo .node.hot{border-color:var(--red);color:var(--red)}
+  .topo .edge{color:var(--text-faint);font-size:14px;line-height:1}
+  .topo .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;font-size:11.5px;color:var(--text-dim)}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:middle}
+  .toast{position:fixed;top:88px;right:24px;background:var(--surface);backdrop-filter:var(--blur);border:1px solid rgba(99,102,241,.35);border-left:3px solid var(--accent);border-radius:12px;padding:14px 18px;box-shadow:0 12px 40px rgba(0,0,0,.45);z-index:50;display:flex;align-items:center;gap:11px;font-size:13px;transform:translateX(120px);opacity:0;transition:.3s cubic-bezier(.4,0,.2,1)}
+  .toast.show{transform:translateX(0);opacity:1}
+  .toast .ic{width:28px;height:28px;border-radius:50%;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;color:var(--accent-2)}
+  @media(max-width:1080px){.kpi-row{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.span .name{width:130px}}
+</style>
+</head>
+<body>
+  <div class="cosmic"></div><div class="nebula n1"></div><div class="nebula n2"></div>
+  <div class="star-field" id="starField"></div>
+
+  <aside class="sidebar">
+    <div class="brand"><div class="logo"></div><div><b>星尘</b><span>STARDUST</span></div></div>
+    <div class="nav-group">核心</div>
+    <div class="nav-item"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>概览</div>
+    <div class="nav-item"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><circle cx="7" cy="7" r="1" fill="currentColor"/><circle cx="7" cy="17" r="1" fill="currentColor"/></svg>节点管理</div>
+    <div class="nav-item active"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h10M4 18h7"/></svg>应用监控</div>
+    <div class="nav-item"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>日志 / APM</div>
+    <div class="nav-item"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.3 1a7 7 0 0 0-1.7-1L16.5 3h-3l-.4 2.6a7 7 0 0 0-1.7 1l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 1.7 1l.4 2.6h3l.4-2.6a7 7 0 0 0 1.7-1l2.3 1 2-3.4-2-1.5a7 7 0 0 0 .1-1Z"/></svg>配置中心</div>
+    <div class="nav-group">进阶</div>
+    <div class="nav-item"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="9"/></svg>网关</div>
+    <div class="nav-item"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/></svg>Redis / MySQL</div>
+    <div class="nav-more">+ 更多高级能力 ›</div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="proj-switch"><span class="dot"></span><b>生产环境</b><span class="caret">▾</span></div>
+      <div class="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg><input placeholder="搜索链路 ID / 接口 / 服务…" /></div>
+      <div class="top-actions"><div class="icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div><div class="avatar">笑</div></div>
+    </div>
+
+    <div class="content">
+      <div class="crumb">应用监控 / <b>order-service</b></div>
+      <div class="page-head">
+        <div><h1>order-service · 调用链</h1><p>最近一次慢请求 Trace，总耗时 820ms（超 500ms 阈值）。</p></div>
+        <div style="display:flex;gap:10px"><button class="btn" onclick="toast('已打开基线对比')">对比基线</button><button class="btn primary" onclick="toast('正在拉取实时链路…')">查看实时</button></div>
+      </div>
+
+      <div class="kpi-row">
+        <div class="glass kpi"><div class="label">QPS</div><div class="val">1,284</div><div class="sub">近 5 分钟均值</div></div>
+        <div class="glass kpi warn"><div class="label">P99 响应</div><div class="val">820ms</div><div class="sub">阈值 500ms ⚠</div></div>
+        <div class="glass kpi alert"><div class="label">错误率</div><div class="val">1.8%</div><div class="sub">↑ 0.6% 较 1h</div></div>
+        <div class="glass kpi"><div class="label">实例数</div><div class="val">6</div><div class="sub">全部健康</div></div>
+      </div>
+
+      <div class="grid">
+        <div class="glass card">
+          <div class="card-h"><h3>调用链瀑布图 · Trace #a3f9c1</h3><span class="link">完整链路 ›</span></div>
+          <div class="wf">
+            <div class="axis"><span>0ms</span><span>200ms</span><span>400ms</span><span>600ms</span><span>820ms</span></div>
+            <div class="span"><div class="name">POST /api/order <span class="svc">order-service</span></div><div class="track"><div class="bar b-accent" style="left:0%;width:100%" onclick="toast('入口 span · 820ms')">820ms</div></div></div>
+            <div class="span"><div class="name">├ 校验令牌 <span class="svc">auth-svc</span></div><div class="track"><div class="bar b-green" style="left:1%;width:9%" onclick="toast('auth-svc · 72ms')">72ms</div></div></div>
+            <div class="span"><div class="name">├ 查询库存 <span class="svc">inventory-svc</span></div><div class="track"><div class="bar b-purple" style="left:12%;width:22%" onclick="toast('inventory-svc · 180ms')">180ms</div></div></div>
+            <div class="span"><div class="name">│  └ Redis GET <span class="svc">cache</span></div><div class="track"><div class="bar b-green" style="left:13%;width:5%" onclick="toast('Redis GET · 38ms')">38ms</div></div></div>
+            <div class="span"><div class="name">├ 创建订单 <span class="svc">db-master</span></div><div class="track"><div class="bar b-amber" style="left:36%;width:41%" onclick="toast('db-master · 336ms')">336ms</div></div></div>
+            <div class="span"><div class="name">│  └ INSERT 事务 <span class="svc">sql</span></div><div class="track"><div class="bar b-red" style="left:37%;width:39%" onclick="toast('慢调用：INSERT 事务 318ms')">318ms ⚠</div></div></div>
+            <div class="span"><div class="name">├ 扣减库存 <span class="svc">inventory-svc</span></div><div class="track"><div class="bar b-purple" style="left:78%;width:14%" onclick="toast('inventory-svc · 116ms')">116ms</div></div></div>
+            <div class="span"><div class="name">└ 发送消息 <span class="svc">mq</span></div><div class="track"><div class="bar b-green" style="left:92%;width:8%" onclick="toast('MQ · 66ms')">66ms</div></div></div>
+          </div>
+          <div class="legend">
+            <span><i class="b-accent"></i>入口</span><span><i class="b-purple"></i>库存服务</span>
+            <span><i class="b-amber"></i>数据库</span><span><i class="b-green"></i>缓存 / 队列</span><span><i class="b-red"></i>慢调用（超阈值）</span>
+          </div>
+        </div>
+
+        <div class="glass card">
+          <div class="card-h"><h3>服务拓扑</h3></div>
+          <div class="topo">
+            <div class="node">order-service</div><div class="edge">│</div>
+            <div class="row2"><div class="node">auth-svc</div><div class="node">inventory-svc</div></div>
+            <div class="edge">│</div>
+            <div class="row2"><div class="node">cache (Redis)</div><div class="node hot">db-master ⚠</div></div>
+            <div class="edge">│</div>
+            <div class="node">MQ 消息总线</div>
+          </div>
+          <div style="margin-top:16px;font-size:12.5px;color:var(--text-dim);line-height:1.6">
+            瓶颈定位：<b style="color:var(--red)">db-master 写入事务 318ms</b> 占整条链路 39%，建议检查索引与批量提交。
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"><div class="ic">✓</div><div id="toastMsg">完成</div></div>
+  <script>
+    (function(){const f=document.getElementById('starField');for(let i=0;i<140;i++){const s=document.createElement('div');s.className='star';const sz=Math.random()*2+1;s.style.width=sz+'px';s.style.height=sz+'px';s.style.left=Math.random()*100+'%';s.style.top=Math.random()*100+'%';s.style.animationDelay=(Math.random()*3)+'s';f.appendChild(s);}})();
+    let toastTimer;function toast(msg){const t=document.getElementById('toast');document.getElementById('toastMsg').textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2600);}
+  </script>
+</body>
+</html>

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>星尘 · 恒星系视角 / Star System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="cosmic.css" />
+<style>
+  /* 恒星系专属 */
+  #sys { position:absolute; inset:0; display:grid; place-items:center; }
+  #sys svg { width:100%; height:100%; }
+  .sun-core { animation: breathe 5s ease-in-out infinite; transform-box: fill-box; transform-origin:center; }
+  @keyframes breathe { 0%,100%{transform:scale(1);} 50%{transform:scale(1.04);} }
+  .planet { cursor:pointer; }
+  .planet:hover .planet-body { transform:scale(1.3); }
+  .planet-body { transition: transform .25s ease; transform-box: fill-box; transform-origin:center; }
+  .orbit-path { fill:none; stroke:var(--line-2); stroke-dasharray:3 6; opacity:.5; }
+  #holoWrap { position:fixed; top:50%; right:32px; transform:translateY(-50%); width:430px; max-width:92vw; z-index:70; display:none; }
+  #holoWrap.show { display:block; }
+  .mini-stat { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--line-2); font-size:13px; }
+  .mini-stat .v { font-weight:600; }
+</style>
+</head>
+<body class="theme-serene">
+<div class="cosmos" id="cosmos">
+  <div class="starfield" id="sfFar"><div class="layer"></div></div>
+  <div class="starfield" id="sfMid"><div class="layer"></div></div>
+  <div class="nebula a"></div>
+  <!-- 远处其他恒星（暗示可返回） -->
+  <div id="sys">
+    <svg viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid meet" id="sysSvg"></svg>
+  </div>
+  <div class="vignette"></div>
+</div>
+
+<!-- 面包屑 -->
+<div class="crumbs">
+  <a href="#" id="crumbRealm">星域</a><span class="sep">→</span>
+  <a href="prototype-overview.html" id="crumbGalaxy">银河</a><span class="sep">→</span><span class="cur" id="nodeName">节点</span>
+</div>
+
+<!-- 主题切换 -->
+<div class="theme-switch">
+  <span class="ttl">环境状态 · 色彩寓意</span>
+  <div class="theme-row" id="themeRow">
+    <div class="theme-btn active" data-t="serene"    title="宁静"></div>
+    <div class="theme-btn" data-t="attention" title="微澜"></div>
+    <div class="theme-btn" data-t="crisis"    title="危机"></div>
+    <div class="theme-btn" data-t="supernova" title="超新星"></div>
+    <div class="theme-btn" data-t="genesis"   title="扩容"></div>
+  </div>
+</div>
+
+<!-- 全息面板（点击行星展开） -->
+<div id="holoWrap">
+  <div class="holo" id="holo" style="padding:18px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+      <div>
+        <div class="eyebrow">服务实例 · Dust</div>
+        <div style="font-size:18px;font-weight:700;margin-top:2px" id="hName">—</div>
+      </div>
+      <div class="holo-bar">
+        <div class="holo-btn" id="hExpand" title="展开全息详情">⤢</div>
+        <div class="holo-btn" id="hClose" title="收起">✕</div>
+      </div>
+    </div>
+    <div style="margin:6px 0 12px"><span class="pill ok" id="hPill">健康</span> <span class="t-2" style="font-size:12px">实例 <b id="hInst" class="mono">0</b></span></div>
+    <div class="mini-stat"><span class="t-2">QPS</span><span class="v mono" id="hQps">—</span></div>
+    <div class="mini-stat"><span class="t-2">P99 延迟</span><span class="v mono" id="hLat">—</span></div>
+    <div class="mini-stat"><span class="t-2">错误率</span><span class="v mono" id="hErr">—</span></div>
+    <div class="mini-stat" style="border:0"><span class="t-2">所属轨道</span><span class="v" id="hOrbit">—</span></div>
+    <div style="margin-top:14px;display:flex;gap:10px">
+      <span class="btn primary" id="hGo" style="flex:1;justify-content:center">进入全息详情 →</span>
+    </div>
+  </div>
+</div>
+
+<div class="fx-layer" id="fx"></div>
+<div class="tip" id="tip"></div>
+<div class="warp-flash" id="flash"></div>
+
+<script>
+const SVGNS='http://www.w3.org/2000/svg';
+const svg=document.getElementById('sysSvg');
+const qs=new URLSearchParams(location.search);
+const nodeId=qs.get('node')||'n3';
+const NODEINFO={ n1:['web-gw-01',32],n2:['web-gw-02',32],n3:['api-core-01',64],n4:['api-core-02',64],
+  n5:['db-master',48],n6:['cache-01',16],n7:['mq-broker',24],n8:['job-worker',16],
+  n9:['staging-01',16],n10:['staging-02',16],n11:['dev-sandbox',8],n12:['edge-cn',24] };
+const [nodeName,cores]=NODEINFO[nodeId]||['api-core-01',64];
+document.getElementById('nodeName').textContent=nodeName;
+
+// 模拟服务的轨道（3 条轨道）
+const SERVICES=[
+  { name:'order-svc',  inst:6, health:'ok',   qps:1820, lat:42, err:0.2, orbit:0, ang:0 },
+  { name:'user-svc',   inst:4, health:'ok',   qps:960,  lat:38, err:0.1, orbit:0, ang:2 },
+  { name:'pay-svc',    inst:3, health:'warn', qps:540,  lat:120,err:1.4, orbit:1, ang:1 },
+  { name:'inv-svc',    inst:5, health:'ok',   qps:720,  lat:51, err:0.3, orbit:1, ang:3 },
+  { name:'search-svc', inst:4, health:'ok',   qps:1100, lat:60, err:0.4, orbit:1, ang:5 },
+  { name:'notify-svc', inst:2, health:'danger',qps:210, lat:380,err:4.1, orbit:2, ang:0.5 },
+  { name:'auth-svc',   inst:3, health:'ok',   qps:880,  lat:33, err:0.1, orbit:2, ang:2.5 },
+  { name:'file-svc',   inst:2, health:'ok',   qps:160,  lat:70, err:0.2, orbit:2, ang:4 },
+];
+const ORBITS=[ {rx:230,ry:150}, {rx:340,ry:220}, {rx:450,ry:290} ];
+const sunLoad = cores>48?68 : cores>16?52 : 28;
+
+function el(t,a){const e=document.createElementNS(SVGNS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+function hc(h){return getComputedStyle(document.body).getPropertyValue(h==='ok'?'--ok':h==='warn'?'--warn':'--danger');}
+
+// 资源环形仪表（CPU/内存/磁盘）
+function drawSun(){
+  const cx=600, cy=400;
+  svg.innerHTML='';
+  // 轨道
+  ORBITS.forEach(o=>{
+    const p=el('ellipse',{class:'orbit-path', cx, cy, rx:o.rx, ry:o.ry});
+    svg.appendChild(p);
+  });
+  // 太阳光晕
+  const glow=el('circle',{cx,cy,r:120, fill:hc('ok'), opacity:.10});
+  svg.appendChild(glow);
+  // 三层环仪表
+  const rings=[ {r:150,val:sunLoad, col:'--star'}, {r:120,val:sunLoad-14,col:'--accent'}, {r:92,val:sunLoad+8,col:'--star-2'} ];
+  rings.forEach(rg=>{
+    const C=2*Math.PI*rg.r;
+    const track=el('circle',{class:'gauge-track gauge-ring', cx,cy,r:rg.r, 'stroke-width':6});
+    const val=el('circle',{class:'gauge-ring', cx,cy,r:rg.r, 'stroke-width':6, stroke:getComputedStyle(document.body).getPropertyValue(rg.col),
+      'stroke-dasharray':C, 'stroke-dashoffset':C*(1-rg.val/100)});
+    svg.appendChild(track); svg.appendChild(val);
+  });
+  // 太阳本体
+  const sun=el('circle',{class:'sun-core', cx,cy,r:70, fill:hc('ok')});
+  sun.style.filter='drop-shadow(0 0 26px '+hc('ok')+')';
+  svg.appendChild(sun);
+  // 中心文字（用 style 设置 fill，var() 仅在 CSS 上下文生效）
+  const t1=el('text',{x:cx,y:cy-4,'text-anchor':'middle','font-size':22,'font-weight':700}); t1.style.fill='var(--ink)'; t1.textContent=cores+'C';
+  const t2=el('text',{x:cx,y:cy+18,'text-anchor':'middle','font-size':12}); t2.style.fill='var(--ink-2)'; t2.textContent='算力核心';
+  svg.appendChild(t1); svg.appendChild(t2);
+  // 行星
+  SERVICES.forEach(s=>{
+    const o=ORBITS[s.orbit];
+    const g=el('g',{class:'planet','data-name':s.name});
+    const pr=6+s.inst; // 行星大小=实例数
+    const body=el('circle',{class:'planet-body', r:pr, fill:hc(s.health)});
+    body.style.filter='drop-shadow(0 0 8px '+hc(s.health)+')';
+    g.appendChild(body);
+    // 沿椭圆轨道运动
+    const am=el('animateMotion',{dur:(14+s.orbit*5)+'s', repeatCount:'indefinite', begin:(s.ang)+'s', rotate:'auto'});
+    const path=`M ${cx+o.rx} ${cy} A ${o.rx} ${o.ry} 0 1 1 ${cx-o.rx} ${cy} A ${o.rx} ${o.ry} 0 1 1 ${cx+o.rx} ${cy}`;
+    am.setAttribute('path',path);
+    g.appendChild(am);
+    g.addEventListener('mouseenter',()=>{ const tip=document.getElementById('tip'); tip.innerHTML=`<b style="color:${hc(s.health)}">${s.name}</b> · 实例 ${s.inst} · ${s.qps} QPS`; tip.classList.add('show'); const r=g.getBoundingClientRect(); tip.style.left=r.left+r.width/2+'px'; tip.style.top=r.top+'px'; });
+    g.addEventListener('mouseleave',()=>document.getElementById('tip').classList.remove('show'));
+    g.addEventListener('click',()=>openHolo(s));
+    svg.appendChild(g);
+  });
+}
+function openHolo(s){
+  const w=document.getElementById('holoWrap'); w.classList.add('show');
+  document.getElementById('hName').textContent=s.name;
+  const pill=document.getElementById('hPill');
+  pill.className='pill '+s.health; pill.textContent={ok:'健康',warn:'关注',danger:'故障'}[s.health];
+  document.getElementById('hInst').textContent=s.inst;
+  document.getElementById('hQps').textContent=s.qps.toLocaleString();
+  document.getElementById('hLat').textContent=s.lat+' ms';
+  document.getElementById('hErr').textContent=s.err+' %';
+  document.getElementById('hOrbit').textContent='轨道 '+ (s.orbit+1);
+  document.getElementById('hGo').onclick=()=>jumpFlash('prototype-config.html?svc='+s.name+'&project='+MPROJ);
+  const holo=document.getElementById('holo'); holo.classList.remove('closing');
+}
+document.getElementById('hClose').onclick=()=>{
+  const holo=document.getElementById('holo'); holo.classList.add('closing');
+  setTimeout(()=>document.getElementById('holoWrap').classList.remove('show'),300);
+};
+document.getElementById('hExpand').onclick=()=>jumpFlash('prototype-config.html?svc='+(document.getElementById('hName').textContent)+'&project='+MPROJ);
+
+// 点击太阳本体 → 节点详情
+svg.addEventListener('click',e=>{ if(e.target.classList.contains('sun-core')){ supernova(600,400); } });
+
+/* 星空 */
+function buildStars(id,c,sz,op){const L=document.querySelector('#'+id+' .layer');L.innerHTML='';for(let i=0;i<c;i++){const s=document.createElement('div');s.className='star';const x=Math.random()*sz+1;s.style.width=s.style.height=x+'px';s.style.left=Math.random()*100+'%';s.style.top=Math.random()*100+'%';s.style.setProperty('--tw',(2+Math.random()*3).toFixed(1)+'s');s.style.opacity=op+Math.random()*.6;L.appendChild(s);}}
+buildStars('sfFar',90,1.4,.15);buildStars('sfMid',50,2.2,.25);
+document.addEventListener('mousemove',e=>{const dx=(e.clientX/innerWidth-.5),dy=(e.clientY/innerHeight-.5);document.getElementById('sfFar').style.transform=`translate(${dx*10}px,${dy*10}px)`;document.getElementById('sfMid').style.transform=`translate(${dx*22}px,${dy*22}px)`;});
+
+/* 主题 */
+const THEMES={serene:['var(--ok)','集群宁静'],attention:['var(--warn)','存在告警'],crisis:['var(--danger)','严重故障'],supernova:['var(--star)','发布中'],genesis:['var(--ok)','扩容中']};
+function setTheme(t){document.body.className='theme-'+t;document.querySelectorAll('.theme-btn').forEach(b=>b.classList.toggle('active',b.dataset.t===t));drawSun();}
+document.getElementById('themeRow').querySelectorAll('.theme-btn').forEach(b=>b.onclick=()=>setTheme(b.dataset.t));
+
+/* 星域（项目）参数：面包屑与返航串接 */
+const MP=new URLSearchParams(location.search);
+const MPROJ=MP.get('project')||'galaxy-core';
+const MPNAME={'galaxy-core':'核心星域','payment':'支付星域','iot':'物联星域','ml-train':'训练星域'}[MPROJ]||'核心星域';
+document.getElementById('crumbRealm').textContent='星域：'+MPNAME;
+document.getElementById('crumbRealm').href='prototype-console.html?project='+MPROJ;
+document.getElementById('crumbGalaxy').href='prototype-overview.html?project='+MPROJ;
+const MNODE=MP.get('node'); if(MNODE) document.getElementById('nodeName').textContent=MNODE;
+
+/* 返回 */
+function backHome(){ jumpFlash('prototype-overview.html?project='+MPROJ); }
+document.addEventListener('dblclick',e=>{ if(e.target.closest('#sys')) backHome(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') backHome(); });
+function jumpFlash(go){const f=document.getElementById('flash');f.classList.add('go');setTimeout(()=>location.href=go,520);}
+function supernova(x,y){const fx=document.getElementById('fx');const s=document.createElement('div');s.className='shock';s.style.left=x+'px';s.style.top=y+'px';s.style.width=s.style.height='40px';fx.appendChild(s);}
+
+setTheme('serene'); drawSun();
+</script>
+</body>
+</html>

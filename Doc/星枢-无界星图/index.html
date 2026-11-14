@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>星尘 Stardust · 星际指挥台 / 原型入口</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="cosmic.css" />
+<style>
+  .stage { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:26px; z-index:30; padding:24px; overflow:auto; }
+  .brand { text-align:center; }
+  .brand h1 { font-size:40px; font-weight:700; letter-spacing:.04em;
+    background:linear-gradient(90deg,var(--star),var(--accent)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .brand .sub { color:var(--ink-2); font-size:14px; margin-top:8px; letter-spacing:.18em; }
+
+  /* 星域选择 */
+  .realm-h { font-size:13px; letter-spacing:.2em; color:var(--ink-3); margin-top:6px; }
+  .realms { display:flex; gap:20px; flex-wrap:wrap; justify-content:center; }
+  .realm-orb { width:170px; height:170px; border-radius:50%; cursor:pointer; position:relative;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+    border:1px solid var(--line); background:radial-gradient(circle at 38% 32%, color-mix(in srgb,var(--star) 26%,transparent), var(--glass-2) 70%);
+    backdrop-filter:blur(14px); transition:.28s; overflow:hidden; }
+  .realm-orb::after { content:""; position:absolute; inset:0; border-radius:50%; box-shadow:inset 0 0 40px color-mix(in srgb,var(--star) 30%,transparent); }
+  .realm-orb:hover { transform:translateY(-8px) scale(1.04); border-color:var(--star); box-shadow:var(--glow-star); }
+  .realm-orb .nm { font-size:17px; font-weight:700; color:var(--ink); }
+  .realm-orb .en { font-size:10px; letter-spacing:.16em; color:var(--ink-3); }
+  .realm-orb .meta { font-size:11px; color:var(--ink-2); margin-top:4px; }
+
+  .levels { display:flex; gap:18px; flex-wrap:wrap; justify-content:center; }
+  .card { width:200px; padding:20px; border-radius:18px; cursor:pointer; text-decoration:none; color:var(--ink);
+    background:var(--glass); border:1px solid var(--line); backdrop-filter:blur(16px); transition:.22s; }
+  .card:hover { transform:translateY(-6px); box-shadow:var(--glow-soft); border-color:var(--star); }
+  .card .lv { font-size:11px; letter-spacing:.2em; color:var(--star); font-weight:600; }
+  .card .nm { font-size:18px; font-weight:700; margin:8px 0 6px; }
+  .card .ds { font-size:12px; color:var(--ink-2); line-height:1.6; }
+  .card .go { margin-top:12px; font-size:12px; color:var(--accent); }
+  .card.console { border-color:color-mix(in srgb,var(--accent) 50%,transparent); }
+  .card.console .lv { color:var(--accent); }
+
+  .meaning { max-width:880px; width:100%; padding:20px 24px; border-radius:18px;
+    background:var(--glass); border:1px solid var(--line); backdrop-filter:blur(16px); }
+  .meaning h2 { font-size:15px; font-weight:600; margin-bottom:14px; color:var(--ink); }
+  .mgrid { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; }
+  .m { padding:14px; border-radius:14px; border:1px solid var(--line-2); background:color-mix(in srgb,var(--ink) 3%,transparent); }
+  .m .sw { width:34px; height:34px; border-radius:50%; margin-bottom:10px; box-shadow:0 0 16px currentColor; }
+  .m .t { font-size:13px; font-weight:600; }
+  .m .d { font-size:11.5px; color:var(--ink-2); margin-top:6px; line-height:1.55; }
+  .foot { color:var(--ink-3); font-size:12px; text-align:center; }
+  @media(max-width:760px){ .mgrid{ grid-template-columns:repeat(2,1fr);} .realm-orb{width:140px;height:140px;} }
+</style>
+</head>
+<body class="theme-serene">
+<div class="cosmos" id="cosmos">
+  <div class="starfield" id="sfFar"><div class="layer"></div></div>
+  <div class="starfield" id="sfMid"><div class="layer"></div></div>
+  <div class="nebula a"></div><div class="nebula b"></div>
+  <div class="vignette"></div>
+</div>
+
+<div class="stage">
+  <div class="brand">
+    <h1>星尘 · 星际指挥台</h1>
+    <div class="sub">BOUNDLESS STAR MAP · 无界星图</div>
+  </div>
+
+  <div class="realm-h">选择你的宇宙 · 星域（项目即一切）</div>
+  <div class="realms">
+    <a class="realm-orb" href="prototype-overview.html?project=galaxy-core" style="--star:#7CA0FF">
+      <div class="nm">核心星域</div><div class="en">GALAXY CORE</div><div class="meta">42 应用 · 18 节点</div>
+    </a>
+    <a class="realm-orb" href="prototype-overview.html?project=payment" style="--star:#FFC56A">
+      <div class="nm">支付星域</div><div class="en">PAYMENT</div><div class="meta">16 应用 · 9 节点</div>
+    </a>
+    <a class="realm-orb" href="prototype-overview.html?project=iot" style="--star:#5CE0C8">
+      <div class="nm">物联星域</div><div class="en">IOT EDGE</div><div class="meta">53 应用 · 120 节点</div>
+    </a>
+    <a class="realm-orb" href="prototype-overview.html?project=ml-train" style="--star:#FF9C5C">
+      <div class="nm">训练星域</div><div class="en">ML TRAIN</div><div class="meta">8 应用 · 24 节点</div>
+    </a>
+  </div>
+
+  <div class="levels">
+    <a class="card" href="prototype-overview.html">
+      <div class="lv">LEVEL 1</div><div class="nm">银河视角</div>
+      <div class="ds">整片宇宙即集群总览：恒星=节点、尘埃=服务、光束=调用。</div>
+      <div class="go">进入星系 →</div>
+    </a>
+    <a class="card" href="prototype-monitor.html?node=n3">
+      <div class="lv">LEVEL 2</div><div class="nm">恒星系视角</div>
+      <div class="ds">放大单节点：资源环形仪表 + 轨道上运转的服务行星。</div>
+      <div class="go">进入恒星系 →</div>
+    </a>
+    <a class="card" href="prototype-config.html?svc=api-core-01">
+      <div class="lv">LEVEL 3</div><div class="nm">尘埃视角</div>
+      <div class="ds">奇点坍缩舱：监控 / 配置 / 日志 / 拓扑，超新星发布。</div>
+      <div class="go">展开全息 →</div>
+    </a>
+    <a class="card console" href="prototype-console.html">
+      <div class="lv">CONSOLE</div><div class="nm">星舰控制台</div>
+      <div class="ds">跨星域治理台：应用/节点/配置/Redis/MySQL/网关/部署/用户/角色/设置。</div>
+      <div class="go">进入档案馆 →</div>
+    </a>
+  </div>
+
+  <div class="meaning">
+    <h2>色彩搭配切换寓意 · 环境状态即配色语义</h2>
+    <div class="mgrid">
+      <div class="m"><div class="sw" style="background:linear-gradient(135deg,#7CA0FF,#9C7CFF);color:#7CA0FF"></div><div class="t">宁静</div><div class="d">全部健康。蓝紫星海，星点呼吸、粒子匀速。</div></div>
+      <div class="m"><div class="sw" style="background:linear-gradient(135deg,#FFC56A,#FF9C5C);color:#FFC56A"></div><div class="t">微澜</div><div class="d">存在告警。暮色琥珀，关注星体规律脉冲。</div></div>
+      <div class="m"><div class="sw" style="background:linear-gradient(135deg,#FF5C7A,#FF3C6E);color:#FF5C7A"></div><div class="t">危机</div><div class="d">严重故障。黑洞红吸积盘，背景透赤红。</div></div>
+      <div class="m"><div class="sw" style="background:linear-gradient(135deg,#FFD27A,#FF9A3C);color:#FFD27A"></div><div class="t">超新星</div><div class="d">发布中。炽金爆发，粒子加速向外扩散。</div></div>
+      <div class="m"><div class="sw" style="background:linear-gradient(135deg,#5CE0C8,#5CD0FF);color:#5CE0C8"></div><div class="t">扩容</div><div class="d">弹性伸缩。新绿引力波涟漪荡开。</div></div>
+    </div>
+  </div>
+
+  <div class="foot">提示：每个原型右上角可切换环境状态主题，体验"色彩即语义"。Ctrl+K 唤起曲速命令。项目=星域，沉浸式星图按星域切片，星舰控制台为跨星域治理台。</div>
+</div>
+
+<script>
+function buildStars(id,c,sz,op){const L=document.querySelector('#'+id+' .layer');L.innerHTML='';for(let i=0;i<c;i++){const s=document.createElement('div');s.className='star';const x=Math.random()*sz+1;s.style.width=s.style.height=x+'px';s.style.left=Math.random()*100+'%';s.style.top=Math.random()*100+'%';s.style.setProperty('--tw',(2+Math.random()*3).toFixed(1)+'s');s.style.opacity=op+Math.random()*.6;L.appendChild(s);}}
+buildStars('sfFar',120,1.4,.15);buildStars('sfMid',70,2.2,.25);
+document.addEventListener('mousemove',e=>{const dx=(e.clientX/innerWidth-.5),dy=(e.clientY/innerHeight-.5);document.getElementById('sfFar').style.transform=`translate(${dx*10}px,${dy*10}px)`;document.getElementById('sfMid').style.transform=`translate(${dx*22}px,${dy*22}px)`;});
+</script>
+</body>
+</html>

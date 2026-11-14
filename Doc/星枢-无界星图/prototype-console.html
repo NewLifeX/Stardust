@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>星尘 Stardust · 星舰控制台 / Command Deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="cosmic.css" />
+<style>
+  /* ===== 控制台外壳（在 cosmic.css 宇宙皮肤之上叠加管理布局） ===== */
+  .console { position:absolute; inset:0; z-index:20; display:flex; flex-direction:column; }
+  .console-top {
+    height:58px; flex:none; display:flex; align-items:center; gap:18px; padding:0 22px;
+    background:linear-gradient(180deg,color-mix(in srgb,var(--bg-deep) 86%,transparent),transparent);
+    border-bottom:1px solid var(--line); backdrop-filter:blur(8px); z-index:30;
+  }
+  .console-top .brand { font-size:15px; font-weight:700; letter-spacing:.06em;
+    background:linear-gradient(90deg,var(--star),var(--accent)); -webkit-background-clip:text; background-clip:text; color:transparent; white-space:nowrap; }
+  .console-top .brand small { display:block; font-size:9px; letter-spacing:.22em; color:var(--ink-3); -webkit-text-fill-color:var(--ink-3); font-weight:500; }
+  /* 星域选择 */
+  .realm { position:relative; }
+  .realm-btn { display:flex; align-items:center; gap:8px; padding:7px 13px; border-radius:999px; cursor:pointer;
+    background:var(--glass-2); border:1px solid var(--line); color:var(--ink); font-size:13px; transition:.18s; }
+  .realm-btn:hover { border-color:var(--star); }
+  .realm-btn .orb { width:12px; height:12px; border-radius:50%; background:radial-gradient(circle at 35% 30%,var(--star),var(--accent)); box-shadow:0 0 10px var(--star); }
+  .realm-btn .caret { color:var(--ink-3); font-size:10px; }
+  .realm-menu { position:absolute; top:46px; left:0; min-width:220px; padding:8px; border-radius:14px; display:none; z-index:80;
+    background:var(--glass-2); border:1px solid var(--line); backdrop-filter:blur(20px); box-shadow:0 18px 50px rgba(0,0,0,.5); }
+  .realm-menu.show { display:block; animation:holoIn .2s ease; }
+  .realm-menu .ri { display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:10px; cursor:pointer; font-size:13px; color:var(--ink-2); }
+  .realm-menu .ri:hover { background:color-mix(in srgb,var(--star) 14%,transparent); color:var(--ink); }
+  .realm-menu .ri .o { width:10px; height:10px; border-radius:50%; box-shadow:0 0 8px currentColor; }
+  .realm-menu .ri.cur { color:var(--ink); }
+  .realm-menu .ri .meta { margin-left:auto; font-size:11px; color:var(--ink-3); }
+  .top-spacer { flex:1; }
+  .warp-hint { font-size:11.5px; color:var(--ink-3); border:1px solid var(--line-2); border-radius:8px; padding:5px 10px; cursor:pointer; }
+  .warp-hint kbd { font-family:inherit; color:var(--ink-2); }
+  .warp-hint:hover { border-color:var(--star); color:var(--ink-2); }
+
+  /* 主体：左导航 + 数据区 */
+  .console-body { flex:1; display:flex; min-height:0; }
+  .rail { width:222px; flex:none; overflow:auto; padding:16px 12px; border-right:1px solid var(--line);
+    background:linear-gradient(180deg,color-mix(in srgb,var(--bg-deep) 60%,transparent),transparent); }
+  .rail .grp { font-size:10.5px; letter-spacing:.16em; color:var(--ink-3); margin:16px 10px 8px; }
+  .rail .grp:first-child { margin-top:2px; }
+  .rail-item { display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:10px; cursor:pointer;
+    color:var(--ink-2); font-size:13px; border:1px solid transparent; transition:.15s; text-decoration:none; }
+  .rail-item .ic { width:20px; text-align:center; color:var(--star); font-size:14px; }
+  .rail-item:hover { background:color-mix(in srgb,var(--star) 10%,transparent); color:var(--ink); }
+  .rail-item.active { background:color-mix(in srgb,var(--star) 16%,transparent); color:var(--ink); border-color:var(--line); }
+  .rail-item .badge { margin-left:auto; font-size:10px; color:var(--ink-3); background:color-mix(in srgb,var(--ink) 8%,transparent); border-radius:6px; padding:1px 7px; }
+  .rail-item.active .badge { color:var(--star); }
+
+  .main { flex:1; min-width:0; display:flex; flex-direction:column; padding:18px 22px 14px; overflow:hidden; }
+  .sec-head { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:14px; }
+  .sec-head .title { font-size:18px; font-weight:700; color:var(--ink); }
+  .sec-head .title small { font-size:11px; color:var(--ink-3); font-weight:500; margin-left:8px; letter-spacing:.1em; }
+  .sec-head .count { font-size:12px; color:var(--ink-2); }
+  .sec-head .grow { flex:1; }
+  .search { display:flex; align-items:center; gap:8px; padding:7px 12px; border-radius:10px; background:var(--glass-2); border:1px solid var(--line); }
+  .search input { background:none; border:none; outline:none; color:var(--ink); font-size:13px; width:200px; font-family:inherit; }
+  .search input::placeholder { color:var(--ink-3); }
+  .btn-new { padding:8px 14px; border-radius:10px; cursor:pointer; font-size:12.5px; color:var(--bg-abyss); font-weight:600;
+    background:linear-gradient(135deg,var(--star),var(--accent)); border:none; box-shadow:var(--glow-soft); }
+  .btn-new:hover { filter:brightness(1.08); }
+  .chips { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+  .chip { font-size:11.5px; padding:5px 11px; border-radius:999px; cursor:pointer; color:var(--ink-2);
+    border:1px solid var(--line-2); background:color-mix(in srgb,var(--ink) 4%,transparent); transition:.15s; }
+  .chip:hover { color:var(--ink); border-color:var(--star); }
+  .chip.active { color:var(--bg-abyss); background:var(--star); border-color:transparent; font-weight:600; }
+
+  /* 玻璃数据表 */
+  .table-wrap { flex:1; min-height:0; overflow:auto; border-radius:16px; border:1px solid var(--line);
+    background:var(--glass); backdrop-filter:blur(14px); box-shadow:0 10px 40px rgba(0,0,0,.28); }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  thead th { position:sticky; top:0; z-index:5; text-align:left; padding:12px 16px; font-weight:600; color:var(--ink-2); font-size:11.5px; letter-spacing:.04em;
+    background:color-mix(in srgb,var(--bg-deep) 92%,transparent); backdrop-filter:blur(6px); border-bottom:1px solid var(--line); white-space:nowrap; }
+  tbody td { padding:11px 16px; border-bottom:1px solid var(--line-2); color:var(--ink); vertical-align:middle; }
+  tbody tr { transition:background .14s; }
+  tbody tr:hover { background:color-mix(in srgb,var(--star) 9%,transparent); }
+  td.mono, th.mono { font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--ink-2); }
+  .st { display:inline-flex; align-items:center; gap:6px; font-size:12px; }
+  .st .s { width:9px; height:9px; border-radius:50%; box-shadow:0 0 8px currentColor; }
+  .st.ok{color:var(--ok);} .st.warn{color:var(--warn);} .st.danger{color:var(--danger);} .st.idle{color:var(--ink-3);}
+  .tag { display:inline-block; font-size:11px; padding:2px 9px; border-radius:999px; border:1px solid var(--line-2); color:var(--ink-2); }
+  .tag.acc { color:var(--star); border-color:color-mix(in srgb,var(--star) 50%,transparent); }
+  .bar { height:6px; width:88px; border-radius:99px; background:color-mix(in srgb,var(--ink) 14%,transparent); overflow:hidden; display:inline-block; vertical-align:middle; }
+  .bar > i { display:block; height:100%; border-radius:99px; background:linear-gradient(90deg,var(--ok),var(--star)); }
+  .bar.hi > i { background:linear-gradient(90deg,var(--warn),var(--danger)); }
+  .ops { display:flex; gap:6px; }
+  .op { width:28px; height:28px; border-radius:8px; display:grid; place-items:center; cursor:pointer; color:var(--ink-2);
+    background:color-mix(in srgb,var(--ink) 6%,transparent); border:1px solid var(--line-2); font-size:13px; transition:.15s; }
+  .op:hover { color:var(--star); border-color:var(--star); }
+  .empty { padding:40px; text-align:center; color:var(--ink-3); }
+  /* 分页 */
+  .pager { flex:none; display:flex; align-items:center; gap:10px; justify-content:flex-end; padding:12px 4px 2px; font-size:12px; color:var(--ink-2); }
+  .pager button { padding:6px 12px; border-radius:8px; cursor:pointer; color:var(--ink-2); background:var(--glass-2); border:1px solid var(--line); }
+  .pager button:hover:not(:disabled){ border-color:var(--star); color:var(--ink); }
+  .pager button:disabled { opacity:.4; cursor:default; }
+
+  @media(max-width:900px){ .rail{display:none;} }
+</style>
+</head>
+<body class="theme-serene">
+<div class="cosmos" id="cosmos">
+  <div class="starfield" id="sfFar"><div class="layer"></div></div>
+  <div class="starfield" id="sfMid"><div class="layer"></div></div>
+  <div class="starfield" id="sfNear"><div class="layer"></div></div>
+  <div class="nebula a"></div><div class="nebula b"></div>
+  <div class="vignette"></div>
+</div>
+
+<!-- 主题切换（色彩寓意） -->
+<div class="theme-switch">
+  <span class="ttl">环境状态 · 色彩寓意</span>
+  <div class="theme-row" id="themeRow">
+    <div class="theme-btn active" data-t="serene"    title="宁静 · 全部健康"></div>
+    <div class="theme-btn" data-t="attention" title="微澜 · 存在告警"></div>
+    <div class="theme-btn" data-t="crisis"    title="危机 · 严重故障"></div>
+    <div class="theme-btn" data-t="supernova" title="超新星 · 发布中"></div>
+    <div class="theme-btn" data-t="genesis"   title="扩容 · 弹性伸缩"></div>
+  </div>
+</div>
+
+<!-- 寓意图例 -->
+<div class="legend glass" id="legend">
+  <div class="lh"><span class="sw" id="legSw" style="color:var(--ok)"></span><span id="legTitle">宁静 · Serene</span></div>
+  <div class="row"><span class="c" style="background:var(--ok)"></span> 健康 — 资源充足</div>
+  <div class="row"><span class="c" style="background:var(--warn)"></span> 关注 — 负载偏高</div>
+  <div class="row"><span class="c" style="background:var(--danger)"></span> 危机 — 故障塌陷</div>
+  <div class="desc" id="legDesc">整片宇宙蓝紫静谧，星点缓慢呼吸，粒子匀速流动。</div>
+</div>
+
+<!-- 健康脉冲灯 -->
+<div class="health" style="top:66px;left:24px;right:auto;transform:none">
+  <span class="dot" id="healthDot"></span><span class="txt" id="healthTxt">集群宁静</span>
+</div>
+
+<!-- 控制台外壳 -->
+<div class="console">
+  <div class="console-top">
+    <div class="brand">星舰控制台<small>COMMAND DECK · 星图档案馆</small></div>
+    <div class="realm" id="realm">
+      <div class="realm-btn" id="realmBtn">
+        <span class="orb"></span><span id="realmName">核心星域</span><span class="caret">▾</span>
+      </div>
+      <div class="realm-menu" id="realmMenu"></div>
+    </div>
+    <div class="top-spacer"></div>
+    <div class="warp-hint" id="warpHint"><kbd>Ctrl</kbd>+<kbd>K</kbd> 曲速命令</div>
+  </div>
+
+  <div class="console-body">
+    <nav class="rail" id="rail"></nav>
+    <section class="main">
+      <div class="sec-head">
+        <div class="title" id="secTitle">应用<small id="secSub">APPLICATIONS</small></div>
+        <div class="count" id="secCount"></div>
+        <div class="grow"></div>
+        <div class="search">⌕<input id="secSearch" placeholder="检索本表…" /></div>
+        <button class="btn-new" id="btnNew">＋ 新建</button>
+      </div>
+      <div class="chips" id="chips"></div>
+      <div class="table-wrap"><table id="tbl"><thead id="th"></thead><tbody id="tb"></tbody></table></div>
+      <div class="pager" id="pager"></div>
+    </section>
+  </div>
+</div>
+
+<!-- 曲速命令 -->
+<div class="warp" id="warp">
+  <div class="warp-box glass">
+    <input id="warpInput" placeholder="跃迁至星体 / 指令 / 视图…" />
+    <div class="warp-list" id="warpList"></div>
+    <div class="warp-foot"><span><kbd>↑</kbd><kbd>↓</kbd> 选择</span><span><kbd>↵</kbd> 跃迁</span><span><kbd>Esc</kbd> 关闭</span></div>
+  </div>
+</div>
+<div class="warp-flash" id="flash"></div>
+
+<script>
+/* ===================== 背景星空 ===================== */
+function buildStars(id,count,sizeMax,opMin){
+  const layer=document.querySelector('#'+id+' .layer'); layer.innerHTML='';
+  for(let i=0;i<count;i++){ const s=document.createElement('div'); s.className='star';
+    const sz=Math.random()*sizeMax+1; s.style.width=s.style.height=sz+'px';
+    s.style.left=Math.random()*100+'%'; s.style.top=Math.random()*100+'%';
+    s.style.setProperty('--tw',(2+Math.random()*3).toFixed(1)+'s');
+    s.style.opacity=opMin+Math.random()*0.6; layer.appendChild(s); }
+}
+buildStars('sfFar',120,1.4,0.1); buildStars('sfMid',70,2.2,0.18); buildStars('sfNear',36,3,0.3);
+document.addEventListener('mousemove',e=>{
+  const dx=(e.clientX/window.innerWidth-0.5), dy=(e.clientY/window.innerHeight-0.5);
+  document.getElementById('sfFar').style.transform=`translate(${dx*8}px,${dy*8}px)`;
+  document.getElementById('sfMid').style.transform=`translate(${dx*18}px,${dy*18}px)`;
+  document.getElementById('sfNear').style.transform=`translate(${dx*34}px,${dy*34}px)`;
+});
+
+/* ===================== 环境状态主题（色彩寓意） ===================== */
+const THEMES = {
+  serene:    { title:'宁静 · Serene',     color:'var(--ok)',      desc:'整片宇宙蓝紫静谧，星点缓慢呼吸，粒子匀速流动。' },
+  attention: { title:'微澜 · Attention',  color:'var(--warn)',    desc:'暮色琥珀泛起，关注星体规律脉冲，空间微微泛暖。' },
+  crisis:    { title:'危机 · Crisis',     color:'var(--danger)',  desc:'故障恒星塌陷为黑洞，红色吸积盘旋转，背景透出赤红。' },
+  supernova: { title:'超新星 · Supernova', color:'var(--star)',    desc:'目标恒星爆发光波，粒子加速向外扩散，炽金铺满星海。' },
+  genesis:   { title:'扩容 · Genesis',    color:'var(--ok)',      desc:'新恒星自远方飞入，引力波涟漪荡开，星海泛起新绿。' },
+};
+function setTheme(t){
+  document.body.className='theme-'+t;
+  document.querySelectorAll('.theme-btn').forEach(b=>b.classList.toggle('active',b.dataset.t===t));
+  const info=THEMES[t];
+  document.getElementById('legTitle').textContent=info.title;
+  document.getElementById('legSw').style.color=info.color;
+  document.getElementById('legDesc').textContent=info.desc;
+  const dot=document.getElementById('healthDot'), txt=document.getElementById('healthTxt');
+  const map={serene:['var(--ok)','集群宁静'],attention:['var(--warn)','存在告警'],crisis:['var(--danger)','严重故障'],supernova:['var(--star)','发布中'],genesis:['var(--ok)','扩容中']};
+  dot.style.background=map[t][0]; dot.style.boxShadow='0 0 12px '+map[t][0]; txt.textContent=map[t][1];
+}
+document.getElementById('themeRow').querySelectorAll('.theme-btn').forEach(b=>b.onclick=()=>setTheme(b.dataset.t));
+
+/* ===================== 跃迁闪屏 ===================== */
+function jumpFlash(go){
+  document.getElementById('flash').classList.add('go');
+  document.getElementById('cosmos').classList.add('warp-fold');
+  setTimeout(()=>{ location.href=go; }, 520);
+}
+
+/* ===================== 曲速命令 ===================== */
+const warp=document.getElementById('warp'), warpInput=document.getElementById('warpInput'), warpList=document.getElementById('warpList');
+const COMMANDS = [
+  { ic:'🌌', k:'视图', t:'银河视角（星图）', go:'prototype-overview.html' },
+  { ic:'🛰', k:'视图', t:'恒星系视角', go:'prototype-monitor.html?node=n3' },
+  { ic:'✦', k:'视图', t:'星舰控制台', go:'prototype-console.html' },
+  { ic:'⟳', k:'指令', t:'切换环境状态：宁静', go:'#theme:serene' },
+  { ic:'⟳', k:'指令', t:'切换环境状态：微澜', go:'#theme:attention' },
+  { ic:'⟳', k:'指令', t:'切换环境状态：危机', go:'#theme:crisis' },
+  { ic:'⟳', k:'指令', t:'切换环境状态：超新星', go:'#theme:supernova' },
+  { ic:'⟳', k:'指令', t:'切换环境状态：扩容', go:'#theme:genesis' },
+];
+let warpSel=0;
+function renderWarp(q=''){
+  const list=COMMANDS.filter(c=>c.t.toLowerCase().includes(q.toLowerCase())||c.k.includes(q));
+  warpList.innerHTML = list.map((c,i)=>`<div class="warp-item ${i===warpSel?'sel':''}" data-go="${c.go}">
+    <span class="ic">${c.ic}</span><span style="flex:1">${c.t}</span><span class="k">${c.k}</span></div>`).join('') || '<div class="warp-item">无匹配指令</div>';
+  warpList.querySelectorAll('.warp-item').forEach(it=>it.onclick=()=>execGo(it.dataset.go));
+}
+function execGo(go){ if(go && go.startsWith('#theme:')){ setTheme(go.split(':')[1]); closeWarp(); return; } jumpFlash(go); }
+function openWarp(){ warp.classList.add('show'); document.getElementById('cosmos').classList.add('warp-fold'); renderWarp(); warpInput.value=''; warpInput.focus(); warpSel=0; }
+function closeWarp(){ warp.classList.remove('show'); document.getElementById('cosmos').classList.remove('warp-fold'); }
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){ e.preventDefault(); warp.classList.contains('show')?closeWarp():openWarp(); }
+  if(e.key==='Escape') closeWarp();
+  if(warp.classList.contains('show')){
+    const items=COMMANDS.filter(c=>c.t.toLowerCase().includes(warpInput.value.toLowerCase()));
+    if(e.key==='ArrowDown'){ warpSel=Math.min(warpSel+1,items.length-1); renderWarp(warpInput.value); }
+    if(e.key==='ArrowUp'){ warpSel=Math.max(warpSel-1,0); renderWarp(warpInput.value); }
+    if(e.key==='Enter'){ const it=warpList.querySelector('.sel'); if(it) execGo(it.dataset.go); }
+  }
+});
+warpInput.addEventListener('input',()=>{ warpSel=0; renderWarp(warpInput.value); });
+warp.addEventListener('click',e=>{ if(e.target===warp) closeWarp(); });
+document.getElementById('warpHint').onclick=openWarp;
+
+/* ===================== 星域（项目）选择 ===================== */
+const PROJECTS=[
+  { id:'galaxy-core', name:'核心星域', en:'Galaxy Core', color:'#7CA0FF', apps:42, nodes:18 },
+  { id:'payment',     name:'支付星域', en:'Payment',     color:'#FFC56A', apps:16, nodes:9  },
+  { id:'iot',         name:'物联星域', en:'IoT Edge',    color:'#5CE0C8', apps:53, nodes:120},
+  { id:'ml-train',    name:'训练星域', en:'ML Train',    color:'#FF9C5C', apps:8,  nodes:24 },
+];
+let curProject='galaxy-core';
+function projById(id){ return PROJECTS.find(p=>p.id===id)||PROJECTS[0]; }
+function renderRealm(){
+  const m=document.getElementById('realmMenu');
+  m.innerHTML=PROJECTS.map(p=>`<div class="ri ${p.id===curProject?'cur':''}" data-id="${p.id}">
+    <span class="o" style="color:${p.color};background:${p.color}"></span>
+    <span>${p.name}</span><span class="meta">${p.apps}应用 · ${p.nodes}节点</span></div>`).join('');
+  m.querySelectorAll('.ri').forEach(r=>r.onclick=()=>{ curProject=r.dataset.id;
+    document.getElementById('realmName').textContent=projById(curProject).name;
+    m.classList.remove('show'); renderRealm(); });
+}
+document.getElementById('realmBtn').onclick=()=>document.getElementById('realmMenu').classList.toggle('show');
+document.getElementById('realmName').textContent=projById(curProject).name;
+renderRealm();
+
+/* ===================== 数据：各功能域样例 ===================== */
+const st=(s)=>`<span class="st ${s}"><span class="s"></span>${ {ok:'健康',warn:'关注',danger:'危机',idle:'离线'}[s] }</span>`;
+const tag=(t,c)=>`<span class="tag ${c||''}">${t}</span>`;
+const bar=(v)=>`<span class="bar ${v>=80?'hi':''}"><i style="width:${v}%"></i></span> ${v}%`;
+
+const SECTIONS = {
+  project:{ group:'项目与资源', icon:'🌐', title:'项目总览', sub:'GALAXY PROJECTS', cols:[
+      {k:'name',t:'星域 / 项目'},{k:'en',t:'标识',mono:1},{k:'apps',t:'应用数'},{k:'nodes',t:'节点数'},{k:'env',t:'环境'},{k:'status',t:'状态',st:1},{k:'ops',t:'操作'}],
+    rows:PROJECTS.map(p=>({name:`<b>${p.name}</b>`,en:p.id,apps:p.apps,nodes:p.nodes,env:'生产',status:'ok',ops:'进入星域'})),
+    onOps:(r)=>{ const id=PROJECTS.find(p=>p.name.replace(/<[^>]+>/g,'')===r.name.replace(/<[^>]+>/g,'')); } },
+  app:{ group:'项目与资源', icon:'🪐', title:'应用', sub:'APPLICATIONS', cols:[
+      {k:'name',t:'应用'},{k:'cat',t:'分类',tag:1},{k:'proj',t:'星域'},{k:'online',t:'在线实例'},{k:'ver',t:'版本',mono:1},{k:'status',t:'状态',st:1},{k:'ops',t:'操作'}],
+    rows:[
+      {name:'api-core-01',cat:'核心',proj:'核心星域',online:6,ver:'9.2.1',status:'ok',ops:'查看'},
+      {name:'order-svc',cat:'业务',proj:'核心星域',online:4,ver:'3.1.0',status:'ok',ops:'查看'},
+      {name:'pay-gateway',cat:'支付',proj:'支付星域',online:3,ver:'2.4.7',status:'warn',ops:'查看'},
+      {name:'iot-hub',cat:'物联',proj:'物联星域',online:11,ver:'1.9.2',status:'ok',ops:'查看'},
+      {name:'ml-trainer',cat:'训练',proj:'训练星域',online:2,ver:'0.8.0',status:'danger',ops:'查看'},
+      {name:'auth-svc',cat:'基础',proj:'核心星域',online:5,ver:'4.0.3',status:'ok',ops:'查看'},
+      {name:'notify-svc',cat:'业务',proj:'核心星域',online:3,ver:'2.0.1',status:'idle',ops:'查看'},
+      {name:'edge-proxy',cat:'物联',proj:'物联星域',online:8,ver:'1.2.0',status:'ok',ops:'查看'},
+    ], filters:['全部','核心','业务','支付','物联','训练','基础'], filterField:'cat' },
+  node:{ group:'项目与资源', icon:'★', title:'节点', sub:'NODES', cols:[
+      {k:'name',t:'节点'},{k:'ip',t:'IP',mono:1},{k:'os',t:'系统'},{k:'cpu',t:'CPU',bar:1},{k:'mem',t:'内存',bar:1},{k:'status',t:'状态',st:1},{k:'ops',t:'操作'}],
+    rows:[
+      {name:'node-bj-01',ip:'10.0.1.11',os:'Ubuntu 22.04',cpu:32,mem:54,status:'ok',ops:'查看'},
+      {name:'node-bj-02',ip:'10.0.1.12',os:'Ubuntu 22.04',cpu:71,mem:63,status:'warn',ops:'查看'},
+      {name:'node-sh-01',ip:'10.0.2.21',os:'CentOS 7',cpu:48,mem:77,status:'ok',ops:'查看'},
+      {name:'node-gz-03',ip:'10.0.3.31',os:'Windows 2022',cpu:88,mem:91,status:'danger',ops:'查看'},
+      {name:'node-edge-09',ip:'192.168.9.9',os:'Alpine',cpu:21,mem:40,status:'ok',ops:'查看'},
+      {name:'node-iot-44',ip:'192.168.44.4',os:'Alpine',cpu:12,mem:28,status:'ok',ops:'查看'},
+      {name:'node-ml-02',ip:'10.0.5.2',os:'Ubuntu 24.04',cpu:95,mem:82,status:'danger',ops:'查看'},
+      {name:'node-bj-07',ip:'10.0.1.17',os:'Ubuntu 22.04',cpu:0,mem:0,status:'idle',ops:'查看'},
+    ], filters:['全部','健康','关注','危机','离线'] },
+  config:{ group:'项目与资源', icon:'⚙', title:'配置', sub:'APP CONFIG', cols:[
+      {k:'app',t:'应用'},{k:'key',t:'Key',mono:1},{k:'env',t:'环境',tag:1},{k:'val',t:'值',mono:1},{k:'ut',t:'更新时间'},{k:'ops',t:'操作'}],
+    rows:[
+      {app:'api-core-01',key:'ConnectionStrings:Redis',env:'生产',val:'redis://10.0.1.30:6379',ut:'07-26 11:02',ops:'编辑'},
+      {app:'order-svc',key:'Order.TimeoutSec',env:'生产',val:'30',ut:'07-25 09:41',ops:'编辑'},
+      {app:'pay-gateway',key:'Pay.RateLimit',env:'灰度',val:'1000/s',ut:'07-26 08:15',ops:'编辑'},
+      {app:'iot-hub',key:'Mqtt.Host',env:'生产',val:'mqtt://hub.iot',ut:'07-20 14:00',ops:'编辑'},
+      {app:'auth-svc',key:'Jwt.ExpireMin',env:'生产',val:'120',ut:'07-18 19:33',ops:'编辑'},
+      {app:'ml-trainer',key:'Train.GpuPerNode',env:'生产',val:'4',ut:'07-22 02:10',ops:'编辑'},
+      {app:'notify-svc',key:'Sms.Provider',env:'测试',val:'aliyun',ut:'07-15 10:22',ops:'编辑'},
+    ], filters:['全部','生产','灰度','测试'], filterField:'env' },
+  trace:{ group:'可观测', icon:'📡', title:'调用链', sub:'TRACING', cols:[
+      {k:'tid',t:'链路 ID',mono:1},{k:'app',t:'入口应用'},{k:'cost',t:'耗时(ms)'},{k:'status',t:'状态',st:1},{k:'time',t:'时间'},{k:'ops',t:'操作'}],
+    rows:[
+      {tid:'tr-8f2a1c',app:'api-core-01',cost:142,status:'ok',time:'07-26 13:40',ops:'追踪'},
+      {tid:'tr-7b3e90',app:'order-svc',cost:880,status:'warn',time:'07-26 13:39',ops:'追踪'},
+      {tid:'tr-5c1d44',app:'pay-gateway',cost:1205,status:'danger',time:'07-26 13:38',ops:'追踪'},
+      {tid:'tr-a09f22',app:'auth-svc',cost:64,status:'ok',time:'07-26 13:38',ops:'追踪'},
+      {tid:'tr-3e7711',app:'notify-svc',cost:310,status:'warn',time:'07-26 13:37',ops:'追踪'},
+      {tid:'tr-91aa08',app:'iot-hub',cost:53,status:'ok',time:'07-26 13:36',ops:'追踪'},
+    ], filters:['全部','健康','关注','危机'] },
+  alarm:{ group:'可观测', icon:'🔔', title:'告警', sub:'ALARMS', cols:[
+      {k:'lv',t:'级别',tag:1},{k:'obj',t:'对象'},{k:'msg',t:'内容'},{k:'time',t:'时间'},{k:'status',t:'状态',st:1},{k:'ops',t:'操作'}],
+    rows:[
+      {lv:tag('严重','acc'),lvl:'严重',obj:'node-gz-03',msg:'内存使用率持续 >90%',time:'07-26 13:20',status:'danger',ops:'处理'},
+      {lv:tag('警告'),lvl:'警告',obj:'ml-trainer',msg:'GPU 利用率 95% 接近上限',time:'07-26 13:10',status:'warn',ops:'处理'},
+      {lv:tag('警告'),lvl:'警告',obj:'pay-gateway',msg:'支付成功率下跌至 97.2%',time:'07-26 12:55',status:'warn',ops:'处理'},
+      {lv:tag('提示'),lvl:'提示',obj:'node-bj-02',msg:'CPU 负载偏高',time:'07-26 12:30',status:'idle',ops:'处理'},
+      {lv:tag('严重','acc'),lvl:'严重',obj:'node-ml-02',msg:'训练任务 OOM 重启',time:'07-26 11:48',status:'danger',ops:'处理'},
+    ], filters:['全部','严重','警告','提示'], filterField:'lvl' },
+  redis:{ group:'基础设施', icon:'🟥', title:'Redis 监控', sub:'REDIS', cols:[
+      {k:'inst',t:'实例',mono:1},{k:'role',t:'角色',tag:1},{k:'mem',t:'内存',bar:1},{k:'conn',t:'连接数'},{k:'hit',t:'命中率'},{k:'status',t:'状态',st:1},{k:'ops',t:'操作'}],
+    rows:[
+      {inst:'redis-01:6379',role:tag('主'),mem:62,conn:842,hit:'99.2%',status:'ok',ops:'详情'},
+      {inst:'redis-02:6379',role:tag('从'),mem:58,conn:610,hit:'99.0%',status:'ok',ops:'详情'},
+      {inst:'redis-cache:6379',role:tag('主'),mem:84,conn:1502,hit:'97.8%',status:'warn',ops:'详情'},
+      {inst:'redis-session:6379',role:tag('主'),mem:33,conn:430,hit:'99.9%',status:'ok',ops:'详情'},
+      {inst:'redis-pay:6379',role:tag('主'),mem:71,conn:920,hit:'98.5%',status:'warn',ops:'详情'},
+      {inst:'redis-03:6379',role:tag('从'),mem:59,conn:588,hit:'99.1%',status:'ok',ops:'详情'},
+    ], filters:['全部','主','从'], filterField:'role' },
+  mysql:{ group:'基础设施', icon:'🐬', title:'MySQL 监控', sub:'MYSQL', cols:[
+      {k:'inst',t:'实例',mono:1},{k:'ver',t:'版本',mono:1},{k:'conn',t:'连接数'},{k:'qps',t:'QPS'},{k:'slow',t:'慢查询/分'},{k:'status',t:'状态',st:1},{k:'ops',t:'操作'}],
+    rows:[
+      {inst:'mysql-core:3306',ver:'8.0.36',conn:210,qps:'5.4k',slow:3,status:'ok',ops:'详情'},
+      {inst:'mysql-order:3306',ver:'8.0.36',conn:168,qps:'3.1k',slow:12,status:'warn',ops:'详情'},
+      {inst:'mysql-pay:3306',ver:'8.4.0',conn:96,qps:'1.8k',slow:1,status:'ok',ops:'详情'},
+      {inst:'mysql-iot:3306',ver:'5.7.44',conn:64,qps:'0.9k',slow:0,status:'ok',ops:'详情'},
+      {inst:'mysql-log:3306',ver:'8.0.36',conn:320,qps:'8.2k',slow:27,status:'warn',ops:'详情'},
+    ], filters:['全部','健康','关注'] },
+  gateway:{ group:'基础设施', icon:'🚪', title:'网关路由', sub:'GATEWAY', cols:[
+      {k:'route',t:'路由',mono:1},{k:'up',t:'上游'},{k:'hits',t:'命中/分'},{k:'status',t:'状态',st:1},{k:'ops',t:'操作'}],
+    rows:[
+      {route:'/api/core/*',up:'api-core-01',hits:'12.3k',status:'ok',ops:'配置'},
+      {route:'/api/order/*',up:'order-svc',hits:'4.1k',status:'ok',ops:'配置'},
+      {route:'/pay/*',up:'pay-gateway',hits:'2.2k',status:'warn',ops:'配置'},
+      {route:'/iot/*',up:'iot-hub',hits:'9.8k',status:'ok',ops:'配置'},
+      {route:'/auth/*',up:'auth-svc',hits:'6.5k',status:'ok',ops:'配置'},
+    ], filters:['全部','健康','关注'] },
+  deploy:{ group:'交付', icon:'🚀', title:'部署流水线', sub:'DEPLOYMENT', cols:[
+      {k:'pipe',t:'流水线'},{k:'branch',t:'分支',mono:1},{k:'last',t:'最近运行'},{k:'status',t:'状态',st:1},{k:'cost',t:'耗时'},{k:'ops',t:'操作'}],
+    rows:[
+      {pipe:'api-core 发布',branch:'main',last:'07-26 10:20',status:'ok',cost:'3m12s',ops:'运行'},
+      {pipe:'order 灰度',branch:'release/3.1',last:'07-25 22:05',status:'warn',cost:'6m40s',ops:'运行'},
+      {pipe:'pay 回滚',branch:'hotfix',last:'07-26 09:11',status:'danger',cost:'1m30s',ops:'运行'},
+      {pipe:'iot 批量',branch:'main',last:'07-24 18:00',status:'ok',cost:'12m05s',ops:'运行'},
+      {pipe:'ml 训练镜像',branch:'train',last:'07-22 02:00',status:'ok',cost:'20m00s',ops:'运行'},
+    ], filters:['全部','健康','关注','危机'] },
+  mcp:{ group:'平台', icon:'🔑', title:'MCP 令牌', sub:'MCP TOKENS', cols:[
+      {k:'name',t:'名称'},{k:'token',t:'令牌',mono:1},{k:'scope',t:'范围',tag:1},{k:'status',t:'状态',st:1},{k:'ops',t:'操作'}],
+    rows:[
+      {name:'运维机器人',token:'mcp_9f2a…c1',scope:tag('读写'),status:'ok',ops:'编辑'},
+      {name:'监控只读',token:'mcp_3b7e…90',scope:tag('只读'),status:'ok',ops:'编辑'},
+      {name:'外部集成',token:'mcp_a01d…77',scope:tag('受限'),status:'warn',ops:'编辑'},
+    ], filters:['全部','读写','只读','受限'], filterField:'scope' },
+  audit:{ group:'平台', icon:'📜', title:'审计日志', sub:'AUDIT', cols:[
+      {k:'act',t:'操作'},{k:'user',t:'用户'},{k:'time',t:'时间'},{k:'res',t:'结果',st:1},{k:'ops',t:'操作'}],
+    rows:[
+      {act:'修改配置 pay-gateway',user:'admin',time:'07-26 08:15',res:'ok',ops:'详情'},
+      {act:'发布 api-core',user:'ci-bot',time:'07-26 10:20',res:'ok',ops:'详情'},
+      {act:'删除节点 node-bj-07',user:'ops',time:'07-25 17:40',res:'warn',ops:'详情'},
+      {act:'新建角色 发布员',user:'admin',time:'07-24 11:00',res:'ok',ops:'详情'},
+      {act:'登录失败 x5',user:'guest',time:'07-23 03:12',res:'danger',ops:'详情'},
+    ], filters:['全部','健康','关注','危机'] },
+  user:{ group:'系统', icon:'👤', title:'用户', sub:'USERS', cols:[
+      {k:'acc',t:'账号',mono:1},{k:'name',t:'姓名'},{k:'role',t:'角色',tag:1},{k:'status',t:'状态',st:1},{k:'last',t:'最后登录'},{k:'ops',t:'操作'}],
+    rows:[
+      {acc:'admin',name:'星尘管理员',role:tag('超管','acc'),status:'ok',last:'07-26 13:00',ops:'编辑'},
+      {acc:'ops_zhang',name:'张运维',role:tag('运维'),status:'ok',last:'07-26 09:30',ops:'编辑'},
+      {acc:'dev_li',name:'李开发',role:tag('开发'),status:'ok',last:'07-25 22:11',ops:'编辑'},
+      {acc:'viewer',name:'只读访客',role:tag('访客'),status:'idle',last:'07-20 10:00',ops:'编辑'},
+      {acc:'robot',name:'运维机器人',role:tag('API'),status:'ok',last:'07-26 13:42',ops:'编辑'},
+    ], filters:['全部','超管','运维','开发','访客','API'], filterField:'role' },
+  role:{ group:'系统', icon:'🛡', title:'角色', sub:'ROLES', cols:[
+      {k:'name',t:'角色'},{k:'perms',t:'权限数'},{k:'members',t:'成员'},{k:'status',t:'状态',st:1},{k:'ops',t:'操作'}],
+    rows:[
+      {name:'超管',perms:38,members:1,status:'ok',ops:'编辑'},
+      {name:'运维',perms:22,members:3,status:'ok',ops:'编辑'},
+      {name:'开发',perms:14,members:9,status:'ok',ops:'编辑'},
+      {name:'访客',perms:4,members:1,status:'idle',ops:'编辑'},
+      {name:'发布员',perms:9,members:2,status:'ok',ops:'编辑'},
+    ], filters:['全部','健康','离线'] },
+  setting:{ group:'系统', icon:'🎛', title:'星尘设置', sub:'SETTINGS', cols:[
+      {k:'key',t:'配置项',mono:1},{k:'val',t:'值'},{k:'desc',t:'说明'},{k:'ops',t:'操作'}],
+    rows:[
+      {key:'StarServer.Url',val:'http://stardust.local',desc:'控制面服务地址',ops:'编辑'},
+      {key:'Registry.AutoRegister',val:'true',desc:'应用自动注册',ops:'编辑'},
+      {key:'Config.PollInterval',val:'30s',desc:'配置长轮询间隔',ops:'编辑'},
+      {key:'Trace.SampleRate',val:'0.2',desc:'调用链采样率',ops:'编辑'},
+      {key:'Alarm.Enable',val:'true',desc:'告警总开关',ops:'编辑'},
+      {key:'Deploy.RetainDays',val:'30',desc:'发布历史保留天数',ops:'编辑'},
+    ], filters:['全部'] },
+};
+
+/* ===================== 渲染数据表 ===================== */
+let curSec='app', curFilter='全部', curPage=1, PAGE=8, curQ='';
+function groupOrder(){ const seen=[]; Object.values(SECTIONS).forEach(s=>{ if(!seen.includes(s.group)) seen.push(s.group); }); return seen; }
+
+function renderRail(){
+  const rail=document.getElementById('rail'); const groups=groupOrder();
+  let html='';
+  // 运营星图分组（链接回沉浸式视图）
+  html+=`<div class="grp">运营星图</div>
+    <a class="rail-item" href="prototype-overview.html"><span class="ic">🌌</span>银河视角</a>
+    <a class="rail-item" href="prototype-monitor.html?node=n3"><span class="ic">🛰</span>恒星系视角</a>`;
+  groups.forEach(g=>{
+    html+=`<div class="grp">${g}</div>`;
+    Object.entries(SECTIONS).forEach(([key,s])=>{
+      if(s.group===g){ const n=s.rows.length;
+        html+=`<div class="rail-item ${key===curSec?'active':''}" data-sec="${key}"><span class="ic">${s.icon}</span>${s.title}<span class="badge">${n}</span></div>`; }
+    });
+  });
+  rail.innerHTML=html;
+  rail.querySelectorAll('.rail-item[data-sec]').forEach(el=>el.onclick=()=>selectSec(el.dataset.sec));
+}
+
+function selectSec(key){ curSec=key; curFilter='全部'; curPage=1; curQ=''; document.getElementById('secSearch').value=''; renderRail(); renderHead(); renderRows(); }
+
+function renderHead(){
+  const s=SECTIONS[curSec];
+  document.getElementById('secTitle').firstChild.textContent=s.title;
+  document.getElementById('secSub').textContent=s.sub;
+  document.getElementById('th').innerHTML='<tr>'+s.cols.map(c=>`<th class="${c.mono?'mono':''}">${c.t}</th>`).join('')+'</tr>';
+  // 筛选 chips
+  const chips=document.getElementById('chips');
+  const fl=s.filters||['全部'];
+  chips.innerHTML=fl.map(f=>`<div class="chip ${f==='全部'?'active':''}" data-f="${f}">${f}</div>`).join('');
+  chips.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{ curFilter=c.dataset.f; curPage=1;
+    chips.querySelectorAll('.chip').forEach(x=>x.classList.toggle('active',x===c)); renderRows(); });
+}
+
+function cellHTML(s,col,r){
+  const v=r[col.k];
+  if(col.st) return st(r[col.k]);
+  if(col.bar) return bar(parseInt(r[col.k],10));
+  if(col.tag) return v; // 已是 tag()
+  if(col.k==='ops') return `<div class="ops"><span class="op" title="查看">⌕</span><span class="op" title="编辑">✎</span><span class="op" title="删除">🗑</span></div>`;
+  return v;
+}
+
+function filteredRows(){
+  const s=SECTIONS[curSec];
+  let rows=s.rows;
+  if(curFilter!=='全部' && s.filters){
+    if(s.filterField){ rows=rows.filter(r=>String(r[s.filterField]).includes(curFilter)); }
+    else { const mp={健康:'ok',关注:'warn',危机:'danger',离线:'idle'}; if(mp[curFilter]) rows=rows.filter(r=>r.status===mp[curFilter]); }
+  }
+  if(curQ){ const q=curQ.toLowerCase(); rows=rows.filter(r=>Object.values(r).some(v=>String(v).toLowerCase().includes(q))); }
+  return rows;
+}
+
+function renderRows(){
+  const s=SECTIONS[curSec]; const rows=filteredRows();
+  const total=rows.length, pages=Math.max(1,Math.ceil(total/PAGE)); if(curPage>pages)curPage=pages;
+  const slice=rows.slice((curPage-1)*PAGE,curPage*PAGE);
+  document.getElementById('secCount').textContent=`共 ${total} 条 · 第 ${curPage}/${pages} 页`;
+  const tb=document.getElementById('tb');
+  tb.innerHTML = slice.length? slice.map(r=>'<tr>'+s.cols.map(c=>`<td class="${c.mono?'mono':''}">${cellHTML(s,c,r)}</td>`).join('')+'</tr>').join('')
+    : `<tr><td class="empty" colspan="${s.cols.length}">无匹配记录</td></tr>`;
+  // 分页
+  const pg=document.getElementById('pager');
+  pg.innerHTML=`<button id="prev" ${curPage<=1?'disabled':''}>‹ 上一页</button><span>${curPage} / ${pages}</span><button id="next" ${curPage>=pages?'disabled':''}>下一页 ›</button>`;
+  pg.querySelector('#prev').onclick=()=>{ if(curPage>1){curPage--;renderRows();} };
+  pg.querySelector('#next').onclick=()=>{ if(curPage<pages){curPage++;renderRows();} };
+}
+
+document.getElementById('secSearch').addEventListener('input',e=>{ curQ=e.target.value; curPage=1; renderRows(); });
+document.getElementById('btnNew').onclick=()=>{ /* 原型示意：生产环境此处打开新建抽屉 */ };
+
+/* ===================== 启动 ===================== */
+setTheme('serene'); renderRail(); renderHead(); renderRows();
+</script>
+</body>
+</html>

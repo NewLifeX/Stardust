@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>星尘 Stardust · 接入引导</title>
+<style>
+  :root{
+    --bg:#0B1120; --surface:rgba(30,41,59,.72); --surface-2:rgba(51,65,85,.5);
+    --border:rgba(148,163,184,.18); --border-soft:rgba(148,163,184,.1);
+    --text:#E6EAF2; --text-dim:#94A3B8; --text-faint:#64748B;
+    --accent:#6366F1; --accent-2:#38BDF8; --accent-soft:rgba(99,102,241,.16);
+    --green:#34D399; --amber:#FBBF24; --red:#F87171; --purple:#A78BFA;
+    --radius:16px; --radius-sm:10px; --blur:blur(20px);
+    --font:'Geist','Satoshi','HarmonyOS Sans SC','PingFang SC',system-ui,sans-serif;
+    --mono:'Geist Mono','JetBrains Mono',ui-monospace,'SF Mono',Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+  .cosmic{position:fixed;inset:0;z-index:-2;background:
+    radial-gradient(ellipse at 16% 20%, rgba(139,92,246,.20), transparent 45%),
+    radial-gradient(ellipse at 82% 12%, rgba(56,189,248,.18), transparent 45%),
+    radial-gradient(ellipse at 68% 86%, rgba(16,185,129,.12), transparent 45%),
+    radial-gradient(ellipse at 28% 82%, rgba(99,102,241,.16), transparent 45%),
+    linear-gradient(160deg,#0B1120,#0A0E1A);}
+  .nebula{position:fixed;border-radius:50%;filter:blur(60px);opacity:.14;z-index:-1;animation:neb 24s ease-in-out infinite alternate}
+  .nebula.n1{width:380px;height:380px;background:var(--purple);top:8%;left:6%}
+  .nebula.n2{width:420px;height:420px;background:var(--accent-2);bottom:4%;right:8%;animation-delay:-8s}
+  @keyframes neb{to{transform:translate(90px,46px) scale(1.18)}}
+  .star-field{position:fixed;inset:0;z-index:-1;pointer-events:none}
+  .star{position:absolute;background:#fff;border-radius:50%;animation:tw 3s infinite alternate}
+  @keyframes tw{0%,100%{opacity:.18}50%{opacity:.95}}
+  .wrap{position:relative;z-index:1;max-width:880px;margin:0 auto;padding:48px 24px 64px}
+  .head{text-align:center;margin-bottom:34px}
+  .head .logo{width:48px;height:48px;border-radius:13px;margin:0 auto 16px;background:conic-gradient(from 0deg,var(--accent),var(--accent-2),var(--purple),var(--accent));animation:spin 18s linear infinite;position:relative;box-shadow:0 0 22px rgba(99,102,241,.45)}
+  .head .logo::after{content:'★';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .head h1{font-size:24px;font-weight:650}.head p{color:var(--text-dim);font-size:14px;margin-top:8px}
+  .progress{display:flex;align-items:center;justify-content:space-between;margin:0 auto 36px;max-width:680px;position:relative}
+  .progress::before{content:'';position:absolute;left:8%;right:8%;top:17px;height:2px;background:var(--border)}
+  .progress .fill{position:absolute;left:8%;top:17px;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent-2));width:33%;box-shadow:0 0 10px var(--accent-soft)}
+  .p-step{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:9px;width:80px}
+  .p-step .dot{width:36px;height:36px;border-radius:50%;background:var(--bg);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--text-faint);transition:.2s}
+  .p-step.done .dot{background:rgba(52,211,153,.16);border-color:var(--green);color:var(--green)}
+  .p-step.active .dot{background:var(--accent-soft);border-color:var(--accent);color:#c7d2fe;box-shadow:0 0 0 5px var(--accent-soft)}
+  .p-step .t{font-size:12px;color:var(--text-faint);text-align:center}
+  .p-step.active .t{color:#c7d2fe;font-weight:600}.p-step.done .t{color:var(--text-dim)}
+  .glass{background:var(--surface);backdrop-filter:var(--blur);border:1px solid var(--border);border-radius:var(--radius);transition:.22s}
+  .glass:hover{border-color:rgba(99,102,241,.5);box-shadow:0 18px 44px rgba(0,0,0,.4),0 0 0 1px rgba(99,102,241,.12)}
+  .panel{padding:30px}
+  .panel .step-tag{display:inline-block;font-size:11px;font-family:var(--mono);color:var(--accent-2);background:rgba(56,189,248,.12);padding:3px 10px;border-radius:20px;margin-bottom:14px}
+  .panel h2{font-size:19px;font-weight:600}
+  .panel .desc{color:var(--text-dim);font-size:13.5px;margin-top:8px;line-height:1.6}
+  .cmd{background:rgba(2,6,18,.6);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;margin:18px 0;font-family:var(--mono);font-size:13px;color:var(--green);display:flex;align-items:center;justify-content:space-between}
+  .cmd .copy{color:var(--text-faint);font-size:11px;cursor:pointer;border:1px solid var(--border);padding:3px 9px;border-radius:6px;transition:.18s}
+  .cmd .copy:hover{color:#fff;border-color:var(--accent)}
+  .checks{display:flex;flex-direction:column;gap:11px;margin-top:6px}
+  .check{display:flex;align-items:center;gap:12px;padding:13px 15px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm)}
+  .check .ic{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+  .check.ok .ic{background:rgba(52,211,153,.16);color:var(--green)}
+  .check.wait .ic{background:rgba(251,191,36,.16);color:var(--amber)}
+  .check b{font-size:13.5px;font-weight:550}.check p{font-size:12px;color:var(--text-dim);margin-top:2px}
+  .check .st{margin-left:auto;font-size:12px;font-family:var(--mono)}
+  .check.ok .st{color:var(--green)}.check.wait .st{color:var(--amber)}
+  .hint{margin-top:18px;font-size:12.5px;color:var(--text-faint);display:flex;gap:8px;align-items:flex-start;line-height:1.6}
+  .hint svg{flex-shrink:0;margin-top:2px}
+  .actions{display:flex;justify-content:space-between;align-items:center;margin-top:26px}
+  .btn{display:inline-flex;align-items:center;gap:7px;padding:11px 20px;border-radius:var(--radius-sm);font-size:13.5px;font-weight:550;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);transition:.18s}
+  .btn:hover{transform:translateY(-2px);border-color:var(--accent)}
+  .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;border:none}
+  .btn.primary:hover{box-shadow:0 8px 24px rgba(99,102,241,.4)}
+  .btn.ghost{background:transparent;color:var(--text-dim)}
+  .btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+  .skip{font-size:12.5px;color:var(--text-faint);cursor:pointer}.skip:hover{color:var(--text-dim)}
+  .toast{position:fixed;top:88px;right:24px;background:var(--surface);backdrop-filter:var(--blur);border:1px solid rgba(99,102,241,.35);border-left:3px solid var(--accent);border-radius:12px;padding:14px 18px;box-shadow:0 12px 40px rgba(0,0,0,.45);z-index:50;display:flex;align-items:center;gap:11px;font-size:13px;transform:translateX(120px);opacity:0;transition:.3s cubic-bezier(.4,0,.2,1)}
+  .toast.show{transform:translateX(0);opacity:1}
+  .toast .ic{width:28px;height:28px;border-radius:50%;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;color:var(--accent-2)}
+</style>
+</head>
+<body>
+  <div class="cosmic"></div><div class="nebula n1"></div><div class="nebula n2"></div>
+  <div class="star-field" id="starField"></div>
+
+  <div class="wrap">
+    <div class="head">
+      <div class="logo"></div>
+      <h1>欢迎接入星尘</h1>
+      <p>跟随引导完成接入，监控与日志将在接入后自动产生 — 预计 5 分钟。</p>
+    </div>
+
+    <div class="progress">
+      <div class="fill"></div>
+      <div class="p-step done"><div class="dot">✓</div><div class="t">创建项目</div></div>
+      <div class="p-step active"><div class="dot">2</div><div class="t">接入节点</div></div>
+      <div class="p-step"><div class="dot">3</div><div class="t">接入应用</div></div>
+      <div class="p-step"><div class="dot">4</div><div class="t">看见价值</div></div>
+    </div>
+
+    <div class="glass panel">
+      <span class="step-tag">STEP 2 / 4</span>
+      <h2>安装并启动 StarAgent</h2>
+      <p class="desc">StarAgent 是节点侧的守护进程。在目标服务器执行下方命令，节点将自动向星尘注册并出现在「节点管理」中。</p>
+
+      <div class="cmd"><span>curl -sL https://star.newlifex.com/install.sh | bash -s -- --token &lt;你的接入令牌&gt;</span><span class="copy" onclick="toast('安装命令已复制')">复制</span></div>
+
+      <div class="checks">
+        <div class="check ok"><div class="ic">✓</div><div><b>下载 Agent 包</b><p>v3.2.1 · 已校验签名</p></div><span class="st">完成</span></div>
+        <div class="check ok"><div class="ic">✓</div><div><b>注册到星尘</b><p>node-api-01 已上线</p></div><span class="st">在线</span></div>
+        <div class="check wait"><div class="ic">…</div><div><b>等待心跳</b><p>目标服务器 star-agent-gw 尚未响应</p></div><span class="st">等待中</span></div>
+      </div>
+
+      <div class="hint">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v.01M11 12h1v4h1"/></svg>
+        <span>提示：接入令牌在「配置中心 → 接入管理」获取。一台服务器一个 Agent 即可纳管其上的全部应用。</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <span class="skip" onclick="toast('已跳过引导')">跳过引导，稍后自行接入 ›</span>
+      <div style="display:flex;gap:10px">
+        <button class="btn ghost" onclick="toast('返回上一步')">上一步</button>
+        <button class="btn primary" onclick="toast('正在检测节点…')">检测节点并继续 ›</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"><div class="ic">✓</div><div id="toastMsg">完成</div></div>
+  <script>
+    (function(){const f=document.getElementById('starField');for(let i=0;i<140;i++){const s=document.createElement('div');s.className='star';const sz=Math.random()*2+1;s.style.width=sz+'px';s.style.height=sz+'px';s.style.left=Math.random()*100+'%';s.style.top=Math.random()*100+'%';s.style.animationDelay=(Math.random()*3)+'s';f.appendChild(s);}})();
+    let toastTimer;function toast(msg){const t=document.getElementById('toast');document.getElementById('toastMsg').textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2600);}
+  </script>
+</body>
+</html>
