@@ -29,8 +29,11 @@ public class HostStabilityGuardTests
         // 做 IsEnabled，rule(None) 命中 EventLog→Heartbeat 内 LogError 不再触达其写路径。
         // 注：EventLogLoggerProvider.CreateLogger 直造实例的 IsEnabled 不经过 filter（框架实现），
         // 故正确断言点是 LoggerFilterOptions.Rules 而非直造 logger。
+        // 注2：代码级 AddFilter<EventLogLoggerProvider> 注册的 ProviderName=provider 全名
+        // （Microsoft.Extensions.Logging.EventLog.EventLogLoggerProvider），配置别名 "EventLog"
+        // 只出现在 appsettings 配置式规则里，两者勿混。
         var options = app.Services.GetRequiredService<IOptions<LoggerFilterOptions>>().Value;
-        Assert.Contains(options.Rules, r => r.ProviderName == "EventLog" && r.LogLevel == LogLevel.None);
+        Assert.Contains(options.Rules, r => r.ProviderName == "Microsoft.Extensions.Logging.EventLog.EventLogLoggerProvider" && r.LogLevel == LogLevel.None);
     }
 
     [Fact]

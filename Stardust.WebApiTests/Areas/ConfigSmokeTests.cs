@@ -92,7 +92,8 @@ public class ConfigSmokeTests
         }
     }
 
-    /// <summary>C01（进程内事实）：ConfigController 公开动作仅 GetAll 一个；新前端无根 Config 管理页，UI 断言归 5188 窗口。</summary>
+    /// <summary>C01（进程内事实）：ConfigController 公开动作仅 GetAll/GetAllByApp 两个（GetAllByApp=刀1 预览链改道端点，2026-11-12 合入）；
+    /// 新前端无根 Config 管理页，UI 断言归 5188 窗口。</summary>
     [Fact]
     public void ConfigController_HasOnlyGetAll_PublicAction()
     {
@@ -104,7 +105,7 @@ public class ConfigSmokeTests
             .ToArray();
 
         _output.WriteLine("[C01] ConfigController actions: " + String.Join(", ", actions));
-        Assert.Equal(new[] { "GetAll" }, actions);
+        Assert.Equal(new[] { "GetAll", "GetAllByApp" }, actions);
     }
 
     /// <summary>C12/C04：空 appId → 参数错误信封（登录门之前抛出，HTTP 200 + code 非 0 + message 含 appId）。</summary>
