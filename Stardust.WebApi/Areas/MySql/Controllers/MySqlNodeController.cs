@@ -68,7 +68,7 @@ public class MySqlNodeController : WebEntityController<MySqlNode>
         if (nodeId > 0)
         {
             var node = MySqlNode.FindById(nodeId);
-            if (node != null) return new[] { CropRow(node) };
+            if (node != null) return new[] { node };
         }
 
         var server = p["server"];
@@ -79,7 +79,7 @@ public class MySqlNodeController : WebEntityController<MySqlNode>
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return MySqlNode.Search(server, port, projectId, enable, start, end, p["Q"], p).Select(CropRow);
+        return MySqlNode.Search(server, port, projectId, enable, start, end, p["Q"], p);
     }
 
     [EntityAuthorize(PermissionFlags.Update)]
@@ -107,46 +107,14 @@ public class MySqlNodeController : WebEntityController<MySqlNode>
         return JsonRefresh($"刷新[{node}]成功！");
     }
 
-    /// <summary>查看单行。出参投影裁剪 Password/UserName/WebHook 明文（task-95 二期刀0，OBS-3 CropPfx 同款语义：值级置 null）</summary>
-    /// <param name="id">主键</param>
-    /// <returns>裁剪后的单行数据</returns>
-    public override ApiResponse<MySqlNode> Detail(String id)
-    {
-        var res = base.Detail(id);
-        if (res?.Data != null) res.Data = CropRow(res.Data);
-        return res;
-    }
+    /// <summary>行级掩码规则（声明式，替代分散的 CropRow 与 Detail/Insert/Update/Delete override，语义逐键保真）：
+    /// 全视图（列表/详情/导出/写响应）Password/UserName/WebHook 值级置 null（键不删，task-95 刀0）；
+    /// 新提交值与旧存量值都不得回显。Valid 守卫仍负责 "*****" 回显与恢复（POST 恢复原值防静默清库）；
+    /// 掩码只改写投影行，不触碰共享缓存中的原实体。</summary>
+    private static readonly Dictionary<String, Object> _masks = new(StringComparer.OrdinalIgnoreCase) { ["Password"] = null, ["UserName"] = null, ["WebHook"] = null };
 
-    /// <summary>添加数据。响应快照裁剪敏感三键（task-95 刀0；无回显需求）</summary>
-    /// <param name="model">提交的模型</param>
-    /// <returns>裁剪后的新增结果</returns>
-    public override async Task<ApiResponse<MySqlNode>> Insert(MySqlNode model)
-    {
-        var res = await base.Insert(model);
-        if (res?.Data != null) res.Data = CropRow(res.Data);
-        return res;
-    }
-
-    /// <summary>更新数据。响应快照裁剪敏感三键（task-95 刀0；新提交值与旧存量值都不得回显）</summary>
-    /// <param name="id">主键</param>
-    /// <param name="model">提交的模型</param>
-    /// <returns>裁剪后的更新结果</returns>
-    public override async Task<ApiResponse<MySqlNode>> Update(String id, MySqlNode model)
-    {
-        var res = await base.Update(id, model);
-        if (res?.Data != null) res.Data = CropRow(res.Data);
-        return res;
-    }
-
-    /// <summary>删除数据。响应快照裁剪敏感三键（task-95 刀0；存量凭据不得随删除回显）</summary>
-    /// <param name="id">主键</param>
-    /// <returns>裁剪后的删除结果</returns>
-    public override ApiResponse<MySqlNode> Delete(String id)
-    {
-        var res = base.Delete(id);
-        if (res?.Data != null) res.Data = CropRow(res.Data);
-        return res;
-    }
+    /// <summary>全视图统一掩码（原行为：五路出参全掩）。</summary>
+    protected override IDictionary<String, Object> GetRowMasks(ViewKinds view) => _masks;
 
     /// <summary>写入校验：GET 回显掩码 + POST 守卫（task-95 刀0，AppDeployController.RepoPassword 先例同款）。
     /// 前端编辑抽屉以 Detail 全量展开为 PUT 提交体（F1 形态），Detail/回显均给 "*****"，
@@ -189,20 +157,4 @@ public class MySqlNodeController : WebEntityController<MySqlNode>
         return base.Valid(entity, type, post);
     }
 
-    /// <summary>出参投影：克隆实体并置空 Password/UserName/WebHook 明文，杜绝列表/详情/写响应泄漏（task-95 二期刀0）。
-    /// 克隆为全新实例，不原地改写共享缓存中的原实体；Valid 的 GET 掩码/POST 回填链路走原实体，写路径语义不变。</summary>
-    /// <param name="src">原始实体</param>
-    /// <returns>不含凭据明文的克隆实体</returns>
-    private static MySqlNode CropRow(MySqlNode src)
-    {
-        var dst = new MySqlNode();
-        foreach (var fi in MySqlNode.Meta.Fields)
-        {
-            dst[fi.Name] = src[fi.Name];
-        }
-        dst.Password = null;
-        dst.UserName = null;
-        dst.WebHook = null;
-        return dst;
-    }
 }

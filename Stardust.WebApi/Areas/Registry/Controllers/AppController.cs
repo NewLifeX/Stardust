@@ -56,7 +56,7 @@ public class AppController : RegistryEntityController<App>
         if (id > 0)
         {
             var node = App.FindById(id);
-            if (node != null) return [CropRow(node)];
+            if (node != null) return [node];
         }
 
         var projectId = p["projectId"].ToInt(-1);
@@ -66,50 +66,17 @@ public class AppController : RegistryEntityController<App>
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return App.Search(projectId, category, enable, start, end, p["Q"], p).Select(CropRow);
+        return App.Search(projectId, category, enable, start, end, p["Q"], p);
     }
 
-    /// <summary>查看单行。出参投影裁剪 Secret/WebHook 明文（task-95 二期刀2，OBS-3 CropPfx 同款语义：值级置 null）。
-    /// 预览链已改道 /Config/GetAllByApp（刀1），行/详情 Secret 零消费方。</summary>
-    /// <param name="id">主键</param>
-    /// <returns>裁剪后的单行数据</returns>
-    public override ApiResponse<App> Detail(String id)
-    {
-        var res = base.Detail(id);
-        if (res?.Data != null) res.Data = CropRow(res.Data);
-        return res;
-    }
+    /// <summary>行级掩码规则（声明式，替代分散的 CropRow 与 Detail/Insert/Update/Delete override，语义逐键保真）：
+    /// 全视图（列表/详情/导出/写响应）Secret/WebHook 值级置 null（键不删，task-95 刀2）。
+    /// 预览链已改道 /Config/GetAllByApp（刀1），行/详情 Secret 零消费方。
+    /// Valid 守卫仍负责 "*****" 回显与恢复；掩码只改写投影行，不触碰共享缓存中的原实体。</summary>
+    private static readonly Dictionary<String, Object> _masks = new(StringComparer.OrdinalIgnoreCase) { ["Secret"] = null, ["WebHook"] = null };
 
-    /// <summary>添加数据。响应快照裁剪敏感双键（task-95 刀2）</summary>
-    /// <param name="model">提交的模型</param>
-    /// <returns>裁剪后的新增结果</returns>
-    public override async Task<ApiResponse<App>> Insert(App model)
-    {
-        var res = await base.Insert(model);
-        if (res?.Data != null) res.Data = CropRow(res.Data);
-        return res;
-    }
-
-    /// <summary>更新数据。响应快照裁剪敏感双键（task-95 刀2；新提交值与旧存量值都不得回显）</summary>
-    /// <param name="id">主键</param>
-    /// <param name="model">提交的模型</param>
-    /// <returns>裁剪后的更新结果</returns>
-    public override async Task<ApiResponse<App>> Update(String id, App model)
-    {
-        var res = await base.Update(id, model);
-        if (res?.Data != null) res.Data = CropRow(res.Data);
-        return res;
-    }
-
-    /// <summary>删除数据。响应快照裁剪敏感双键（task-95 刀2）</summary>
-    /// <param name="id">主键</param>
-    /// <returns>裁剪后的删除结果</returns>
-    public override ApiResponse<App> Delete(String id)
-    {
-        var res = base.Delete(id);
-        if (res?.Data != null) res.Data = CropRow(res.Data);
-        return res;
-    }
+    /// <summary>全视图统一掩码（原行为：五路出参全掩）。</summary>
+    protected override IDictionary<String, Object> GetRowMasks(ViewKinds view) => _masks;
 
     /// <summary>写入校验：GET 回显掩码 + POST 守卫（task-95 刀2，AppDeployController.RepoPassword 先例同款）。
     /// Vue 编辑走 partial-PUT：Secret 留空不提交、WebHook 不在表单（不 Dirty）→ 天然安全；守卫双键仍拦 "*****"
@@ -144,22 +111,6 @@ public class AppController : RegistryEntityController<App>
         }
 
         return base.Valid(entity, type, post);
-    }
-
-    /// <summary>出参投影：克隆实体并置空 Secret/WebHook 明文，杜绝列表/详情/写响应泄漏（task-95 二期刀2）。
-    /// 克隆为全新实例，不原地改写共享缓存中的原实体；Valid 的 GET 掩码/POST 回填链路走原实体，写路径语义不变。</summary>
-    /// <param name="src">原始实体</param>
-    /// <returns>不含 Secret/WebHook 明文的克隆实体</returns>
-    private static App CropRow(App src)
-    {
-        var dst = new App();
-        foreach (var fi in App.Meta.Fields)
-        {
-            dst[fi.Name] = src[fi.Name];
-        }
-        dst.Secret = null;
-        dst.WebHook = null;
-        return dst;
     }
 
     /// <summary>搜索</summary>

@@ -51,7 +51,7 @@ public class AppDeployNodeController : DeploymentEntityController<AppDeployNode>
         if (id > 0)
         {
             var entity = AppDeployNode.FindById(id);
-            if (entity != null) return [CropRow(entity)];
+            if (entity != null) return [entity];
         }
 
         var deployId = p["deployId"].ToInt(-1);
@@ -63,7 +63,7 @@ public class AppDeployNodeController : DeploymentEntityController<AppDeployNode>
         PageSetting.EnableNavbar = false;
 
         // 部署集优先：按部署集直接过滤其节点
-        if (deployId > 0) return AppDeployNode.Search(deployId, nodeId, enable, p["Q"], p).Select(CropRow);
+        if (deployId > 0) return AppDeployNode.Search(deployId, nodeId, enable, p["Q"], p);
 
         // 按应用：先换取该应用全部部署集 Id，再按集合过滤；应用无部署集即无节点
         if (appId > 0)
@@ -71,30 +71,10 @@ public class AppDeployNodeController : DeploymentEntityController<AppDeployNode>
             var setIds = AppDeploy.FindAllByAppId(appId).Select(e => e.Id).ToArray();
             if (setIds.Length == 0) return [];
 
-            return AppDeployNode.Search(setIds, nodeId, enable, p["Q"], p).Select(CropRow);
+            return AppDeployNode.Search(setIds, nodeId, enable, p["Q"], p);
         }
 
-        return AppDeployNode.Search(-1, nodeId, enable, p["Q"], p).Select(CropRow);
-    }
-
-    /// <summary>查看单行。UserName 掩码回显 "*****"（task-95 二期刀8/N2：Vue 编辑抽屉走 Detail 取数，掩码回显防 F1 静默清库）。
-    /// 克隆后改写，不原地污染共享缓存中的原实体（原实体仍是 Valid 守卫的恢复源）。</summary>
-    /// <param name="id">主键</param>
-    /// <returns>掩码回显后的单行数据</returns>
-    public override ApiResponse<AppDeployNode> Detail(String id)
-    {
-        var res = base.Detail(id);
-        if (res?.Data != null)
-        {
-            var dst = new AppDeployNode();
-            foreach (var fi in AppDeployNode.Meta.Fields)
-            {
-                dst[fi.Name] = res.Data[fi.Name];
-            }
-            if (!dst.UserName.IsNullOrEmpty()) dst.UserName = "*****";
-            res.Data = dst;
-        }
-        return res;
+        return AppDeployNode.Search(-1, nodeId, enable, p["Q"], p);
     }
 
     /// <summary>写入校验：POST 守卫（task-95 二期刀8/N2，MySqlNode 刀0 同款）。前端编辑抽屉以 Detail 全量展开为 PUT 提交体（F1 形态），
@@ -230,18 +210,18 @@ public class AppDeployNodeController : DeploymentEntityController<AppDeployNode>
         }
     }
 
-    /// <summary>出参投影：克隆实体并置空 UserName 明文，杜绝列表行泄漏（task-95 二期刀8/N2，一期 CropRow 同款语义：值级置 null，键不删）。
-    /// 克隆为全新实例，不原地改写共享缓存中的原实体；Valid 守卫链路走原实体，写路径语义不变。</summary>
-    /// <param name="src">原始实体</param>
-    /// <returns>不含 UserName 明文的克隆实体</returns>
-    private static AppDeployNode CropRow(AppDeployNode src)
+    /// <summary>行级掩码规则（声明式，替代分散的 CropRow 与 Detail override，语义逐键保真）：
+    /// 列表行/导出 UserName 值级置 null（键不删，一期 CropRow 同款）；详情行 UserName 非空时回显哨兵 "*****"
+    /// （task-95 二期刀8/N2：Vue 编辑抽屉走 Detail 取数，掩码回显防 F1 静默清库）；写响应不掩码（原行为）。
+    /// Valid POST 守卫仍负责哨兵恢复原值；掩码只改写投影行，不触碰共享缓存中的原实体。</summary>
+    private static readonly Dictionary<String, Object> _listMasks = new(StringComparer.OrdinalIgnoreCase) { ["UserName"] = null };
+    private static readonly Dictionary<String, Object> _detailMasks = new(StringComparer.OrdinalIgnoreCase) { ["UserName"] = "*****" };
+
+    /// <summary>视图感知行级掩码规则，语义见 <see cref="WebEntityController{T}.GetRowMasks"/>。</summary>
+    protected override IDictionary<String, Object> GetRowMasks(ViewKinds view) => view switch
     {
-        var dst = new AppDeployNode();
-        foreach (var fi in AppDeployNode.Meta.Fields)
-        {
-            dst[fi.Name] = src[fi.Name];
-        }
-        dst.UserName = null;
-        return dst;
-    }
+        ViewKinds.List => _listMasks,
+        ViewKinds.Detail => _detailMasks,
+        _ => null,
+    };
 }

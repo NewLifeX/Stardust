@@ -88,7 +88,7 @@ public class AppTracerController : WebEntityController<AppTracer>
         if (id > 0)
         {
             var app = AppTracer.FindByKey(id);
-            if (app != null) return [CropRow(app)];
+            if (app != null) return [app];
         }
         var appId = p["appId"].ToInt(-1);
         if (appId > 0)
@@ -120,7 +120,7 @@ public class AppTracerController : WebEntityController<AppTracer>
 
         p.RetrieveState = true;
 
-        return AppTracer.Search(projectId, appId, category, enable, start, end, p["Q"], p).Select(CropRow);
+        return AppTracer.Search(projectId, appId, category, enable, start, end, p["Q"], p);
     }
 
     protected override Int32 OnDelete(AppTracer entity)
@@ -280,62 +280,15 @@ public class AppTracerController : WebEntityController<AppTracer>
         return JsonRefresh("成功！");
     }
 
-    /// <summary>查看单行。出参投影掩码 WebHook（task-95 二期刀4）</summary>
-    /// <param name="id">主键</param>
-    /// <returns>掩码后的单行数据</returns>
-    public override ApiResponse<AppTracer> Detail(String id)
-    {
-        var res = base.Detail(id);
-        if (res?.Data != null) res.Data = CropRow(res.Data);
-        return res;
-    }
+    /// <summary>行级掩码规则（声明式，替代分散的 CropRow 与 Detail/Insert/Update/Delete override，语义逐键保真）：
+    /// 全视图（列表/详情/导出/写响应）WebHook 非空时掩码哨兵 "••••••"（非部分明文，回填提交由 Valid 守卫识别还原）。
+    /// 刀4 偏离一期「值级 null」惯例：F2 编辑回填（tracerPutBody 恒带 webHook）需要哨兵语义（null 回填→PUT 空→静默清库）。
+    /// 掩码只改写投影行，不触碰共享缓存中的原实体。</summary>
+    private static readonly Dictionary<String, Object> _masks = new(StringComparer.OrdinalIgnoreCase) { ["WebHook"] = MaskPlaceholder };
 
-    /// <summary>添加数据。响应快照掩码 WebHook（task-95 刀4）</summary>
-    /// <param name="model">提交的模型</param>
-    /// <returns>掩码后的新增结果</returns>
-    public override async Task<ApiResponse<AppTracer>> Insert(AppTracer model)
-    {
-        var res = await base.Insert(model);
-        if (res?.Data != null) res.Data = CropRow(res.Data);
-        return res;
-    }
-
-    /// <summary>更新数据。响应快照掩码 WebHook（task-95 刀4）</summary>
-    /// <param name="id">主键</param>
-    /// <param name="model">提交的模型</param>
-    /// <returns>掩码后的更新结果</returns>
-    public override async Task<ApiResponse<AppTracer>> Update(String id, AppTracer model)
-    {
-        var res = await base.Update(id, model);
-        if (res?.Data != null) res.Data = CropRow(res.Data);
-        return res;
-    }
-
-    /// <summary>删除数据。响应快照掩码 WebHook（task-95 刀4）</summary>
-    /// <param name="id">主键</param>
-    /// <returns>掩码后的删除结果</returns>
-    public override ApiResponse<AppTracer> Delete(String id)
-    {
-        var res = base.Delete(id);
-        if (res?.Data != null) res.Data = CropRow(res.Data);
-        return res;
-    }
+    /// <summary>全视图统一掩码（原行为：五路出参全掩）。</summary>
+    protected override IDictionary<String, Object> GetRowMasks(ViewKinds view) => _masks;
 
     /// <summary>WebHook 掩码哨兵（lead 刀6 同款定值；非部分明文，回填提交由 Valid 守卫识别还原）</summary>
     private const String MaskPlaceholder = "••••••";
-
-    /// <summary>出参投影：克隆实体并置 WebHook 为掩码哨兵，杜绝列表/详情/写响应泄漏（task-95 二期刀4）。
-    /// 刀3/4 偏离一期「值级 null」惯例：F2 编辑回填（tracerPutBody 恒带 webHook）需要哨兵语义（null 回填→PUT 空→静默清库），已随小步报披露。</summary>
-    /// <param name="src">原始实体</param>
-    /// <returns>WebHook 掩码的克隆实体</returns>
-    private static AppTracer CropRow(AppTracer src)
-    {
-        var dst = new AppTracer();
-        foreach (var fi in AppTracer.Meta.Fields)
-        {
-            dst[fi.Name] = src[fi.Name];
-        }
-        dst.WebHook = src.WebHook.IsNullOrEmpty() ? null : MaskPlaceholder;
-        return dst;
-    }
 }

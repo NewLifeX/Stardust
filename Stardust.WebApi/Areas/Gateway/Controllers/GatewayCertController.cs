@@ -9,9 +9,11 @@ using XCode.Membership;
 namespace Stardust.Web.Areas.Gateway.Controllers;
 
 /// <summary>网关证书。SSL证书配置，统一使用星尘部署中心的 SslCertificate 管理</summary>
+/// <remarks>改继承 WebEntityController（2026-11-14）：接入行级掩码机制与 Insert/Update 双通道补值修复层，
+/// 收口此前直继承裸 EntityController 的脱敏/裸奔面（Q5 上游化论据的本地部分）。</remarks>
 [Menu(10, true, Icon = "fa-lock")]
 [GatewayArea]
-public class GatewayCertController : EntityController<SslCertificate>
+public class GatewayCertController : WebEntityController<SslCertificate>
 {
     static GatewayCertController()
     {
@@ -41,62 +43,16 @@ public class GatewayCertController : EntityController<SslCertificate>
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return SslCertificate.Search(null, enable, start, end, p["Q"], p).Select(CropPfx);
+        return SslCertificate.Search(null, enable, start, end, p["Q"], p);
     }
 
-    /// <summary>查看单行。出参投影裁剪 PfxPassword 明文（OBS-3）</summary>
-    /// <param name="id">主键</param>
-    /// <returns>裁剪后的单行数据</returns>
-    public override ApiResponse<SslCertificate> Detail(String id)
-    {
-        var res = base.Detail(id);
-        if (res?.Data != null) res.Data = CropPfx(res.Data);
-        return res;
-    }
+    /// <summary>行级掩码规则（声明式，替代分散的 CropPfx 与 Detail/Insert/Update/Delete override，语义逐键保真）：
+    /// 全视图（列表/详情/导出/写响应）PfxPassword 值级置 null（键不删，OBS-3）；
+    /// 写路径响应语义=裁剪，调用方无回显需求；新提交值与旧存量值都不得回显。
+    /// 掩码只改写投影行，不触碰共享缓存中的原实体。</summary>
+    private static readonly Dictionary<String, Object> _masks = new(StringComparer.OrdinalIgnoreCase) { ["PfxPassword"] = null };
 
-    /// <summary>添加数据。响应快照裁剪 PfxPassword 明文（OBS-3 扩围：写路径响应语义=裁剪，调用方无回显需求）</summary>
-    /// <param name="model">提交的模型</param>
-    /// <returns>裁剪后的新增结果</returns>
-    public override async Task<ApiResponse<SslCertificate>> Insert(SslCertificate model)
-    {
-        var res = await base.Insert(model);
-        if (res?.Data != null) res.Data = CropPfx(res.Data);
-        return res;
-    }
+    /// <summary>全视图统一掩码（原行为：五路出参全掩）。</summary>
+    protected override IDictionary<String, Object> GetRowMasks(ViewKinds view) => _masks;
 
-    /// <summary>更新数据。响应快照裁剪 PfxPassword 明文（OBS-3 扩围：新提交值与旧存量值都不得回显）</summary>
-    /// <param name="id">主键</param>
-    /// <param name="model">提交的模型</param>
-    /// <returns>裁剪后的更新结果</returns>
-    public override async Task<ApiResponse<SslCertificate>> Update(String id, SslCertificate model)
-    {
-        var res = await base.Update(id, model);
-        if (res?.Data != null) res.Data = CropPfx(res.Data);
-        return res;
-    }
-
-    /// <summary>删除数据。响应快照裁剪 PfxPassword 明文（OBS-3 扩围：存量密码不得随删除回显流向非创建者）</summary>
-    /// <param name="id">主键</param>
-    /// <returns>裁剪后的删除结果</returns>
-    public override ApiResponse<SslCertificate> Delete(String id)
-    {
-        var res = base.Delete(id);
-        if (res?.Data != null) res.Data = CropPfx(res.Data);
-        return res;
-    }
-
-    /// <summary>出参投影：克隆实体并置空 PfxPassword 明文，杜绝列表/详情/导出泄漏（OBS-3）。
-    /// 克隆为全新实例，不原地改写共享缓存中的原实体；查找数据 FindData 不裁剪，写路径语义不变。</summary>
-    /// <param name="src">原始实体</param>
-    /// <returns>不含密码明文的克隆实体</returns>
-    private static SslCertificate CropPfx(SslCertificate src)
-    {
-        var dst = new SslCertificate();
-        foreach (var fi in SslCertificate.Meta.Fields)
-        {
-            dst[fi.Name] = src[fi.Name];
-        }
-        dst.PfxPassword = null;
-        return dst;
-    }
 }

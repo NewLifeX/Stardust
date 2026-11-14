@@ -49,34 +49,16 @@ public class McpTokenController : WebEntityController<McpToken>
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return McpToken.Search(token, enable, start, end, p["Q"], p).Select(CropRow);
+        return McpToken.Search(token, enable, start, end, p["Q"], p);
     }
 
-    /// <summary>查看单行。出参投影裁剪 Token 明文（task-94 一期脱敏，OBS-3 CropPfx 同款语义：值级置 null）。
-    /// 注意：Insert/Update/Reset 写响应不裁——create/reset 的一次性 Token 揭示 UX 依赖写响应回传明文。</summary>
-    /// <param name="id">主键</param>
-    /// <returns>裁剪后的单行数据</returns>
-    public override ApiResponse<McpToken> Detail(String id)
-    {
-        var res = base.Detail(id);
-        if (res?.Data != null) res.Data = CropRow(res.Data);
-        return res;
-    }
+    /// <summary>行级掩码规则（声明式，替代分散的 CropRow 与 Detail override，语义逐键保真）：
+    /// 列表行/详情行/导出 Token 值级置 null（键不删，task-94 一期脱敏）。
+    /// 写响应不掩码——create/reset 的一次性 Token 揭示 UX 依赖写响应回传明文（原行为）。</summary>
+    private static readonly Dictionary<String, Object> _masks = new(StringComparer.OrdinalIgnoreCase) { ["Token"] = null };
 
-    /// <summary>出参投影：克隆实体并置空 Token 明文，杜绝列表/详情泄漏（task-94 一期脱敏）。
-    /// 克隆为全新实例，不原地改写共享缓存中的原实体；写路径（OnInsert/OnUpdate/Reset）走原实体，语义不变。</summary>
-    /// <param name="src">原始实体</param>
-    /// <returns>不含 Token 明文的克隆实体</returns>
-    private static McpToken CropRow(McpToken src)
-    {
-        var dst = new McpToken();
-        foreach (var fi in McpToken.Meta.Fields)
-        {
-            dst[fi.Name] = src[fi.Name];
-        }
-        dst.Token = null;
-        return dst;
-    }
+    /// <summary>列表/详情/导出统一掩码；写视图不掩码（Token 揭示 UX，原行为）。</summary>
+    protected override IDictionary<String, Object> GetRowMasks(ViewKinds view) => view is ViewKinds.List or ViewKinds.Detail ? _masks : null;
 
     /// <summary>插入时自动生成Token字符串并同步资源授权</summary>
     protected override Int32 OnInsert(McpToken entity)

@@ -68,33 +68,14 @@ public class DomainProviderController : NodesEntityController<DomainProvider>
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return DomainProvider.Search(domain, enable, start, end, p["Q"], p).Select(CropRow);
+        return DomainProvider.Search(domain, enable, start, end, p["Q"], p);
     }
 
-    /// <summary>查看单行。出参投影裁剪 AppKey/AppSecret 明文（task-95 二期刀5，OBS-3 CropPfx 同款语义：值级置 null）。
-    /// MVC 回显已核实：StarWeb 编辑表单取数=meta+实体路径（自家 EntityController），与 API Detail 独立，本裁剪不影响 MVC 回显。</summary>
-    /// <param name="id">主键</param>
-    /// <returns>裁剪后的单行数据</returns>
-    public override ApiResponse<DomainProvider> Detail(String id)
-    {
-        var res = base.Detail(id);
-        if (res?.Data != null) res.Data = CropRow(res.Data);
-        return res;
-    }
+    /// <summary>行级掩码规则（声明式，替代分散的 CropRow 与 Detail override，语义逐键保真）：
+    /// 列表行/详情行/导出 AppKey/AppSecret 值级置 null（键不删，task-94 一期 + 刀5）；
+    /// 写响应不掩码（原行为：无写路径 override）。掩码只改写投影行，不触碰共享缓存中的原实体。</summary>
+    private static readonly Dictionary<String, Object> _masks = new(StringComparer.OrdinalIgnoreCase) { ["AppKey"] = null, ["AppSecret"] = null };
 
-    /// <summary>出参投影：克隆实体并置空 AppKey/AppSecret 明文，杜绝列表行泄漏（task-94 一期脱敏，OBS-3 CropPfx 同款语义：值级置 null）。
-    /// 刀5 起同裁 Detail；克隆为全新实例，不原地改写共享缓存中的原实体。</summary>
-    /// <param name="src">原始实体</param>
-    /// <returns>不含 AppKey/AppSecret 明文的克隆实体</returns>
-    private static DomainProvider CropRow(DomainProvider src)
-    {
-        var dst = new DomainProvider();
-        foreach (var fi in DomainProvider.Meta.Fields)
-        {
-            dst[fi.Name] = src[fi.Name];
-        }
-        dst.AppKey = null;
-        dst.AppSecret = null;
-        return dst;
-    }
+    /// <summary>列表/详情/导出统一掩码；写视图不掩码（原行为）。</summary>
+    protected override IDictionary<String, Object> GetRowMasks(ViewKinds view) => view is ViewKinds.List or ViewKinds.Detail ? _masks : null;
 }

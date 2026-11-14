@@ -88,24 +88,15 @@ public class AppOnlineController : RegistryEntityController<AppOnline>
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return AppOnline.Search(projectId, appId, nodeId, category, start, end, p["Q"], p).Select(CropRow);
+        return AppOnline.Search(projectId, appId, nodeId, category, start, end, p["Q"], p);
     }
 
-    /// <summary>出参投影：克隆实体并置空 Token/UserName 明文，杜绝列表行泄漏（task-94 一期脱敏，OBS-3 CropPfx 同款语义：值级置 null）。
-    /// 克隆为全新实例，不原地改写共享缓存中的原实体。</summary>
-    /// <param name="src">原始实体</param>
-    /// <returns>不含 Token/UserName 明文的克隆实体</returns>
-    private static AppOnline CropRow(AppOnline src)
-    {
-        var dst = new AppOnline();
-        foreach (var fi in AppOnline.Meta.Fields)
-        {
-            dst[fi.Name] = src[fi.Name];
-        }
-        dst.Token = null;
-        dst.UserName = null;
-        return dst;
-    }
+    /// <summary>行级掩码规则（声明式，替代分散的 CropRow，语义逐键保真）：
+    /// 列表行/导出 Token/UserName 值级置 null（键不删，task-94 一期脱敏）；详情/写视图不掩码（原行为：无 override）。</summary>
+    private static readonly Dictionary<String, Object> _masks = new(StringComparer.OrdinalIgnoreCase) { ["Token"] = null, ["UserName"] = null };
+
+    /// <summary>仅列表/导出掩码（导出经掩码视图回退=List），详情/写视图不掩码（原行为）。</summary>
+    protected override IDictionary<String, Object> GetRowMasks(ViewKinds view) => view == ViewKinds.List ? _masks : null;
 
     /// <summary>实例快照。按应用返回所有在线实例及其最近一条性能数据</summary>
     /// <remarks>

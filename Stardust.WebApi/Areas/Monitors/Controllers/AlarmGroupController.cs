@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
+using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data;
 using Stardust.Data.Monitors;
@@ -50,7 +51,7 @@ public class AlarmGroupController : WebEntityController<AlarmGroup>
         if (id > 0)
         {
             var app = AlarmGroup.FindById(id);
-            if (app != null) return new[] { CropRow(app) };
+            if (app != null) return new[] { app };
         }
 
         var name = p["name"];
@@ -59,7 +60,7 @@ public class AlarmGroupController : WebEntityController<AlarmGroup>
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return AlarmGroup.Search(name, enable, start, end, p["Q"], p).Select(CropRow);
+        return AlarmGroup.Search(name, enable, start, end, p["Q"], p);
     }
 
     /// <summary>马上执行</summary>
@@ -85,46 +86,14 @@ public class AlarmGroupController : WebEntityController<AlarmGroup>
         }
     }
 
-    /// <summary>查看单行。出参投影掩码 WebHook（task-95 二期刀3）</summary>
-    /// <param name="id">主键</param>
-    /// <returns>掩码后的单行数据</returns>
-    public override ApiResponse<AlarmGroup> Detail(String id)
-    {
-        var res = base.Detail(id);
-        if (res?.Data != null) res.Data = CropRow(res.Data);
-        return res;
-    }
+    /// <summary>行级掩码规则（声明式，替代分散的 CropRow 与 Detail/Insert/Update/Delete override，语义逐键保真）：
+    /// 全视图（列表/详情/导出/写响应）WebHook 非空时掩码哨兵 "••••••"（非部分明文，回填提交由 Valid 守卫识别还原）。
+    /// 刀3 偏离一期「值级 null」惯例：F2 编辑回填需要哨兵语义（null 回填→PUT 空→静默清库）。
+    /// 掩码只改写投影行，不触碰共享缓存中的原实体。</summary>
+    private static readonly Dictionary<String, Object> _masks = new(StringComparer.OrdinalIgnoreCase) { ["WebHook"] = MaskPlaceholder };
 
-    /// <summary>添加数据。响应快照掩码 WebHook（task-95 刀3）</summary>
-    /// <param name="model">提交的模型</param>
-    /// <returns>掩码后的新增结果</returns>
-    public override async Task<ApiResponse<AlarmGroup>> Insert(AlarmGroup model)
-    {
-        var res = await base.Insert(model);
-        if (res?.Data != null) res.Data = CropRow(res.Data);
-        return res;
-    }
-
-    /// <summary>更新数据。响应快照掩码 WebHook（task-95 刀3）</summary>
-    /// <param name="id">主键</param>
-    /// <param name="model">提交的模型</param>
-    /// <returns>掩码后的更新结果</returns>
-    public override async Task<ApiResponse<AlarmGroup>> Update(String id, AlarmGroup model)
-    {
-        var res = await base.Update(id, model);
-        if (res?.Data != null) res.Data = CropRow(res.Data);
-        return res;
-    }
-
-    /// <summary>删除数据。响应快照掩码 WebHook（task-95 刀3）</summary>
-    /// <param name="id">主键</param>
-    /// <returns>掩码后的删除结果</returns>
-    public override ApiResponse<AlarmGroup> Delete(String id)
-    {
-        var res = base.Delete(id);
-        if (res?.Data != null) res.Data = CropRow(res.Data);
-        return res;
-    }
+    /// <summary>全视图统一掩码（原行为：五路出参全掩）。</summary>
+    protected override IDictionary<String, Object> GetRowMasks(ViewKinds view) => _masks;
 
     /// <summary>写入校验：GET 回显掩码 + POST 守卫（task-95 二期刀3，F2 消解闭环）。
     /// 前端编辑抽屉从列表行回填且 PUT 恒带 webHook 键（alarmGroup.logic groupBody）——行输出
@@ -162,19 +131,4 @@ public class AlarmGroupController : WebEntityController<AlarmGroup>
 
     /// <summary>WebHook 掩码哨兵（lead 刀6 同款定值；非部分明文，回填提交由 Valid 守卫识别还原）</summary>
     private const String MaskPlaceholder = "••••••";
-
-    /// <summary>出参投影：克隆实体并置 WebHook 为掩码哨兵，杜绝列表/详情/写响应泄漏（task-95 二期刀3）。
-    /// 刀3/4 偏离一期「值级 null」惯例：F2 编辑回填需要哨兵语义（null 回填→PUT 空→静默清库），已随小步报披露。</summary>
-    /// <param name="src">原始实体</param>
-    /// <returns>WebHook 掩码的克隆实体</returns>
-    private static AlarmGroup CropRow(AlarmGroup src)
-    {
-        var dst = new AlarmGroup();
-        foreach (var fi in AlarmGroup.Meta.Fields)
-        {
-            dst[fi.Name] = src[fi.Name];
-        }
-        dst.WebHook = src.WebHook.IsNullOrEmpty() ? null : MaskPlaceholder;
-        return dst;
-    }
 }

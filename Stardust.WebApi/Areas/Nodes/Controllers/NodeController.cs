@@ -92,7 +92,7 @@ public class NodeController : NodesEntityController<Node>
         if (nodeId > 0)
         {
             var node = Node.FindByKey(nodeId);
-            if (node != null) return new[] { CropRow(node) };
+            if (node != null) return new[] { node };
         }
 
         var rids = p["areaId"].SplitAsInt("/");
@@ -118,45 +118,23 @@ public class NodeController : NodesEntityController<Node>
             if (!Enum.TryParse(osKind, out kind)) kind = (OSKinds)(-1);
         }
 
-        return Node.Search(projectId, provinceId, cityId, category, product, kind, version, runtime, framework, arch, enable, start, end, p["Q"], p).Select(CropRow);
+        return Node.Search(projectId, provinceId, cityId, category, product, kind, version, runtime, framework, arch, enable, start, end, p["Q"], p);
     }
 
-    /// <summary>查看单行。出参投影裁剪 WebHook 明文（task-95 二期刀0/N1）。
-    /// Secret 保守保留（节点详情/注册流程在用，一期裁定）；WebHook 告警回调凭据不得出户。
-    /// MVC 编辑表单走服务端实体绑定（非本 API Detail），无 F1 静默清库面。</summary>
-    /// <param name="id">主键</param>
-    /// <returns>裁剪后的单行数据</returns>
-    public override ApiResponse<Node> Detail(String id)
-    {
-        var res = base.Detail(id);
-        if (res?.Data != null)
-        {
-            var dst = new Node();
-            foreach (var fi in Node.Meta.Fields)
-            {
-                dst[fi.Name] = res.Data[fi.Name];
-            }
-            dst.WebHook = null;
-            res.Data = dst;
-        }
-        return res;
-    }
+    /// <summary>行级掩码规则（声明式，替代分散的 CropRow 与 Detail override，语义逐键保真）：
+    /// 列表行/导出 Secret/WebHook 值级置 null（task-94 一期 + 刀0/N1 增 WebHook）；
+    /// 详情行仅 WebHook 置 null——Secret 保守保留（节点详情/注册流程在用，一期裁定）；
+    /// 写响应不掩码（原行为）。掩码只改写投影行，不触碰共享缓存中的原实体。</summary>
+    private static readonly Dictionary<String, Object> _listMasks = new(StringComparer.OrdinalIgnoreCase) { ["Secret"] = null, ["WebHook"] = null };
+    private static readonly Dictionary<String, Object> _detailMasks = new(StringComparer.OrdinalIgnoreCase) { ["WebHook"] = null };
 
-    /// <summary>出参投影：克隆实体并置空 Secret/WebHook 明文，杜绝列表行泄漏（task-94 一期 + task-95 二期刀0/N1 增 WebHook）。
-    /// 仅裁列表出参；Detail 见上（Secret 保守保留、WebHook 裁剪），克隆为全新实例，不原地改写共享缓存中的原实体。</summary>
-    /// <param name="src">原始实体</param>
-    /// <returns>不含 Secret/WebHook 明文的克隆实体</returns>
-    private static Node CropRow(Node src)
+    /// <summary>视图感知行级掩码规则，语义见 <see cref="WebEntityController{T}.GetRowMasks"/>。</summary>
+    protected override IDictionary<String, Object> GetRowMasks(ViewKinds view) => view switch
     {
-        var dst = new Node();
-        foreach (var fi in Node.Meta.Fields)
-        {
-            dst[fi.Name] = src[fi.Name];
-        }
-        dst.Secret = null;
-        dst.WebHook = null;
-        return dst;
-    }
+        ViewKinds.List => _listMasks,
+        ViewKinds.Detail => _detailMasks,
+        _ => null,
+    };
 
     /// <summary>搜索</summary>
     /// <param name="category"></param>

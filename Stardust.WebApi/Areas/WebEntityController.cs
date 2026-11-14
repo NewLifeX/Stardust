@@ -12,8 +12,46 @@ using XCode;
 namespace Stardust.Web.Areas;
 
 /// <summary>星尘业务控制器基类（可写）。提供 MVC 版兼容的 JsonRefresh 与统一的导航/字段裁剪。</summary>
+/// <remarks>
+/// 行级掩码机制（2026-11-14 收敛 task-94/95 分散的 CropRow/Detail 掩码 override）：
+/// 控制器只需重写 <see cref="GetRowMasks"/> 声明「键 → 掩码值」规则（一处声明，列表/详情/导出/写响应全视图生效），
+/// 本基类在唯一投影出口 OnProject 统一应用，语义与原 CropRow 一致：值 null=键在值 null（键不删）；
+/// 非空字符串=原值非空时替换为哨兵（条件哨兵，如 WebHook "••••••"）。永不触碰共享缓存中的实体本体。
+/// </remarks>
 public class WebEntityController<T> : EntityController<T> where T : Entity<T>, new()
 {
+    private ViewKinds? _maskView;
+
+    /// <summary>捕获本次投影的视图类型。基类所有响应都按 OnGetOutputFields→OnProject 成对调用
+    /// （列表 :74/:78、详情 :107、写响应 :42/:174/:230/:349、导出 :516/:538），OnProject 不携带视图，借此传递。</summary>
+    protected override IList<DataField> OnGetOutputFields(ViewKinds kind, T entity = null)
+    {
+        _maskView = kind;
+        return base.OnGetOutputFields(kind, entity);
+    }
+
+    /// <summary>视图感知的行级掩码规则。键大小写不敏感；值 null=键在值 null（键不删）；
+    /// 非空字符串=原值非空时替换为该哨兵。返回 null 表示该视图不掩码。缺省实现=不掩码。</summary>
+    protected virtual IDictionary<String, Object> GetRowMasks(ViewKinds view) => null;
+
+    /// <summary>统一投影出口：基类投影后按声明规则应用行级掩码（列表/详情/导出/写响应全视图汇入此处）。</summary>
+    protected override ApiRow OnProject(T entity, IList<DataField> fields = null, Boolean camelCase = true)
+    {
+        var row = base.OnProject(entity, fields, camelCase);
+        if (row != null) WebEntityCompat.ApplyRowMasks(row, GetRowMasks(_maskView ?? ViewKinds.List));
+        return row;
+    }
+
+    /// <summary>导出数据源：Csv/Excel 导出直写实体索引器值、不经 OnProject 投影，无法走行掩码；
+    /// 此处按列表掩码规则克隆脱敏，保证 Json/Xml/Csv/Excel 四类导出与列表口径一致（Json/Xml 另经 OnProject 掩码，幂等）。</summary>
+    protected override IEnumerable<T> ExportData(Int32 max = 0)
+    {
+        var masks = GetRowMasks(ViewKinds.List);
+        if (masks == null || masks.Count == 0) return base.ExportData(max);
+
+        return base.ExportData(max).Select(e => WebEntityCompat.CropEntity(e, masks));
+    }
+
     public override void OnActionExecuting(ActionExecutingContext filterContext)
     {
         base.OnActionExecuting(filterContext);
@@ -27,7 +65,7 @@ public class WebEntityController<T> : EntityController<T> where T : Entity<T>, n
     /// 属性=Valid/业务读取通道，Extends 值存储=持久化读取通道）。
     /// 修复=双通道补值：绑定实体本体逐业务字段 SetItem 把属性值同步进值存储（保住属性值供 Valid 与业务读取），
     /// 再 OnInsert（业务钩子）→ 二次同步（钩子生成的字段如 Token）→ Insert（内部 Valid 在 OnInsert 之后，与部署版顺序一致）。</summary>
-    public override async Task<ApiResponse<T>> Insert(T model)
+    public override async Task<ApiResponse<ApiRow>> Insert(T model)
     {
         T entity;
         if (model is T src) entity = src;
@@ -56,7 +94,7 @@ public class WebEntityController<T> : EntityController<T> where T : Entity<T>, n
 
         var fields = SyncValues(entity);
 
-        var rs = new ApiResponse<T>();
+        var rs = new ApiResponse<ApiRow>();
         try
         {
             // 主键语义：身份列必须为空（与 Cube ProcessInsert 对齐；索引器取不到属性值，用属性反射取）
@@ -79,13 +117,13 @@ public class WebEntityController<T> : EntityController<T> where T : Entity<T>, n
 
             rs.Code = 0;
             rs.Message = "添加成功！";
-            rs.Data = entity;
+            rs.Data = OnProject(entity, OnGetOutputFields(ViewKinds.EditForm, entity));
         }
         catch (Exception ex)
         {
             rs.Code = 500;
             rs.Message = "添加失败！ " + ex.Message;
-            rs.Data = entity;
+            rs.Data = OnProject(entity, OnGetOutputFields(ViewKinds.EditForm, entity));
         }
 
         return await Task.FromResult(rs);
@@ -97,7 +135,7 @@ public class WebEntityController<T> : EntityController<T> where T : Entity<T>, n
     /// 抛「名称不能为空」（500）。本 override 镜像 Insert 的双通道补值：提交字段=属性+SetItem 双写并显式置脏，
     /// 未提交字段=属性通道对齐 Extends 库值。缺主键/主键不一致/数据不存在三种守卫全部委托基类，
     /// 继承其原始异常语义（基类在拷贝前抛出，无重复落库风险）。</summary>
-    public override async Task<ApiResponse<T>> Update(String id, T model)
+    public override async Task<ApiResponse<ApiRow>> Update(String id, T model)
     {
         if (id.IsNullOrEmpty()) return await base.Update(id, model);
 
@@ -141,7 +179,7 @@ public class WebEntityController<T> : EntityController<T> where T : Entity<T>, n
         }
         catch (Exception ex)
         {
-            var rs = new ApiResponse<T> { Code = 500, Message = "保存失败！ [Sync] " + ex.Message, Data = entity };
+            var rs = new ApiResponse<ApiRow> { Code = 500, Message = "保存失败！ [Sync] " + ex.Message, Data = OnProject(entity, OnGetOutputFields(ViewKinds.EditForm, entity)) };
             return await Task.FromResult(rs);
         }
 
@@ -224,6 +262,35 @@ public class WebEntityController<T> : EntityController<T> where T : Entity<T>, n
 /// </summary>
 public class WebReadOnlyEntityController<T> : ReadOnlyEntityController<T> where T : Entity<T>, new()
 {
+    private ViewKinds? _maskView;
+
+    /// <summary>视图捕获，语义同 WebEntityController（只读基类无写响应，视图只会是 List/Detail/Export）。</summary>
+    protected override IList<DataField> OnGetOutputFields(ViewKinds kind, T entity = null)
+    {
+        _maskView = kind;
+        return base.OnGetOutputFields(kind, entity);
+    }
+
+    /// <summary>视图感知的行级掩码规则，语义同 WebEntityController。</summary>
+    protected virtual IDictionary<String, Object> GetRowMasks(ViewKinds view) => null;
+
+    /// <summary>统一投影出口：应用行级掩码，语义同 WebEntityController。</summary>
+    protected override ApiRow OnProject(T entity, IList<DataField> fields = null, Boolean camelCase = true)
+    {
+        var row = base.OnProject(entity, fields, camelCase);
+        if (row != null) WebEntityCompat.ApplyRowMasks(row, GetRowMasks(_maskView ?? ViewKinds.List));
+        return row;
+    }
+
+    /// <summary>导出数据源：按列表掩码规则克隆脱敏，语义同 WebEntityController（只读基类无写响应）。</summary>
+    protected override IEnumerable<T> ExportData(Int32 max = 0)
+    {
+        var masks = GetRowMasks(ViewKinds.List);
+        if (masks == null || masks.Count == 0) return base.ExportData(max);
+
+        return base.ExportData(max).Select(e => WebEntityCompat.CropEntity(e, masks));
+    }
+
     public override void OnActionExecuting(ActionExecutingContext filterContext)
     {
         base.OnActionExecuting(filterContext);
@@ -293,6 +360,55 @@ static class WebEntityCompat
         }
 
         return fields;
+    }
+
+    /// <summary>把行级掩码规则应用到投影行（task-94/95 各控制器 CropRow/Detail 掩码的统一实现）。
+    /// 键大小写不敏感（ApiRow=OrdinalIgnoreCase 字典）。值 null=键在值 null（键不删，原「值级置 null」契约）；
+    /// 非空字符串=原值非空时替换为该哨兵（条件哨兵，如 WebHook "••••••"），原值为空则保持不动。
+    /// 规则键不在投影行（字段未下发）时跳过，不新增键。</summary>
+    public static void ApplyRowMasks(IDictionary<String, Object> row, IDictionary<String, Object> masks)
+    {
+        if (row == null || masks == null || masks.Count == 0) return;
+        foreach (var kv in masks)
+        {
+            if (kv.Key.IsNullOrEmpty()) continue;
+            if (!row.TryGetValue(kv.Key, out var value)) continue;
+
+            if (kv.Value is String sentinel && !sentinel.IsNullOrEmpty())
+            {
+                if (value != null && !(value + "").IsNullOrEmpty()) row[kv.Key] = sentinel;
+            }
+            else
+            {
+                row[kv.Key] = null;
+            }
+        }
+    }
+
+    /// <summary>按掩码规则克隆实体（键在值 null / 非空→哨兵），语义同 ApplyRowMasks。
+    /// 供 Csv/Excel 导出（直写实体索引器值、不经 OnProject 投影）兜底；克隆为全新实例，不触碰共享缓存中的原实体。</summary>
+    public static TEntity CropEntity<TEntity>(TEntity src, IDictionary<String, Object> masks) where TEntity : Entity<TEntity>, new()
+    {
+        if (src == null || masks == null || masks.Count == 0) return src;
+
+        var dst = new TEntity();
+        foreach (var fi in Entity<TEntity>.Meta.Fields)
+        {
+            dst[fi.Name] = src[fi.Name];
+        }
+        foreach (var kv in masks)
+        {
+            var value = dst[kv.Key];
+            if (kv.Value is String sentinel && !sentinel.IsNullOrEmpty())
+            {
+                if (value != null && !(value + "").IsNullOrEmpty()) dst[kv.Key] = sentinel;
+            }
+            else
+            {
+                dst[kv.Key] = null;
+            }
+        }
+        return dst;
     }
 
     /// <summary>
