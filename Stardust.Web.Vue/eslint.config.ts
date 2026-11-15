@@ -31,6 +31,11 @@ export default tseslint.config(
       '**/*.config.ts',
       'e2e-report',
       'e2e/**/.cache',
+      // 测试生成物（Playwright CT/Vitest 产物，已 gitignore 非源码；跳过 lint 防污染全仓 check 门禁——2026-11-12 实锤 ct-report/trace 3321 error）
+      'ct-report',
+      'test-results-ct',
+      'playwright-report',
+      'coverage',
       // 调试/临时残留脚本（非项目源码，跳过 lint）
       '.temp',
       '**/_*.mjs',
@@ -43,6 +48,10 @@ export default tseslint.config(
       'stardust_layout.js',
       'main_resolved.js',
       'spec-check.cjs',
+      // 走查取证脚本族（untracked 非产品码，跳过 lint 防污染全仓 check 门禁）
+      '**/walk-*.mjs',
+      '**/shot-*.mjs',
+      '**/probe-*.mjs',
     ],
   },
   js.configs.recommended,

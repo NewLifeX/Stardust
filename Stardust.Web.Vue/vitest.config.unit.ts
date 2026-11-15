@@ -102,25 +102,48 @@ export default defineConfig({
         'src/layouts/StardustLayout2/projectMember.logic.ts',
         'src/layouts/StardustLayout2/appTracer.logic.ts',
         'src/layouts/StardustLayout2/daystat.logic.ts',
+        'src/layouts/StardustLayout2/traceStat.logic.ts',
         'src/layouts/StardustLayout2/deploy.logic.ts',
         'src/layouts/StardustLayout2/appConfig.logic.ts',
         'src/layouts/StardustLayout2/configCenter.logic.ts',
         'src/layouts/StardustLayout2/apps.logic.ts',
         'src/layouts/StardustLayout2/mesh.logic.ts',
         'src/layouts/StardustLayout2/appInstances.logic.ts',
+        'src/layouts/StardustLayout2/pipelineConfig.logic.ts',
+        'src/layouts/StardustLayout2/pipelineWebhook.logic.ts',
+        'src/layouts/StardustLayout2/gatewayRoute.logic.ts',
+        'src/layouts/StardustLayout2/gatewayCluster.logic.ts',
+        'src/layouts/StardustLayout2/gatewayCert.logic.ts',
+        'src/layouts/StardustLayout2/gatewayNode.logic.ts',
+        'src/layouts/StardustLayout2/alarmGroup.logic.ts',
+        'src/layouts/StardustLayout2/alarms.logic.ts',
+        'src/layouts/StardustLayout2/alarmRecord.logic.ts',
+        'src/layouts/StardustLayout2/galaxyProject.logic.ts',
+        'src/layouts/StardustLayout2/middleware.logic.ts',
+        'src/layouts/StardustLayout2/traceData.logic.ts',
+        'src/layouts/StardustLayout2/traceItem.logic.ts',
+        'src/layouts/StardustLayout2/agentDeploy.model.ts',
         'src/stores/contextParams.logic.ts',
         'apps/stardust/src/views/Stardust/appsModel.ts',
         'apps/stardust/src/views/Stardust/nodes.model.ts',
+        'apps/stardust/src/views/Console/traceRule.logic.ts',
         'apps/stardust/src/components/traceGraph.logic.ts',
+        'apps/stardust/src/views/Registry/registryCase.ts',
       ],
       thresholds: {
-        // 门槛 = 当前真实基线（纳入 appConfig/configCenter/apps/mesh/appInstances.logic 后 2026-11-03 实测：
-        // statements 80.31 / branches 67.65 / functions 87.15 / lines 82.15），
-        // 略留余量但卡住「覆盖率倒退」。
-        statements: 80,
-        branches: 67,
-        functions: 87,
-        lines: 82,
+        // 门槛 = 当前真实基线（MW-01 棘轮后 84.4/73.07/90.75/86.29；
+        // MW-02 MySqlNode 段并入后 2026-11-09 实测 85.02/73.25/91.21/86.96——
+        // branches 余量仅 0.25 故四项维持原值不虚抬，余量见本注释实测行）。
+        // MW-03 Redis 段并入后 2026-11-09 实测 87.38/73.95/91.63（statements 以 lines 近似，
+        // lcov 口径；middleware.logic.ts 单文件 99.47/92/100/100）——
+        // statements/lines/functions 各抬 1，branches 余量 0.95 维持 73 不动。
+        // PLT-07 平台设置表单（mcpToken.logic.ts +fetchMcpRuntime/saveStarServerSettings/51 字段清单，
+        // 测试 +6=60 例）后 2026-11-09 v8 实测 85.88/74.47/91.84/87.73——
+        // branches 抬 1（余量 1.47），statements/functions/lines 余量 0.88/0.84/0.73 维持。
+        statements: 85,
+        branches: 74,
+        functions: 91,
+        lines: 87,
       },
       exclude: [
         'node_modules/',

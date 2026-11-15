@@ -50,6 +50,12 @@ export default defineConfig(() => {
     server: {
       port: 5188,
       host: '0.0.0.0',
+      // CT 运行（playwright-ct）会在 src/layouts 产生 .*.tmpdir/*.tmp 临时 transform 产物，
+      // Windows 下 chokidar 对其 watch 报 EBUSY 会崩掉整个 dev server（2026-11-07 14:11 实证，
+      // lead 托管 5188 被 GW-01 的 CT 运行击落）；忽略之，并忽略各测试产物目录减少无谓 reload。
+      watch: {
+        ignored: ['**/*.tmpdir/**', '**/*.tmp', '**/test-results-ct/**', '**/ct-report/**', '**/coverage/**'],
+      },
       // 无代理：页面直接请求 VITE_APP_BASE_API 指定的后端主机（跨域由后端 CORS 策略放行）。
     },
     build: {
