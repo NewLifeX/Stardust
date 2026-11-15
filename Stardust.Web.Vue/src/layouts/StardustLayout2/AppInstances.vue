@@ -371,6 +371,9 @@ function askFreeMemory(): void {
             <th :class="TH">
               版本
             </th>
+            <th :class="TH">
+              追踪
+            </th>
             <th :class="[TH, 'w-[220px]']">
               操作
             </th>
@@ -450,6 +453,22 @@ function askFreeMemory(): void {
             </td>
             <td :class="[TD, 'font-mono text-[12px] text-[var(--el-text-color-primary)]']">
               {{ r.version || '—' }}
+            </td>
+            <!-- REG-02（2026-11-08）：追踪列 = TraceId 链 /trace/{traceId} 契约页，无值「—」 -->
+            <td
+              :class="[TD, 'font-mono text-[11px] text-[var(--el-text-color-secondary)]']"
+              data-spec="app-instances-trace"
+            >
+              <RouterLink
+                v-if="r.traceId"
+                :to="`/trace/${r.traceId}`"
+                class="text-[var(--el-color-primary)] hover:underline"
+              >
+                {{ r.traceId }}
+              </RouterLink>
+              <template v-else>
+                —
+              </template>
             </td>
             <td :class="TD">
               <div

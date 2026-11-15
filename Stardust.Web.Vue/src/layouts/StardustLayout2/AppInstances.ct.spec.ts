@@ -26,6 +26,17 @@ test('ThreeRows：F04 快照列——真实 CPU/内存、离线标签、无数�
   await expect(page.locator('[data-spec="app-instances"]')).toContainText('3 个实例（2 在线）');
 });
 
+// REG-02（2026-11-08）：追踪列 —— 有 TraceId 链契约页 /trace/{traceId}，无值「—」
+test('REG-02：实例表追踪列有值链 /trace/:id，无值显示 —', async ({ page }) => {
+  await openStory(page, 'AppInstances/ThreeRows');
+  const rows = page.locator('[data-spec="app-instances-row"]');
+  const cell = rows.nth(0).locator('[data-spec="app-instances-trace"]');
+  await expect(cell).toContainText('a1b2c3d4e5f6');
+  await expect(cell.locator('a')).toHaveAttribute('href', '/trace/a1b2c3d4e5f6');
+  await expect(rows.nth(1).locator('[data-spec="app-instances-trace"]')).toHaveText('—');
+  await expect(rows.nth(2).locator('[data-spec="app-instances-trace"]')).toHaveText('—');
+});
+
 test('F03：勾选两行 → 批量条出现，执行命令后汇总完整展示（多行）', async ({ page }) => {
   await openStory(page, 'AppInstances/ThreeRows');
   const rows = page.locator('[data-spec="app-instances-row"]');

@@ -1,8 +1,12 @@
-// 应用页纯逻辑（与 UI 解耦，便于单测）：状态判定、KPI 聚合、状态筛选
+/** 应用页纯逻辑（与 UI 解耦，便于单测）：状态判定、KPI 聚合、状态筛选
+ *  趋势分组复用 StardustLayout2/apps.logic 的 trendPointsByApp（单测 6 例锁定），不再内联重复实现。
+ */
 // 真实数据来源（camelCase）：
 //  - 应用列表 /Registry/App        字段 name/displayName/category/version/enable
 //  - 在线聚合 /Registry/AppOnline  (appName 去重计数；同 appName 行数 = 实例数)
 // 状态优先级：告警 > 离线 > 在线
+
+import { trendPointsByApp } from '@/layouts/StardustLayout2/apps.logic';
 
 /** 七态状态体系（§20.1）：运行/异常/离线/维护/部署中/发布失败/未知 */
 export type AppStatus = 'running' | 'error' | 'offline' | 'maintenance' | 'deploying' | 'publishFailed' | 'unknown'
@@ -602,7 +606,11 @@ export function appMetricMap(rows: MinuteStatRow[]): Map<number, AppMetric> {
 /** 列表页：并行抓取应用 / 在线 / 服务 / 分钟统计 / 日统计并聚合实例数与服务数 */
 export async function fetchAppList(request: Req): Promise<{ rows: AppAggRow[]; online: OnlineRow[] }> {
   // 日统计趋势：失败不阻塞列表，降级为空趋势
-  const dayStatP = request({ url: '/Monitors/AppDayStat', method: 'GET', params: { PageSize: 500 } })
+  // C14-b 定谳：AppDayStat 列表接口默认只回当日（2026-11-10 实证 totalCount=4），缺日期窗则 trend 永远单点、小图永不渲染——必须显式带近 14 天窗
+  const localDay = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const today = new Date();
+  const fourteenAgo = new Date(today.getTime() - 13 * 86_400_000);
+  const dayStatP = request({ url: '/Monitors/AppDayStat', method: 'GET', params: { PageSize: 500, dtStart: localDay(fourteenAgo), dtEnd: localDay(today) } })
     .then((r) => (r?.data ?? []) as Record<string, unknown>[])
     .catch(() => [] as Record<string, unknown>[])
   const [ar, or, sr, mr, dr] = await Promise.all([
@@ -618,25 +626,8 @@ export async function fetchAppList(request: Req): Promise<{ rows: AppAggRow[]; o
   const svc = new Map<number, number>()
   for (const r of (sr?.data ?? []) as { appId?: number }[]) if (r.appId) svc.set(r.appId, (svc.get(r.appId) ?? 0) + 1)
   const metricMap = appMetricMap((mr?.data ?? []) as MinuteStatRow[])
-  // 日统计按 appId 分组、按日期升序取最近 14 天
-  const trendMap = new Map<number, { date: string; total: number }[]>()
-  {
-    const byApp = new Map<number, { date: string; total: number }[]>()
-    for (const r of dr) {
-      const appId = Number(r.AppId ?? r.appId ?? 0)
-      if (!appId) continue
-      const date = String(r.StatDate ?? r.statDate ?? '').slice(0, 10)
-      if (!date) continue
-      const total = Number(r.Total ?? r.total ?? 0) || 0
-      const arr = byApp.get(appId) ?? []
-      arr.push({ date, total })
-      byApp.set(appId, arr)
-    }
-    for (const [id, pts] of byApp) {
-      pts.sort((a, b) => a.date.localeCompare(b.date))
-      trendMap.set(id, pts.slice(-14))
-    }
-  }
+  // 日统计按 appId 分组、按日期升序取最近 14 天（C14：归一复用单测锁定的纯函数）
+  const trendMap = trendPointsByApp(dr, 14)
   const rows = toAggRows((ar?.data ?? []) as AppListItem[], inst).map((r) => ({
     ...r,
     services: svc.get(r.id ?? 0) ?? 0,

@@ -7,7 +7,7 @@ import type { InstanceRow } from './appInstances.logic.ts';
 //  - /Registry/AppOnline/Snapshot → 快照（camelCase；id 13 无性能数据 → CPU/内存「待接入」，id 12 offline）
 const LIST = {
   data: [
-    { Id: 11, NodeId: 7, NodeName: 'node-a', IP: '10.0.0.1', Client: '10.0.0.1@1234', Version: '1.2.0', LongLink: true },
+    { Id: 11, NodeId: 7, NodeName: 'node-a', IP: '10.0.0.1', Client: '10.0.0.1@1234', Version: '1.2.0', LongLink: true, TraceId: 'a1b2c3d4e5f6' },
     { Id: 12, NodeId: 8, NodeName: 'node-b', IP: '10.0.0.2', Client: '10.0.0.2@5678', Version: '1.2.0', LongLink: true },
     { Id: 13, NodeId: 9, NodeName: 'node-c', IP: '10.0.0.3', Client: '10.0.0.3@9012', Version: '1.1.0', LongLink: false },
   ],

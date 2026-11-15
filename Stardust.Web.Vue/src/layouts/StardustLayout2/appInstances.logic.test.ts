@@ -28,15 +28,19 @@ function stubReq(queue: Array<{ res?: unknown; err?: unknown }>): { req: Req; ca
 }
 
 describe('toInstances · 行映射', () => {
-  it('大小写字段都认，取节点名/IP/版本/长连接', () => {
+  it('大小写字段都认，取节点名/IP/版本/长连接/追踪Id', () => {
     const rows = toInstances([
-      { Id: 1, NodeId: 7, NodeName: 'node-a', IP: '10.0.0.1', Client: '10.0.0.1@1234', Version: '1.2.0', LongLink: true },
+      { Id: 1, NodeId: 7, NodeName: 'node-a', IP: '10.0.0.1', Client: '10.0.0.1@1234', Version: '1.2.0', LongLink: true, TraceId: 'a1b2c3' },
       { id: 2, nodeId: 8, nodeName: 'node-b', ip: '10.0.0.2', client: '10.0.0.2@5678', version: '1.1.0', longLink: false },
     ]);
     expect(rows).toEqual([
-      { id: 1, nodeId: 7, node: 'node-a', ip: '10.0.0.1', client: '10.0.0.1@1234', version: '1.2.0', longLink: true },
-      { id: 2, nodeId: 8, node: 'node-b', ip: '10.0.0.2', client: '10.0.0.2@5678', version: '1.1.0', longLink: false },
+      { id: 1, nodeId: 7, node: 'node-a', ip: '10.0.0.1', client: '10.0.0.1@1234', version: '1.2.0', longLink: true, traceId: 'a1b2c3' },
+      { id: 2, nodeId: 8, node: 'node-b', ip: '10.0.0.2', client: '10.0.0.2@5678', version: '1.1.0', longLink: false, traceId: '' },
     ]);
+  });
+
+  it('REG-02 追踪列：无 TraceId 字段归一空串（列显示「—」不发链）', () => {
+    expect(toInstances([{ Id: 3 }])[0].traceId).toBe('');
   });
 
   it('空行兜底', () => {
@@ -105,7 +109,7 @@ describe('F04 fetchSnapshots / mergeSnapshots / cpuText', () => {
   });
 
   it('mergeSnapshots：快照覆盖 online/性能字段，快照失败回退列表行（性能 null）', () => {
-    const rows: InstanceRow[] = [{ id: 11, nodeId: 7, node: 'node-a', ip: '10.0.0.1', client: 'c1', version: '1.0', longLink: true }];
+    const rows: InstanceRow[] = [{ id: 11, nodeId: 7, node: 'node-a', ip: '10.0.0.1', client: 'c1', version: '1.0', longLink: true, traceId: '' }];
     const snaps = new Map([[11, toSnapshot({ id: 11, online: false, cpu: 55.55, memory: 4096, availableMemory: 8192, threads: 9, connections: 3, updateTime: '2026-11-03T10:00:00' })]]);
     const merged = mergeSnapshots(rows, snaps);
     // Snapshot 的 memory/availableMemory 单位为 MB，merge 转成字节（4096MB→4GiB）
@@ -116,7 +120,7 @@ describe('F04 fetchSnapshots / mergeSnapshots / cpuText', () => {
 
   it('内存单位：MB 转字节后 formatBytes 显示 189 MB / 5.0 GB', async () => {
     const { formatBytes } = await import('./appObserve.logic');
-    const rows: InstanceRow[] = [{ id: 21, nodeId: 7, node: 'n', ip: '10.0.0.9', client: 'c', version: '', longLink: false }];
+    const rows: InstanceRow[] = [{ id: 21, nodeId: 7, node: 'n', ip: '10.0.0.9', client: 'c', version: '', longLink: false, traceId: '' }];
     // memory=189（MB）、availableMemory=5119（MB≈5GB）；若误当字节会显示成「189 B」
     const snaps = new Map([[21, toSnapshot({ id: 21, online: true, cpu: 3, memory: 189, availableMemory: 5119, threads: 8, connections: 1, updateTime: '2026-11-03T10:00:00' })]]);
     const merged = mergeSnapshots(rows, snaps)[0];

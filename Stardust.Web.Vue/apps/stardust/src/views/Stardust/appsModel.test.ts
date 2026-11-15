@@ -15,6 +15,7 @@ import {
   normalizeRunStatus,
   servicesGroups,
   updatePipeline,
+  fetchAppList,
   type AppListItem,
   type PipelineRow,
 } from './appsModel';
@@ -397,5 +398,45 @@ describe('updatePipeline · 编辑流水线（PUT /{id} 部分更新）', () => 
     const r = await updatePipeline(req as never, row, { enable: true });
     expect(r.ok).toBe(false);
     expect(r.message).toBe('流水线不存在');
+  });
+});
+
+describe('fetchAppList · 趋势归一（C14 勘误锁）', () => {
+  /** 五接口桩：AppDayStat 给两日三行（含一条坏行），其余接口最小行 */
+  function stub() {
+    return vi.fn(async (cfg: { url: string }) => {
+      const rows: Record<string, unknown>[] =
+        cfg.url === '/Registry/App'
+          ? [{ id: 1, name: 'order-api', displayName: '订单服务', category: '业务应用', version: '1.0.0', enable: true }]
+          : cfg.url === '/Registry/AppOnline'
+            ? [{ appName: 'order-api' }]
+            : cfg.url === '/Registry/AppService'
+              ? [{ appId: 1 }]
+              : cfg.url === '/Monitors/AppMinuteStat'
+                ? []
+                : [
+                    { AppId: 1, StatDate: '2026-11-09 00:00:00', Total: 9 },
+                    { AppId: 1, StatDate: '2026-11-08 00:00:00', Total: 3 },
+                    { AppId: 0, StatDate: '2026-11-08 00:00:00', Total: 99 }, // 坏行：无 appId，应被丢弃
+                  ];
+      return { data: rows };
+    });
+  }
+
+  it('趋势经 trendPointsByApp 归一：升序、近 14 天、坏行丢弃，并挂到聚合行', async () => {
+    const req = stub();
+    const { rows } = await fetchAppList(req as never);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].trend).toEqual([
+      { date: '2026-11-08', total: 3 },
+      { date: '2026-11-09', total: 9 },
+    ]);
+    // 五接口并行（AppDayStat 是其中之一，PageSize=500），且必须带 14 天日期窗——
+    // C14-b 实证：接口默认只回当日（totalCount=4），缺 dtStart/dtEnd 则 trend 永远单点、小图永不渲染
+    const dayStatCall = (req.mock.calls.map((c) => c[0] as { url: string; params: Record<string, unknown> })).find((c) => c.url === '/Monitors/AppDayStat');
+    expect(dayStatCall).toBeDefined();
+    expect(dayStatCall!.params.PageSize).toBe(500);
+    expect(String(dayStatCall!.params.dtStart)).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(String(dayStatCall!.params.dtEnd)).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 });
