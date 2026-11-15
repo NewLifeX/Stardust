@@ -14,6 +14,7 @@ const detail: ServiceDetail = {
   id: 7,
   name: 'Star.Web',
   service: {
+    name: 'Star.Web',
     displayName: '星尘主站',
     category: 'Web',
     enable: true,
@@ -72,6 +73,23 @@ export const stories = [
       consumers,
       serviceName: 'Star.Web',
       busy: true,
+    },
+  },
+
+  // REG-09 新建服务（create 态）：服务名+空表单，单例默认勾选，无提供者/消费者段
+  {
+    id: 'ServiceDetailDrawer/Create',
+    component: ServiceDetailDrawer,
+    props: {
+      open: true,
+      loading: false,
+      failed: false,
+      service: null,
+      providers: [],
+      consumers: [],
+      serviceName: '',
+      busy: false,
+      mode: 'create' as const,
     },
   },
 ];
