@@ -3,45 +3,33 @@ import { describe, it, expect, vi } from 'vitest';
 import { effectScope, nextTick, ref } from 'vue';
 import { useDeployData } from './useDeployData.ts';
 import type { DeployDeps } from './useDeployData.ts';
-import type { DeployInfo, HistoryRow, ShipNode, StepRow, VersionOption } from './ship.logic.ts';
+import type { DeployInfo, HistoryRow, RunDetail, ShipNode, StepRow, VersionOption } from './ship.logic.ts';
 import type { Req, RunHistoryRow } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
-import type { PipelineCard, PipelineForm } from './pipelineForm.logic.ts';
 
 const request: Req = async () => ({});
 
 function dep(appId: number, version = `v${appId}`): DeployInfo {
-  return { id: appId * 10, appId, version, enable: true, autoPublish: false, multiVersion: false };
+  return { id: appId * 10, appId, name: '', version, enable: true, autoPublish: false, multiVersion: false };
 }
 function ver(id: number, version: string): VersionOption {
-  return { id, version, disabled: false, reason: '', current: false, label: version };
+  return { id, version, disabled: false, reason: '', current: false, label: version, url: '' };
 }
 function node(id: number, name: string): ShipNode {
-  return { id, nodeId: id, name, ip: '10.0.0.1', enable: true, version: 'v1', mode: 10, modeLabel: 'Standard' };
+  return { id, nodeId: id, name, ip: '10.0.0.1', enable: true, version: 'v1', appVersion: '', mode: 10, modeLabel: 'Standard', delay: 0, processId: 0, startTime: '—', compile: '—', lastActive: '—' };
 }
 const HIST: HistoryRow = {
   id: 1, deployId: 10, nodeId: 1, node: 'n1', action: 'install', actionLabel: '安装',
   success: true, remark: '', traceId: '', at: '', time: '', ip: '',
 };
 const RUNS: RunHistoryRow[] = [{ id: 11 }, { id: 12 }];
-const PIPE: PipelineCard = {
-  id: 5, name: 'build-main', deployId: 10, projectId: 2, branch: 'main', buildNodeId: 2,
-  deployNodeIds: null, autoDeploy: true, enable: true, remark: '',
-};
-const PIPE_FORM: PipelineForm = {
-  name: 'build-main', branch: 'main', buildNodeId: 2, deployNodeIds: [1], autoDeploy: true, enable: true, remark: '',
-};
 
 function baseDeps(): DeployDeps {
   return {
-    fetchDeploy: async (_r, appId) => ({ status: 'ok', deploy: dep(appId) }),
+    fetchDeploy: async (_r, appId) => ({ status: 'ok', deploy: dep(appId), others: { count: 0, nodes: 0 } }),
     fetchVersions: async () => [ver(2, 'v2'), ver(1, 'v1')],
     fetchShipNodes: async () => [node(1, 'n1')],
     fetchDeployHistory: async () => [HIST],
-    fetchPipelineCards: async () => [PIPE],
-    createPipeline: async () => ({ ok: true, message: '流水线已创建' }),
-    savePipeline: async () => ({ ok: true, message: '流水线已保存' }),
-    triggerPipelineRun: async () => ({ ok: true, message: '流水线已触发' }),
-    reprocessPipelineRun: async () => ({ ok: true, message: '流水线已重新触发' }),
+    fetchPipelines: async () => [{ id: 5 }],
     fetchRunHistory: async () => RUNS,
     fetchRunSteps: async () => [] as StepRow[],
     useVersion: async () => ({ ok: true, message: '已下发部署命令' }),
@@ -56,9 +44,18 @@ function baseDeps(): DeployDeps {
     createBuildNode: async () => ({ ok: true, message: '编译节点已添加' }),
     updateBuildNode: async () => ({ ok: true, message: '编译节点已保存' }),
     deleteBuildNode: async () => ({ ok: true, message: '编译节点已删除' }),
+    // CARD-DEP-01/02：流水线配置与运行详情/重跑
+    fetchPipelineList: async () => [],
+    fetchRunHistoryFiltered: async () => [],
+    fetchRunDetail: async () => 'missing' as const,
+    reprocessRun: async () => ({ ok: true, message: '流水线已重新触发，运行编号[42]' }),
+    createPipeline: async () => ({ ok: true, message: '流水线已创建' }),
+    updatePipeline: async () => ({ ok: true, message: '流水线已保存' }),
+    deletePipeline: async () => ({ ok: true, message: '流水线已删除' }),
+    copyWebhookUrl: async () => ({ ok: true, message: 'ok', url: 'http://s/Deployment/Pipeline/Webhook?token=t' }),
+    triggerPipeline: async () => ({ ok: true, message: '流水线已触发，运行编号[42]' }),
   };
 }
-
 function deferred<T>() {
   let resolve!: (v: T) => void;
   const promise = new Promise<T>((r) => {
@@ -145,12 +142,12 @@ describe('useDeployData · 取数', () => {
   it('慢的旧响应不覆盖新应用的数据', async () => {
     const slow = deferred<Awaited<ReturnType<DeployDeps['fetchDeploy']>>>();
     const s = setup({
-      fetchDeploy: (_r, appId) => (appId === 1 ? slow.promise : Promise.resolve({ status: 'ok', deploy: dep(appId) })),
+      fetchDeploy: (_r, appId) => (appId === 1 ? slow.promise : Promise.resolve({ status: 'ok', deploy: dep(appId), others: { count: 0, nodes: 0 } })),
     });
     s.appId.value = 2;
     await settle();
     expect(s.d.deploy.value?.version).toBe('v2');
-    slow.resolve({ status: 'ok', deploy: dep(1, 'old') });
+    slow.resolve({ status: 'ok', deploy: dep(1, 'old'), others: { count: 0, nodes: 0 } });
     await settle();
     expect(s.d.deploy.value?.version).toBe('v2');
     s.scope.stop();
@@ -298,17 +295,21 @@ describe('useDeployData · 节点操作', () => {
     }
   });
 
-  it('操作后立即刷新一次，4 秒后再刷新一次', async () => {
+  it('操作后 400ms 首刷一次，4 秒兜底再刷一次（走查缺陷1：避开写事务提交时差）', async () => {
     vi.useFakeTimers();
     try {
-      const fetchDeploy = vi.fn<DeployDeps['fetchDeploy']>(async (_r, appId) => ({ status: 'ok', deploy: dep(appId) }));
+      const fetchDeploy = vi.fn<DeployDeps['fetchDeploy']>(async (_r, appId) => ({ status: 'ok', deploy: dep(appId), others: { count: 0, nodes: 0 } }));
       const s = setup({ fetchDeploy });
       await settle();
       expect(fetchDeploy).toHaveBeenCalledTimes(1);
       await s.d.operate(node(1, 'n1'), 'install');
       await settle();
+      // 不再立即刷：立即 load 可能读到写事务提交前的旧数据
+      expect(fetchDeploy).toHaveBeenCalledTimes(1);
+      await vi.advanceTimersByTimeAsync(400);
+      await settle();
       expect(fetchDeploy).toHaveBeenCalledTimes(2);
-      await vi.advanceTimersByTimeAsync(4000);
+      await vi.advanceTimersByTimeAsync(3600);
       await settle();
       expect(fetchDeploy).toHaveBeenCalledTimes(3);
       s.scope.stop();
@@ -369,7 +370,7 @@ describe('useDeployData · 销毁', () => {
     const slow = deferred<Awaited<ReturnType<DeployDeps['fetchDeploy']>>>();
     const s = setup({ fetchDeploy: () => slow.promise });
     s.scope.stop();
-    slow.resolve({ status: 'ok', deploy: dep(1) });
+    slow.resolve({ status: 'ok', deploy: dep(1), others: { count: 0, nodes: 0 } });
     await settle();
     expect(s.d.deploy.value).toBeNull();
   });
@@ -377,7 +378,7 @@ describe('useDeployData · 销毁', () => {
   it('scope 停止后，等待中的 4 秒刷新被取消', async () => {
     vi.useFakeTimers();
     try {
-      const fetchDeploy = vi.fn<DeployDeps['fetchDeploy']>(async (_r, appId) => ({ status: 'ok', deploy: dep(appId) }));
+      const fetchDeploy = vi.fn<DeployDeps['fetchDeploy']>(async (_r, appId) => ({ status: 'ok', deploy: dep(appId), others: { count: 0, nodes: 0 } }));
       const s = setup({ fetchDeploy });
       await settle();
       await s.d.operate(node(1, 'n1'), 'install');
@@ -400,7 +401,7 @@ describe('useDeployData · F09 运行轮询', () => {
   it('有进行中的运行：pollMs 后静默重取，轮询链持续到无活跃运行', async () => {
     vi.useFakeTimers();
     try {
-      const fetchDeploy = vi.fn<DeployDeps['fetchDeploy']>(async (_r, appId) => ({ status: 'ok', deploy: dep(appId) }));
+      const fetchDeploy = vi.fn<DeployDeps['fetchDeploy']>(async (_r, appId) => ({ status: 'ok', deploy: dep(appId), others: { count: 0, nodes: 0 } }));
       // 第一轮运行是 Deploying(3)，之后两轮切到 Success(4)
       let round = 0;
       const fetchRunHistory = vi.fn<DeployDeps['fetchRunHistory']>(async () => {
@@ -427,7 +428,7 @@ describe('useDeployData · F09 运行轮询', () => {
   it('没有活跃运行：不轮询', async () => {
     vi.useFakeTimers();
     try {
-      const fetchDeploy = vi.fn<DeployDeps['fetchDeploy']>(async (_r, appId) => ({ status: 'ok', deploy: dep(appId) }));
+      const fetchDeploy = vi.fn<DeployDeps['fetchDeploy']>(async (_r, appId) => ({ status: 'ok', deploy: dep(appId), others: { count: 0, nodes: 0 } }));
       setup({ fetchDeploy, fetchRunHistory: async () => [runWith(4)] });
       await settle();
       const n = fetchDeploy.mock.calls.length;
@@ -441,7 +442,7 @@ describe('useDeployData · F09 运行轮询', () => {
   it('scope 停止后轮询取消', async () => {
     vi.useFakeTimers();
     try {
-      const fetchDeploy = vi.fn<DeployDeps['fetchDeploy']>(async (_r, appId) => ({ status: 'ok', deploy: dep(appId) }));
+      const fetchDeploy = vi.fn<DeployDeps['fetchDeploy']>(async (_r, appId) => ({ status: 'ok', deploy: dep(appId), others: { count: 0, nodes: 0 } }));
       const s = setup({ fetchDeploy, fetchRunHistory: async () => [runWith(3)] });
       await settle();
       s.scope.stop();
@@ -459,7 +460,7 @@ describe('useDeployData · F06/F07/F08 新操作', () => {
     const saveDeploy = vi.fn<DeployDeps['saveDeploy']>(async () => ({ ok: true, message: '部署集已保存' }));
     const s = setup({ saveDeploy });
     await settle();
-    const ok = await s.d.saveDeployEdit({ name: 'x', category: '', enable: true, packageName: '', autoPublish: false, multiVersion: false, repository: '', repoUserName: '', repoPassword: '', branch: '', projectPath: '', buildArgs: '', packageFilters: '', logDirectory: '', logFilePattern: '', remark: '' });
+    const ok = await s.d.saveDeployEdit({ name: 'x', category: '', enable: true, packageName: '', autoPublish: false, multiVersion: false, repository: '', repoUserName: '', repoPassword: '', branch: '', projectPath: '', buildArgs: '', packageFilters: '', remark: '', logDirectory: '', logFilePattern: '' });
     expect(ok).toBe(true);
     expect(s.d.busyKey.value).toBe('');
     expect(saveDeploy.mock.calls[0][1]).toBe(10); // dep() 里 id = appId*10
@@ -531,30 +532,223 @@ describe('useDeployData · F06/F07/F08 新操作', () => {
   });
 });
 
-describe('useDeployData · 流水线', () => {
-  it('取数写入流水线列表；加载失败与空列表分开', async () => {
-    const s = setup();
+// ================= CARD-DEP-01/02（2026-11-07）：流水线配置 + 运行筛选/详情/重跑 =================
+
+describe('useDeployData · 流水线配置（CARD-DEP-01）', () => {
+  it('load 并行取流水线配置：成功写入 pipelines，失败置 pipelinesFailed 且清空', async () => {
+    const s = setup({ fetchPipelineList: async () => [{ id: 7, name: 'build-main', deployId: 10, branch: 'main', buildNodeId: 3, projectId: 88, deployNodeIds: '1,2', autoDeploy: true, enable: true, updateTime: '' }] });
     await settle();
-    expect(s.d.pipelines.value.map((p) => p.id)).toEqual([5]);
+    expect(s.d.pipelines.value.map((p) => p.id)).toEqual([7]);
     expect(s.d.pipelinesFailed.value).toBe(false);
     s.scope.stop();
 
-    const failed = setup({ fetchPipelineCards: async () => null });
+    const f = setup({ fetchPipelineList: async () => null });
     await settle();
-    expect(failed.d.pipelinesFailed.value).toBe(true);
-    expect(failed.d.pipelines.value).toEqual([]);
-    failed.scope.stop();
+    expect(f.d.pipelinesFailed.value).toBe(true);
+    expect(f.d.pipelines.value).toEqual([]);
+    f.scope.stop();
   });
 
-  it('触发与重跑把结果写进反馈', async () => {
+  it('savePipeline：无 id 走 create（带 deployId），有 id 走 update；busy 与反馈', async () => {
+    const createPipeline = vi.fn<DeployDeps['createPipeline']>(async () => ({ ok: true, message: '流水线已创建' }));
+    const updatePipeline = vi.fn<DeployDeps['updatePipeline']>(async () => ({ ok: true, message: '流水线已保存' }));
+    const s = setup({ createPipeline, updatePipeline });
+    await settle();
+    const m = { name: 'a', branch: 'main', buildNodeId: 3, deployNodeIds: [1, 2], autoDeploy: true, enable: true };
+    expect(await s.d.savePipeline(m)).toBe(true);
+    expect(createPipeline.mock.calls[0]).toEqual([expect.anything(), 10, m]);
+    expect(await s.d.savePipeline(m, 7)).toBe(true);
+    expect(updatePipeline.mock.calls[0][1]).toBe(7);
+    expect(s.toasts.at(-1)?.text).toBe('流水线已保存');
+    expect(s.d.busyKey.value).toBe('');
+    s.scope.stop();
+  });
+
+  it('removePipeline：busyKey=del:{id}，成功反馈「流水线已删除」', async () => {
+    const deletePipeline = vi.fn<DeployDeps['deletePipeline']>(async () => ({ ok: true, message: '流水线已删除' }));
+    const s = setup({ deletePipeline });
+    await settle();
+    await s.d.removePipeline({ id: 7, name: 'a', deployId: 10, branch: 'main', buildNodeId: 0, projectId: 0, deployNodeIds: '', autoDeploy: false, enable: true, updateTime: '' });
+    expect(deletePipeline.mock.calls[0][1]).toBe(7);
+    expect(s.toasts.at(-1)).toEqual({ ok: true, text: '流水线已删除' });
+    s.scope.stop();
+  });
+
+  it('copyWebhookFor：busyKey=copy:{id}，返回完整 URL；失败时反馈不带成功 toast', async () => {
     const s = setup();
     await settle();
-    await s.d.triggerPipeline(5, 'build-main');
-    expect(s.toasts.at(-1)?.text).toContain('流水线已触发');
-    await s.d.reprocessRun(11);
-    expect(s.toasts.at(-1)?.text).toContain('重新触发');
-    expect(await s.d.createPipeline(PIPE_FORM)).toBe(true);
-    expect(await s.d.savePipeline(5, PIPE_FORM)).toBe(true);
+    const row = { id: 7, name: 'a', deployId: 10, branch: 'main', buildNodeId: 0, projectId: 0, deployNodeIds: '', autoDeploy: false, enable: true, updateTime: '' };
+    const r = await s.d.copyWebhookFor(row);
+    expect(r.ok).toBe(true);
+    expect(r.url).toContain('?token=');
+    expect(s.d.busyKey.value).toBe('');
+    s.scope.stop();
+  });
+
+  it('triggerRun：busyKey=trigger:{id}，message 透传后端「流水线已触发，运行编号[N]」', async () => {
+    const triggerPipeline = vi.fn<DeployDeps['triggerPipeline']>(async () => ({ ok: true, message: '流水线已触发，运行编号[42]' }));
+    const s = setup({ triggerPipeline });
+    await settle();
+    await s.d.triggerRun({ id: 7, name: 'a', deployId: 10, branch: 'main', buildNodeId: 0, projectId: 0, deployNodeIds: '', autoDeploy: false, enable: true, updateTime: '' });
+    expect(triggerPipeline.mock.calls[0][1]).toBe(7);
+    expect(s.toasts.at(-1)).toEqual({ ok: true, text: '流水线已触发，运行编号[42]' });
+    s.scope.stop();
+  });
+
+  // task-88（2026-11-12）：触发成功反馈带「查看运行」直达，并自动选中该次运行（行高亮 + 状态徽标）
+  it('triggerRun：成功解析「运行编号[N]」→ 反馈带 openRun 动作 + 选中该运行；失败与无编号不带动作', async () => {
+    const triggerPipeline = vi.fn<DeployDeps['triggerPipeline']>(async () => ({ ok: true, message: '流水线已触发，运行编号[42]' }));
+    const fetchRunSteps = vi.fn<DeployDeps['fetchRunSteps']>(async () => [] as StepRow[]);
+    const s = setup({ triggerPipeline, fetchRunSteps });
+    await settle();
+    await s.d.triggerRun({ id: 7, name: 'a', deployId: 10, branch: 'main', buildNodeId: 0, projectId: 0, deployNodeIds: '', autoDeploy: false, enable: true, updateTime: '' });
+    const fb = s.d.feedback.value[0];
+    expect(fb?.ok).toBe(true);
+    expect(fb?.action).toEqual({ kind: 'openRun', label: '查看运行', runId: 42 });
+    await settle();
+    expect(s.d.selectedRunId.value).toBe(42);
+    expect(fetchRunSteps).toHaveBeenCalledWith(expect.anything(), 42);
+    s.scope.stop();
+
+    // 失败：反馈不带动作，也不选中
+    const bad = setup({ triggerPipeline: async () => ({ ok: false, message: '流水线未启用' }) });
+    await settle();
+    await bad.d.triggerRun({ id: 7, name: 'a', deployId: 10, branch: 'main', buildNodeId: 0, projectId: 0, deployNodeIds: '', autoDeploy: false, enable: true, updateTime: '' });
+    expect(bad.d.feedback.value[0]?.ok).toBe(false);
+    expect(bad.d.feedback.value[0]?.action).toBeUndefined();
+    expect(bad.d.selectedRunId.value).toBe(0);
+    bad.scope.stop();
+
+    // 成功但 message 无编号：反馈不带动作（降级为普通提示）
+    const noNo = setup({ triggerPipeline: async () => ({ ok: true, message: '触发成功' }) });
+    await settle();
+    await noNo.d.triggerRun({ id: 7, name: 'a', deployId: 10, branch: 'main', buildNodeId: 0, projectId: 0, deployNodeIds: '', autoDeploy: false, enable: true, updateTime: '' });
+    expect(noNo.d.feedback.value[0]?.action).toBeUndefined();
+    noNo.scope.stop();
+  });
+
+  // task-88：重跑与手动触发同格式（「流水线已重新触发，运行编号[N]」），同样带直达动作 + 选中
+  it('rerunRun：成功反馈带 openRun 动作（运行编号[43]）并选中该运行', async () => {
+    const reprocessRun = vi.fn<DeployDeps['reprocessRun']>(async () => ({ ok: true, message: '流水线已重新触发，运行编号[43]' }));
+    const s = setup({ reprocessRun });
+    await settle();
+    await s.d.rerunRun(11);
+    const fb = s.d.feedback.value[0];
+    expect(fb?.text).toBe('流水线已重新触发，运行编号[43]');
+    expect(fb?.action).toEqual({ kind: 'openRun', label: '查看运行', runId: 43 });
+    await settle();
+    expect(s.d.selectedRunId.value).toBe(43);
+    s.scope.stop();
+  });
+
+  // 走查缺陷1 锁行为（lead 修复单）：写成功后不点刷新，配置卡数据也要自动上屏
+  it('创建/删除流水线成功后自动刷新：无需手动点刷新，pipelines 上屏新数据', async () => {
+    vi.useFakeTimers();
+    try {
+      let list = [{ id: 7, name: 'demo-main', deployId: 10, branch: 'main', buildNodeId: 3, projectId: 88, deployNodeIds: '1,2', autoDeploy: true, enable: true, updateTime: '' }];
+      const fetchPipelineList = vi.fn<DeployDeps['fetchPipelineList']>(async () => list);
+      const createPipeline = vi.fn<DeployDeps['createPipeline']>(async (_r, _did, m) => {
+        list = [...list, { id: 8, name: m.name, deployId: 10, branch: m.branch, buildNodeId: m.buildNodeId, projectId: 88, deployNodeIds: '1,2', autoDeploy: m.autoDeploy, enable: m.enable, updateTime: '' }];
+        return { ok: true, message: '流水线已创建' };
+      });
+      const deletePipeline = vi.fn<DeployDeps['deletePipeline']>(async () => {
+        list = list.filter((p) => p.id !== 8);
+        return { ok: true, message: '流水线已删除' };
+      });
+      const s = setup({ fetchPipelineList, createPipeline, deletePipeline });
+      await settle();
+      expect(s.d.pipelines.value.map((p) => p.id)).toEqual([7]);
+
+      // 创建 walk-fix：写返回后 400ms 首刷即上屏
+      await s.d.savePipeline({ name: 'walk-fix', branch: 'main', buildNodeId: 0, deployNodeIds: [1], autoDeploy: false, enable: true });
+      expect(fetchPipelineList).toHaveBeenCalledTimes(1);
+      await vi.advanceTimersByTimeAsync(400);
+      await settle();
+      expect(fetchPipelineList).toHaveBeenCalledTimes(2);
+      expect(s.d.pipelines.value.map((p) => p.id)).toEqual([7, 8]);
+      expect(s.toasts.at(-1)?.text).toBe('流水线已创建');
+
+      // 删除 walk-fix：兜底刷后回到单条（即使首刷读旧，4s 兜底也会追上）
+      await s.d.removePipeline(list.find((p) => p.id === 8)!);
+      await vi.advanceTimersByTimeAsync(400);
+      await settle();
+      expect(s.d.pipelines.value.map((p) => p.id)).toEqual([7]);
+      // 兜底定时器已重排，不再残留旧值
+      await vi.advanceTimersByTimeAsync(3600);
+      await settle();
+      expect(s.d.pipelines.value.map((p) => p.id)).toEqual([7]);
+      s.scope.stop();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe('useDeployData · 运行筛选/详情/重跑（CARD-DEP-02）', () => {
+  it('筛选生效时改走 fetchRunHistoryFiltered；重置恢复 fetchRunHistory', async () => {
+    const fetchRunHistory = vi.fn<DeployDeps['fetchRunHistory']>(async () => RUNS);
+    const fetchRunHistoryFiltered = vi.fn<DeployDeps['fetchRunHistoryFiltered']>(async () => [{ id: 31 }]);
+    const s = setup({ fetchRunHistory, fetchRunHistoryFiltered });
+    await settle();
+    expect(fetchRunHistory).toHaveBeenCalledTimes(1);
+    expect(fetchRunHistoryFiltered).not.toHaveBeenCalled();
+
+    s.d.setRunFilter({ status: 5 });
+    await settle();
+    expect(fetchRunHistoryFiltered).toHaveBeenCalledTimes(1);
+    expect(s.d.runs.value).toEqual([{ id: 31 }]);
+    // 参数带上 status；dtStart/dtEnd 不带
+    expect(s.d.runFilter.status).toBe(5);
+
+    s.d.resetRunFilter();
+    await settle();
+    expect(s.d.runFilter.status).toBe(-1);
+    expect(fetchRunHistory).toHaveBeenCalledTimes(2);
+    s.scope.stop();
+  });
+
+  it('openRunDetail：就绪态回填流水线名与产物版本；missing/failed 状态机', async () => {
+    const full = { id: 42, pipelineId: 7, status: 'Success', appVersionId: 2 } as unknown as RunDetail;
+    const s = setup({ fetchRunDetail: async () => full });
+    await settle();
+    await s.d.openRunDetail(42);
+    expect(s.d.runDetailOpen.value).toBe(true);
+    expect(s.d.runDetailState.value).toBe('ready');
+    expect(s.d.runDetail.value?.pipelineName).toBe('#7'); // pipelines 为空 → #Id 兜底
+    expect(s.d.runDetail.value?.versionLabel).toBe('v2');
+    s.scope.stop();
+
+    const m = setup({ fetchRunDetail: async () => 'missing' as const });
+    await settle();
+    await m.d.openRunDetail(42);
+    expect(m.d.runDetailState.value).toBe('missing');
+    m.scope.stop();
+
+    const f = setup({ fetchRunDetail: async () => null });
+    await settle();
+    await f.d.openRunDetail(42);
+    expect(f.d.runDetailState.value).toBe('failed');
+    f.d.retryRunDetail();
+    await settle();
+    expect(f.d.runDetailState.value).toBe('failed');
+    f.scope.stop();
+  });
+
+  it('closeRunDetail 清空状态；rerunRun busyKey=rerun:{id} 且透传 message', async () => {
+    const reprocessRun = vi.fn<DeployDeps['reprocessRun']>(async () => ({ ok: true, message: '流水线已重新触发，运行编号[43]' }));
+    const s = setup({ reprocessRun, fetchRunDetail: async () => ({ id: 42, status: 'Success' } as unknown as RunDetail) });
+    await settle();
+    await s.d.openRunDetail(42);
+    expect(s.d.runDetailOpen.value).toBe(true);
+    s.d.closeRunDetail();
+    expect(s.d.runDetailOpen.value).toBe(false);
+    expect(s.d.runDetail.value).toBeNull();
+    expect(s.d.runDetailState.value).toBe('idle');
+
+    await s.d.rerunRun(42);
+    expect(reprocessRun.mock.calls[0][1]).toBe(42);
+    expect(s.d.busyKey.value).toBe('');
+    expect(s.toasts.at(-1)).toEqual({ ok: true, text: '流水线已重新触发，运行编号[43]' });
     s.scope.stop();
   });
 });

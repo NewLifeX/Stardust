@@ -2,21 +2,36 @@
 // 从 ShipPanel.vue 移出，行为与原组件一致；各展示组件（DeployVersionBar、DeployNodes 等）共用同一份状态。
 // 取数函数、request、通知、时钟都由调用方注入，便于在 Vitest 里不 mock 模块直接单测。
 // 二次确认弹窗（openGuard）是 UI，留在容器里：用户确认后才调用这里的 applyVersion / operate。
-import { computed, onScopeDispose, ref, watch } from 'vue';
-import { fetchRunHistory, isRunActive } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
+import { computed, onScopeDispose, reactive, ref, watch } from 'vue';
+import { fetchPipelines, fetchRunHistory, isRunActive } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
 import type { Req, RunHistoryRow } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
 import {
   actionInfo,
   fetchDeploy,
   fetchDeployHistory,
+  fetchRunDetail,
+  fetchRunHistoryFiltered,
   fetchRunSteps,
   fetchShipNodes,
   fetchVersions,
+  isRunFilterActive,
   operateNode,
+  reprocessRun,
   useVersion,
   useVersionNotice,
 } from './ship.logic.ts';
-import type { DeployInfo, HistoryRow, NodeAction, ShipNode, StepRow, VersionOption } from './ship.logic.ts';
+import type { RunDetail, RunFilter } from './ship.logic.ts';
+import {
+  copyWebhookUrl,
+  createPipeline,
+  deletePipeline,
+  fetchPipelineList,
+  parseTriggerRunNo,
+  triggerPipeline,
+  updatePipeline,
+} from './pipelineConfig.logic.ts';
+import type { PipelineForm, PipelineRow } from './pipelineConfig.logic.ts';
+import type { DeployInfo, DeployOthers, HistoryRow, NodeAction, ShipNode, StepRow, VersionOption } from './ship.logic.ts';
 import {
   batchOperateNodes,
   createBuildNode,
@@ -31,15 +46,6 @@ import {
 } from './deploy.logic.ts';
 import type { BuildNodeForm, DeployEditModel, DeployNodeForm } from './deploy.logic.ts';
 import { useManualRefresh } from './useManualRefresh.ts';
-import {
-  cardToPipelineRow,
-  createPipeline as createPipelineReq,
-  fetchPipelineCards,
-  reprocessPipelineRun,
-  savePipeline as savePipelineReq,
-  triggerPipelineRun,
-} from './pipelineForm.logic.ts';
-import type { PipelineCard, PipelineForm } from './pipelineForm.logic.ts';
 
 /** 可注入的取数与操作函数，类型直接取自真实实现 */
 export interface DeployDeps {
@@ -47,12 +53,8 @@ export interface DeployDeps {
   fetchVersions: typeof fetchVersions;
   fetchShipNodes: typeof fetchShipNodes;
   fetchDeployHistory: typeof fetchDeployHistory;
-  fetchPipelineCards: typeof fetchPipelineCards;
+  fetchPipelines: typeof fetchPipelines;
   fetchRunHistory: typeof fetchRunHistory;
-  createPipeline: typeof createPipelineReq;
-  savePipeline: typeof savePipelineReq;
-  triggerPipelineRun: typeof triggerPipelineRun;
-  reprocessPipelineRun: typeof reprocessPipelineRun;
   fetchRunSteps: typeof fetchRunSteps;
   useVersion: typeof useVersion;
   operateNode: typeof operateNode;
@@ -66,6 +68,16 @@ export interface DeployDeps {
   createBuildNode: typeof createBuildNode;
   updateBuildNode: typeof updateBuildNode;
   deleteBuildNode: typeof deleteBuildNode;
+  // —— CARD-DEP-01/02（2026-11-07 接线点登记）：流水线配置 CRUD/复制/启动 + 运行筛选/详情/重跑 ——
+  fetchPipelineList: typeof fetchPipelineList;
+  fetchRunHistoryFiltered: typeof fetchRunHistoryFiltered;
+  fetchRunDetail: typeof fetchRunDetail;
+  reprocessRun: typeof reprocessRun;
+  createPipeline: typeof createPipeline;
+  updatePipeline: typeof updatePipeline;
+  deletePipeline: typeof deletePipeline;
+  copyWebhookUrl: typeof copyWebhookUrl;
+  triggerPipeline: typeof triggerPipeline;
 }
 
 export const DEFAULT_DEPLOY_DEPS: DeployDeps = {
@@ -73,12 +85,8 @@ export const DEFAULT_DEPLOY_DEPS: DeployDeps = {
   fetchVersions,
   fetchShipNodes,
   fetchDeployHistory,
-  fetchPipelineCards,
+  fetchPipelines,
   fetchRunHistory,
-  createPipeline: createPipelineReq,
-  savePipeline: savePipelineReq,
-  triggerPipelineRun,
-  reprocessPipelineRun,
   fetchRunSteps,
   useVersion,
   operateNode,
@@ -92,13 +100,32 @@ export const DEFAULT_DEPLOY_DEPS: DeployDeps = {
   createBuildNode,
   updateBuildNode,
   deleteBuildNode,
+  fetchPipelineList,
+  fetchRunHistoryFiltered,
+  fetchRunDetail,
+  reprocessRun,
+  createPipeline,
+  updatePipeline,
+  deletePipeline,
+  copyWebhookUrl,
+  triggerPipeline,
 };
+
+/** 反馈条目的直达动作（task-88 2026-11-12）：现阶段只有「打开该次运行的详情抽屉」 */
+export interface DeployFeedbackAction {
+  kind: 'openRun';
+  label: string;
+  /** AppPipelineRun.Id（触发/重跑 message「运行编号[N]」解析） */
+  runId: number;
+}
 
 export interface DeployFeedback {
   key: number;
   ok: boolean;
   text: string;
   at: string;
+  /** 成功触发/重跑流水线时携带「查看运行」直达动作；其余操作无 */
+  action?: DeployFeedbackAction;
 }
 
 export interface DeployDataOptions {
@@ -121,18 +148,29 @@ export function useDeployData(opt: DeployDataOptions) {
   const loading = ref(true);
   const loadError = ref('');
   const deploy = ref<DeployInfo | null>(null);
+  // CARD-DEP-08 D2：同应用其余部署集摘要（单集应用 count=0，显示层判 0 不渲染副行）；加载失败/无集时为 null
+  const others = ref<DeployOthers | null>(null);
   const versions = ref<VersionOption[]>([]);
   const versionsFailed = ref(false);
   const nodes = ref<ShipNode[]>([]);
   const nodesFailed = ref(false);
   // null：历史加载失败
   const history = ref<HistoryRow[] | null>([]);
-  const pipelines = ref<PipelineCard[]>([]);
-  const pipelinesFailed = ref(false);
   const runs = ref<RunHistoryRow[]>([]);
   const selectedRunId = ref(0);
   // undefined：未加载；null：加载失败
   const steps = ref<StepRow[] | null | undefined>(undefined);
+
+  // —— CARD-DEP-01：流水线配置列表（pipelineConfig.logic 的行形状，含 DeployNodeIds/UpdateTime） ——
+  const pipelines = ref<PipelineRow[]>([]);
+  const pipelinesFailed = ref(false);
+
+  // —— CARD-DEP-02：运行筛选（状态/时间区间）+ 详情抽屉 ——
+  const runFilter = reactive<RunFilter>({ status: -1, dtStart: '', dtEnd: '' });
+  const runDetailOpen = ref(false);
+  const runDetail = ref<RunDetail | null>(null);
+  const runDetailState = ref<'idle' | 'loading' | 'ready' | 'missing' | 'failed'>('idle');
+  let detailTimer: ReturnType<typeof setTimeout> | undefined;
 
   // 操作状态：busyKey 为空表示空闲；同一时刻只允许一个操作，避免命令交叉
   const busyKey = ref('');
@@ -142,14 +180,15 @@ export function useDeployData(opt: DeployDataOptions) {
 
   let loadToken = 0;
   let reloadTimer: ReturnType<typeof setTimeout> | undefined;
+  let reloadBackupTimer: ReturnType<typeof setTimeout> | undefined;
   // F09：运行未到终态时 5s 静默轮询；到终态/销毁/离开页签（scope 释放）即停
   let pollTimer: ReturnType<typeof setTimeout> | undefined;
 
   const enabledNodes = computed(() => nodes.value.filter((n) => n.enable));
 
-  function pushFeedback(ok: boolean, text: string): void {
+  function pushFeedback(ok: boolean, text: string, action?: DeployFeedbackAction): void {
     const at = new Date().toTimeString().slice(0, 8);
-    feedback.value = [{ key: ++feedbackSeq, ok, text, at }, ...feedback.value].slice(0, 6);
+    feedback.value = [{ key: ++feedbackSeq, ok, text, at, action }, ...feedback.value].slice(0, 6);
     opt.notify(ok, text);
   }
 
@@ -183,41 +222,43 @@ export function useDeployData(opt: DeployDataOptions) {
     if (token !== loadToken) return;
     if (d.status === 'failed') {
       loadError.value = '部署集加载失败';
-      pipelines.value = [];
-      pipelinesFailed.value = false;
       loading.value = false;
       return;
     }
     if (d.status === 'none') {
       deploy.value = null;
+      others.value = null;
       versions.value = [];
       nodes.value = [];
       history.value = [];
-      pipelines.value = [];
-      pipelinesFailed.value = false;
       runs.value = [];
+      pipelines.value = [];
       loading.value = false;
       schedulePoll();
       return;
     }
     const dep = d.deploy;
-    const [vs, ns, cards, hs] = await Promise.all([
+    const [vs, ns, pipelines0, hs, cfg] = await Promise.all([
       deps.fetchVersions(opt.request, dep.id, dep.version),
       deps.fetchShipNodes(opt.request, dep.id),
-      deps.fetchPipelineCards(opt.request, dep.id),
+      deps.fetchPipelines(opt.request, dep.id),
       deps.fetchDeployHistory(opt.request, dep.id),
+      deps.fetchPipelineList(opt.request, dep.id),
     ]);
-    const rs = await deps.fetchRunHistory(opt.request, (cards ?? []).map(cardToPipelineRow));
+    const rs = isRunFilterActive(runFilter)
+      ? await deps.fetchRunHistoryFiltered(opt.request, pipelines0, runFilter)
+      : await deps.fetchRunHistory(opt.request, pipelines0);
     if (token !== loadToken) return;
     deploy.value = dep;
+    others.value = d.others ?? null;
     versionsFailed.value = vs === null;
     nodesFailed.value = ns === null;
     versions.value = vs ?? [];
     nodes.value = ns ?? [];
     history.value = hs;
-    pipelinesFailed.value = cards === null;
-    pipelines.value = cards ?? [];
     runs.value = rs;
+    pipelinesFailed.value = cfg === null;
+    pipelines.value = cfg ?? [];
     loading.value = false;
     schedulePoll();
   }
@@ -226,14 +267,30 @@ export function useDeployData(opt: DeployDataOptions) {
   onScopeDispose(() => {
     loadToken++;
     if (reloadTimer) clearTimeout(reloadTimer);
+    if (reloadBackupTimer) clearTimeout(reloadBackupTimer);
     if (pollTimer) clearTimeout(pollTimer);
+    if (detailTimer) clearTimeout(detailTimer);
   });
 
-  /** 命令是 fire-and-forget，节点装完需要几秒：立刻刷新一次，4 秒后再刷新一次 */
+  /** 写操作后自动重取（走查缺陷1，2026-11-07 实测定位）：400ms 首刷（避开写事务提交时差），
+   *  首刷完成后再接 3.6s 兜底（节点命令 fire-and-forget 装完需要几秒，保留第二次）。
+   *  原实现「400ms/4s 两个独立定时器」在后端慢（实测单次 load 全程 3s+）时必然交叠：
+   *  后启动的 load ++loadToken 作废先启动的（load() 尾部 discard），上屏被推迟到最后一个 load 跑完，
+   *  表现为「toast 成功但卡长时间不刷新」。串行链保证同一时刻最多一个重取在跑，永不互相作废；
+   *  重复写操作重排定时器，旧链若已在飞，由更新链收敛（最后启动的 load 拿最新数据上屏）。 */
   function refreshSoon(): void {
     if (reloadTimer) clearTimeout(reloadTimer);
-    void load(true);
-    reloadTimer = setTimeout(() => void load(true), 4000);
+    if (reloadBackupTimer) clearTimeout(reloadBackupTimer);
+    reloadTimer = setTimeout(() => {
+      reloadTimer = undefined;
+      void load(true).then(() => {
+        if (reloadBackupTimer) clearTimeout(reloadBackupTimer);
+        reloadBackupTimer = setTimeout(() => {
+          reloadBackupTimer = undefined;
+          void load(true);
+        }, 3600);
+      });
+    }, 400);
   }
 
   /** 手动刷新：状态机在 useManualRefresh（防重入、至少旋转 300ms、失败给可见提示，AGENTS.md §11） */
@@ -400,57 +457,6 @@ export function useDeployData(opt: DeployDataOptions) {
     refreshSoon();
   }
 
-  /** 新建流水线。成功返回 true 供容器关抽屉 */
-  async function createPipeline(form: PipelineForm): Promise<boolean> {
-    const deployId = deploy.value?.id ?? 0;
-    if (!deployId || busyKey.value) return false;
-    busyKey.value = 'pipe:new';
-    busyText.value = '正在创建流水线…';
-    const r = await deps.createPipeline(opt.request, deployId, form);
-    busyKey.value = '';
-    busyText.value = '';
-    pushFeedback(r.ok, r.ok ? `${opt.appName()}：${r.message}` : `${opt.appName()} 创建流水线失败：${r.message}`);
-    refreshSoon();
-    return r.ok;
-  }
-
-  /** 保存流水线编辑。成功返回 true 供容器关抽屉 */
-  async function savePipeline(id: number, form: PipelineForm): Promise<boolean> {
-    if (!id || busyKey.value) return false;
-    busyKey.value = `pipe-save:${id}`;
-    busyText.value = '正在保存流水线…';
-    const r = await deps.savePipeline(opt.request, id, form);
-    busyKey.value = '';
-    busyText.value = '';
-    pushFeedback(r.ok, r.ok ? `${opt.appName()}：${r.message}` : `${opt.appName()} 保存流水线失败：${r.message}`);
-    refreshSoon();
-    return r.ok;
-  }
-
-  /** 手动触发。调用前由容器完成二次确认 */
-  async function triggerPipeline(id: number, name: string): Promise<void> {
-    if (!id || busyKey.value) return;
-    busyKey.value = `pipe:${id}`;
-    busyText.value = `正在触发流水线 ${name}…`;
-    const r = await deps.triggerPipelineRun(opt.request, id);
-    busyKey.value = '';
-    busyText.value = '';
-    pushFeedback(r.ok, r.ok ? `${name}：${r.message}` : `${name} 触发失败：${r.message}`);
-    refreshSoon();
-  }
-
-  /** 重跑失败或已取消的运行。调用前由容器完成二次确认 */
-  async function reprocessRun(id: number): Promise<void> {
-    if (!id || busyKey.value) return;
-    busyKey.value = `run:${id}`;
-    busyText.value = `正在重跑运行 #${id}…`;
-    const r = await deps.reprocessPipelineRun(opt.request, id);
-    busyKey.value = '';
-    busyText.value = '';
-    pushFeedback(r.ok, r.ok ? r.message : `运行 #${id} 重跑失败：${r.message}`);
-    refreshSoon();
-  }
-
   /** 选中一条运行记录并拉取步骤；再点同一条取消选中 */
   async function selectRun(id: number): Promise<void> {
     if (!id) return;
@@ -465,6 +471,167 @@ export function useDeployData(opt: DeployDataOptions) {
     if (selectedRunId.value === id) steps.value = s;
   }
 
+  // ---------- CARD-DEP-01：流水线配置操作（Guard 确认在容器） ----------
+
+  async function savePipeline(m: PipelineForm, id?: number): Promise<boolean> {
+    const deployId = deploy.value?.id ?? 0;
+    if (busyKey.value) return false;
+    busyKey.value = 'save';
+    busyText.value = id ? '正在保存流水线…' : '正在创建流水线…';
+    const r = id ? await deps.updatePipeline(opt.request, id, m) : await deps.createPipeline(opt.request, deployId, m);
+    busyKey.value = '';
+    busyText.value = '';
+    pushFeedback(r.ok, r.ok ? r.message : `流水线保存失败：${r.message}`);
+    refreshSoon();
+    return r.ok;
+  }
+
+  async function removePipeline(row: PipelineRow): Promise<void> {
+    if (busyKey.value) return;
+    busyKey.value = `del:${row.id}`;
+    busyText.value = `正在删除流水线 ${row.name}…`;
+    const r = await deps.deletePipeline(opt.request, row.id);
+    busyKey.value = '';
+    busyText.value = '';
+    pushFeedback(r.ok, r.ok ? r.message : `删除流水线 ${row.name} 失败：${r.message}`);
+    refreshSoon();
+  }
+
+  /** 复制 WebHook：返回完整 URL，剪贴板与成功 toast 在容器（文案「WebHook 地址已复制到剪贴板」） */
+  async function copyWebhookFor(row: PipelineRow): Promise<{ ok: boolean; url: string; message: string }> {
+    if (busyKey.value) return { ok: false, url: '', message: '已有操作进行中' };
+    busyKey.value = `copy:${row.id}`;
+    busyText.value = `正在获取 ${row.name} 的 WebHook 地址…`;
+    const r = await deps.copyWebhookUrl(opt.request, row.id);
+    busyKey.value = '';
+    busyText.value = '';
+    if (!r.ok) pushFeedback(false, `复制 WebHook 地址失败：${r.message}`);
+    return r;
+  }
+
+  async function triggerRun(row: PipelineRow): Promise<void> {
+    if (busyKey.value) return;
+    busyKey.value = `trigger:${row.id}`;
+    busyText.value = `正在触发流水线 ${row.name}…`;
+    const r = await deps.triggerPipeline(opt.request, row.id);
+    busyKey.value = '';
+    busyText.value = '';
+    // task-88（2026-11-12）：成功反馈带「查看运行」直达（运行编号[N] = AppPipelineRun.Id），并选中该次运行——
+    // 行高亮 + 头部状态徽标 + 四段进度立即可见；新运行行由 refreshSoon/5s 轮询上屏（不新增轮询）。
+    if (r.ok) {
+      const runId = parseTriggerRunNo(r.message);
+      pushFeedback(true, r.message, runId > 0 ? { kind: 'openRun', label: '查看运行', runId } : undefined);
+      if (runId > 0 && selectedRunId.value !== runId) void selectRun(runId);
+    } else {
+      pushFeedback(false, `触发流水线 ${row.name} 失败：${r.message}`);
+    }
+    refreshSoon();
+  }
+
+  // ---------- CARD-DEP-02：运行筛选 / 详情抽屉 / 重跑 ----------
+
+  /** 应用筛选并重取（轮询按同筛选静默重取，语义不变） */
+  function setRunFilter(f: Partial<RunFilter>): void {
+    Object.assign(runFilter, f);
+    void load(true);
+  }
+
+  function resetRunFilter(): void {
+    Object.assign(runFilter, { status: -1, dtStart: '', dtEnd: '' });
+    void load(true);
+  }
+
+  function stopDetailPoll(): void {
+    if (detailTimer) clearTimeout(detailTimer);
+    detailTimer = undefined;
+  }
+
+  /** 详情 5s 轮询（统一口径，裁定 #4）：状态 0-3 时静默重取，到终态/关闭/离开页面停止 */
+  function scheduleDetailPoll(): void {
+    stopDetailPoll();
+    if (!runDetailOpen.value || !runDetail.value || !isRunActive(runDetail.value.status)) return;
+    const ms = opt.pollMs ?? 5000;
+    detailTimer = setTimeout(() => {
+      detailTimer = undefined;
+      void pollDetail().then(scheduleDetailPoll);
+    }, ms);
+  }
+
+  async function pollDetail(): Promise<void> {
+    if (!runDetailOpen.value || !runDetail.value) return;
+    const id = runDetail.value.id;
+    const d = await deps.fetchRunDetail(opt.request, id);
+    if (!runDetailOpen.value || runDetail.value?.id !== id) return;
+    if (d === 'missing') {
+      runDetail.value = null;
+      runDetailState.value = 'missing';
+      stopDetailPoll();
+      return;
+    }
+    if (d) {
+      runDetail.value = fillRunDetail(d);
+      runDetailState.value = 'ready';
+    }
+  }
+
+  /** 容器回填：流水线名与产物版本号（详情接口只回 Id） */
+  function fillRunDetail(d: RunDetail): RunDetail {
+    d.pipelineName = pipelines.value.find((p) => p.id === d.pipelineId)?.name ?? (d.pipelineId > 0 ? `#${d.pipelineId}` : '—');
+    d.versionLabel = versions.value.find((v) => v.id === d.appVersionId)?.version ?? (d.appVersionId > 0 ? `#${d.appVersionId}` : '—');
+    return d;
+  }
+
+  async function openRunDetail(id: number): Promise<void> {
+    if (!id) return;
+    runDetailOpen.value = true;
+    runDetailState.value = 'loading';
+    runDetail.value = null;
+    const d = await deps.fetchRunDetail(opt.request, id);
+    if (!runDetailOpen.value) return;
+    if (d === 'missing') {
+      runDetail.value = null;
+      runDetailState.value = 'missing';
+      return;
+    }
+    if (!d) {
+      runDetailState.value = 'failed';
+      return;
+    }
+    runDetail.value = fillRunDetail(d);
+    runDetailState.value = 'ready';
+    scheduleDetailPoll();
+  }
+
+  function closeRunDetail(): void {
+    runDetailOpen.value = false;
+    stopDetailPoll();
+    runDetail.value = null;
+    runDetailState.value = 'idle';
+  }
+
+  function retryRunDetail(): void {
+    const id = runDetail.value?.id ?? 0;
+    void openRunDetail(id);
+  }
+
+  async function rerunRun(id: number): Promise<void> {
+    if (busyKey.value) return;
+    busyKey.value = `rerun:${id}`;
+    busyText.value = '正在重跑流水线…';
+    const r = await deps.reprocessRun(opt.request, id);
+    busyKey.value = '';
+    busyText.value = '';
+    // task-88：重跑与手动触发同格式（「流水线已重新触发，运行编号[N]」），同样给「查看运行」直达 + 选中高亮
+    if (r.ok) {
+      const runId = parseTriggerRunNo(r.message);
+      pushFeedback(true, r.message, runId > 0 ? { kind: 'openRun', label: '查看运行', runId } : undefined);
+      if (runId > 0 && selectedRunId.value !== runId) void selectRun(runId);
+    } else {
+      pushFeedback(false, `重跑失败：${r.message}`);
+    }
+    refreshSoon();
+  }
+
   return {
     loading,
     loadError,
@@ -473,9 +640,8 @@ export function useDeployData(opt: DeployDataOptions) {
     versionsFailed,
     nodes,
     nodesFailed,
+    others,
     history,
-    pipelines,
-    pipelinesFailed,
     runs,
     selectedRunId,
     steps,
@@ -497,9 +663,22 @@ export function useDeployData(opt: DeployDataOptions) {
     removeNode,
     saveBuildNode,
     removeBuildNode,
-    createPipeline,
+    // —— CARD-DEP-01/02（2026-11-07）：流水线配置 + 运行筛选/详情/重跑 ——
+    pipelines,
+    pipelinesFailed,
+    runFilter,
+    setRunFilter,
+    resetRunFilter,
+    runDetailOpen,
+    runDetail,
+    runDetailState,
+    openRunDetail,
+    closeRunDetail,
+    retryRunDetail,
+    rerunRun,
     savePipeline,
-    triggerPipeline,
-    reprocessRun,
+    removePipeline,
+    copyWebhookFor,
+    triggerRun,
   };
 }

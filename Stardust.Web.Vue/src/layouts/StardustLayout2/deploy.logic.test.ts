@@ -16,7 +16,9 @@ import {
   fetchDeployDetail,
   fetchDeployNodeDetail,
   fetchNodeOptions,
+  nodeEchoState,
   requestFailText,
+  resolveEffectiveLogDir,
   rollbackCandidates,
   rollbackNotice,
   saveDeploy,
@@ -31,6 +33,8 @@ import {
   validateDeployEdit,
   validateDeployNodeForm,
 } from './deploy.logic.ts';
+import detail212 from './__fixtures__/appdeploynode-detail.212.json';
+import detailCurrent from './__fixtures__/appdeploynode-detail.current.json';
 
 type Cfg = { url: string; method?: string; params?: Record<string, unknown>; data?: unknown; headers?: Record<string, string> };
 function stubReq(responder: (cfg: Cfg) => unknown = () => ({ code: 200, data: null })): { req: Req; calls: Cfg[] } {
@@ -329,5 +333,81 @@ describe('requestFailText', () => {
     expect(requestFailText({ message: 'Request failed with status code 404' }, '上传失败')).toContain('接口部署中');
     expect(requestFailText(new Error('boom'), '上传失败')).toBe('上传失败：boom');
     expect(requestFailText(null, '上传失败')).toBe('上传失败');
+  });
+});
+
+describe('task-90 resolveEffectiveLogDir', () => {
+  it('节点未填（含 trim 空白）=跟随部署集', () => {
+    expect(resolveEffectiveLogDir({ LogDirectory: '', LogFilePattern: '*.log' }, { LogDirectory: 'D:/deploy/logs' })).toBe('D:/deploy/logs');
+    expect(resolveEffectiveLogDir({ logDirectory: '   ' }, { logDirectory: '/var/log/star' })).toBe('/var/log/star');
+    expect(resolveEffectiveLogDir({}, { logDirectory: 'logs' })).toBe('logs');
+    expect(resolveEffectiveLogDir(undefined, { LogDirectory: 'logs' })).toBe('logs');
+  });
+
+  it('节点级覆盖：节点有值时优先于部署集（大小写两种都认）', () => {
+    expect(resolveEffectiveLogDir({ LogDirectory: 'D:/node/logs' }, { LogDirectory: 'D:/deploy/logs' })).toBe('D:/node/logs');
+    expect(resolveEffectiveLogDir({ logDirectory: '/node/logs' }, { logDirectory: '/deploy/logs' })).toBe('/node/logs');
+  });
+
+  it('双空=未配置返回空串（前端据此渲染配置引导、不发请求）', () => {
+    expect(resolveEffectiveLogDir({}, {})).toBe('');
+    expect(resolveEffectiveLogDir(undefined, undefined)).toBe('');
+    expect(resolveEffectiveLogDir({ LogDirectory: '  ' }, { logDirectory: '' })).toBe('');
+    // 212 真机响应形态：logDirectory: null（walk-appwalk-api-deploys-all.json:31）
+    expect(resolveEffectiveLogDir({ logDirectory: null }, { logDirectory: null })).toBe('');
+  });
+
+  it('trim 后返回去空白值；前端映射行（camelCase 字符串）与原始行都可用', () => {
+    expect(resolveEffectiveLogDir({ logDirectory: '  logs  ' }, {})).toBe('logs');
+    // ShipNode/DeployInfo 形态（unknown 入参，不挑类型）
+    expect(resolveEffectiveLogDir({ id: 1, logDirectory: '' }, { id: 7, logDirectory: 'D:/app/logs' })).toBe('D:/app/logs');
+  });
+});
+
+describe('task-91 节点回显：真实响应体夹具 + 回显状态机', () => {
+  // GET /Nodes/Node?enable=true 的映射行（与 fetchNodeOptions 输出同形）
+  const options = [
+    { id: 1, name: 'mcpapi-node', ip: '127.0.0.1' },
+    { id: 2, name: 'mcpapi-crossnode', ip: '10.0.0.2' },
+    { id: 3, name: 'DGCWIAX10', ip: '10.0.0.3' },
+  ];
+
+  it('toDeployNodeForm(212 真身)：详情缺 nodeId 键 → 回填 0（bug 形状钉死）', () => {
+    // 212 旧构建 Cube 投影只发映射列 nodeName，不发关联键 nodeId（上游 5110d102 修复的缺陷家族）
+    const m = toDeployNodeForm(detail212.data);
+    expect(m.nodeId).toBe(0);
+    expect(m.enable).toBe(true);
+    expect(m.port).toBe(0);
+    expect(m.fileName).toBe('');
+    expect(m.logDirectory).toBe('');
+    expect(m.logFilePattern).toBe('*.log');
+    expect(m.remark).toBe('');
+  });
+
+  it('toDeployNodeForm(当前栈真身)：nodeId=1 正常回显（修复后形态钉死）', () => {
+    const m = toDeployNodeForm(detailCurrent.data);
+    expect(m.nodeId).toBe(1);
+    expect(m.enable).toBe(true);
+    expect(m.logDirectory).toBe('');
+    expect(m.logFilePattern).toBe('*.log');
+  });
+
+  it('nodeEchoState：新增=none；选项加载中=ok（不抢跑误报）', () => {
+    expect(nodeEchoState(null, 0, options, false)).toBe('none');
+    expect(nodeEchoState(undefined, 3, options, false)).toBe('none');
+    // 加载中：绑定节点到底在不在选项还不知道，不出警示
+    expect(nodeEchoState({ nodeId: 0 }, 0, options, true)).toBe('ok');
+    expect(nodeEchoState({ nodeId: 4 }, 4, options, true)).toBe('ok');
+  });
+
+  it('nodeEchoState：编辑缺 nodeId=missing；绑定节点在选项=ok；不在=unavailable', () => {
+    expect(nodeEchoState({ nodeId: 0 }, 0, options, false)).toBe('missing');
+    expect(nodeEchoState({ nodeId: 3 }, 3, options, false)).toBe('ok');
+    expect(nodeEchoState({ nodeId: 4 }, 4, options, false)).toBe('unavailable');
+  });
+
+  it('nodeEchoState：选项为空且不在加载=ok（拉取失败已有 toast 兜底，不重复误导；missing 优先于空选项）', () => {
+    expect(nodeEchoState({ nodeId: 4 }, 4, [], false)).toBe('ok');
+    expect(nodeEchoState({ nodeId: 0 }, 0, [], false)).toBe('missing');
   });
 });

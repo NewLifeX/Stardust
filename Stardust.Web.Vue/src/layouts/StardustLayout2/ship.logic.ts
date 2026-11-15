@@ -1,4 +1,4 @@
-﻿// 发布页纯逻辑（无 Vue 依赖，request 由调用方注入，便于单测）。
+// 发布页纯逻辑（无 Vue 依赖，request 由调用方注入，便于单测）。
 // 对照原型 page-ship.jsx 的 ShipPanel。原型的版本、历史、灰度动画是演示数据，这里只接真实接口：
 //  - 部署集：GET /Deployment/AppDeploy?appId=
 //  - 版本：GET /Deployment/AppDeployVersion?deployId=
@@ -6,8 +6,8 @@
 //  - 按节点结果：GET /Deployment/AppPipelineStep?runId=（只有流水线发起的部署才有步骤）
 //  - 发起部署：GET /Deployment/AppDeployVersion/UseVersion?id=（响应结构未核实，见 useVersion）
 // 响应字段大小写两种都认（后端 JSON 与旧 MVC 方言）。取数失败返回 null，由页面显示「加载失败」，不造数据。
-import { normalizeRunStatus, okRes, triggerLabel, isRunActive } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
-import type { Req, RunHistoryRow } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
+import { mergeRunHistory, normalizeRunStatus, okRes, triggerLabel, isRunActive } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
+import type { PipelineRunRow, Req, RunHistoryRow } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
 
 type Rec = Record<string, unknown>;
 
@@ -44,13 +44,26 @@ function listOf(res: { data?: unknown } | undefined): Rec[] {
 export interface DeployInfo {
   id: number;
   appId: number;
+  /** 部署集名称（D4 空态主句「部署集「{name}」暂无节点」用） */
+  name: string;
   version: string;
   enable: boolean;
   autoPublish: boolean;
   /** 开启后各节点可以运行不同版本，此时节点版本与部署集版本不一致不一定是异常（列表接口是否返回该字段未核实，缺失按 false） */
   multiVersion: boolean;
+  /** task-90 部署集级日志目录：节点未配置时跟随（212 新后端字段；旧构建响应缺键为空串，resolveEffectiveLogDir 兜底） */
+  logDirectory?: string;
 }
-export type DeployLookup = { status: 'ok'; deploy: DeployInfo } | { status: 'none' } | { status: 'failed' };
+
+/** CARD-DEP-08 D2：同应用其余部署集摘要。count=其余集数（rows-1），nodes=本应用全部集的启用节点数之和（Σ Nodes，D3 修正后口径可信） */
+export interface DeployOthers {
+  count: number;
+  nodes: number;
+}
+export type DeployLookup =
+  | { status: 'ok'; deploy: DeployInfo; others: DeployOthers }
+  | { status: 'none' }
+  | { status: 'failed' };
 
 export async function fetchDeploy(request: Req, appId: number): Promise<DeployLookup> {
   if (!appId || appId <= 0) return { status: 'none' };
@@ -60,19 +73,26 @@ export async function fetchDeploy(request: Req, appId: number): Promise<DeployLo
     // 后端按 appId 过滤（应用部署.Biz.cs Search 的 _.AppId == appId），但列表输出去掉了 AppId 字段
     // （AppDeployController 的 ListFields.RemoveField("AppId", …)），行内通常没有 appId 可比对。
     // 此时直接采用后端过滤结果的第一个（Id 倒序，即最新部署集）；行内带 appId 时仍严格比对，避免拿错应用。
+    // （task-89 的「appId 恒在→严格过滤」定谳不采：新掩码契约下行键可被投影/掩码，缺席容忍优先，22:5x 审计背书）
     const hasAppId = rows.some((r) => pick(r, 'AppId', 'appId') !== undefined);
-    const hit = hasAppId ? rows.find((r) => num(pick(r, 'AppId', 'appId')) === appId) : rows[0];
+    // 本应用行集：行内带 appId 时严格按行过滤（其余应用行不进结果、不进 others）；
+    // 全部行缺 appId（掩码契约）时信任后端的 appId 查询语义，全部行即本应用行。
+    const own = hasAppId ? rows.filter((r) => num(pick(r, 'AppId', 'appId')) === appId) : rows;
+    const hit = own[0];
     if (!hit) return { status: 'none' };
     return {
       status: 'ok',
       deploy: {
         id: num(pick(hit, 'Id', 'id')),
         appId,
+        name: str(pick(hit, 'Name', 'name')),
         version: str(pick(hit, 'Version', 'version')),
         enable: bool(pick(hit, 'Enable', 'enable')),
         autoPublish: bool(pick(hit, 'AutoPublish', 'autoPublish')),
         multiVersion: bool(pick(hit, 'MultiVersion', 'multiVersion')),
+        logDirectory: str(pick(hit, 'LogDirectory', 'logDirectory')),
       },
+      others: { count: Math.max(0, own.length - 1), nodes: own.reduce((s: number, r) => s + num(pick(r, 'Nodes', 'nodes')), 0) },
     };
   } catch {
     return { status: 'failed' };
@@ -88,6 +108,8 @@ export interface VersionOption {
   reason: string;
   current: boolean;
   label: string;
+  /** C18 下载包链接：后端 Url 原文（trim 后；缺字段为空串） */
+  url: string;
 }
 
 /** UseVersion 要求版本已启用、有版本号、有文件地址；Url 字段缺失时视为未知，不置灰 */
@@ -104,9 +126,20 @@ export function toVersionOptions(rows: Rec[], currentVersion: string): VersionOp
       else if (url !== undefined && str(url).trim() === '') reason = '没有文件地址';
       const current = !!version && version === currentVersion;
       const label = `${version || `#${id}`}${current ? ' · 当前' : ''}${reason ? ` · ${reason}` : ''}`;
-      return { id, version, disabled: reason !== '', reason, current, label };
+      return { id, version, disabled: reason !== '', reason, current, label, url: str(url ?? '').trim() };
     })
     .sort((a, b) => b.id - a.id);
+}
+
+/** C18 下载包链接：Url 已落库（相对 `/cube/file?id=…` 或绝对地址）。SPA 与 6681 不同源，相对路径须拼 API 基址
+ *  （参照 pipelineWebhook.logic.ts:49 的 base ?? env 兜底；单测环境无 env 时相对路径降级原样返回，同源部署仍可达）。
+ *  返回 null = 无 Url，不渲染链接。 */
+export function versionDownloadHref(rawUrl: unknown, base?: string): string | null {
+  const u = str(rawUrl ?? '').trim();
+  if (!u) return null;
+  if (/^https?:\/\//i.test(u)) return u;
+  const b = String(base ?? import.meta.env?.VITE_APP_BASE_API ?? '').replace(/\/+$/, '');
+  return `${b}${u.startsWith('/') ? u : `/${u}`}`;
 }
 
 export async function fetchVersions(request: Req, deployId: number, currentVersion: string): Promise<VersionOption[] | null> {
@@ -127,9 +160,24 @@ export interface ShipNode {
   name: string;
   ip: string;
   enable: boolean;
+  /** 部署版本（Version）：install 发布下发时回填的包版本（2026-11-12 方案C；此前无写入者恒空） */
   version: string;
+  /** 应用程序版本（AppVersion）：在线实例上报的应用入口程序集 FileVersion，随心跳自动更新（应用节点.Biz.cs Fill(AppOnline)） */
+  appVersion: string;
   mode: number;
   modeLabel: string;
+  /** task-90 节点级日志目录：空（trim 后）=跟随部署集（212 新后端字段；旧构建响应缺键为空串） */
+  logDirectory?: string;
+  /** 延迟（Delay，单位秒）：发布下去后延迟执行的时间，用于滚动发布；0=不延迟（task-92；实体 Stardust.Data/Deployment/应用节点.cs:162） */
+  delay: number;
+  /** 进程（ProcessId）：0=未上报/未运行，展示层显示「—」（应用节点.cs:180） */
+  processId: number;
+  /** 进程时间（StartTime）：进程启动时间；已格式化 yyyy-MM-dd HH:mm，未上报（0001-01-01）为「—」（应用节点.cs:207） */
+  startTime: string;
+  /** 编译时间（Compile）：客户端编译时间，格式化同上（应用节点.cs:216） */
+  compile: string;
+  /** 最后活跃（LastActive）：最后一次上报心跳的时间，格式化同上（应用节点.cs:234） */
+  lastActive: string;
 }
 
 /** AppDeployNode.Mode：运行模式（不是 AppDeployVersion.Mode 的包模式） */
@@ -149,8 +197,16 @@ export function toShipNodes(rows: Rec[]): ShipNode[] {
       ip: str(pick(r, 'IP', 'iP', 'ip')),
       enable: bool(pick(r, 'Enable', 'enable')),
       version: str(pick(r, 'Version', 'version')),
+      appVersion: str(pick(r, 'AppVersion', 'appVersion')),
       mode,
       modeLabel: modeLabel(mode),
+      logDirectory: str(pick(r, 'LogDirectory', 'logDirectory')),
+      // task-92 五列：延迟/进程/进程时间/编译时间/最后活跃（键已在 6681 响应体，见 Doc/用户旅程/evidence/deploy-nodes-cols/）
+      delay: num(pick(r, 'Delay', 'delay')),
+      processId: num(pick(r, 'ProcessId', 'processId')),
+      startTime: fmtTime(str(pick(r, 'StartTime', 'startTime'))),
+      compile: fmtTime(str(pick(r, 'Compile', 'compile'))),
+      lastActive: fmtTime(str(pick(r, 'LastActive', 'lastActive'))),
     };
   });
 }
@@ -338,6 +394,8 @@ export async function useVersion(request: Req, versionId: number): Promise<{ ok:
 
 export function fmtTime(s: string | undefined): string {
   if (!s) return '—';
+  // DateTime.MinValue（0001-01-01）是「未到达/空值」语义：统一占位「—」（实现规范 §3.3；走查缺陷3，2026-11-07）
+  if (s.startsWith('0001-01-01')) return '—';
   return s.replace('T', ' ').slice(0, 16);
 }
 
@@ -571,4 +629,227 @@ export function refreshFeedback(o: RefreshOutcome): RefreshFeedback | null {
     return { ok: false, text: '刷新未完全成功：版本、节点或部署历史有一项加载失败，请看对应区块的提示' };
   }
   return null;
+}
+
+// ---------- 流水线运行：筛选 / 详情 / 重跑（CARD-DEP-02，J-DEP-08，2026-11-07） ----------
+
+/** 运行状态下拉（逐字对齐旧壳 0-6 中文：全部/等待/编译中/上传成功/部署中/成功/失败/已取消）。
+ *  2 UploadSucceeded 实际不出现（代码从不赋值），仅作枚举完整性保留（侦察 ①1.2）。 */
+export const RUN_STATUS_FILTERS: { value: number; label: string }[] = [
+  { value: -1, label: '全部' },
+  { value: 0, label: '等待' },
+  { value: 1, label: '编译中' },
+  { value: 2, label: '上传成功' },
+  { value: 3, label: '部署中' },
+  { value: 4, label: '成功' },
+  { value: 5, label: '失败' },
+  { value: 6, label: '已取消' },
+];
+
+export interface RunFilter {
+  /** -1 = 全部；0-6 对齐 PipelineStatus */
+  status: number;
+  /** YYYY-MM-DD；空=不限（后端按 CreateTime 过滤） */
+  dtStart: string;
+  dtEnd: string;
+}
+
+export const EMPTY_RUN_FILTER: RunFilter = { status: -1, dtStart: '', dtEnd: '' };
+
+export function isRunFilterActive(f: RunFilter): boolean {
+  return f.status >= 0 || !!f.dtStart || !!f.dtEnd;
+}
+
+/** 后端 Search 参数：只带生效项（status=-1 不带、空日期不带），与 Search(pipelineId,status,dtStart,dtEnd) 对齐 */
+export function runFilterParams(f: RunFilter): { status?: number; dtStart?: string; dtEnd?: string } {
+  const p: { status?: number; dtStart?: string; dtEnd?: string } = {};
+  if (f.status >= 0) p.status = f.status;
+  if (f.dtStart) p.dtStart = f.dtStart;
+  if (f.dtEnd) p.dtEnd = f.dtEnd;
+  return p;
+}
+
+/** 按筛选取运行列表：逐流水线带 status/dtStart/dtEnd 查询（appsModel.fetchRunHistory 不带筛选参数，故在此拼装），合并去重。 */
+export async function fetchRunHistoryFiltered(
+  request: Req,
+  pipelines: { id?: number; name?: string }[],
+  filter: RunFilter,
+): Promise<RunHistoryRow[]> {
+  const params = runFilterParams(filter);
+  const batches: PipelineRunRow[][] = [];
+  for (const p of pipelines) {
+    if (!p.id) continue;
+    try {
+      const res = await request({ url: '/Deployment/AppPipelineRun', method: 'GET', params: { pipelineId: p.id, ...params, PageSize: 20 } });
+      batches.push(listOf(res) as PipelineRunRow[]);
+    } catch {
+      batches.push([]);
+    }
+  }
+  return mergeRunHistory(batches);
+}
+
+// ---------- 运行详情（Api Detail：run 全字段 + steps[]，侦察 ①1.1） ----------
+
+/** 详情里的步骤行：九字段全集（含格子不展示的 CommandId/StartedTime/FinishedTime，J-DEP-09 补承载） */
+export interface StepDetailRow extends StepRow {
+  startText: string;
+  endText: string;
+}
+
+export function toStepDetailRows(rows: Rec[]): StepDetailRow[] {
+  return toStepRows(rows)
+    .map((s, i) => {
+      const raw = rows[i] as Rec;
+      return {
+        ...s,
+        startText: fmtTime(str(pick(raw, 'StartedTime', 'startedTime'))),
+        endText: fmtTime(str(pick(raw, 'FinishedTime', 'finishedTime'))),
+      };
+    })
+    .sort((a, b) => a.stepIndex - b.stepIndex || a.id - b.id);
+}
+
+export interface RunDetail {
+  id: number;
+  pipelineId: number;
+  /** 容器按流水线列表回填；找不到为空串 */
+  pipelineName: string;
+  status: string;
+  statusLabel: string;
+  tone: ShipTone;
+  triggerSource: string;
+  branch: string;
+  commitId: string;
+  commitMessage: string;
+  commitAuthor: string;
+  commitTime: string;
+  buildNodeId: number;
+  appVersionId: number;
+  /** 容器按版本列表回填 */
+  versionLabel: string;
+  buildStartedTime: string;
+  buildFinishedTime: string;
+  deployStartedTime: string;
+  deployFinishedTime: string;
+  traceId: string;
+  /** 后端返回才渲染链接（侦察：WebApi Detail 投影列 TraceId，TraceUrl 未核实——有则用） */
+  traceUrl: string;
+  remark: string;
+  createTime: string;
+  updateTime: string;
+  steps: StepDetailRow[];
+  active: boolean;
+}
+
+export function toRunDetail(d: Rec): RunDetail {
+  const status = normalizeRunStatus(pick(d, 'Status', 'status'));
+  const t = runTone(status);
+  return {
+    id: num(pick(d, 'Id', 'id')),
+    pipelineId: num(pick(d, 'PipelineId', 'pipelineId')),
+    pipelineName: '',
+    status,
+    statusLabel: t.label,
+    tone: t.tone,
+    triggerSource: str(pick(d, 'TriggerSource', 'triggerSource')),
+    branch: str(pick(d, 'Branch', 'branch')),
+    commitId: str(pick(d, 'CommitId', 'commitId')),
+    commitMessage: str(pick(d, 'CommitMessage', 'commitMessage')),
+    commitAuthor: str(pick(d, 'CommitAuthor', 'commitAuthor')),
+    commitTime: fmtTime(str(pick(d, 'CommitTime', 'commitTime'))),
+    buildNodeId: num(pick(d, 'BuildNodeId', 'buildNodeId')),
+    appVersionId: num(pick(d, 'AppVersionId', 'appVersionId')),
+    versionLabel: '',
+    buildStartedTime: fmtTime(str(pick(d, 'BuildStartedTime', 'buildStartedTime'))),
+    buildFinishedTime: fmtTime(str(pick(d, 'BuildFinishedTime', 'buildFinishedTime'))),
+    deployStartedTime: fmtTime(str(pick(d, 'DeployStartedTime', 'deployStartedTime'))),
+    deployFinishedTime: fmtTime(str(pick(d, 'DeployFinishedTime', 'deployFinishedTime'))),
+    traceId: str(pick(d, 'TraceId', 'traceId')),
+    traceUrl: str(pick(d, 'TraceUrl', 'traceUrl')),
+    remark: str(pick(d, 'Remark', 'remark')),
+    createTime: fmtTime(str(pick(d, 'CreateTime', 'createTime'))),
+    updateTime: fmtTime(str(pick(d, 'UpdateTime', 'updateTime'))),
+    steps: toStepDetailRows((d.steps as Rec[]) ?? []),
+    active: isRunActive(status),
+  };
+}
+
+/** 耗时（秒）：终点=部署完成，缺省编译完成；起点=编译开始；任一缺失返回 null */
+export function runElapsedSeconds(d: RunDetail): number | null {
+  const end = d.deployFinishedTime !== '—' ? d.deployFinishedTime : d.buildFinishedTime !== '—' ? d.buildFinishedTime : '';
+  const start = d.buildStartedTime !== '—' ? d.buildStartedTime : '';
+  if (!end || !start) return null;
+  const e = new Date(end.replace(' ', 'T')).getTime();
+  const s = new Date(start.replace(' ', 'T')).getTime();
+  if (!Number.isFinite(e) || !Number.isFinite(s)) return null;
+  return Math.max(0, Math.round((e - s) / 1000));
+}
+
+/** 详情取数：GET /Deployment/AppPipelineRun/Detail?id=（WebApi JSON，含 steps[]）。
+ *  记录不存在（后端 code 500「Run record does not exist.」）返回 'missing'；请求异常（网络等）返回 null。 */
+export async function fetchRunDetail(request: Req, id: number): Promise<RunDetail | 'missing' | null> {
+  if (!id || id <= 0) return 'missing';
+  try {
+    const res = await request({ url: '/Deployment/AppPipelineRun/Detail', method: 'GET', params: { id } });
+    const r = okRes(res);
+    const d = r.data as Rec | undefined;
+    if (!r.ok || !d) return 'missing';
+    return toRunDetail(d);
+  } catch (e) {
+    const st = num((e as { status?: unknown; response?: { status?: unknown } } | null)?.status)
+      || num((e as { response?: { status?: unknown } } | null)?.response?.status);
+    return st === 500 ? 'missing' : null;
+  }
+}
+
+/** 重跑：GET /Deployment/AppPipelineRun/Reprocess?id=（成功 message「流水线已重新触发，运行编号[N]」） */
+export async function reprocessRun(request: Req, id: number): Promise<{ ok: boolean; message: string }> {
+  if (!id || id <= 0) return { ok: false, message: '缺少运行编号' };
+  try {
+    const res = await request({ url: '/Deployment/AppPipelineRun/Reprocess', method: 'GET', params: { id } });
+    const r = okRes(res);
+    return { ok: r.ok, message: r.ok ? r.message || '已重新触发流水线' : r.message || '重跑失败' };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error && e.message ? `重跑失败：${e.message}` : '重跑失败' };
+  }
+}
+
+/** 节点名兜底：节点列表没有该 Id 时显示「节点 {Id}」（J-DEP-09） */
+export function nodeNameOf(nodes: ShipNode[], id: number): string {
+  const hit = nodes.find((n) => n.nodeId === id);
+  return hit?.name || (id > 0 ? `节点 ${id}` : '—');
+}
+
+// ---------- D5 应用联想（CARD-DEP-08，J-REG-01 §8 行 9 移交项，候选 A 定稿） ----------
+
+/** 联想候选：注册应用精简档（AppController.AppSearch 返回 Id/Name/DisplayName/Category） */
+export interface AppOption {
+  id: number;
+  name: string;
+  displayName: string;
+}
+
+/** GET /Registry/App/AppSearch?key=：enable 在服务端固定 true、PageSize 20（AppController.cs:75），
+ *  参数名是 key（定稿卡「?name=」为笔误，已由 lead 转台账登记）。空关键字不发请求；失败返回 []，由组件静默不弹候选。 */
+export async function fetchAppOptions(request: Req, key: string): Promise<AppOption[]> {
+  const kw = key.trim();
+  if (!kw) return [];
+  try {
+    const res = await request({ url: '/Registry/App/AppSearch', method: 'GET', params: { key: kw } });
+    return listOf(res)
+      .map((r) => ({
+        id: num(pick(r, 'Id', 'id')),
+        name: str(pick(r, 'Name', 'name')),
+        displayName: str(pick(r, 'DisplayName', 'displayName')),
+      }))
+      .filter((o) => o.id > 0);
+  } catch {
+    return [];
+  }
+}
+
+/** 联想条目文案：有显示名时「name（displayName）」，与旧壳 /Registry/App 联想框一致（App/index.vue:212） */
+export function toLovItem(o: AppOption): { value: string; id: number } {
+  return { value: o.displayName ? `${o.name}（${o.displayName}）` : o.name, id: o.id };
 }

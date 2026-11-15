@@ -267,6 +267,29 @@ export function validateDeployNodeForm(m: DeployNodeForm): string {
   return '';
 }
 
+/** task-91 节点回显健康度（编辑抽屉打开时的回显状态，驱动选择器旁的可见警示）：
+ *  - none：新增（无 initial），无警示；
+ *  - ok：无需提示——绑定节点在可选项中；或节点选项加载中（还不知道能不能回显，不抢跑）；或选项为空且不在加载（拉取失败页面已有 toast，不重复误导）；
+ *  - missing：编辑但 nodeId<=0——212 旧构建投影只发映射列 nodeName 不发关联键 nodeId（上游 NewLife.Cube 5110d102 修复的缺陷家族），详情缺键无从恢复；
+ *  - unavailable：编辑且 nodeId 不在可选项中（节点已停用/删除/未同步）。 */
+export type NodeEchoState = 'none' | 'ok' | 'missing' | 'unavailable';
+
+export function nodeEchoState(initial: unknown, nodeId: number, nodeOptions: NodeOption[], nodesLoading: boolean): NodeEchoState {
+  if (!initial) return 'none';
+  if (nodesLoading) return 'ok';
+  if (!nodeId || nodeId <= 0) return 'missing';
+  if (!nodeOptions.length) return 'ok';
+  return nodeOptions.some((o) => o.id === nodeId) ? 'ok' : 'unavailable';
+}
+
+/** task-90 生效日志目录：节点级 logDirectory 优先；节点未填（trim 后空）=跟随部署集 logDirectory；两者都空返回 ''（未配置，前端据此前置拦截不发请求）。
+ *  入参为原始行或前端映射行（字段 LogDirectory/logDirectory 两种大小写都认，缺字段/undefined/null 均按未填）。 */
+export function resolveEffectiveLogDir(node?: unknown, deploy?: unknown): string {
+  const nodeDir = str(pick((node ?? {}) as Rec, 'LogDirectory', 'logDirectory')).trim();
+  if (nodeDir) return nodeDir;
+  return str(pick((deploy ?? {}) as Rec, 'LogDirectory', 'logDirectory')).trim();
+}
+
 function deployNodeFail(e: unknown, fallback: string): { ok: boolean; message: string } {
   return { ok: false, message: requestFailText(e, fallback) };
 }
