@@ -594,402 +594,488 @@ async function sendRegisterCode(channel: 'mail' | 'sms', account: string) {
         </div>
 
         <div class="sd-form__panels">
-        <div
-          class="sd-form__panel"
-          :class="{ 'is-off': panel !== 'login' }"
-          :inert="panel !== 'login'"
-        >
-        <form
-          class="sd-fields"
-          novalidate
-          @submit.prevent="submit"
-        >
-          <label class="sd-field-group">
-            <span class="sd-field-label">用户名</span>
-            <span class="sd-field">
-              <svg
-                class="sd-ico"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <circle
-                  cx="12"
-                  cy="8"
-                  r="4"
-                />
-                <path d="M20 21a8 8 0 0 0-16 0" />
-              </svg>
-              <input
-                v-model="username"
-                type="text"
-                class="sd-field__input"
-                placeholder="请输入用户名"
-                autocomplete="username"
-              >
-            </span>
-          </label>
-
-          <label
-            v-if="passwordEnabled"
-            class="sd-field-group"
+          <div
+            class="sd-form__panel"
+            :class="{ 'is-off': panel !== 'login' }"
+            :inert="panel !== 'login'"
           >
-            <span class="sd-field-label">
-              密码
-              <button
-                type="button"
-                class="sd-field-link"
-                @click="notifyNotWired('忘记密码')"
-              >
-                忘记密码?
-              </button>
-            </span>
-              <span class="sd-field">
-                <svg
-                  class="sd-ico"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <rect
-                    x="3"
-                    y="11"
-                    width="18"
-                    height="11"
-                    rx="2"
-                  />
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
-                <input
-                  v-model="password"
-                  :type="showPw ? 'text' : 'password'"
-                  class="sd-field__input"
-                  placeholder="请输入密码"
-                  autocomplete="current-password"
-                >
-                <button
-                  type="button"
-                  class="sd-field__eye"
-                  :class="{ 'is-on': showPw }"
-                  aria-label="切换密码可见性"
-                  @click="showPw = !showPw"
-                >
+            <form
+              class="sd-fields"
+              novalidate
+              @submit.prevent="submit"
+            >
+              <label class="sd-field-group">
+                <span class="sd-field-label">用户名</span>
+                <span class="sd-field">
                   <svg
                     class="sd-ico"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
                   >
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                     <circle
                       cx="12"
-                      cy="12"
-                      r="3"
+                      cy="8"
+                      r="4"
                     />
+                    <path d="M20 21a8 8 0 0 0-16 0" />
+                  </svg>
+                  <input
+                    v-model="username"
+                    type="text"
+                    class="sd-field__input"
+                    placeholder="请输入用户名"
+                    autocomplete="username"
+                  >
+                </span>
+              </label>
+
+              <label
+                v-if="passwordEnabled"
+                class="sd-field-group"
+              >
+                <span class="sd-field-label">
+                  密码
+                  <button
+                    type="button"
+                    class="sd-field-link"
+                    @click="notifyNotWired('忘记密码')"
+                  >
+                    忘记密码?
+                  </button>
+                </span>
+                <span class="sd-field">
+                  <svg
+                    class="sd-ico"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <rect
+                      x="3"
+                      y="11"
+                      width="18"
+                      height="11"
+                      rx="2"
+                    />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                  <input
+                    v-model="password"
+                    :type="showPw ? 'text' : 'password'"
+                    class="sd-field__input"
+                    placeholder="请输入密码"
+                    autocomplete="current-password"
+                  >
+                  <button
+                    type="button"
+                    class="sd-field__eye"
+                    :class="{ 'is-on': showPw }"
+                    aria-label="切换密码可见性"
+                    @click="showPw = !showPw"
+                  >
+                    <svg
+                      class="sd-ico"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="3"
+                      />
+                    </svg>
+                  </button>
+                </span>
+                <div
+                  v-if="showPasswordHints"
+                  class="password-hints"
+                  data-spec="password-hints"
+                >
+                  <div
+                    v-for="(rule, idx) in passwordRules"
+                    :key="idx"
+                    class="password-hint-item"
+                    :class="{ satisfied: rule.satisfied }"
+                  >
+                    <span class="hint-icon">{{ rule.satisfied ? '✓' : '○' }}</span>
+                    <span class="hint-text">{{ rule.label }}</span>
+                  </div>
+                </div>
+              </label>
+
+              <div class="sd-remember">
+                <button
+                  type="button"
+                  class="sd-check"
+                  :class="{ 'is-on': remember }"
+                  :aria-pressed="remember"
+                  @click="remember = !remember"
+                >
+                  <svg
+                    v-if="remember"
+                    class="sd-ico sd-ico--thick"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path d="M4 12.5l5 5L20 6.5" />
                   </svg>
                 </button>
-              </span>
-            <div
-              v-if="showPasswordHints"
-              class="password-hints"
-              data-spec="password-hints"
-            >
-              <div
-                v-for="(rule, idx) in passwordRules"
-                :key="idx"
-                class="password-hint-item"
-                :class="{ satisfied: rule.satisfied }"
-              >
-                <span class="hint-icon">{{ rule.satisfied ? '✓' : '○' }}</span>
-                <span class="hint-text">{{ rule.label }}</span>
+                <span
+                  class="sd-remember__text"
+                  @click="remember = !remember"
+                >记住我</span>
               </div>
-            </div>
-          </label>
 
-          <div class="sd-remember">
-            <button
-              type="button"
-              class="sd-check"
-              :class="{ 'is-on': remember }"
-              :aria-pressed="remember"
-              @click="remember = !remember"
-            >
-              <svg
-                v-if="remember"
-                class="sd-ico sd-ico--thick"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
+              <p
+                v-if="errorText"
+                class="sd-error"
+                data-spec="login-error"
               >
-                <path d="M4 12.5l5 5L20 6.5" />
-              </svg>
-            </button>
-            <span
-              class="sd-remember__text"
-              @click="remember = !remember"
-            >记住我</span>
-          </div>
+                {{ errorText }}
+              </p>
+              <p
+                v-if="notActivated"
+                class="sd-error"
+                data-spec="login-not-activated"
+              >
+                账号未激活，请先激活后再登录
+                <button
+                  type="button"
+                  class="sd-field-link"
+                  @click="openResend"
+                >
+                  重新发送激活
+                </button>
+              </p>
 
-          <p
-            v-if="errorText"
-            class="sd-error"
-            data-spec="login-error"
-          >
-            {{ errorText }}
-          </p>
-          <p
-            v-if="notActivated"
-            class="sd-error"
-            data-spec="login-not-activated"
-          >
-            账号未激活，请先激活后再登录
-            <button
-              type="button"
-              class="sd-field-link"
-              @click="openResend"
-            >
-              重新发送激活
-            </button>
-          </p>
-
-          <button
-            type="submit"
-            class="sd-submit"
-            data-spec="login-submit"
-            :class="{ 'is-loading': loading }"
-            :disabled="loading"
-          >
-            <span
-              v-if="loading"
-              class="sd-submit__spin"
-              aria-hidden="true"
-            />
-            <span>{{ loading ? '校验中…' : '进入控制台' }}</span>
-          </button>
-
-          <div class="sd-help">
-            <span>
-              还没有账户?
               <button
-                type="button"
-                class="sd-field-link"
-                @click="showRegister"
+                type="submit"
+                class="sd-submit"
+                data-spec="login-submit"
+                :class="{ 'is-loading': loading }"
+                :disabled="loading"
               >
-                去注册
-              </button>
-            </span>
-          </div>
-        </form>
-
-        <!-- 第三方在凭证下方，只渲染 LoginConfig.oauth -->
-        <template v-if="oauthProviders.length">
-          <div class="sd-divider">
-            <span>或第三方登录</span>
-          </div>
-          <div class="sd-sso">
-            <button
-              v-for="p in oauthProviders"
-              :key="providerName(p)"
-              type="button"
-              class="sd-sso__btn"
-              data-spec="login-sso-btn"
-              :aria-label="providerLabel(p)"
-              :title="providerLabel(p)"
-              @click="startOAuth(p)"
-            >
-              <img
-                v-if="p.logo"
-                class="sd-sso__logo"
-                :src="resolveLogo(p.logo)"
-                alt=""
-              >
-              <svg
-                v-else-if="isGithub(p)"
-                class="sd-ico"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"
+                <span
+                  v-if="loading"
+                  class="sd-submit__spin"
+                  aria-hidden="true"
                 />
-              </svg>
-              <span
-                v-else
-                class="sd-sso__mark"
-              >{{ providerLabel(p).slice(0, 1) }}</span>
-            </button>
-          </div>
-        </template>
-        </div>
+                <span>{{ loading ? '校验中…' : '进入控制台' }}</span>
+              </button>
 
-        <div
-          class="sd-register sd-form__panel"
-          :class="{ 'is-off': panel !== 'register' }"
-          :inert="panel !== 'register'"
-          data-spec="register-panel"
-        >
-          <div
-            v-if="pendingActivation"
-            class="sd-fields"
-            data-spec="register-pending"
-          >
-            <p class="sd-field-label">
-              注册成功，请激活账号
-            </p>
-            <p class="sd-error">
-              激活{{ pendingActivation.channels?.includes('mail') ? '邮件' : '短信' }}已发送至 {{ pendingActivation.targets?.join(', ') }}，请查收并完成激活。激活前无法登录。
-            </p>
-            <button
-              type="button"
-              class="sd-submit"
-              @click="showLogin"
-            >
-              返回登录
-            </button>
-            <button
-              v-if="pendingActivation.targets?.length"
-              type="button"
-              class="sd-field-link"
-              @click="resendPending"
-            >
-              重新发送
-            </button>
-          </div>
-          <div
-            v-if="!pendingActivation && registerModes.length > 1"
-            class="sd-switch"
-            :style="{ gridTemplateColumns: `repeat(${registerModes.length}, 1fr)` }"
-          >
-            <button
-              v-for="mode in registerModes"
-              :key="mode"
-              type="button"
-              class="sd-switch__btn"
-              :class="{ 'is-active': regMode === mode }"
-              @click="regMode = mode; errorText = ''"
-            >
-              {{ mode === 'password' ? '用户名' : mode === 'mail' ? '邮箱' : '手机' }}
-            </button>
-          </div>
-          <form
-            v-if="!pendingActivation"
-            class="sd-fields"
-            novalidate
-            @submit.prevent="submitRegister"
-          >
-            <label
-              v-if="regMode === 'password'"
-              class="sd-field-group"
-            >
-              <span class="sd-field-label">用户名</span>
-              <span class="sd-field">
-                <svg class="sd-ico" viewBox="0 0 24 24" aria-hidden="true">
-                  <circle cx="12" cy="8" r="4" />
-                  <path d="M20 21a8 8 0 0 0-16 0" />
-                </svg>
-                <input v-model="regUsername" type="text" class="sd-field__input" placeholder="请输入用户名" autocomplete="username">
-              </span>
-            </label>
-            <label
-              v-if="regMode === 'mail' || (regMode === 'password' && requireMailVerify)"
-              class="sd-field-group"
-            >
-              <span class="sd-field-label">
-                邮箱
-                <button
-                  v-if="regMode === 'mail'"
-                  type="button"
-                  class="sd-field-link"
-                  @click="sendRegisterCode('mail', regEmail.trim())"
-                >
-                  发送验证码
-                </button>
-              </span>
-              <span class="sd-field">
-                <svg class="sd-ico" viewBox="0 0 24 24" aria-hidden="true">
-                  <rect x="2" y="4" width="20" height="16" rx="2" />
-                  <path d="M22 6l-10 7L2 6" />
-                </svg>
-                <input v-model="regEmail" type="email" class="sd-field__input" placeholder="请输入邮箱" autocomplete="email">
-              </span>
-            </label>
-            <label
-              v-if="regMode === 'mobile' || (regMode === 'password' && requireMobileVerify)"
-              class="sd-field-group"
-            >
-              <span class="sd-field-label">
-                手机号
-                <button
-                  v-if="regMode === 'mobile'"
-                  type="button"
-                  class="sd-field-link"
-                  @click="sendRegisterCode('sms', regMobile.trim())"
-                >
-                  发送验证码
-                </button>
-              </span>
-              <span class="sd-field">
-                <input v-model="regMobile" type="tel" class="sd-field__input" placeholder="请输入手机号" autocomplete="tel">
-              </span>
-            </label>
-            <label
-              v-if="regMode !== 'password'"
-              class="sd-field-group"
-            >
-              <span class="sd-field-label">验证码</span>
-              <span class="sd-field">
-                <input v-model="regCode" type="text" class="sd-field__input" placeholder="请输入验证码" maxlength="6" inputmode="numeric">
-              </span>
-            </label>
-            <label class="sd-field-group">
-              <span class="sd-field-label">密码</span>
-              <span class="sd-field">
-                <svg class="sd-ico" viewBox="0 0 24 24" aria-hidden="true">
-                  <rect x="3" y="11" width="18" height="11" rx="2" />
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
-                <input v-model="regPassword" :type="showRegPw ? 'text' : 'password'" class="sd-field__input" placeholder="请输入密码" autocomplete="new-password">
-              </span>
-            </label>
-            <label class="sd-field-group">
-              <span class="sd-field-label">确认密码</span>
-              <span class="sd-field">
-                <svg class="sd-ico" viewBox="0 0 24 24" aria-hidden="true">
-                  <rect x="3" y="11" width="18" height="11" rx="2" />
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
-                <input v-model="regConfirm" :type="showRegPw ? 'text' : 'password'" class="sd-field__input" placeholder="再次输入密码" autocomplete="new-password">
-              </span>
-            </label>
-            <div
-              v-if="showRegPasswordHints"
-              class="password-hints"
-              data-spec="register-password-hints"
-            >
-              <div
-                v-for="(rule, idx) in regPasswordRules"
-                :key="idx"
-                class="password-hint-item"
-                :class="{ satisfied: rule.satisfied }"
-              >
-                <span class="hint-icon">{{ rule.satisfied ? '✓' : '○' }}</span>
-                <span class="hint-text">{{ rule.label }}</span>
+              <div class="sd-help">
+                <span>
+                  还没有账户?
+                  <button
+                    type="button"
+                    class="sd-field-link"
+                    @click="showRegister"
+                  >
+                    去注册
+                  </button>
+                </span>
               </div>
-            </div>
-            <p v-if="errorText" class="sd-error" data-spec="login-error">{{ errorText }}</p>
-            <button type="submit" class="sd-submit" data-spec="register-submit" :disabled="loading">
-              <span>{{ loading ? '提交中…' : '注册' }}</span>
-            </button>
-          </form>
-          <div class="sd-help">
-            <span>
-              已有账户?
+            </form>
+
+            <!-- 第三方在凭证下方，只渲染 LoginConfig.oauth -->
+            <template v-if="oauthProviders.length">
+              <div class="sd-divider">
+                <span>或第三方登录</span>
+              </div>
+              <div class="sd-sso">
+                <button
+                  v-for="p in oauthProviders"
+                  :key="providerName(p)"
+                  type="button"
+                  class="sd-sso__btn"
+                  data-spec="login-sso-btn"
+                  :aria-label="providerLabel(p)"
+                  :title="providerLabel(p)"
+                  @click="startOAuth(p)"
+                >
+                  <img
+                    v-if="p.logo"
+                    class="sd-sso__logo"
+                    :src="resolveLogo(p.logo)"
+                    alt=""
+                  >
+                  <svg
+                    v-else-if="isGithub(p)"
+                    class="sd-ico"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"
+                    />
+                  </svg>
+                  <span
+                    v-else
+                    class="sd-sso__mark"
+                  >{{ providerLabel(p).slice(0, 1) }}</span>
+                </button>
+              </div>
+            </template>
+          </div>
+
+          <div
+            class="sd-register sd-form__panel"
+            :class="{ 'is-off': panel !== 'register' }"
+            :inert="panel !== 'register'"
+            data-spec="register-panel"
+          >
+            <div
+              v-if="pendingActivation"
+              class="sd-fields"
+              data-spec="register-pending"
+            >
+              <p class="sd-field-label">
+                注册成功，请激活账号
+              </p>
+              <p class="sd-error">
+                激活{{ pendingActivation.channels?.includes('mail') ? '邮件' : '短信' }}已发送至 {{ pendingActivation.targets?.join(', ') }}，请查收并完成激活。激活前无法登录。
+              </p>
               <button
                 type="button"
-                class="sd-field-link"
+                class="sd-submit"
                 @click="showLogin"
               >
-                去登录
+                返回登录
               </button>
-            </span>
+              <button
+                v-if="pendingActivation.targets?.length"
+                type="button"
+                class="sd-field-link"
+                @click="resendPending"
+              >
+                重新发送
+              </button>
+            </div>
+            <div
+              v-if="!pendingActivation && registerModes.length > 1"
+              class="sd-switch"
+              :style="{ gridTemplateColumns: `repeat(${registerModes.length}, 1fr)` }"
+            >
+              <button
+                v-for="mode in registerModes"
+                :key="mode"
+                type="button"
+                class="sd-switch__btn"
+                :class="{ 'is-active': regMode === mode }"
+                @click="regMode = mode; errorText = ''"
+              >
+                {{ mode === 'password' ? '用户名' : mode === 'mail' ? '邮箱' : '手机' }}
+              </button>
+            </div>
+            <form
+              v-if="!pendingActivation"
+              class="sd-fields"
+              novalidate
+              @submit.prevent="submitRegister"
+            >
+              <label
+                v-if="regMode === 'password'"
+                class="sd-field-group"
+              >
+                <span class="sd-field-label">用户名</span>
+                <span class="sd-field">
+                  <svg
+                    class="sd-ico"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <circle
+                      cx="12"
+                      cy="8"
+                      r="4"
+                    />
+                    <path d="M20 21a8 8 0 0 0-16 0" />
+                  </svg>
+                  <input
+                    v-model="regUsername"
+                    type="text"
+                    class="sd-field__input"
+                    placeholder="请输入用户名"
+                    autocomplete="username"
+                  >
+                </span>
+              </label>
+              <label
+                v-if="regMode === 'mail' || (regMode === 'password' && requireMailVerify)"
+                class="sd-field-group"
+              >
+                <span class="sd-field-label">
+                  邮箱
+                  <button
+                    v-if="regMode === 'mail'"
+                    type="button"
+                    class="sd-field-link"
+                    @click="sendRegisterCode('mail', regEmail.trim())"
+                  >
+                    发送验证码
+                  </button>
+                </span>
+                <span class="sd-field">
+                  <svg
+                    class="sd-ico"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <rect
+                      x="2"
+                      y="4"
+                      width="20"
+                      height="16"
+                      rx="2"
+                    />
+                    <path d="M22 6l-10 7L2 6" />
+                  </svg>
+                  <input
+                    v-model="regEmail"
+                    type="email"
+                    class="sd-field__input"
+                    placeholder="请输入邮箱"
+                    autocomplete="email"
+                  >
+                </span>
+              </label>
+              <label
+                v-if="regMode === 'mobile' || (regMode === 'password' && requireMobileVerify)"
+                class="sd-field-group"
+              >
+                <span class="sd-field-label">
+                  手机号
+                  <button
+                    v-if="regMode === 'mobile'"
+                    type="button"
+                    class="sd-field-link"
+                    @click="sendRegisterCode('sms', regMobile.trim())"
+                  >
+                    发送验证码
+                  </button>
+                </span>
+                <span class="sd-field">
+                  <input
+                    v-model="regMobile"
+                    type="tel"
+                    class="sd-field__input"
+                    placeholder="请输入手机号"
+                    autocomplete="tel"
+                  >
+                </span>
+              </label>
+              <label
+                v-if="regMode !== 'password'"
+                class="sd-field-group"
+              >
+                <span class="sd-field-label">验证码</span>
+                <span class="sd-field">
+                  <input
+                    v-model="regCode"
+                    type="text"
+                    class="sd-field__input"
+                    placeholder="请输入验证码"
+                    maxlength="6"
+                    inputmode="numeric"
+                  >
+                </span>
+              </label>
+              <label class="sd-field-group">
+                <span class="sd-field-label">密码</span>
+                <span class="sd-field">
+                  <svg
+                    class="sd-ico"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <rect
+                      x="3"
+                      y="11"
+                      width="18"
+                      height="11"
+                      rx="2"
+                    />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                  <input
+                    v-model="regPassword"
+                    :type="showRegPw ? 'text' : 'password'"
+                    class="sd-field__input"
+                    placeholder="请输入密码"
+                    autocomplete="new-password"
+                  >
+                </span>
+              </label>
+              <label class="sd-field-group">
+                <span class="sd-field-label">确认密码</span>
+                <span class="sd-field">
+                  <svg
+                    class="sd-ico"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <rect
+                      x="3"
+                      y="11"
+                      width="18"
+                      height="11"
+                      rx="2"
+                    />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                  <input
+                    v-model="regConfirm"
+                    :type="showRegPw ? 'text' : 'password'"
+                    class="sd-field__input"
+                    placeholder="再次输入密码"
+                    autocomplete="new-password"
+                  >
+                </span>
+              </label>
+              <div
+                v-if="showRegPasswordHints"
+                class="password-hints"
+                data-spec="register-password-hints"
+              >
+                <div
+                  v-for="(rule, idx) in regPasswordRules"
+                  :key="idx"
+                  class="password-hint-item"
+                  :class="{ satisfied: rule.satisfied }"
+                >
+                  <span class="hint-icon">{{ rule.satisfied ? '✓' : '○' }}</span>
+                  <span class="hint-text">{{ rule.label }}</span>
+                </div>
+              </div>
+              <p
+                v-if="errorText"
+                class="sd-error"
+                data-spec="login-error"
+              >
+                {{ errorText }}
+              </p>
+              <button
+                type="submit"
+                class="sd-submit"
+                data-spec="register-submit"
+                :disabled="loading"
+              >
+                <span>{{ loading ? '提交中…' : '注册' }}</span>
+              </button>
+            </form>
+            <div class="sd-help">
+              <span>
+                已有账户?
+                <button
+                  type="button"
+                  class="sd-field-link"
+                  @click="showLogin"
+                >
+                  去登录
+                </button>
+              </span>
+            </div>
           </div>
-        </div>
         </div>
       </section>
     </div>
