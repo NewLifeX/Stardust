@@ -111,3 +111,29 @@ test('DeployPipelineRuns 全部跳过有单独提示；没有运行记录时显�
   await expect(page.locator(CELL)).toHaveCount(0);
   await expect(page.locator('[data-spec="ship-allskipped"]')).toHaveCount(0);
 });
+
+// CARD-DEP-02：筛选条（状态 0-6 七项 + 时间区间 + 重置）与行内操作
+test('DeployPipelineRuns 筛选条：七项状态下拉逐字、重置在无筛选时禁用', async ({ page }) => {
+  await openStory(page, 'DeployPipelineRuns/Default');
+  const opts = page.locator('[data-spec="ship-runs-filter-status"] option');
+  await expect(opts).toHaveText(['全部', '等待', '编译中', '上传成功', '部署中', '成功', '失败', '已取消']);
+  await expect(page.locator('[data-spec="ship-runs-filter-start"]')).toHaveCount(1);
+  await expect(page.locator('[data-spec="ship-runs-filter-end"]')).toHaveCount(1);
+  await expect(page.locator('[data-spec="ship-runs-filter-reset"]')).toBeDisabled();
+  await expect(page.locator('[data-spec="ship-runs-filter-reset"]')).toHaveAttribute('title', '当前没有生效的筛选');
+});
+
+test('DeployPipelineRuns 筛选生效：重置可点；行操作重跑旋转禁用、详情可点', async ({ page }) => {
+  await openStory(page, 'DeployPipelineRuns/Filtered');
+  await expect(page.locator('[data-spec="ship-runs-filter-status"]')).toHaveValue('5');
+  await expect(page.locator('[data-spec="ship-runs-filter-reset"]')).toBeEnabled();
+  await expect(page.locator('[data-spec="ship-runs-filter-reset"]')).toHaveAttribute('title', '清空状态与时间筛选，恢复全量');
+
+  const rerun = page.locator(RUN).nth(1).locator('[data-spec="ship-rerun"]');
+  await expect(rerun).toBeDisabled();
+  await expect(rerun).toContainText('重跑中…');
+  await expect(rerun.locator('.animate-spin')).toHaveCount(1);
+  const detail = page.locator(RUN).nth(1).locator('[data-spec="ship-runs-detail"]');
+  await expect(detail).toBeEnabled();
+  await expect(detail).toHaveText('详情');
+});

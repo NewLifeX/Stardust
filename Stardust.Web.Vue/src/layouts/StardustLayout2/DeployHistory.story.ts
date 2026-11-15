@@ -1,9 +1,9 @@
-﻿import DeployHistory from './DeployHistory.vue';
+import DeployHistory from './DeployHistory.vue';
 import type { HistoryRow, ShipNode } from './ship.logic.ts';
 
 const NODES: ShipNode[] = [
-  { id: 11, nodeId: 1, name: 'node-a', ip: '10.0.0.1', enable: true, version: 'v1.4.2', mode: 10, modeLabel: 'Standard' },
-  { id: 12, nodeId: 2, name: 'node-b', ip: '10.0.0.2', enable: true, version: 'v1.4.1', mode: 11, modeLabel: 'Shadow' },
+  { id: 11, nodeId: 1, name: 'node-a', ip: '10.0.0.1', enable: true, version: 'v1.4.2', appVersion: '1.4.2.0', mode: 10, modeLabel: 'Standard', delay: 0, processId: 0, startTime: '—', compile: '—', lastActive: '—' },
+  { id: 12, nodeId: 2, name: 'node-b', ip: '10.0.0.2', enable: true, version: 'v1.4.1', appVersion: '', mode: 11, modeLabel: 'Shadow', delay: 0, processId: 0, startTime: '—', compile: '—', lastActive: '—' },
 ];
 
 function row(id: number, patch: Partial<HistoryRow>): HistoryRow {
