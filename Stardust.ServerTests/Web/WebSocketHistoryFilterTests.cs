@@ -57,8 +57,6 @@ public class WebSocketHistoryFilterTests
     {
         Assert.True(WebSocketHistoryFilter.IsConnectionAction("WebSocket connected"));
         Assert.True(WebSocketHistoryFilter.IsConnectionAction("WebSocket disconnected"));
-        Assert.True(WebSocketHistoryFilter.IsConnectionAction("WebSocket连接"));
-        Assert.True(WebSocketHistoryFilter.IsConnectionAction("WebSocket断开"));
         Assert.False(WebSocketHistoryFilter.IsConnectionAction("WebSocket send"));
         Assert.False(WebSocketHistoryFilter.IsConnectionAction("App/Ping"));
     }

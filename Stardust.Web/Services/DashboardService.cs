@@ -533,7 +533,7 @@ public class DashboardService
         // 最近变更：只看发布与生命周期动作，过滤心跳、WebSocket、鉴权等运行日志；同一动作只留最新一条
         var changes = AppHistory.FindAll(AppHistory._.AppId == appId, AppHistory._.Id.Desc(), null, 0, 60)
             .Where(e => HistoryAction.IsChange(e.Action))
-            .GroupBy(e => HistoryAction.Normalize(e.Action ?? ""))
+            .GroupBy(e => e.Action ?? "")
             .Select(g => g.First())
             .Take(8)
             .ToList();

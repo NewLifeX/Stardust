@@ -15,8 +15,6 @@ public static class WebSocketHistoryFilter
 {
     private const String Connected = HistoryAction.WebSocketConnected;
     private const String Disconnected = HistoryAction.WebSocketDisconnected;
-    private const String ConnectedCn = "WebSocket连接";
-    private const String DisconnectedCn = "WebSocket断开";
 
     /// <summary>去重窗口。同一会话在该时间内的重复连接/断开只记录一次，单位秒</summary>
     public static Int32 Window { get; set; } = 60;
@@ -28,7 +26,7 @@ public static class WebSocketHistoryFilter
     /// <param name="action">动作名称</param>
     /// <returns>是否连接或断开</returns>
     public static Boolean IsConnectionAction(String action) =>
-        action.EqualIgnoreCase(Connected, Disconnected, ConnectedCn, DisconnectedCn);
+        action.EqualIgnoreCase(Connected, Disconnected);
 
     /// <summary>过滤重复的连接历史</summary>
     /// <param name="clientId">会话标识。为空时按动作名去重</param>
@@ -40,7 +38,7 @@ public static class WebSocketHistoryFilter
         if (!IsConnectionAction(action)) return true;
 
         var now = DateTime.Now;
-        var isDisconnect = action.EqualIgnoreCase(Disconnected, DisconnectedCn);
+        var isDisconnect = action.EqualIgnoreCase(Disconnected);
 
         // 连接时长必须在去重之前维护，否则被抑制的那次重连会把时长算到上一次连接头上
         if (!clientId.IsNullOrEmpty())

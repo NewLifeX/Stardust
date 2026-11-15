@@ -190,7 +190,7 @@
 "Failed to dispatch the deploy command to node {0}: {1}": "Käyttöönotto-komennon lähetys solmulle {0} epäonnistui: {1}"
 "Application authentication": "Sovelluksen todennus"
 "Node authentication": "Solmun todennus"
-"Timed out offline": "Yhteys katkesi aikakatkaisun vuoksi"
+"Offline timeout": "Yhteys katkesi aikakatkaisun vuoksi"
 "An application with an empty secret cannot log in. Set a Secret for this application in the registry or enable re-registration.": "Sovellus, jonka salaisuus on tyhjä, ei voi kirjautua sisään. Aseta tälle sovellukselle salaisuus rekisterissä tai ota uudelleenrekisteröinti käyttöön."
 "Secret validation failed.": "Salaisuuden vahvistus epäonnistui."
 "[{0}] re-registered in [{1}] mode; secret issued": "[{0}] rekisteröitiin uudelleen tilassa [{1}]; salaisuus myönnetty"

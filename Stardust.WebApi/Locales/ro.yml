@@ -190,7 +190,7 @@
 "Failed to dispatch the deploy command to node {0}: {1}": "Trimiterea comenzii de implementare către nodul {0} a eșuat: {1}"
 "Application authentication": "Autentificare aplicație"
 "Node authentication": "Autentificare nod"
-"Timed out offline": "Offline din cauza expirării"
+"Offline timeout": "Offline din cauza expirării"
 "An application with an empty secret cannot log in. Set a Secret for this application in the registry or enable re-registration.": "O aplicație cu secret gol nu se poate autentifica. Setați un secret pentru această aplicație în registru sau activați reînregistrarea."
 "Secret validation failed.": "Validarea secretului a eșuat."
 "[{0}] re-registered in [{1}] mode; secret issued": "[{0}] reînregistrat în modul [{1}]; secret emis"

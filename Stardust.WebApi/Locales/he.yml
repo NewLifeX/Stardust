@@ -190,7 +190,7 @@
 "Failed to dispatch the deploy command to node {0}: {1}": "שליחת פקודת הפריסה לצומת {0} נכשלה: {1}"
 "Application authentication": "אימות יישום"
 "Node authentication": "אימות צומת"
-"Timed out offline": "פסק זמן במצב לא מקוון"
+"Offline timeout": "פסק זמן במצב לא מקוון"
 "An application with an empty secret cannot log in. Set a Secret for this application in the registry or enable re-registration.": "יישום עם סוד ריק אינו יכול להיכנס. הגדירו סוד ליישום זה במרכז הרישום או הפעילו רישום מחדש."
 "Secret validation failed.": "אימות הסוד נכשל."
 "[{0}] re-registered in [{1}] mode; secret issued": "[{0}] נרשם מחדש במצב [{1}]; סוד הונפק"

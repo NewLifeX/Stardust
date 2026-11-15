@@ -190,7 +190,7 @@
 "Failed to dispatch the deploy command to node {0}: {1}": "ノード {0} への配置コマンド送信に失敗しました: {1}"
 "Application authentication": "アプリケーション認証"
 "Node authentication": "ノード認証"
-"Timed out offline": "タイムアウトでオフライン"
+"Offline timeout": "タイムアウトでオフライン"
 "An application with an empty secret cannot log in. Set a Secret for this application in the registry or enable re-registration.": "シークレットが空のアプリケーションはログインできません。レジストリでこのアプリケーションの Secret を設定するか、再登録を有効にしてください。"
 "Secret validation failed.": "シークレットの検証に失敗しました。"
 "[{0}] re-registered in [{1}] mode; secret issued": "[{0}] が [{1}] モードで再登録し、シークレットを発行しました"

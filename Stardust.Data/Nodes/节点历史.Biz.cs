@@ -110,8 +110,9 @@ public partial class NodeHistory : Entity<NodeHistory>
     /// <param name="end"></param>
     /// <param name="key"></param>
     /// <param name="page"></param>
+    /// <param name="excludeActions">需要排除的操作。仅在未指定 action 时生效</param>
     /// <returns></returns>
-    public static IList<NodeHistory> Search(Int32 nodeId, Int32 provinceId, Int32 cityId, String action, Boolean? success, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<NodeHistory> Search(Int32 nodeId, Int32 provinceId, Int32 cityId, String action, Boolean? success, DateTime start, DateTime end, String key, PageParameter page, String[] excludeActions = null)
     {
         var exp = new WhereExpression();
 
@@ -119,6 +120,13 @@ public partial class NodeHistory : Entity<NodeHistory>
         if (provinceId >= 0) exp &= _.ProvinceID == provinceId;
         if (cityId >= 0) exp &= _.CityID == cityId;
         if (!action.IsNullOrEmpty()) exp &= _.Action.In(action.Split(","));
+        else if (excludeActions != null)
+        {
+            foreach (var item in excludeActions)
+            {
+                if (!item.IsNullOrEmpty()) exp &= _.Action != item;
+            }
+        }
         if (success != null) exp &= _.Success == success;
 
         // 主键带有时间戳
@@ -168,7 +176,7 @@ public partial class NodeHistory : Entity<NodeHistory>
             Version = node.Version,
             CompileTime = node.CompileTime,
 
-            Remark = remark,
+            Remark = HistorySanitizer.Redact(remark),
 
             Creator = creator,
             CreateTime = DateTime.Now,

@@ -190,7 +190,7 @@
 "Failed to dispatch the deploy command to node {0}: {1}": "فشل إرسال أمر النشر إلى العقدة {0}: {1}"
 "Application authentication": "مصادقة التطبيق"
 "Node authentication": "مصادقة العقدة"
-"Timed out offline": "انتهت المهلة في وضع عدم الاتصال"
+"Offline timeout": "انتهت المهلة في وضع عدم الاتصال"
 "An application with an empty secret cannot log in. Set a Secret for this application in the registry or enable re-registration.": "لا يمكن لتطبيق له سر فارغ تسجيل الدخول. عيّن سرًا لهذا التطبيق في السجل أو فعّل إعادة التسجيل."
 "Secret validation failed.": "فشل التحقق من السر."
 "[{0}] re-registered in [{1}] mode; secret issued": "[{0}] أعاد التسجيل بوضع [{1}]؛ تم إصدار سر"

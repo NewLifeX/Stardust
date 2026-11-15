@@ -190,7 +190,7 @@
 "Failed to dispatch the deploy command to node {0}: {1}": "Udrulningskommandoen kunne ikke sendes til node {0}: {1}"
 "Application authentication": "Applikationsgodkendelse"
 "Node authentication": "Nodegodkendelse"
-"Timed out offline": "Offline på grund af timeout"
+"Offline timeout": "Offline på grund af timeout"
 "An application with an empty secret cannot log in. Set a Secret for this application in the registry or enable re-registration.": "En applikation med en tom hemmelighed kan ikke logge ind. Angiv en hemmelighed for denne applikation i registeret, eller aktivér omregistrering."
 "Secret validation failed.": "Valideringen af hemmeligheden mislykkedes."
 "[{0}] re-registered in [{1}] mode; secret issued": "[{0}] blev registreret igen i tilstanden [{1}]; hemmelighed udstedt"

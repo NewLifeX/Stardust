@@ -190,7 +190,7 @@
 "Failed to dispatch the deploy command to node {0}: {1}": "ارسال دستور استقرار به گره {0} ناموفق بود: {1}"
 "Application authentication": "احراز هویت برنامه"
 "Node authentication": "احراز هویت گره"
-"Timed out offline": "پایان مهلت در حالت آفلاین"
+"Offline timeout": "پایان مهلت در حالت آفلاین"
 "An application with an empty secret cannot log in. Set a Secret for this application in the registry or enable re-registration.": "برنامه‌ای با کلید محرمانه خالی نمی‌تواند وارد شود. برای این برنامه در رجیستری یک کلید محرمانه تنظیم کنید یا ثبت مجدد را فعال کنید."
 "Secret validation failed.": "اعتبارسنجی کلید محرمانه ناموفق بود."
 "[{0}] re-registered in [{1}] mode; secret issued": "[{0}] در حالت [{1}] مجدداً ثبت شد؛ کلید محرمانه صادر شد"

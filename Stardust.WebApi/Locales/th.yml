@@ -190,7 +190,7 @@
 "Failed to dispatch the deploy command to node {0}: {1}": "ส่งคำสั่ง deploy ไปยังโหนด {0} ไม่สำเร็จ: {1}"
 "Application authentication": "การยืนยันตัวตนแอปพลิเคชัน"
 "Node authentication": "การยืนยันตัวตนโหนด"
-"Timed out offline": "ออฟไลน์เนื่องจากหมดเวลา"
+"Offline timeout": "ออฟไลน์เนื่องจากหมดเวลา"
 "An application with an empty secret cannot log in. Set a Secret for this application in the registry or enable re-registration.": "แอปพลิเคชันที่มีความลับว่างเปล่าไม่สามารถเข้าสู่ระบบได้ โปรดตั้งค่า Secret สำหรับแอปพลิเคชันนี้ในรีจิสทรีหรือเปิดใช้การลงทะเบียนใหม่"
 "Secret validation failed.": "ตรวจสอบความลับไม่ผ่าน"
 "[{0}] re-registered in [{1}] mode; secret issued": "[{0}] ลงทะเบียนใหม่ในโหมด [{1}] แล้ว ออกความลับแล้ว"

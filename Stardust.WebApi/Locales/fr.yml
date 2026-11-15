@@ -190,7 +190,7 @@
 "Failed to dispatch the deploy command to node {0}: {1}": "Impossible d'envoyer la commande de déploiement au nœud {0} : {1}"
 "Application authentication": "Authentification de l'application"
 "Node authentication": "Authentification du nœud"
-"Timed out offline": "Hors ligne pour délai dépassé"
+"Offline timeout": "Hors ligne pour délai dépassé"
 "An application with an empty secret cannot log in. Set a Secret for this application in the registry or enable re-registration.": "Une application avec un secret vide ne peut pas se connecter. Définissez un Secret pour cette application dans le registre ou activez le réenregistrement."
 "Secret validation failed.": "Échec de la validation du secret."
 "[{0}] re-registered in [{1}] mode; secret issued": "[{0}] réenregistrée en mode [{1}] ; secret émis"

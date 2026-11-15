@@ -109,14 +109,58 @@ public partial class AppHistory : Entity<AppHistory>
     /// <param name="end"></param>
     /// <param name="key"></param>
     /// <param name="page"></param>
+    /// <param name="excludeActions">需要排除的操作。仅在未指定 action 时生效</param>
     /// <returns></returns>
-    public static IList<AppHistory> Search(Int32 appId, String client, String action, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<AppHistory> Search(Int32 appId, String client, String action, DateTime start, DateTime end, String key, PageParameter page, String[] excludeActions = null)
     {
         var exp = new WhereExpression();
 
         if (appId >= 0) exp &= _.AppId == appId;
         if (!client.IsNullOrEmpty()) exp &= _.Client == client;
         if (!action.IsNullOrEmpty()) exp &= _.Action == action;
+        else if (excludeActions != null)
+        {
+            foreach (var item in excludeActions)
+            {
+                if (!item.IsNullOrEmpty()) exp &= _.Action != item;
+            }
+        }
+
+        exp &= _.Id.Between(start, end, Meta.Factory.Snow);
+
+        if (!key.IsNullOrEmpty()) exp &= _.Action == key | _.Client.StartsWith(key);
+
+        return FindAll(exp, page);
+    }
+
+    /// <summary>查询（含状态、节点与排除操作）</summary>
+    /// <param name="appId">应用</param>
+    /// <param name="client">客户端</param>
+    /// <param name="action">操作</param>
+    /// <param name="success">是否成功</param>
+    /// <param name="nodeId">节点</param>
+    /// <param name="start">开始时间</param>
+    /// <param name="end">结束时间</param>
+    /// <param name="key">关键字</param>
+    /// <param name="page">分页参数</param>
+    /// <param name="excludeActions">需要排除的操作。仅在未指定 action 时生效</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppHistory> SearchEx(Int32 appId, String client, String action, Boolean? success, Int32 nodeId, DateTime start, DateTime end, String key, PageParameter page, String[] excludeActions = null)
+    {
+        var exp = new WhereExpression();
+
+        if (appId >= 0) exp &= _.AppId == appId;
+        if (!client.IsNullOrEmpty()) exp &= _.Client == client;
+        if (!action.IsNullOrEmpty()) exp &= _.Action == action;
+        else if (excludeActions != null)
+        {
+            foreach (var item in excludeActions)
+            {
+                if (!item.IsNullOrEmpty()) exp &= _.Action != item;
+            }
+        }
+        if (success != null) exp &= _.Success == success;
+        if (nodeId >= 0) exp &= _.NodeId == nodeId;
 
         exp &= _.Id.Between(start, end, Meta.Factory.Snow);
 
@@ -153,7 +197,7 @@ public partial class AppHistory : Entity<AppHistory>
             Action = action,
             Success = success,
             Version = version,
-            Remark = remark,
+            Remark = HistorySanitizer.Redact(remark),
 
             TraceId = DefaultSpan.Current?.TraceId,
             Creator = creator,

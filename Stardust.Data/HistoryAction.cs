@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using NewLife;
 
 namespace Stardust.Data;
@@ -8,8 +7,8 @@ namespace Stardust.Data;
 /// <remarks>
 /// 应用历史与节点历史由管理端、服务端、代理和客户端分别写入，写入进程的界面语言不可控。
 /// 若在写入时翻译，同一操作会因写入进程语言不同而在库里出现多种文本。
-/// 因此操作名统一保存英文规范键，由管理端展示时经 <see cref="Localize"/> 翻译；
-/// 旧数据中的中文操作名先经 <see cref="Normalize"/> 归一化，再参与翻译与筛选。
+/// 因此操作名统一保存英文规范键，由管理端展示时经 <see cref="Localize"/> 翻译。
+/// 历史表按保留期定期清理，旧版本写入的中文操作名不做归一化兼容，按库中原样展示直至清空。
 /// </remarks>
 public static class HistoryAction
 {
@@ -26,8 +25,14 @@ public static class HistoryAction
     /// <summary>关联上线</summary>
     public const String AssociatedOnline = "Associated online";
 
-    /// <summary>超时下线</summary>
-    public const String TimedOutOffline = "Timed out offline";
+    /// <summary>设备下线</summary>
+    public const String DeviceOffline = "Device offline";
+
+    /// <summary>设备事件。设备上报的事件没有名称时使用</summary>
+    public const String DeviceEvent = "Device event";
+
+    /// <summary>下线超时</summary>
+    public const String OfflineTimeout = "Offline timeout";
 
     /// <summary>注册服务</summary>
     public const String RegisterService = "RegisterService";
@@ -73,8 +78,8 @@ public static class HistoryAction
     /// <summary>动态注册</summary>
     public const String DynamicRegistration = "Dynamic registration";
 
-    /// <summary>登录校验</summary>
-    public const String LoginValidation = "Login validation";
+    /// <summary>标识不一致。客户端上报的唯一标识与登记信息不符</summary>
+    public const String IdentityMismatch = "Identity mismatch";
 
     /// <summary>匹配已有节点</summary>
     public const String MatchedExistingNode = "Matched existing node";
@@ -126,104 +131,35 @@ public static class HistoryAction
     /// <summary>变更类操作。看板“最近变更”只展示这些动作，过滤心跳、WebSocket 与鉴权日志</summary>
     private static readonly String[] _changeActions =
     [
-        ApplicationRegistered, ApplicationReRegistered, AssociatedOnline, TimedOutOffline, AppStart,
+        ApplicationRegistered, ApplicationReRegistered, AssociatedOnline, DeviceOffline, OfflineTimeout, AppStart,
         RegisterService, UnregisterService, AutoUpdate, Upgrade, Rescue, DomainChanged,
     ];
-
-    private static readonly Dictionary<String, String> _aliases = new(StringComparer.OrdinalIgnoreCase)
-    {
-        // 英文规范键统一大小写，避免客户端传入小写变体后出现重复分组
-        [ApplicationAuthentication] = ApplicationAuthentication,
-        [ApplicationRegistered] = ApplicationRegistered,
-        [ApplicationReRegistered] = ApplicationReRegistered,
-        [AssociatedOnline] = AssociatedOnline,
-        [TimedOutOffline] = TimedOutOffline,
-        [RegisterService] = RegisterService,
-        [UnregisterService] = UnregisterService,
-        [ResolveService] = ResolveService,
-        [Authorize] = Authorize,
-        [RefreshToken] = RefreshToken,
-        [GetAll] = GetAll,
-        [Upload] = Upload,
-        [UploadBuildFile] = UploadBuildFile,
-        [AppStart] = AppStart,
-        [WebSocketConnected] = WebSocketConnected,
-        [WebSocketDisconnected] = WebSocketDisconnected,
-        [WebSocketSend] = WebSocketSend,
-        [NodeAuthentication] = NodeAuthentication,
-        [DynamicRegistration] = DynamicRegistration,
-        [LoginValidation] = LoginValidation,
-        [MatchedExistingNode] = MatchedExistingNode,
-        [AutoUpdate] = AutoUpdate,
-        [PushDotNet] = PushDotNet,
-        [DomainChanged] = DomainChanged,
-        [AppAddNode] = AppAddNode,
-        [Rescue] = Rescue,
-        [Upgrade] = Upgrade,
-        [SyncTime] = SyncTime,
-        [ClockSkew] = ClockSkew,
-        [RunBash] = RunBash,
-        [RunCmd] = RunCmd,
-        [Delete] = Delete,
-        [LocalProbe] = LocalProbe,
-        [ServiceController] = ServiceController,
-        [Restart] = Restart,
-
-        // 旧版本在写入时翻译成中文，历史数据需要等价归一化
-        ["应用鉴权"] = ApplicationAuthentication,
-        ["应用注册"] = ApplicationRegistered,
-        ["应用重注册"] = ApplicationReRegistered,
-        ["关联上线"] = AssociatedOnline,
-        ["超时下线"] = TimedOutOffline,
-        ["应用下线"] = TimedOutOffline,
-        ["节点鉴权"] = NodeAuthentication,
-        ["节点下线"] = TimedOutOffline,
-        ["动态注册"] = DynamicRegistration,
-        ["登录校验"] = LoginValidation,
-        ["匹配已有节点"] = MatchedExistingNode,
-        ["自动更新"] = AutoUpdate,
-        ["推送dotNet"] = PushDotNet,
-        ["修改域名"] = DomainChanged,
-        ["WebSocket连接"] = WebSocketConnected,
-        ["WebSocket断开"] = WebSocketDisconnected,
-        ["WebSocket发送"] = WebSocketSend,
-        ["重启"] = Restart,
-        ["重启服务"] = Restart,
-    };
     #endregion
 
     #region 方法
-    /// <summary>把历史记录中的操作名归一化为英文规范键</summary>
-    /// <param name="action">数据库中的操作名，可能是英文规范键或旧版本写入的中文文本</param>
-    /// <returns>英文规范键；未知操作名原样返回</returns>
-    public static String Normalize(String action)
+    /// <summary>按当前界面语言翻译操作名</summary>
+    /// <param name="action">数据库中的操作名，必须是英文规范键；未知操作名原样返回</param>
+    /// <returns>当前界面语言的操作名</returns>
+    public static String Localize(String action)
     {
         if (action.IsNullOrEmpty()) return action;
 
-        var key = action.Trim();
-        return _aliases.TryGetValue(key, out var value) ? value : key;
+        return L.T(action);
     }
 
-    /// <summary>按当前界面语言翻译操作名</summary>
-    /// <param name="action">数据库中的操作名</param>
-    /// <returns>当前界面语言的操作名；未知操作名原样返回</returns>
-    public static String Localize(String action)
-    {
-        var key = Normalize(action);
-        return key.IsNullOrEmpty() ? key : L.T(key);
-    }
+    /// <summary>连接类操作。WebSocket 连接/断开数量大，历史列表默认不展示，按操作筛选时可查看</summary>
+    public static readonly String[] ConnectionActions = [WebSocketConnected, WebSocketDisconnected, WebSocketSend];
 
     /// <summary>判断是否变更类操作</summary>
     /// <param name="action">数据库中的操作名</param>
     /// <returns>是否为应用上下线、注册、升级等变更动作</returns>
     public static Boolean IsChange(String action)
     {
-        var key = Normalize(action);
-        if (key.IsNullOrEmpty()) return false;
+        if (action.IsNullOrEmpty()) return false;
 
         foreach (var item in _changeActions)
         {
-            if (item.EqualIgnoreCase(key)) return true;
+            if (item.EqualIgnoreCase(action)) return true;
         }
 
         return false;

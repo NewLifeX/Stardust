@@ -190,7 +190,7 @@
 "Failed to dispatch the deploy command to node {0}: {1}": "Nie udało się wysłać polecenia wdrożenia do węzła {0}: {1}"
 "Application authentication": "Uwierzytelnianie aplikacji"
 "Node authentication": "Uwierzytelnianie węzła"
-"Timed out offline": "Wyłączono po przekroczeniu czasu"
+"Offline timeout": "Wyłączono po przekroczeniu czasu"
 "An application with an empty secret cannot log in. Set a Secret for this application in the registry or enable re-registration.": "Aplikacja z pustym sekretem nie może się zalogować. Ustaw Secret dla tej aplikacji w rejestrze lub włącz ponowną rejestrację."
 "Secret validation failed.": "Walidacja sekretu nie powiodła się."
 "[{0}] re-registered in [{1}] mode; secret issued": "[{0}] zarejestrowano ponownie w trybie [{1}]; sekret wydany"

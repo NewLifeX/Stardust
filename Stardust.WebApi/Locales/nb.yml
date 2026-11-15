@@ -190,7 +190,7 @@
 "Failed to dispatch the deploy command to node {0}: {1}": "Distribusjonskommandoen kunne ikke sendes til node {0}: {1}"
 "Application authentication": "Applikasjonsautentisering"
 "Node authentication": "Nodeautentisering"
-"Timed out offline": "Frakoblet på grunn av tidsavbrudd"
+"Offline timeout": "Frakoblet på grunn av tidsavbrudd"
 "An application with an empty secret cannot log in. Set a Secret for this application in the registry or enable re-registration.": "En applikasjon med tom hemmelighet kan ikke logge inn. Angi en hemmelighet for denne applikasjonen i registeret, eller aktiver omregistrering."
 "Secret validation failed.": "Valideringen av hemmeligheten mislyktes."
 "[{0}] re-registered in [{1}] mode; secret issued": "[{0}] ble registrert på nytt i modusen [{1}]; hemmelighet utstedt"

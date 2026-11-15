@@ -190,7 +190,7 @@
 "Failed to dispatch the deploy command to node {0}: {1}": "Не вдалося надіслати команду розгортання на вузол {0}: {1}"
 "Application authentication": "Автентифікація застосунку"
 "Node authentication": "Автентифікація вузла"
-"Timed out offline": "Відключено через тайм-аут"
+"Offline timeout": "Відключено через тайм-аут"
 "An application with an empty secret cannot log in. Set a Secret for this application in the registry or enable re-registration.": "Застосунок із порожнім секретом не може увійти. Задайте Secret для цього застосунку в реєстрі або ввімкніть повторну реєстрацію."
 "Secret validation failed.": "Перевірка секрету не пройдена."
 "[{0}] re-registered in [{1}] mode; secret issued": "[{0}] перереєстровано в режимі [{1}]; секрет видано"

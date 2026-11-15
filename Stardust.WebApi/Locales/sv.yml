@@ -190,7 +190,7 @@
 "Failed to dispatch the deploy command to node {0}: {1}": "Det gick inte att skicka driftsättningskommandot till noden {0}: {1}"
 "Application authentication": "Applikationsautentisering"
 "Node authentication": "Nodautentisering"
-"Timed out offline": "Offline på grund av timeout"
+"Offline timeout": "Offline på grund av timeout"
 "An application with an empty secret cannot log in. Set a Secret for this application in the registry or enable re-registration.": "En applikation med tom hemlighet kan inte logga in. Ange en hemlighet för denna applikation i registret eller aktivera omregistrering."
 "Secret validation failed.": "Valideringen av hemligheten misslyckades."
 "[{0}] re-registered in [{1}] mode; secret issued": "[{0}] registrerades om i läget [{1}]; hemlighet utfärdad"

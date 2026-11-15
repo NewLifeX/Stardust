@@ -190,7 +190,7 @@
 "Failed to dispatch the deploy command to node {0}: {1}": "Bereitstellungsbefehl an Knoten {0} konnte nicht gesendet werden: {1}"
 "Application authentication": "Anwendungsauthentifizierung"
 "Node authentication": "Knotenauthentifizierung"
-"Timed out offline": "Wegen Zeitüberschreitung offline"
+"Offline timeout": "Wegen Zeitüberschreitung offline"
 "An application with an empty secret cannot log in. Set a Secret for this application in the registry or enable re-registration.": "Eine Anwendung mit leerem Geheimnis kann sich nicht anmelden. Legen Sie im Registrierungszentrum ein Secret für diese Anwendung fest oder aktivieren Sie die Neuregistrierung."
 "Secret validation failed.": "Geheimnisvalidierung fehlgeschlagen."
 "[{0}] re-registered in [{1}] mode; secret issued": "[{0}] hat sich im Modus [{1}] neu registriert; Geheimnis ausgestellt"

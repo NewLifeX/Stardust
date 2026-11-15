@@ -190,7 +190,7 @@
 "Failed to dispatch the deploy command to node {0}: {1}": "नोड {0} को डिप्लॉय कमांड भेजने में विफल: {1}"
 "Application authentication": "एप्लिकेशन प्रमाणीकरण"
 "Node authentication": "नोड प्रमाणीकरण"
-"Timed out offline": "ऑफ़लाइन रहते समय समय समाप्त"
+"Offline timeout": "ऑफ़लाइन रहते समय समय समाप्त"
 "An application with an empty secret cannot log in. Set a Secret for this application in the registry or enable re-registration.": "खाली सीक्रेट वाला एप्लिकेशन लॉगिन नहीं कर सकता। रजिस्ट्री में इस एप्लिकेशन के लिए सीक्रेट सेट करें या पुनः-पंजीकरण सक्षम करें।"
 "Secret validation failed.": "सीक्रेट सत्यापन विफल।"
 "[{0}] re-registered in [{1}] mode; secret issued": "[{0}] ने [{1}] मोड में पुनः पंजीकरण किया; सीक्रेट जारी हुआ"

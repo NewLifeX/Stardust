@@ -48,12 +48,12 @@ public class NodeOnlineService(IServiceProvider serviceProvider, StarServerSetti
                     if (node != null)
                     {
                         var msg = L.TLog("[{0}/{1}] logged in at {2}, last active at {3}", node, online?.SessionID, online.CreateTime, online.UpdateTime);
-                        node.WriteHistory(HistoryAction.TimedOutOffline, true, msg, online.CreateIP);
+                        node.WriteHistory(HistoryAction.OfflineTimeout, true, msg, online.CreateIP);
 
                         // 结算在线时长统一由 RemoveOnline 负责
                         _nodeService.RemoveOnline(new DeviceContext { Device = node, Online = online });
 
-                        CheckOffline(node, L.T("Timed out offline"));
+                        CheckOffline(node, L.T("Offline timeout"));
                     }
                 }
             }

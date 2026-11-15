@@ -264,22 +264,22 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         var level = 5;
         if (!uuid.IsNullOrEmpty() && uuid != node.Uuid)
         {
-            node.WriteHistory(HistoryAction.LoginValidation, false, L.TLog("Unique identifier mismatch (new != old): {0} != {1}", uuid, node.Uuid), ip);
+            node.WriteHistory(HistoryAction.IdentityMismatch, false, L.TLog("Unique identifier mismatch (new != old): {0} != {1}", uuid, node.Uuid), ip);
             level--;
         }
         if (!guid.IsNullOrEmpty() && guid != node.MachineGuid)
         {
-            node.WriteHistory(HistoryAction.LoginValidation, false, L.TLog("Machine identifier mismatch (new != old): {0} != {1}", guid, node.MachineGuid), ip);
+            node.WriteHistory(HistoryAction.IdentityMismatch, false, L.TLog("Machine identifier mismatch (new != old): {0} != {1}", guid, node.MachineGuid), ip);
             level--;
         }
         if (!serial.IsNullOrEmpty() && serial != node.SerialNumber)
         {
-            node.WriteHistory(HistoryAction.LoginValidation, false, L.TLog("Computer serial number mismatch (new != old): {0} != {1}", serial, node.SerialNumber), ip);
+            node.WriteHistory(HistoryAction.IdentityMismatch, false, L.TLog("Computer serial number mismatch (new != old): {0} != {1}", serial, node.SerialNumber), ip);
             level--;
         }
         if (!board.IsNullOrEmpty() && board != node.Board)
         {
-            node.WriteHistory(HistoryAction.LoginValidation, false, L.TLog("Motherboard mismatch (new != old): {0} != {1}", board, node.Board), ip);
+            node.WriteHistory(HistoryAction.IdentityMismatch, false, L.TLog("Motherboard mismatch (new != old): {0} != {1}", board, node.Board), ip);
             //flag = false;
         }
         //if (!diskid.IsNullOrEmpty() && diskid != node.DiskID)
@@ -289,14 +289,14 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         //}
         if (!node.ProductCode.IsNullOrEmpty() && !productCode.IsNullOrEmpty() && !node.ProductCode.EqualIgnoreCase(productCode))
         {
-            node.WriteHistory(HistoryAction.LoginValidation, false, L.TLog("Product code mismatch (new != old): {0} != {1}", productCode, node.ProductCode), ip);
+            node.WriteHistory(HistoryAction.IdentityMismatch, false, L.TLog("Product code mismatch (new != old): {0} != {1}", productCode, node.ProductCode), ip);
             //level--;
         }
 
         // 机器名
         if (di.MachineName != node.MachineName)
         {
-            node.WriteHistory(HistoryAction.LoginValidation, false, L.TLog("Machine name mismatch (new != old): {0} != {1}", di.MachineName, node.MachineName), ip);
+            node.WriteHistory(HistoryAction.IdentityMismatch, false, L.TLog("Machine name mismatch (new != old): {0} != {1}", di.MachineName, node.MachineName), ip);
         }
 
         // 网卡地址
@@ -307,7 +307,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
             // 任意匹配则通过
             if (!nodems.Any(e => dims.Contains(e)))
             {
-                node.WriteHistory(HistoryAction.LoginValidation, false, L.TLog("MAC address mismatch (new != old): {0} != {1}", di.Macs, node.MACs), ip);
+                node.WriteHistory(HistoryAction.IdentityMismatch, false, L.TLog("MAC address mismatch (new != old): {0} != {1}", di.Macs, node.MACs), ip);
                 level--;
             }
         }
@@ -320,7 +320,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
             // 任意匹配则通过
             if (!nodems.Any(e => dims.Contains(e)))
             {
-                node.WriteHistory(HistoryAction.LoginValidation, false, L.TLog("Disk serial number mismatch (new != old): {0} != {1}", diskid, node.DiskID), ip);
+                node.WriteHistory(HistoryAction.IdentityMismatch, false, L.TLog("Disk serial number mismatch (new != old): {0} != {1}", diskid, node.DiskID), ip);
                 level--;
             }
         }

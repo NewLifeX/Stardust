@@ -190,7 +190,7 @@
 "Failed to dispatch the deploy command to node {0}: {1}": "Nem sikerült elküldeni az üzembe helyezési parancsot a(z) {0} csomópontnak: {1}"
 "Application authentication": "Alkalmazás-hitelesítés"
 "Node authentication": "Csomópont-hitelesítés"
-"Timed out offline": "Offline állapotban időtúllépés"
+"Offline timeout": "Offline állapotban időtúllépés"
 "An application with an empty secret cannot log in. Set a Secret for this application in the registry or enable re-registration.": "Üres titokkal rendelkező alkalmazás nem tud bejelentkezni. Állítson be egy Secretet ehhez az alkalmazáshoz a nyilvántartásban, vagy engedélyezze az újraregisztrációt."
 "Secret validation failed.": "A titok ellenőrzése nem sikerült."
 "[{0}] re-registered in [{1}] mode; secret issued": "A(z) [{0}] újraregisztrált [{1}] módban; titok kiadva"

@@ -62,9 +62,9 @@ public class OnlineService : IHostedService
                     if (app != null)
                     {
                         var msg = L.TLog("[{0}/{1}] logged in at {2}, last active at {3}", app, olt?.Client, olt.CreateTime, olt.UpdateTime);
-                        app.WriteHistory(HistoryAction.TimedOutOffline, true, msg, olt.Version, olt.CreateIP, olt.Client);
+                        app.WriteHistory(HistoryAction.OfflineTimeout, true, msg, olt.Version, olt.CreateIP, olt.Client);
 
-                        CheckOffline(app, L.T("Timed out offline"));
+                        CheckOffline(app, L.T("Offline timeout"));
                     }
                 }
             }

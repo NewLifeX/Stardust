@@ -190,7 +190,7 @@
 "Failed to dispatch the deploy command to node {0}: {1}": "向節點 {0} 下發部署命令失敗：{1}"
 "Application authentication": "應用鑑權"
 "Node authentication": "節點鑑權"
-"Timed out offline": "逾時下線"
+"Offline timeout": "逾時下線"
 "An application with an empty secret cannot log in. Set a Secret for this application in the registry or enable re-registration.": "空密鑰應用禁止登入！請在註冊中心為該應用設定 Secret 或開啟允許重新註冊"
 "Secret validation failed.": "密鑰校驗失敗"
 "[{0}] re-registered in [{1}] mode; secret issued": "[{0}]按[{1}]模式重新註冊，密鑰已下發"
