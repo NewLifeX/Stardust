@@ -23,6 +23,9 @@ import { ref, reactive, computed, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { usePageApi } from '@newlifex/cube-vue/core/composables/useCubeApi';
 import type { FieldMeta } from '@newlifex/cube-vue/core/types/field';
+// DEF-1 族第二成员（wave4 排程令）：行值 13 单元 0 非空 + links href 缺 ?serviceId= 同根，
+// 取值统一走共享 registryCase（camelCase 回退），禁止本页再写 PascalCase 直读。
+import { cellText, columnLabel, pickField } from '../registryCase';
 
 const api = usePageApi('Registry', 'Service');
 
@@ -37,6 +40,7 @@ interface BackendField {
   multiple?: boolean;
   url?: string | null;
   target?: string | null;
+  header?: string | null;
 }
 interface PageMeta {
   list: BackendField[];
@@ -86,6 +90,7 @@ function toFieldMeta(f: BackendField): FieldMeta {
     multiple: f.multiple,
     url: f.url ?? undefined,
     target: f.target ?? undefined,
+    header: f.header ?? undefined,
   };
 }
 
@@ -125,22 +130,18 @@ async function fetchList() {
   }
 }
 
-function cellText(row: Row, key: string): string {
-  const v = row[key];
-  return v == null ? '' : String(v);
-}
-
 // 独立链接列：后端 url 模板 /Registry/AppService?serviceId={Id} / /Registry/AppConsume?serviceId={Id}
+// serviceId 走 pickField（DEF-1 族：row.Id 在 camelCase 行上未命中曾致 href 省参裸路径）
 function providersUrl(row: Row): string {
-  return toUrl('/Registry/AppService', { serviceId: row.Id });
+  return toUrl('/Registry/AppService', { serviceId: pickField(row, 'Id') as number });
 }
 function consumersUrl(row: Row): string {
-  return toUrl('/Registry/AppConsume', { serviceId: row.Id });
+  return toUrl('/Registry/AppConsume', { serviceId: pickField(row, 'Id') as number });
 }
 
 // 批量选择
 function onSelectionChange(selection: Row[]) {
-  selectedIds.value = selection.map((r) => r.Id as number).filter((id) => id != null);
+  selectedIds.value = selection.map((r) => pickField(r, 'Id') as number).filter((id) => id != null);
 }
 
 function handleSearch() {
@@ -246,7 +247,7 @@ onMounted(async () => {
             v-for="f in listFields"
             :key="f.name"
             :prop="f.name"
-            :label="f.displayName || f.name"
+            :label="columnLabel(f.displayName, f.header, f.name)"
             :fixed="f.name === 'Name' ? 'left' : false"
             show-overflow-tooltip
           >
@@ -258,7 +259,7 @@ onMounted(async () => {
                   :href="providersUrl(row)"
                   target="_self"
                 >
-                  {{ row.Providers }}
+                  {{ cellText(row, 'Providers') }}
                 </el-link>
               </template>
               <template v-else-if="f.name === 'Consumers'">
@@ -267,7 +268,7 @@ onMounted(async () => {
                   :href="consumersUrl(row)"
                   target="_self"
                 >
-                  {{ row.Consumers }}
+                  {{ cellText(row, 'Consumers') }}
                 </el-link>
               </template>
               <template v-else>

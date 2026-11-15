@@ -16,10 +16,13 @@
  * 含 url 的字段自动渲染为链接列（替换 {Field} 占位符），匹配 MVC 呈现。
  */
 import { ref, reactive, computed, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import { usePageApi } from '@newlifex/cube-vue/core/composables/useCubeApi';
 import type { FieldMeta } from '@newlifex/cube-vue/core/types/field';
 
 const api = usePageApi('Registry', 'AppConsume');
+// REG-05（2026-11-08 定稿裁定⑤）：URL 参数过滤 —— 直访/链入 ?serviceId=&appId= 时首查带参
+const route = useRoute();
 
 interface BackendField {
   name: string;
@@ -48,10 +51,12 @@ const page = ref(1);
 const pageSize = ref(20);
 const listFields = ref<FieldMeta[]>([]);
 
-// 搜索栏（对应 MVC Search：Q 关键字 + enable 启用状态）
+// 搜索栏（对应 MVC Search：Q 关键字 + enable 启用状态；appId/serviceId 由 URL 参数注入，不在 UI 展示）
 const filters = reactive({
   q: '',
   enable: '' as string, // ''=全部, 'true'=启用, 'false'=禁用
+  appId: '' as string, // REG-05：URL ?appId= 注入
+  serviceId: '' as string, // REG-05：URL ?serviceId= 注入
 });
 
 function toFieldMeta(f: BackendField): FieldMeta {
@@ -90,6 +95,9 @@ async function fetchList() {
     };
     if (filters.q) params.Q = filters.q;
     if (filters.enable !== '') params.enable = filters.enable === 'true';
+    // REG-05：URL 注入的维度过滤透传后端（AppConsume.Search appId/serviceId ToInt）
+    if (filters.appId !== '') params.appId = filters.appId;
+    if (filters.serviceId !== '') params.serviceId = filters.serviceId;
 
     const res: any = await api.getList<Row>(params);
     rows.value = res?.data ?? [];
@@ -129,6 +137,8 @@ function handleSearch() {
 function handleReset() {
   filters.q = '';
   filters.enable = '';
+  filters.appId = '';
+  filters.serviceId = '';
   page.value = 1;
   fetchList();
 }
@@ -138,10 +148,15 @@ function onPageChange(p: number) {
   fetchList();
 }
 
-const hasActiveFilter = computed(() => !!filters.q || filters.enable !== '');
+const hasActiveFilter = computed(() => !!filters.q || filters.enable !== '' || filters.appId !== '' || filters.serviceId !== '');
 
 onMounted(async () => {
   console.log('[Registry/AppConsume] custom view mounted');
+  // REG-05：URL 参数过滤 —— ?serviceId=&appId= 预填后首查带参
+  const qs = String(route.query.serviceId ?? '').trim();
+  const qa = String(route.query.appId ?? '').trim();
+  if (qs) filters.serviceId = qs;
+  if (qa) filters.appId = qa;
   await fetchMeta();
   await fetchList();
 });

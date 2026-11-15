@@ -21,6 +21,7 @@ import { ElMessage } from 'element-plus';
 import request from '@newlifex/cube-vue/core/utils/request';
 import { usePageApi } from '@newlifex/cube-vue/core/composables/useCubeApi';
 import type { FieldMeta } from '@newlifex/cube-vue/core/types/field';
+import { cellText, columnLabel, pickField } from '../registryCase';
 
 const api = usePageApi('Registry', 'App');
 const route = useRoute();
@@ -31,6 +32,7 @@ const projectId = ref<number | undefined>(undefined);
 interface BackendField {
   name: string;
   displayName: string;
+  header?: string | null;
   typeName: string;
   itemType?: string;
   primaryKey?: boolean;
@@ -77,6 +79,7 @@ function toFieldMeta(f: BackendField): FieldMeta {
   return {
     name: f.name,
     displayName: f.displayName,
+    header: f.header ?? undefined,
     typeName: f.typeName,
     itemType: f.itemType,
     primaryKey: f.primaryKey,
@@ -107,7 +110,7 @@ async function fetchCategories() {
     const data = res?.data ?? [];
     const set = new Set<string>();
     data.forEach((r: Row) => {
-      const c = r.Category;
+      const c = cellText(r, 'Category');
       if (c) set.add(c);
     });
     const list = Array.from(set)
@@ -145,28 +148,25 @@ async function fetchList() {
   }
 }
 
-function cellText(row: Row, key: string): string {
-  const v = row[key];
-  return v == null ? '' : String(v);
-}
-
-// 自建链接列
+// 自建链接列（camelCase 行数据经 pickField 兜底读取）
 function detailUrl(row: Row): string {
-  return toUrl('/Registry/App/Detail', { id: row.Id });
+  return toUrl('/Registry/App/Detail', { id: pickField(row, 'Id') });
 }
 function projectUrl(row: Row): string {
-  return toUrl('/Platform/GalaxyProject', { projectId: row.ProjectId });
+  return toUrl('/Platform/GalaxyProject', { projectId: pickField(row, 'ProjectId') });
 }
 function appLogUrl(row: Row): string {
-  return toUrl('/Registry/AppLog', { appId: row.Id });
+  return toUrl('/Registry/AppLog', { appId: pickField(row, 'Id') });
 }
 function auditLogUrl(row: Row): string {
-  return toUrl('/Admin/Log', { category: '应用系统', linkId: row.Id });
+  return toUrl('/Admin/Log', { category: '应用系统', linkId: pickField(row, 'Id') });
 }
 
 // 批量选择
 function onSelectionChange(selection: Row[]) {
-  selectedIds.value = selection.map((r) => r.Id as number).filter((id) => id != null);
+  selectedIds.value = selection
+    .map((r) => pickField(r, 'Id'))
+    .filter((id): id is number => id != null);
 }
 
 // 批量告警（SetAlarm）
@@ -209,10 +209,14 @@ async function querySearchAsync(query: string, cb: (items: { value: string; id: 
       params: { key: query },
     });
     const data = res?.data ?? [];
-    const items = data.map((e: any) => ({
-      value: e.DisplayName ? `${e.Name}（${e.DisplayName}）` : e.Name,
-      id: e.Id,
-    }));
+    const items = data.map((e: any) => {
+      const name = cellText(e, 'Name');
+      const displayName = cellText(e, 'DisplayName');
+      return {
+        value: displayName ? `${name}（${displayName}）` : name,
+        id: pickField(e, 'Id'),
+      };
+    });
     searchSuggestions.value = items;
     cb(items);
   } catch (e) {
@@ -371,7 +375,7 @@ watch(
             v-for="f in listFields"
             :key="f.name"
             :prop="f.name"
-            :label="f.displayName || f.name"
+            :label="columnLabel(f.displayName, f.header, f.name)"
             :fixed="f.name === 'Name' ? 'left' : false"
             show-overflow-tooltip
           >
@@ -383,17 +387,17 @@ watch(
                   :href="detailUrl(row)"
                   target="_blank"
                 >
-                  {{ row.Name }}
+                  {{ cellText(row, 'Name') }}
                 </el-link>
               </template>
               <template v-else-if="f.name === 'ProjectName'">
                 <el-link
-                  v-if="row.ProjectName"
+                  v-if="cellText(row, 'ProjectName')"
                   type="primary"
                   :href="projectUrl(row)"
                   target="_self"
                 >
-                  {{ row.ProjectName }}
+                  {{ cellText(row, 'ProjectName') }}
                 </el-link>
                 <span v-else>-</span>
               </template>
