@@ -13,30 +13,43 @@
  */
 import { computed, ref, watch } from 'vue';
 import { request } from '@newlifex/cube-vue/core/utils/request';
-import { pipelineSteps } from '../Stardust/appsModel';
+import { pipelineSteps, isRunActive } from '../Stardust/appsModel';
 import type { PipelineRunRow } from '../Stardust/appsModel';
 import Btn from '@/layouts/StardustLayout2/Btn.vue';
 import Card from '@/layouts/StardustLayout2/Card.vue';
-import KIcon from '@/layouts/StardustLayout2/KIcon.vue';
 import BuildNodes from '@/layouts/StardustLayout2/BuildNodes.vue';
 import DeployEditDrawer from '@/layouts/StardustLayout2/DeployEditDrawer.vue';
+import DeployFeedbackStrip from '@/layouts/StardustLayout2/DeployFeedbackStrip.vue';
 import DeployHistory from '@/layouts/StardustLayout2/DeployHistory.vue';
 import DeployNodes from '@/layouts/StardustLayout2/DeployNodes.vue';
 import DeployPipelineRuns from '@/layouts/StardustLayout2/DeployPipelineRuns.vue';
-import PipelineBoard from '@/layouts/StardustLayout2/PipelineBoard.vue';
-import PipelineFormDrawer from '@/layouts/StardustLayout2/PipelineFormDrawer.vue';
 import DeployVersionBar from '@/layouts/StardustLayout2/DeployVersionBar.vue';
 import DeployVersionList from '@/layouts/StardustLayout2/DeployVersionList.vue';
 import NodeFormDrawer from '@/layouts/StardustLayout2/NodeFormDrawer.vue';
 import DeployLogDrawer from '@/layouts/StardustLayout2/DeployLogDrawer.vue';
+import PipelineConfigCard from '@/layouts/StardustLayout2/PipelineConfigCard.vue';
+import PipelineConfigDrawer from '@/layouts/StardustLayout2/PipelineConfigDrawer.vue';
+import PipelineRunDetailDrawer from '@/layouts/StardustLayout2/PipelineRunDetailDrawer.vue';
+import PipelineStepDrawer from '@/layouts/StardustLayout2/PipelineStepDrawer.vue';
+import PipelineWebhookCard from '@/layouts/StardustLayout2/PipelineWebhookCard.vue';
+import {
+  copyTextToClipboard,
+  fetchDeployNodeOptions,
+  fetchPipelineProjectId,
+  searchBuildNodes,
+  toPipelineForm,
+} from '@/layouts/StardustLayout2/pipelineConfig.logic';
+import type { BuildNodeSearchItem, PipelineForm, PipelineNodeOption, PipelineRow } from '@/layouts/StardustLayout2/pipelineConfig.logic';
+import { fetchWebhookFields } from '@/layouts/StardustLayout2/pipelineWebhook.logic';
+import type { WebhookFieldDoc } from '@/layouts/StardustLayout2/pipelineWebhook.logic';
 import AttentionList from '@/layouts/StardustLayout2/AttentionList.vue';
+import AppLov from '@/layouts/StardustLayout2/AppLov.vue';
 import { openGuard } from '@/layouts/StardustLayout2/ui.store';
 import type { DeploySection } from '@/layouts/StardustLayout2/workbench.logic';
 import type { AppTab } from '@/layouts/StardustLayout2/palette.items';
 import { buildAttention } from '@/layouts/StardustLayout2/overview.logic';
 import { toast } from '@/layouts/StardustLayout2/useToast';
 import { useDeployData } from '@/layouts/StardustLayout2/useDeployData';
-import { NOTICE_CLASS } from '@/layouts/StardustLayout2/deployView.styles';
 import { nodeStats as calcNodeStats, nodeVersionTag as calcNodeVersionTag } from '@/layouts/StardustLayout2/deployView.logic';
 import type { VersionTag } from '@/layouts/StardustLayout2/deployView.logic';
 import type { PipelineView, StageItem } from '@/layouts/StardustLayout2/deployPipeline.styles';
@@ -47,16 +60,7 @@ import {
   operateNotice,
   useVersionNotice,
 } from '@/layouts/StardustLayout2/ship.logic';
-import {
-  canReprocess,
-  compileNodeChoices,
-  deployTargetChoices,
-  emptyPipelineForm,
-  fetchPipelineDetail,
-  fetchWebhookUrl,
-} from '@/layouts/StardustLayout2/pipelineForm.logic';
-import type { PipelineCard, PipelineForm } from '@/layouts/StardustLayout2/pipelineForm.logic';
-import type { NodeActionInfo, Notice, ShipNode, VersionOption } from '@/layouts/StardustLayout2/ship.logic';
+import type { NodeActionInfo, Notice, RunFilter, ShipNode, ShipRunRow, VersionOption } from '@/layouts/StardustLayout2/ship.logic';
 import { fetchBuildNodes, runBuildUpload, runPackageUpload } from '@/layouts/StardustLayout2/buildNodes.logic';
 import type { BuildNodeAct, BuildNodeRow } from '@/layouts/StardustLayout2/buildNodes.logic';
 import {
@@ -64,6 +68,7 @@ import {
   fetchDeployDetail,
   fetchDeployNodeDetail,
   fetchNodeOptions,
+  resolveEffectiveLogDir,
   rollbackCandidates,
   rollbackNotice,
 } from '@/layouts/StardustLayout2/deploy.logic';
@@ -72,7 +77,7 @@ import type { BuildNodeForm, DeployEditModel, DeployNodeForm, NodeOption } from 
 // section：只渲染哪一块（versions / nodes / history / pipeline）；不传表示纵向显示全部（/ship 整页用，停点 20 随该页一起去掉）
 // overview：概览页签，只渲染版本条与需关注事项；instances 是在线实例数，由页面传入（未知不传）
 const props = defineProps<{ appId: number; appName: string; section?: DeploySection; overview?: boolean; instances?: number }>();
-const emit = defineEmits<{ go: [tab: AppTab] }>();
+const emit = defineEmits<{ go: [tab: AppTab]; openApp: [appId: number] }>();
 
 // 该块是否要渲染
 function show(name: DeploySection): boolean {
@@ -84,6 +89,7 @@ const {
   loading,
   loadError,
   deploy,
+  others,
   versions,
   versionsFailed,
   nodes,
@@ -110,12 +116,23 @@ const {
   removeNode,
   saveBuildNode,
   removeBuildNode,
+  // CARD-DEP-01/02（2026-11-07 接线点登记）：流水线配置 + 运行筛选/详情/重跑
   pipelines,
   pipelinesFailed,
-  createPipeline,
+  runFilter,
+  setRunFilter,
+  resetRunFilter,
+  runDetailOpen,
+  runDetail,
+  runDetailState,
+  openRunDetail,
+  closeRunDetail,
+  retryRunDetail,
+  rerunRun,
   savePipeline,
-  triggerPipeline,
-  reprocessRun,
+  removePipeline,
+  copyWebhookFor,
+  triggerRun,
 } = useDeployData({
   appId: () => props.appId,
   appName: () => props.appName,
@@ -198,6 +215,11 @@ function onSync(): void {
   void syncApp();
 }
 
+// CARD-DEP-08 D5：联想框选中应用 → 交给宿主跳该应用的部署页签（App.vue 推 /app/versions/<id>）
+function onLovSelect(item: { value: string; id: number }): void {
+  if (item?.id > 0) emit('openApp', item.id);
+}
+
 // ---------- F07/F08 节点表单 Drawer（部署 / 编译共用 NodeFormDrawer） ----------
 
 type NodeKind = 'deploy' | 'build';
@@ -220,9 +242,22 @@ const logDrawer = ref<{ open: boolean; deployNodeId: number; nodeName: string }>
   nodeName: '',
 });
 
+// task-90：生效日志目录 = 节点级 logDirectory 优先，空=跟随部署集；双空=未配置（抽屉里前置拦截+配置引导）。
+// 抽屉保存后 refreshSoon 刷新 nodes/deploy → 此 computed 重算 → DeployLogDrawer watch(logDir) 自动加载。
+const logDrawerNode = computed(() => nodes.value.find((n) => n.id === logDrawer.value.deployNodeId) ?? null);
+const effectiveLogDir = computed(() => resolveEffectiveLogDir(logDrawerNode.value, deploy.value));
+
 function openDeployLogs(n: ShipNode): void {
   if (busyKey.value) return;
   logDrawer.value = { open: true, deployNodeId: n.id, nodeName: n.name };
+}
+
+// task-90：配置引导空态的「配置日志目录」按钮 → 复用既有节点编辑抽屉通道（askEditNode 拉详情+节点选项），
+// 日志抽屉保持打开（编辑抽屉 z-index 41 叠在其上），保存成功 onNodeSubmit 关编辑抽屉 → 自动加载闭环。
+function onConfigureLog(): void {
+  const n = logDrawerNode.value;
+  if (!n || busyKey.value) return;
+  void askEditNode(n);
 }
 
 async function loadNodeOptions(): Promise<void> {
@@ -322,105 +357,6 @@ function askRollback(): void {
   openGuard(`${props.appName} 一键回滚。${notice}`, () => applyVersion(target as VersionOption));
 }
 
-const selectedRun = computed(() => runRows.value.find((r) => r.id === selectedRunId.value) ?? null);
-const reprocessDisabled = computed(() => !!busyKey.value || !selectedRun.value || !canReprocess(selectedRun.value.status));
-const reprocessing = computed(() => busyKey.value.startsWith('run:'));
-const reprocessTitle = computed(() => {
-  if (busyKey.value) return '有操作正在进行';
-  if (!selectedRun.value) return '先点一条失败或已取消的运行';
-  if (!canReprocess(selectedRun.value.status)) return '只有失败或已取消的运行可以重跑';
-  return `按运行 #${selectedRun.value.id} 的提交重新触发流水线`;
-});
-
-function askReprocess(): void {
-  const row = selectedRun.value;
-  if (!row || reprocessDisabled.value) return;
-  openGuard(`${props.appName} 重跑运行 #${row.id}。会按原来的提交新建一次运行并重新编译。确认？`, () => reprocessRun(row.id));
-}
-
-// ---------- 流水线配置：新建 / 编辑 / 触发 / 复制 Webhook ----------
-
-const pipeDrawer = ref<{ open: boolean; loading: boolean; id: number | null; initial: PipelineForm | null }>({
-  open: false, loading: false, id: null, initial: null,
-});
-const copyingId = ref(0);
-const webhookFallback = ref('');
-const pipeSaving = computed(() => busyKey.value === 'pipe:new' || busyKey.value.startsWith('pipe-save:'));
-
-const buildLabels = computed(() => {
-  const map: Record<number, string> = {};
-  for (const n of nodeOptions.value) map[n.id] = n.name;
-  return map;
-});
-const compileChoices = computed(() => compileNodeChoices(
-  buildRows.value.map((r) => ({ nodeName: r.nodeName, enable: r.enable })),
-  nodeOptions.value.map((n) => ({ id: n.id, name: n.name })),
-  pipeDrawer.value.initial?.buildNodeId ?? 0,
-));
-const deployChoices = computed(() => deployTargetChoices(
-  nodes.value.map((n) => ({ id: n.id, name: n.name, ip: n.ip })),
-  pipeDrawer.value.initial?.deployNodeIds ?? [],
-));
-
-async function askCreatePipeline(): Promise<void> {
-  if (busyKey.value) return;
-  webhookFallback.value = '';
-  await loadNodeOptions();
-  pipeDrawer.value = { open: true, loading: false, id: null, initial: emptyPipelineForm() };
-}
-
-async function askEditPipeline(card: PipelineCard): Promise<void> {
-  if (busyKey.value) return;
-  webhookFallback.value = '';
-  await loadNodeOptions();
-  pipeDrawer.value = { open: true, loading: true, id: card.id, initial: null };
-  const detail = await fetchPipelineDetail(request, card.id);
-  if (!pipeDrawer.value.open || pipeDrawer.value.id !== card.id) return;
-  if (!detail) {
-    pipeDrawer.value = { open: false, loading: false, id: null, initial: null };
-    toast(`流水线「${card.name || card.id}」详情加载失败，请稍后重试`, 'err');
-    return;
-  }
-  pipeDrawer.value = { open: true, loading: false, id: card.id, initial: detail };
-}
-
-function onPipelineSubmit(form: PipelineForm): void {
-  const id = pipeDrawer.value.id;
-  const run = id ? savePipeline(id, form) : createPipeline(form);
-  void run.then((ok) => {
-    if (ok) pipeDrawer.value = { open: false, loading: false, id: null, initial: null };
-  });
-}
-
-function askTrigger(card: PipelineCard): void {
-  if (busyKey.value || !card.enable || !card.buildNodeId) return;
-  const branch = card.branch || '（未填分支）';
-  const after = card.autoDeploy ? '编译成功后会自动安装到该流水线的部署节点。' : '不会自动安装，编译产物需要再发布。';
-  openGuard(`手动触发「${card.name || card.id}」。将在编译节点上拉取分支 ${branch} 并编译。${after}`, () => triggerPipeline(card.id, card.name || `流水线 #${card.id}`));
-}
-
-async function onCopyWebhook(card: PipelineCard): Promise<void> {
-  if (copyingId.value) return;
-  copyingId.value = card.id;
-  webhookFallback.value = '';
-  try {
-    const r = await fetchWebhookUrl(request, card.id);
-    if (!r.ok || !r.url) {
-      toast(`${card.name || card.id} 复制 Webhook 失败：${r.message}`, 'err');
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(r.url);
-      toast(`「${card.name || card.id}」的 Webhook 地址已复制`, 'ok');
-    } catch {
-      webhookFallback.value = r.url;
-      toast('浏览器没有写入剪贴板，地址显示在流水线列表下方，请手动复制', 'err');
-    }
-  } finally {
-    copyingId.value = 0;
-  }
-}
-
 // ---------- 编译节点（子 tab） ----------
 
 type NodeTab = 'deploy' | 'build';
@@ -490,6 +426,14 @@ const view = computed<PipelineView | null>(() => {
   if (run && steps.value) {
     const r = buildNodeResults(nodes.value, steps.value, run.status);
     if (r.deploySteps > 0) return { items: r.items, allSkipped: r.allSkipped, note: `运行 #${run.id} 按节点的部署步骤` };
+    // task-88（2026-11-12）：触发后自动选中的新运行常在此刻还没有步骤上报，别误报「没有按节点的部署步骤」
+    if (isRunActive(run.status)) {
+      return {
+        items: buildVersionCells(nodes.value, d.version),
+        allSkipped: false,
+        note: `运行 #${run.id} 进行中，按节点的部署步骤要等节点执行后显示；点「查看运行」或行内「详情」看最新状态`,
+      };
+    }
     return {
       items: buildVersionCells(nodes.value, d.version),
       allSkipped: false,
@@ -520,6 +464,110 @@ const attention = computed(() =>
     instances: props.instances,
     now: Date.now(),
   }),
+);
+
+// ---------- CARD-DEP-01 流水线配置：抽屉 + 级联 + 行操作 ----------
+
+const pipeDrawer = ref<{ open: boolean; id: number; initial: PipelineForm | null; title: string; sub: string }>({
+  open: false, id: 0, initial: null, title: '', sub: '',
+});
+const pipeNodeOptions = ref<PipelineNodeOption[]>([]);
+const pipeNodesLoading = ref(false);
+const pipeProjectId = ref(0);
+/** 复制中的流水线 Id（从 busyKey 提取，供 Webhook 卡与配置卡按钮态） */
+const pipeCopyId = computed(() => (busyKey.value.startsWith('copy:') ? Number(busyKey.value.slice(5)) || 0 : 0));
+/** 重跑中的运行（rerun:{id}，供运行表行操作） */
+const rerunKey = computed(() => (busyKey.value.startsWith('rerun:') ? busyKey.value : ''));
+
+/** 编译节点 suggest：NodeSearch 按 GetDeployProject 级联出的项目 Id 过滤（旧壳 _Form_SelectBuildNode 同参） */
+function searchNodesFor(key: string): Promise<BuildNodeSearchItem[] | null> {
+  return searchBuildNodes(request, pipeProjectId.value, key);
+}
+
+async function loadPipeCascade(): Promise<void> {
+  const did = deploy.value?.id ?? 0;
+  if (!did) {
+    pipeNodeOptions.value = [];
+    pipeProjectId.value = 0;
+    return;
+  }
+  pipeNodesLoading.value = true;
+  const [opts, pid] = await Promise.all([fetchDeployNodeOptions(request, did), fetchPipelineProjectId(request, did)]);
+  pipeNodesLoading.value = false;
+  pipeNodeOptions.value = opts ?? [];
+  pipeProjectId.value = pid ?? 0;
+}
+
+function askCreatePipeline(): void {
+  if (!deploy.value || busyKey.value) return;
+  pipeDrawer.value = { open: true, id: 0, initial: null, title: '新增流水线', sub: `部署集 ${props.appName}` };
+  void loadPipeCascade();
+}
+
+function askEditPipeline(row: PipelineRow): void {
+  if (busyKey.value) return;
+  pipeDrawer.value = { open: true, id: row.id, initial: toPipelineForm(row), title: `编辑流水线 · ${row.name}`, sub: `部署集 ${props.appName}` };
+  void loadPipeCascade();
+}
+
+function onPipelineSubmit(form: PipelineForm): void {
+  const id = pipeDrawer.value.id || undefined;
+  void savePipeline(form, id).then((ok) => {
+    if (ok) pipeDrawer.value.open = false;
+  });
+}
+
+function askRemovePipeline(row: PipelineRow): void {
+  if (busyKey.value) return;
+  openGuard(`删除流水线 ${row.name}（分支 ${row.branch || '—'}）。删除后 Webhook 地址立即失效，历史运行记录保留。确认？`, () => removePipeline(row));
+}
+
+async function onCopyWebhook(row: PipelineRow): Promise<void> {
+  if (busyKey.value) return;
+  const r = await copyWebhookFor(row);
+  if (!r.ok) return; // 失败反馈已在 useDeployData.pushFeedback
+  const copied = await copyTextToClipboard(r.url, navigator, document);
+  toast(copied ? 'WebHook 地址已复制到剪贴板' : `复制失败，地址：${r.url}`, copied ? 'ok' : 'err');
+}
+
+function askTriggerPipeline(row: PipelineRow): void {
+  if (busyKey.value) return;
+  openGuard('启动流水线。确认手动触发该流水线运行（使用当前分支最新提交）？', () => triggerRun(row));
+}
+
+// ---------- CARD-DEP-02 运行筛选/重跑/详情 + CARD-DEP-03/04 ----------
+
+function askRerun(row: ShipRunRow): void {
+  if (busyKey.value) return;
+  openGuard('重跑流水线。确认基于本次运行重新触发流水线？', () => rerunRun(row.id));
+}
+
+function onFilterChange(patch: Partial<RunFilter>): void {
+  setRunFilter(patch);
+}
+
+// CARD-DEP-03：步骤明细抽屉（数据源 = 详情响应 steps[]，零新增请求）
+const stepsDrawerOpen = ref(false);
+
+// CARD-DEP-04：Webhook 字段说明（GetFields 一次加载；失败降级静态说明）
+const webhookFields = ref<WebhookFieldDoc[] | null>(null);
+const webhookFieldsLoading = ref(false);
+
+async function loadWebhookFields(): Promise<void> {
+  if (webhookFields.value || webhookFieldsLoading.value) return;
+  webhookFieldsLoading.value = true;
+  // GetFields 无 /api 前缀（走查缺陷2）：fetchWebhookFields 内部直连 VITE_APP_BASE_API，失败静默降级
+  webhookFields.value = await fetchWebhookFields();
+  webhookFieldsLoading.value = false;
+}
+
+// pipeline 页签可见（或整页 /ship 不分区块）时加载一次
+watch(
+  () => (props.section ?? 'pipeline') === 'pipeline',
+  (v) => {
+    if (v) void loadWebhookFields();
+  },
+  { immediate: true },
 );
 </script>
 
@@ -560,35 +608,12 @@ const attention = computed(() =>
     </Card>
 
     <template v-else-if="deploy">
-      <!-- 操作进行中与最近反馈：始终在用户视线内 -->
-      <div
-        v-if="busyText || feedback.length"
-        class="flex flex-col gap-[6px]"
-        data-spec="ship-feedback"
-      >
-        <div
-          v-if="busyText"
-          class="rounded-[8px] border border-[color-mix(in_oklab,var(--el-color-primary)_40%,transparent)] bg-[color-mix(in_oklab,var(--el-color-primary)_10%,transparent)] px-3 py-2 text-[12.5px] text-[var(--el-color-primary-light-3)]"
-          data-spec="ship-busy"
-        >
-          {{ busyText }}
-        </div>
-        <div
-          v-for="f in feedback"
-          :key="f.key"
-          data-spec="ship-feedback-item"
-          class="flex items-start gap-2 rounded-[8px] border px-3 py-2 text-[12.5px]"
-          :class="f.ok ? NOTICE_CLASS.info : 'border-[color-mix(in_oklab,var(--el-color-danger)_35%,transparent)] bg-[color-mix(in_oklab,var(--el-color-danger)_10%,transparent)] text-[var(--el-color-danger)]'"
-        >
-          <KIcon
-            :name="f.ok ? 'Check' : 'Alert'"
-            :size="13"
-            class="mt-[2px] shrink-0"
-          />
-          <span class="min-w-0 flex-1 break-words">{{ f.text }}</span>
-          <span class="shrink-0 font-mono text-[11px] tabular-nums opacity-70">{{ f.at }}</span>
-        </div>
-      </div>
+      <!-- 操作进行中与最近反馈：始终在用户视线内；「查看运行」直达该次运行详情抽屉（task-88 2026-11-12） -->
+      <DeployFeedbackStrip
+        :busy-text="busyText"
+        :items="feedback"
+        @open-run="openRunDetail"
+      />
 
       <DeployVersionBar
         :version="deploy.version"
@@ -612,6 +637,13 @@ const attention = computed(() =>
         :data-section="section ?? 'all'"
       >
         <div v-if="show('versions')">
+          <!-- CARD-DEP-08 D5（J-REG-01 §8 行 9 移交项）：工作台部署页签顶部应用联想框，选中跳该应用部署页签（仅工作台 versions 页签，/ship 页自有下拉不重复） -->
+          <div
+            v-if="section === 'versions'"
+            class="mb-3"
+          >
+            <AppLov @select="onLovSelect" />
+          </div>
           <DeployVersionList
             :versions="versions"
             :versions-failed="versionsFailed"
@@ -661,6 +693,8 @@ const attention = computed(() =>
             :nodes-failed="nodesFailed"
             :busy-key="busyKey"
             :version-tags="versionTags"
+            :deploy-name="deploy?.name ?? ''"
+            :others="others"
             @operate="askOperate"
             @batch="askBatch"
             @create="askCreateNode('deploy')"
@@ -688,39 +722,48 @@ const attention = computed(() =>
         </div>
 
         <div v-if="show('pipeline')">
-          <PipelineBoard
-            :cards="pipelines"
-            :failed="pipelinesFailed"
-            :busy-key="busyKey"
-            :build-labels="buildLabels"
-            :copying-id="copyingId"
-            @create="askCreatePipeline"
-            @edit="askEditPipeline"
-            @trigger="askTrigger"
-            @copy="onCopyWebhook"
-          />
-          <p
-            v-if="webhookFallback"
-            class="m-0 break-all rounded-[8px] border border-[var(--el-border-color-light)] bg-[var(--el-bg-color-overlay)] px-3 py-2 font-mono text-[11.5px] text-[var(--el-text-color-primary)]"
-            data-spec="pipeline-webhook-fallback"
-          >
-            {{ webhookFallback }}
-          </p>
-          <DeployPipelineRuns
-            :run-rows="runRows"
-            :selected-run-id="selectedRunId"
-            :stages="stages"
-            :view="view"
-            :rollback-disabled="rollbackDisabled"
-            :rollback-title="rollbackTitle"
-            :rolling-back="rollbackBusy"
-            :reprocess-disabled="reprocessDisabled"
-            :reprocess-title="reprocessTitle"
-            :reprocessing="reprocessing"
-            @select="selectRun"
-            @rollback="askRollback"
-            @reprocess="askReprocess"
-          />
+          <div class="flex flex-col gap-3">
+            <!-- CARD-DEP-01：流水线配置（CRUD + 复制地址 + 启动） -->
+            <PipelineConfigCard
+              :rows="pipelines"
+              :failed="pipelinesFailed"
+              :busy-key="busyKey"
+              @create="askCreatePipeline"
+              @copy="onCopyWebhook"
+              @trigger="askTriggerPipeline"
+              @edit="askEditPipeline"
+              @remove="askRemovePipeline"
+              @retry="load()"
+            />
+
+            <!-- CARD-DEP-02：流水线运行（筛选 + 行内重跑/详情 + 5s 轮询在 useDeployData） -->
+            <DeployPipelineRuns
+              :run-rows="runRows"
+              :selected-run-id="selectedRunId"
+              :stages="stages"
+              :view="view"
+              :rollback-disabled="rollbackDisabled"
+              :rollback-title="rollbackTitle"
+              :rolling-back="rollbackBusy"
+              :run-filter="runFilter"
+              :rerun-key="rerunKey"
+              @select="selectRun"
+              @rollback="askRollback"
+              @rerun="askRerun"
+              @detail="openRunDetail($event.id)"
+              @filter-change="onFilterChange"
+              @filter-reset="resetRunFilter"
+            />
+
+            <!-- CARD-DEP-04：Webhook 接入说明（复制 + GetFields 指引 + 结果语义速查） -->
+            <PipelineWebhookCard
+              :rows="pipelines"
+              :fields="webhookFields"
+              :fields-loading="webhookFieldsLoading"
+              :copying-id="pipeCopyId"
+              @copy="onCopyWebhook"
+            />
+          </div>
         </div>
       </div>
     </template>
@@ -752,19 +795,42 @@ const attention = computed(() =>
       :open="logDrawer.open"
       :deploy-node-id="logDrawer.deployNodeId"
       :node-name="logDrawer.nodeName"
+      :log-dir="effectiveLogDir"
       @close="logDrawer.open = false"
+      @configure="onConfigureLog"
     />
 
-    <PipelineFormDrawer
+    <!-- CARD-DEP-01 流水线配置抽屉（新增/编辑 + 三级联） -->
+    <PipelineConfigDrawer
       :open="pipeDrawer.open"
-      :pipeline-id="pipeDrawer.id"
       :initial="pipeDrawer.initial"
-      :busy="pipeSaving"
-      :loading="pipeDrawer.loading"
-      :compile-choices="compileChoices"
-      :deploy-choices="deployChoices"
+      :title="pipeDrawer.title"
+      :sub="pipeDrawer.sub"
+      :project-id="pipeProjectId"
+      :node-options="pipeNodeOptions"
+      :nodes-loading="pipeNodesLoading"
+      :search-nodes="searchNodesFor"
+      :busy="busyKey === 'save'"
       @close="pipeDrawer.open = false"
       @submit="onPipelineSubmit"
+    />
+
+    <!-- CARD-DEP-02 运行详情抽屉（Detail JSON，5s 轮询由 useDeployData） -->
+    <PipelineRunDetailDrawer
+      :open="runDetailOpen"
+      :state="runDetailState === 'idle' ? 'loading' : runDetailState"
+      :detail="runDetail"
+      @close="closeRunDetail"
+      @open-steps="stepsDrawerOpen = true"
+      @retry="retryRunDetail"
+    />
+
+    <!-- CARD-DEP-03 步骤明细抽屉（数据源 = 详情响应 steps[]，零新增请求） -->
+    <PipelineStepDrawer
+      :open="stepsDrawerOpen"
+      :detail="runDetail"
+      :nodes="nodes"
+      @close="stepsDrawerOpen = false"
     />
 
     <!-- 概览：版本条之后是需关注事项；加载中不显示，加载失败时照常显示（部署相关项为待接入，实例数不依赖部署集） -->

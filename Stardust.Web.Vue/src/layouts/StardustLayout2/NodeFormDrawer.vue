@@ -5,10 +5,10 @@
  * validateBuildNodeForm），真正落库在容器（useDeployData.saveNode / saveBuildNode）。
  * 节点选择器数据由容器 fetchNodeOptions 拉好传入；提交按钮遵守 AGENTS.md §11（busy 禁用 + 文案变化）。
  */
-import { reactive, ref, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import Btn from './Btn.vue';
 import Drawer from './Drawer/Drawer.vue';
-import { validateBuildNodeForm, validateDeployNodeForm } from './deploy.logic.ts';
+import { nodeEchoState, validateBuildNodeForm, validateDeployNodeForm } from './deploy.logic.ts';
 import type { BuildNodeForm, DeployNodeForm, NodeOption } from './deploy.logic.ts';
 
 const inputCls =
@@ -74,6 +74,10 @@ function onNodeChange(e: Event): void {
   form.nodeId = Number((e.target as HTMLSelectElement).value) || 0;
 }
 
+// task-91 回显健康度：编辑打开但物理节点无法回显时给可见提示（212 旧构建投影缺 nodeId / 绑定节点已停用）。
+// 随 form.nodeId 反应：用户重选节点后警示自动消失。
+const echoState = computed(() => nodeEchoState(props.initial, form.nodeId, props.nodeOptions, props.nodesLoading));
+
 function onSubmit(): void {
   const err = props.kind === 'deploy' ? validateDeployNodeForm(form) : validateBuildNodeForm(form);
   if (err) {
@@ -101,10 +105,13 @@ function onSubmit(): void {
 </script>
 
 <template>
+  <!-- task-90：z-index 41 —— 从「节点文件日志」空态点「配置日志目录」时，本抽屉与 DeployLogDrawer（z=40）同屏叠放，
+       EP ElDrawer 不 teleport、同 z-index 由 DOM 顺序决定叠放（日志抽屉挂载在后会盖住本抽屉），故抬高一层。 -->
   <Drawer
     :open="open"
     :title="title"
     :sub="sub"
+    :z-index="41"
     @close="emit('close')"
   >
     <div
@@ -139,6 +146,17 @@ function onSubmit(): void {
             {{ n.name }}{{ n.ip ? `（${n.ip}）` : '' }}
           </option>
         </select>
+        <!-- task-91 回显警示：详情缺 nodeId（212 旧构建投影缺关联键）或绑定节点不在可选项时可见提示，重选后消失 -->
+        <p
+          v-if="echoState === 'missing'"
+          data-spec="node-echo-warning"
+          class="m-0 text-[12px] text-[var(--el-color-warning)]"
+        >未能回显该行已绑定的物理节点（详情接口未返回 nodeId）。如需保存，请重新选择节点。</p>
+        <p
+          v-else-if="echoState === 'unavailable'"
+          data-spec="node-echo-warning"
+          class="m-0 text-[12px] text-[var(--el-color-warning)]"
+        >该行绑定的物理节点 #{{ form.nodeId }} 不在可选项中（可能已停用）。如需更换，请重新选择节点。</p>
       </label>
 
       <template v-if="kind === 'deploy'">
