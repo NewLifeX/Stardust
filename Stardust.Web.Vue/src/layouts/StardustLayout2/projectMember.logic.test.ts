@@ -3,6 +3,7 @@ import type { Req, ReqOptions } from '../../../apps/stardust/src/views/Stardust/
 import {
   addMember,
   addMemberBlockReason,
+  buildMemberQueryParams,
   candidateUsers,
   feedbackRemainMs,
   fetchMemberLinks,
@@ -152,5 +153,58 @@ describe('ProjectUser 请求', () => {
       'DELETE /Platform/ProjectUser q=7 body=/undefined',
       'PUT /Platform/ProjectUser q= body=7/false',
     ]);
+  });
+});
+
+// ==================== 成员卡查询条（CARD-PLT-06） ====================
+
+describe('buildMemberQueryParams', () => {
+  it('enable 三态布尔化：on→true / off→false / 空→不带', () => {
+    expect(buildMemberQueryParams({ enable: 'on' })).toEqual({ enable: true });
+    expect(buildMemberQueryParams({ enable: 'off' })).toEqual({ enable: false });
+    expect(buildMemberQueryParams({ enable: '' })).toEqual({});
+    expect(buildMemberQueryParams({})).toEqual({});
+  });
+
+  it('dtStart/dtEnd/Q trim 空不下发，非空下发', () => {
+    expect(buildMemberQueryParams({ dtStart: '  ', dtEnd: '', Q: '   ' })).toEqual({});
+    expect(buildMemberQueryParams({ dtStart: ' 2026-01-01 ', dtEnd: '2026-01-31', Q: ' 何炳宏 ' }))
+      .toEqual({ dtStart: '2026-01-01', dtEnd: '2026-01-31', Q: '何炳宏' });
+  });
+});
+
+describe('fetchMemberLinks 查询条', () => {
+  it('带 query：projectId 顶栏透传 + 查询参拼装（PageSize 在最前，enable/dt/Q 叠加）', async () => {
+    let seen: Record<string, unknown> = {};
+    const req: Req = async (opt) => {
+      seen = opt.params ?? {};
+      return { data: [{ Id: 9, ProjectId: 3, UserId: 4, Enable: false, UserName: '停用账号' }] };
+    };
+    const r = await fetchMemberLinks(req, 3, { enable: 'off', dtStart: '2026-01-01', Q: '停用' });
+    expect(seen).toEqual({ PageSize: 500, projectId: 3, enable: false, dtStart: '2026-01-01', Q: '停用' });
+    expect(r.error).toBe('');
+    expect(r.rows[0]).toMatchObject({ id: 9, enable: false, userName: '停用账号' });
+  });
+
+  it('不带 query（既有两参调用形态回归）：仅 PageSize + 条件 projectId，不出现查询参', async () => {
+    let seen: Record<string, unknown> = {};
+    const req: Req = async (opt) => {
+      seen = opt.params ?? {};
+      return { data: [] };
+    };
+    await fetchMemberLinks(req, null);
+    expect(seen).toEqual({ PageSize: 500 });
+    await fetchMemberLinks(req, 7);
+    expect(seen).toEqual({ PageSize: 500, projectId: 7 });
+  });
+
+  it('空条件查询等同无参（全键 trim 空不下发），projectId=0 顶栏不透传', async () => {
+    let seen: Record<string, unknown> = {};
+    const req: Req = async (opt) => {
+      seen = opt.params ?? {};
+      return { data: [] };
+    };
+    await fetchMemberLinks(req, 0, { enable: '', dtStart: '', dtEnd: '', Q: '' });
+    expect(seen).toEqual({ PageSize: 500 });
   });
 });

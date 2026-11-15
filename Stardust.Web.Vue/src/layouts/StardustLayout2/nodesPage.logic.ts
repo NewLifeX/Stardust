@@ -11,8 +11,21 @@
 // 复用 apps/stardust/nodes.model.ts 的纯函数：mapNodes 做字段归一与在线/离线初判，buildOnlineIndex 从在线应用建
 // 在线名集合与服务数计数；本文件在此之上合并 NodeOnline 实时指标，归一成控制台三态（正常/高负载/离线）。
 //
-// NodeController 自定义动作只有 Trace/SetAlarm/ResetAlarm/Fix/RefreshDns，没有批量升级 Agent / 安装 .NET / 下发指令
-// 的端点，也没有「接入节点向导」接口 → 这些按钮一律 disabled 并在视线内显示「待接入」，不发假请求。
+// NodeController 自定义动作只有 Trace/SetAlarm/ResetAlarm/Fix/RefreshDns，没有单节点「升级 Agent /
+// 安装 .NET」的端点，也没有「接入节点向导」接口 → 这些按钮一律 disabled 并在视线内显示「待接入」，不发假请求。
+// 批量运维五动作（CARD-NODE-11，2026-11-09）：不落本文件，独立为 nodeOnline.logic.ts ——
+// NodeOnlineController 的 CheckUpgrade/SyncTime/Restart/Reboot/Execute（GET+keys=在线会话 Id），
+// 勾选 Node.Id 经 /Nodes/NodeOnline 快照行（nodeID+updateTime 最新）映射；契约汇总条+逐节点展开行；
+// 前端无权限位数据源 → 不做前端权限禁用，权限不足由后端拒绝经失败条呈现（旅程 NodeOnline.md S3 如实）。
+//
+// 增量登记（共享文件，按任务追加）：
+//  - NODE-01 节点页骨架：mergeNodes/toneCounts/filterConsole/toggleSelect/barLevel/relTime/layoutNodes
+//  - NODE-11 批量运维：nodeOnline.logic.ts（独立文件，不在此登记）
+//  - NODE-13 抽屉：toNodeAppRows/cpuPoints/drawerKv/fetchNodes/fetchNodeApps/fetchCpuHistory（参数 fetchCpuHistory/request/nodeId/projectId）
+//  - NODE-06 抽屉命令：nodeCmd.logic.ts（独立文件，不在此登记）
+//  - CARD-NODE-07 抽屉「性能」页签（2026-11-10）：pageSizeFor24h(:414)/sampleEvenly(:424)/NODE_DATA_SERIES(:436)/
+//    toNodeDataChart(:470)/buildNodeDataChartOption(:495)/toNodeLovItem(:513)/fetchNodeSearchOptions(:527)/fetchNodeData(:551)；
+//    契约=NodeDataController.cs:37-47（Period>0?24*3600/Period:1440）+ NodeController.cs:128-142（NodeSearch Lov）。
 import {
   mapNodes,
   type NodeRow,
@@ -381,5 +394,174 @@ export async function fetchCpuHistory(
     return { points: cpuPoints(listOf(res)), error: '' };
   } catch (e) {
     return { points: [], error: e instanceof Error && e.message ? e.message : 'CPU 历史加载失败' };
+  }
+}
+
+// ==================== 抽屉「性能」页签（CARD-NODE-07，2026-11-10 定稿） ====================
+// 24h 采样换算取全量点 + 时间轴等距取点 + 13 序列单 Y 轴按值显隐；Lov=NodeSearch（与 NODE-01 共用）。
+// 后端契约：NodeDataController.cs:37-47（nodeId>0 且 PageSize==20 → PageSize=Period>0?24*3600/Period:1440）；
+// 节点实体 Period 默认 60 秒（节点.cs:449）；序列字段映射实抄迁移页 NodeData/index.vue:189-201。
+
+/** 首字母小写（SystemLoad→systemLoad；NewLife camelCase 序列化兜底，DiskIOPS→diskIOPS 保留后续大小写） */
+function camel(name: string): string {
+  return name ? name[0].toLowerCase() + name.slice(1) : name;
+}
+
+/**
+ * 24h 采样换算（C11a，BL-NData-03）：Period>0 → 24*3600/Period（向下取整，与 C# 整数除法一致），
+ * 否则 1440（每分钟一点）。前端主动换算带上目标 PageSize，不依赖后端「PageSize==20 时魔法扩大」。
+ */
+export function pageSizeFor24h(period?: number | null): number {
+  const p = num(period);
+  if (p !== null && p > 0) return Math.floor((24 * 3600) / p);
+  return 1440;
+}
+
+/**
+ * 时间轴等距取点（C11b）：超过 max 时按索引等距抽样（含首尾两点），否则原样返回；空集/非法 max → 空数组。
+ * 用于把 24h 全量采样（Period<60 时最多 2880+ 点）降密到可读密度。
+ */
+export function sampleEvenly<T>(rows: T[], max: number): T[] {
+  if (!Array.isArray(rows) || rows.length === 0) return [];
+  if (!(max > 0)) return [];
+  if (rows.length <= max) return rows;
+  if (max === 1) return [rows[0]];
+  const step = (rows.length - 1) / (max - 1);
+  const out: T[] = [];
+  for (let i = 0; i < max; i++) out.push(rows[Math.round(i * step)]);
+  return out;
+}
+
+/** 13 序列定义（迁移页 legend 原文 + 后端字段；scale=百分比字段 ×100，其余原值） */
+export const NODE_DATA_SERIES: readonly { key: string; field: string; scale: number }[] = [
+  { key: '系统负载(%)', field: 'SystemLoad', scale: 100 },
+  { key: 'CPU率(%)', field: 'CpuRate', scale: 100 },
+  { key: '空闲内存(M)', field: 'FreeMemory', scale: 1 },
+  { key: '可用磁盘(M)', field: 'AvailableFreeSpace', scale: 1 },
+  { key: '磁盘活动(%)', field: 'DiskActiveTime', scale: 100 },
+  { key: '电量(%)', field: 'Battery', scale: 100 },
+  { key: '上行(B/s)', field: 'UplinkSpeed', scale: 1 },
+  { key: '下行(B/s)', field: 'DownlinkSpeed', scale: 1 },
+  { key: '温度', field: 'Temperature', scale: 1 },
+  { key: '磁盘IOPS', field: 'DiskIOPS', scale: 1 },
+  { key: '连接数', field: 'TcpConnections', scale: 1 },
+  { key: '内网质量(%)', field: 'IntranetScore', scale: 100 },
+  { key: '外网质量(%)', field: 'InternetScore', scale: 100 },
+];
+
+/** 单序列：图例名 + 值列（与 times 对齐；该行无值为 null，ECharts 断点） */
+export interface NodeSeries {
+  name: string;
+  values: (number | null)[];
+}
+
+/** 性能页签图表视图模型：times 升序 + 按值显隐后的序列 + 换算取回的原始行数 */
+export interface NodeDataChart {
+  times: string[];
+  series: NodeSeries[];
+  total: number;
+}
+
+/**
+ * NodeData 采样行 → 图表数据（C11b/c，BL-NData-05）：X=LocalTime 升序，13 序列单 Y 轴，
+ * 按值显隐=任一采样行该字段有数值才收进 series（全空序列不画、不进图例）；
+ * 超过 maxPoints 按时间轴等距取点降密；空集 → { times:[], series:[], total:0 }（空态不画假曲线）。
+ */
+export function toNodeDataChart(rows: Rec[], maxPoints = 1440): NodeDataChart {
+  const ordered = [...(rows ?? [])].sort((a, b) =>
+    str(pick(a, 'localTime', 'LocalTime')).localeCompare(str(pick(b, 'localTime', 'LocalTime'))),
+  );
+  const sampled = sampleEvenly(ordered, maxPoints);
+  const times = sampled.map((r) => str(pick(r, 'localTime', 'LocalTime')));
+  const series: NodeSeries[] = [];
+  for (const def of NODE_DATA_SERIES) {
+    const values: (number | null)[] = [];
+    let hasValue = false;
+    for (const r of sampled) {
+      const n = num(pick(r, def.field, camel(def.field)));
+      if (n === null) {
+        values.push(null);
+        continue;
+      }
+      hasValue = true;
+      values.push(n * def.scale);
+    }
+    if (hasValue) series.push({ name: def.key, values });
+  }
+  return { times, series, total: ordered.length };
+}
+
+/** 采样行 → ECharts option（供 src/components/EChart.vue；单 Y 轴，颜色走组件默认调色板） */
+export function buildNodeDataChartOption(chart: NodeDataChart): Record<string, unknown> {
+  return {
+    tooltip: { trigger: 'axis' },
+    legend: { data: chart.series.map((s) => s.name), type: 'scroll', bottom: 0 },
+    grid: { left: 48, right: 24, top: 24, bottom: 56, containLabel: true },
+    xAxis: { type: 'category', boundaryGap: false, data: chart.times },
+    yAxis: { type: 'value' },
+    series: chart.series.map((s) => ({ name: s.name, type: 'line', smooth: true, showSymbol: false, data: s.values })),
+  };
+}
+
+/** 节点搜索 Lov 选项（AppLov 同形：{id,value}，el-autocomplete value-key='value'） */
+export interface NodeOption {
+  id: number;
+  value: string;
+}
+
+/** NodeSearch 候选行 → Lov 选项（name 优先，兜底 code/IP；丢掉无 Id 行） */
+export function toNodeLovItem(r: Rec): NodeOption | null {
+  const id = num(pick(r, 'iD', 'ID', 'id', 'Id'));
+  if (id === null || id <= 0) return null;
+  const name = str(pick(r, 'name', 'Name'));
+  const code = str(pick(r, 'code', 'Code'));
+  const ip = str(pick(r, 'iP', 'IP', 'ip'));
+  return { id, value: name || code || ip || `#${id}` };
+}
+
+/**
+ * Lov 远程联想（CARD-NODE-07 §9.3，与 NODE-01 共用组件）：GET /Nodes/Node/NodeSearch
+ * （NodeController.cs:128-142 [LovList]，params key/pageSize 20 服务端固定/LastActive desc）。
+ * 空关键字不发请求；失败静默空列表（联想框可改词重试）。
+ */
+export async function fetchNodeSearchOptions(
+  request: Req,
+  key: string,
+  projectId?: number | null,
+): Promise<NodeOption[]> {
+  const q = str(key);
+  if (!q) return [];
+  try {
+    // PageSize 固定 20 对齐后端契约（NodeController.cs:131 new PageParameter{PageSize=20}），不走 paramsOf 默认 500
+    const p: Record<string, unknown> = { key: q, PageSize: 20 };
+    if (projectId != null) p.projectId = projectId;
+    const res = await request({ url: '/Nodes/Node/NodeSearch', method: 'GET', params: p });
+    return listOf(res)
+      .map(toNodeLovItem)
+      .filter((o): o is NodeOption => o !== null);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * 抽屉「性能」页签取数（C11a）：GET /Nodes/NodeData，PageSize=24h 采样换算值（period 取节点实体 Period）。
+ * 返回原始采样行（Pascal/camel 双形态字段），供 toNodeDataChart 消费。
+ */
+export async function fetchNodeData(
+  request: Req,
+  nodeId: number,
+  period?: number | null,
+  projectId?: number | null,
+): Promise<{ rows: Rec[]; error: string }> {
+  try {
+    const res = await request({
+      url: '/Nodes/NodeData',
+      method: 'GET',
+      params: paramsOf(projectId, { nodeId, PageSize: pageSizeFor24h(period) }),
+    });
+    return { rows: listOf(res), error: '' };
+  } catch (e) {
+    return { rows: [], error: e instanceof Error && e.message ? e.message : '性能数据加载失败' };
   }
 }

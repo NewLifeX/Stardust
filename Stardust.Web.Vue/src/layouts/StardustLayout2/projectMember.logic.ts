@@ -144,10 +144,40 @@ export function memberSaveBlock(
   return '';
 }
 
-export async function fetchMemberLinks(request: Req, projectId?: number | null): Promise<{ rows: MemberLink[]; error: string }> {
+// ==================== 成员卡查询条（CARD-PLT-06） ====================
+
+/** 成员卡查询条条件。enable 三态：'' 全部 / 'on' 仅启用 / 'off' 仅停用（userId 不做控件，记差异）。 */
+export interface MemberQuery {
+  enable?: '' | 'on' | 'off';
+  dtStart?: string;
+  dtEnd?: string;
+  Q?: string;
+}
+
+/** 查询条件 → 服务端 params：trim 空不下发；enable 布尔化（后端 ProjectUserController.Search 读 p["enable"]?.ToBoolean()）。
+ *  projectId 不在此函数内——顶栏透传由 fetchMemberLinks 第二参承载，与定稿卡 §5 次序一致。 */
+export function buildMemberQueryParams(q: MemberQuery): Record<string, unknown> {
+  const p: Record<string, unknown> = {};
+  if (q.enable === 'on') p.enable = true;
+  else if (q.enable === 'off') p.enable = false;
+  const dtStart = (q.dtStart ?? '').trim();
+  if (dtStart) p.dtStart = dtStart;
+  const dtEnd = (q.dtEnd ?? '').trim();
+  if (dtEnd) p.dtEnd = dtEnd;
+  const kw = (q.Q ?? '').trim();
+  if (kw) p.Q = kw;
+  return p;
+}
+
+export async function fetchMemberLinks(
+  request: Req,
+  projectId?: number | null,
+  query?: MemberQuery,
+): Promise<{ rows: MemberLink[]; error: string }> {
   try {
     const params: Record<string, unknown> = { PageSize: 500 };
     if (projectId != null && projectId > 0) params.projectId = projectId;
+    if (query) Object.assign(params, buildMemberQueryParams(query));
     const res = await request({ url: '/Platform/ProjectUser', method: 'GET', params });
     return { rows: listOf(res).map(toLink), error: '' };
   } catch (e) {

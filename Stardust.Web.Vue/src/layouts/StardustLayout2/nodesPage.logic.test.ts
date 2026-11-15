@@ -12,6 +12,13 @@ import {
   cpuPoints,
   fetchNodes,
   fetchNodeApps,
+  fetchNodeData,
+  fetchNodeSearchOptions,
+  pageSizeFor24h,
+  sampleEvenly,
+  toNodeDataChart,
+  buildNodeDataChartOption,
+  NODE_DATA_SERIES,
   type NodeRowView,
 } from './nodesPage.logic.ts';
 import type { Req } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
@@ -245,5 +252,125 @@ describe('fetchNodes：request 注入 / projectId 透传 / 失败 error', () => 
       'agentVer', 'cluster', 'cpu', 'framework', 'id', 'ip', 'lastActive', 'machineName',
       'mem', 'name', 'os', 'ping', 'raw', 'runtime', 'services', 'tone', 'code',
     ].sort());
+  });
+});
+
+// ==================== CARD-NODE-07 抽屉「性能」页签（24h 换算/等距取点/按值显隐/Lov） ====================
+
+describe('pageSizeFor24h：24h 采样换算（镜像 NodeDataController.cs:37-47）', () => {
+  it('Period>0 → 24*3600/Period 向下取整；0/null/负 → 1440 兜底', () => {
+    expect(pageSizeFor24h(60)).toBe(1440); // 默认 60 秒 → 每分钟一点
+    expect(pageSizeFor24h(30)).toBe(2880); // 30 秒 → 86400/30
+    expect(pageSizeFor24h(7)).toBe(12342); // 86400/7=12342.857 → floor
+    expect(pageSizeFor24h(0)).toBe(1440);
+    expect(pageSizeFor24h(null)).toBe(1440);
+    expect(pageSizeFor24h(undefined)).toBe(1440);
+    expect(pageSizeFor24h(-5)).toBe(1440);
+  });
+});
+
+describe('sampleEvenly：时间轴等距取点（C11b）', () => {
+  const seven = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
+
+  it('rows≤max 原样返回（同引用）；rows>max 含首尾等距抽样', () => {
+    expect(sampleEvenly(seven, 10)).toBe(seven); // 未超上限 → 原样
+    expect(sampleEvenly(seven, 7)).toBe(seven);
+    // max=4 → step=(7-1)/3=2 → 索引 0,2,4,6（首尾必含）
+    expect(sampleEvenly(seven, 4)).toEqual(['a', 'c', 'e', 'g']);
+  });
+
+  it('边界：空集 → []；max=0/负 → []；max=1 → 仅首元素', () => {
+    expect(sampleEvenly([], 100)).toEqual([]);
+    expect(sampleEvenly(seven, 0)).toEqual([]);
+    expect(sampleEvenly(seven, -3)).toEqual([]);
+    expect(sampleEvenly(seven, 1)).toEqual(['a']);
+  });
+});
+
+describe('toNodeDataChart：13 序列按值显隐 + ×100 + LocalTime 升序 + 空态不画假曲线', () => {
+  // 手工样例：两行乱序；温度两行全 null（应隐藏）；电量仅一行有值（应保留且对齐 null）；cpuRate/systemLoad 百分比 ×100
+  const SAMPLE = [
+    { localTime: '10:00', cpuRate: 0.42, systemLoad: 1.2, battery: 0.85, uplinkSpeed: 100, temperature: null },
+    { localTime: '09:00', cpuRate: 0.5, systemLoad: 1.0, uplinkSpeed: null, temperature: undefined },
+  ];
+
+  it('13 序列定义自检 + 升序 + ×100 换算 + 全空序列隐藏', () => {
+    expect(NODE_DATA_SERIES).toHaveLength(13);
+    const c = toNodeDataChart(SAMPLE);
+    expect(c.total).toBe(2);
+    expect(c.times).toEqual(['09:00', '10:00']); // LocalTime 升序
+    const cpu = c.series.find((s) => s.name === 'CPU率(%)');
+    expect(cpu?.values).toEqual([50, 42]); // ×100，与升序行对齐
+    const load = c.series.find((s) => s.name === '系统负载(%)');
+    expect(load?.values).toEqual([100, 120]);
+    const battery = c.series.find((s) => s.name === '电量(%)');
+    expect(battery?.values).toEqual([null, 85]); // 09:00 行无值 → null 断点
+    expect(c.series.find((s) => s.name === '温度')).toBeUndefined(); // 两行全空 → 不进图表/图例
+    // 未缩放字段原值：上行 B/s
+    const up = c.series.find((s) => s.name === '上行(B/s)');
+    expect(up?.values).toEqual([null, 100]);
+  });
+
+  it('空集 → 全空视图模型（空态，不画假曲线）；option 形态=单 Y 轴 + 按值显隐后的 series', () => {
+    const empty = toNodeDataChart([]);
+    expect(empty).toEqual({ times: [], series: [], total: 0 });
+    const c = toNodeDataChart(SAMPLE);
+    const opt = buildNodeDataChartOption(c);
+    expect(opt.yAxis).toEqual({ type: 'value' }); // 单 Y 轴（双 Y 轴裁定不补）
+    expect((opt.series as { name: string }[]).map((s) => s.name)).toEqual(c.series.map((s) => s.name));
+    expect(opt.xAxis).toMatchObject({ type: 'category', boundaryGap: false, data: c.times });
+  });
+});
+
+describe('fetchNodeData / fetchNodeSearchOptions：PageSize 主动换算 + Lov 契约（CARD-NODE-07）', () => {
+  interface Call { url: string; method?: string; params?: Record<string, unknown> }
+  function stub(handler: (c: Call) => unknown): { req: Req; calls: Call[] } {
+    const calls: Call[] = [];
+    const req: Req = async (c) => {
+      calls.push(c);
+      return handler(c) as { data?: unknown };
+    };
+    return { req, calls };
+  }
+
+  it('fetchNodeData：GET /Nodes/NodeData 带 nodeId+换算 PageSize+projectId；失败 → error+空行', async () => {
+    const { req, calls } = stub((c) => ({ data: [{ localTime: '09:00', cpuRate: 0.5 }] }));
+    const { rows, error } = await fetchNodeData(req, 5, 30, 9);
+    expect(error).toBe('');
+    expect(rows).toHaveLength(1);
+    expect(calls[0].url).toBe('/Nodes/NodeData');
+    expect(calls[0].params?.nodeId).toBe(5);
+    expect(calls[0].params?.PageSize).toBe(2880); // period=30 → 24*3600/30
+    expect(calls[0].params?.projectId).toBe(9);
+    const bad: Req = async () => {
+      throw new Error('Request failed with status 500');
+    };
+    const r2 = await fetchNodeData(bad, 5, 60);
+    expect(r2.rows).toEqual([]);
+    expect(r2.error).toMatch(/500/);
+  });
+
+  it('fetchNodeSearchOptions：空关键字不发请求；NodeSearch PageSize 固定 20；脏行过滤；失败静默空列表', async () => {
+    const { req, calls } = stub((c) => ({
+      data: [
+        { id: 1, name: 'web-1', code: 'N001', iP: '10.0.0.1' },
+        { id: 0, name: 'dirty' },
+        { name: 'no-id' },
+        { id: 2, name: '', code: 'N002' },
+      ],
+    }));
+    expect(await fetchNodeSearchOptions(req, '')).toEqual([]);
+    expect(calls).toHaveLength(0); // 空关键字不发请求
+    const opts = await fetchNodeSearchOptions(req, 'web', 7);
+    expect(calls[0].url).toBe('/Nodes/Node/NodeSearch');
+    expect(calls[0].params).toMatchObject({ key: 'web', PageSize: 20, projectId: 7 });
+    expect(opts).toEqual([
+      { id: 1, value: 'web-1' },
+      { id: 2, value: 'N002' }, // name 空 → 兜底 code
+    ]);
+    const bad: Req = async () => {
+      throw new Error('boom');
+    };
+    expect(await fetchNodeSearchOptions(bad, 'web')).toEqual([]); // 联想失败静默
   });
 });
