@@ -23,6 +23,8 @@ import { ref, computed, onMounted } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import request from '@newlifex/cube-vue/core/utils/request';
 import { usePageApi } from '@newlifex/cube-vue/core/composables/useCubeApi';
+// 单元格取值纯逻辑：PascalCase/camelCase 双方言都认（修 2026-11-12 走查 bug2 列全空白）
+import { cellText } from './pipelineCell.logic.ts';
 
 const api = usePageApi('Deployment', 'AppPipeline');
 
@@ -70,14 +72,6 @@ const pageSize = ref(20);
 const hasActiveFilter = computed(
   () => deployId.value > 0 || enableFilter.value !== '' || timeRange.value != null,
 );
-
-function cellText(row: Row, key: string): string {
-  const v = row[key];
-  if (v == null) return '';
-  if (key === 'Enable') return v ? '是' : '否';
-  if (key === 'UpdateTime') return String(v).replace('T', ' ').slice(0, 19);
-  return String(v);
-}
 
 /** 「流水线历史」链接：/Deployment/AppPipelineRun?pipelineId=<行Id> */
 function historyUrl(row: Row): string {

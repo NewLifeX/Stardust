@@ -129,6 +129,7 @@ export default defineConfig({
         'apps/stardust/src/views/Console/traceRule.logic.ts',
         'apps/stardust/src/components/traceGraph.logic.ts',
         'apps/stardust/src/views/Registry/registryCase.ts',
+        'apps/stardust/src/views/Deployment/AppPipeline/pipelineCell.logic.ts',
       ],
       thresholds: {
         // 门槛 = 当前真实基线（MW-01 棘轮后 84.4/73.07/90.75/86.29；
