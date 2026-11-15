@@ -15,6 +15,7 @@
 // 字段为空时为 0，不臆造总数）；valueSummary 列表层无逐配置值，留空（Drawer 才拉全量 KV）。
 import { fetchAppList, okRes } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
 import type { Req, ReqOptions } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
+import { getAccessToken } from '@newlifex/cube-vue/core/utils/token';
 import { historyVersionOf } from './appConfig.logic.ts';
 
 type Rec = Record<string, unknown>;
@@ -85,6 +86,10 @@ export interface ConfigCenterRow {
   valueSummary: string;
   /** AppConfig.UpdateTime 格式化；无记录为 — */
   lastPublishText: string;
+  /** AppConfig.UpdateTime 毫秒时间戳（日期区间筛选用；无记录为 0） */
+  lastPublishMs: number;
+  /** 应用类别（AppConfig.Category；与 Registry/App 的 Category 同源，选项接口 /Configs/AppConfig/Categories） */
+  category: string;
   /** 有待发布草稿（nextVersion > version） */
   pending: boolean;
 }
@@ -147,11 +152,17 @@ export function countUsedKeys(v: unknown): number {
  */
 export function buildKeyCounts(rows: Rec[]): Map<number, number> {
   const m = new Map<number, number>();
+  const touched = new Set<number>();
   for (const r of rows) {
-    if (str(pick(r, 'NewStatus', 'newStatus')).toLowerCase() === '[[deleted]]') continue;
     const id = num(pick(r, 'ConfigId', 'configId'));
-    if (id > 0) m.set(id, (m.get(id) ?? 0) + 1);
+    if (id <= 0) continue;
+    // DEF-2：该 configId 在 ConfigData 里出现过（即使全部行待删除）也要入 map 计 0，
+    // 否则会回退到 UsedKeys 上报值，把「生效 0 键」错显示成上报的旧值。
+    touched.add(id);
+    if (str(pick(r, 'NewStatus', 'newStatus')).toLowerCase() === '[[deleted]]') continue;
+    m.set(id, (m.get(id) ?? 0) + 1);
   }
+  for (const id of touched) if (!m.has(id)) m.set(id, 0);
   return m;
 }
 
@@ -177,6 +188,7 @@ export function toConfigCenterRows(appConfigs: Rec[], appMap: Map<number, string
     const id = num(pick(r, 'Id', 'id'));
     // 键数优先取 ConfigData 实际行数；拉不到时回退 UsedKeys 上报计数（可能为 0）
     const fromData = keyCounts?.get(id);
+    const updateMs = toMs(pick(r, 'UpdateTime', 'updateTime'));
     out.push({
       configId: id,
       appId,
@@ -187,7 +199,9 @@ export function toConfigCenterRows(appConfigs: Rec[], appMap: Map<number, string
       enable: bool(pick(r, 'Enable', 'enable')),
       keyCount: fromData ?? countUsedKeys(pick(r, 'UsedKeys', 'usedKeys')),
       valueSummary: '',
-      lastPublishText: fmtTime(toMs(pick(r, 'UpdateTime', 'updateTime'))),
+      lastPublishText: fmtTime(updateMs),
+      lastPublishMs: updateMs,
+      category: str(pick(r, 'Category', 'category')),
       pending: nextVersion > version,
     });
   }
@@ -195,14 +209,50 @@ export function toConfigCenterRows(appConfigs: Rec[], appMap: Map<number, string
   return out;
 }
 
-/** 搜索 + 应用过滤纯函数。keyword 匹配应用名/配置名（小写包含）；appId<=0 不过滤 */
+/** 列表筛选条件（候选 A：关键字 + 应用 + 类别 + 最近更新日期区间，均为前端过滤） */
+export interface ConfigRowFilter {
+  keyword: string;
+  appId: number;
+  /** 类别；'' = 全部类别（不过滤） */
+  category?: string;
+  /** 最近更新区间起点（含，毫秒）；0/缺省 = 不限 */
+  dateFrom?: number;
+  /** 最近更新区间终点（含，毫秒）；0/缺省 = 不限 */
+  dateTo?: number;
+}
+
+/** 日期控件 yyyy-MM-dd → 当地时区当天 [起点ms, 终点ms]；空串返回 0（不过滤） */
+export function dateRangeToMs(start: string, end: string): { from: number; to: number } {
+  const dayMs = (s: string, edge: 'from' | 'to'): number => {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s.trim());
+    if (!m) return 0;
+    const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    if (Number.isNaN(d.getTime())) return 0;
+    return edge === 'from' ? d.getTime() : d.getTime() + 24 * 3600 * 1000 - 1;
+  };
+  return { from: dayMs(start, 'from'), to: dayMs(end, 'to') };
+}
+
+/**
+ * 列表筛选纯函数（C05 断言）：关键字匹配应用名/配置名（小写包含）；appId<=0 不过滤；
+ * category 空串不过滤（首项「全部类别」）；dateFrom/dateTo 为 0 表示不限，
+ * 区间为闭区间 [from, to]，过滤对象是行内的 lastPublishMs（最近更新）。
+ */
 export function filterRows(
   rows: ConfigCenterRow[],
-  f: { keyword: string; appId: number },
+  f: ConfigRowFilter,
 ): ConfigCenterRow[] {
   const k = f.keyword.trim().toLowerCase();
+  const cat = (f.category ?? '').trim();
+  const from = f.dateFrom ?? 0;
+  const to = f.dateTo ?? 0;
   return rows.filter((r) => {
     if (f.appId > 0 && r.appId !== f.appId) return false;
+    if (cat && r.category !== cat) return false;
+    // 日期区间过滤 = 「最近更新在区间内」：从未更新（lastPublishMs=0）不算命中
+    if ((from > 0 || to > 0) && r.lastPublishMs <= 0) return false;
+    if (from > 0 && r.lastPublishMs < from) return false;
+    if (to > 0 && r.lastPublishMs > to) return false;
     if (!k) return true;
     return r.appName.toLowerCase().includes(k) || r.configName.toLowerCase().includes(k);
   });
@@ -231,6 +281,144 @@ export async function fetchAllConfigs(request: Req, projectId?: number | null): 
     return { rows: toConfigCenterRows(listOf(cfgRes), appMap, keyCounts), error: '' };
   } catch (e) {
     return { rows: [], error: errText(e, '配置中心加载失败') };
+  }
+}
+
+/**
+ * 类别选项：GET /Configs/AppConfig/Categories（C05 断言「类别选项来自该接口」）。
+ * F-CFG-1 P2（2026-11-10 review-walk 实锤）：后端真返字典 {类别: " (N)"}（live：{"":" (1)",...}），
+ * 旧实现只认数组 → 恒 null → 下拉恒降级行内去重。现双形状兼容：
+ * 字典取键为选项（去空白、排除空键——空串与「全部类别」哨兵 '' 冲突，无类别行经「全部」本就可达）、
+ * 数组维持旧去空白去空项；均保序去重。失败/标量返回 null（调用方降级为行内 category 去重，不拖垮列表）。
+ */
+export async function fetchConfigCategories(request: Req): Promise<string[] | null> {
+  try {
+    const res = await request({ url: '/Configs/AppConfig/Categories', method: 'GET' });
+    const d: unknown = res?.data;
+    if (Array.isArray(d)) {
+      // 去空白去空项，保序去重
+      const out: string[] = [];
+      for (const x of d) {
+        const s = str(x);
+        if (s && !out.includes(s)) out.push(s);
+      }
+      return out;
+    }
+    if (d && typeof d === 'object') {
+      const out: string[] = [];
+      for (const k of Object.keys(d as Rec)) {
+        const s = str(k);
+        if (s && !out.includes(s)) out.push(s);
+      }
+      return out;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/** 预览弹层内容（/config/getall 实拉结果，C19 断言） */
+export interface ConfigPreview {
+  /** AppConfig.Id（行appId，用于请求） */
+  appId: number;
+  /** 应用名（App.Name，即 /config/getall 的 appId 参数） */
+  appName: string;
+  version: number;
+  scope: string;
+  nextVersion: number;
+  nextPublish: string;
+  updateTime: string;
+  /** 生效键值对（Configs 字典；无数据为空对象） */
+  configs: Record<string, string>;
+}
+
+/**
+ * /config/getall 响应 → ConfigPreview。响应形态见 Stardust.WebApi/ConfigController.cs
+ * （ConfigInfo：Version / Scope / NextVersion / NextPublish / UpdateTime / Configs 字典；
+ * 前端预览不传 version，后端恒回 Configs）。
+ */
+export function toPreviewInfo(data: unknown): Omit<ConfigPreview, 'appId'> {
+  const d = (data ?? {}) as Rec;
+  const raw = (pick(d, 'Configs', 'configs') ?? {}) as Rec;
+  const configs: Record<string, string> = {};
+  for (const [k, v] of Object.entries(raw)) configs[k] = String(v ?? '');
+  return {
+    appName: str(pick(d, 'AppName', 'appName')),
+    version: num(pick(d, 'Version', 'version')),
+    scope: str(pick(d, 'Scope', 'scope')),
+    nextVersion: num(pick(d, 'NextVersion', 'nextVersion')),
+    nextPublish: str(pick(d, 'NextPublish', 'nextPublish')),
+    updateTime: str(pick(d, 'UpdateTime', 'updateTime')),
+    configs,
+  };
+}
+
+/**
+ * DEF-6（2026-11-10）直连通道：/config/getall 为后端裸根路由（ConfigController，无 /api 前缀），
+ * 实体 request 通道（api-core resolveRequestUrl 对非服务路径一律拼 /api）会打出 /api/config/getall → 404
+ * （j-appreg live 定谳：同窗 /api/Registry/App 200 vs /api/config/getall 404 铁证）。
+ * 与 fetchWebhookFields（pipelineWebhook.logic.ts，同一缺陷家族）同型：原生 fetch 直连
+ * VITE_APP_BASE_API host；base/fetch 可注入（单测）；无 base（纯单测环境）降级 null。
+ * 鉴权（F-CFG-2 P1 补丁，2026-11-10 review-walk 实锤）：6681 实体通道实走 authorization: bearer JWT，
+ * 「credentials:'include' 的会话 cookie 可鉴权本裸根路由」被 live 否定（fetch 无 cookie 无 bearer →
+ * HTTP 200 但信封 code:401「未登录！」）。token 与 cubeAxios 拦截器同源：core/utils/token.getAccessToken
+ * （localStorage key=config.auth.tokenKey，头前缀同 request.ts tokenHeaderPrefix 'bearer '）；无 token 仅退化为现状。
+ * 信封 {code,data}：带 code/success 字段一律按 okRes 判定（与实体 request 通道 unwrap 同语义），
+ * 非成功抛错由上层 catch 归 null（弹层失败态）——严禁把 401 信封透传给 toPreviewInfo 伪造成空态；
+ * 无信封字段的裸 body 维持透传兼容。坏 body/非 2xx 同样抛错归 null。
+ */
+async function fetchGetallDirect(
+  params: Record<string, string>,
+  opts: { base?: string; fetchImpl?: typeof fetch; path?: string },
+): Promise<{ data?: unknown } | null> {
+  const base = String(opts.base ?? import.meta.env?.VITE_APP_BASE_API ?? '').replace(/\/+$/, '');
+  if (!base) return null;
+  const doFetch = opts.fetchImpl ?? ((...a: Parameters<typeof fetch>) => globalThis.fetch(...a));
+  const qs = new URLSearchParams(params).toString();
+  const headers: Record<string, string> = { Accept: 'application/json' };
+  const token = getAccessToken();
+  if (token) headers['Authorization'] = `bearer ${token}`;
+  const res = await doFetch(`${base}${opts.path ?? '/config/getall'}${qs ? `?${qs}` : ''}`, {
+    method: 'GET',
+    credentials: 'include',
+    headers,
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const body = (await res.json()) as Rec | null;
+  const env = body ?? {};
+  if ('code' in env || 'success' in env) {
+    if (!okRes(env).ok) throw new Error(`信封 code=${str(env.code)} ${str(env.message)}`.trim());
+  }
+  return { data: body?.data ?? body };
+}
+
+/**
+ * 候选 B：预览链取数（task-95 二期刀1 改道，2026-11-12）。
+ * 旧链 `/config/getall?appId={Name}&secret={AppSecret}`：App LIST 行读明文 Secret（行 JSON 泄漏面）
+ * 且 Secret 入 URL 访问日志——刀2 将裁 App 行 Secret，故先行改道专用端点
+ * `GET /Config/GetAllByApp?appId={Id}`（后端 ConfigController 同类复用 GetAll：
+ * Secret 服务端内解析，浏览器与访问日志零经手；心跳/作用域语义与旧链完全一致）。
+ * 直连形态保留（DEF-6：非服务路径实体 request 通道拼 /api 会 404，同 fetchWebhookFields 家族）。
+ * App 行仍经实体通道查一次（DEF-4：Search 只认 p["Id"]），仅取 Name/DisplayName 供预览头，
+ * 不再读取 Secret（刀2 裁剪后此链不破）。失败返回 null（弹层显示加载失败）。
+ */
+export async function fetchConfigPreview(
+  request: Req,
+  appId: number,
+  opts: { base?: string; fetchImpl?: typeof fetch } = {},
+): Promise<ConfigPreview | null> {
+  if (!appId || appId <= 0) return null;
+  try {
+    const appRes = await request({ url: '/Registry/App', method: 'GET', params: { Id: appId, PageSize: 1 } });
+    const app = listOf(appRes)[0];
+    const name = app ? str(pick(app, 'Name', 'name')) : '';
+    if (!name) return null;
+    const res = await fetchGetallDirect({ appId: String(appId), version: '0' }, { ...opts, path: '/Config/GetAllByApp' });
+    if (!res) return null;
+    return { appId, ...toPreviewInfo(res?.data), appName: str(pick(app, 'DisplayName', 'displayName')) || name };
+  } catch {
+    return null;
   }
 }
 
@@ -263,10 +451,7 @@ export function toDetailHistory(rows: Rec[]): DetailHistoryItem[] {
 
 /** 待发布项数：草稿值与生效值不同，或 NewStatus 标记删除/新增 */
 export function countPendingItems(items: DetailConfigItem[]): number {
-  return items.filter((it) => {
-    if (it.newStatus) return true;
-    return it.newValue !== it.value;
-  }).length;
+  return pendingDiff(items).length;
 }
 
 /** 拉详情：ConfigData + ConfigHistory。任一失败返回 null（由 Drawer 显示加载失败） */
@@ -330,10 +515,15 @@ export function diffConfigValues(oldRows: Rec[], newRows: Rec[]): ConfigDiffRow[
   return out;
 }
 
-/** 详情项 → 待发布 diff（Value 为旧 / NewValue 为新），只返回非 unchanged 行 */
+/** 详情项 → 待发布 diff（Value 为旧 / NewValue 为新），只返回非 unchanged 行。
+ * DEF-3：NewValue 为 null（后端未返回草稿，toDetailItems 归一为 ''）且 NewStatus 为空 = 无草稿，
+ * 新值侧按生效值处理 → unchanged，不产生「草稿=空串」的伪差异。 */
 export function pendingDiff(items: DetailConfigItem[]): ConfigDiffRow[] {
   const oldRows = items.map((i) => ({ Key: i.key, Value: i.value }));
-  const newRows = items.map((i) => ({ Key: i.key, Value: i.newValue }));
+  const newRows = items.map((i) => ({
+    Key: i.key,
+    Value: i.newStatus === '' && i.newValue === '' ? i.value : i.newValue,
+  }));
   return diffConfigValues(oldRows, newRows).filter((d) => d.state !== 'unchanged');
 }
 

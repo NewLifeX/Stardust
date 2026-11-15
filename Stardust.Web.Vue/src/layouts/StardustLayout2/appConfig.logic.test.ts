@@ -1,12 +1,14 @@
 // 配置页签纯逻辑单测（Vitest）。2026-10-29：子代理 B 配置/实例两页签，先红后绿。
 import { describe, it, expect } from 'vitest';
 import {
+  buildDiffRows,
   configItemPutBody,
   configItemState,
   createConfigItem,
   deleteConfigItem,
   fetchConfigApp,
   fetchConfigHistory,
+  fetchConfigHistoryDiff,
   fetchConfigItems,
   fetchOnlineCount,
   filterPending,
@@ -16,10 +18,11 @@ import {
   saveConfigItem,
   syncAppConfig,
   toConfigHistory,
+  toConfigHistoryDiff,
   toConfigItems,
   validateConfigItemForm,
 } from './appConfig.logic';
-import type { ConfigItem } from './appConfig.logic';
+import type { ConfigHistoryDiff, ConfigItem } from './appConfig.logic';
 import type { Req } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
 
 /** 桩请求：按预设响应队列依次返回；抛错模拟网络失败 */
@@ -153,6 +156,79 @@ describe('toConfigHistory / fetchConfigHistory', () => {
   });
 });
 
+describe('toConfigHistoryDiff / buildDiffRows / fetchConfigHistoryDiff · 历史版本对比', () => {
+  const diff: ConfigHistoryDiff = {
+    id: 21,
+    configId: 10,
+    oldJson: '{"Id":10,"Version":1,"NextVersion":2,"Enable":true,"Name":"demo"}',
+    newJson: '{"Id":10,"Version":2,"NextVersion":3,"Enable":false,"Name":"demo"}',
+    changedKeys: ['Enable', 'NextVersion', 'Version'],
+  };
+
+  it('响应解析：data 五字段，oldJson 空→null，changedKeys 非数组兜底 []，缺 newJson 无效', () => {
+    expect(toConfigHistoryDiff({ data: { id: 21, configId: 10, newJson: '{"a":1}', oldJson: null, changedKeys: ['a'] } })).toEqual({
+      id: 21,
+      configId: 10,
+      oldJson: null,
+      newJson: '{"a":1}',
+      changedKeys: ['a'],
+    });
+    expect(toConfigHistoryDiff({ data: { newJson: 'x', oldJson: '', changedKeys: 'bad' } })).toEqual({
+      id: 0,
+      configId: 0,
+      oldJson: null,
+      newJson: 'x',
+      changedKeys: [],
+    });
+    expect(toConfigHistoryDiff({ data: { oldJson: 'x' } })).toBeNull();
+    expect(toConfigHistoryDiff(undefined)).toBeNull();
+  });
+
+  it('buildDiffRows：changed 值序列化 + added/removed 归类', () => {
+    expect(buildDiffRows(diff)).toEqual([
+      { key: 'Enable', kind: 'changed', oldValue: 'true', newValue: 'false' },
+      { key: 'NextVersion', kind: 'changed', oldValue: '2', newValue: '3' },
+      { key: 'Version', kind: 'changed', oldValue: '1', newValue: '2' },
+    ]);
+    const d2: ConfigHistoryDiff = {
+      id: 1,
+      configId: 1,
+      oldJson: '{"Keep":"v","Gone":1,"Empty":""}',
+      newJson: '{"Keep":"v2","Fresh":{"a":1},"Empty":""}',
+      changedKeys: ['Empty', 'Fresh', 'Gone', 'Keep'],
+    };
+    expect(buildDiffRows(d2)).toEqual([
+      { key: 'Empty', kind: 'changed', oldValue: '（空）', newValue: '（空）' },
+      { key: 'Fresh', kind: 'added', oldValue: '—', newValue: '{"a":1}' },
+      { key: 'Gone', kind: 'removed', oldValue: '1', newValue: '—' },
+      { key: 'Keep', kind: 'changed', oldValue: 'v', newValue: 'v2' },
+    ]);
+  });
+
+  it('buildDiffRows：首次发布 oldJson=null 全键 added；坏 JSON 侧按缺键；changedKeys 空=无差异', () => {
+    const first: ConfigHistoryDiff = { id: 1, configId: 1, oldJson: null, newJson: '{"Version":1}', changedKeys: ['Version'] };
+    expect(buildDiffRows(first)).toEqual([{ key: 'Version', kind: 'added', oldValue: '—', newValue: '1' }]);
+    const broken: ConfigHistoryDiff = { id: 1, configId: 1, oldJson: '{bad', newJson: '{"Version":1}', changedKeys: ['Version'] };
+    expect(buildDiffRows(broken)[0]).toMatchObject({ kind: 'added' });
+    const brokenNew: ConfigHistoryDiff = { id: 1, configId: 1, oldJson: '{"Version":1}', newJson: 'not-json', changedKeys: ['Version'] };
+    expect(buildDiffRows(brokenNew)[0]).toMatchObject({ kind: 'removed' });
+    expect(buildDiffRows({ ...first, changedKeys: [] })).toEqual([]);
+  });
+
+  it('fetchConfigHistoryDiff：GET Diff?id= 透传；失败/缺参返回 null', async () => {
+    const { req, calls } = stubReq([
+      { res: { data: { id: 21, configId: 10, newJson: '{"Version":2}', oldJson: '{"Version":1}', changedKeys: ['Version'] } } },
+    ]);
+    const d = await fetchConfigHistoryDiff(req, 21);
+    expect(d).toMatchObject({ id: 21, changedKeys: ['Version'] });
+    expect(calls[0]).toMatchObject({ url: '/Configs/ConfigHistory/Diff', method: 'GET', params: { id: 21 } });
+    const { req: req2 } = stubReq([{ err: new Error('500') }]);
+    expect(await fetchConfigHistoryDiff(req2, 21)).toBeNull();
+    const { req: req3 } = stubReq([]);
+    expect(await fetchConfigHistoryDiff(req3, 0)).toBeNull();
+  });
+});
+
 describe('fetchOnlineCount · 在线实例数', () => {
   it('返回行数', async () => {
     const { req } = stubReq([{ res: { data: [{ Id: 1 }, { Id: 2 }, { Id: 3 }] } }]);
@@ -241,21 +317,35 @@ describe('F10 validateConfigItemForm / configItemPutBody', () => {
 describe('F10 配置项 CRUD', () => {
   it('saveConfigItem：PUT /Configs/ConfigData/{id}，body 按发布态', async () => {
     const { req, calls } = stubReq([{ res: { code: 0, message: '操作成功' } }]);
-    const r = await saveConfigItem(req, { id: 5, published: true, enable: true }, { key: 'a', scope: '', value: '1', newValue: '2', enable: true, remark: '' });
+    const r = await saveConfigItem(req, { id: 5, published: true, originalEnable: true }, { key: 'a', scope: '', value: '1', newValue: '2', enable: true, remark: '' });
     expect(r.ok).toBe(true);
     expect(calls[0]).toMatchObject({ url: '/Configs/ConfigData/5', method: 'PUT' });
     expect((calls[0] as { data: Record<string, unknown> }).data).toEqual({ NewValue: '2', Remark: '' });
   });
 
+  it('saveConfigItem：Enable 翻转双向进 body，未变不进（originalEnable 基准，DEF-C12 回归）', async () => {
+    const { req, calls } = stubReq([{ res: { code: 0, message: '操作成功' } }, { res: { code: 0, message: '操作成功' } }, { res: { code: 0, message: '操作成功' } }]);
+    const form0 = { key: 'a', scope: '', value: '1', newValue: '2', remark: '' };
+    // true→false：原启用，现 uncheck → body.Enable=false（后端 OnUpdate 转 NewStatus 禁用草稿）
+    await saveConfigItem(req, { id: 9, published: true, originalEnable: true }, { ...form0, enable: false });
+    expect((calls[0] as { data: Record<string, unknown> }).data).toEqual({ NewValue: '2', Remark: '', Enable: false });
+    // false→true：原禁用，现勾上 → body.Enable=true（NewStatus 启用草稿）
+    await saveConfigItem(req, { id: 9, published: true, originalEnable: false }, { ...form0, enable: true });
+    expect((calls[1] as { data: Record<string, unknown> }).data).toEqual({ NewValue: '2', Remark: '', Enable: true });
+    // 未变：Enable 不进 body
+    await saveConfigItem(req, { id: 9, published: true, originalEnable: true }, { ...form0, enable: true });
+    expect('Enable' in (calls[2] as { data: Record<string, unknown> }).data).toBe(false);
+  });
+
   it('saveConfigItem：失败 code 500 透传消息', async () => {
     const { req } = stubReq([{ res: { code: 500, message: '在用值不能修改！' } }]);
-    const r = await saveConfigItem(req, { id: 5, published: true, enable: true }, { key: 'a', scope: '', value: '1', newValue: '2', enable: true, remark: '' });
+    const r = await saveConfigItem(req, { id: 5, published: true, originalEnable: true }, { key: 'a', scope: '', value: '1', newValue: '2', enable: true, remark: '' });
     expect(r).toMatchObject({ ok: false, message: '在用值不能修改！' });
   });
 
   it('saveConfigItem：缺 id 不发请求', async () => {
     const { req, calls } = stubReq([]);
-    expect((await saveConfigItem(req, { id: 0, published: false, enable: true }, { key: 'a', scope: '', value: '', newValue: '', enable: true, remark: '' })).ok).toBe(false);
+    expect((await saveConfigItem(req, { id: 0, published: false, originalEnable: true }, { key: 'a', scope: '', value: '', newValue: '', enable: true, remark: '' })).ok).toBe(false);
     expect(calls).toHaveLength(0);
   });
 

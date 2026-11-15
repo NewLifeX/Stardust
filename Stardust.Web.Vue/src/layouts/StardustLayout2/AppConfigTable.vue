@@ -33,6 +33,7 @@ import {
 } from './appConfig.logic';
 import type { ConfigApp, ConfigHistoryItem, ConfigItem, ConfigItemForm } from './appConfig.logic.ts';
 import ConfigItemDrawer from './ConfigItemDrawer.vue';
+import ConfigHistoryDiffDrawer from './ConfigHistoryDiffDrawer.vue';
 import { openGuard } from './ui.store.ts';
 import { toast } from './useToast.ts';
 import { useManualRefresh } from './useManualRefresh.ts';
@@ -68,6 +69,10 @@ const itemDrawerOpen = ref(false);
 /** null=新增；否则编辑（published 决定字段读写） */
 const itemEditing = ref<(ConfigItemForm & { published: boolean }) | null>(null);
 const itemEditId = ref(0);
+
+/** S2b「对比上一版」Diff 抽屉：父持有开关，抽屉自取数 */
+const diffDrawerOpen = ref(false);
+const diffHistory = ref<ConfigHistoryItem | null>(null);
 
 const pending = computed(() => filterPending(items.value));
 const hasDraft = computed(() => !!config.value && config.value.nextVersion > config.value.version);
@@ -162,6 +167,12 @@ function onRollback(h: ConfigHistoryItem): void {
   });
 }
 
+/** S2b 打开「对比上一版」Diff 抽屉（GET /Configs/ConfigHistory/Diff?id=，抽屉内取数） */
+function onDiff(h: ConfigHistoryItem): void {
+  diffHistory.value = h;
+  diffDrawerOpen.value = true;
+}
+
 // ---------- F10 配置项就地编辑 ----------
 
 /** 新增配置项：POST 建 Key/Scope/Value，走待发布草稿 */
@@ -195,7 +206,8 @@ async function onItemSubmit(form: ConfigItemForm): Promise<void> {
     const r = itemEditId.value > 0
       ? await saveConfigItem(
           req(),
-          { id: itemEditId.value, published: itemEditing.value?.published ?? false, enable: form.enable },
+          // originalEnable=打开抽屉时的行原始启用值（itemEditing.enable），变化检测基准；form.enable 是现值（DEF-C12：此前误把现值当原值，启用草稿永不提交）
+          { id: itemEditId.value, published: itemEditing.value?.published ?? false, originalEnable: itemEditing.value?.enable ?? form.enable },
           form,
         )
       : await createConfigItem(req(), config.value?.id ?? 0, form);
@@ -495,17 +507,30 @@ async function onSync(): Promise<void> {
           >
             当前
           </Tag>
-          <Btn
-            v-else-if="h.action === 'Publish'"
-            size="sm"
-            variant="ghost"
-            :disabled="!!busy"
-            class="ml-auto"
-            data-spec="app-config-rollback"
-            @click="onRollback(h)"
+          <span
+            v-if="h.action === 'Publish'"
+            class="ml-auto flex shrink-0 items-center gap-[4px]"
           >
-            {{ busy === `rollback:${h.id}` ? '回滚中…' : '回滚' }}
-          </Btn>
+            <Btn
+              size="sm"
+              variant="ghost"
+              :disabled="!!busy"
+              data-spec="app-config-history-diff"
+              @click="onDiff(h)"
+            >
+              对比
+            </Btn>
+            <Btn
+              v-if="!(config && h.version === config.version)"
+              size="sm"
+              variant="ghost"
+              :disabled="!!busy"
+              data-spec="app-config-rollback"
+              @click="onRollback(h)"
+            >
+              {{ busy === `rollback:${h.id}` ? '回滚中…' : '回滚' }}
+            </Btn>
+          </span>
         </div>
         <div
           v-if="!history.length"
@@ -529,6 +554,14 @@ async function onSync(): Promise<void> {
       :busy="busy === 'item'"
       @close="itemDrawerOpen = false"
       @submit="onItemSubmit"
+    />
+
+    <!-- S2b 对比上一版 Diff 抽屉（版本快照级差异，抽屉内自取数） -->
+    <ConfigHistoryDiffDrawer
+      :open="diffDrawerOpen"
+      :history="diffHistory"
+      :deps="deps"
+      @close="diffDrawerOpen = false"
     />
   </Card>
 </template>

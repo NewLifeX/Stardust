@@ -1,7 +1,9 @@
 <script setup lang="ts">
 /**
  * ConfigDetailDrawer：跨应用配置中心的详情抽屉（只读）。
- * 数据由薄壳取好传入（detail），本组件不发请求。三态：loading / error / 空。
+ * 数据由薄壳取好传入（detail），详情本身不发请求；「预览」弹层取数走注入的
+ * fetchPreview（默认接 configCenter.logic.fetchConfigPreview + 全局 request，
+ * 与 AppLov.fetchOptions 同一注入模式，story/CT 传替身）。
  * 左：完整 KV（Key / 生效值 / 草稿值）；中：待发布差异（已发布 Value → 草稿 NewValue）；
  * 右/下：版本历史（版本号 / 动作 / 时间，只读日志）。
  *
@@ -9,12 +11,13 @@
  * 不能选两个历史版本做 KV diff；这里的 diff 只对比当前「已发布 → 草稿」。
  * 不做编辑：底部提示跳转到应用 → 配置页签。样式只用 --el-* + Tailwind。
  */
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { request } from '@newlifex/cube-vue/core/utils/request';
 import Drawer from './Drawer/Drawer.vue';
 import Tag from './Tag.vue';
 import Btn from './Btn.vue';
-import { pendingDiff } from './configCenter.logic.ts';
-import type { ConfigDetail, ConfigDiffRow } from './configCenter.logic.ts';
+import { fetchConfigPreview, pendingDiff } from './configCenter.logic.ts';
+import type { ConfigDetail, ConfigDiffRow, ConfigPreview } from './configCenter.logic.ts';
 
 const props = withDefaults(
   defineProps<{
@@ -22,6 +25,8 @@ const props = withDefaults(
     detail: ConfigDetail | null;
     loading?: boolean;
     error?: string;
+    /** 预览取数注入点：appId → /config/getall 实拉结果；默认接 logic 层 */
+    fetchPreview?: (appId: number) => Promise<ConfigPreview | null>;
   }>(),
   { loading: false, error: '' },
 );
@@ -34,6 +39,56 @@ const emit = defineEmits<{
 /** 待发布差异（已发布 Value → 草稿 NewValue），只列有变化的行 */
 const diffRows = computed<ConfigDiffRow[]>(() =>
   props.detail ? pendingDiff(props.detail.items) : [],
+);
+
+// ---------- 预览弹层（候选 B，C19：内容为 /config/getall 实拉结果，关闭无副作用） ----------
+
+const previewOpen = ref(false);
+const previewLoading = ref(false);
+const previewError = ref('');
+const previewData = ref<ConfigPreview | null>(null);
+
+const fetchPreviewFn: (appId: number) => Promise<ConfigPreview | null> =
+  props.fetchPreview ?? ((appId: number) => fetchConfigPreview(request, appId));
+
+async function loadPreview(): Promise<void> {
+  if (!props.detail) return;
+  previewLoading.value = true;
+  previewError.value = '';
+  try {
+    const p = await fetchPreviewFn(props.detail.appId);
+    if (p === null) previewError.value = '预览加载失败';
+    else previewData.value = p;
+  } catch {
+    previewError.value = '预览加载失败';
+  } finally {
+    previewLoading.value = false;
+  }
+}
+
+function openPreview(): void {
+  previewData.value = null;
+  previewError.value = '';
+  previewOpen.value = true;
+  void loadPreview();
+}
+
+// 主抽屉关闭即复位预览态（关闭无副作用）
+watch(
+  () => props.open,
+  (open) => {
+    if (!open) {
+      previewOpen.value = false;
+      previewLoading.value = false;
+      previewError.value = '';
+      previewData.value = null;
+    }
+  },
+);
+
+/** 生效键值对按 Key 排序展示 */
+const previewEntries = computed<[string, string][]>(() =>
+  previewData.value ? Object.entries(previewData.value.configs).sort(([a], [b]) => a.localeCompare(b)) : [],
 );
 
 const DIFF_TAG: Record<ConfigDiffRow['state'], { text: string; tone: 'ok' | 'warn' | 'err' | 'default' }> = {
@@ -59,6 +114,17 @@ const ACTION_LABEL: Record<string, string> = {
     :sub="detail ? `配置 #${detail.configId} · ${detail.items.length} 项` : ''"
     @close="emit('close')"
   >
+    <template #header-extra>
+      <Btn
+        v-if="detail"
+        size="sm"
+        data-spec="config-preview-link"
+        @click="openPreview"
+      >
+        预览
+      </Btn>
+    </template>
+
     <!-- 加载中 -->
     <div
       v-if="loading"
@@ -261,5 +327,97 @@ const ACTION_LABEL: Record<string, string> = {
         </Btn>
       </div>
     </div>
+
+    <!-- 预览弹层：GET /config/getall?appId={应用名}&secret=***（secret 不展示）实拉结果，只读 -->
+    <Drawer
+      :open="previewOpen"
+      :title="detail ? `预览 · ${detail.appName}` : '预览'"
+      :sub="previewData ? `GET /config/getall?appId=${previewData.appName}&secret=***` : '预览加载中…'"
+      @close="previewOpen = false"
+    >
+      <!-- 预览加载中 -->
+      <div
+        v-if="previewLoading"
+        data-spec="config-preview-loading"
+        class="flex items-center gap-[8px] py-[24px] text-[12.5px] text-[var(--el-text-color-secondary)]"
+      >
+        <span class="inline-block h-[14px] w-[14px] animate-spin rounded-full border-2 border-[var(--el-border-color)] border-t-[var(--el-color-primary)]" />
+        预览加载中…
+      </div>
+
+      <!-- 预览失败 + 重试 -->
+      <div
+        v-else-if="previewError"
+        data-spec="config-preview-failed"
+        class="flex items-center gap-[10px] py-[24px]"
+      >
+        <span class="text-[12.5px] text-[var(--el-color-danger)]">{{ previewError }}</span>
+        <Btn
+          size="sm"
+          data-spec="config-preview-retry"
+          @click="loadPreview"
+        >
+          重试
+        </Btn>
+      </div>
+
+      <!-- 预览体：元信息 + 生效键值对 -->
+      <div
+        v-else-if="previewData"
+        data-spec="config-preview-body"
+      >
+        <div
+          data-spec="config-preview-meta"
+          class="mb-3 flex flex-wrap items-center gap-x-[14px] gap-y-[4px] rounded-[10px] border border-[var(--el-border-color-light)] bg-[var(--el-bg-color-overlay)] px-[12px] py-[8px] text-[11.5px] text-[var(--el-text-color-secondary)]"
+        >
+          <span>生效版本 <span class="font-mono text-[var(--el-text-color-primary)]">v{{ previewData.version }}</span></span>
+          <span>作用域 <span class="font-mono text-[var(--el-text-color-primary)]">{{ previewData.scope || '—' }}</span></span>
+          <span>下一版本 <span class="font-mono text-[var(--el-text-color-primary)]">v{{ previewData.nextVersion }}</span></span>
+          <span>下次发布 <span class="font-mono text-[var(--el-text-color-primary)]">{{ previewData.nextPublish || '—' }}</span></span>
+          <span>更新时间 <span class="font-mono text-[var(--el-text-color-primary)]">{{ previewData.updateTime || '—' }}</span></span>
+          <span>{{ previewEntries.length }} 个键</span>
+        </div>
+
+        <!-- 预览空态：拉到 ConfigInfo 但没有键 -->
+        <div
+          v-if="previewEntries.length === 0"
+          data-spec="config-preview-empty"
+          class="py-[24px] text-[12.5px] text-[var(--el-text-color-secondary)]"
+        >
+          该应用还没有可拉取的配置
+        </div>
+
+        <table
+          v-else
+          class="w-full border-collapse"
+        >
+          <thead>
+            <tr>
+              <th class="border-b border-[var(--el-border-color-light)] px-2 py-[6px] text-left text-[11px] font-medium text-[var(--el-text-color-secondary)]">
+                Key
+              </th>
+              <th class="border-b border-[var(--el-border-color-light)] px-2 py-[6px] text-left text-[11px] font-medium text-[var(--el-text-color-secondary)]">
+                生效值
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="[key, value] in previewEntries"
+              :key="key"
+              data-spec="config-preview-row"
+              :data-key="key"
+            >
+              <td class="border-b border-[var(--el-border-color-lighter)] px-2 py-[5px] align-top font-mono text-[12px] text-[var(--el-text-color-primary)]">
+                {{ key }}
+              </td>
+              <td class="border-b border-[var(--el-border-color-lighter)] px-2 py-[5px] align-top font-mono text-[12px] break-all text-[var(--el-text-color-secondary)]">
+                {{ value }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </Drawer>
   </Drawer>
 </template>

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 /**
  * ConfigCenterList：跨应用配置中心列表（/configs）。纯 UI：收归一好的 rows，
- * 内部做搜索 + 应用过滤（filterRows 纯函数），点行发 open(configId)，打开详情 Drawer。
+ * 内部做搜索 + 应用 + 类别 + 最近更新日期区间过滤（filterRows 纯函数，均为前端过滤），
+ * 点行发 open(configId)，打开详情 Drawer。
  * 三态分开：loading（spinner）、error（可见错误 + 重试）、空态「还没有应用配置」。
  * 状态 Tag：有待发布草稿=橙色「待发布」，否则绿色「已发布」。样式只用 --el-* + Tailwind。
  */
@@ -11,7 +12,7 @@ import Tag from './Tag.vue';
 import Btn from './Btn.vue';
 import KIcon from './KIcon.vue';
 import { SELECT, TD, TH } from './deployView.styles.ts';
-import { filterRows } from './configCenter.logic.ts';
+import { dateRangeToMs, filterRows } from './configCenter.logic.ts';
 import type { ConfigCenterRow } from './configCenter.logic.ts';
 
 const props = withDefaults(
@@ -19,8 +20,10 @@ const props = withDefaults(
     rows: ConfigCenterRow[];
     loading?: boolean;
     error?: string;
+    /** 类别选项（来自 GET /Configs/AppConfig/Categories，宿主传入）；空则降级为行内 category 去重 */
+    categories?: string[];
   }>(),
-  { loading: false, error: '' },
+  { loading: false, error: '', categories: () => [] },
 );
 
 const emit = defineEmits<{
@@ -30,20 +33,55 @@ const emit = defineEmits<{
 
 const keyword = ref('');
 const appFilter = ref(0); // 0 = 全部应用
+const categoryFilter = ref(''); // '' = 全部类别
+const dateStart = ref(''); // yyyy-MM-dd，空 = 不限
+const dateEnd = ref('');
 
-/** 过滤后的行（搜索 + 应用下拉，AND） */
+const dateRange = computed(() => dateRangeToMs(dateStart.value, dateEnd.value));
+
+/** 过滤后的行（搜索 + 应用 + 类别 + 日期区间，AND，均为前端过滤） */
 const filtered = computed(() =>
-  filterRows(props.rows, { keyword: keyword.value, appId: appFilter.value }),
+  filterRows(props.rows, {
+    keyword: keyword.value,
+    appId: appFilter.value,
+    category: categoryFilter.value,
+    dateFrom: dateRange.value.from,
+    dateTo: dateRange.value.to,
+  }),
 );
 
-/** 应用下拉选项：从已有配置的行里去重（appId, appName） */
+/** 应用下拉选项：从已有配置的行里去重（appId, appName）；appId<=0（全局配置，如 Common）不进下拉——0 是「全部应用」哨兵值 */
 const appOptions = computed(() => {
   const seen = new Map<number, string>();
   for (const r of props.rows) {
+    if (r.appId <= 0) continue;
     if (!seen.has(r.appId)) seen.set(r.appId, r.appName);
   }
   return [...seen.entries()].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
 });
+
+/** 类别下拉选项：优先宿主传入的 Categories 接口结果，降级为行内 category 去重 */
+const categoryOptions = computed<string[]>(() => {
+  if (props.categories.length > 0) return props.categories;
+  const out: string[] = [];
+  for (const r of props.rows) {
+    if (r.category && !out.includes(r.category)) out.push(r.category);
+  }
+  return out;
+});
+
+/** 有筛选项在起作用时，清空按钮才显示 */
+const hasActiveFilter = computed(
+  () => keyword.value !== '' || appFilter.value > 0 || categoryFilter.value !== '' || dateStart.value !== '' || dateEnd.value !== '',
+);
+
+function clearFilters(): void {
+  keyword.value = '';
+  appFilter.value = 0;
+  categoryFilter.value = '';
+  dateStart.value = '';
+  dateEnd.value = '';
+}
 </script>
 
 <template>
@@ -90,6 +128,54 @@ const appOptions = computed(() => {
           {{ a.name }}
         </option>
       </select>
+
+      <select
+        v-model="categoryFilter"
+        :class="SELECT"
+        data-spec="config-category-filter"
+      >
+        <option value="">
+          全部类别
+        </option>
+        <option
+          v-for="c in categoryOptions"
+          :key="c"
+          :value="c"
+        >
+          {{ c }}
+        </option>
+      </select>
+
+      <span
+        data-spec="config-daterange-filter"
+        class="flex items-center gap-[4px]"
+      >
+        <input
+          v-model="dateStart"
+          type="date"
+          aria-label="最近更新起"
+          data-spec="config-date-start"
+          class="h-[28px] rounded-[8px] border border-[var(--el-border-color-light)] bg-[var(--el-bg-color-overlay)] px-[8px] text-[12px] text-[var(--el-text-color-primary)] outline-none focus:border-[var(--el-color-primary)]"
+        >
+        <span class="text-[11.5px] text-[var(--el-text-color-placeholder)]">~</span>
+        <input
+          v-model="dateEnd"
+          type="date"
+          aria-label="最近更新止"
+          data-spec="config-date-end"
+          class="h-[28px] rounded-[8px] border border-[var(--el-border-color-light)] bg-[var(--el-bg-color-overlay)] px-[8px] text-[12px] text-[var(--el-text-color-primary)] outline-none focus:border-[var(--el-color-primary)]"
+        >
+      </span>
+
+      <Btn
+        v-if="hasActiveFilter"
+        size="sm"
+        variant="ghost"
+        data-spec="config-filter-clear"
+        @click="clearFilters"
+      >
+        清除筛选
+      </Btn>
     </div>
 
     <!-- 加载中 -->
@@ -133,7 +219,7 @@ const appOptions = computed(() => {
       data-spec="config-no-match"
       class="px-[14px] py-[18px] text-[12.5px] text-[var(--el-text-color-secondary)]"
     >
-      没有匹配「{{ keyword }}」的应用配置
+      {{ keyword ? `没有匹配「${keyword}」的应用配置` : '没有符合筛选条件的应用配置' }}
     </div>
 
     <!-- 表格 -->
