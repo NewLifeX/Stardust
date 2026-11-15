@@ -35,6 +35,13 @@ export interface StardustContext {
    * 这种重复请求的代价被显著放大。
    */
   ready: boolean;
+  /**
+   * 项目列表版本号（CARD-PLT-01）：项目管理新增/编辑/删除项目成功后递增，
+   * useConsoleShell watch 后重拉顶栏项目下拉（/Platform/GalaxyProject）。
+   * 与 revision 分离——revision 是「上下文选择变更」，本信号是「项目清单本身变更」，
+   * 不改当前选中项（选中项变更/失效由 useProjectSwitcher.resolveProjects 在重拉后兜底处理）。
+   */
+  projectsVersion: number;
 }
 
 /** 方案 §5.4 推荐环境：开发 → 测试 → 预发布 → 生产 */
@@ -68,6 +75,7 @@ function loadInitial(): StardustContext {
     environment: localStorage.getItem(LS_ENVIRONMENT) || null,
     environmentName: environmentLabel(localStorage.getItem(LS_ENVIRONMENT)),
     revision: 0,
+    projectsVersion: 0,
     // 已持久化 projectId（老用户 / 刷新页面）时上下文即刻可用，无需等待 TopBar 解析
     ready: !!localStorage.getItem(LS_PROJECT_ID),
   };
@@ -79,6 +87,14 @@ export const stardustContext = reactive<StardustContext>(loadInitial());
 /** 上下文变更（项目 / 环境）后递增版本号，页面 watch 联动刷新 */
 function bumpRevision(): void {
   stardustContext.revision += 1;
+}
+
+/**
+ * 项目清单变更信号（CARD-PLT-01）：项目管理 新增/编辑/删除 成功后调用。
+ * useConsoleShell watch 本信号重拉顶栏项目列表；不递增 revision（不改当前选中项）。
+ */
+export function bumpProjectsVersion(): void {
+  stardustContext.projectsVersion += 1;
 }
 
 /**
@@ -128,6 +144,10 @@ let contextInterceptorRegistered = false;
 export function ensureStardustContextInterceptor(): void {
   if (contextInterceptorRegistered) return;
   contextInterceptorRegistered = true;
+  // CARD-MON-08 第二件：全局请求超时兜底。后端挂起窗（6681 Auth/Login POST 无回实证）曾让
+  // useManualRefresh 的 refreshing 永挂；请求自身先超时（30s，本地栈查询亚秒级余量充足），
+  // 配合 useManualRefresh 看门狗双保险，保证按钮状态机总能收到终态信号。
+  cubeAxios.defaults.timeout = 30_000;
   cubeAxios.interceptors.request.use((config) => {
     const ctx = contextParams();
     if (ctx.projectId != null || ctx.environment != null) {

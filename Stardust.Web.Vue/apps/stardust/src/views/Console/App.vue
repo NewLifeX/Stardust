@@ -33,6 +33,7 @@ import { WORKBENCH_TABS, resolveTab, tabLabel, tabSection } from '@/layouts/Star
 import { observeQueryToRoute, toObserveQuery, type ObserveKind, type ObserveQuery } from '@/layouts/StardustLayout2/appObserve.logic';
 import { stardustContext } from '@/stores/stardustContext';
 import { useContextReload } from '@/layouts/StardustLayout2/useContextReload';
+import { settleLoad } from '@/layouts/StardustLayout2/contextReload.logic';
 
 const route = useRoute();
 const router = useRouter();
@@ -67,6 +68,12 @@ async function loadApps(isStale: () => boolean): Promise<void> {
     if (isStale()) return;
     errorText.value = e instanceof Error ? e.message : String(e);
     load.value = 'failed';
+  } finally {
+    // DEF-02 守卫家族统一兜底：判废响应不碰状态（终态由最新 loader 负责）；
+    // 最新 loader 收口却漏写终态时兜底 failed，防「应用加载中…」永锁
+    // （REG-07：登录后项目链双维连跳，先前响应全判废且无后续 reload）。
+    load.value = settleLoad(load.value, isStale());
+    if (load.value === 'failed' && !errorText.value) errorText.value = '加载失败，请刷新重试';
   }
 }
 
@@ -81,6 +88,11 @@ function onObserveQuery(q: ObserveQuery): void {
 function onInstanceDrill(payload: { tab: 'appHistory' | 'meter'; client: string }): void {
   if (payload.tab === 'meter') go('meter', payload.client ? { clientId: payload.client } : {});
   else go('appHistory', payload.client ? { client: payload.client } : {});
+}
+
+// CARD-DEP-08 D5：部署页签顶部联想框选中应用 → 跳该应用的版本页签（部署集域）
+function onOpenApp(appId: number): void {
+  if (appId > 0) void router.push(appPath(appId, 'versions'));
 }
 
 // 上下文（项目、环境）就绪后首轮取数，之后切换项目或环境自动重取
@@ -223,10 +235,12 @@ const { reload } = useContextReload(loadApps, stardustContext);
         :overview="tab === 'overview'"
         :instances="row.instances"
         @go="go"
+        @open-app="onOpenApp"
       />
       <TraceList
         v-else-if="tab === 'trace' && row.id !== undefined"
         :app-id="Number(row.id)"
+        :app-name="name"
         @open-config="go('config')"
         @locate-instance="go('instances')"
       />

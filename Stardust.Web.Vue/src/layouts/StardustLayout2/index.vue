@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 /**
  * StardustLayout2：按设计交接包 v2（此刻 / 应用 / 节点 / 发布 / 治理）重做的控制台外壳。
  * 结构：56px 顶栏 + 可滚动内容区（max 1240，左右 32，底部留 104 给右下角的控制台按钮）+ 底部控制台（展开 300px，在 flex 列里挤压内容区）。
@@ -217,6 +217,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onWindowKeydown));
     <GuardModal
       v-if="guard"
       :label="guard.label"
+      :detail="guard.detail"
       @cancel="cancelGuard"
       @confirm="confirmGuard"
     />

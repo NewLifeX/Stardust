@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 /**
  * GuardModal：生产环境二次确认，对照原型 kit-shell.jsx 的 GuardModal 与 kit.css 的 .x-mask / .x-modal / .x-warnbar。
  * 纯 UI：只发 cancel 与 confirm，不自己关闭、不执行回调。
@@ -8,7 +8,7 @@
  */
 import Btn from '../Btn.vue';
 
-defineProps<{ label: string }>();
+defineProps<{ label: string; /** 可选正文（不传保持默认警示文案；标题+正文两段确认的卡用，2026-11-07 GW-03） */ detail?: string }>();
 
 const emit = defineEmits<{
   cancel: [];
@@ -42,7 +42,17 @@ const emit = defineEmits<{
       >
         {{ label }}
       </h2>
-      <p class="m-0 text-[12.5px] text-[var(--el-text-color-secondary)]">
+      <p
+        v-if="detail"
+        class="m-0 text-[12.5px] text-[var(--el-text-color-secondary)]"
+        data-spec="guard-detail"
+      >
+        {{ detail }}
+      </p>
+      <p
+        v-else
+        class="m-0 text-[12.5px] text-[var(--el-text-color-secondary)]"
+      >
         该操作会立即影响线上流量,并记入审计日志。
       </p>
       <div class="mt-[18px] flex justify-end gap-2">

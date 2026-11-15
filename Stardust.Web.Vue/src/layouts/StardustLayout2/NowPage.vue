@@ -71,7 +71,13 @@ async function load(isStale: () => boolean): Promise<void> {
   } catch {
     result = null;
   }
-  if (isStale()) return;
+  if (isStale()) {
+    // DEF-02 同族收口：响应已判废（REG-07 项目链双维连跳后无后续 reload 时），
+    // 不收口会让 loading 骨架与 refreshing 旋转永挂——落回旧数据态，终态由最新 loader 负责覆写。
+    loading.value = false;
+    refreshing.value = false;
+    return;
+  }
   if (result) {
     data.value = result.data;
     errors.value = result.errors;

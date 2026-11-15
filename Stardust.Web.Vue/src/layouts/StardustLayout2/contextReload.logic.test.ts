@@ -1,5 +1,5 @@
-﻿import { describe, expect, it } from 'vitest';
-import { canLoad, contextKey, createRequestGuard, type ContextLike } from './contextReload.logic';
+import { describe, expect, it } from 'vitest';
+import { canLoad, contextKey, createRequestGuard, settleLoad, type ContextLike } from './contextReload.logic';
 
 describe('contextKey', () => {
   it('未就绪且无项目、无环境时 key 稳定', () => {
@@ -72,5 +72,19 @@ describe('createRequestGuard', () => {
     b.begin();
     b.begin();
     expect(a.isLatest(ta)).toBe(true);
+  });
+});
+
+describe('settleLoad · DEF-02 守卫家族统一兜底', () => {
+  it('判废响应不碰状态（终态由最新 loader 负责）', () => {
+    expect(settleLoad('loading', true)).toBe('loading');
+    expect(settleLoad('ok', true)).toBe('ok');
+    expect(settleLoad('failed', true)).toBe('failed');
+  });
+
+  it('最新 loader 收口但终态漏写时兜底为 failed，loading 不得遗留（「应用加载中…」永锁防线）', () => {
+    expect(settleLoad('loading', false)).toBe('failed');
+    expect(settleLoad('ok', false)).toBe('ok');
+    expect(settleLoad('failed', false)).toBe('failed');
   });
 });

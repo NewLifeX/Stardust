@@ -1,4 +1,4 @@
-﻿import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { nextTick, reactive } from 'vue';
 import { useContextReload } from './useContextReload';
 
@@ -63,6 +63,26 @@ describe('useContextReload', () => {
     expect(stale).toHaveLength(2);
     expect(stale[0]()).toBe(true);
     expect(stale[1]()).toBe(false);
+  });
+
+  it('DEF-02 REG-07 复现：项目链双维连跳，先前响应全部判废，仅最新有效', async () => {
+    // REG-07 实证（diag-reg07-appdetail.mjs L37）：登录后自动切项目链 token 连跳多次，
+    // 前序响应全部 isStale 判废；若最新响应也不回/再判废且无后续 reload，load 停 'loading' 永锁——
+    // 故守卫家族须配 settleLoad 兜底（contextReload.logic.ts），本用例锁住判废链契约防回归。
+    const ctx = makeCtx({ ready: true, projectId: 3 });
+    const stale: Array<() => boolean> = [];
+    useContextReload((isStale) => {
+      stale.push(isStale);
+    }, ctx);
+    ctx.projectId = 4; // 第一维切换 → reload#2
+    await nextTick();
+    ctx.projectId = 5; // 项目链第二次变化
+    ctx.environment = 'prod'; // 环境维同窗变化 → reload#3
+    await nextTick();
+    expect(stale).toHaveLength(3);
+    expect(stale[0]()).toBe(true); // 首响应已判废
+    expect(stale[1]()).toBe(true); // 二响应已判废（REG-07「两响应皆 stale」形态）
+    expect(stale[2]()).toBe(false); // 仅最新有效；它若不回即永锁，由 settleLoad 兜底
   });
 
   it('reload 手动重取，未就绪时不取', () => {

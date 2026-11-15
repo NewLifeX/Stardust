@@ -8,6 +8,7 @@ const App = () => import('../../../apps/stardust/src/views/Console/App.vue');
 const Changes = () => import('../../../apps/stardust/src/views/Console/Changes.vue');
 const Now = () => import('../../../apps/stardust/src/views/Console/Now.vue');
 const Nodes = () => import('../../../apps/stardust/src/views/Console/Nodes.vue');
+const AgentDeploy = () => import('../../../apps/stardust/src/views/Console/AgentDeploy.vue');
 const Mesh = () => import('../../../apps/stardust/src/views/Console/Mesh.vue');
 const Configs = () => import('../../../apps/stardust/src/views/Console/Configs.vue');
 const Alarms = () => import('../../../apps/stardust/src/views/Console/Alarms.vue');
@@ -18,6 +19,8 @@ export const consoleRoutes: ConfigRoute[] = [
   { path: '/apps', name: 'ConsoleApps', component: Apps, meta: { auth: true, title: '应用' } },
   { path: '/app/:tab/:id', name: 'ConsoleApp', component: App, meta: { auth: true, title: '应用工作台' } },
   { path: '/nodes', name: 'ConsoleNodes', component: Nodes, meta: { auth: true, title: '节点' } },
+  // CARD-NODE-03：Agent 远程部署面板（独立路由，NodesPage 页头入口进入）
+  { path: '/nodes/agent-deploy', name: 'ConsoleAgentDeploy', component: AgentDeploy, meta: { auth: true, title: 'Agent 远程部署' } },
   // 旧 /ship 整页随停点 20 取消，重定向到「变更」时间线（Ship.vue 文件保留备用，不再由路由引用）
   { path: '/ship', redirect: '/changes' },
   { path: '/changes', name: 'ConsoleChanges', component: Changes, meta: { auth: true, title: '变更' } },
