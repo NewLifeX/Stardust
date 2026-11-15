@@ -4,6 +4,7 @@
  */
 import Drawer from './Drawer/Drawer.vue';
 import McpTokenResourcePanel from './McpTokenResourcePanel.vue';
+import type { Req } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
 import type { McpOption, McpResourceRow, McpTokenFullRow } from './mcpToken.logic.ts';
 
 defineProps<{
@@ -14,6 +15,8 @@ defineProps<{
   nodes: McpOption[];
   apps: McpOption[];
   busy?: boolean;
+  /** 请求函数（透传面板查询条） */
+  req: Req;
 }>();
 
 const emit = defineEmits<{
@@ -34,6 +37,7 @@ const emit = defineEmits<{
   >
     <McpTokenResourcePanel
       embedded
+      :req="req"
       :token="token"
       :resources="resources"
       :projects="projects"

@@ -3,15 +3,19 @@
  * McpTokenResourcePanel：某枚令牌的资源授权管理（最小授权收窄白名单）。
  * 选中令牌后列出其 Project/Node/App 授权；可新增单条授权、删除授权。
  * IsAll 通配不在新建入口提供（设计 v1.2：新建禁用 IsAll，存量只读保留）。
- * 纯 UI：增删都发事件，由容器调接口后刷新；按钮 busy 时禁用。
+ * 增删启停发事件由容器调接口后刷新；查询条自治（CARD-PLT-05）：服务端查询当前令牌授权，
+ * 返回全部回退 props 客户端过滤；切换令牌自动清查询，避免 A 令牌结果串显。
  */
 import { computed, ref, watch } from 'vue';
+import type { Req } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
 import Btn from './Btn.vue';
 import Card from './Card.vue';
 import Tag from './Tag.vue';
-import { filterResourcesByToken, type McpOption, type McpResourceRow, type McpTokenFullRow } from './mcpToken.logic.ts';
+import { fetchMcpTokenResources, filterResourcesByToken, type McpOption, type McpResourceRow, type McpTokenFullRow } from './mcpToken.logic.ts';
 
 const props = defineProps<{
+  /** 请求函数（查询条用；增删启停仍走事件由容器执行） */
+  req: Req;
   token: McpTokenFullRow | null;
   resources: McpResourceRow[];
   projects: McpOption[];
@@ -39,13 +43,63 @@ const candidates = computed<McpOption[]>(() => {
   return props.apps;
 });
 
-/** 选中令牌的授权行 */
-const rows = computed<McpResourceRow[]>(() => filterResourcesByToken(props.resources, props.token?.id ?? 0));
+// ==================== 查询条（CARD-PLT-05） ====================
 
-// 切换令牌时清空新增表单
+/** 查询条状态：'' = 全部类型/全部状态 */
+const rqType = ref('');
+const rqEnable = ref<'' | 'on' | 'off'>('');
+const rqDtStart = ref('');
+const rqDtEnd = ref('');
+const rqQ = ref('');
+const rqLoading = ref(false);
+const rqError = ref('');
+/** null = 查询未生效（显示 props 客户端过滤）；非 null = 最近一次服务端查询快照 */
+const rqRows = ref<McpResourceRow[] | null>(null);
+
+/** 展示行：查询快照起底，否则 props 按 token 客户端过滤 */
+const rows = computed<McpResourceRow[]>(() => rqRows.value ?? filterResourcesByToken(props.resources, props.token?.id ?? 0));
+
+async function applyResourceQuery(): Promise<void> {
+  const token = props.token;
+  if (!token || rqLoading.value) return;
+  rqLoading.value = true;
+  try {
+    const r = await fetchMcpTokenResources(
+      props.req,
+      { tokenId: token.id, resourceType: rqType.value, enable: rqEnable.value, dtStart: rqDtStart.value, dtEnd: rqDtEnd.value, Q: rqQ.value },
+      { nodes: props.nodes, apps: props.apps, projects: props.projects },
+    );
+    rqRows.value = r.rows;
+    rqError.value = r.error;
+  } finally {
+    rqLoading.value = false;
+  }
+}
+
+/** 返回全部：清快照回 props 客户端过滤 */
+function resetResourceQuery(): void {
+  rqType.value = '';
+  rqEnable.value = '';
+  rqDtStart.value = '';
+  rqDtEnd.value = '';
+  rqQ.value = '';
+  rqError.value = '';
+  rqRows.value = null;
+}
+
+// 切换令牌时清空查询与新增表单（tokenId 固定透传，快照不可跨令牌复用）
 watch(
   () => props.token?.id,
-  () => { newId.value = 0; },
+  () => {
+    newId.value = 0;
+    rqRows.value = null;
+    rqError.value = '';
+    rqType.value = '';
+    rqEnable.value = '';
+    rqDtStart.value = '';
+    rqDtEnd.value = '';
+    rqQ.value = '';
+  },
 );
 
 const canAdd = computed(() => newId.value > 0 && !props.busy);
@@ -94,6 +148,85 @@ const TYPE_OPTIONS = [
     </div>
 
     <template v-else>
+      <!-- 查询条（CARD-PLT-05：服务端查询当前令牌授权） -->
+      <div class="flex flex-wrap items-center gap-[8px] border-b border-[var(--el-border-color-light)] px-[14px] py-[10px]">
+        <select
+          v-model="rqType"
+          data-spec="mcp-resource-query-type"
+          class="h-[28px] cursor-pointer rounded-[8px] border border-[var(--el-border-color-light)] bg-[var(--el-bg-color-overlay)] px-[9px] text-[12px] text-[var(--el-text-color-primary)] outline-none"
+        >
+          <option value="">
+            全部类型
+          </option>
+          <option
+            v-for="t in TYPE_OPTIONS"
+            :key="t.key"
+            :value="t.key"
+          >
+            {{ t.label }}
+          </option>
+        </select>
+        <select
+          v-model="rqEnable"
+          data-spec="mcp-resource-query-enable"
+          class="h-[28px] cursor-pointer rounded-[8px] border border-[var(--el-border-color-light)] bg-[var(--el-bg-color-overlay)] px-[9px] text-[12px] text-[var(--el-text-color-primary)] outline-none"
+        >
+          <option value="">
+            全部状态
+          </option>
+          <option value="on">
+            仅启用
+          </option>
+          <option value="off">
+            仅停用
+          </option>
+        </select>
+        <input
+          v-model="rqDtStart"
+          type="date"
+          data-spec="mcp-resource-query-dt"
+          class="h-[28px] rounded-[8px] border border-[var(--el-border-color-light)] bg-[var(--el-bg-color-overlay)] px-[9px] text-[12px] text-[var(--el-text-color-primary)] outline-none"
+        >
+        <span class="text-[11px] text-[var(--el-text-color-secondary)]">至</span>
+        <input
+          v-model="rqDtEnd"
+          type="date"
+          data-spec="mcp-resource-query-dt"
+          class="h-[28px] rounded-[8px] border border-[var(--el-border-color-light)] bg-[var(--el-bg-color-overlay)] px-[9px] text-[12px] text-[var(--el-text-color-primary)] outline-none"
+        >
+        <input
+          v-model="rqQ"
+          data-spec="mcp-resource-query-q"
+          placeholder="搜索资源名 / 关键字"
+          class="h-[28px] w-[150px] rounded-[8px] border border-[var(--el-border-color-light)] bg-[var(--el-bg-color-overlay)] px-[9px] text-[12px] text-[var(--el-text-color-primary)] outline-none placeholder:text-[var(--el-text-color-placeholder)]"
+        >
+        <button
+          type="button"
+          data-spec="mcp-resource-query-apply"
+          :disabled="rqLoading"
+          class="cursor-pointer rounded-[8px] border border-[var(--el-border-color-light)] bg-[var(--el-fill-color-light)] px-[12px] py-[4px] text-[12px] text-[var(--el-text-color-primary)] hover:bg-[var(--el-fill-color)] disabled:cursor-not-allowed disabled:opacity-60"
+          @click="applyResourceQuery"
+        >
+          {{ rqLoading ? '查询中…' : '查询' }}
+        </button>
+        <button
+          v-if="rqRows !== null"
+          type="button"
+          data-spec="mcp-resource-query-reset"
+          class="cursor-pointer rounded-[8px] border border-[var(--el-border-color-light)] px-[12px] py-[4px] text-[12px] text-[var(--el-text-color-secondary)] hover:bg-[var(--el-fill-color-light)]"
+          @click="resetResourceQuery"
+        >
+          返回全部
+        </button>
+      </div>
+      <div
+        v-if="rqError"
+        data-spec="mcp-resource-query-error"
+        class="px-[14px] py-[8px] text-[12px] text-[var(--el-color-danger)]"
+      >
+        授权查询失败：{{ rqError }}
+      </div>
+
       <!-- 新增授权行 -->
       <div class="flex flex-wrap items-center gap-[8px] border-b border-[var(--el-border-color-light)] px-[14px] py-[10px]">
         <select
@@ -227,7 +360,12 @@ const TYPE_OPTIONS = [
               data-spec="mcp-resource-empty"
               class="px-[14px] py-[16px] text-center text-[12.5px] text-[var(--el-text-color-secondary)]"
             >
-              该令牌还没有收窄授权（Scope 域内全部资源可用）
+              <template v-if="rqRows !== null">
+                当前查询条件下没有授权。可调整条件重试，或点「返回全部」查看全部授权。
+              </template>
+              <template v-else>
+                该令牌还没有收窄授权（Scope 域内全部资源可用）
+              </template>
             </td>
           </tr>
         </tbody>

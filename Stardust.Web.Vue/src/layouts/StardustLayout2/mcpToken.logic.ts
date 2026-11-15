@@ -13,7 +13,8 @@
 //
 // 写接口（运行中 Cube（NewLife.Cube.dll）基类为 RESTful 特性路由，2026-10-30 实测确认）：
 //  - 创建令牌   POST /Platform/McpToken            JSON body {name,enable,userId,projectId,scopes,remark,expireTime?}
-//                  OnInsert 自动生成 sdmcp_ Token；ProjectId>0 且 Scopes 空时后端填默认只读 scope 串。
+//                  OnInsert 自动生成 sk-mcp- 前缀 Token（sk-mcp- + 48 位；遗留数据为 sdmcp_ 旧前缀，
+//                  后端 MCP令牌.Biz.cs TokenPrefix/LegacyTokenPrefix 实核 2026-11-09）；ProjectId>0 且 Scopes 空时后端填默认只读 scope 串。
 //                  响应 Data 即新实体（含 Token），优先直接读，缺 Token 再兜底重拉列表 max(Id)。
 //  - 更新令牌   PUT  /Platform/McpToken/{id}        JSON body（OnUpdate 强制 Token 字段恢复原值，不可改）
 //  - 删除令牌   DELETE /Platform/McpToken/{id}
@@ -169,13 +170,18 @@ export interface McpManageData {
 
 // ==================== 纯推导 ====================
 
-/** 令牌掩码：前 8 位 + … + 后 4 位；过短只显示前 4 位加星；空值显示 — */
+/** 令牌掩码：前 8 位 + … + 后 4 位；过短只显示前 4 位加星；空值显示 —。
+ *  task-95 刀6 起**列表列渲染不再使用本函数**（改 TOKEN_MASK_PLACEHOLDER 固定占位，
+ *  lead 裁：服务端零部分明文出户，前端列不得从 Token 推导任何部分明文）；本函数保留供非列表场景。 */
 export function maskTokenFull(token: unknown): string {
   const t = str(token);
   if (!t) return '—';
   if (t.length <= 12) return t.length > 4 ? `${t.slice(0, 4)}****` : '****';
   return `${t.slice(0, 8)}…${t.slice(-4)}`;
 }
+
+/** 令牌列表列固定占位（task-95 刀6）：零明文字符，与 Token 值/前缀无关 */
+export const TOKEN_MASK_PLACEHOLDER = '******';
 
 /** scope 域 → 中文名（与后端 OnInsert 默认 scope 串同域） */
 export const SCOPE_DOMAINS: { key: string; label: string }[] = [
@@ -259,7 +265,8 @@ export function toTokenRows(
     out.push({
       id,
       name: str(pick(r, 'Name', 'name')),
-      masked: maskTokenFull(pick(r, 'Token', 'token')),
+      // task-95 刀6（lead 裁）：列表列固定占位，不从 Token 推导任何部分明文；空值保留 — 空态
+      masked: str(pick(r, 'Token', 'token')) ? TOKEN_MASK_PLACEHOLDER : '—',
       enable: bool(pick(r, 'Enable', 'enable')),
       userId,
       userName: userId > 0 ? userMap.get(userId) ?? '' : '',
@@ -411,6 +418,90 @@ export async function fetchMcpManage(request: Req, projectId?: number | null): P
   }
 }
 
+// ==================== 服务端查询（CARD-PLT-04） ====================
+
+/** 令牌卡头查询条条件。enable 三态：'' 全部 / 'on' 仅启用 / 'off' 仅停用 */
+export interface McpTokenQuery {
+  token?: string;
+  enable?: '' | 'on' | 'off';
+  dtStart?: string;
+  dtEnd?: string;
+  Q?: string;
+}
+
+/** 查询条件 → 服务端 params：trim 空不下发；enable 布尔化（后端 p["enable"]?.ToBoolean()）。
+ *  注：后端 McpTokenController.Search 只读 token/enable/dtStart/dtEnd/Q，projectId 不在服务端参数内
+ *  （「按绑定项目过滤」是前端客户端叠加语义，与定稿卡 S2 一致）。 */
+export function buildTokenQueryParams(q: McpTokenQuery): Record<string, unknown> {
+  const p: Record<string, unknown> = {};
+  const token = (q.token ?? '').trim();
+  if (token) p.token = token;
+  if (q.enable === 'on') p.enable = true;
+  else if (q.enable === 'off') p.enable = false;
+  const dtStart = (q.dtStart ?? '').trim();
+  if (dtStart) p.dtStart = dtStart;
+  const dtEnd = (q.dtEnd ?? '').trim();
+  if (dtEnd) p.dtEnd = dtEnd;
+  const kw = (q.Q ?? '').trim();
+  if (kw) p.Q = kw;
+  return p;
+}
+
+/** 服务端查询令牌列表（查询条「查询」）：候选 projects/users 传入以解析绑定列名 */
+export async function fetchMcpTokens(
+  request: Req,
+  query: McpTokenQuery,
+  opts?: { projects?: McpOption[]; users?: McpOption[] },
+): Promise<{ rows: McpTokenFullRow[]; error: string }> {
+  try {
+    const res = await request({ url: '/Platform/McpToken', method: 'GET', params: { PageSize: 500, ...buildTokenQueryParams(query) } });
+    const projectMap = buildOptionMap(opts?.projects ?? []);
+    const userMap = buildOptionMap(opts?.users ?? []);
+    return { rows: toTokenRows(listOf(res), projectMap, userMap), error: '' };
+  } catch (e) {
+    return { rows: [], error: errText(e, 'MCP 令牌列表加载失败') };
+  }
+}
+
+/** 客户端项目过滤（CARD-PLT-04 叠加次序）：服务端查询（token/enable/dt/Q，projectId 不在参数面，
+ *  见 buildTokenQueryParams 注释）先落快照，本函数在快照之上做客户端项目过滤——
+ *  f=0 不过滤；f=-1 仅未绑定（projectId<=0）；其余按 projectId 精确匹配。 */
+export function filterTokensByProject(rows: McpTokenFullRow[], f: number): McpTokenFullRow[] {
+  if (!f) return rows;
+  return rows.filter((t) => (f === -1 ? t.projectId <= 0 : t.projectId === f));
+}
+
+// ==================== 服务端查询（CARD-PLT-05） ====================
+
+/** 资源授权查询条条件。resourceType：'' 全部 / Project / Node / App；enable 三态同令牌查询条 */
+export interface McpTokenResourceQuery {
+  tokenId?: number;
+  resourceType?: string;
+  enable?: '' | 'on' | 'off';
+  dtStart?: string;
+  dtEnd?: string;
+  Q?: string;
+}
+
+/** 服务端查询资源授权列表（面板查询条「查询」）：tokenId 固定透传（Drawer 当前令牌，<=0 不下发），
+ *  enable/dt/Q 复用令牌查询条语义（trim 空不下发；enable 布尔化）。候选 nodes/apps/projects 传入以解析资源名列。 */
+export async function fetchMcpTokenResources(
+  request: Req,
+  query: McpTokenResourceQuery,
+  opts?: { nodes?: McpOption[]; apps?: McpOption[]; projects?: McpOption[] },
+): Promise<{ rows: McpResourceRow[]; error: string }> {
+  try {
+    const p: Record<string, unknown> = { PageSize: 500, ...buildTokenQueryParams(query) };
+    if (query.tokenId && query.tokenId > 0) p.tokenId = query.tokenId;
+    const type = (query.resourceType ?? '').trim();
+    if (type) p.resourceType = type;
+    const res = await request({ url: '/Platform/McpTokenResource', method: 'GET', params: p });
+    return { rows: toResourceRows(listOf(res), opts?.nodes ?? [], opts?.apps ?? [], opts?.projects ?? []), error: '' };
+  } catch (e) {
+    return { rows: [], error: errText(e, '授权列表加载失败') };
+  }
+}
+
 // ==================== 写操作 ====================
 
 /** 表单模型（McpTokenForm.vue 提交） */
@@ -463,7 +554,7 @@ async function fetchTokenValue(request: Req, tokenId: number): Promise<string> {
 }
 
 /** 创建令牌。优先直接读 POST 响应 Data 里的完整实体（ProcessInsert 返回带 Token 的实体）；
- *  响应缺 Token 时兜底重拉列表取 max(Id) 行（旧宿主行为），一次性读出完整 sdmcp_ 值 */
+ *  响应缺 Token 时兜底重拉列表取 max(Id) 行（旧宿主行为），一次性读出完整 sk-mcp- 值 */
 export async function createToken(request: Req, form: McpTokenFormModel): Promise<OpResult> {
   if (!form.name.trim()) return { ok: false, message: '请填写令牌名称' };
   try {
@@ -675,7 +766,7 @@ export async function setServerEnable(request: Req, id: number, enable: boolean)
 
 // ==================== 审计服务端查询（McpAuditController.Search 全参数 + 分页） ====================
 
-/** 审计历史查询条件（服务端过滤：tokenId/success/toolName/dtStart/dtEnd + 分页） */
+/** 审计历史查询条件（服务端过滤：tokenId/success/toolName/actionName/Q/dtStart/dtEnd + 分页） */
 export interface McpAuditQuery {
   /** 令牌过滤；0 = 全部 */
   tokenId: number;
@@ -683,6 +774,10 @@ export interface McpAuditQuery {
   toolName: string;
   /** 执行结果；undefined = 全部 */
   success?: boolean;
+  /** 动作名（精确匹配 ActionName，如 Create/Update/Delete）；空 = 不限 */
+  actionName?: string;
+  /** 关键字（后端 Q，跨列模糊检索）；空 = 不限 */
+  Q?: string;
   /** 起始日期 "YYYY-MM-DD"；空 = 不限 */
   dtStart: string;
   /** 结束日期 "YYYY-MM-DD"；空 = 不限（自动补到当日 23:59:59） */
@@ -701,6 +796,8 @@ export function buildAuditQueryParams(q: McpAuditQuery): Record<string, unknown>
   if (q.tokenId > 0) p.tokenId = q.tokenId;
   if (q.toolName.trim()) p.toolName = q.toolName.trim();
   if (q.success === true || q.success === false) p.success = q.success;
+  if (q.actionName?.trim()) p.actionName = q.actionName.trim();
+  if (q.Q?.trim()) p.Q = q.Q.trim();
   if (q.dtStart.trim()) p.dtStart = q.dtStart.trim();
   const end = q.dtEnd.trim();
   if (end) p.dtEnd = end.includes(' ') ? end : `${end} 23:59:59`;
@@ -779,5 +876,124 @@ export async function setMcpEnabled(request: Req, raw: Rec | null, enable: boole
     return { ok: r.ok, message: r.ok ? (enable ? 'MCP 服务已开启' : 'MCP 服务已关闭') : r.message || '开关更新失败' };
   } catch (e) {
     return { ok: false, message: errText(e, '开关更新失败') };
+  }
+}
+
+// ==================== 平台设置完整表单（CARD-PLT-07：StarServerSetting 全量保存） ====================
+
+/** 平台设置表单字段定义（字段清单附录 = Doc/用户旅程/平台/StarServer.md §10；源 = Stardust.Server/Setting.cs:57-268 逐字） */
+export interface StarServerFormField {
+  /** Setting.cs 属性名（PascalCase） */
+  name: string;
+  /** 中文标签（Setting.cs summary 压缩） */
+  label: string;
+  /** 分组标题；表单渲染序 = 数组序（分组连续，密钥/只读殿后） */
+  group: string;
+  type: 'number' | 'boolean' | 'enum' | 'csv' | 'text' | 'secret';
+  /** 只读展示（McpActionSet/SensitiveKeywords，卡面 S4 定稿语义） */
+  readonly?: boolean;
+  /** 单位/说明 */
+  hint?: string;
+  /** 枚举选项（value 与后端枚举数值逐字一致，不硬编码字符串映射） */
+  options?: { value: number; label: string }[];
+}
+
+export const STAR_SERVER_FORM_FIELDS: StarServerFormField[] = [
+  // —— 端口与注册 ——
+  { name: 'Port', label: '端口', group: '端口与注册', type: 'number', hint: '默认 6600' },
+  { name: 'AutoRegister', label: '允许节点自动注册', group: '端口与注册', type: 'boolean' },
+  { name: 'AppAutoRegister', label: '允许应用自动注册', group: '端口与注册', type: 'boolean' },
+  {
+    name: 'ReRegister', label: '重注册模式', group: '端口与注册', type: 'enum',
+    hint: '已存在应用的动态注册策略',
+    options: [
+      { value: 0, label: '默认' }, { value: 1, label: '开放' }, { value: 2, label: '可信接入' },
+      { value: 3, label: '临时放行' }, { value: 4, label: '关闭' },
+    ],
+  },
+  { name: 'WhiteIP', label: '准入白名单', group: '端口与注册', type: 'csv', hint: 'IP 条件，逗号分隔，支持 * 模糊' },
+  { name: 'AllowControlNodesWhenEmpty', label: '可控节点为空时放行', group: '端口与注册', type: 'boolean' },
+  { name: 'NodeCodeFormula', label: '节点编码公式', group: '端口与注册', type: 'text' },
+  { name: 'NodeCodeLevel', label: '节点编码辨识度', group: '端口与注册', type: 'number', hint: '相同硬件信息个数' },
+  // —— 令牌与会话 ——
+  { name: 'TokenExpire', label: '令牌有效期', group: '令牌与会话', type: 'number', hint: '秒' },
+  { name: 'SessionTimeout', label: '会话超时', group: '令牌与会话', type: 'number', hint: '秒' },
+  { name: 'SaltTime', label: '盐值有效期', group: '令牌与会话', type: 'number', hint: '秒' },
+  // —— 监控与告警 ——
+  { name: 'MonitorFlowPeriod', label: '监控流统计周期', group: '监控与告警', type: 'number', hint: '秒' },
+  { name: 'MonitorBatchPeriod', label: '监控批统计周期', group: '监控与告警', type: 'number', hint: '秒' },
+  { name: 'MonitorSavePeriod', label: '监控落盘周期', group: '监控与告警', type: 'number', hint: '秒' },
+  { name: 'MonitorPatrolPeriod', label: '监控巡检周期', group: '监控与告警', type: 'number', hint: '秒' },
+  { name: 'AlarmPeriod', label: '监控告警周期', group: '监控与告警', type: 'number', hint: '秒' },
+  { name: 'IgnoreErrorItems', label: '忽略错误的埋点', group: '监控与告警', type: 'csv', hint: '逗号分隔，支持 * 通配' },
+  { name: 'IgnoreErrorKeywords', label: '忽略的异常关键字', group: '监控与告警', type: 'csv', hint: '命中视为传输层中断' },
+  // —— 数据保留与清理 ——
+  { name: 'DataRetention', label: '数据保留（分钟级）', group: '数据保留与清理', type: 'number', hint: '天' },
+  { name: 'DataRetention2', label: '数据保留（小时级）', group: '数据保留与清理', type: 'number', hint: '天' },
+  { name: 'DataRetention3', label: '数据保留（每日）', group: '数据保留与清理', type: 'number', hint: '天' },
+  {
+    name: 'ClearMode', label: '数据清理模式', group: '数据保留与清理', type: 'enum',
+    options: [{ value: 1, label: 'Truncate（高效）' }, { value: 2, label: 'Delete（无需DDL）' }],
+  },
+  // —— Web 与调用链 ——
+  { name: 'WebUrl', label: '控制台地址', group: 'Web 与调用链', type: 'text', hint: '用于监控告警地址' },
+  { name: 'TraceAnonymous', label: '调用链允许匿名', group: 'Web 与调用链', type: 'boolean', hint: '仅限内网或公开演示' },
+  { name: 'TraceShareExpire', label: '调用链分享有效期', group: 'Web 与调用链', type: 'number', hint: '分钟，≤0 长期' },
+  {
+    name: 'HomeSummaryMode', label: '首页概览展示模式', group: 'Web 与调用链', type: 'enum',
+    options: [{ value: 1, label: '隐藏' }, { value: 2, label: '量级' }, { value: 3, label: '精确' }],
+  },
+  { name: 'EnableInstallPage', label: '启用安装引导页', group: 'Web 与调用链', type: 'boolean' },
+  { name: 'AgentDownloadBaseUrl', label: '资源下载基础地址', group: 'Web 与调用链', type: 'text' },
+  { name: 'AgentServerUrl', label: '安装引导服务端地址', group: 'Web 与调用链', type: 'text', hint: '反向代理时必须显式配置' },
+  { name: 'AnonymousReport', label: '允许匿名埋点上报', group: 'Web 与调用链', type: 'boolean' },
+  { name: 'DotNetSyncPeriod', label: 'dotNet 同步周期', group: 'Web 与调用链', type: 'number', hint: '秒，0 禁用' },
+  { name: 'DotNetSyncUrl', label: 'dotNet 同步地址', group: 'Web 与调用链', type: 'text', hint: '支持 {major} 占位符' },
+  // —— 文件与上传 ——
+  { name: 'UploadPath', label: '上传目录', group: '文件与上传', type: 'text', hint: '需与 StarWeb 同目录' },
+  { name: 'MaxUploadSize', label: '上传包最大大小', group: '文件与上传', type: 'number', hint: '字节，0 = Kestrel 默认' },
+  { name: 'FileCache', label: '文件缓存目录', group: '文件与上传', type: 'text', hint: '空 = 不启用' },
+  { name: 'FileCacheWhiteIP', label: '文件缓存白名单', group: '文件与上传', type: 'csv', hint: 'IP 条件，支持 * 模糊' },
+  { name: 'FileStorageProvide', label: '文件存储提供服务', group: '文件与上传', type: 'boolean' },
+  { name: 'FileStorageFetch', label: '文件存储拉取文件', group: '文件与上传', type: 'boolean' },
+  { name: 'ValidateAttachment', label: '附件下载鉴权', group: '文件与上传', type: 'boolean' },
+  { name: 'PublicAttachmentCategories', label: '免登录公开附件分类', group: '文件与上传', type: 'csv', hint: 'ValidateAttachment 开启时生效' },
+  { name: 'AttachmentTokenExpire', label: '附件下载令牌有效期', group: '文件与上传', type: 'number', hint: '秒' },
+  // —— 级联与同步 ——
+  { name: 'UplinkServer', label: '上级服务器', group: '级联与同步', type: 'text', hint: '同步向上级汇报数据' },
+  { name: 'FixedCity', label: '固定城市', group: '级联与同步', type: 'boolean', hint: '开启后不再按 IP 自动计算' },
+  // —— MCP 与安全 ——
+  { name: 'EnableMcp', label: '启用 MCP 服务', group: 'MCP 与安全', type: 'boolean', hint: '与连接指引卡开关同字段' },
+  { name: 'RateLimitPaths', label: '限流路径前缀', group: 'MCP 与安全', type: 'csv', hint: '逗号分隔，按 IP 限流' },
+  { name: 'RateLimitTimes', label: '限流次数', group: 'MCP 与安全', type: 'number', hint: '次/分钟/IP' },
+  { name: 'CorsOrigins', label: 'CORS 允许的来源', group: 'MCP 与安全', type: 'csv', hint: '空 = 任意来源' },
+  // —— 密钥（mask 显示，留空 = 不改） ——
+  { name: 'TokenSecret', label: '令牌密钥', group: '密钥', type: 'secret', hint: '轮换将使全量令牌失效' },
+  { name: 'TraceShareSecret', label: '调用链分享密钥', group: '密钥', type: 'secret', hint: '轮换将使全部分享链接失效' },
+  // —— 只读展示（S4 定稿语义，禁改） ——
+  { name: 'McpActionSet', label: 'MCP 动作集', group: '只读展示', type: 'text', readonly: true, hint: 'node/app/config/deploy/gateway/monitor/system，* = 全部' },
+  { name: 'SensitiveKeywords', label: '敏感配置 key 关键词', group: '只读展示', type: 'text', readonly: true, hint: '命中关键词的配置值一律返回 ***' },
+];
+
+/**
+ * 平台设置全量保存。ConfigController.Update 是**全量覆盖**（cfg.Copy(value) 后 Save，
+ * 请求体缺省字段会被回写为类型默认值），因此必须把 GET 到的完整设置对象回传，仅叠加
+ * patch 改动字段；patch 每键同时写 PascalCase/camelCase 两个 key 与后端绑定兼容（同 setMcpEnabled 先例）。
+ * 密钥字段留空 = 改动 patch 不含该键 → raw 原值原样回传 = 保持不变（由组件层保证）。
+ */
+export async function saveStarServerSettings(request: Req, raw: Rec | null, patch: Rec): Promise<OpResult> {
+  if (!raw) return { ok: false, message: '取不到当前设置，不能保存' };
+  try {
+    const body: Rec = { ...raw };
+    for (const [k, v] of Object.entries(patch)) {
+      body[k] = v;
+      const camel = k.charAt(0).toLowerCase() + k.slice(1);
+      if (camel !== k) body[camel] = v;
+    }
+    const res = (await request({ url: '/Platform/StarServer', method: 'PUT', data: body } as ReqOptions & { data: Rec }));
+    const r = okRes(res);
+    return { ok: r.ok, message: r.ok ? '平台设置已保存' : r.message || '平台设置保存失败' };
+  } catch (e) {
+    return { ok: false, message: errText(e, '平台设置保存失败') };
   }
 }

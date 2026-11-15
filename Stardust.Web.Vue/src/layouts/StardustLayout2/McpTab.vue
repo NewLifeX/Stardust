@@ -27,9 +27,10 @@ import McpTokenResourceDrawer from './McpTokenResourceDrawer.vue';
 import Tag from './Tag.vue';
 import { toast } from './useToast';
 import { fetchMemberLinks, type MemberLink } from './projectMember.logic.ts';
-import type { McpServerRow } from './mesh.logic.ts';
+import { buildMcpServerQueryParams, fetchMcpServers, type McpServerQuery, type McpServerRow } from './mesh.logic.ts';
 import {
   addResource,
+  buildAuditQueryParams,
   createMcpServer,
   createToken,
   deleteMcpServer,
@@ -37,7 +38,9 @@ import {
   deleteToken,
   fetchMcpAuditPage,
   fetchMcpRuntime,
+  fetchMcpTokens,
   filterAudits,
+  filterTokensByProject,
   formatBoundUser,
   parseScopes,
   resetToken,
@@ -56,6 +59,7 @@ import {
   type McpTokenFormModel,
   type McpTokenFullRow,
 } from './mcpToken.logic.ts';
+import { downloadEntityExport, type ExportFormat } from './exportDownload.logic.ts';
 
 const req = request as Req;
 
@@ -70,10 +74,12 @@ const props = withDefaults(
     apps: McpOption[];
     servers: McpServerRow[];
     serversError?: string;
+    /** 顶栏项目上下文（CARD-PLT-03：服务器查询/导出透传，>0 才带参） */
+    projectId?: number;
     loading?: boolean;
     error?: string;
   }>(),
-  { serversError: '', loading: false, error: '' },
+  { serversError: '', projectId: 0, loading: false, error: '' },
 );
 
 const emit = defineEmits<{
@@ -238,6 +244,65 @@ function onTokenRowClick(row: McpTokenFullRow): void {
 }
 
 const serversSectionOpen = ref(false);
+
+// ---------- 服务器卡头查询条（CARD-PLT-03：enable/dt/Q 服务端过滤 + 导出按钮组） ----------
+const serverQueryEnable = ref<'' | 'on' | 'off'>('');
+const serverQueryDtStart = ref('');
+const serverQueryDtEnd = ref('');
+const serverQueryQ = ref('');
+const serverQueryLoading = ref(false);
+const serverQueryError = ref('');
+/** null = 未查询（显示 props 列表）；数组 = 查询态（显示服务端结果） */
+const serverQueryRows = ref<McpServerRow[] | null>(null);
+/** 导出进行中：'' 空闲，'excel'/'json' 进行中（防重复点击） */
+const serverExporting = ref<'' | ExportFormat>('');
+
+const visibleServers = computed(() => serverQueryRows.value ?? props.servers);
+
+/** 当前服务器查询条件（查询与导出共用同一组装保证导出=当前查询条件） */
+function currentServerQuery(): McpServerQuery {
+  return {
+    projectId: props.projectId,
+    enable: serverQueryEnable.value === '' ? undefined : serverQueryEnable.value === 'on',
+    dtStart: serverQueryDtStart.value,
+    dtEnd: serverQueryDtEnd.value,
+    Q: serverQueryQ.value,
+  };
+}
+
+/** 服务端查询：条件在点击「查询」时生效；查询结果为快照（行内操作后不自动重查，同审计查询模式） */
+async function applyServerQuery(): Promise<void> {
+  serverQueryLoading.value = true;
+  serverQueryError.value = '';
+  const r = await fetchMcpServers(req, currentServerQuery());
+  serverQueryRows.value = r.rows;
+  serverQueryError.value = r.error;
+  serverQueryLoading.value = false;
+}
+
+function resetServerQuery(): void {
+  serverQueryEnable.value = '';
+  serverQueryDtStart.value = '';
+  serverQueryDtEnd.value = '';
+  serverQueryQ.value = '';
+  serverQueryRows.value = null;
+  serverQueryError.value = '';
+}
+
+/** 导出服务器列表（excel/json）：与列表查询同参走服务端 export 端点，blob 下载 */
+async function exportServers(format: ExportFormat): Promise<void> {
+  if (serverExporting.value) return;
+  serverExporting.value = format;
+  const r = await downloadEntityExport(
+    '/Platform/McpServer/export',
+    { ...buildMcpServerQueryParams(currentServerQuery()), PageSize: 500 },
+    format,
+    'mcp-server',
+  );
+  serverExporting.value = '';
+  if (r.ok) toast(`已导出：${r.fileName}`, 'ok');
+  else toast(`导出失败：${r.message}`, 'err');
+}
 
 const deleteTarget = ref<McpTokenFullRow | null>(null);
 async function onDeleteConfirm(): Promise<void> {
@@ -417,11 +482,51 @@ async function onEnableMcpConfirm(): Promise<void> {
 // ---------- 令牌项目过滤（G-D：令牌为平台级资源，客户端按绑定项目过滤） ----------
 /** 0=全部项目；-1=未绑定；>0=项目 Id */
 const tokenProjectFilter = ref(0);
-const displayTokens = computed(() => {
-  const f = tokenProjectFilter.value;
-  if (!f) return props.tokens;
-  return props.tokens.filter((t) => (f === -1 ? t.projectId <= 0 : t.projectId === f));
-});
+
+// ---------- 令牌卡头查询条（CARD-PLT-04：token/enable/dt/Q 服务端过滤 + 客户端项目过滤叠加） ----------
+const tokenQueryToken = ref('');
+const tokenQueryEnable = ref<'' | 'on' | 'off'>('');
+const tokenQueryDtStart = ref('');
+const tokenQueryDtEnd = ref('');
+const tokenQueryQ = ref('');
+const tokenQueryLoading = ref(false);
+const tokenQueryError = ref('');
+/** null = 未查询（显示 props 列表）；数组 = 查询态（显示服务端结果，项目过滤仍客户端叠加） */
+const tokenQueryRows = ref<McpTokenFullRow[] | null>(null);
+
+const displayTokens = computed(() =>
+  filterTokensByProject(tokenQueryRows.value ?? props.tokens, tokenProjectFilter.value),
+);
+
+/** 服务端查询：条件在点击「查询」时生效；查询结果为快照（行内操作后不自动重查，同服务器/审计查询模式） */
+async function applyTokenQuery(): Promise<void> {
+  tokenQueryLoading.value = true;
+  tokenQueryError.value = '';
+  const r = await fetchMcpTokens(
+    req,
+    {
+      token: tokenQueryToken.value,
+      enable: tokenQueryEnable.value,
+      dtStart: tokenQueryDtStart.value,
+      dtEnd: tokenQueryDtEnd.value,
+      Q: tokenQueryQ.value,
+    },
+    { projects: props.projects, users: props.users },
+  );
+  tokenQueryRows.value = r.rows;
+  tokenQueryError.value = r.error;
+  tokenQueryLoading.value = false;
+}
+
+function resetTokenQuery(): void {
+  tokenQueryToken.value = '';
+  tokenQueryEnable.value = '';
+  tokenQueryDtStart.value = '';
+  tokenQueryDtEnd.value = '';
+  tokenQueryQ.value = '';
+  tokenQueryRows.value = null;
+  tokenQueryError.value = '';
+}
 
 // ---------- 审计过滤（近期 200 条客户端过滤 + 历史服务端查询分页） ----------
 const auditTokenId = ref(0);
@@ -431,6 +536,8 @@ const expandedAuditId = ref<string | null>(null);
 /** recent=props 近期记录（客户端过滤）；query=服务端历史检索结果 */
 const auditMode = ref<'recent' | 'query'>('recent');
 const auditToolName = ref('');
+const auditActionName = ref('');
+const auditKeyword = ref('');
 const auditDtStart = ref('');
 const auditDtEnd = ref('');
 const AUDIT_PAGE_SIZE = 50;
@@ -439,6 +546,8 @@ const auditTotal = ref(0);
 const queryAudits = ref<McpAuditFullRow[]>([]);
 const queryLoading = ref(false);
 const queryError = ref('');
+/** 导出进行中：'' 空闲，'excel'/'json' 进行中（防重复点击） */
+const auditExporting = ref<'' | ExportFormat>('');
 
 const clientFilter = computed(() => ({ tokenId: auditTokenId.value, ipQ: auditIpQ.value, level: auditLevel.value }));
 const visibleAudits = computed(() =>
@@ -447,25 +556,41 @@ const visibleAudits = computed(() =>
     : filterAudits(queryAudits.value, clientFilter.value),
 );
 
-/** 服务端历史查询。条件在点击「查询」时生效；翻页沿用当前条件 */
-async function loadAuditPage(pageIndex: number): Promise<void> {
-  queryLoading.value = true;
-  queryError.value = '';
-  const q: McpAuditQuery = {
+/** 当前审计检索条件（查询与导出共用同一组装，保证导出=当前查询条件） */
+function currentAuditQuery(pageIndex: number): McpAuditQuery {
+  return {
     tokenId: auditTokenId.value,
     toolName: auditToolName.value,
     success: auditLevel.value === 'all' ? undefined : auditLevel.value === 'ok',
+    actionName: auditActionName.value,
+    Q: auditKeyword.value,
     dtStart: auditDtStart.value,
     dtEnd: auditDtEnd.value,
     pageIndex,
     pageSize: AUDIT_PAGE_SIZE,
   };
-  const r = await fetchMcpAuditPage(req, q);
+}
+
+/** 服务端历史查询。条件在点击「查询」时生效；翻页沿用当前条件 */
+async function loadAuditPage(pageIndex: number): Promise<void> {
+  queryLoading.value = true;
+  queryError.value = '';
+  const r = await fetchMcpAuditPage(req, currentAuditQuery(pageIndex));
   queryAudits.value = r.rows;
   auditTotal.value = r.total;
   auditPageIndex.value = pageIndex;
   queryError.value = r.error;
   queryLoading.value = false;
+}
+
+/** 导出审计（excel/json）：与列表查询同参走服务端 export 端点，blob 下载 */
+async function exportAudit(format: ExportFormat): Promise<void> {
+  if (auditExporting.value) return;
+  auditExporting.value = format;
+  const r = await downloadEntityExport('/Platform/McpAudit/export', buildAuditQueryParams(currentAuditQuery(0)), format, 'mcp-audit');
+  auditExporting.value = '';
+  if (r.ok) toast(`已导出：${r.fileName}`, 'ok');
+  else toast(`导出失败：${r.message}`, 'err');
 }
 
 function enterAuditQuery(): void {
@@ -648,10 +773,97 @@ function riskLabel(level: number): string {
           />
           <h3 class="text-[14px] font-semibold text-[var(--el-text-color-primary)]">
             远端 MCP 服务器
-            <span class="ml-[6px] text-[11.5px] font-normal text-[var(--el-text-color-secondary)]">{{ servers.length }} 个 · 高级</span>
+            <span class="ml-[6px] text-[11.5px] font-normal text-[var(--el-text-color-secondary)]">{{ visibleServers.length }} 个 · 高级</span>
           </h3>
         </button>
         <span class="flex-1" />
+        <template v-if="serversSectionOpen">
+          <select
+            v-model="serverQueryEnable"
+            data-spec="mcp-server-query-enable"
+            class="h-[28px] cursor-pointer rounded-[8px] border border-[var(--el-border-color-light)] bg-[var(--el-bg-color-overlay)] px-[9px] text-[12px] text-[var(--el-text-color-primary)] outline-none"
+          >
+            <option value="">
+              全部状态
+            </option>
+            <option value="on">
+              仅启用
+            </option>
+            <option value="off">
+              仅停用
+            </option>
+          </select>
+          <span
+            data-spec="mcp-server-query-dt"
+            class="inline-flex items-center gap-[4px]"
+          >
+            <input
+              v-model="serverQueryDtStart"
+              type="date"
+              class="h-[28px] rounded-[8px] border border-[var(--el-border-color-light)] bg-[var(--el-bg-color-overlay)] px-[8px] text-[12px] text-[var(--el-text-color-primary)] outline-none"
+            >
+            <span class="text-[11px] text-[var(--el-text-color-secondary)]">至</span>
+            <input
+              v-model="serverQueryDtEnd"
+              type="date"
+              class="h-[28px] rounded-[8px] border border-[var(--el-border-color-light)] bg-[var(--el-bg-color-overlay)] px-[8px] text-[12px] text-[var(--el-text-color-primary)] outline-none"
+            >
+          </span>
+          <div class="flex h-[28px] items-center gap-[6px] rounded-[8px] border border-[var(--el-border-color-light)] bg-[var(--el-bg-color-overlay)] px-[9px]">
+            <KIcon
+              name="Search"
+              :size="13"
+              class="text-[var(--el-text-color)]"
+            />
+            <input
+              v-model="serverQueryQ"
+              type="text"
+              placeholder="关键字检索"
+              data-spec="mcp-server-query-q"
+              class="w-[130px] bg-transparent text-[12px] text-[var(--el-text-color-primary)] outline-none placeholder:text-[var(--el-text-color-placeholder)]"
+            >
+          </div>
+          <Btn
+            size="sm"
+            data-spec="mcp-server-query-apply"
+            :disabled="serverQueryLoading"
+            @click="applyServerQuery"
+          >
+            {{ serverQueryLoading ? '查询中…' : '查询' }}
+          </Btn>
+          <Btn
+            v-if="serverQueryRows !== null"
+            size="sm"
+            variant="ghost"
+            data-spec="mcp-server-query-reset"
+            @click="resetServerQuery"
+          >
+            返回全部
+          </Btn>
+          <span
+            data-spec="mcp-server-export"
+            class="inline-flex items-center gap-[4px]"
+          >
+            <Btn
+              size="sm"
+              variant="ghost"
+              data-spec="mcp-server-export-excel"
+              :disabled="serverExporting !== ''"
+              @click="exportServers('excel')"
+            >
+              {{ serverExporting === 'excel' ? '导出中…' : '导出 Excel' }}
+            </Btn>
+            <Btn
+              size="sm"
+              variant="ghost"
+              data-spec="mcp-server-export-json"
+              :disabled="serverExporting !== ''"
+              @click="exportServers('json')"
+            >
+              {{ serverExporting === 'json' ? '导出中…' : '导出 JSON' }}
+            </Btn>
+          </span>
+        </template>
         <Btn
           v-if="serversSectionOpen"
           variant="primary"
@@ -681,11 +893,17 @@ function riskLabel(level: number): string {
           服务器列表加载失败：{{ serversError }}
         </div>
         <div
-          v-else-if="!servers.length"
+          v-else-if="serverQueryError"
+          class="px-[14px] py-[14px] text-[12.5px] text-[var(--el-color-danger)]"
+        >
+          服务器查询失败：{{ serverQueryError }}
+        </div>
+        <div
+          v-else-if="!visibleServers.length"
           data-spec="mcp-server-empty"
           class="px-[14px] py-[16px] text-[12.5px] text-[var(--el-text-color-secondary)]"
         >
-          暂无注册的 MCP 服务器。点右上「新增服务器」登记远端 MCP 服务端点后在此显示。
+          {{ serverQueryRows !== null ? '无匹配的服务器。可调整查询条件后重试，或点「返回全部」查看已注册列表。' : '暂无注册的 MCP 服务器。点右上「新增服务器」登记远端 MCP 服务端点后在此显示。' }}
         </div>
         <table
           v-else
@@ -715,7 +933,7 @@ function riskLabel(level: number): string {
           </thead>
           <tbody>
             <tr
-              v-for="s in servers"
+              v-for="s in visibleServers"
               :key="s.id"
               data-spec="mcp-server-row"
               class="hover:bg-[var(--el-bg-color-overlay)]"
@@ -792,6 +1010,75 @@ function riskLabel(level: number): string {
           <span class="ml-[6px] text-[11.5px] font-normal text-[var(--el-text-color-secondary)]">{{ displayTokens.length }} 枚</span>
         </h3>
         <span class="flex-1" />
+        <input
+          v-model="tokenQueryToken"
+          type="text"
+          placeholder="按 Token 检索"
+          data-spec="mcp-token-query-token"
+          class="h-[28px] w-[150px] rounded-[8px] border border-[var(--el-border-color-light)] bg-[var(--el-bg-color-overlay)] px-[9px] text-[12px] text-[var(--el-text-color-primary)] outline-none placeholder:text-[var(--el-text-color-placeholder)]"
+        >
+        <select
+          v-model="tokenQueryEnable"
+          data-spec="mcp-token-query-enable"
+          class="h-[28px] cursor-pointer rounded-[8px] border border-[var(--el-border-color-light)] bg-[var(--el-bg-color-overlay)] px-[9px] text-[12px] text-[var(--el-text-color-primary)] outline-none"
+        >
+          <option value="">
+            全部状态
+          </option>
+          <option value="on">
+            仅启用
+          </option>
+          <option value="off">
+            仅停用
+          </option>
+        </select>
+        <span
+          data-spec="mcp-token-query-dt"
+          class="inline-flex items-center gap-[4px]"
+        >
+          <input
+            v-model="tokenQueryDtStart"
+            type="date"
+            class="h-[28px] rounded-[8px] border border-[var(--el-border-color-light)] bg-[var(--el-bg-color-overlay)] px-[8px] text-[12px] text-[var(--el-text-color-primary)] outline-none"
+          >
+          <span class="text-[11px] text-[var(--el-text-color-secondary)]">至</span>
+          <input
+            v-model="tokenQueryDtEnd"
+            type="date"
+            class="h-[28px] rounded-[8px] border border-[var(--el-border-color-light)] bg-[var(--el-bg-color-overlay)] px-[8px] text-[12px] text-[var(--el-text-color-primary)] outline-none"
+          >
+        </span>
+        <div class="flex h-[28px] items-center gap-[6px] rounded-[8px] border border-[var(--el-border-color-light)] bg-[var(--el-bg-color-overlay)] px-[9px]">
+          <KIcon
+            name="Search"
+            :size="13"
+            class="text-[var(--el-text-color)]"
+          />
+          <input
+            v-model="tokenQueryQ"
+            type="text"
+            placeholder="关键字检索"
+            data-spec="mcp-token-query-q"
+            class="w-[130px] bg-transparent text-[12px] text-[var(--el-text-color-primary)] outline-none placeholder:text-[var(--el-text-color-placeholder)]"
+          >
+        </div>
+        <Btn
+          size="sm"
+          data-spec="mcp-token-query-apply"
+          :disabled="tokenQueryLoading"
+          @click="applyTokenQuery"
+        >
+          {{ tokenQueryLoading ? '查询中…' : '查询' }}
+        </Btn>
+        <Btn
+          v-if="tokenQueryRows !== null"
+          size="sm"
+          variant="ghost"
+          data-spec="mcp-token-query-reset"
+          @click="resetTokenQuery"
+        >
+          返回全部
+        </Btn>
         <select
           v-model.number="tokenProjectFilter"
           data-spec="mcp-token-project-filter"
@@ -850,6 +1137,13 @@ function riskLabel(level: number): string {
         >
           重试
         </Btn>
+      </div>
+      <div
+        v-else-if="tokenQueryError"
+        data-spec="mcp-token-query-error"
+        class="flex items-center gap-[10px] px-[14px] py-[14px] text-[12.5px] text-[var(--el-color-danger)]"
+      >
+        令牌查询失败：{{ tokenQueryError }}
       </div>
       <div
         v-else-if="!tokens.length"
@@ -1017,7 +1311,7 @@ function riskLabel(level: number): string {
               data-spec="mcp-token-filter-empty"
               class="px-[14px] py-[14px] text-center text-[12.5px] text-[var(--el-text-color-secondary)]"
             >
-              当前项目过滤条件下没有令牌
+              {{ tokenQueryRows !== null ? '当前查询条件下没有令牌。可调整条件重试，或点「返回全部」查看全部令牌。' : '当前项目过滤条件下没有令牌' }}
             </td>
           </tr>
         </tbody>
@@ -1094,6 +1388,20 @@ function riskLabel(level: number): string {
             class="h-[28px] w-[200px] rounded-[8px] border border-[var(--el-border-color-light)] bg-[var(--el-bg-color-overlay)] px-[9px] text-[12px] text-[var(--el-text-color-primary)] outline-none placeholder:text-[var(--el-text-color-placeholder)]"
           >
           <input
+            v-model="auditActionName"
+            type="text"
+            placeholder="动作名，如 Create"
+            data-spec="mcp-audit-action-name"
+            class="h-[28px] w-[150px] rounded-[8px] border border-[var(--el-border-color-light)] bg-[var(--el-bg-color-overlay)] px-[9px] text-[12px] text-[var(--el-text-color-primary)] outline-none placeholder:text-[var(--el-text-color-placeholder)]"
+          >
+          <input
+            v-model="auditKeyword"
+            type="text"
+            placeholder="关键字检索"
+            data-spec="mcp-audit-keyword"
+            class="h-[28px] w-[150px] rounded-[8px] border border-[var(--el-border-color-light)] bg-[var(--el-bg-color-overlay)] px-[9px] text-[12px] text-[var(--el-text-color-primary)] outline-none placeholder:text-[var(--el-text-color-placeholder)]"
+          >
+          <input
             v-model="auditDtStart"
             type="date"
             data-spec="mcp-audit-dtstart"
@@ -1113,6 +1421,29 @@ function riskLabel(level: number): string {
           >
             查询
           </Btn>
+          <span
+            data-spec="mcp-audit-export"
+            class="inline-flex items-center gap-[4px]"
+          >
+            <Btn
+              size="sm"
+              variant="ghost"
+              data-spec="mcp-audit-export-excel"
+              :disabled="auditExporting !== ''"
+              @click="exportAudit('excel')"
+            >
+              {{ auditExporting === 'excel' ? '导出中…' : '导出 Excel' }}
+            </Btn>
+            <Btn
+              size="sm"
+              variant="ghost"
+              data-spec="mcp-audit-export-json"
+              :disabled="auditExporting !== ''"
+              @click="exportAudit('json')"
+            >
+              {{ auditExporting === 'json' ? '导出中…' : '导出 JSON' }}
+            </Btn>
+          </span>
           <Btn
             size="sm"
             variant="ghost"
@@ -1354,6 +1685,7 @@ function riskLabel(level: number): string {
       :nodes="nodes"
       :apps="apps"
       :busy="resourceBusy"
+      :req="req"
       @close="closeResourceDrawer"
       @add="onAddResource"
       @remove="onRemoveResource"
