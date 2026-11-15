@@ -142,7 +142,7 @@
 "Failed to dispatch the deploy command to node {0}: {1}": "Impossibile inviare il comando di distribuzione al nodo {0}: {1}"
 "Application authentication": "Autenticazione applicazione"
 "Node authentication": "Autenticazione nodo"
-"Timed out offline": "Offline per timeout"
+"Offline timeout": "Offline per timeout"
 "An application with an empty secret cannot log in. Set a Secret for this application in the registry or enable re-registration.": "Un'applicazione con un segreto vuoto non può accedere. Impostare un segreto per questa applicazione nel registro o abilitare la nuova registrazione."
 "Secret validation failed.": "Convalida del segreto non riuscita."
 "[{0}] re-registered in [{1}] mode; secret issued": "[{0}] registrato di nuovo in modalità [{1}]; segreto emesso"
@@ -231,3 +231,5 @@
 # AI分类与默认分组
 "AI对话": "Chat IA"
 "默认": "Predefinito"
+"Deleted {1:n0} AppCommand records before [{0}]": "Deleted {1:n0} AppCommand records before [{0}]"
+"Deleted {1:n0} NodeCommand records before [{0}]": "Deleted {1:n0} NodeCommand records before [{0}]"

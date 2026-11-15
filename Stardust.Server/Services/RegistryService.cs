@@ -680,25 +680,38 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
     /// <param name="clientId">应用实例标识。向特定应用实例发送命令时指定</param>
     /// <param name="model">命令模型</param>
     /// <param name="user">创建者</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <param name="coalesceKey">合并键。非空时若存在同应用同命令且参数包含该键的未完成命令，则更新该命令而不新增</param>
     /// <returns></returns>
-    public async Task<CommandReplyModel> SendCommand(App app, String clientId, CommandInModel model, String user, CancellationToken cancellationToken = default)
+    public async Task<CommandReplyModel> SendCommand(App app, String clientId, CommandInModel model, String user, CancellationToken cancellationToken = default, String coalesceKey = null)
     {
         //if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), L.T("Application must be specified."));
         if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
 
-        var cmd = new AppCommand
+        // 服务注册通知会在短时间内反复产生，合并到同一条未完成命令，避免命令表被同类通知刷满
+        var cmd = !coalesceKey.IsNullOrEmpty() ? AppCommand.FindPending(app.Id, model.Command, coalesceKey) : null;
+        if (cmd != null)
         {
-            AppId = app.Id,
-            Command = model.Command,
-            Argument = model.Argument,
-            //Expire = model.Expire,
-            TraceId = DefaultSpan.Current?.TraceId,
+            cmd.Argument = model.Argument;
+            if (model.Expire > 0) cmd.Expire = DateTime.Now.AddSeconds(model.Expire);
+            cmd.Update();
+        }
+        else
+        {
+            cmd = new AppCommand
+            {
+                AppId = app.Id,
+                Command = model.Command,
+                Argument = model.Argument,
+                //Expire = model.Expire,
+                TraceId = DefaultSpan.Current?.TraceId,
 
-            CreateUser = user,
-        };
-        if (model.StartTime > 0) cmd.StartTime = DateTime.Now.AddSeconds(model.StartTime);
-        if (model.Expire > 0) cmd.Expire = DateTime.Now.AddSeconds(model.Expire);
-        cmd.Insert();
+                CreateUser = user,
+            };
+            if (model.StartTime > 0) cmd.StartTime = DateTime.Now.AddSeconds(model.StartTime);
+            if (model.Expire > 0) cmd.Expire = DateTime.Now.AddSeconds(model.Expire);
+            cmd.Insert();
+        }
 
         // 分发命令给该应用的所有实例
         var cmdModel = BuildCommand(app, cmd);
@@ -766,6 +779,7 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
         // 获取所有订阅该服务的应用，可能相同应用多实例订阅，需要去重
         var appIds = list.Select(e => e.AppId).Distinct().ToArray();
         var arguments = new { service.AppName, service.ServiceName, service.Address }.ToJson();
+        var coalesceKey = $"\"ServiceName\":\"{service.ServiceName}\"";
 
         using var span = _tracer?.NewSpan(nameof(NotifyConsumers), $"{command} appIds={appIds.Join()} user={user} arguments={arguments}");
 
@@ -781,7 +795,7 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
                     Argument = arguments,
                     Expire = 600,
                 };
-                ts.Add(SendCommand(app, null, model, user));
+                ts.Add(SendCommand(app, null, model, user, default, coalesceKey));
             }
         }
 

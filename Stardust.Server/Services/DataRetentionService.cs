@@ -52,6 +52,8 @@ public class DataRetentionService(StarServerSetting setting, ITracer tracer) : I
             Clear(NodeData.DeleteBefore, time2, "Deleted {1:n0} NodeData records before [{0}]");
             Clear(RedisData.DeleteBefore, time2, "Deleted {1:n0} RedisData records before [{0}]");
             Clear(AppMeter.DeleteBefore, time2, "Deleted {1:n0} AppMeter records before [{0}]");
+            Clear(AppCommand.DeleteBefore, time2, "Deleted {1:n0} AppCommand records before [{0}]");
+            Clear(NodeCommand.DeleteBefore, time2, "Deleted {1:n0} NodeCommand records before [{0}]");
             Clear(AppMinuteStat.DeleteBefore, time, "Deleted {1:n0} AppMinuteStat records before [{0}]");
             Clear(TraceMinuteStat.DeleteBefore, time, "Deleted {1:n0} TraceMinuteStat records before [{0}]");
             Clear(TraceHourStat.DeleteBefore, time2, "Deleted {1:n0} TraceHourStat records before [{0}]");

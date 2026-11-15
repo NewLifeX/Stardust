@@ -142,7 +142,7 @@
 "Failed to dispatch the deploy command to node {0}: {1}": "노드 {0}에 배포 명령을 보내지 못했습니다: {1}"
 "Application authentication": "애플리케이션 인증"
 "Node authentication": "노드 인증"
-"Timed out offline": "오프라인 시간 초과"
+"Offline timeout": "오프라인 시간 초과"
 "An application with an empty secret cannot log in. Set a Secret for this application in the registry or enable re-registration.": "비밀 키가 비어 있는 애플리케이션은 로그인할 수 없습니다. 레지스트리에서 이 애플리케이션의 Secret을 설정하거나 재등록을 활성화하세요."
 "Secret validation failed.": "비밀 키 검증에 실패했습니다."
 "[{0}] re-registered in [{1}] mode; secret issued": "[{0}]이(가) [{1}] 모드로 재등록되었습니다. 비밀 키가 발급되었습니다"
@@ -231,3 +231,5 @@
 # AI分类与默认分组
 "AI对话": "AI 대화"
 "默认": "기본"
+"Deleted {1:n0} AppCommand records before [{0}]": "Deleted {1:n0} AppCommand records before [{0}]"
+"Deleted {1:n0} NodeCommand records before [{0}]": "Deleted {1:n0} NodeCommand records before [{0}]"

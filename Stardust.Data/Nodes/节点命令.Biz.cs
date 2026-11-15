@@ -173,6 +173,11 @@ public partial class NodeCommand : Entity<NodeCommand>
         return list.Count;
     }
 
+    /// <summary>删除指定时间之前更新的命令</summary>
+    /// <param name="date">时间阈值</param>
+    /// <returns>删除行数</returns>
+    public static Int32 DeleteBefore(DateTime date) => Delete(_.UpdateTime < date);
+
     /// <summary>转为模型</summary>
     /// <returns></returns>
     public CommandModel ToModel()

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using NewLife;
@@ -86,6 +87,9 @@ public partial class AppCommand : Entity<AppCommand>
     #endregion
 
     #region 高级查询
+    /// <summary>通知类命令。注册/注销通知由服务端自动产生，数量随服务变更放大，列表默认不展示</summary>
+    public static readonly String[] NotifyCommands = ["registry/register", "registry/unregister"];
+
     /// <summary>高级查询</summary>
     /// <param name="appId">应用</param>
     /// <param name="command">命令</param>
@@ -93,18 +97,46 @@ public partial class AppCommand : Entity<AppCommand>
     /// <param name="end">更新时间结束</param>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+    /// <param name="excludeCommands">需要排除的命令。仅在未指定 command 时生效</param>
     /// <returns>实体列表</returns>
-    public static IList<AppCommand> Search(Int32 appId, String command, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<AppCommand> Search(Int32 appId, String command, DateTime start, DateTime end, String key, PageParameter page, String[] excludeCommands = null)
     {
         var exp = new WhereExpression();
 
         if (appId >= 0) exp &= _.AppId == appId;
         if (!command.IsNullOrEmpty()) exp &= _.Command == command;
+        else if (excludeCommands != null)
+        {
+            foreach (var item in excludeCommands)
+            {
+                if (!item.IsNullOrEmpty()) exp &= _.Command != item;
+            }
+        }
         exp &= _.UpdateTime.Between(start, end);
         if (!key.IsNullOrEmpty()) exp &= _.Command.Contains(key) | _.Argument.Contains(key) | _.CreateUser.Contains(key) | _.CreateIP.Contains(key) | _.UpdateIP.Contains(key);
 
         return FindAll(exp, page);
     }
+
+    /// <summary>查找未完成的同类命令，用于合并重复的注册通知</summary>
+    /// <param name="appId">应用</param>
+    /// <param name="command">命令</param>
+    /// <param name="argumentKey">参数关键字，通常为服务名</param>
+    /// <returns>未完成的命令；不存在时返回 null</returns>
+    public static AppCommand FindPending(Int32 appId, String command, String argumentKey)
+    {
+        if (appId <= 0 || command.IsNullOrEmpty()) return null;
+
+        var exp = _.AppId == appId & _.Command == command & _.Status <= CommandStatus.处理中;
+        if (!argumentKey.IsNullOrEmpty()) exp &= _.Argument.Contains(argumentKey);
+
+        return FindAll(exp, _.Id.Desc(), null, 0, 1).FirstOrDefault();
+    }
+
+    /// <summary>删除指定时间之前更新的命令</summary>
+    /// <param name="date">时间阈值</param>
+    /// <returns>删除行数</returns>
+    public static Int32 DeleteBefore(DateTime date) => Delete(_.UpdateTime < date);
 
     // Select Count(Id) as Id,Category From AppCommand Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
     //static readonly FieldCache<AppCommand> _CategoryCache = new FieldCache<AppCommand>(nameof(Category))

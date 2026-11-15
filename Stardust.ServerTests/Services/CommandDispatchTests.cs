@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
+using NewLife.Data;
 using NewLife.Log;
 using NewLife.Remoting.Models;
 using NewLife.Remoting.Services;
@@ -165,6 +166,62 @@ public class CommandDispatchTests
             manager.Remove(session);
             cmd?.Delete();
             node.Delete();
+        }
+    }
+
+    [Fact(DisplayName = "重复的注册通知合并为同一条未完成命令")]
+    public async Task SendCommand_CoalesceNotifyCommands()
+    {
+        var svc = (RegistryService)RuntimeHelpers.GetUninitializedObject(typeof(RegistryService));
+
+        var app = new App { Name = "cmd_" + Rand.NextString(8), Secret = "x", Enable = true };
+        app.Insert();
+
+        try
+        {
+            const String key = "\"ServiceName\":\"StarWeb\"";
+            var arg1 = "{\"AppName\":\"StarWeb\",\"ServiceName\":\"StarWeb\",\"Address\":\"http://a\"}";
+            var arg2 = "{\"AppName\":\"StarWeb\",\"ServiceName\":\"StarWeb\",\"Address\":\"http://b\"}";
+
+            await svc.SendCommand(app, null, new CommandInModel { Command = "registry/register", Argument = arg1, Expire = 600, Timeout = 0 }, "tester", default, key);
+            await svc.SendCommand(app, null, new CommandInModel { Command = "registry/register", Argument = arg2, Expire = 600, Timeout = 0 }, "tester", default, key);
+
+            var list = AppCommand.FindAll(AppCommand._.AppId == app.Id & AppCommand._.Command == "registry/register");
+            Assert.Single(list);
+            Assert.Contains("http://b", list[0].Argument);
+        }
+        finally
+        {
+            AppCommand.Delete(AppCommand._.AppId == app.Id);
+            app.Delete();
+        }
+    }
+
+    [Fact(DisplayName = "应用命令列表默认排除注册通知")]
+    public void Search_ExcludeNotifyCommands()
+    {
+        var app = new App { Name = "cmd_" + Rand.NextString(8), Secret = "x", Enable = true };
+        app.Insert();
+
+        try
+        {
+            new AppCommand { AppId = app.Id, Command = "registry/register", Argument = "{}" }.Insert();
+            new AppCommand { AppId = app.Id, Command = "registry/unregister", Argument = "{}" }.Insert();
+            new AppCommand { AppId = app.Id, Command = "app/freeMemory", Argument = "{}" }.Insert();
+
+            var page = new PageParameter { PageSize = 20 };
+            var list = AppCommand.Search(app.Id, null, default, default, null, page, AppCommand.NotifyCommands);
+
+            Assert.Single(list);
+            Assert.Equal("app/freeMemory", list[0].Command);
+
+            var all = AppCommand.Search(app.Id, null, default, default, null, new PageParameter { PageSize = 20 });
+            Assert.Equal(3, all.Count);
+        }
+        finally
+        {
+            AppCommand.Delete(AppCommand._.AppId == app.Id);
+            app.Delete();
         }
     }
 

@@ -128,6 +128,27 @@ public partial class AppMeter : Entity<AppMeter>
     }
 
     private static readonly ICache _cache = new MemoryCache { Expire = 600 };
+    private static readonly ICache _sampleCache = new MemoryCache();
+
+    /// <summary>判断本次心跳是否达到性能采样落库周期。应用每次心跳都带性能信息，按采样周期落库可避免每秒一行</summary>
+    /// <param name="appId">应用编号</param>
+    /// <param name="clientId">实例标识</param>
+    /// <param name="period">采样周期，单位秒。非正数按 60 秒处理</param>
+    /// <param name="now">当前单调时间，单位毫秒。传入 0 时取 <see cref="Runtime.TickCount64"/></param>
+    /// <returns>达到周期返回 true，应写入性能数据；否则返回 false</returns>
+    public static Boolean TryAcquireSample(Int32 appId, String clientId, Int32 period, Int64 now = 0)
+    {
+        if (appId <= 0 || clientId.IsNullOrEmpty()) return true;
+        if (period <= 0) period = 60;
+        if (now <= 0) now = Runtime.TickCount64;
+
+        var key = $"meter:{appId}:{clientId}";
+        if (_sampleCache.TryGetValue<Int64>(key, out var last) && last > 0 && now - last < period * 1000L) return false;
+
+        _sampleCache.Set(key, now, period);
+
+        return true;
+    }
     /// <summary>获取某个应用下的客户端数</summary>
     /// <param name="appId"></param>
     /// <returns></returns>
@@ -170,6 +191,9 @@ public partial class AppMeter : Entity<AppMeter>
     /// <param name="ip"></param>
     public static void WriteData(App app, AppInfo info, String source, String clientId, String ip, Int32 nodeId)
     {
+        // 心跳每秒一次，而性能数据只需按采样周期落库，避免 AppMeter 每秒每实例一行
+        if (source.EqualIgnoreCase("Ping") && !TryAcquireSample(app.Id, clientId, app.Period)) return;
+
         // 兼容旧版时间
         var dt = DateTime.Now;
         if (info.Time > 0) dt = info.Time.ToDateTime().ToLocalTime();
