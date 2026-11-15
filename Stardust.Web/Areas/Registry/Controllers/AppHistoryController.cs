@@ -90,6 +90,9 @@ public class AppHistoryController : RegistryEntityController<AppHistory>
 
         //if (appId > 0 && start.Year < 2000) p["dtStart"] = (start = DateTime.Today).ToString("yyyy-MM-dd");
 
-        return AppHistory.Search(appId, client, action, success, nodeId, start, end, p["Q"], p);
+        // WebSocket 连接/断开数量大，默认不展示；指定 action 或 all=true 时查看
+        var exclude = action.IsNullOrEmpty() && !p["all"].ToBoolean() ? HistoryAction.ConnectionActions : null;
+
+        return AppHistory.SearchEx(appId, client, action, success, nodeId, start, end, p["Q"], p, exclude);
     }
 }

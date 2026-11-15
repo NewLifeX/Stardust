@@ -38,6 +38,9 @@ public class AppCommandController : RegistryEntityController<AppCommand>
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return AppCommand.Search(appId, command, start, end, p["Q"], p);
+        // 注册/注销通知数量随服务变更放大，默认不展示；显式指定 command 时可查看
+        var exclude = command.IsNullOrEmpty() ? AppCommand.NotifyCommands : null;
+
+        return AppCommand.Search(appId, command, start, end, p["Q"], p, exclude);
     }
 }

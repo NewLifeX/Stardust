@@ -40,6 +40,11 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
             df.Url = "/Nodes/Node/Detail?Id={NodeID}";
             df.Target = "_blank";
         }
+        {
+            // PingCount 是心跳次数，不是延迟，避免被误读为心跳耗时
+            var df = ListFields.GetField("PingCount") as ListField;
+            if (df != null) df.DisplayName = "心跳次数";
+        }
 
         ListFields.LocalizedTraceUrl();
     }
@@ -100,8 +105,11 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
     [EntityAuthorize((PermissionFlags)16)]
     public async Task<ActionResult> CheckUpgrade()
     {
+        var keys = SelectKeys;
+        if (keys == null || keys.Length == 0) return JsonRefresh(L.T("Please select at least one item."));
+
         var ts = new List<(String name, Task<CommandReplyModel?> task)>();
-        foreach (var item in SelectKeys)
+        foreach (var item in keys)
         {
             var online = NodeOnline.FindById(item.ToInt());
             if (online?.Node != null)
@@ -115,17 +123,7 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
 
         await Task.WhenAll(ts.Select(t => t.task));
 
-        var success = ts.Count(t => t.task.Result != null);
-        var timeout = ts.Count(t => t.task.Result == null);
-        var msg = $"操作成功！下发{ts.Count}个，响应{success}个，超时{timeout}个";
-        foreach (var (name, task) in ts)
-        {
-            var reply = task.Result;
-            if (reply != null)
-                msg += $"\n{name}: {reply.Data ?? "(无返回数据)"}";
-        }
-
-        return JsonRefresh(msg);
+        return JsonRefresh(Summary(ts));
     }
 
     [DisplayName("升级到版本")]
@@ -134,12 +132,15 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
     {
         if (releaseId.IsNullOrEmpty()) throw new ArgumentNullException(nameof(releaseId));
 
+        var keys = SelectKeys;
+        if (keys == null || keys.Length == 0) return JsonRefresh(L.T("Please select at least one item."));
+
         var release = ProductRelease.FindById(releaseId.ToInt());
-        if (release == null) return JsonRefresh("指定版本不存在！");
+        if (release == null) return JsonRefresh(L.T("The specified version does not exist."));
 
         var ts = new List<(String name, Task<CommandReplyModel?> task)>();
         var skipCount = 0;
-        foreach (var item in SelectKeys)
+        foreach (var item in keys)
         {
             var online = NodeOnline.FindById(item.ToInt());
             if (online?.Node != null)
@@ -160,29 +161,22 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
             }
         }
 
-        if (ts.Count == 0) return JsonRefresh($"选中节点均无匹配的包。跳过{skipCount}个");
+        if (ts.Count == 0) return JsonRefresh(L.T("No matched package for the selected nodes; skipped {0}", skipCount));
 
         await Task.WhenAll(ts.Select(t => t.task));
 
-        var success = ts.Count(t => t.task.Result != null);
-        var timeout = ts.Count(t => t.task.Result == null);
-        var msg = $"操作成功！下发{ts.Count}个，响应{success}个，超时{timeout}个，跳过{skipCount}个";
-        foreach (var (name, task) in ts)
-        {
-            var reply = task.Result;
-            if (reply != null)
-                msg += $"\n{name}: {reply.Data ?? "(无返回数据)"}";
-        }
-
-        return JsonRefresh(msg);
+        return JsonRefresh(Queued(ts.Count, skipCount));
     }
 
     [DisplayName("同步时间")]
     [EntityAuthorize((PermissionFlags)16)]
     public async Task<ActionResult> SyncTime()
     {
+        var keys = SelectKeys;
+        if (keys == null || keys.Length == 0) return JsonRefresh(L.T("Please select at least one item."));
+
         var ts = new List<(String name, Task<CommandReplyModel?> task)>();
-        foreach (var item in SelectKeys)
+        foreach (var item in keys)
         {
             var online = NodeOnline.FindById(item.ToInt());
             if (online?.Node != null)
@@ -193,25 +187,18 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
 
         await Task.WhenAll(ts.Select(t => t.task));
 
-        var success = ts.Count(t => t.task.Result != null);
-        var timeout = ts.Count(t => t.task.Result == null);
-        var msg = $"操作成功！下发{ts.Count}个，响应{success}个，超时{timeout}个";
-        foreach (var (name, task) in ts)
-        {
-            var reply = task.Result;
-            if (reply != null)
-                msg += $"\n{name}: {reply.Data ?? "(无返回数据)"}";
-        }
-
-        return JsonRefresh(msg);
+        return JsonRefresh(Summary(ts));
     }
 
     [DisplayName("重启服务")]
     [EntityAuthorize((PermissionFlags)32)]
     public async Task<ActionResult> Restart()
     {
+        var keys = SelectKeys;
+        if (keys == null || keys.Length == 0) return JsonRefresh(L.T("Please select at least one item."));
+
         var ts = new List<(String name, Task<CommandReplyModel?> task)>();
-        foreach (var item in SelectKeys)
+        foreach (var item in keys)
         {
             var online = NodeOnline.FindById(item.ToInt());
             if (online?.Node != null)
@@ -222,25 +209,18 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
 
         await Task.WhenAll(ts.Select(t => t.task));
 
-        var success = ts.Count(t => t.task.Result != null);
-        var timeout = ts.Count(t => t.task.Result == null);
-        var msg = $"操作成功！下发{ts.Count}个，响应{success}个，超时{timeout}个";
-        foreach (var (name, task) in ts)
-        {
-            var reply = task.Result;
-            if (reply != null)
-                msg += $"\n{name}: {reply.Data ?? "(无返回数据)"}";
-        }
-
-        return JsonRefresh(msg);
+        return JsonRefresh(Summary(ts));
     }
 
     [DisplayName("重启系统")]
     [EntityAuthorize((PermissionFlags)64)]
     public async Task<ActionResult> Reboot()
     {
+        var keys = SelectKeys;
+        if (keys == null || keys.Length == 0) return JsonRefresh(L.T("Please select at least one item."));
+
         var ts = new List<(String name, Task<CommandReplyModel?> task)>();
-        foreach (var item in SelectKeys)
+        foreach (var item in keys)
         {
             var online = NodeOnline.FindById(item.ToInt());
             if (online?.Node != null)
@@ -251,48 +231,60 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
 
         await Task.WhenAll(ts.Select(t => t.task));
 
-        var success = ts.Count(t => t.task.Result != null);
-        var timeout = ts.Count(t => t.task.Result == null);
-        var msg = $"操作成功！下发{ts.Count}个，响应{success}个，超时{timeout}个";
-        foreach (var (name, task) in ts)
-        {
-            var reply = task.Result;
-            if (reply != null)
-                msg += $"\n{name}: {reply.Data ?? "(无返回数据)"}";
-        }
-
-        return JsonRefresh(msg);
+        return JsonRefresh(Summary(ts));
     }
 
     [DisplayName("执行命令")]
     [EntityAuthorize((PermissionFlags)16)]
     public async Task<ActionResult> Execute(String command, String argument)
     {
-        if (GetRequest("keys") == null) throw new ArgumentNullException(nameof(SelectKeys));
-        if (command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(command));
+        var keys = SelectKeys;
+        if (keys == null || keys.Length == 0) return JsonRefresh(L.T("Please select at least one item."));
+        if (command.IsNullOrEmpty()) return JsonRefresh(L.T("Command cannot be empty."));
 
         var ts = new List<(String name, Task<CommandReplyModel?> task)>();
-        foreach (var item in SelectKeys)
+        foreach (var item in keys)
         {
             var online = NodeOnline.FindById(item.ToInt());
             if (online != null && online.Node != null)
             {
-                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, command, argument, 0, 300, 0, HttpContext.RequestAborted)));
+                // 交互式命令等待短回执，便于页面直接展示执行结果
+                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, command, argument, 0, 300, 5, HttpContext.RequestAborted)));
             }
         }
 
         await Task.WhenAll(ts.Select(t => t.task));
 
-        var success = ts.Count(t => t.task.Result != null);
-        var timeout = ts.Count(t => t.task.Result == null);
-        var msg = $"操作成功！下发{ts.Count}个，响应{success}个，超时{timeout}个";
+        return JsonRefresh(Summary(ts));
+    }
+
+    /// <summary>批量命令结果摘要。区分已下发、有回执与无回执，避免把即发即忘误报成超时</summary>
+    /// <param name="ts">每个目标的命令任务</param>
+    /// <returns>本地化摘要文本</returns>
+    private static String Summary(List<(String name, Task<CommandReplyModel?> task)> ts)
+    {
+        var replied = ts.Count(t => t.task.Result != null);
+        var noReply = ts.Count - replied;
+
+        var msg = L.T("Dispatched {0}, replied {1}, no reply {2}", ts.Count, replied, noReply);
         foreach (var (name, task) in ts)
         {
             var reply = task.Result;
-            if (reply != null)
-                msg += $"\n{name}: {reply.Data ?? "(无返回数据)"}";
+            if (reply?.Data != null) msg += $"\n{name}: {reply.Data}";
         }
 
-        return JsonRefresh(msg);
+        return msg;
+    }
+
+    /// <summary>即发即忘命令摘要。命令已写入队列，回执通过事件异步上报</summary>
+    /// <param name="dispatched">已下发数量</param>
+    /// <param name="skipped">跳过数量</param>
+    /// <returns>本地化摘要文本</returns>
+    private static String Queued(Int32 dispatched, Int32 skipped = 0)
+    {
+        var msg = L.T("Dispatched {0}; awaiting node confirmation", dispatched);
+        if (skipped > 0) msg += " " + L.T("Skipped {0} offline", skipped);
+
+        return msg;
     }
 }

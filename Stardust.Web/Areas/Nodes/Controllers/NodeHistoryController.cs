@@ -55,7 +55,10 @@ public class NodeHistoryController : NodesEntityController<NodeHistory>
 
         if (p.Sort.IsNullOrEmpty()) p.OrderBy = NodeHistory._.Id.Desc();
 
-        return NodeHistory.Search(nodeId, provinceId, cityId, action, success, start, end, p["Q"], p);
+        // WebSocket 连接/断开数量大，默认不展示；指定 action 或 all=true 时查看
+        var exclude = action.IsNullOrEmpty() && !p["all"].ToBoolean() ? HistoryAction.ConnectionActions : null;
+
+        return NodeHistory.Search(nodeId, provinceId, cityId, action, success, start, end, p["Q"], p, exclude);
     }
 
     /// <summary>查看。详情中的操作名同样按当前界面语言显示</summary>

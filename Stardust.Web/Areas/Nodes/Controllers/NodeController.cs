@@ -32,7 +32,7 @@ public class NodeController : NodesEntityController<Node>
 
         var list = ListFields;
         list.Clear();
-        var allows = new[] { "ID", "ProjectName", "Name", "Code", "Category", "ProductCode", "CityName", "Enable", "Version", "OSKind", "Runtime", "Framework", "IP", "OS", "MachineName", "Cpu", "Memory", "TotalSize", "Logins", "LastActive", "OnlineTime", "UpdateTime", "UpdateIP" };
+        var allows = new[] { "ID", "ProjectName", "Name", "Code", "Category", "ProductCode", "CityName", "Enable", "Version", "OSKind", "Runtime", "Framework", "IP", "Cpu", "Memory", "LastActive", "OnlineTime", "UpdateTime" };
         foreach (var item in allows)
         {
             list.AddListField(item);
@@ -75,8 +75,8 @@ public class NodeController : NodesEntityController<Node>
         //}
         {
             var df = ListFields.AddListField("Log", "UpdateTime");
-            df.DisplayName = "日志";
-            df.Url = "/Admin/Log?category=节点&linkId={ID}";
+            df.DisplayName = "历史";
+            df.Url = "/Nodes/NodeHistory?nodeId={ID}";
             df.Target = "_frame";
         }
 

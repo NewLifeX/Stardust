@@ -22,7 +22,7 @@ public class AppOnlineController : RegistryEntityController<AppOnline>
 
     static AppOnlineController()
     {
-        ListFields.RemoveField("ProjectName", "ProcessName", "MachineName", "UserName", "Token");
+        ListFields.RemoveField("ProjectName", "ProcessName", "MachineName", "UserName", "Token", "WorkerId", "UUID", "Macs", "StartTime", "Compile", "Creator", "CreateTime", "CreateIP", "UpdateTime", "UpdateIP");
 
         {
             var df = ListFields.GetField("AppName") as ListField;
@@ -37,6 +37,11 @@ public class AppOnlineController : RegistryEntityController<AppOnline>
             df.Text = "{NodeName}";
             df.Url = "/Nodes/Node?Id={NodeId}";
             df.Target = "_blank";
+        }
+        {
+            // PingCount 是心跳次数，不是延迟，避免被误读为心跳耗时
+            var df = ListFields.GetField("PingCount") as ListField;
+            if (df != null) df.DisplayName = "心跳次数";
         }
         {
             var df = ListFields.AddListField("OnlineState", null, "PingCount");
@@ -94,12 +99,13 @@ public class AppOnlineController : RegistryEntityController<AppOnline>
     [EntityAuthorize((PermissionFlags)16)]
     public async Task<ActionResult> Execute(String command, String argument)
     {
-        if (GetRequest("keys") == null) throw new ArgumentNullException(nameof(SelectKeys));
-        if (command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(command));
+        var keys = SelectKeys;
+        if (keys == null || keys.Length == 0) return JsonRefresh(L.T("Please select at least one item."));
+        if (command.IsNullOrEmpty()) return JsonRefresh(L.T("Command cannot be empty."));
 
         var ts = new List<(String name, Task<CommandReplyModel?> task)>();
         var skipped = 0;
-        foreach (var item in SelectKeys)
+        foreach (var item in keys)
         {
             var online = AppOnline.FindById(item.ToInt());
             if (online != null && online.App != null)
@@ -111,33 +117,26 @@ public class AppOnlineController : RegistryEntityController<AppOnline>
                     continue;
                 }
 
-                ts.Add((online.AppName, _starFactory.SendAppCommandAsync(online.App.Name, online.Client, command, argument, 0, 300, 0, HttpContext.RequestAborted)));
+                // 交互式命令等待短回执，便于页面直接展示执行结果
+                ts.Add((online.AppName, _starFactory.SendAppCommandAsync(online.App.Name, online.Client, command, argument, 0, 300, 5, HttpContext.RequestAborted)));
             }
         }
 
         await Task.WhenAll(ts.Select(t => t.task));
 
-        var success = ts.Count(t => t.task.Result != null);
-        var timeout = ts.Count(t => t.task.Result == null);
-        var msg = $"操作成功！下发{ts.Count}个，响应{success}个，超时{timeout}个";
-        if (skipped > 0) msg += $"，跳过离线{skipped}个";
-        foreach (var (name, task) in ts)
-        {
-            var reply = task.Result;
-            if (reply != null)
-                msg += $"\n{name}: {reply.Data ?? "(无返回数据)"}";
-        }
-
-        return JsonRefresh(msg);
+        return JsonRefresh(Summary(ts, skipped));
     }
 
     [DisplayName("释放内存")]
     [EntityAuthorize((PermissionFlags)32)]
     public async Task<ActionResult> FreeMemory()
     {
+        var keys = SelectKeys;
+        if (keys == null || keys.Length == 0) return JsonRefresh(L.T("Please select at least one item."));
+
         var ts = new List<(String name, Task<CommandReplyModel?> task)>();
         var skipped = 0;
-        foreach (var item in SelectKeys)
+        foreach (var item in keys)
         {
             var online = AppOnline.FindById(item.ToInt());
             if (online != null && online.App != null)
@@ -155,18 +154,27 @@ public class AppOnlineController : RegistryEntityController<AppOnline>
 
         await Task.WhenAll(ts.Select(t => t.task));
 
-        var success = ts.Count(t => t.task.Result != null);
-        var timeout = ts.Count(t => t.task.Result == null);
-        var msg = $"操作成功！下发{ts.Count}个，响应{success}个，超时{timeout}个";
-        if (skipped > 0) msg += $"，跳过离线{skipped}个";
+        return JsonRefresh(Summary(ts, skipped));
+    }
+
+    /// <summary>批量命令结果摘要。区分已下发、有回执与无回执，避免把即发即忘误报成超时</summary>
+    /// <param name="ts">每个目标的命令任务</param>
+    /// <param name="skipped">跳过的离线实例数</param>
+    /// <returns>本地化摘要文本</returns>
+    private static String Summary(List<(String name, Task<CommandReplyModel?> task)> ts, Int32 skipped)
+    {
+        var replied = ts.Count(t => t.task.Result != null);
+        var noReply = ts.Count - replied;
+
+        var msg = L.T("Dispatched {0}, replied {1}, no reply {2}", ts.Count, replied, noReply);
+        if (skipped > 0) msg += " " + L.T("Skipped {0} offline", skipped);
         foreach (var (name, task) in ts)
         {
             var reply = task.Result;
-            if (reply != null)
-                msg += $"\n{name}: {reply.Data ?? "(无返回数据)"}";
+            if (reply?.Data != null) msg += $"\n{name}: {reply.Data}";
         }
 
-        return JsonRefresh(msg);
+        return msg;
     }
 
     /// <summary>判断在线会话是否仍然活跃</summary>

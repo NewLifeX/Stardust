@@ -53,7 +53,7 @@ public class AppMeterController : RegistryEntityController<AppMeter>
 
         if (appId > 0)
         {
-            // 最近24小时
+            // 最近24小时，但限制最大点数，避免短周期应用一次渲染上万行
             if (p.PageSize == 20 && appId > 0)
             {
                 p.PageSize = 1440;
@@ -62,7 +62,7 @@ public class AppMeterController : RegistryEntityController<AppMeter>
                 var app = App.FindById(appId);
                 if (app != null && app.Period > 0)
                 {
-                    p.PageSize = 24 * 3600 / app.Period;
+                    p.PageSize = Math.Min(24 * 3600 / app.Period, 1000);
                 }
             }
 
@@ -105,6 +105,7 @@ public class AppMeterController : RegistryEntityController<AppMeter>
                 {
                     Title = new ChartTitle { Text = app.Name + "#" + clientId },
                     Height = 400,
+                    Grid = new ChartGrid { Left = 8, Right = 8 },
                 };
                 chart.SetX(list2, _.Time, e => (e.Time.Year > 2000 ? e.Time : e.CreateTime).ToFullString());
                 //chart.SetY("指标");

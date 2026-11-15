@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
+using NewLife.Cube.ViewModels;
 using NewLife.Log;
 using NewLife.Web;
 using Stardust.Data.Nodes;
@@ -31,6 +32,18 @@ public class NodeVersionController(IFileStorage fileStorage) : EntityController<
             //    var entity = e as NodeVersion;
             //    return !entity.Source.IsNullOrEmpty() && !entity.Source.StartsWithIgnoreCase("http://", "https://");
             //};
+        }
+
+        {
+            var df = ListFields.GetField("Strategy") as ListField;
+            if (df != null)
+            {
+                // 策略文本较长，列表截断显示，完整内容通过标题悬浮查看，避免把末列挤出屏幕
+                df.Title = "{Strategy}";
+                df.GetValue = e => e is NodeVersion entity && entity.Strategy.Length > 60
+                    ? entity.Strategy[..60] + "..."
+                    : (e as NodeVersion)?.Strategy;
+            }
         }
 
         {

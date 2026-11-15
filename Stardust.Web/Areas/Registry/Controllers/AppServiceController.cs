@@ -33,6 +33,19 @@ public class AppServiceController : RegistryEntityController<AppService>
             var df = ListFields.GetField("Client") as ListField;
             df.Url = "/Registry/AppService?appId={AppId}&client={Client}";
         }
+        {
+            // PingCount 是心跳次数，不是延迟，避免被误读为心跳耗时
+            var df = ListFields.GetField("PingCount") as ListField;
+            if (df != null) df.DisplayName = "心跳次数";
+        }
+        {
+            // 服务地址是注册中心最关键的信息，前移到服务名之后，避免被末列截断
+            if (ListFields.GetField("Address") != null)
+            {
+                ListFields.RemoveField("Address");
+                ListFields.AddListField("Address", "ServiceName");
+            }
+        }
     }
 
     /// <summary>高级搜索。按条件分页查询</summary>

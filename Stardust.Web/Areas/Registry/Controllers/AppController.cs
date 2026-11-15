@@ -36,12 +36,12 @@ public class AppController : RegistryEntityController<App>
         {
             var df = ListFields.AddListField("AppLog", "Version");
             df.DisplayName = "应用日志";
-            df.Url = "/Registry/AppLog?appId={Id}";
+            df.Url = "/Registry/AppClientLog?appId={Id}";
         }
         {
             var df = ListFields.AddListField("Log", "CreateUser");
-            df.DisplayName = "审计日志";
-            df.Url = "/Admin/Log?category=应用系统&linkId={Id}";
+            df.DisplayName = "历史";
+            df.Url = "/Registry/AppHistory?appId={Id}";
             df.Target = "_frame";
         }
     }

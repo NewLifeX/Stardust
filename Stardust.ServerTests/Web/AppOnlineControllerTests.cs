@@ -1,7 +1,9 @@
 extern alias web;
 using System;
 using System.ComponentModel;
+using System.Globalization;
 using System.Reflection;
+using NewLife;
 using Stardust.Data;
 using Xunit;
 
@@ -21,5 +23,32 @@ public class AppOnlineControllerTests
         Assert.Equal(false, method.Invoke(null, [null]));
         Assert.Equal(true, method.Invoke(null, [new AppOnline { UpdateTime = DateTime.Now }]));
         Assert.Equal(false, method.Invoke(null, [new AppOnline { UpdateTime = DateTime.Now.AddHours(-1) }]));
+    }
+
+    [Fact]
+    [DisplayName("应用命令摘要区分已下发与无回执，不再把即发即忘误报成超时")]
+    public void Summary_ReportsDispatchedAndSkipped()
+    {
+        var old = Localization.Culture;
+        try
+        {
+            Localization.Culture = CultureInfo.GetCultureInfo("en");
+
+            var method = typeof(web::Stardust.Web.Areas.Registry.Controllers.AppOnlineController)
+                .GetMethod("Summary", BindingFlags.NonPublic | BindingFlags.Static);
+            Assert.NotNull(method);
+
+            var paramType = method.GetParameters()[0].ParameterType;
+            var list = Activator.CreateInstance(paramType);
+            var rs = (String)method.Invoke(null, [list, 2])!;
+
+            Assert.Contains("Dispatched 0, replied 0, no reply 0", rs);
+            Assert.Contains("Skipped 2 offline", rs);
+            Assert.DoesNotContain("timeout", rs, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            Localization.Culture = old;
+        }
     }
 }

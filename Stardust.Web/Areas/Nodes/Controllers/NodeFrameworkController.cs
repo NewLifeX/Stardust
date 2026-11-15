@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
+using NewLife.Cube.ViewModels;
 using NewLife.Serialization;
 using NewLife.Web;
 using Stardust.Data.Nodes;
@@ -20,6 +21,22 @@ namespace Stardust.Web.Areas.Nodes.Controllers;
 public class NodeFrameworkController : EntityController<Node>
 {
     private readonly StarFactory _starFactory;
+
+    static NodeFrameworkController()
+    {
+        // 节点框架页只保留框架相关列，其余信息进入节点详情，避免三十列横向滚动
+        var list = ListFields;
+        list.Clear();
+        var allows = new[] { "ID", "Name", "Code", "ProductCode", "Category", "CityName", "Enable", "Version", "OSKind", "Runtime", "Framework", "Frameworks", "LastActive" };
+        foreach (var item in allows)
+        {
+            list.AddListField(item);
+        }
+
+        var df = ListFields.GetField("Name") as ListField;
+        df.Url = "/Nodes/Node/Detail?Id={ID}";
+        df.Target = "_blank";
+    }
 
     public NodeFrameworkController(StarFactory starFactory)
     {
