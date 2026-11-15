@@ -67,3 +67,29 @@ test('视图切换：关系图↔瀑布往返（默认瀑布，既有基线不�
   await page.locator('[data-spec="trace-view-graph"]').click();
   await expect(page.locator('[data-spec="trace-graph"] canvas')).toHaveCount(1);
 });
+
+test('关系环视图：第三态按钮接线，layout=circular wrapper 承载（TraceGraph 零改动）', async ({ page }) => {
+  // 第三态按钮在切换组内可见（C10 实现面：此前仅「瀑布｜关系图」两态）
+  await openStory(page, 'TraceDetail/Ring');
+  await expect(page.locator('[data-spec="trace-detail-view-ring"]')).toContainText('关系环');
+  // 关系环 wrapper 就位且内部 TraceGraph 经桩渲染 canvas（layout 透传链路由单测+走查取证）
+  const ring = page.locator('[data-spec="trace-graph-circular"]');
+  await expect(ring).toBeVisible();
+  await expect(ring.locator('[data-spec="trace-graph"] canvas')).toHaveCount(1);
+  // 多值注记在关系环视图显示「关系环」字样
+  await expect(page.locator('[data-spec="trace-multi-note"]')).toHaveCount(0);
+});
+
+test('视图切换：关系环↔关系图↔瀑布三态往返（互斥渲染，不残留）', async ({ page }) => {
+  await openStory(page, 'TraceDetail/Ring');
+  await expect(page.locator('[data-spec="trace-graph-circular"]')).toBeVisible();
+  await page.locator('[data-spec="trace-view-graph"]').click();
+  await expect(page.locator('[data-spec="trace-graph-circular"]')).toHaveCount(0);
+  await expect(page.locator('[data-spec="trace-graph"] canvas')).toHaveCount(1);
+  await page.locator('[data-spec="trace-view-waterfall"]').click();
+  await expect(page.locator('[data-spec="trace-graph"]')).toHaveCount(0);
+  await expect(page.locator('[data-spec="trace-waterfall"]')).toBeVisible();
+  await page.locator('[data-spec="trace-detail-view-ring"]').click();
+  await expect(page.locator('[data-spec="trace-graph-circular"] canvas')).toHaveCount(1);
+  await expect(page.locator('[data-spec="trace-waterfall"]')).toHaveCount(0);
+});

@@ -57,4 +57,7 @@ export const stories = [
 
   // 测试状态：关系图视图（initialView='graph'）→ TraceGraph 经桩渲染（API 优先注入；瀑布数据仍用 stubSpans）
   { id: 'TraceDetail/Graph', component: TraceDetail, props: { traceId: '405', initialView: 'graph', deps: { fetchSpans: stubSpans, graph: stubGraph } } },
+
+  // 测试状态：关系环视图（initialView='ring'，CARD-MON-14）→ TraceGraph layout="circular" 透传（桩仍 layout=none 确定性；透传链路经单测+走查网络面板取证）
+  { id: 'TraceDetail/Ring', component: TraceDetail, props: { traceId: '405', initialView: 'ring', deps: { fetchSpans: stubSpans, graph: stubGraph } } },
 ];

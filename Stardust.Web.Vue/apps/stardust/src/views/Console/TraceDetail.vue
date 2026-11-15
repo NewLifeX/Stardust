@@ -4,8 +4,9 @@
  * 顶部 TraceId 输入框支持逗号多值（parseTraceIds 拆分去重，上限 5 个）：
  * 服务端 /Monitors/SampleData?traceId= 是单值查询、没有「一次返回多条链路」的接口，
  * 多值=前端逐条并行拉取后**并列展示各链路独立时间轴**（UI 明确标注，不是合并视图）。
- * 视图切换（2026-11-04 用户拍板接入 /api/trace/graph）：瀑布（默认）｜关系图
- * ——关系图内嵌 TraceGraph 组件（API 优先、SampleData 自解析回退，见 traceGraph.logic.ts）。
+ * 视图切换（2026-11-04 用户拍板接入 /api/trace/graph；2026-11-09 CARD-MON-14 接线第三态）：
+ * 瀑布（默认）｜关系图｜关系环——后两者内嵌 TraceGraph 组件（API 优先、SampleData 自解析回退，
+ * 见 traceGraph.logic.ts）；关系环=同数据链 layout="circular"（组件与服务端早已支持，页面此前未暴露）。
  * 复用 trace.logic 的 toSpans/buildTraceList/buildWaterfall/summarizeTrace。
  * 入口深链：AppObserve（应用历史/命令）、DeployHistory、TraceList 的 TraceId 链接。
  * 取数经 deps 注入（story/CT 假实现，生产走真实 request）。
@@ -47,7 +48,7 @@ const props = defineProps<{
   /** story/CT 种子：无路由环境（gallery）直接从 prop 取初始 TraceId */
   traceId?: string;
   /** story/CT 种子：初始视图（默认瀑布，保持既有基线） */
-  initialView?: 'waterfall' | 'graph';
+  initialView?: 'waterfall' | 'graph' | 'ring';
 }>();
 
 function req(): Req {
@@ -57,8 +58,8 @@ function req(): Req {
 const input = ref('');
 const loading = ref(false);
 const loadError = ref(false);
-/** 视图切换：瀑布（默认）｜关系图（TraceGraph：API 优先、SampleData 自解析回退） */
-const view = ref<'waterfall' | 'graph'>(props.initialView ?? 'waterfall');
+/** 视图切换：瀑布（默认）｜关系图｜关系环（TraceGraph：API 优先、SampleData 自解析回退；关系环=layout circular） */
+const view = ref<'waterfall' | 'graph' | 'ring'>(props.initialView ?? 'waterfall');
 /** 每条链路一份：summary + 片段；null=取数失败 */
 interface TraceUnit {
   summary: TraceSummary;
@@ -225,13 +226,21 @@ function goBack(): void {
           >
             关系图
           </Btn>
+          <Btn
+            size="sm"
+            :variant="view === 'ring' ? 'primary' : 'ghost'"
+            data-spec="trace-detail-view-ring"
+            @click="view = 'ring'"
+          >
+            关系环
+          </Btn>
         </span>
         <span
           v-if="multi && !loading"
           class="text-[11.5px] text-[var(--el-text-color-secondary)]"
           data-spec="trace-multi-note"
         >
-          多值并列展示：{{ units.length }} 条链路各自独立{{ view === 'waterfall' ? '时间轴' : '关系图' }}（服务端按 TraceId 单值查询，无合并接口）
+          多值并列展示：{{ units.length }} 条链路各自独立{{ view === 'waterfall' ? '时间轴' : view === 'ring' ? '关系环' : '关系图' }}（服务端按 TraceId 单值查询，无合并接口）
         </span>
       </div>
     </Card>
@@ -296,13 +305,24 @@ function goBack(): void {
         </div>
 
         <div class="px-[18px] py-[14px]">
-          <!-- 关系图视图：TraceGraph 自取数（API 优先、SampleData 自解析回退），与瀑布取数相互独立 -->
+          <!-- 关系图/关系环视图：TraceGraph 自取数（API 优先、SampleData 自解析回退），与瀑布取数相互独立 -->
           <template v-if="view === 'graph'">
             <TraceGraph
               :trace-id="u.summary.traceId"
               height="360px"
               :deps="graphDeps"
             />
+          </template>
+          <!-- 关系环：同数据链 layout="circular" 透传（TraceGraph prop 已就绪，零改动）；wrapper 承 data-spec 锚 -->
+          <template v-else-if="view === 'ring'">
+            <div data-spec="trace-graph-circular">
+              <TraceGraph
+                :trace-id="u.summary.traceId"
+                height="360px"
+                layout="circular"
+                :deps="graphDeps"
+              />
+            </div>
           </template>
           <template v-else-if="u.spans === null">
             <div

@@ -18,9 +18,9 @@ import { buildWaterfall, fetchTraceSummaries, fetchTraceSpans, shortId, summariz
 import type { Span, TraceSummary, WaterfallBar } from './trace.logic.ts';
 import type { Req } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
 
-/** 取数依赖注入：story/CT 传假实现，生产用默认 */
+/** 取数依赖注入：story/CT 传假实现，生产用默认；appName 用于 F-MON-08-01 数字 appId→应用名映射（后端 SampleData.appId 存名串） */
 export interface TraceDeps {
-  fetchTraces: (request: Req, appId: number) => Promise<TraceSummary[] | null>;
+  fetchTraces: (request: Req, appId: number, appName?: string) => Promise<TraceSummary[] | null>;
   fetchDetail: (request: Req, traceId: string) => Promise<Span[] | null>;
 }
 
@@ -31,6 +31,8 @@ const DEFAULT_DEPS: TraceDeps = {
 
 const props = defineProps<{
   appId: number;
+  /** F-MON-08-01：应用名（SampleData.appId 存名串）；空/缺省时回退发数字 id（行为与修复前一致） */
+  appName?: string;
   deps?: TraceDeps;
 }>();
 
@@ -59,7 +61,7 @@ async function loadTraces(): Promise<void> {
   const token = ++loadToken;
   loading.value = true;
   loadError.value = false;
-  const list = await deps.fetchTraces(realRequest, props.appId);
+  const list = await deps.fetchTraces(realRequest, props.appId, props.appName);
   if (token !== loadToken) return;
   loading.value = false;
   if (list === null) {
@@ -97,7 +99,8 @@ async function refresh(): Promise<void> {
   refreshing.value = false;
 }
 
-watch(() => props.appId, () => void loadTraces(), { immediate: true });
+// 应用名随容器应用列表异步到达（''→实名）：名字变化也要重取，否则首帧数字 id 空结果后不再发请求
+watch(() => [props.appId, props.appName], () => void loadTraces(), { immediate: true });
 onScopeDispose(() => {
   loadToken++;
 });
