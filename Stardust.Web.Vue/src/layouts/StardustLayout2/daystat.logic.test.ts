@@ -2,12 +2,17 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
   buildDayStatParams,
+  buildDayStatRangeParams,
   buildMinuteStatParams,
   dayCallsChartOption,
   dayCostChartOption,
   dayStatSummary,
+  dayStatTotalRow,
   fetchDayStats,
+  fetchDayStatsRange,
   fetchMinuteStats,
+  createLoadGuard,
+  fmtErrorRate,
   localDateStr,
   localDateTimeStr,
   minuteChartOption,
@@ -181,5 +186,140 @@ describe('dayStatSummary · 顶部汇总', () => {
   it('total=0 时错误率为 0 不除零', () => {
     const s = dayStatSummary([toDayStatRow({ Total: 0, Errors: 3 })]);
     expect(s.errorRate).toBe(0);
+  });
+});
+
+describe('buildDayStatRangeParams / fetchDayStatsRange · 自定义区间（CARD-MON-04）', () => {
+  it('区间参数原样透传，pageSize 按区间天数对齐（span+2，下限 30）', () => {
+    const p = buildDayStatRangeParams(32, '2026-10-01', '2026-10-14');
+    expect(p.appId).toBe(32);
+    expect(p.dtStart).toBe('2026-10-01');
+    expect(p.dtEnd).toBe('2026-10-14');
+    expect(p.pageSize).toBe(30); // 14 天 → max(16, 30)
+
+    const long = buildDayStatRangeParams(32, '2026-08-01', '2026-11-08'); // 100 天
+    expect(long.pageSize).toBe(102);
+  });
+
+  it('逆序区间（起晚于止）天数兜底为 1，pageSize 仍为下限 30', () => {
+    const p = buildDayStatRangeParams(5, '2026-11-08', '2026-11-01');
+    expect(p.pageSize).toBe(30);
+    expect(p.dtStart).toBe('2026-11-08');
+    expect(p.dtEnd).toBe('2026-11-01');
+  });
+
+  it('fetchDayStatsRange 请求 /Monitors/AppDayStat 带区间参数，结果按日期升序', async () => {
+    let seen: { url?: string; params?: Record<string, unknown> } = {};
+    const request = (async (cfg: { url: string; params: Record<string, unknown> }) => {
+      seen = cfg;
+      return {
+        data: [
+          { StatDate: '2026-10-03', Total: 1 },
+          { StatDate: '2026-10-01', Total: 2 },
+          { StatDate: '2026-10-02', Total: 3 },
+        ],
+      };
+    }) as Req;
+    const list = await fetchDayStatsRange(request, 32, '2026-10-01', '2026-10-14');
+    expect(seen.url).toBe('/Monitors/AppDayStat');
+    expect(seen.params?.dtStart).toBe('2026-10-01');
+    expect(seen.params?.dtEnd).toBe('2026-10-14');
+    expect(list.map((r) => r.statDate)).toEqual(['2026-10-01', '2026-10-02', '2026-10-03']);
+  });
+});
+
+describe('dayStatTotalRow · 总计行聚合（前端聚合已加载行，CARD-MON-04）', () => {
+  it('求和/错误率/平均耗时/最大耗时手算', () => {
+    const rows = [
+      toDayStatRow({ StatDate: '2026-11-01', Total: 100, Errors: 5, Cost: 20, MaxCost: 50, Names: 3, Apis: 1, Https: 2, Dbs: 3, Mqs: 4, Redis: 5 }),
+      toDayStatRow({ StatDate: '2026-11-02', Total: 300, Errors: 10, Cost: 40, MaxCost: 70, Names: 4, Apis: 2, Https: 3, Dbs: 4, Mqs: 5, Redis: 6 }),
+    ];
+    const t = dayStatTotalRow(rows);
+    expect(t.days).toBe(2);
+    expect(t.total).toBe(400);
+    expect(t.errors).toBe(15);
+    expect(t.errorRate).toBeCloseTo(3.75);
+    expect(t.avgCost).toBe(30);
+    expect(t.maxCost).toBe(70);
+    expect(t.names).toBe(7);
+    expect(t.apis).toBe(3);
+    expect(t.https).toBe(5);
+    expect(t.dbs).toBe(7);
+    expect(t.mqs).toBe(9);
+    expect(t.redis).toBe(11);
+  });
+
+  it('空行全 0 不除零', () => {
+    const t = dayStatTotalRow([]);
+    expect(t.days).toBe(0);
+    expect(t.total).toBe(0);
+    expect(t.errors).toBe(0);
+    expect(t.errorRate).toBe(0);
+    expect(t.avgCost).toBe(0);
+    expect(t.maxCost).toBe(0);
+  });
+
+  it('total=0 行错误率 0；avgCost 过滤无调用行（与汇总卡同口径）', () => {
+    const t = dayStatTotalRow([toDayStatRow({ Total: 0, Errors: 3, Cost: 99, MaxCost: 120 })]);
+    expect(t.errorRate).toBe(0);
+    expect(t.avgCost).toBe(0);
+    expect(t.errors).toBe(3);
+    expect(t.maxCost).toBe(120);
+  });
+});
+
+describe('fmtErrorRate · 单行错误率百分比口径（C13 修复：后端 ErrorRate 存小数，×100 渲染）', () => {
+  it('0.0043 → 0.43%（与总计行同数量级），0.0208 → 2.08%', () => {
+    expect(fmtErrorRate(0.0043)).toBe('0.43%');
+    expect(fmtErrorRate(0.0208)).toBe('2.08%');
+  });
+
+  it('0 → 0%；负值与超界值也按比例；NaN/非有限 → —', () => {
+    expect(fmtErrorRate(0)).toBe('0%');
+    expect(fmtErrorRate(0.125)).toBe('12.5%');
+    expect(fmtErrorRate(Number.NaN)).toBe('—');
+    expect(fmtErrorRate(Number.POSITIVE_INFINITY)).toBe('—');
+  });
+});
+
+describe('createLoadGuard · 双加载域竞态守卫（CARD-MON-DEF-01）', () => {
+  it('同域后发使先发 stale（守卫本职）', () => {
+    const g = createLoadGuard();
+    const t1 = g.begin();
+    const t2 = g.begin();
+    expect(g.isStale(t1)).toBe(true);
+    expect(g.isStale(t2)).toBe(false);
+  });
+
+  it('跨域实例互不影响：他域 begin 不误伤本域 fresh 判定（缺陷语义=共用 token 时分钟域 begin 使日统计域 loading 永不复位）', () => {
+    const gLoad = createLoadGuard();
+    const gMinute = createLoadGuard();
+    const tLoad = gLoad.begin();
+    const tMinute = gMinute.begin();
+    expect(gLoad.isStale(tLoad)).toBe(false);
+    expect(gMinute.isStale(tMinute)).toBe(false);
+  });
+
+  it('跨域先后交错仍互不干扰（模拟 load 在飞期间 loadMinute begin+完成）', () => {
+    const gLoad = createLoadGuard();
+    const gMinute = createLoadGuard();
+    const tLoad = gLoad.begin();
+    const tMinute1 = gMinute.begin();
+    expect(gLoad.isStale(tLoad)).toBe(false);
+    const tMinute2 = gMinute.begin();
+    expect(gMinute.isStale(tMinute1)).toBe(true);
+    expect(gMinute.isStale(tMinute2)).toBe(false);
+    expect(gLoad.isStale(tLoad)).toBe(false);
+  });
+
+  it('ticket 唯一递增，实例间互不共享计数', () => {
+    const g1 = createLoadGuard();
+    const g2 = createLoadGuard();
+    const a1 = g1.begin();
+    const a2 = g1.begin();
+    const b1 = g2.begin();
+    expect(a2).toBe(a1 + 1);
+    expect(b1).toBe(1);
+    expect(g2.isStale(a1)).toBe(false);
   });
 });
