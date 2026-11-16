@@ -93,6 +93,7 @@ export default defineConfig({
         'src/layouts/StardustLayout2/dock.logic.ts',
         'src/layouts/StardustLayout2/palette.logic.ts',
         'src/layouts/StardustLayout2/palette.items.ts',
+        'src/layouts/StardustLayout2/paletteSearch.logic.ts',
         'src/layouts/StardustLayout2/terminal.logic.ts',
         'src/layouts/StardustLayout2/toast.logic.ts',
         'src/layouts/StardustLayout2/ui.store.ts',

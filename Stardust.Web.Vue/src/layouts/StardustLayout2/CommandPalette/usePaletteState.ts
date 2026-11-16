@@ -1,4 +1,4 @@
-﻿// 命令面板的会话状态（无生命周期、无 DOM，依赖由调用方注入，便于单测）。
+// 命令面板的会话状态（无生命周期、无 DOM，依赖由调用方注入，便于单测）。
 // 对照原型 kit-shell.jsx 的 Palette：q / sel、分组过滤、选中项随查询归零、
 // 回车与点击都是“先关闭，再执行”。
 // 每次调用都会新建状态：组件用 v-if 挂载，每次打开自然重置（原型也是在 open 变化时清空）。
@@ -37,7 +37,12 @@ export function usePaletteState(deps: PaletteStateDeps) {
   const query = ref('');
   const sel = ref(0);
 
-  const groups = computed(() => filterGroups(deps.config()?.groups ?? [], query.value));
+  const groups = computed(() => {
+    const base = filterGroups(deps.config()?.groups ?? [], query.value);
+    // 追踪组：输入像 TraceId 时追加（不参与子串过滤，网络无关，永远最后）
+    const trace = deps.config()?.traceJump?.(query.value) ?? null;
+    return trace ? [...base, trace] : base;
+  });
   const flat = computed(() => flattenGroups(groups.value));
   const placeholder = computed(() => deps.config()?.placeholder || DEFAULT_PLACEHOLDER);
 

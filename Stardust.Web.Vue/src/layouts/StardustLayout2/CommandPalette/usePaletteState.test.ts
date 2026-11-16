@@ -1,4 +1,4 @@
-﻿// 命令面板会话状态单测（Vitest）
+// 命令面板会话状态单测（Vitest）
 // 对照原型 kit-shell.jsx 的 Palette：选中项随查询归零、回车与点击先关闭再执行。
 import { describe, it, expect } from 'vitest';
 import { shallowRef } from 'vue';
@@ -293,5 +293,76 @@ describe('usePaletteState · onKey Esc 与普通键', () => {
     state.onKey('a');
     state.onKey('Tab');
     expect(log).toHaveLength(0);
+  });
+});
+
+// ---------- 追踪组（traceJump，2026-11-16 输入2） ----------
+
+/** 带追踪跳转的配置：traceJump 产自 buildBasePalette 同款形状 */
+function sampleWithTrace(log: string[]): PaletteConfig {
+  return {
+    placeholder: '搜索应用、节点、TraceId,或执行操作…',
+    groups: [{ title: '页面', list: [{ text: '跳转 · 此刻', hint: '首页', run: () => log.push('run:now') }] }],
+    traceJump: (q) => (/^[A-Za-z0-9_-]{2,}(,[A-Za-z0-9_-]{2,})*$/.test(q.trim()) ? {
+      title: '链路追踪',
+      list: [{ text: `追踪 · ${q.trim()}`, hint: '打开链路详情', run: () => log.push(`run:trace:${q.trim()}`) }],
+    } : null),
+  };
+}
+
+describe('usePaletteState · traceJump 追踪组', () => {
+  it('空查询不追加追踪组', () => {
+    const { state } = setup(sampleWithTrace([]), []);
+    expect(state.view.value.some((g) => g.title === '链路追踪')).toBe(false);
+  });
+
+  it('输入像 id：追加「链路追踪」组（页面组被过滤空时视图只剩追踪组）', () => {
+    const { state } = setup(sampleWithTrace([]), []);
+    state.setQuery('0abc20d417947901');
+    expect(state.view.value.map((g) => g.title).join()).toBe('链路追踪');
+  });
+
+  it('输入中文：不追加追踪组', () => {
+    const { state } = setup(sampleWithTrace([]), []);
+    state.setQuery('星尘');
+    expect(state.view.value.some((g) => g.title === '链路追踪')).toBe(false);
+  });
+
+  it('纯字母短串也属 id 形态（追加式，页面组命中时共存）', () => {
+    const { state } = setup(sampleWithTrace([]), []);
+    state.setQuery('zzz');
+    // 「zzz」不命中「跳转 · 此刻」→ 页面组空，视图只有追踪组
+    expect(state.view.value.map((g) => g.title).join()).toBe('链路追踪');
+  });
+
+  it('traceJump 返回 null：视图与无追踪组一致', () => {
+    const { state } = setup(sampleWithTrace([]), []);
+    state.setQuery('星尘!'); // 不像 id → traceJump null；也不命中页面组 → 空视图
+    expect(state.view.value).toHaveLength(0);
+  });
+
+  it('追踪组参与全局下标编号，回车按序执行并先关闭', () => {
+    const log: string[] = [];
+    const { state } = setup(sampleWithTrace(log), log);
+    state.setQuery('aaa111');
+    // 查询不命中页面组 → 视图只有追踪组，下标 0
+    expect(state.view.value[0].rows[0].index).toBe(0);
+    state.onKey('Enter');
+    expect(log.join()).toBe('close,run:trace:aaa111');
+  });
+
+  it('两组共存时追踪组下标接着编号（追加式，不挤掉过滤结果）', () => {
+    const log: string[] = [];
+    const cfg: PaletteConfig = {
+      placeholder: 'x',
+      groups: [{ title: '页面', list: [{ text: 'aaa111', run: () => log.push('run:page') }] }],
+      traceJump: () => ({ title: '链路追踪', list: [{ text: '追踪 · aaa111', run: () => log.push('run:trace') }] }),
+    };
+    const s = usePaletteState({ config: () => cfg, close: () => log.push('close') });
+    s.setQuery('aaa111');
+    expect(s.view.value.map((g) => g.title).join()).toBe('页面,链路追踪');
+    expect(s.view.value[1].rows[0].index).toBe(1);
+    s.onKey('Enter');
+    expect(log.join()).toBe('close,run:page');
   });
 });

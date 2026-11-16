@@ -11,6 +11,11 @@ import type { PaletteGroup } from './palette.logic';
 export interface PaletteConfig {
   placeholder: string;
   groups: PaletteGroup[];
+  /**
+   * 追踪跳转：按当前查询追加「链路追踪」组（输入像 TraceId 时返回组，否则 null）。
+   * 该组不参与子串过滤，由 usePaletteState 追加在过滤结果之后；不传则面板无追踪能力。
+   */
+  traceJump?: (query: string) => PaletteGroup | null;
 }
 
 /** 一次生产确认：label 是弹窗标题，detail 是可选正文（不传保持默认警示文案），fn 在用户点“确认执行”后调用 */

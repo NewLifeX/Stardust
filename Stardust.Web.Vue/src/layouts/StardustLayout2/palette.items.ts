@@ -4,6 +4,7 @@
 import { NAV_ITEMS, type NavKey } from './nav.logic.ts';
 import type { PaletteGroup, PaletteItem } from './palette.logic.ts';
 import type { Verb } from './hotkeys.logic.ts';
+import { parseTraceIds, shortId } from './trace.logic.ts';
 import type { PaletteConfig } from './ui.store.ts';
 
 /** 应用工作台页签（原型 openApp 的第二个参数） */
@@ -56,6 +57,12 @@ export interface PaletteDeps {
   openDock?: () => void;
   /** 启动接入向导；不传则不生成对应快捷操作，A 键无动作 */
   startWizard?: () => void;
+  /**
+   * 追踪跳转（输入像 TraceId 时面板追加「链路追踪」组）。
+   * 不传则配置不带 traceJump，面板不出追踪项。
+   * 调用方一律走命名路由 ConsoleTrace（禁路径跳转，见 routes.ts /trace 打分铁律）。
+   */
+  goTrace?: (ids: string) => void;
 }
 
 /** 动词键的结果：打开一个新面板，或交给调用方启动向导 */
@@ -104,9 +111,48 @@ function compact(groups: Array<PaletteGroup | null>): PaletteGroup[] {
   return groups.filter((g): g is PaletteGroup => g !== null);
 }
 
+// ---------- 追踪 id 检测与「链路追踪」组（2026-11-16 输入2） ----------
+
+/** 追踪 id 形态：仅 字母/数字/下划线/连字符；单字符永远不是 id，至少 2 字符防单键误触 */
+const TRACE_ID_PART = /^[A-Za-z0-9_-]+$/;
+const TRACE_ID_MIN_LENGTH = 2;
+
+/**
+ * 输入串是否像追踪 id：按 逗号/分号/空白 拆分（复用 /trace 契约页的 parseTraceIds 同一套拆分口径，
+ * 上限 5 与契约页一致），每段都符合 id 字符集才认为像。中文、点分 IP、单字符不会命中；
+ * 组是追加式的——即使同串也命中应用/节点，追踪组只是多一项，不挤掉其它结果。
+ * 返回空数组表示不像（调用方不追加「链路追踪」组）。
+ */
+export function traceIdsFromQuery(query: string, limit = 5): string[] {
+  const parts = parseTraceIds(query, limit);
+  if (parts.length === 0) return [];
+  return parts.every((p) => p.length >= TRACE_ID_MIN_LENGTH && TRACE_ID_PART.test(p)) ? parts : [];
+}
+
+/**
+ * 追踪跳转组：输入像 TraceId 时返回「链路追踪」组（追加在过滤结果之后，不参与子串过滤）。
+ * 不像 id 或没有 goTrace 时返回 null。
+ */
+export function buildTraceGroup(query: string, goTrace?: (ids: string) => void): PaletteGroup | null {
+  if (!goTrace) return null;
+  const ids = traceIdsFromQuery(query);
+  if (ids.length === 0) return null;
+  const joined = ids.join(',');
+  return {
+    title: '链路追踪',
+    list: [
+      {
+        text: `追踪 · ${shortId(joined, 24)}`,
+        hint: '打开链路详情',
+        run: () => goTrace(joined),
+      },
+    ],
+  };
+}
+
 /** ⌘K 打开的基础面板 */
 export function buildBasePalette(deps: PaletteDeps): PaletteConfig {
-  const { go, apps = [], nodes = [], openNode, openDock, startWizard } = deps;
+  const { go, apps = [], nodes = [], openNode, openDock, startWizard, goTrace } = deps;
 
   const pages = PAGE_ENTRIES.map<PaletteItem>((p) => ({
     text: `跳转 · ${p.text}`,
@@ -131,6 +177,8 @@ export function buildBasePalette(deps: PaletteDeps): PaletteConfig {
   return {
     placeholder: BASE_PLACEHOLDER,
     groups: compact([group('页面', pages), group('应用', appItems), group('节点', nodeItems), group('快捷操作', quick)]),
+    // 输入像 TraceId 时追加「链路追踪」组（usePaletteState 按当前查询调用）；没传 goTrace 不带该能力
+    traceJump: goTrace ? (q: string) => buildTraceGroup(q, goTrace) : undefined,
   };
 }
 
