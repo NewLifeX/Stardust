@@ -227,11 +227,16 @@ export interface AppForm {
   displayName: string;
   category: string;
   enable: boolean;
-  /** 客户端轮询间隔（秒） */
+  /** 心跳周期（秒）。0 或 60 表示按应用类型生成 */
   period: number;
+  /** 应用类型。0未知，1服务端，2Web服务端，3桌面应用，4移动应用，5前端 */
+  kind: number;
   secret: string;
   remark: string;
 }
+
+/** 有效的应用类型。0..5 连续编号 */
+const APP_KINDS = new Set([0, 1, 2, 3, 4, 5]);
 
 export function validateAppForm(m: AppForm, isCreate: boolean): string {
   if (!m.name.trim()) return '应用名必填（接入端要用它来注册）';
@@ -240,7 +245,8 @@ export function validateAppForm(m: AppForm, isCreate: boolean): string {
     if (m.name.trim() !== m.name.trim().toLowerCase()) return '应用名建议全小写（服务注册与配置中心按名称匹配）';
     if (/\s/.test(m.name.trim())) return '应用名不能包含空格';
   }
-  if (!Number.isFinite(m.period) || m.period < 0) return '轮询间隔必须是不小于 0 的秒数';
+  if (!Number.isFinite(m.period) || m.period < 0) return '心跳周期必须是不小于 0 的秒数';
+  if (!Number.isFinite(m.kind) || !APP_KINDS.has(m.kind)) return '应用类型不合法';
   return '';
 }
 
@@ -252,6 +258,7 @@ export function appCreateBody(m: AppForm, projectId?: number | null): Record<str
     Category: m.category.trim(),
     Enable: m.enable,
     Period: m.period,
+    Kind: m.kind,
     Remark: m.remark,
   };
   if (m.secret.trim()) body.Secret = m.secret.trim();
@@ -266,6 +273,7 @@ export function appUpdateBody(m: AppForm): Record<string, unknown> {
     Category: m.category.trim(),
     Enable: m.enable,
     Period: m.period,
+    Kind: m.kind,
     Remark: m.remark,
   };
   if (m.secret.trim()) body.Secret = m.secret.trim();

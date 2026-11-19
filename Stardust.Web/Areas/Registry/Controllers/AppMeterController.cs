@@ -60,9 +60,9 @@ public class AppMeterController : RegistryEntityController<AppMeter>
 
                 // 默认查询最近24小时。如果指定了应用，还需要根据应用心跳间隔来调整
                 var app = App.FindById(appId);
-                if (app != null && app.Period > 0)
+                if (app != null)
                 {
-                    p.PageSize = Math.Min(24 * 3600 / app.Period, 1000);
+                    p.PageSize = Math.Min(24 * 3600 / app.EffectivePeriod, 1000);
                 }
             }
 

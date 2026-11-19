@@ -454,9 +454,10 @@ const inputCls =
               type="checkbox"
               data-spec="tracer-form-meter"
             >
-            性能收集
+            埋点带性能
           </label>
         </div>
+        <span class="text-[11px] text-[var(--el-text-color-placeholder)]">仅控制埋点上报是否携带性能信息；心跳性能始终采集，由应用类型决定周期</span>
         <div class="grid grid-cols-2 gap-[10px]">
           <label class="flex flex-col gap-[4px]">
             <span class="text-[12px] text-[var(--el-text-color-secondary)]">跟踪模式</span>

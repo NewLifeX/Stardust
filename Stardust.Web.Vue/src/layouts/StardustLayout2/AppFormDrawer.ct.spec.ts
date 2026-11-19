@@ -15,7 +15,8 @@ test('AppFormDrawer 新建：Name 可填，Secret 占位「留空由服务端自
   await expect(name).toBeEnabled();
   await expect(name).toHaveAttribute('placeholder', '小写字母/数字/点，如 star.web');
   await expect(page.locator('[data-spec="app-form-secret"]')).toHaveAttribute('placeholder', '留空由服务端自动生成');
-  await expect(page.locator('[data-spec="app-form-period"]')).toHaveValue('60');
+  await expect(page.locator('[data-spec="app-form-period"]')).toHaveValue('0');
+  await expect(page.locator('[data-spec="app-form-kind"]')).toHaveValue('0');
   await expect(page.locator('[data-spec="app-form-enable"]')).toBeChecked();
 });
 

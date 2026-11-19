@@ -6,7 +6,8 @@ const editing: AppForm = {
   displayName: '星尘主站',
   category: 'IoT 平台',
   enable: true,
-  period: 60,
+  period: 300,
+  kind: 2,
   secret: '',
   remark: '',
 };

@@ -255,7 +255,7 @@ describe('sparklinePath', () => {
 
 describe('F12 validateAppForm / body 构造', () => {
   it('Name 必填、建议小写、创建态禁空格', () => {
-    const base = { name: '', displayName: '', category: '', enable: true, period: 60, secret: '', remark: '' };
+    const base = { name: '', displayName: '', category: '', enable: true, period: 60, kind: 0, secret: '', remark: '' };
     expect(validateAppForm(base, true)).toContain('必填');
     expect(validateAppForm({ ...base, name: 'Star.Web' }, true)).toContain('小写');
     expect(validateAppForm({ ...base, name: 'a b' }, true)).toContain('空格');
@@ -263,19 +263,21 @@ describe('F12 validateAppForm / body 构造', () => {
   });
 
   it('编辑态 Name 只读不改（不校验大小写拦截重复）', () => {
-    const base = { name: 'Star.Web', displayName: '', category: '', enable: true, period: 60, secret: '', remark: '' };
+    const base = { name: 'Star.Web', displayName: '', category: '', enable: true, period: 60, kind: 0, secret: '', remark: '' };
     expect(validateAppForm(base, false)).toBe('');
+    expect(validateAppForm({ ...base, kind: 5 }, false)).toBe('');
+    expect(validateAppForm({ ...base, kind: 6 }, false)).toContain('应用类型');
   });
 
   it('create body：Secret 有值才带，ProjectId 有效才带', () => {
-    const m = { name: 'star.web ', displayName: ' 星尘 ', category: 'IoT', enable: false, period: 30, secret: '', remark: 'r' };
-    expect(appCreateBody(m, null)).toEqual({ Name: 'star.web', DisplayName: '星尘', Category: 'IoT', Enable: false, Period: 30, Remark: 'r' });
+    const m = { name: 'star.web ', displayName: ' 星尘 ', category: 'IoT', enable: false, period: 30, kind: 0, secret: '', remark: 'r' };
+    expect(appCreateBody(m, null)).toEqual({ Name: 'star.web', DisplayName: '星尘', Category: 'IoT', Enable: false, Period: 30, Kind: 0, Remark: 'r' });
     expect(appCreateBody(m, 7)).toMatchObject({ ProjectId: 7 });
     expect(appCreateBody({ ...m, secret: 's3cret' }, 0)).toMatchObject({ Secret: 's3cret' });
   });
 
   it('update body：不含 Name；Secret 留空不提交', () => {
-    const m = { name: 'star.web', displayName: '星尘', category: '', enable: true, period: 60, secret: '', remark: '' };
+    const m = { name: 'star.web', displayName: '星尘', category: '', enable: true, period: 60, kind: 0, secret: '', remark: '' };
     const body = appUpdateBody(m) as Record<string, unknown>;
     expect(body).not.toHaveProperty('Name');
     expect(body).not.toHaveProperty('Secret');
@@ -284,7 +286,7 @@ describe('F12 validateAppForm / body 构造', () => {
 });
 
 describe('F12 App CRUD 请求', () => {
-  const m = { name: 'star.web', displayName: '星尘', category: '', enable: true, period: 60, secret: '', remark: '' };
+  const m = { name: 'star.web', displayName: '星尘', category: '', enable: true, period: 60, kind: 0, secret: '', remark: '' };
   const caller = async (opt: unknown) => opt as Awaited<ReturnType<Req>>;
 
   it('createApp：POST /Registry/App，成功带回 data.id', async () => {

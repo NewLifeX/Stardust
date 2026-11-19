@@ -140,7 +140,8 @@ function askEditApp(r: AppAggRow): void {
     displayName: r.displayName ?? '',
     category: r.category ?? '',
     enable: r.enable !== false,
-    period: 60,
+    period: Number(r.period ?? 0),
+    kind: Number(r.kind ?? 0),
     secret: '',
     remark: '',
   };

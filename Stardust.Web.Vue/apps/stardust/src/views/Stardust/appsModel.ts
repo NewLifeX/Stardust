@@ -28,6 +28,10 @@ export interface AppListItem {
   category?: string
   version?: string
   enable?: boolean
+  /** 心跳周期（秒）。0 或 60 表示按应用类型生成 */
+  period?: number
+  /** 应用类型。0未知，1服务端，2Web服务端，3桌面应用，4移动应用，5前端 */
+  kind?: number
   updateTime?: string
   [k: string]: unknown
 }

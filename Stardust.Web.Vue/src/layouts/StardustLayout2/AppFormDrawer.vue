@@ -22,7 +22,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{ close: []; submit: [form: AppForm] }>();
 
-const form = reactive<AppForm>({ name: '', displayName: '', category: '', enable: true, period: 60, secret: '', remark: '' });
+const form = reactive<AppForm>({ name: '', displayName: '', category: '', enable: true, period: 0, kind: 0, secret: '', remark: '' });
 const formError = ref('');
 
 watch(
@@ -30,7 +30,7 @@ watch(
   ([open, init]) => {
     if (!open) return;
     formError.value = '';
-    Object.assign(form, { name: '', displayName: '', category: '', enable: true, period: 60, secret: '', remark: '' }, init ?? {});
+    Object.assign(form, { name: '', displayName: '', category: '', enable: true, period: 0, kind: 0, secret: '', remark: '' }, init ?? {});
   },
   { immediate: true },
 );
@@ -95,6 +95,22 @@ function onSubmit(): void {
         >
       </label>
 
+      <label class="flex flex-col gap-[4px]">
+        <span class="text-[12px] text-[var(--el-text-color-secondary)]">应用类型</span>
+        <select
+          v-model.number="form.kind"
+          data-spec="app-form-kind"
+          class="h-[30px] w-full rounded-[8px] border border-[var(--el-border-color-light)] bg-[var(--el-bg-color-overlay)] px-[10px] text-[12.5px] text-[var(--el-text-color-primary)] outline-none focus:border-[var(--el-color-primary)]"
+        >
+          <option :value="0">未知（保持历史行为）</option>
+          <option :value="1">服务端</option>
+          <option :value="2">Web 服务端</option>
+          <option :value="3">桌面应用</option>
+          <option :value="4">移动应用</option>
+          <option :value="5">前端</option>
+        </select>
+      </label>
+
       <div class="flex gap-[16px]">
         <label class="flex items-center gap-[8px]">
           <input
@@ -106,7 +122,7 @@ function onSubmit(): void {
           <span class="text-[12.5px] text-[var(--el-text-color-primary)]">启用</span>
         </label>
         <label class="flex items-center gap-[8px]">
-          <span class="text-[12px] text-[var(--el-text-color-secondary)]">轮询间隔（秒）</span>
+          <span class="text-[12px] text-[var(--el-text-color-secondary)]">心跳周期（秒）</span>
           <input
             v-model.number="form.period"
             type="number"
@@ -116,6 +132,7 @@ function onSubmit(): void {
           >
         </label>
       </div>
+      <span class="text-[11px] text-[var(--el-text-color-placeholder)]">心跳周期填 0 或 60 表示按应用类型自动生成</span>
 
       <label class="flex flex-col gap-[4px]">
         <span class="text-[12px] text-[var(--el-text-color-secondary)]">密钥（Secret）</span>
