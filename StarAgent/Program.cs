@@ -828,6 +828,7 @@ internal class MyService : ServiceBase, IServiceProvider
                 {
                     Server = server,
                     AppId = "StarAgent",
+                    Kind = AppKinds.Server,
                     AcceptPlatformLanguage = false,
                 });
                 _factory.Register(_container);

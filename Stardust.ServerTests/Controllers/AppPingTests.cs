@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.TestHost;
 using NewLife;
 using NewLife.Security;
 using Stardust.Data;
+using Stardust.Models;
 using Stardust.Server;
 using Xunit;
 
@@ -85,6 +86,40 @@ public class AppPingTests : StarTestBase
 
             Assert.True(pingResp.IsSuccessStatusCode, "心跳应成功，实际响应：" + pingBody);
             Assert.Contains("\"defaultLanguage\":\"ja\"", pingBody, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            set.DefaultLanguage = old;
+            app.Delete();
+        }
+    }
+
+    [Fact(DisplayName = "桌面应用登录与心跳不下发平台默认语言")]
+    public async Task Desktop_DoesNotReceiveDefaultLanguage()
+    {
+        var set = StarServerSetting.Current;
+        var old = set.DefaultLanguage;
+        var name = "desktop_" + Rand.NextString(8);
+        var app = new App { Name = name, Secret = "secret-" + Rand.NextString(8), Enable = true, Kind = AppKinds.Desktop };
+        app.Insert();
+        try
+        {
+            set.DefaultLanguage = "ja";
+
+            var client = _server.CreateClient();
+
+            var loginResp = await client.PostAsync("app/login", JsonContent.Create(new { AppId = name, Secret = app.Secret }));
+            var loginBody = await loginResp.Content.ReadAsStringAsync();
+            var token = ExtractToken(loginBody);
+            Assert.False(token.IsNullOrEmpty(), "登录应下发令牌：" + loginBody);
+            Assert.DoesNotContain("\"defaultLanguage\":\"", loginBody, StringComparison.OrdinalIgnoreCase);
+
+            client.DefaultRequestHeaders.Authorization = new("Bearer", token);
+            var pingResp = await client.PostAsync("app/ping", JsonContent.Create(new { Name = name, Version = "1.0.0", MachineName = "test-machine" }));
+            var pingBody = await pingResp.Content.ReadAsStringAsync();
+
+            Assert.True(pingResp.IsSuccessStatusCode, "心跳应成功，实际响应：" + pingBody);
+            Assert.DoesNotContain("\"defaultLanguage\":\"", pingBody, StringComparison.OrdinalIgnoreCase);
         }
         finally
         {

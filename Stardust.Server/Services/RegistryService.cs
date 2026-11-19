@@ -1,4 +1,4 @@
-﻿using NewLife;
+using NewLife;
 using NewLife.Caching;
 using NewLife.Log;
 using NewLife.Remoting;
@@ -76,9 +76,21 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
     public override ILoginResponse Login(DeviceContext context, ILoginRequest request, String source)
     {
         var rs = base.Login(context, request, source);
-        if (rs is LoginResponse response) response.DefaultLanguage = _setting.GetDefaultLanguage(response.DefaultLanguage);
+        if (rs is LoginResponse response)
+            response.DefaultLanguage = GetDefaultLanguage(context.Device as App, response.DefaultLanguage);
 
         return rs;
+    }
+
+    /// <summary>按应用类型获取下发给客户端的默认语言。桌面、移动和前端不下发，Web 服务端按服务端处理</summary>
+    /// <param name="app">应用</param>
+    /// <param name="defaultLanguage">核心配置默认语言</param>
+    /// <returns>语言名称；不需要下发时返回 null</returns>
+    private String GetDefaultLanguage(App app, String defaultLanguage)
+    {
+        if (app != null && !AppKindPolicy.ShouldSendDefaultLanguage(app)) return null;
+
+        return _setting.GetDefaultLanguage(defaultLanguage);
     }
 
     /// <summary>验证设备合法性</summary>
@@ -160,11 +172,13 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
             }
 
             // 新应用，查找或创建应用，避免多线程创建冲突
+            var kind = request is AppModel appModel ? appModel.Kind : AppKinds.Unknown;
             app = App.GetOrAdd(name, App.FindByName, k => new App
             {
                 Name = name,
                 Secret = Rand.NextString(16),
                 Enable = _setting.AppAutoRegister,
+                Kind = kind,
             });
 
             app.WriteHistory(HistoryAction.ApplicationRegistered, true, L.TLog("[{0}] registered successfully.", app.Name), null, context.UserHost, context.ClientId);
@@ -245,6 +259,10 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
         }
 
         if (app.DisplayName.IsNullOrEmpty()) app.DisplayName = model.AppName;
+
+        // 客户端声明应用类型：仅首次注册或管理员未设置（未知）时采用，管理员设置的类型不被客户端覆盖
+        if (app.Kind == AppKinds.Unknown && model.Kind != AppKinds.Unknown) app.Kind = model.Kind;
+
         app.LastLogin = DateTime.Now;
         app.LastIP = ip;
         app.UpdateIP = ip;
@@ -572,7 +590,8 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
     public override IPingResponse Ping(DeviceContext context, IPingRequest? request, IPingResponse? response)
     {
         var rs = base.Ping(context, request, response);
-        if (rs is PingResponse ping) ping.DefaultLanguage = _setting.GetDefaultLanguage(ping.DefaultLanguage);
+        if (rs is PingResponse ping)
+            ping.DefaultLanguage = GetDefaultLanguage(context.Device as App, ping.DefaultLanguage);
 
         return rs;
     }

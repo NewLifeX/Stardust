@@ -61,10 +61,11 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     /// <summary>默认语言。平台下发给客户端的默认语言，并作为无语言声明请求的界面兜底</summary>
     /// <remarks>
     /// 请求未携带语言时作为服务端界面与消息的兜底，并随登录/心跳下发给客户端；不改变服务端日志语言。
+    /// 应用通道按 <c>AppKind</c> 决定是否下发，Desktop/Mobile/Frontend 前端不下发，Web 服务端按服务端处理；节点通道仍下发，由客户端开关忽略。
     /// 支持 zh-Hans、zh-Hant、en 等词表语言，无法识别的值回退核心配置。
     /// 平台与核心都未配置默认语言时下发 auto，新版客户端据此清除本机保存的平台语言并恢复系统语言。
     /// </remarks>
-    [Description("Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.")]
+    [Description("Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; application channel skips Desktop/Mobile/Frontend kinds; empty uses the core configuration DefaultLanguage.")]
     public String DefaultLanguage { get; set; } = "";
 
     /// <summary>令牌密钥。用于生成JWT令牌的算法和密钥，如HS256:ABCD1234</summary>
@@ -150,6 +151,10 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     /// <summary>数据清理模式。支持高效Truncate，或者无需DDL的Delete，默认Truncate</summary>
     [Description("Data cleanup mode. Supports efficient Truncate or Delete without DDL. Default Truncate.")]
     public ClearModes ClearMode { get; set; } = ClearModes.Truncate;
+
+    /// <summary>性能采样目标实例数。在线实例超过该值时按 ClientId 稳定哈希采样，默认1000</summary>
+    [Description("Performance sampling target. When online instances exceed this value, samples are selected by stable ClientId hash; default 1000.")]
+    public Int32 MeterSampleTarget { get; set; } = 1000;
 
     /// <summary>上传目录。存放升级包，需要跟StarWeb配置为同一个目录，默认../Uploads</summary>
     [Description("Upload directory. Stores upgrade packages and must be the same directory configured for StarWeb. Default ../Uploads.")]
