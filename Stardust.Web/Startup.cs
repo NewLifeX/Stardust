@@ -9,6 +9,7 @@ using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Log;
 using NewLife.Threading;
+using Stardust;
 using Stardust.Data;
 using Stardust.Data.Configs;
 using Stardust.Data.Deployment;
@@ -53,6 +54,14 @@ public class Startup
 
         var set = StarServerSetting.Current;
         services.AddSingleton(set);
+
+        // 集群配置同步。Parameter 表为唯一配置源，配置页保存后广播变更，各实例立即拉取
+        services.AddConfigSync(o =>
+        {
+            o.AppId = "StarWeb";
+            o.AddCommon();
+            o.Add<StarSetting>("Star", skip: [nameof(StarSetting.Secret)]);
+        });
 
         // 统计。查看端不接收数据上报，关闭启动恢复补算，避免与数据进程重复重算
         services.AddSingleton<IAppDayStatService, AppDayStatService>();
@@ -408,7 +417,7 @@ public class Startup
     /// <summary>清理历史遗留的死菜单。接口控制器（如流水线 Webhook）没有管理页面，早期被区域扫描成了菜单，点开即 404</summary>
     private static void RemoveDeadMenus()
     {
-        var menu = Menu.Find(Menu._.Url == "/Deployment/PipelineWebhook");
+        var menu = Menu.FindByUrl("/Deployment/PipelineWebhook");
         if (menu != null)
         {
             XTrace.WriteLine("Remove dead menu [{0}]", menu.Url);
@@ -425,14 +434,14 @@ public class Startup
         Menu parent = null;
         for (var i = 0; i < 20 && parent == null; i++)
         {
-            parent = Menu.Find(Menu._.Url == "/Platform") ?? Menu.Find(Menu._.Url == "/Admin");
+            parent = Menu.FindByUrl("/Platform") ?? Menu.FindByUrl("/Admin");
             if (parent == null) Thread.Sleep(500);
         }
         if (parent == null) return;
 
-        var menu = Menu.Find(Menu._.Url == "/Dashboard" & Menu._.ParentID == parent.ID);
+        var menu = Menu.FindByUrlAndParentID("/Dashboard", parent.ID);
         // 清理早期放在一级的看板菜单，一级节点无法直接打开页面
-        foreach (var item in Menu.FindAll(Menu._.Url == "/Dashboard" & Menu._.ParentID != parent.ID))
+        foreach (var item in Menu.FindAllByUrl("/Dashboard").Where(e => e.ParentID != parent.ID))
         {
             XTrace.WriteLine("Remove dead dashboard menu [{0}]", item.ID);
             item.Delete();
