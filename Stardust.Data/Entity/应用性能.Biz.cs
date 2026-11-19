@@ -130,6 +130,9 @@ public partial class AppMeter : Entity<AppMeter>
     private static readonly ICache _cache = new MemoryCache { Expire = 600 };
     private static readonly ICache _sampleCache = new MemoryCache();
 
+    /// <summary>每周期目标落库实例数。在线实例超过该值时按 ClientId 稳定哈希采样</summary>
+    public static Int32 SampleTarget { get; set; } = 1000;
+
     /// <summary>判断本次心跳是否达到性能采样落库周期。应用每次心跳都带性能信息，按采样周期落库可避免每秒一行</summary>
     /// <param name="appId">应用编号</param>
     /// <param name="clientId">实例标识</param>
@@ -149,6 +152,51 @@ public partial class AppMeter : Entity<AppMeter>
 
         return true;
     }
+
+    /// <summary>按在线实例数对性能历史做确定性采样。在线数不超过目标时全部保留</summary>
+    /// <param name="appId">应用编号</param>
+    /// <param name="clientId">实例标识</param>
+    /// <param name="onlineCount">在线实例数</param>
+    /// <param name="target">目标保留实例数</param>
+    /// <returns>是否保留本次历史数据</returns>
+    public static Boolean ShouldSample(Int32 appId, String clientId, Int32 onlineCount, Int32 target)
+    {
+        if (appId <= 0 || clientId.IsNullOrEmpty()) return true;
+        if (target <= 0 || onlineCount <= target) return true;
+
+        var hash = StableHash($"{appId}:{clientId}");
+        return hash % (UInt32)onlineCount < (UInt32)target;
+    }
+
+    /// <summary>获取应用在线实例数。短时缓存，避免每次心跳都查库</summary>
+    /// <param name="appId">应用编号</param>
+    /// <returns>在线实例数</returns>
+    public static Int32 GetOnlineCount(Int32 appId)
+    {
+        if (appId <= 0) return 0;
+
+        var key = $"online:{appId}";
+        if (_cache.TryGetValue<Int32>(key, out var count)) return count;
+
+        count = (Int32)AppOnline.FindCount(AppOnline._.AppId == appId);
+        _cache.Set(key, count, 60);
+
+        return count;
+    }
+
+    private static UInt32 StableHash(String value)
+    {
+        // FNV-1a，跨进程稳定，避免 String.GetHashCode 的随机化导致采样漂移
+        var hash = 2166136261u;
+        foreach (var ch in value)
+        {
+            hash ^= ch;
+            hash *= 16777619u;
+        }
+
+        return hash;
+    }
+
     /// <summary>获取某个应用下的客户端数</summary>
     /// <param name="appId"></param>
     /// <returns></returns>
@@ -191,8 +239,14 @@ public partial class AppMeter : Entity<AppMeter>
     /// <param name="ip"></param>
     public static void WriteData(App app, AppInfo info, String source, String clientId, String ip, Int32 nodeId)
     {
-        // 心跳每秒一次，而性能数据只需按采样周期落库，避免 AppMeter 每秒每实例一行
-        if (source.EqualIgnoreCase("Ping") && !TryAcquireSample(app.Id, clientId, app.Period)) return;
+        // 心跳每秒一次，而性能数据只需按有效心跳周期落库，避免 AppMeter 每秒每实例一行
+        if (source.EqualIgnoreCase("Ping"))
+        {
+            if (!TryAcquireSample(app.Id, clientId, app.EffectivePeriod)) return;
+
+            var online = GetOnlineCount(app.Id);
+            if (!ShouldSample(app.Id, clientId, online, SampleTarget)) return;
+        }
 
         // 兼容旧版时间
         var dt = DateTime.Now;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -137,11 +137,11 @@ public partial class AppTracer
     public Int32 MaxErrors { get => _MaxErrors; set { if (OnPropertyChanging("MaxErrors", value)) { _MaxErrors = value; OnPropertyChanged("MaxErrors"); } } }
 
     private Boolean _EnableMeter;
-    /// <summary>性能收集。收集应用性能信息，数量较大的客户端可以不必收集应用性能信息</summary>
-    [DisplayName("性能收集")]
-    [Description("性能收集。收集应用性能信息，数量较大的客户端可以不必收集应用性能信息")]
+    /// <summary>埋点性能。埋点上报时是否携带性能信息，不影响心跳性能采集</summary>
+    [DisplayName("埋点性能")]
+    [Description("埋点性能。埋点上报时是否携带性能信息，不影响心跳性能采集")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("EnableMeter", "性能收集。收集应用性能信息，数量较大的客户端可以不必收集应用性能信息", "")]
+    [BindColumn("EnableMeter", "埋点性能。埋点上报时是否携带性能信息，不影响心跳性能采集", "")]
     public Boolean EnableMeter { get => _EnableMeter; set { if (OnPropertyChanging("EnableMeter", value)) { _EnableMeter = value; OnPropertyChanged("EnableMeter"); } } }
 
     private String _WhiteList;
@@ -427,7 +427,7 @@ public partial class AppTracer
     /// <param name="projectId">项目。资源归属的团队</param>
     /// <param name="appId">应用</param>
     /// <param name="mode">跟踪模式。仅针对api类型，过滤被扫描的数据</param>
-    /// <param name="enableMeter">性能收集。收集应用性能信息，数量较大的客户端可以不必收集应用性能信息</param>
+    /// <param name="enableMeter">埋点性能。埋点上报时是否携带性能信息，不影响心跳性能采集</param>
     /// <param name="enable">启用</param>
     /// <param name="start">更新时间开始</param>
     /// <param name="end">更新时间结束</param>
@@ -496,7 +496,7 @@ public partial class AppTracer
         /// <summary>异常数。最大异常采样数，采样周期内，最多只记录指定数量的异常事件，默认10</summary>
         public static readonly Field MaxErrors = FindByName("MaxErrors");
 
-        /// <summary>性能收集。收集应用性能信息，数量较大的客户端可以不必收集应用性能信息</summary>
+        /// <summary>埋点性能。埋点上报时是否携带性能信息，不影响心跳性能采集</summary>
         public static readonly Field EnableMeter = FindByName("EnableMeter");
 
         /// <summary>白名单。要过滤Api操作名时的白名单，支持*模糊匹配如/Cube/*，支持^开头的正则表达式如^/Admin/</summary>
@@ -607,7 +607,7 @@ public partial class AppTracer
         /// <summary>异常数。最大异常采样数，采样周期内，最多只记录指定数量的异常事件，默认10</summary>
         public const String MaxErrors = "MaxErrors";
 
-        /// <summary>性能收集。收集应用性能信息，数量较大的客户端可以不必收集应用性能信息</summary>
+        /// <summary>埋点性能。埋点上报时是否携带性能信息，不影响心跳性能采集</summary>
         public const String EnableMeter = "EnableMeter";
 
         /// <summary>白名单。要过滤Api操作名时的白名单，支持*模糊匹配如/Cube/*，支持^开头的正则表达式如^/Admin/</summary>

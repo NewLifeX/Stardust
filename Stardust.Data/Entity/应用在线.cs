@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -212,6 +212,69 @@ public partial class AppOnline
     [BindColumn("Listens", "监听端口。网络端口监听信息", "")]
     public String Listens { get => _Listens; set { if (OnPropertyChanging("Listens", value)) { _Listens = value; OnPropertyChanged("Listens"); } } }
 
+    private Int32 _Memory;
+    /// <summary>物理内存。单位M</summary>
+    [Category("性能")]
+    [DisplayName("物理内存")]
+    [Description("物理内存。单位M")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("Memory", "物理内存。单位M", "")]
+    public Int32 Memory { get => _Memory; set { if (OnPropertyChanging("Memory", value)) { _Memory = value; OnPropertyChanged("Memory"); } } }
+
+    private Double _CpuUsage;
+    /// <summary>CPU负载。处理器时间除以物理时间的占比</summary>
+    [Category("性能")]
+    [DisplayName("CPU负载")]
+    [Description("CPU负载。处理器时间除以物理时间的占比")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("CpuUsage", "CPU负载。处理器时间除以物理时间的占比", "")]
+    public Double CpuUsage { get => _CpuUsage; set { if (OnPropertyChanging("CpuUsage", value)) { _CpuUsage = value; OnPropertyChanged("CpuUsage"); } } }
+
+    private Int32 _Threads;
+    /// <summary>线程数</summary>
+    [Category("性能")]
+    [DisplayName("线程数")]
+    [Description("线程数")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("Threads", "线程数", "")]
+    public Int32 Threads { get => _Threads; set { if (OnPropertyChanging("Threads", value)) { _Threads = value; OnPropertyChanged("Threads"); } } }
+
+    private Int32 _HeapSize;
+    /// <summary>堆大小。单位M</summary>
+    [Category("性能")]
+    [DisplayName("堆大小")]
+    [Description("堆大小。单位M")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("HeapSize", "堆大小。单位M", "")]
+    public Int32 HeapSize { get => _HeapSize; set { if (OnPropertyChanging("HeapSize", value)) { _HeapSize = value; OnPropertyChanged("HeapSize"); } } }
+
+    private Int32 _Handles;
+    /// <summary>句柄数</summary>
+    [Category("性能")]
+    [DisplayName("句柄数")]
+    [Description("句柄数")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("Handles", "句柄数", "")]
+    public Int32 Handles { get => _Handles; set { if (OnPropertyChanging("Handles", value)) { _Handles = value; OnPropertyChanged("Handles"); } } }
+
+    private Int32 _GCCount;
+    /// <summary>GC次数。周期时间内发生GC的次数</summary>
+    [Category("性能")]
+    [DisplayName("GC次数")]
+    [Description("GC次数。周期时间内发生GC的次数")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("GCCount", "GC次数。周期时间内发生GC的次数", "")]
+    public Int32 GCCount { get => _GCCount; set { if (OnPropertyChanging("GCCount", value)) { _GCCount = value; OnPropertyChanged("GCCount"); } } }
+
+    private DateTime _MeterTime;
+    /// <summary>性能快照时间</summary>
+    [Category("性能")]
+    [DisplayName("性能快照时间")]
+    [Description("性能快照时间")]
+    [DataObjectField(false, false, true, 0)]
+    [BindColumn("MeterTime", "性能快照时间", "")]
+    public DateTime MeterTime { get => _MeterTime; set { if (OnPropertyChanging("MeterTime", value)) { _MeterTime = value; OnPropertyChanged("MeterTime"); } } }
+
     private String _Token;
     /// <summary>令牌</summary>
     [DisplayName("令牌")]
@@ -306,6 +369,13 @@ public partial class AppOnline
             "StartTime" => _StartTime,
             "IP" => _IP,
             "Listens" => _Listens,
+            "Memory" => _Memory,
+            "CpuUsage" => _CpuUsage,
+            "Threads" => _Threads,
+            "HeapSize" => _HeapSize,
+            "Handles" => _Handles,
+            "GCCount" => _GCCount,
+            "MeterTime" => _MeterTime,
             "Token" => _Token,
             "TraceId" => _TraceId,
             "Creator" => _Creator,
@@ -342,6 +412,13 @@ public partial class AppOnline
                 case "StartTime": _StartTime = value.ToDateTime(); break;
                 case "IP": _IP = Convert.ToString(value); break;
                 case "Listens": _Listens = Convert.ToString(value); break;
+                case "Memory": _Memory = value.ToInt(); break;
+                case "CpuUsage": _CpuUsage = value.ToDouble(); break;
+                case "Threads": _Threads = value.ToInt(); break;
+                case "HeapSize": _HeapSize = value.ToInt(); break;
+                case "Handles": _Handles = value.ToInt(); break;
+                case "GCCount": _GCCount = value.ToInt(); break;
+                case "MeterTime": _MeterTime = value.ToDateTime(); break;
                 case "Token": _Token = Convert.ToString(value); break;
                 case "TraceId": _TraceId = Convert.ToString(value); break;
                 case "Creator": _Creator = Convert.ToString(value); break;
@@ -532,6 +609,27 @@ public partial class AppOnline
         /// <summary>监听端口。网络端口监听信息</summary>
         public static readonly Field Listens = FindByName("Listens");
 
+        /// <summary>物理内存。单位M</summary>
+        public static readonly Field Memory = FindByName("Memory");
+
+        /// <summary>CPU负载。处理器时间除以物理时间的占比</summary>
+        public static readonly Field CpuUsage = FindByName("CpuUsage");
+
+        /// <summary>线程数</summary>
+        public static readonly Field Threads = FindByName("Threads");
+
+        /// <summary>堆大小。单位M</summary>
+        public static readonly Field HeapSize = FindByName("HeapSize");
+
+        /// <summary>句柄数</summary>
+        public static readonly Field Handles = FindByName("Handles");
+
+        /// <summary>GC次数。周期时间内发生GC的次数</summary>
+        public static readonly Field GCCount = FindByName("GCCount");
+
+        /// <summary>性能快照时间</summary>
+        public static readonly Field MeterTime = FindByName("MeterTime");
+
         /// <summary>令牌</summary>
         public static readonly Field Token = FindByName("Token");
 
@@ -627,6 +725,27 @@ public partial class AppOnline
 
         /// <summary>监听端口。网络端口监听信息</summary>
         public const String Listens = "Listens";
+
+        /// <summary>物理内存。单位M</summary>
+        public const String Memory = "Memory";
+
+        /// <summary>CPU负载。处理器时间除以物理时间的占比</summary>
+        public const String CpuUsage = "CpuUsage";
+
+        /// <summary>线程数</summary>
+        public const String Threads = "Threads";
+
+        /// <summary>堆大小。单位M</summary>
+        public const String HeapSize = "HeapSize";
+
+        /// <summary>句柄数</summary>
+        public const String Handles = "Handles";
+
+        /// <summary>GC次数。周期时间内发生GC的次数</summary>
+        public const String GCCount = "GCCount";
+
+        /// <summary>性能快照时间</summary>
+        public const String MeterTime = "MeterTime";
 
         /// <summary>令牌</summary>
         public const String Token = "Token";

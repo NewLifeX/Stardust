@@ -116,6 +116,17 @@
         </tr>
 
         <tr>
+            <td>Kind</td>
+            <td>应用类型</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>按部署角色给出心跳周期、离线告警、自动激活、单例、埋点性能、语言下发等默认策略，可在本应用单独覆盖</td>
+        </tr>
+
+        <tr>
             <td>Enable</td>
             <td>启用</td>
             <td>Boolean</td>
@@ -161,13 +172,13 @@
 
         <tr>
             <td>Period</td>
-            <td>采样周期</td>
+            <td>心跳周期</td>
             <td>Int32</td>
             <td></td>
             <td></td>
             <td></td>
             <td>N</td>
-            <td>应用定期采样并上报性能数据，默认60秒</td>
+            <td>应用定期上报在线与性能数据，单位秒；0或60表示按应用类型生成，默认0</td>
         </tr>
 
         <tr>
@@ -636,6 +647,83 @@
             <td></td>
             <td></td>
             <td>网络端口监听信息</td>
+        </tr>
+
+        <tr>
+            <td>Memory</td>
+            <td>物理内存</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>单位M</td>
+        </tr>
+
+        <tr>
+            <td>CpuUsage</td>
+            <td>CPU负载</td>
+            <td>Double</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>处理器时间除以物理时间的占比</td>
+        </tr>
+
+        <tr>
+            <td>Threads</td>
+            <td>线程数</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>HeapSize</td>
+            <td>堆大小</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>单位M</td>
+        </tr>
+
+        <tr>
+            <td>Handles</td>
+            <td>句柄数</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>GCCount</td>
+            <td>GC次数</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>周期时间内发生GC的次数</td>
+        </tr>
+
+        <tr>
+            <td>MeterTime</td>
+            <td>性能快照时间</td>
+            <td>DateTime</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
         </tr>
 
         <tr>

@@ -8,6 +8,7 @@ using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
+using Stardust.Models;
 using XCode;
 using XCode.Cache;
 
@@ -71,7 +72,11 @@ public partial class AppTracer : Entity<AppTracer>
             if (!Dirtys[nameof(Timeout)]) Timeout = 5000;
             if (!Dirtys[nameof(MaxTagLength)]) MaxTagLength = 1024;
             if (!Dirtys[nameof(RequestTagLength)]) RequestTagLength = 1024;
-            if (!Dirtys[nameof(EnableMeter)]) EnableMeter = true;
+            if (!Dirtys[nameof(EnableMeter)])
+            {
+                var app = App;
+                EnableMeter = app == null || AppKindPolicy.GetDefault(app).EnableMeter;
+            }
         }
         else
         {

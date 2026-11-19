@@ -71,6 +71,15 @@ public partial class App
     [BindColumn("Category", "类别", "")]
     public String Category { get => _Category; set { if (OnPropertyChanging("Category", value)) { _Category = value; OnPropertyChanged("Category"); } } }
 
+    private Stardust.Models.AppKinds _Kind;
+    /// <summary>应用类型。按应用形态给出心跳周期、离线告警、自动激活、单例、埋点性能、语言下发等默认策略，可在本应用单独调整</summary>
+    [Category("部署")]
+    [DisplayName("应用类型")]
+    [Description("应用类型。按应用形态给出心跳周期、离线告警、自动激活、单例、埋点性能、语言下发等默认策略，可在本应用单独调整")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("Kind", "应用类型。按应用形态给出心跳周期、离线告警、自动激活、单例、埋点性能、语言下发等默认策略，可在本应用单独调整", "", DefaultValue = "0")]
+    public Stardust.Models.AppKinds Kind { get => _Kind; set { if (OnPropertyChanging("Kind", value)) { _Kind = value; OnPropertyChanged("Kind"); } } }
+
     private Boolean _Enable;
     /// <summary>启用</summary>
     [DisplayName("启用")]
@@ -104,11 +113,11 @@ public partial class App
     public DateTime Compile { get => _Compile; set { if (OnPropertyChanging("Compile", value)) { _Compile = value; OnPropertyChanged("Compile"); } } }
 
     private Int32 _Period;
-    /// <summary>采样周期。应用定期采样并上报性能数据，默认60秒</summary>
-    [DisplayName("采样周期")]
-    [Description("采样周期。应用定期采样并上报性能数据，默认60秒")]
+    /// <summary>心跳周期。应用定期上报在线与性能数据，单位秒；0或60表示按应用类型生成，默认0</summary>
+    [DisplayName("心跳周期")]
+    [Description("心跳周期。应用定期上报在线与性能数据，单位秒；0或60表示按应用类型生成，默认0")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("Period", "采样周期。应用定期采样并上报性能数据，默认60秒", "")]
+    [BindColumn("Period", "心跳周期。应用定期上报在线与性能数据，单位秒；0或60表示按应用类型生成，默认0", "")]
     public Int32 Period { get => _Period; set { if (OnPropertyChanging("Period", value)) { _Period = value; OnPropertyChanged("Period"); } } }
 
     private Boolean _Singleton;
@@ -285,6 +294,7 @@ public partial class App
             "DisplayName" => _DisplayName,
             "Secret" => _Secret,
             "Category" => _Category,
+            "Kind" => _Kind,
             "Enable" => _Enable,
             "AutoActive" => _AutoActive,
             "Version" => _Version,
@@ -320,6 +330,7 @@ public partial class App
                 case "DisplayName": _DisplayName = Convert.ToString(value); break;
                 case "Secret": _Secret = Convert.ToString(value); break;
                 case "Category": _Category = Convert.ToString(value); break;
+                case "Kind": _Kind = (Stardust.Models.AppKinds)value.ToInt(); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
                 case "AutoActive": _AutoActive = value.ToBoolean(); break;
                 case "Version": _Version = Convert.ToString(value); break;
@@ -366,6 +377,7 @@ public partial class App
     #region 高级查询
     /// <summary>高级查询</summary>
     /// <param name="projectId">项目。资源归属的团队</param>
+    /// <param name="kind">应用类型。按应用形态给出心跳周期、离线告警、自动激活、单例、埋点性能、语言下发等默认策略，可在本应用单独调整</param>
     /// <param name="autoActive">自动激活。自动激活启用该应用在注册中心提供的服务，供其它消费者使用</param>
     /// <param name="singleton">单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于管理实例</param>
     /// <param name="alarmOnOffline">下线告警。节点下线时，发送告警</param>
@@ -376,11 +388,12 @@ public partial class App
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<App> Search(Int32 projectId, Boolean? autoActive, Boolean? singleton, Boolean? alarmOnOffline, Stardust.Models.ReRegisterModes reRegister, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<App> Search(Int32 projectId, Stardust.Models.AppKinds kind, Boolean? autoActive, Boolean? singleton, Boolean? alarmOnOffline, Stardust.Models.ReRegisterModes reRegister, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
         if (projectId >= 0) exp &= _.ProjectId == projectId;
+        if (kind >= 0) exp &= _.Kind == kind;
         if (autoActive != null) exp &= _.AutoActive == autoActive;
         if (singleton != null) exp &= _.Singleton == singleton;
         if (alarmOnOffline != null) exp &= _.AlarmOnOffline == alarmOnOffline;
@@ -415,6 +428,9 @@ public partial class App
         /// <summary>类别</summary>
         public static readonly Field Category = FindByName("Category");
 
+        /// <summary>应用类型。按应用形态给出心跳周期、离线告警、自动激活、单例、埋点性能、语言下发等默认策略，可在本应用单独调整</summary>
+        public static readonly Field Kind = FindByName("Kind");
+
         /// <summary>启用</summary>
         public static readonly Field Enable = FindByName("Enable");
 
@@ -427,7 +443,7 @@ public partial class App
         /// <summary>编译时间。最大版本应用的编译时间</summary>
         public static readonly Field Compile = FindByName("Compile");
 
-        /// <summary>采样周期。应用定期采样并上报性能数据，默认60秒</summary>
+        /// <summary>心跳周期。应用定期上报在线与性能数据，单位秒；0或60表示按应用类型生成，默认0</summary>
         public static readonly Field Period = FindByName("Period");
 
         /// <summary>单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于管理实例</summary>
@@ -508,6 +524,9 @@ public partial class App
         /// <summary>类别</summary>
         public const String Category = "Category";
 
+        /// <summary>应用类型。按应用形态给出心跳周期、离线告警、自动激活、单例、埋点性能、语言下发等默认策略，可在本应用单独调整</summary>
+        public const String Kind = "Kind";
+
         /// <summary>启用</summary>
         public const String Enable = "Enable";
 
@@ -520,7 +539,7 @@ public partial class App
         /// <summary>编译时间。最大版本应用的编译时间</summary>
         public const String Compile = "Compile";
 
-        /// <summary>采样周期。应用定期采样并上报性能数据，默认60秒</summary>
+        /// <summary>心跳周期。应用定期上报在线与性能数据，单位秒；0或60表示按应用类型生成，默认0</summary>
         public const String Period = "Period";
 
         /// <summary>单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于管理实例</summary>

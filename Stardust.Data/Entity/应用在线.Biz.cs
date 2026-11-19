@@ -324,6 +324,15 @@ public partial class AppOnline : Entity<AppOnline>, IOnlineModel2
             CommandLine = info.CommandLine;
             Listens = info.Listens;
             StartTime = info.StartTime;
+
+            // 每实例最新性能快照，历史数据仍由 AppMeter 按采样策略保存
+            Memory = (Int32)(info.WorkingSet / 1024 / 1024);
+            CpuUsage = Math.Round(info.CpuUsage, 4);
+            Threads = info.Threads;
+            HeapSize = (Int32)(info.HeapSize / 1024 / 1024);
+            Handles = info.Handles;
+            GCCount = info.GCCount;
+            MeterTime = info.Time > 0 ? info.Time.ToDateTime().ToLocalTime() : DateTime.Now;
         }
     }
 

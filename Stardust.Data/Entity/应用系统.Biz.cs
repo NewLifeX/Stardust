@@ -41,6 +41,24 @@ public partial class App : Entity<App>, IDeviceModel2, ILogProvider
         sc.GetSlaveKeyMethod = e => e.Name;
     }
 
+    private AppKinds? _oldKind;
+
+    /// <summary>判断字段本次是否被修改</summary>
+    /// <param name="fieldName">字段名</param>
+    /// <returns>是否修改</returns>
+    internal Boolean IsFieldDirty(String fieldName) => Dirtys[fieldName];
+
+    /// <summary>属性改变。记录应用类型变更前的值，供策略字段切换默认值</summary>
+    /// <param name="fieldName">字段名</param>
+    /// <param name="newValue">新属性值</param>
+    /// <returns>是否允许改变</returns>
+    protected override Boolean OnPropertyChanging(String fieldName, Object newValue)
+    {
+        if (fieldName == nameof(Kind) && newValue is AppKinds kind && kind != _Kind) _oldKind = _Kind;
+
+        return base.OnPropertyChanging(fieldName, newValue);
+    }
+
     /// <summary>验证数据，通过抛出异常的方式提示验证失败。</summary>
     /// <param name="isNew">是否插入</param>
     public override void Valid(Boolean isNew)
@@ -54,8 +72,16 @@ public partial class App : Entity<App>, IDeviceModel2, ILogProvider
         // 安全治理：强制应用密钥非空，空密钥=匿名接入=认证绕过。新建或补录自动生成
         if (Secret.IsNullOrEmpty()) Secret = Rand.NextString(16);
 
-        if (isNew && !Dirtys[__.AutoActive]) AutoActive = true;
-        if (Period == 0) Period = 60;
+        if (isNew)
+        {
+            AppKindPolicy.ApplyDefaults(this);
+        }
+        else if (_oldKind is AppKinds oldKind)
+        {
+            // 类型变化时，仍等于旧类型默认值的项切换到新类型默认值，管理员调整过的值保留
+            AppKindPolicy.ChangeDefaults(this, oldKind);
+        }
+        _oldKind = null;
 
         if (Compile.Year < 2000 && !Version.IsNullOrEmpty())
         {
@@ -64,15 +90,6 @@ public partial class App : Entity<App>, IDeviceModel2, ILogProvider
         }
 
         base.Valid(isNew);
-    }
-
-    protected override App CreateInstance(Boolean forEdit = false)
-    {
-        // 默认单例
-        var entity = base.CreateInstance(forEdit);
-        if (forEdit) entity.Singleton = true;
-
-        return entity;
     }
 
     /// <summary>
@@ -88,6 +105,7 @@ public partial class App : Entity<App>, IDeviceModel2, ILogProvider
         var entity = new App
         {
             Name = "StarServer",
+            Kind = AppKinds.Server,
             Enable = true,
             ReRegister = ReRegisterModes.Temporary,
         };
@@ -96,6 +114,7 @@ public partial class App : Entity<App>, IDeviceModel2, ILogProvider
         entity = new App
         {
             Name = "StarWeb",
+            Kind = AppKinds.Server,
             Enable = true,
             ReRegister = ReRegisterModes.Temporary,
             AllowControlNodes = "*",
@@ -106,6 +125,7 @@ public partial class App : Entity<App>, IDeviceModel2, ILogProvider
         {
             Name = "StarWebApi",
             DisplayName = "Stardust management API",
+            Kind = AppKinds.Server,
             Enable = true,
             ReRegister = ReRegisterModes.Temporary,
             AllowControlNodes = "*",
@@ -179,7 +199,17 @@ public partial class App : Entity<App>, IDeviceModel2, ILogProvider
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]
     public IList<AppConsume> Consumers => Extends.Get(nameof(Consumers), k => AppConsume.FindAllByAppId(Id));
 
+    /// <summary>有效策略。按应用类型与当前字段值计算</summary>
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    public AppPolicy Policy => AppKindPolicy.Resolve(this, AppTracer.FindByAppId(Id));
+
+    /// <summary>有效心跳周期。0 和 60 按应用类型生成</summary>
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    public Int32 EffectivePeriod => AppKindPolicy.Resolve(this, null).Period;
+
     String IDeviceModel.Code { get => Name; set => Name = value; }
+
+    Int32 IDeviceModel2.Period => EffectivePeriod;
 
     String IDeviceModel2.NewServer => null;
     #endregion
