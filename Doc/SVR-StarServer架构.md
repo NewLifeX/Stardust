@@ -110,7 +110,7 @@ StarServer（`Stardust.Server`）是星尘平台的服务端核心，提供所�
 | 配置项 | 默认值 | 说明 |
 |--------|--------|------|
 | Port | 6600 | 服务端口 |
-| DefaultLanguage | — | 登录/心跳/`/api` 下发的默认语言，留空时沿用核心配置 DefaultLanguage；客户端可用 `StarOptions.AcceptPlatformLanguage=false` 忽略，`/api` 语言只影响进程内 |
+| DefaultLanguage | — | 登录/心跳/`/api` 下发的默认语言，留空时沿用核心配置 DefaultLanguage；应用通道按 `AppKind` 决定是否下发（Desktop/Mobile/Frontend 不下发，Web 服务端按服务端处理），节点通道仍下发；客户端可用 `StarOptions.AcceptPlatformLanguage=false` 或 `StarClient.AcceptPlatformLanguage=false` 忽略，`/api` 语言只影响进程内 |
 | TokenSecret | — | JWT 令牌密钥 |
 | TokenExpire | 7200 | 令牌有效期（秒） |
 | SessionTimeout | 600 | 会话超时（秒） |
@@ -121,12 +121,35 @@ StarServer（`Stardust.Server`）是星尘平台的服务端核心，提供所�
 | MonitorBatchPeriod | 30 | 监控批统计周期（秒） |
 | MonitorSavePeriod | 300 | 监控落盘周期（秒） |
 | MonitorPatrolPeriod | 600 | 非热门应用巡检重算周期（秒） |
+| MeterSampleTarget | 1000 | 心跳性能历史采样目标实例数；在线实例超过该值时按 ClientId 稳定哈希采样，0 表示不限制 |
 | DataRetention | 3 | 数据保留天数 |
 | EnableAI | false | 启用 AI 对话接口，已登录应用可调用 `/v1/chat/completions` |
 | AIUrl | — | OpenAI 兼容上游地址，可填基础地址、`/v1` 地址或完整 chat/completions 地址 |
 | AIKey | — | 上游访问密钥，作为 Bearer 令牌发送；留空表示上游免鉴权 |
 | AIModels | — | 允许的模型清单，逗号分隔；首个为默认模型，请求未指定时使用；留空视为未配置 |
 | AISystemPrompt | — | 默认系统提示词，消息未带 system 时追加到平台上下文之后 |
+
+### 4.1 集群配置同步
+
+StarServer 与 StarWeb 共用数据库时，`NewLife.Setting`（Core）、`SysConfig`、`XCodeSetting`、`StarSetting` 等启动期配置文件通过 `ConfigSyncManager`（NewLife.XCode）下发：
+
+- Parameter 表 `Category={AppId}-{Scope}`，每键一行；StarWeb 用 `StarWeb-Core`，StarServer 用 `StarServer-Core`，互不冲突。
+- StarWeb 的配置页优先读 Parameter，保存时同时写 Parameter 与本地；StarServer 无界面，可在 StarWeb 的「字典参数」页维护 `StarServer-*` 分类。
+- 各实例启动完成后每 60 秒比较 Parameter 最新 `UpdateTime` 与本地文件/`.applied`；Parameter 更新则整份覆盖本地文件，本地更新则保留。
+- 启用：
+
+```csharp
+services.AddConfigSync(o =>
+{
+    o.AppId = "StarServer";
+    o.AddCommon();
+    o.Add<StarSetting>("Star", skip: [nameof(StarSetting.Secret)]);
+});
+```
+
+StarWeb 使用 Cube 提供的同名扩展，`AppId` 设为 `StarWeb`。事件经 `IEventBusFactory` 广播加速，无总线时轮询兜底；`StarServerSetting` 已是数据库 Provider，不参与文件同步。详见 XCode 文档《配置同步（ConfigSync）》。
+
+> 本地联调：Cube/XCode 的新 API 尚未发布 NuGet 时，用 `-p:UseLocalNewLifeSource=true` 让 `Stardust.Data`/`Stardust.Web` 引用同级源码项目；正式发版时升级 `NewLife.XCode` 与 `NewLife.Cube.Core` 包版本。
 
 ---
 

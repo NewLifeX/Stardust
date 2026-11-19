@@ -111,9 +111,11 @@
 | `MaxErrors` | 10 | 每周期异常采样数 |
 | `MaxFails` | 2880 | 最大失败队列长度（约2天） |
 | `TrimSelf` | true | 剔除埋点上报自身的调用 |
-| `EnableMeter` | true | 是否收集应用性能信息 |
+| `EnableMeter` | true | 埋点上报是否携带性能信息；不影响心跳性能采集 |
 | `EnableOpenTelemetry` | true | 是否采集第三方组件的 OpenTelemetry 埋点 |
 | `EnableTagSanitize` | true | 上报前是否脱敏标签里的连接串与凭据 |
+
+心跳性能与埋点性能是两条链路：`/App/Ping` 每次心跳携带性能信息，`AppOnline` 更新每实例最新快照；`AppMeter` 按应用的有效心跳周期落历史，并在在线实例超过 `MeterSampleTarget`（默认 1000）时按 `ClientId` 稳定哈希采样。`AppTracer.EnableMeter` 只控制埋点上报是否携带性能信息，不控制心跳性能采集。
 
 ### 3.2 上报数据结构
 
