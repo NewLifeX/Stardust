@@ -41,6 +41,17 @@
     <ProjectReference Include="..\Stardust.Extensions\Stardust.Extensions.csproj" />
     <ProjectReference Include="..\Stardust\Stardust.csproj" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <NewLifeSourceRoot Condition="'$(NewLifeSourceRoot)' == ''">$(MSBuildProjectDirectory)\..\..</NewLifeSourceRoot>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(UseLocalNewLifeSource)' == 'true'">
+    <!-- 项目引用不会像 NuGet 包那样把 analyzers 传递下来，本地联调显式挂上 Core 源生成器 -->
+    <ProjectReference Include="$(NewLifeSourceRoot)\NewLife.Core\NewLife.Core.SourceGenerator\NewLife.Core.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" SetTargetFramework="TargetFramework=netstandard2.0" Private="false" AdditionalProperties="PublishAot=false" GlobalPropertiesToRemove="PublishAot;PublishTrimmed;SelfContained;RuntimeIdentifier;RuntimeIdentifiers" />
+    <CompilerVisibleProperty Include="NewLifeLocalizationGenerateL" />
+    <CompilerVisibleProperty Include="NewLifeLocalizationOverwrite" />
+    <CompilerVisibleProperty Include="NewLifeLocalizationLanguages" />
+  </ItemGroup>
   <ItemGroup>
     <!-- Locales 目录由 NewLife.Core 源生成器编译期解析；本项目未直接引用 Core 包，显式挂载输入 -->
     <AdditionalFiles Include="$(MSBuildProjectDirectory)\Locales\*.yml" />

@@ -16,9 +16,9 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Setup dotNET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v6
       with:
         dotnet-version: 10.x
 
@@ -28,7 +28,7 @@ jobs:
     - name: Publish osx-arm64
       run: dotnet publish StarAgent/StarAgent.csproj -c Release -f net10.0 -r osx-arm64 --self-contained -o out/osx-arm64 -p:TargetFrameworks=net10.0
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         name: staragent-osx
         path: out/osx-*
@@ -39,9 +39,9 @@ jobs:
     continue-on-error: true
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Setup dotNET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v6
       with:
         dotnet-version: 10.x
     - name: Install Android workload
@@ -51,7 +51,7 @@ jobs:
     - name: Pack APK
       run: pwsh -NoProfile -File StarAgent.Android/pack-android.ps1 -Mode Aot -RuntimeIdentifier android-arm64
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         name: staragent-android
         path: Bin/Agent/mobile/android/apk/*.apk
@@ -60,9 +60,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Setup dotNET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v6
       with:
         dotnet-version: 10.x
     - name: Install Android workload
@@ -89,7 +89,7 @@ jobs:
         disable-animations: true
         script: pwsh -NoProfile -File StarAgent.Android/run-android.ps1 -Mode Jit -Start -SkipBuild
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       if: always()
       with:
         name: staragent-android-smoke
@@ -99,9 +99,9 @@ jobs:
     runs-on: xcode-27
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Setup dotNET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v6
       with:
         dotnet-version: 10.x
     - name: Install iOS workload
@@ -118,7 +118,7 @@ jobs:
         SKIP_BUILD: "1"
         MODE: start
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       if: always()
       with:
         name: staragent-ios-smoke

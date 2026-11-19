@@ -28,9 +28,9 @@ jobs:
             project: ClientTest/ClientTest.csproj
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Setup dotNET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v6
       with:
         dotnet-version: 10.x
     - name: Test
@@ -39,7 +39,7 @@ jobs:
           --logger "trx;LogFileName=${{ matrix.name }}.trx" --results-directory TestResults
     - name: Upload Test Results
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: test-results-${{ matrix.name }}
         path: TestResults/*.trx
@@ -52,9 +52,9 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Setup dotNET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: |
             6.x
@@ -62,6 +62,7 @@ jobs:
             8.x
             9.x
             10.x
+            11.x
       # 仓库仅保留 星尘.slnx（XML 方案格式）一个解决方案文件，显式指定以保证解析目标明确
       - name: Build
         run: |
@@ -73,7 +74,7 @@ jobs:
     timeout-minutes: 10
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Check English messages
       shell: pwsh
       run: |
@@ -115,16 +116,16 @@ jobs:
     continue-on-error: true
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Setup dotNET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v6
       with:
         dotnet-version: 10.x
     - name: Test
       run: dotnet test Stardust.Tests/Stardust.Tests.csproj -c Release --nologo --logger "trx;LogFileName=linux-arm64.trx" --results-directory TestResults
     - name: Upload Test Results
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: test-results-linux-arm64
         path: TestResults/*.trx

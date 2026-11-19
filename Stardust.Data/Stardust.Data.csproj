@@ -38,8 +38,23 @@
     <Compile Remove="Deployment\部署在线.cs" />
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(UseLocalNewLifeSource)' != 'true'">
+    <!-- 待 NewLife.XCode 发布包含 ConfigSync 的版本后升级此版本号；在此之前本地联调用 -p:UseLocalNewLifeSource=true -->
     <PackageReference Include="NewLife.XCode" Version="12.3.2026.1115-beta0353" />
+  </ItemGroup>
+
+  <!-- 本地联调：NewLife 源码仓库与本仓库同处一个根目录（默认 C:\X）时，
+       加 -p:UseLocalNewLifeSource=true 改为项目引用，便于同步上游未发布的配置同步引擎 -->
+  <PropertyGroup>
+    <NewLifeSourceRoot Condition="'$(NewLifeSourceRoot)' == ''">$(MSBuildProjectDirectory)\..\..</NewLifeSourceRoot>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(UseLocalNewLifeSource)' == 'true'">
+    <ProjectReference Include="$(NewLifeSourceRoot)\NewLife.XCode\XCode\XCode.csproj" />
+    <!-- 项目引用不会像 NuGet 包那样把 analyzers 传递下来，本地联调显式挂上 Core 源生成器 -->
+    <ProjectReference Include="$(NewLifeSourceRoot)\NewLife.Core\NewLife.Core.SourceGenerator\NewLife.Core.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" SetTargetFramework="TargetFramework=netstandard2.0" Private="false" AdditionalProperties="PublishAot=false" GlobalPropertiesToRemove="PublishAot;PublishTrimmed;SelfContained;RuntimeIdentifier;RuntimeIdentifiers" />
+    <CompilerVisibleProperty Include="NewLifeLocalizationGenerateL" />
+    <CompilerVisibleProperty Include="NewLifeLocalizationOverwrite" />
+    <CompilerVisibleProperty Include="NewLifeLocalizationLanguages" />
   </ItemGroup>
 
   <ItemGroup>

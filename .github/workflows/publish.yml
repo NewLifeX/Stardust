@@ -18,9 +18,9 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Setup dotNET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v6
       with:
         dotnet-version: |
           6.x
@@ -28,6 +28,7 @@ jobs:
           8.x
           9.x
           10.x
+          11.x
     - name: Get Version
       shell: pwsh
       # tag 形如 v3.10.2026.1024，取出版本后缀 2026.1024；手工触发时用当天日期
