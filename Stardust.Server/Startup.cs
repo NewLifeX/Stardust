@@ -9,6 +9,7 @@ using NewLife.IP;
 using NewLife.Log;
 using NewLife.Remoting.Extensions;
 using NewLife.Serialization;
+using Stardust;
 using Stardust.Data;
 using Stardust.Data.Deployment;
 using Stardust.Data.Nodes;
@@ -18,6 +19,7 @@ using Stardust.Dns;
 using Stardust.Registry;
 using Stardust.Services;
 using Stardust.Server.Services;
+using Stardust.Server.Services.ConfigSync;
 using XCode;
 using XCode.DataAccessLayer;
 
@@ -52,6 +54,15 @@ public class Startup
         services.AddSingleton<ICacheProvider, RedisCacheProvider>();
 
         services.AddSingleton(set);
+        AppMeter.SampleTarget = set.MeterSampleTarget;
+
+        // 集群配置同步。Parameter 表为唯一配置源，各实例定时拉取，并通过事件总线互相通知变更
+        services.AddConfigSync(o =>
+        {
+            o.AppId = "StarServer";
+            o.AddCommon();
+            o.Add<StarSetting>("Star", skip: [nameof(StarSetting.Secret)]);
+        });
 
         // 统计服务
         var traceService = new TraceStatService(tracer)
@@ -74,6 +85,7 @@ public class Startup
             traceService.SavePeriod = set.MonitorSavePeriod;
             traceService.PatrolPeriod = set.MonitorPatrolPeriod;
             appStatService.BatchPeriod = set.MonitorBatchPeriod;
+            AppMeter.SampleTarget = set.MeterSampleTarget;
         };
 
         IpResolver.Register();
