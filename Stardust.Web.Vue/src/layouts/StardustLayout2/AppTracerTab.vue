@@ -6,13 +6,16 @@
  * 行为真源见 appTracer.logic.ts 头注释（AppTracerController.cs：SelectKeys=GetRequest("Keys") 逗号串）。
  * 交互反馈按 AGENTS.md §11：刷新/保存/修正/删除按钮一律 loading + 禁用 + 结果 toast，失败写明对象与步骤。
  */
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { request } from '@newlifex/cube-vue/core/utils/request';
 import Btn from './Btn.vue';
 import Card from './Card.vue';
 import Drawer from './Drawer/Drawer.vue';
 import KIcon from './KIcon.vue';
 import Tag from './Tag.vue';
+import TraceDataPanel from './TraceDataPanel.vue';
+import TraceItemsPanel from './TraceItemsPanel.vue';
 import { openGuard } from './ui.store';
 import { toast } from './useToast.ts';
 import { useManualRefresh } from './useManualRefresh.ts';
@@ -40,6 +43,21 @@ const props = defineProps<{
 
 function req(): Req {
   return props.deps?.request ?? (request as Req);
+}
+
+// 「告警中心」Btn（CARD-MON-01 定稿裁定 3）：仅导航跳 /alarms，不做字段级关联（不造关系）。
+// story/CT 直挂组件时无 router 上下文，router 为 undefined，按钮点击为 no-op（仅真实外壳内导航）。
+const router = useRouter();
+function goAlarms(): void {
+  if (router) void router.push('/alarms');
+}
+
+// CARD-MON-12 裁定 3 裁量 2：「埋点数」可点 → 预设应用过滤 + 滚动定位到跟踪项区块（scroll-mt 贴顶不遮）。
+const traceItemsAnchor = ref<HTMLElement | null>(null);
+const externalTraceAppId = ref<number | null>(null);
+function goTraceItems(r: TracerRow): void {
+  externalTraceAppId.value = r.appId;
+  void nextTick(() => traceItemsAnchor.value?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
 }
 
 const rows = ref<TracerRow[]>([]);
@@ -199,6 +217,15 @@ const inputCls =
         监控中心 · 应用跟踪器
       </h3>
       <span class="flex-1" />
+      <Btn
+        variant="default"
+        size="sm"
+        data-spec="tracer-alarms"
+        title="打开 /alarms 告警中心（当前与历史告警、告警组配置）"
+        @click="goAlarms"
+      >
+        告警中心
+      </Btn>
       <Btn
         variant="default"
         size="sm"
@@ -379,7 +406,15 @@ const inputCls =
               :class="TD"
               class="tabular-nums"
             >
-              {{ r.itemCount }}
+              <button
+                type="button"
+                data-spec="tracer-item-count"
+                class="text-[12px] text-[var(--el-color-primary)] hover:underline"
+                :title="`查看 ${r.name} 的跟踪项`"
+                @click="goTraceItems(r)"
+              >
+                {{ r.itemCount }}
+              </button>
             </td>
             <td
               :class="TD"
@@ -418,6 +453,26 @@ const inputCls =
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- CARD-MON-11：追踪数据区块（定稿裁定「11 先 12 后」接线增量；appId 固定当前应用；deps 透传宿主桩/真实请求） -->
+    <TraceDataPanel
+      :app-id="appId"
+      :app-name="appName"
+      :deps="{ request: req() }"
+    />
+
+    <!-- CARD-MON-12：跟踪项区块（挂追踪数据后；externalAppId=「埋点数」可点下行的预设过滤） -->
+    <div
+      ref="traceItemsAnchor"
+      class="scroll-mt-[16px]"
+    >
+      <TraceItemsPanel
+        :app-id="appId"
+        :app-name="appName"
+        :external-app-id="externalTraceAppId"
+        :deps="{ request: req() }"
+      />
     </div>
 
     <Drawer

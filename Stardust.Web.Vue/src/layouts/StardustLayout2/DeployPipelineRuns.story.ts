@@ -1,6 +1,8 @@
 import DeployPipelineRuns from './DeployPipelineRuns.vue';
 import type { PipelineView, StageItem } from './deployPipeline.styles.ts';
-import type { NodeResult, ShipRunRow } from './ship.logic.ts';
+import type { RunFilter, NodeResult, ShipRunRow } from './ship.logic.ts';
+
+const FILTER: RunFilter = { status: -1, dtStart: '', dtEnd: '' };
 
 function run(id: number, patch: Partial<ShipRunRow>): ShipRunRow {
   return {
@@ -60,6 +62,8 @@ const BASE = {
   rollbackDisabled: false,
   rollbackTitle: '回滚到上一个版本 v1.4.1',
   rollingBack: false,
+  runFilter: FILTER,
+  rerunKey: '',
 };
 
 export const stories = [
@@ -99,6 +103,13 @@ export const stories = [
   {
     id: 'DeployPipelineRuns/Empty',
     component: DeployPipelineRuns,
-    props: { runRows: [], selectedRunId: null, stages: [], view: { items: [], allSkipped: false, note: '' }, rollbackDisabled: true, rollbackTitle: '没有可回滚的版本（需要除当前生效版本之外的可用版本）', rollingBack: false },
+    props: { runRows: [], selectedRunId: null, stages: [], view: { items: [], allSkipped: false, note: '' }, rollbackDisabled: true, rollbackTitle: '没有可回滚的版本（需要除当前生效版本之外的可用版本）', rollingBack: false, runFilter: FILTER, rerunKey: '' },
+  },
+
+  // CARD-DEP-02：筛选生效态（状态=失败）+ 某行重跑进行中（旋转禁用，AGENTS.md §11）
+  {
+    id: 'DeployPipelineRuns/Filtered',
+    component: DeployPipelineRuns,
+    props: { ...BASE, runFilter: { status: 5, dtStart: '', dtEnd: '' }, rerunKey: 'rerun:6' },
   },
 ];

@@ -16,6 +16,16 @@
 // 由该 tab 自己显示错误+重试，不拖垮整页。
 import type { Req } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
 import { okRes } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
+import { routeFilterParams } from './gatewayRoute.logic.ts';
+import type { GatewayRouteFilter } from './gatewayRoute.logic.ts';
+import { clusterFilterParams } from './gatewayCluster.logic.ts';
+import type { GatewayClusterFilter } from './gatewayCluster.logic.ts';
+import { certFilterParams } from './gatewayCert.logic.ts';
+import type { GatewayCertFilter } from './gatewayCert.logic.ts';
+import { toProjectRows, type ProjectRow } from './galaxyProject.logic.ts';
+
+// 平台段：MeshPage.vue 的 props 类型标注需要 ProjectRow，这里重新导出（仅类型，无运行时代价）。
+export type { ProjectRow };
 
 type Rec = Record<string, unknown>;
 
@@ -144,8 +154,10 @@ export function toServiceMembers(rows: Rec[], kind: 'provider' | 'consumer'): Se
   }));
 }
 
-/** Service 编辑表单（Name 主键语义不改；Secret 列表隐藏、编辑不回显） */
+/** Service 编辑/新建表单（Name 仅新建态使用：主键语义，编辑态不改；Secret 列表隐藏、编辑不回显） */
 export interface ServiceEditModel {
+  /** 服务名（Name）。新建必填（服务信息.Biz.cs:39 Valid 空抛异常）；编辑态不显示不改 */
+  name: string;
   displayName: string;
   category: string;
   enable: boolean;
@@ -158,9 +170,26 @@ export interface ServiceEditModel {
   remark: string;
 }
 
+/** 新建表单默认值：单例默认勾选（服务信息.Biz.cs:45-52 CreateInstance(forEdit=true)）；其余字段无 DefaultValue 标注，取类型默认，不发明 */
+export function emptyServiceEditModel(): ServiceEditModel {
+  return {
+    name: '',
+    displayName: '',
+    category: '',
+    enable: false,
+    extranet: false,
+    singleton: true,
+    useScope: false,
+    address: '',
+    healthCheck: false,
+    remark: '',
+  };
+}
+
 /** Service 详情行 → 编辑表单 */
 export function toServiceEditModel(r: Rec): ServiceEditModel {
   return {
+    name: str(pick(r, 'Name', 'name')),
     displayName: str(pick(r, 'DisplayName', 'displayName')),
     category: str(pick(r, 'Category', 'category')),
     enable: bool(pick(r, 'Enable', 'enable')),
@@ -188,7 +217,14 @@ export function servicePutBody(m: ServiceEditModel): Record<string, unknown> {
   };
 }
 
-export function validateServiceEdit(m: ServiceEditModel): string {
+/** 新建 body：PUT 部分更新字段 + Name（服务信息.Biz.cs:39 Valid 强制非空） */
+export function servicePostBody(m: ServiceEditModel): Record<string, unknown> {
+  return { Name: m.name.trim(), ...servicePutBody(m) };
+}
+
+/** 表单校验。forCreate：服务名必填（编辑态 Name 主键语义不改，不校验）；显示名两端均必填 */
+export function validateServiceEdit(m: ServiceEditModel, forCreate = false): string {
+  if (forCreate && !m.name.trim()) return '服务名必填';
   if (!m.displayName.trim()) return '服务显示名必填';
   return '';
 }
@@ -233,6 +269,19 @@ export async function saveService(request: Req, id: number, m: ServiceEditModel)
     return { ok: r.ok, message: r.ok ? '服务已保存' : r.message || '服务保存失败' };
   } catch (e) {
     return { ok: false, message: errText(e, '服务保存失败') };
+  }
+}
+
+/** 新建服务：POST /Registry/Service（body 含 Name，服务信息.Biz.cs:39 必填） */
+export async function createService(request: Req, m: ServiceEditModel): Promise<{ ok: boolean; message: string }> {
+  if (!m.name.trim()) return { ok: false, message: '服务名必填' };
+  if (!m.displayName.trim()) return { ok: false, message: '服务显示名必填' };
+  try {
+    const res = await request({ url: '/Registry/Service', method: 'POST', data: servicePostBody(m) } as Parameters<Req>[0] & { data: Record<string, unknown> });
+    const r = okRes(res);
+    return { ok: r.ok, message: r.ok ? '服务已创建' : r.message || '服务创建失败' };
+  } catch (e) {
+    return { ok: false, message: errText(e, '服务创建失败') };
   }
 }
 
@@ -322,23 +371,49 @@ export function toGatewayRoutes(rows: Rec[], clusterMap: Map<number, string>, ce
 
 export interface GatewayResult {
   rows: GatewayRouteRow[];
+  /** GatewayCluster 原始行（集群下拉与 GW-01 集群区块数据源；2026-11-07 GW-03 透出，零新增请求） */
+  clusters: Rec[];
+  /** SslCertificate 原始行（GW-04 证书区块数据源 + matchCert 同源；零新增请求） */
+  certs: Rec[];
+  /** 聚合错误（任一接口失败；保底兼容字段，语义与 GW-03 前一致） */
   error: string;
+  /** 按接口归因（CARD-GW-01：区块三态「集群加载失败：{原因}」需真实数据源；路由失败显示行为不变，保 J-GW-04 C13） */
+  routeError: string;
+  clusterError: string;
+  certError: string;
 }
 
-export async function fetchGateway(request: Req, projectId?: number | null): Promise<GatewayResult> {
-  try {
-    const pp = paramsOf(projectId);
-    const [routeRes, clusterRes, certRes] = await Promise.all([
-      request({ url: '/Gateway/GatewayRoute', method: 'GET', params: { PageSize: 500, ...pp } }),
-      request({ url: '/Gateway/GatewayCluster', method: 'GET', params: { PageSize: 500, ...pp } }),
-      request({ url: '/Gateway/GatewayCert', method: 'GET', params: { PageSize: 500 } }),
-    ]);
-    const clusterMap = buildClusterMap(listOf(clusterRes));
-    const rows = toGatewayRoutes(listOf(routeRes), clusterMap, listOf(certRes));
-    return { rows, error: '' };
-  } catch (e) {
-    return { rows: [], error: errText(e, '网关路由加载失败') };
-  }
+export async function fetchGateway(request: Req, projectId?: number | null, filter?: GatewayRouteFilter, clusterFilter?: GatewayClusterFilter, certFilter?: GatewayCertFilter): Promise<GatewayResult> {
+  const pp = paramsOf(projectId);
+  // CARD-GW-03：筛选条参数与顶栏 projectId 一起透传（后端 Search 语义，J-GW-04 C15/C21）
+  const fp = filter ? routeFilterParams(filter) : {};
+  // CARD-GW-01：集群筛选参数并入集群请求（J-GW-02 C07；projectId 仍走顶栏上下文）
+  const cp = clusterFilter ? clusterFilterParams(clusterFilter) : {};
+  // CARD-GW-04：证书筛选参数并入证书请求。**C11 硬断言：cert 请求永不带 projectId**
+  //（证书=全局资源，实体无 ProjectId；paramsOf 仅对 Route/Cluster 使用——gatewayCert.logic.test 固化断言）
+  const crp = certFilter ? certFilterParams(certFilter) : {};
+  // 三接口仍并行（语义不变）；失败按接口归因（各自独立 catch），不再互相拖垮——
+  // 路由失败 → 页签错误条（J-GW-04 C13 逐字不变）；集群/证书失败 → 各区块自身错误（J-GW-02 C13）
+  const one = async <T>(p: Promise<T>): Promise<{ ok: boolean; res?: T; err: string }> => {
+    try {
+      return { ok: true, res: await p, err: '' };
+    } catch (e) {
+      return { ok: false, err: errText(e, '请求失败') };
+    }
+  };
+  const [route, cluster, cert] = await Promise.all([
+    one(request({ url: '/Gateway/GatewayRoute', method: 'GET', params: { PageSize: 500, ...pp, ...fp } })),
+    one(request({ url: '/Gateway/GatewayCluster', method: 'GET', params: { PageSize: 500, ...pp, ...cp } })),
+    one(request({ url: '/Gateway/GatewayCert', method: 'GET', params: { PageSize: 500, ...crp } })),
+  ]);
+  const clusterRows = cluster.ok ? listOf(cluster.res) : [];
+  const certRows = cert.ok ? listOf(cert.res) : [];
+  const clusterMap = buildClusterMap(clusterRows);
+  const rows = route.ok ? toGatewayRoutes(listOf(route.res), clusterMap, certRows) : [];
+  const routeError = route.err;
+  const clusterError = cluster.err;
+  const certError = cert.err;
+  return { rows, clusters: clusterRows, certs: certRows, error: routeError || clusterError || certError, routeError, clusterError, certError };
 }
 
 // ==================== Tab 3 · AI / MCP ====================
@@ -346,7 +421,7 @@ export async function fetchGateway(request: Req, projectId?: number | null): Pro
 export interface McpTokenRow {
   id: number;
   name: string;
-  /** 掩码令牌，如 sdmcp_****，不明文展示 */
+  /** 掩码令牌，如 sk-mcp-****，不明文展示 */
   masked: string;
   enable: boolean;
   /** 过期时间文案；永不过期显示「永不过期」 */
@@ -481,13 +556,43 @@ export interface McpServerResult {
   error: string;
 }
 
+/** 服务器列表查询条件（服务端过滤：enable/dtStart/dtEnd/Q + projectId 上下文） */
+export interface McpServerQuery {
+  /** 归属项目 GalaxyProject.Id；>0 才透传（McpServerController.Search 覆写：projectId>0 才过滤） */
+  projectId?: number | null;
+  /** 启用状态；undefined = 全部 */
+  enable?: boolean;
+  /** 起始日期 "YYYY-MM-DD"；空 = 不限 */
+  dtStart?: string;
+  /** 结束日期 "YYYY-MM-DD"；空 = 不限 */
+  dtEnd?: string;
+  /** 关键字（后端 Q，跨列模糊检索）；空 = 不限 */
+  Q?: string;
+}
+
+/** 查询条件 → 请求 params。空值不下发；projectId 仅 >0 透传（CARD-PLT-03 定稿裁定 3） */
+export function buildMcpServerQueryParams(q: McpServerQuery): Record<string, unknown> {
+  const p: Record<string, unknown> = {};
+  if ((q.projectId ?? 0) > 0) p.projectId = q.projectId;
+  if (q.enable === true || q.enable === false) p.enable = q.enable;
+  if (q.dtStart?.trim()) p.dtStart = q.dtStart.trim();
+  if (q.dtEnd?.trim()) p.dtEnd = q.dtEnd.trim();
+  if (q.Q?.trim()) p.Q = q.Q.trim();
+  return p;
+}
+
 /**
  * 拉取 MCP 服务器列表（GET /Platform/McpServer）。后端已提供 McpServerController；
  * 失败时 catch 住返回文案，不向用户抛栈。
+ * 第二参兼容旧 number projectId 简写与新 opts 查询；projectId>0 才带参（0/undefined 服务端同义不过滤）。
  */
-export async function fetchMcpServers(request: Req, projectId?: number | null): Promise<McpServerResult> {
+export async function fetchMcpServers(request: Req, projectIdOrQuery?: number | null | McpServerQuery): Promise<McpServerResult> {
   try {
-    const res = await request({ url: '/Platform/McpServer', method: 'GET', params: { PageSize: 500, ...paramsOf(projectId) } });
+    const q: McpServerQuery =
+      projectIdOrQuery != null && typeof projectIdOrQuery === 'object'
+        ? projectIdOrQuery
+        : { projectId: projectIdOrQuery ?? undefined };
+    const res = await request({ url: '/Platform/McpServer', method: 'GET', params: { PageSize: 500, ...buildMcpServerQueryParams(q) } });
     return { rows: toMcpServerRows(listOf(res)), error: '' };
   } catch {
     return { rows: [], error: 'MCP 服务器列表加载失败' };
@@ -648,6 +753,8 @@ export function buildTiles(
 
 export interface PlatformResult {
   tiles: PlatformTile[];
+  /** 星系项目全量行（GalaxyProject 归一，CARD-PLT-01「项目管理」区块数据源；零新增列表请求） */
+  projects: ProjectRow[];
   /** 项目成员列表（ProjectUser 行归一；无用户名字段时 name 退化为 #UserId） */
   members: MemberRow[];
   /** 当前项目只读信息；无项目行时为 null */
@@ -670,11 +777,12 @@ export async function fetchPlatform(request: Req, projectId?: number | null): Pr
     const setting = data && !Array.isArray(data) ? (data as Rec) : undefined;
     return {
       tiles: buildTiles(galaxyRows, userRows, setting, projectId),
+      projects: toProjectRows(galaxyRows),
       members: toMembers(userRows),
       projectInfo: toProjectInfo(galaxyRows, projectId),
       error: '',
     };
   } catch (e) {
-    return { tiles: [], members: [], projectInfo: null, error: errText(e, '平台设置加载失败') };
+    return { tiles: [], projects: [], members: [], projectInfo: null, error: errText(e, '平台设置加载失败') };
   }
 }

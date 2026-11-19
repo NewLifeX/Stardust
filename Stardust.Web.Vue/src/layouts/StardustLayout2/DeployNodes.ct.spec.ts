@@ -61,12 +61,32 @@ test('DeployNodes 下发中：对应按钮写「下发中…」，所有操作�
 
 test('DeployNodes 没有节点与加载失败的提示不同', async ({ page }) => {
   await openStory(page, 'DeployNodes/Empty');
-  await expect(page.locator('[data-spec="ship-nodes-empty"]')).toContainText('该部署集下暂无节点');
+  // CARD-DEP-08 D4：空态主句点部署集名 + 引导按钮开新增抽屉
+  await expect(page.locator('[data-spec="deploy-nodes-empty"]')).toContainText('部署集「DEP08-Set4」暂无节点');
+  await expect(page.locator('[data-spec="deploy-nodes-empty-add"]')).toHaveText('为该部署集新增节点');
+  await expect(page.locator('[data-spec="deploy-nodes-empty-add"]')).toBeEnabled();
+  await expect(page.locator('[data-spec="deploy-nodes-others"]')).toHaveCount(0);
   await expect(page.locator('[data-spec="ship-nodes-failed"]')).toHaveCount(0);
 
   await openStory(page, 'DeployNodes/Failed');
   await expect(page.locator('[data-spec="ship-nodes-failed"]')).toContainText('节点加载失败');
-  await expect(page.locator('[data-spec="ship-nodes-empty"]')).toHaveCount(0);
+  await expect(page.locator('[data-spec="deploy-nodes-empty"]')).toHaveCount(0);
+});
+
+// CARD-DEP-08 D2：多集应用副行两态；单集应用不显示副行
+test('DeployNodes 多集副行：非空态与空态都有，单集没有', async ({ page }) => {
+  const LINE = '本应用另有 2 个部署集（共 6 个节点）';
+
+  await openStory(page, 'DeployNodes/Others');
+  await expect(page.locator('[data-spec="deploy-nodes-others"]')).toHaveText(LINE);
+
+  await openStory(page, 'DeployNodes/EmptyOthers');
+  await expect(page.locator('[data-spec="deploy-nodes-empty"]')).toContainText('部署集「主集」暂无节点');
+  await expect(page.locator('[data-spec="deploy-nodes-empty-add"]')).toBeEnabled();
+  await expect(page.locator('[data-spec="deploy-nodes-others"]')).toHaveText(LINE);
+
+  await openStory(page, 'DeployNodes/Default');
+  await expect(page.locator('[data-spec="deploy-nodes-others"]')).toHaveCount(0);
 });
 
 // F07：勾选节点出现批量操作栏，批量按钮带勾选数；取消选择后收起；新增节点入口在视线内
@@ -131,4 +151,41 @@ test('DeployNodes 危险按钮与普通按钮样式不同；一致与不一致�
   const tagColor = (n: number) =>
     page.locator(ROW).nth(n).locator('[data-spec="tag"]', { hasText: '部署集' }).evaluate((el) => getComputedStyle(el).color);
   expect(await tagColor(0)).not.toBe(await tagColor(1));
+});
+
+// task-92 列扩展：八列补全（延迟/进程/进程时间/编译时间/最后活跃），列序对齐，未上报空值走「—」，操作列不破
+// 2026-11-12 加「应用程序版本」列（AppVersion=在线实例上报的程序集 FileVersion），当前版本与编译时间之间
+test('DeployNodes task-92 列扩展：五新列在场且列序正确，有值与未上报两态，操作列仍可用', async ({ page }) => {
+  await openStory(page, 'DeployNodes/Default');
+
+  // 表头 12 列顺序：勾选/节点/模式/延迟/状态/进程/进程时间/当前版本/应用程序版本/编译时间/最后活跃/操作
+  const ths = await page.locator('thead th').allInnerTexts();
+  expect(ths.map((t) => t.trim())).toEqual([
+    '', '节点', '模式', '延迟', '状态', '进程', '进程时间', '当前版本', '应用程序版本', '编译时间', '最后活跃', '操作',
+  ]);
+
+  const cell = (n: number, i: number) => page.locator(ROW).nth(n).locator('td').nth(i);
+  // node-a：五列全有值（延迟 30 秒、进程 61000、时间格式 yyyy-MM-dd HH:mm）+ 应用程序版本 1.4.2.0
+  await expect(cell(0, 3)).toHaveText('30');
+  await expect(cell(0, 5)).toHaveText('61000');
+  await expect(cell(0, 6)).toHaveText('2026-11-01 19:09');
+  await expect(cell(0, 8)).toHaveText('1.4.2.0');
+  await expect(cell(0, 9)).toHaveText('2026-10-30 11:20');
+  await expect(cell(0, 10)).toHaveText('2026-11-01 19:09');
+  // node-c：未上报——延迟 0 直显 0，进程与三个时间列都是「—」；应用程序版本也无在线实例
+  await expect(cell(2, 3)).toHaveText('0');
+  await expect(cell(2, 5)).toHaveText('—');
+  await expect(cell(2, 6)).toHaveText('—');
+  await expect(cell(2, 8)).toHaveText('—');
+  await expect(cell(2, 9)).toHaveText('—');
+  await expect(cell(2, 10)).toHaveText('—');
+
+  // 列扩展后操作列回归：五个下发按钮与编辑/删除仍可见可点（1280 列宽不破操作列的容器级自检）
+  const acts = page.locator(ROW).nth(0).locator('[data-spec^="ship-op-"]');
+  await expect(acts).toHaveCount(5);
+  for (let i = 0; i < 5; i++) {
+    await expect(acts.nth(i)).toBeVisible();
+  }
+  await expect(page.locator(ROW).nth(0).locator('[data-spec="ship-node-edit"]')).toBeVisible();
+  await expect(page.locator(ROW).nth(0).locator('[data-spec="ship-node-remove"]')).toBeEnabled();
 });

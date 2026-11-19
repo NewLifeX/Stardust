@@ -8,6 +8,7 @@ import {
   fetchTraceSummaries,
   fetchTraceSpans,
   parseTraceIds,
+  resolveSampleAppParam,
   shortId,
   summarizeTrace,
   toSpans,
@@ -166,6 +167,43 @@ describe('fetchTraceSummaries / fetchTraceSpans：取数（request 注入）', (
     });
     expect(await fetchTraceSummaries(req, 0)).toEqual([]);
     expect(called).toBe(0);
+  });
+});
+
+describe('F-MON-08-01 resolveSampleAppParam：数字 appId→应用名（后端 SampleData.appId 存名串）', () => {
+  it('名命中：数字 appId + 应用名 → 发名串（数字→名）', () => {
+    expect(resolveSampleAppParam(4, 'StarServer-Dev')).toBe('StarServer-Dev');
+    expect(resolveSampleAppParam(32, 'Order.Service')).toBe('Order.Service');
+  });
+
+  it('名未命中回退：无应用名/空串 → 保持数字原值（行为与现状一致，不崩不空转）', () => {
+    expect(resolveSampleAppParam(4)).toBe(4);
+    expect(resolveSampleAppParam(4, '')).toBe(4);
+    expect(resolveSampleAppParam(4, undefined)).toBe(4);
+  });
+
+  it('非法 id：<=0 一律返回空串（调用方不发请求）', () => {
+    expect(resolveSampleAppParam(0, 'StarServer-Dev')).toBe('');
+    expect(resolveSampleAppParam(-1)).toBe('');
+    expect(resolveSampleAppParam(0)).toBe('');
+  });
+
+  it('透传：fetchTraceSummaries 带 appName 时 params.appId 收名串，time 仍必传', async () => {
+    const req = fakeRequest((url, params) => {
+      expect(url).toBe('/Monitors/SampleData');
+      expect(params.appId).toBe('StarServer-Dev');
+      expect(String(params.time)).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      return [];
+    });
+    expect(await fetchTraceSummaries(req, 4, 'StarServer-Dev')).toEqual([]);
+  });
+
+  it('透传回退：不带 appName 时 params.appId 仍是数字', async () => {
+    const req = fakeRequest((_url, params) => {
+      expect(params.appId).toBe(4);
+      return [];
+    });
+    expect(await fetchTraceSummaries(req, 4)).toEqual([]);
   });
 });
 

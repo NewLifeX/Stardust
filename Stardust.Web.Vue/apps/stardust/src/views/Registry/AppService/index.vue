@@ -14,14 +14,18 @@
  * 列名权威 = 实体 DisplayName（由后端 list.displayName 下发），以 GetPage 元数据为准对齐 MVC 呈现。
  */
 import { ref, reactive, computed, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import { usePageApi } from '@newlifex/cube-vue/core/composables/useCubeApi';
 import type { FieldMeta } from '@newlifex/cube-vue/core/types/field';
+import { cellText, columnLabel, fillTemplate } from '../registryCase';
 
+const route = useRoute();
 const api = usePageApi('Registry', 'AppService');
 
 interface BackendField {
   name: string;
   displayName: string;
+  header?: string | null;
   typeName: string;
   itemType?: string;
   primaryKey?: boolean;
@@ -51,10 +55,13 @@ const page = ref(1);
 const pageSize = ref(20);
 const listFields = ref<FieldMeta[]>([]);
 
-// 搜索栏（对齐 MVC 高级搜索）
+// 搜索栏（对齐 MVC 高级搜索 appId/serviceId/client/enable/Q；route.query 初始值对齐 appObserve.logic 模式）
 const filters = reactive({
-  q: '',
-  enable: '' as string, // '' 全部 / 'true' / 'false'
+  q: String(route.query.Q ?? route.query.q ?? ''),
+  appId: String(route.query.appId ?? ''),
+  serviceId: String(route.query.serviceId ?? ''),
+  client: String(route.query.client ?? ''),
+  enable: (route.query.enable != null ? String(route.query.enable) : '') as string, // '' 全部 / 'true' / 'false'
 });
 
 const enableOptions = [
@@ -67,6 +74,7 @@ function toFieldMeta(f: BackendField): FieldMeta {
   return {
     name: f.name,
     displayName: f.displayName,
+    header: f.header ?? undefined,
     typeName: f.typeName,
     itemType: f.itemType,
     primaryKey: f.primaryKey,
@@ -75,14 +83,6 @@ function toFieldMeta(f: BackendField): FieldMeta {
     url: f.url ?? undefined,
     target: f.target ?? undefined,
   };
-}
-
-// 独立链接列占位符替换（如 /Registry/Service?name={ServiceName}）
-function fillTemplate(tpl: string, row: Row): string {
-  return tpl.replace(/\{([^}]+)\}/g, (_m, key: string) => {
-    const v = row[key];
-    return v == null ? '' : String(v);
-  });
 }
 
 // 列 url 来源优先级：后端字段 url > 内置映射
@@ -113,6 +113,9 @@ async function fetchList() {
     };
     if (filters.q) params.Q = filters.q;
     if (filters.enable !== '') params.enable = filters.enable === 'true';
+    if (filters.appId !== '') params.appId = Number(filters.appId);
+    if (filters.serviceId !== '') params.serviceId = Number(filters.serviceId);
+    if (filters.client !== '') params.client = filters.client;
 
     const res: any = await api.getList<Row>(params);
     rows.value = res?.data ?? [];
@@ -126,17 +129,15 @@ async function fetchList() {
   }
 }
 
-function cellText(row: Row, key: string): string {
-  const v = row[key];
-  return v == null ? '' : String(v);
-}
-
 function handleSearch() {
   page.value = 1;
   fetchList();
 }
 function handleReset() {
   filters.q = '';
+  filters.appId = '';
+  filters.serviceId = '';
+  filters.client = '';
   filters.enable = '';
   page.value = 1;
   fetchList();
@@ -146,7 +147,9 @@ function onPageChange(p: number) {
   fetchList();
 }
 
-const hasActiveFilter = computed(() => !!filters.q || filters.enable !== '');
+const hasActiveFilter = computed(
+  () => !!filters.q || filters.enable !== '' || filters.appId !== '' || filters.serviceId !== '' || filters.client !== '',
+);
 
 onMounted(async () => {
   console.log('[Registry/AppService] custom view mounted');
@@ -180,6 +183,39 @@ onMounted(async () => {
               v-model="filters.q"
               clearable
               placeholder="服务名 / 客户端 / 地址 / 标签"
+              class="ras-search-input"
+              @keyup.enter="handleSearch"
+            />
+          </div>
+
+          <div class="ras-search-field">
+            <label class="ras-search-label">应用ID</label>
+            <el-input
+              v-model="filters.appId"
+              clearable
+              placeholder="appId"
+              class="ras-search-input"
+              @keyup.enter="handleSearch"
+            />
+          </div>
+
+          <div class="ras-search-field">
+            <label class="ras-search-label">服务ID</label>
+            <el-input
+              v-model="filters.serviceId"
+              clearable
+              placeholder="serviceId"
+              class="ras-search-input"
+              @keyup.enter="handleSearch"
+            />
+          </div>
+
+          <div class="ras-search-field">
+            <label class="ras-search-label">客户端</label>
+            <el-input
+              v-model="filters.client"
+              clearable
+              placeholder="client"
               class="ras-search-input"
               @keyup.enter="handleSearch"
             />
@@ -232,7 +268,7 @@ onMounted(async () => {
             v-for="f in listFields"
             :key="f.name"
             :prop="f.name"
-            :label="f.displayName || f.name"
+            :label="columnLabel(f.displayName, f.header, f.name)"
             :fixed="f.name === 'Id' ? 'left' : false"
             show-overflow-tooltip
           >

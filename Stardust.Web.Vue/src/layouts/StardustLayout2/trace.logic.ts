@@ -250,14 +250,22 @@ export function localDateStr(d = new Date()): string {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 
-/** GET /Monitors/SampleData?appId=&time=：该应用当日采样片段（分表下钻，time 必传） */
-export async function fetchAppSamples(request: Req, appId: number, pageSize = 100): Promise<Span[] | null> {
+/** F-MON-08-01 appId 口径：后端 SampleData.appId 存应用名串（如 StarServer-Dev，约 7.2 万行存量形态），
+ *  工作台路由给的是数字 id——发请求前把数字映射为应用名。三态：名命中→名串；未命中/空串→回退数字原值（行为与现状一致）；
+ *  非法 id(<=0)→空串（调用方不发请求）。 */
+export function resolveSampleAppParam(appId: number, appName?: string): string | number {
+  if (!appId || appId <= 0) return '';
+  return appName ? appName : appId;
+}
+
+/** GET /Monitors/SampleData?appId=&time=：该应用当日采样片段（分表下钻，time 必传；appId 传应用名串，见 resolveSampleAppParam） */
+export async function fetchAppSamples(request: Req, appId: number, pageSize = 100, appName?: string): Promise<Span[] | null> {
   if (!appId || appId <= 0) return [];
   try {
     const res = await request({
       url: '/Monitors/SampleData',
       method: 'GET',
-      params: { appId, time: localDateStr(), PageSize: pageSize },
+      params: { appId: resolveSampleAppParam(appId, appName), time: localDateStr(), PageSize: pageSize },
     });
     return toSpans(listOf(res));
   } catch {
@@ -266,8 +274,8 @@ export async function fetchAppSamples(request: Req, appId: number, pageSize = 10
 }
 
 /** 列表：采样片段按 TraceId 聚合成调用链 */
-export async function fetchTraceSummaries(request: Req, appId: number): Promise<TraceSummary[] | null> {
-  const spans = await fetchAppSamples(request, appId);
+export async function fetchTraceSummaries(request: Req, appId: number, appName?: string): Promise<TraceSummary[] | null> {
+  const spans = await fetchAppSamples(request, appId, 100, appName);
   if (spans === null) return null;
   return buildTraceList(spans);
 }

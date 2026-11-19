@@ -1,9 +1,11 @@
 // MCP 令牌管理纯逻辑单测（Vitest）：request 用桩函数注入，不发真实请求。
 import { describe, it, expect } from 'vitest';
 import type { Req, ReqOptions } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
+import type { McpTokenFullRow } from './mcpToken.logic';
 import {
   addResource,
   buildAuditQueryParams,
+  buildTokenQueryParams,
   createMcpServer,
   createToken,
   deleteMcpServer,
@@ -12,19 +14,24 @@ import {
   fetchMcpAuditPage,
   fetchMcpManage,
   fetchMcpRuntime,
+  fetchMcpTokenResources,
+  fetchMcpTokens,
   filterAudits,
   filterResourcesByToken,
+  filterTokensByProject,
   formatBoundUser,
   maskTokenFull,
   parseScopes,
   previewDefaultProjectScopes,
   resetToken,
   resourceLabel,
+  saveStarServerSettings,
   scopeLabel,
   setMcpEnabled,
   setResourceEnable,
   setServerEnable,
   setTokenEnable,
+  STAR_SERVER_FORM_FIELDS,
   toAuditRows,
   toResourceRows,
   toTokenRows,
@@ -38,8 +45,8 @@ interface Route {
   url: string;
   reply: () => unknown;
 }
-function recording(routes: Route[]): { req: Req; calls: ReqOptions[] } {
-  const calls: ReqOptions[] = [];
+function recording(routes: Route[]): { req: Req; calls: (ReqOptions & { data?: Record<string, unknown> })[] } {
+  const calls: (ReqOptions & { data?: Record<string, unknown> })[] = [];
   const req = (async (o: ReqOptions) => {
     calls.push(o);
     const hit = routes.find((r) => r.method === o.method && r.url === o.url);
@@ -107,15 +114,18 @@ describe('toTokenRows · 令牌行映射', () => {
     expect(rows[0]).toMatchObject({
       id: 3, name: 'claude-ops', enable: true, userId: 9, userName: 'admin', projectId: 7,
       projectName: '默认项目', scopes: 'apps:read', callCount: 1280, lastIP: '10.0.0.5',
-      remark: '运维助手', masked: 'sdmcp_ab…op56',
+      remark: '运维助手', masked: '******',
     });
     expect(rows[0].expireMs).toBeGreaterThan(0);
     expect(rows[0].expireText).toContain('2027-12-31');
+    // 刀6：masked 必须是固定占位，不得含 Token 任何部分明文
+    expect(rows[0].masked).not.toContain('sdmcp');
   });
-  it('ExpireTime 为空 → 永不过期；ProjectId=0 → 项目 —', () => {
+  it('ExpireTime 为空 → 永不过期；ProjectId=0 → 项目 —；Token 空 → masked —', () => {
     const rows = toTokenRows([{ Id: 1, Name: 'ci-bot', ProjectId: 0 }], projects);
     expect(rows[0].expireText).toBe('永不过期');
     expect(rows[0].projectName).toBe('—');
+    expect(rows[0].masked).toBe('—');
   });
   it('项目查不到时兜底 #projectId', () => {
     const rows = toTokenRows([{ Id: 1, Name: 'x', ProjectId: 42 }], projects);
@@ -370,8 +380,8 @@ describe('setResourceEnable · 授权启停', () => {
     expect(r.ok).toBe(true);
     expect(r.message).toBe('授权已停用');
     const body = (calls[0] as unknown as { data: Record<string, unknown> }).data;
-    expect(body.id).toBe(9);
-    expect(body.enable).toBe(false);
+    // CARD-PLT-05 -8：PUT 精断仅 {id,enable}——不带 isAll/resourceType/resourceId/tokenId（SyncByToken 存量只读，新前端不触通配面）
+    expect(body).toEqual({ id: 9, enable: false });
   });
   it('缺 id 拒绝不发请求', async () => {
     const { req, calls } = recording([]);
@@ -433,6 +443,14 @@ describe('buildAuditQueryParams · 审计查询参数', () => {
   it('全空条件只带分页', () => {
     const p = buildAuditQueryParams({ tokenId: 0, toolName: '', dtStart: '', dtEnd: '', pageIndex: 0, pageSize: 50 });
     expect(p).toEqual({ pageIndex: 0, pageSize: 50 });
+  });
+  it('actionName/Q 透传（trim；空不下发）', () => {
+    const p = buildAuditQueryParams({ tokenId: 0, toolName: '', dtStart: '', dtEnd: '', pageIndex: 1, pageSize: 50, actionName: ' create ', Q: ' node ' });
+    expect(p.actionName).toBe('create');
+    expect(p.Q).toBe('node');
+    const p2 = buildAuditQueryParams({ tokenId: 0, toolName: '', dtStart: '', dtEnd: '', pageIndex: 0, pageSize: 50 });
+    expect(p2).not.toHaveProperty('actionName');
+    expect(p2).not.toHaveProperty('Q');
   });
 });
 
@@ -506,5 +524,282 @@ describe('fetchMcpRuntime / setMcpEnabled · 运行时开关', () => {
     const r = await setMcpEnabled(req, null, true);
     expect(r.ok).toBe(false);
     expect(calls).toHaveLength(0);
+  });
+});
+
+describe('fetchMcpTokens / buildTokenQueryParams（CARD-PLT-04 服务端查询）', () => {
+  it('全参透传：token/enable/dtStart/dtEnd/Q 原样进 params，PageSize 500', async () => {
+    const { req, calls } = recording([
+      { method: 'GET', url: '/Platform/McpToken', reply: () => ({ code: 0, data: [] }) },
+    ]);
+    const r = await fetchMcpTokens(req, {
+      token: 'sk-mcp-x',
+      enable: 'on',
+      dtStart: '2026-11-01',
+      dtEnd: '2026-11-09',
+      Q: 'ops',
+    });
+    expect(r.error).toBe('');
+    expect(calls[0].url).toBe('/Platform/McpToken');
+    const params = calls[0].params as Record<string, unknown>;
+    expect(params.PageSize).toBe(500);
+    expect(params.token).toBe('sk-mcp-x');
+    expect(params.enable).toBe(true);
+    expect(params.dtStart).toBe('2026-11-01');
+    expect(params.dtEnd).toBe('2026-11-09');
+    expect(params.Q).toBe('ops');
+  });
+
+  it('enable off→false、空态不下发；token/dt/Q trim 空不下发', async () => {
+    const { req, calls } = recording([
+      { method: 'GET', url: '/Platform/McpToken', reply: () => ({ code: 0, data: [] }) },
+    ]);
+    await fetchMcpTokens(req, { token: '  ', enable: 'off', dtStart: '', dtEnd: '  ', Q: '' });
+    const params = calls[0].params as Record<string, unknown>;
+    expect(params.enable).toBe(false);
+    expect(params).not.toHaveProperty('token');
+    expect(params).not.toHaveProperty('dtStart');
+    expect(params).not.toHaveProperty('dtEnd');
+    expect(params).not.toHaveProperty('Q');
+  });
+
+  it('buildTokenQueryParams 纯函数：enable on→true，空串不产出 enable 键', () => {
+    expect(buildTokenQueryParams({ enable: 'on' })).toEqual({ enable: true });
+    expect(buildTokenQueryParams({ enable: '' })).toEqual({});
+    expect(buildTokenQueryParams({ token: 'sk-1', Q: 'x' })).toEqual({ token: 'sk-1', Q: 'x' });
+  });
+
+  it('projectId 永不在服务端参数（叠加次序①：服务端条件只 token/enable/dt/Q，项目过滤留给客户端）', () => {
+    const p = buildTokenQueryParams({ token: 'sk-mcp-x', enable: 'on', dtStart: '2026-11-01', dtEnd: '2026-11-09', Q: 'ops' });
+    expect(p).toEqual({ token: 'sk-mcp-x', enable: true, dtStart: '2026-11-01', dtEnd: '2026-11-09', Q: 'ops' });
+    expect('projectId' in p).toBe(false);
+  });
+
+  it('filterTokensByProject：f=0 全量 / f=-1 仅未绑定(projectId<=0) / f=N 精确匹配（叠加次序②：快照之上客户端筛）', () => {
+    const rows = [
+      { projectId: 7 },
+      { projectId: 3 },
+      { projectId: 0 },
+      { projectId: -1 },
+    ] as unknown as McpTokenFullRow[];
+    expect(filterTokensByProject(rows, 0)).toHaveLength(4);
+    expect(filterTokensByProject(rows, -1).map((t) => t.projectId)).toEqual([0, -1]);
+    expect(filterTokensByProject(rows, 7).map((t) => t.projectId)).toEqual([7]);
+  });
+
+  it('行映射：projects/users 候选转绑定列名；失败降级空行加错误文案', async () => {
+    const ok = recording([
+      {
+        method: 'GET',
+        url: '/Platform/McpToken',
+        reply: () => ({ code: 0, data: [{ Id: 7, Name: 'ops', Token: 'sk-mcp-AAAABBBBCCCC', Enable: true, UserId: 3, ProjectId: 2, Scopes: 'apps:read' }] }),
+      },
+    ]);
+    const r = await fetchMcpTokens(ok.req, { Q: 'ops' }, { projects: [{ id: 2, name: '星尘' }], users: [{ id: 3, name: '小萌' }] });
+    expect(r.rows).toHaveLength(1);
+    expect(r.rows[0].projectName).toBe('星尘');
+    expect(r.rows[0].userName).toBe('小萌');
+
+    const bad = recording([
+      { method: 'GET', url: '/Platform/McpToken', reply: () => { throw new Error('boom'); } },
+    ]);
+    const rb = await fetchMcpTokens(bad.req, {});
+    expect(rb.rows).toEqual([]);
+    // errText 语义：异常 message 优先透传（§11 失败写明对象），fallback 仅兜底无 message 异常
+    expect(rb.error).toBe('boom');
+  });
+});
+
+describe('fetchMcpTokenResources（CARD-PLT-05 资源授权服务端查询）', () => {
+  it('全参透传：tokenId/resourceType/enable/dtStart/dtEnd/Q 进 params，PageSize 500', async () => {
+    const { req, calls } = recording([
+      { method: 'GET', url: '/Platform/McpTokenResource', reply: () => ({ code: 0, data: [] }) },
+    ]);
+    const r = await fetchMcpTokenResources(req, {
+      tokenId: 7,
+      resourceType: 'Project',
+      enable: 'on',
+      dtStart: '2026-11-01',
+      dtEnd: '2026-11-09',
+      Q: '星尘',
+    });
+    expect(r.error).toBe('');
+    expect(calls[0].url).toBe('/Platform/McpTokenResource');
+    const params = calls[0].params as Record<string, unknown>;
+    expect(params.PageSize).toBe(500);
+    expect(params.tokenId).toBe(7);
+    expect(params.resourceType).toBe('Project');
+    expect(params.enable).toBe(true);
+    expect(params.dtStart).toBe('2026-11-01');
+    expect(params.dtEnd).toBe('2026-11-09');
+    expect(params.Q).toBe('星尘');
+  });
+
+  it('enable off→false；tokenId<=0、resourceType 空、dt/Q 空不下发', async () => {
+    const { req, calls } = recording([
+      { method: 'GET', url: '/Platform/McpTokenResource', reply: () => ({ code: 0, data: [] }) },
+    ]);
+    await fetchMcpTokenResources(req, { tokenId: 0, resourceType: '', enable: 'off', dtStart: '', dtEnd: '  ', Q: '' });
+    const params = calls[0].params as Record<string, unknown>;
+    expect(params.enable).toBe(false);
+    expect(params).not.toHaveProperty('tokenId');
+    expect(params).not.toHaveProperty('resourceType');
+    expect(params).not.toHaveProperty('dtStart');
+    expect(params).not.toHaveProperty('dtEnd');
+    expect(params).not.toHaveProperty('Q');
+  });
+
+  it('仅 tokenId（打开 Drawer 默认态）：params 只有 PageSize+tokenId', async () => {
+    const { req, calls } = recording([
+      { method: 'GET', url: '/Platform/McpTokenResource', reply: () => ({ code: 0, data: [] }) },
+    ]);
+    await fetchMcpTokenResources(req, { tokenId: 9 });
+    const params = calls[0].params as Record<string, unknown>;
+    expect(params.PageSize).toBe(500);
+    expect(params.tokenId).toBe(9);
+    expect(Object.keys(params)).toHaveLength(2);
+  });
+
+  it('行映射：nodes/apps/projects 候选解析资源名；失败降级空行加错误文案', async () => {
+    const ok = recording([
+      {
+        method: 'GET',
+        url: '/Platform/McpTokenResource',
+        reply: () => ({
+          code: 0,
+          data: [
+            { Id: 1, TokenId: 7, ResourceType: 'Project', ResourceId: 2, Enable: true },
+            { Id: 2, TokenId: 7, ResourceType: 'Node', ResourceId: 5, Enable: false },
+          ],
+        }),
+      },
+    ]);
+    const r = await fetchMcpTokenResources(
+      ok.req,
+      { tokenId: 7 },
+      { projects: [{ id: 2, name: '星尘' }], nodes: [{ id: 5, name: '节点甲' }], apps: [] },
+    );
+    expect(r.rows).toHaveLength(2);
+    expect(r.rows[0].resourceName).toBe('星尘');
+    expect(r.rows[0].resourceTypeLabel).toBe('项目');
+    expect(r.rows[1].resourceName).toBe('节点甲');
+    expect(r.rows[1].enable).toBe(false);
+
+    const bad = recording([
+      { method: 'GET', url: '/Platform/McpTokenResource', reply: () => { throw new Error('boom'); } },
+    ]);
+    const rb = await fetchMcpTokenResources(bad.req, { tokenId: 7 });
+    expect(rb.rows).toEqual([]);
+    // errText 语义同 PLT-04：异常 message 优先透传，fallback 仅兜底
+    expect(rb.error).toBe('boom');
+  });
+});
+
+// ==================== CARD-PLT-07 平台设置全量保存 ====================
+
+describe('saveStarServerSettings（CARD-PLT-07 平台设置全量保存）', () => {
+  it('全量回存：body 为 raw 全部键 + patch 改动键双大小写覆盖；PUT /Platform/StarServer', async () => {
+    const raw = { Port: 6600, TokenSecret: 'HS256:abc', EnableMcp: true, DataRetention: 3 };
+    const { req, calls } = recording([
+      { method: 'PUT', url: '/Platform/StarServer', reply: () => ({ code: 0, data: true }) },
+    ]);
+    const r = await saveStarServerSettings(req, raw, { Port: 6700 });
+    expect(r.ok).toBe(true);
+    expect(calls[0].method).toBe('PUT');
+    expect(calls[0].url).toBe('/Platform/StarServer');
+    const body = calls[0].data as Record<string, unknown>;
+    expect(body.Port).toBe(6700);
+    expect(body.port).toBe(6700); // 双大小写兼容后端绑定（同 setMcpEnabled 先例）
+    expect(body.TokenSecret).toBe('HS256:abc'); // 未改字段原样回存（Copy 全量覆盖防丢字段）
+    expect(body.DataRetention).toBe(3);
+    expect(body.EnableMcp).toBe(true);
+  });
+
+  it('patch 空时 body 键集合与 raw 一致（无新增键）；raw 为空报错且不发请求', async () => {
+    const raw = { Port: 6600, enableMcp: false };
+    const { req, calls } = recording([
+      { method: 'PUT', url: '/Platform/StarServer', reply: () => ({ code: 0, data: true }) },
+    ]);
+    await saveStarServerSettings(req, raw, {});
+    const body = calls[0].data as Record<string, unknown>;
+    expect(Object.keys(body).sort()).toEqual(Object.keys(raw).sort());
+
+    const noRaw = recording([]);
+    const r2 = await saveStarServerSettings(noRaw.req, null, { Port: 1 });
+    expect(r2.ok).toBe(false);
+    expect(r2.message).toContain('取不到当前设置');
+    expect(noRaw.calls).toHaveLength(0);
+  });
+
+  it('密钥改动双大小写覆盖（留空不改由组件不进 patch 实现，logic 纯透传）', async () => {
+    const raw = { TokenSecret: 'HS256:old', TraceShareSecret: 'hmac-old' };
+    const { req, calls } = recording([
+      { method: 'PUT', url: '/Platform/StarServer', reply: () => ({ code: 0, data: true }) },
+    ]);
+    await saveStarServerSettings(req, raw, { TokenSecret: 'HS256:new' });
+    const body = calls[0].data as Record<string, unknown>;
+    expect(body.TokenSecret).toBe('HS256:new');
+    expect(body.tokenSecret).toBe('HS256:new');
+    expect(body.TraceShareSecret).toBe('hmac-old'); // 未改动密钥原样回传
+  });
+
+  it('失败降级：errText 异常消息优先透传', async () => {
+    const bad = recording([
+      { method: 'PUT', url: '/Platform/StarServer', reply: () => { throw new Error('boom'); } },
+    ]);
+    const r = await saveStarServerSettings(bad.req, { Port: 1 }, { Port: 2 });
+    expect(r.ok).toBe(false);
+    expect(r.message).toBe('boom');
+  });
+});
+
+describe('STAR_SERVER_FORM_FIELDS（CARD-PLT-07 字段清单元数据，对 Setting.cs:57-268）', () => {
+  it('51 字段逐字含录，剔除注释属性 Debug/ServerUrl/NewServer', () => {
+    const names = STAR_SERVER_FORM_FIELDS.map((f) => f.name);
+    // 数组序 = 表单渲染序（分组连续，密钥/只读殿后）；字段名与 Setting.cs:57-268 属性逐字一致
+    expect(names).toEqual([
+      // 端口与注册
+      'Port', 'AutoRegister', 'AppAutoRegister', 'ReRegister', 'WhiteIP', 'AllowControlNodesWhenEmpty', 'NodeCodeFormula', 'NodeCodeLevel',
+      // 令牌与会话
+      'TokenExpire', 'SessionTimeout', 'SaltTime',
+      // 监控与告警
+      'MonitorFlowPeriod', 'MonitorBatchPeriod', 'MonitorSavePeriod', 'MonitorPatrolPeriod', 'AlarmPeriod', 'IgnoreErrorItems', 'IgnoreErrorKeywords',
+      // 数据保留与清理
+      'DataRetention', 'DataRetention2', 'DataRetention3', 'ClearMode',
+      // Web 与调用链
+      'WebUrl', 'TraceAnonymous', 'TraceShareExpire', 'HomeSummaryMode', 'EnableInstallPage', 'AgentDownloadBaseUrl', 'AgentServerUrl', 'AnonymousReport', 'DotNetSyncPeriod', 'DotNetSyncUrl',
+      // 文件与上传
+      'UploadPath', 'MaxUploadSize', 'FileCache', 'FileCacheWhiteIP', 'FileStorageProvide', 'FileStorageFetch', 'ValidateAttachment', 'PublicAttachmentCategories', 'AttachmentTokenExpire',
+      // 级联与同步
+      'UplinkServer', 'FixedCity',
+      // MCP 与安全
+      'EnableMcp', 'RateLimitPaths', 'RateLimitTimes', 'CorsOrigins',
+      // 密钥（mask）
+      'TokenSecret', 'TraceShareSecret',
+      // 只读展示
+      'McpActionSet', 'SensitiveKeywords',
+    ]);
+    expect(names).toHaveLength(51);
+  });
+
+  it('密钥 2 只读 2 标记正确；枚举字段选项值域与源码枚举一致；分组齐备', () => {
+    const secrets = STAR_SERVER_FORM_FIELDS.filter((f) => f.type === 'secret').map((f) => f.name);
+    expect(secrets).toEqual(['TokenSecret', 'TraceShareSecret']);
+    const ros = STAR_SERVER_FORM_FIELDS.filter((f) => f.readonly).map((f) => f.name);
+    expect(ros).toEqual(['McpActionSet', 'SensitiveKeywords']);
+
+    const byName = new Map(STAR_SERVER_FORM_FIELDS.map((f) => [f.name, f]));
+    expect(byName.get('ReRegister')?.options).toEqual([
+      { value: 0, label: '默认' }, { value: 1, label: '开放' }, { value: 2, label: '可信接入' },
+      { value: 3, label: '临时放行' }, { value: 4, label: '关闭' },
+    ]);
+    expect(byName.get('ClearMode')?.options).toEqual([{ value: 1, label: 'Truncate（高效）' }, { value: 2, label: 'Delete（无需DDL）' }]);
+    expect(byName.get('HomeSummaryMode')?.options).toEqual([
+      { value: 1, label: '隐藏' }, { value: 2, label: '量级' }, { value: 3, label: '精确' },
+    ]);
+
+    const groups = [...new Set(STAR_SERVER_FORM_FIELDS.map((f) => f.group))];
+    expect(groups.length).toBeGreaterThanOrEqual(6);
+    expect(groups.every((g) => g.length > 0)).toBe(true);
   });
 });

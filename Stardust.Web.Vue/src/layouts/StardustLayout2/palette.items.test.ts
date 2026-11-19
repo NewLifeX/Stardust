@@ -5,9 +5,11 @@ import {
   appNameById,
   appPath,
   buildBasePalette,
+  buildTraceGroup,
   buildVerbAction,
   pagePath,
   parseAppId,
+  traceIdsFromQuery,
   type PaletteApp,
   type PaletteDeps,
   type PaletteNode,
@@ -383,5 +385,105 @@ describe('buildVerbAction · A 与其它', () => {
   it('未知动词：返回 null', () => {
     const { deps } = setup({ apps, nodes });
     expect(buildVerbAction('X' as never, deps)).toBeNull();
+  });
+});
+
+describe('traceIdsFromQuery · 追踪 id 形态判断（2026-11-16 输入2）', () => {
+  it.each([
+    ['0abc20d417947901750510000dcefca2'], // 32 位十六进制（用户实测样例）
+    ['1900000000000050001'], // 雪花 Int64 纯数字
+    ['405'], // 旧 MVC 形态短 id
+    ['a1B2c3D4-e5f6-4a2b-8c3d-1e2f3a4b5c6d'], // 连字符分段（W3C 形态）
+    ['trace_01'], // 下划线
+  ])('%s 像追踪 id', (q) => {
+    expect(traceIdsFromQuery(q)).toEqual([q]);
+  });
+
+  it('逗号多值：拆分后逐个返回（口径与 /trace 契约页 parseTraceIds 一致）', () => {
+    expect(traceIdsFromQuery('aaa111,bbb222')).toEqual(['aaa111', 'bbb222']);
+  });
+
+  it('分号与空白也能拆分；重复值去重', () => {
+    expect(traceIdsFromQuery('aaa111; bbb222\tccc333')).toEqual(['aaa111', 'bbb222', 'ccc333']);
+    expect(traceIdsFromQuery('aaa111,aaa111')).toEqual(['aaa111']);
+  });
+
+  it('单字符不像追踪 id（防单键误触）', () => {
+    expect(traceIdsFromQuery('a')).toEqual([]);
+    expect(traceIdsFromQuery('5')).toEqual([]);
+  });
+
+  it.each([
+    ['星尘'], // 中文
+    ['192.168.1.1'], // 点分 IP（点不在字符集）
+    ['订单 服务'], // 词组含中文
+  ])('%s 不按追踪 id 处理', (q) => {
+    expect(traceIdsFromQuery(q)).toEqual([]);
+  });
+
+  it('多段全部合规时按多值放行（追加式，不挤掉其它结果；口径与契约页空白拆分一致）', () => {
+    expect(traceIdsFromQuery('star web')).toEqual(['star', 'web']);
+  });
+
+  it('多值里混入不合规段：整串放弃', () => {
+    expect(traceIdsFromQuery('aaa111,星尘')).toEqual([]);
+  });
+
+  it('上限 5 与契约页一致', () => {
+    expect(traceIdsFromQuery('id01,id02,id03,id04,id05,id06')).toHaveLength(5);
+  });
+
+  it('空串与纯空白：空数组', () => {
+    expect(traceIdsFromQuery('')).toEqual([]);
+    expect(traceIdsFromQuery('   ')).toEqual([]);
+  });
+});
+
+describe('buildTraceGroup · 追踪跳转组', () => {
+  it('像 id 时返回「链路追踪」组：文案带 shortId、hint 说明动作', () => {
+    const g = buildTraceGroup('0abc20d417947901750510000dcefca2', () => {});
+    expect(g?.title).toBe('链路追踪');
+    expect(g?.list).toHaveLength(1);
+    expect(g?.list[0].text).toBe('追踪 · 0abc20d41794790175051000…');
+    expect(g?.list[0].hint).toBe('打开链路详情');
+  });
+
+  it('超长 id 文案截断为 24 位加省略号（run 仍传完整 id）', () => {
+    const seen: string[] = [];
+    const g = buildTraceGroup('0abc20d417947901750510000dcefca2', (ids) => seen.push(ids));
+    expect(g?.list[0].text).toBe('追踪 · 0abc20d41794790175051000…');
+    g?.list[0].run();
+    expect(seen).toEqual(['0abc20d417947901750510000dcefca2']);
+  });
+
+  it('多值以逗号拼接传给 goTrace（契约页自行拆分）', () => {
+    const seen: string[] = [];
+    const g = buildTraceGroup('aaa111,bbb222', (ids) => seen.push(ids));
+    g?.list[0].run();
+    expect(seen).toEqual(['aaa111,bbb222']);
+  });
+
+  it('不像 id：null（不追加组）', () => {
+    expect(buildTraceGroup('星尘', () => {})).toBeNull();
+    expect(buildTraceGroup('', () => {})).toBeNull();
+  });
+
+  it('没有 goTrace：null（面板不带追踪能力）', () => {
+    expect(buildTraceGroup('0abc20d417947901750510000dcefca2')).toBeNull();
+  });
+});
+
+describe('buildBasePalette · traceJump 接线', () => {
+  it('传 goTrace：配置带 traceJump，按查询产出追踪组', () => {
+    const { deps } = setup({ goTrace: () => {} });
+    const cfg = buildBasePalette(deps);
+    expect(cfg.traceJump).toBeTruthy();
+    const g = cfg.traceJump?.('aaa111');
+    expect(g?.title).toBe('链路追踪');
+  });
+
+  it('不传 goTrace：配置不带 traceJump（动词面板等旧配置不受影响）', () => {
+    const { deps } = setup();
+    expect(buildBasePalette(deps).traceJump).toBeUndefined();
   });
 });

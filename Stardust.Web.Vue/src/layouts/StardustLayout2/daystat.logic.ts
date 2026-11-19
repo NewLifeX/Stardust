@@ -136,6 +136,25 @@ export async function fetchDayStats(request: Req, appId: number, days = 7, now =
     .sort((a, b) => a.statDate.localeCompare(b.statDate));
 }
 
+/** 自定义区间查询参数（CARD-MON-04）：dtStart/dtEnd 原样透传，pageSize 按区间天数对齐（span+2，下限 30） */
+export function buildDayStatRangeParams(appId: number, dtStart: string, dtEnd: string): DayStatParams & { pageSize: number } {
+  const parse = (s: string): Date => {
+    const [y, m, d] = s.split('-').map(Number);
+    return new Date(y || 1970, (m || 1) - 1, d || 1);
+  };
+  const spanDays = Math.max(Math.round((parse(dtEnd).getTime() - parse(dtStart).getTime()) / 86_400_000) + 1, 1);
+  return { appId, dtStart, dtEnd, pageSize: Math.max(spanDays + 2, 30) };
+}
+
+/** 自定义区间列表：GET /api/Monitors/AppDayStat?appId=&dtStart=&dtEnd=&pageSize=区间天数+2，按日期升序 */
+export async function fetchDayStatsRange(request: Req, appId: number, dtStart: string, dtEnd: string): Promise<DayStatRow[]> {
+  const p = buildDayStatRangeParams(appId, dtStart, dtEnd);
+  const res = await request({ url: '/Monitors/AppDayStat', method: 'GET', params: { ...p } });
+  return listOf(res)
+    .map(toDayStatRow)
+    .sort((a, b) => a.statDate.localeCompare(b.statDate));
+}
+
 export interface MinuteStatParams {
   appId: number;
   dtStart: string;
@@ -237,6 +256,44 @@ export function minuteChartOption(rows: MinuteStatRow[], c: ChartPalette): Recor
   };
 }
 
+/** 表格总计行（CARD-MON-04）：前端聚合已加载行——数值列求和、错误率=ΣErrors/ΣTotal、平均耗时与汇总卡同口径（total>0 行均值）、最大耗时跨行取最大；空行/除零安全 */
+export interface DayStatTotalRow {
+  days: number;
+  total: number;
+  errors: number;
+  errorRate: number;
+  avgCost: number;
+  maxCost: number;
+  names: number;
+  apis: number;
+  https: number;
+  dbs: number;
+  mqs: number;
+  redis: number;
+}
+
+export function dayStatTotalRow(rows: DayStatRow[]): DayStatTotalRow {
+  const sum = (f: (r: DayStatRow) => number): number => rows.reduce((s, r) => s + f(r), 0);
+  const total = sum((r) => r.total);
+  const errors = sum((r) => r.errors);
+  const withCost = rows.filter((r) => r.total > 0);
+  const avgCost = withCost.length > 0 ? Math.round(withCost.reduce((s, r) => s + r.cost, 0) / withCost.length) : 0;
+  return {
+    days: rows.length,
+    total,
+    errors,
+    errorRate: total > 0 ? Math.round((errors / total) * 10000) / 100 : 0,
+    avgCost,
+    maxCost: rows.reduce((m, r) => Math.max(m, r.maxCost), 0),
+    names: sum((r) => r.names),
+    apis: sum((r) => r.apis),
+    https: sum((r) => r.https),
+    dbs: sum((r) => r.dbs),
+    mqs: sum((r) => r.mqs),
+    redis: sum((r) => r.redis),
+  };
+}
+
 /** 大屏顶部汇总数字（调用总数 / 错误总数 / 平均耗时均值 / 错误率） */
 export interface DayStatSummary {
   total: number;
@@ -252,4 +309,36 @@ export function dayStatSummary(rows: DayStatRow[]): DayStatSummary {
   const avgCost = withCost.length > 0 ? Math.round(withCost.reduce((s, r) => s + r.cost, 0) / withCost.length) : 0;
   const errorRate = total > 0 ? (errors / total) * 100 : 0;
   return { total, errors, avgCost, errorRate: Math.round(errorRate * 100) / 100 };
+}
+
+/**
+ * 单行错误率百分比文案（C13 修复，2026-11-08 抽验裁定）：
+ * 后端 ErrorRate 存小数比例（0.0043 = 0.43%），单行渲染直显数值+% 会差 100 倍——
+ * 统一经本函数 ×100 并四舍五入两位（与 dayStatSummary/dayStatTotalRow 自算口径同源）；
+ * 非有限值（含后端缺省 NaN）返回「—」。
+ */
+export function fmtErrorRate(rate: number): string {
+  if (!Number.isFinite(rate)) return '—';
+  const pct = Math.round(rate * 10000) / 100;
+  return `${pct}%`;
+}
+
+/**
+ * 独立竞态守卫（CARD-MON-DEF-01，2026-11-09）：每个异步加载域一个实例。
+ * 同域后发使先发 stale（守卫本职）；跨域实例计数互不共享——
+ * 修复 DayStatTab load()/loadMinute() 共用同一 token 时，分钟域 begin
+ * 令在飞日统计域 finally 复位判失效（mine!==token）→ loading 永卡 true、
+ * 空数据应用主区永挂「正在加载日统计…」的缺陷。
+ */
+export interface LoadGuard {
+  begin(): number;
+  isStale(ticket: number): boolean;
+}
+
+export function createLoadGuard(): LoadGuard {
+  let token = 0;
+  return {
+    begin: () => ++token,
+    isStale: (ticket: number) => ticket !== token,
+  };
 }

@@ -3,8 +3,10 @@
  * Deployment/AppDeployNode/Index — 部署节点列表（自定义迁移页）
  *
  * MVC 源 _List_Data / _List_Search / _List_Toolbar_Batch 还原：
- *  - 列表列：编号/发布名/[应用]/[节点]/IP/延迟/启用/进程/进程时间/版本/编译时间/最后活跃/远程操作/操作
+ *  - 列表列：编号/发布名/[应用]/[节点]/IP/延迟/启用/进程/进程时间/版本/应用程序版本/编译时间/最后活跃/远程操作/操作
  *    （URL 带 deployId 时不显示「应用」「节点」列，仅显示其余）
+ *    （2026-11-12 新增「应用程序版本」列=AppVersion，在线实例上报的应用入口程序集 FileVersion，随心跳更新；
+ *     「版本」列=install 发布下发的部署版本）
  *  - 「远程操作」列每行 5 个链接：发布/启动/终止/重启/卸载
  *    -> GET /Deployment/AppDeployNode/Operate?act=<动作>&id=<行Id>（后端带 confirm）
  *  - 搜索栏：_Enable(启用下拉) + _DateRange(时间范围 dtStart/dtEnd)
@@ -34,6 +36,7 @@ interface Row {
   ProcessId?: number;
   StartTime?: string;
   Version?: string;
+  AppVersion?: string;
   Compile?: string;
   LastActive?: string;
   [k: string]: unknown;
@@ -54,6 +57,7 @@ const ALL_COLUMNS: Col[] = [
   { name: 'ProcessId', label: '进程', width: 90 },
   { name: 'StartTime', label: '进程时间', width: 170 },
   { name: 'Version', label: '版本', width: 120 },
+  { name: 'AppVersion', label: '应用程序版本', width: 120 },
   { name: 'Compile', label: '编译时间', width: 170 },
   { name: 'LastActive', label: '最后活跃', width: 170 },
 ];

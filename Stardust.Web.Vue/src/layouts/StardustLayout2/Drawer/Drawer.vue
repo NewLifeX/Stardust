@@ -1,9 +1,9 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 /**
  * Drawer：右侧抽屉，对照原型 kit-shell.jsx 的 Drawer 与 kit.css 的 .x-scrim / .x-drawer。
  * 用 Element Plus 的 ElDrawer 封装（输入-1027：不走 useModal / ModalContainer）。
  * 纯 UI：open 由父组件持有；X 按钮、点遮罩、Esc 都只发 close，不自己改 open。
- * 插槽：actions（操作按钮行）、tabs（页签）、默认（正文）。
+ * 插槽：actions（操作按钮行）、tabs（页签）、header-extra（头部右侧、关闭钮前）、默认（正文）。
  * 与原型的已知差异（入场动画、焦点陷阱、Esc 层级）记在 TODO2.md。
  */
 import { ElDrawer } from 'element-plus';
@@ -14,8 +14,10 @@ withDefaults(
     open: boolean;
     title: string;
     sub?: string;
+    /** 叠放层级（task-90）：默认 40 与历史行为一致；同屏双抽屉时上层传更大值（EP 不 teleport，同 z-index 由 DOM 顺序决定叠放） */
+    zIndex?: number;
   }>(),
-  { sub: '' },
+  { sub: '', zIndex: 40 },
 );
 
 const emit = defineEmits<{ close: [] }>();
@@ -44,7 +46,7 @@ const BODY_CLASS = '!px-[22px] !py-5';
     :with-header="false"
     destroy-on-close
     size="560px"
-    :z-index="40"
+    :z-index="zIndex"
     :before-close="requestClose"
     :class="DRAWER_CLASS"
     :modal-class="MASK_CLASS"
@@ -63,6 +65,7 @@ const BODY_CLASS = '!px-[22px] !py-5';
         </div>
       </div>
       <span class="flex-1" />
+      <slot name="header-extra" />
       <button
         type="button"
         data-spec="drawer-close"

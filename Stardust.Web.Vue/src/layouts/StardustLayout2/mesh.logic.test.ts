@@ -6,7 +6,10 @@ import {
   fetchRegistry,
   fetchServiceDetail,
   saveService,
+  createService,
   servicePutBody,
+  servicePostBody,
+  emptyServiceEditModel,
   toServiceEditModel,
   toServiceMembers,
   validateServiceEdit,
@@ -21,6 +24,7 @@ import {
   toMcpAudits,
   fetchMcp,
   fetchMcpServers,
+  buildMcpServerQueryParams,
   toMembers,
   toProjectInfo,
   countCsv,
@@ -40,6 +44,16 @@ function stubReq(map: Record<string, unknown>, throwOn?: string[]): Req {
     if (url in map) return { data: map[url] };
     return { data: [] };
   };
+}
+
+/** 记录型桩：断言透传 params 用（记录最后一次请求 params） */
+function recordReq(data: unknown = []): { req: Req; lastParams: () => Record<string, unknown> | undefined } {
+  let last: Record<string, unknown> | undefined;
+  const req: Req = async (opt) => {
+    last = (opt.params ?? undefined) as Record<string, unknown> | undefined;
+    return { data };
+  };
+  return { req, lastParams: () => last };
 }
 
 describe('注册中心 · toRegistryRows 字段归一与防御', () => {
@@ -291,6 +305,35 @@ describe('MCP 服务器 · fetchMcpServers', () => {
     expect(r.rows[1].url).toBe('http://localhost:8200'); // Address 别名兜底
     expect(r.rows[1].tools).toBe(0);
   });
+
+  it('opts 查询：enable/dtStart/dtEnd/Q 透传 + PageSize 500（CARD-PLT-03 定稿裁定 1）', async () => {
+    const { req, lastParams } = recordReq([{ Id: 1, Name: 'fs', Enable: true }]);
+    const r = await fetchMcpServers(req, { projectId: 7, enable: false, dtStart: '2026-11-01', dtEnd: '2026-11-09', Q: 'node' });
+    expect(r.error).toBe('');
+    expect(lastParams()).toEqual({ PageSize: 500, projectId: 7, enable: false, dtStart: '2026-11-01', dtEnd: '2026-11-09', Q: 'node' });
+    expect(r.rows).toHaveLength(1);
+  });
+
+  it('projectId>0 才带参（定稿裁定 3）；空串/空白条件不下发', async () => {
+    const { req, lastParams } = recordReq([]);
+    const r = await fetchMcpServers(req, { projectId: 0, enable: undefined, dtStart: '', dtEnd: ' ', Q: '' });
+    expect(r.error).toBe('');
+    expect(lastParams()).toEqual({ PageSize: 500 });
+    expect('projectId' in (lastParams() ?? {})).toBe(false);
+  });
+
+  it('buildMcpServerQueryParams：enable true/false 都透传，undefined 不发', () => {
+    expect(buildMcpServerQueryParams({ enable: true })).toEqual({ enable: true });
+    expect(buildMcpServerQueryParams({ enable: false })).toEqual({ enable: false });
+    expect(buildMcpServerQueryParams({ enable: undefined, projectId: 5 })).toEqual({ projectId: 5 });
+  });
+
+  it('旧 number 签名兼容：projectId 透传', async () => {
+    const { req, lastParams } = recordReq([]);
+    const r = await fetchMcpServers(req, 3);
+    expect(r.error).toBe('');
+    expect(lastParams()).toEqual({ PageSize: 500, projectId: 3 });
+  });
 });
 
 describe('成员管理 · toMembers 归一与项目信息', () => {
@@ -382,7 +425,7 @@ describe('F13 toServiceMembers / toServiceEditModel', () => {
   it('编辑表单归一大小写；UseScope 是布尔', () => {
     // 后端实体的 UseScope 是 Boolean；字符串 "prod"/"false" 一律归一为布尔
     const m = toServiceEditModel({ DisplayName: '网关', Category: 'Web', Enable: true, Extranet: false, Singleton: true, UseScope: true, Address: 'tcp://x', HealthCheck: true, Remark: 'r' });
-    expect(m).toEqual({ displayName: '网关', category: 'Web', enable: true, extranet: false, singleton: true, useScope: true, address: 'tcp://x', healthCheck: true, remark: 'r' });
+    expect(m).toEqual({ name: '', displayName: '网关', category: 'Web', enable: true, extranet: false, singleton: true, useScope: true, address: 'tcp://x', healthCheck: true, remark: 'r' });
     // 字符串形态（历史数据/JSON）也归一为布尔，不透传字符串
     const m2 = toServiceEditModel({ DisplayName: 'x', UseScope: 'false' });
     expect(m2.useScope).toBe(false);
@@ -400,6 +443,26 @@ describe('F13 toServiceMembers / toServiceEditModel', () => {
     }
     expect(validateServiceEdit(m)).toBe('');
     expect(validateServiceEdit({ ...m, displayName: ' ' })).toContain('必填');
+  });
+
+  it('REG-09 新建默认值：仅单例默认勾选，其余字段空/false（Biz.cs:45-52）', () => {
+    expect(emptyServiceEditModel()).toEqual({
+      name: '', displayName: '', category: '', enable: false, extranet: false,
+      singleton: true, useScope: false, address: '', healthCheck: false, remark: '',
+    });
+  });
+
+  it('REG-09 POST body：PUT 字段 + Name；新建态校验先服务名后显示名', () => {
+    const m = toServiceEditModel({ Name: ' star.web ', DisplayName: ' 星尘 ', Category: 'Web', Enable: true, Singleton: true, UseScope: false });
+    const body = servicePostBody(m);
+    expect(body).toMatchObject({ Name: 'star.web', DisplayName: '星尘' });
+    expect(typeof body.Singleton).toBe('boolean');
+    // 编辑态（默认）：Name 不参与校验（主键语义不改）
+    expect(validateServiceEdit({ ...m, name: '' })).toBe('');
+    // 新建态：服务名必填（Biz.cs:39 Valid），空显示名次之
+    expect(validateServiceEdit({ ...m, name: ' ' }, true)).toBe('服务名必填');
+    expect(validateServiceEdit({ ...m, displayName: '' }, true)).toBe('服务显示名必填');
+    expect(validateServiceEdit(m, true)).toBe('');
   });
 });
 
@@ -451,5 +514,27 @@ describe('F13 fetchServiceDetail / saveService', () => {
       throw new Error('stub');
     };
     expect((await saveService(noId as Req, 0, m)).ok).toBe(false);
+  });
+
+  it('REG-09 createService：POST /Registry/Service 带 Name，成功/失败/空名拦截', async () => {
+    const calls: unknown[] = [];
+    const req: Req = async (opt) => {
+      calls.push(opt);
+      return { code: 0, message: '操作成功' } as Awaited<ReturnType<Req>>;
+    };
+    const ok = await createService(req, emptyServiceEditModel());
+    // 空名在本地拦截，不发请求
+    expect(ok.ok).toBe(false);
+    expect(calls).toHaveLength(0);
+    const m = toServiceEditModel({ Name: 'star.web', DisplayName: '星尘', Singleton: true });
+    const r = await createService(req, m);
+    expect(r).toEqual({ ok: true, message: '服务已创建' });
+    expect(calls[0]).toMatchObject({ url: '/Registry/Service', method: 'POST' });
+    expect((calls[0] as { data: Record<string, unknown> }).data).toMatchObject({ Name: 'star.web', DisplayName: '星尘', Singleton: true });
+    const bad: Req = async () => {
+      throw new Error('后端校验失败');
+    };
+    const fail = await createService(bad, m);
+    expect(fail).toEqual({ ok: false, message: '后端校验失败' });
   });
 });

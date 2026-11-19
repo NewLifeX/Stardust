@@ -1,15 +1,17 @@
 <script setup lang="ts">
 /**
- * ServiceDetailDrawer：服务详情。三段：Service 编辑表单（PUT /Registry/Service/{id}
+ * ServiceDetailDrawer：服务详情/新建。三段：Service 编辑表单（PUT /Registry/Service/{id}
  * 部分更新）+ 提供者表（/Registry/AppService?serviceId=）+ 消费者表（/Registry/AppConsume?serviceId=）。
+ * create 态（2026-11-08 REG-09）：mode="create" 时标题「新建服务」，表单加服务名（Name 必填，
+ * 服务信息.Biz.cs:39），隐藏加载/失败与提供者/消费者段，submit 由容器走 POST。
  * 详情取数由容器做（失败显示加载失败）；表单校验 inline；保存中禁用（§11）。
  */
-import { reactive, ref, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import Btn from './Btn.vue';
 import Drawer from './Drawer/Drawer.vue';
 import KIcon from './KIcon.vue';
 import Tag from './Tag.vue';
-import { validateServiceEdit } from './mesh.logic.ts';
+import { emptyServiceEditModel, validateServiceEdit } from './mesh.logic.ts';
 import type { ServiceEditModel, ServiceMemberRow } from './mesh.logic.ts';
 import { TD, TH } from './deployView.styles.ts';
 
@@ -23,14 +25,17 @@ const props = defineProps<{
   consumers: ServiceMemberRow[];
   serviceName: string;
   busy: boolean;
+  /** create=新建（无详情取数，表单含服务名）；默认 edit=编辑既有服务 */
+  mode?: 'edit' | 'create';
 }>();
 
 const emit = defineEmits<{ close: []; retry: []; submit: [form: ServiceEditModel] }>();
 
-const form = reactive<ServiceEditModel>({
-  displayName: '', category: '', enable: true, extranet: false, singleton: false,
-  useScope: false, address: '', healthCheck: false, remark: '',
-});
+// 走查修正（2026-11-08 REG-09）：抽屉常驻挂载（容器 :open 驱动），mode 后到/变化必须响应式派生；
+// 普通 const 在 setup 首跑固化，导致先 edit 后 create（或反向）时 isCreate 停留旧值。
+const isCreate = computed(() => props.mode === 'create');
+
+const form = reactive<ServiceEditModel>(emptyServiceEditModel());
 const formError = ref('');
 
 watch(
@@ -38,17 +43,13 @@ watch(
   ([open, svc]) => {
     if (!open) return;
     formError.value = '';
-    Object.assign(
-      form,
-      { displayName: '', category: '', enable: true, extranet: false, singleton: false, useScope: false, address: '', healthCheck: false, remark: '' },
-      svc ?? {},
-    );
+    Object.assign(form, emptyServiceEditModel(), svc ?? {});
   },
   { immediate: true },
 );
 
 function onSubmit(): void {
-  const err = validateServiceEdit(form);
+  const err = validateServiceEdit(form, isCreate.value);
   if (err) {
     formError.value = err;
     return;
@@ -61,12 +62,13 @@ function onSubmit(): void {
 <template>
   <Drawer
     :open="open"
-    :title="`服务详情 · ${serviceName}`"
-    :sub="service ? '编辑服务信息，或查看提供者与消费者' : ''"
+    :title="isCreate ? '新建服务' : `服务详情 · ${serviceName}`"
+    :sub="isCreate ? '填写服务定义；保存后可在列表点开继续编辑' : service ? '编辑服务信息，或查看提供者与消费者' : ''"
     @close="emit('close')"
   >
+    <!-- create 态无详情取数：不渲染加载/失败分支 -->
     <div
-      v-if="loading"
+      v-if="!isCreate && loading"
       class="flex items-center gap-[8px] py-[18px] text-[12.5px] text-[var(--el-text-color-secondary)]"
       data-spec="service-detail-loading"
     >
@@ -75,7 +77,7 @@ function onSubmit(): void {
     </div>
 
     <div
-      v-else-if="failed || !service"
+      v-else-if="!isCreate && (failed || !service)"
       class="py-[14px]"
       data-spec="service-detail-failed"
     >
@@ -106,6 +108,19 @@ function onSubmit(): void {
           服务信息
         </div>
         <div class="grid grid-cols-2 gap-[10px]">
+          <label
+            v-if="isCreate"
+            class="flex flex-col gap-[4px]"
+          >
+            <span class="text-[12px] text-[var(--el-text-color-secondary)]">服务名 *</span>
+            <input
+              v-model="form.name"
+              type="text"
+              placeholder="服务唯一名，如 my-service"
+              data-spec="service-form-name"
+              class="h-[30px] w-full rounded-[8px] border border-[var(--el-border-color-light)] bg-[var(--el-bg-color-overlay)] px-[10px] font-mono text-[12.5px] text-[var(--el-text-color-primary)] outline-none placeholder:text-[var(--el-text-color-placeholder)] focus:border-[var(--el-color-primary)]"
+            >
+          </label>
           <label class="flex flex-col gap-[4px]">
             <span class="text-[12px] text-[var(--el-text-color-secondary)]">显示名 *</span>
             <input
@@ -202,8 +217,8 @@ function onSubmit(): void {
         </div>
       </div>
 
-      <!-- 提供者 -->
-      <div>
+      <!-- 提供者（create 态无上下游，隐藏） -->
+      <div v-if="!isCreate">
         <div class="mb-[6px] flex items-center gap-[8px]">
           <span class="text-[12px] font-semibold text-[var(--el-text-color-primary)]">提供者（{{ providers.length }}）</span>
         </div>
@@ -266,8 +281,8 @@ function onSubmit(): void {
         </div>
       </div>
 
-      <!-- 消费者 -->
-      <div>
+      <!-- 消费者（create 态隐藏） -->
+      <div v-if="!isCreate">
         <div class="mb-[6px] flex items-center gap-[8px]">
           <span class="text-[12px] font-semibold text-[var(--el-text-color-primary)]">消费者（{{ consumers.length }}）</span>
         </div>

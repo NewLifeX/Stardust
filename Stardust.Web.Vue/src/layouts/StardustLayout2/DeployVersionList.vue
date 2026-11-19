@@ -11,10 +11,13 @@ import Card from './Card.vue';
 import KIcon from './KIcon.vue';
 import Tag from './Tag.vue';
 import { H3, NOTICE_CLASS, TD, TH } from './deployView.styles.ts';
-import type { Notice, VersionOption } from './ship.logic.ts';
+import { versionDownloadHref, type Notice, type VersionOption } from './ship.logic.ts';
 
 /** 折叠时显示的版本数 */
 const COLLAPSED_LIMIT = 8;
+
+/** C18 下载包链接基址：与其它接口同源同 host（参照 pipelineWebhook.logic.ts:49） */
+const API_BASE = String(import.meta.env?.VITE_APP_BASE_API ?? '').replace(/\/+$/, '');
 
 const props = defineProps<{
   versions: VersionOption[];
@@ -58,6 +61,11 @@ function buttonTitle(v: VersionOption): string {
 function buttonText(v: VersionOption): string {
   if (props.busyKey === `ver:${v.id}`) return '切换中…';
   return v.current ? '当前版本' : '应用此版本';
+}
+
+/** C18 下载包链接：有 Url 行渲染「下载」，无 Url 行无链接 */
+function downloadHref(v: VersionOption): string | null {
+  return versionDownloadHref(v.url, API_BASE);
 }
 </script>
 
@@ -158,6 +166,15 @@ function buttonText(v: VersionOption): string {
             </Tag>
           </td>
           <td :class="[TD, 'text-right']">
+            <a
+              v-if="downloadHref(v)"
+              :href="downloadHref(v) ?? undefined"
+              target="_blank"
+              rel="noopener"
+              class="mr-2 align-middle text-[12px] text-[var(--el-color-primary)] hover:underline"
+              data-spec="ship-version-download"
+              :title="`下载 ${v.version || `#${v.id}`} 的应用包`"
+            >下载</a>
             <Btn
               size="sm"
               :variant="v.current || v.disabled ? 'default' : 'primary'"

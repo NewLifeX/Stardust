@@ -1,4 +1,4 @@
-﻿// 界面开关单测（Vitest）
+// 界面开关单测（Vitest）
 // 对照原型 kit-app.jsx：palette 为 {placeholder, items} | null，⌘K 只会打开；
 // toggleDock(open, tab) 的 open 缺省为翻转，tab 缺省为保持。
 import { describe, it, expect, beforeEach } from 'vitest';
@@ -200,6 +200,19 @@ describe('ui.store · 生产确认（guard）', () => {
     openGuard('发布 bj-app-01 的配置（3 项变更）', fn);
     expect(guardOpen.value).toBe(true);
     expect(guard.value?.label).toBe('发布 bj-app-01 的配置（3 项变更）');
+    expect(guard.value?.fn).toBe(fn);
+  });
+
+  it('openGuard 不传 detail 时 GuardRequest 无 detail 键（GuardModal 保持默认警示文案）', () => {
+    openGuard('屏蔽该操作名', () => {});
+    expect(guard.value?.label).toBe('屏蔽该操作名');
+    expect('detail' in (guard.value ?? {})).toBe(false);
+  });
+
+  it('openGuard 传 detail 时原样保持（两段式确认，CARD-MON-11）', () => {
+    const fn = () => {};
+    openGuard('屏蔽该操作名', fn, '将把 GET /api/user 加入应用 5 的采样排除名单，后续上报不再采样');
+    expect(guard.value?.detail).toBe('将把 GET /api/user 加入应用 5 的采样排除名单，后续上报不再采样');
     expect(guard.value?.fn).toBe(fn);
   });
 

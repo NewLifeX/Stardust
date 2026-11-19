@@ -26,6 +26,7 @@ import {
   deleteAppRule,
   fetchAllConfigs,
   fetchAppRules,
+  fetchConfigCategories,
   fetchConfigDetail,
   saveAppRule,
 } from '@/layouts/StardustLayout2/configCenter.logic';
@@ -45,6 +46,8 @@ const router = useRouter();
 const rows = ref<ConfigCenterRow[]>([]);
 const loading = ref(false);
 const errorText = ref('');
+/** 类别下拉选项（GET /Configs/AppConfig/Categories），失败静默降级为行内去重 */
+const categories = ref<string[]>([]);
 
 const drawerOpen = ref(false);
 const detail = ref<ConfigDetail | null>(null);
@@ -91,6 +94,10 @@ async function load(isStale: () => boolean): Promise<void> {
   } finally {
     if (!isStale()) loading.value = false;
   }
+  // 类别选项独立拉取，失败不提示（下拉降级为行内 category 去重）
+  void fetchConfigCategories(request).then((list) => {
+    if (!isStale() && list) categories.value = list;
+  });
   // 规则块独立三态，失败不拖垮配置列表
   void loadRules(isStale);
 }
@@ -194,6 +201,7 @@ const { reload } = useContextReload(load, stardustContext);
       :rows="rows"
       :loading="loading"
       :error="errorText"
+      :categories="categories"
       @open="onOpen"
       @retry="reload"
     />

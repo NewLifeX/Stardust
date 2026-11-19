@@ -1,4 +1,4 @@
-﻿// 项目 / 环境上下文变化时，页面重新取数的纯逻辑（无 Vue 依赖，便于单测）。
+// 项目 / 环境上下文变化时，页面重新取数的纯逻辑（无 Vue 依赖，便于单测）。
 // 沿用旧 AdminCenter.vue 的做法：把 ready、projectId、environment 拼成一个 key，
 // 就绪与后续切换共用同一条触发路径；ready 之前不取数，避免先按空项目打一轮请求、再整轮重打。
 // 请求本身不手拼 projectId：stores/stardustContext.ts 的全局拦截器会注入。
@@ -34,4 +34,17 @@ export function createRequestGuard(): RequestGuard {
     begin: () => ++seq,
     isLatest: (token) => token === seq,
   };
+}
+
+/**
+ * DEF-02 守卫家族统一兜底（REG-07 isStale 永锁防线）。
+ * 背景：登录后自动切项目链会让 contextKey 连跳多次，先前响应全部 isStale 判废；
+ * 若最新响应也未把三态机收口（异常路径漏写终态），页面将无限停留「应用加载中…」。
+ * 规则：判废响应不碰状态（终态由最新 loader 负责）；最新 loader 收口时若仍停在 loading，兜底为 failed。
+ */
+export type LoadState = 'loading' | 'ok' | 'failed';
+
+export function settleLoad(current: LoadState, stale: boolean): LoadState {
+  if (stale) return current;
+  return current === 'loading' ? 'failed' : current;
 }

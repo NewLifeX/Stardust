@@ -160,7 +160,8 @@ function actionUrl(row: Row): string {
   return toUrl('/Registry/AppHistory', { appId: row.AppId, action: row.Action });
 }
 function traceUrl(row: Row): string {
-  return toUrl('/Monitors/Trace/Detail', { Id: row.TraceId ?? '' });
+  // REG-03（2026-11-08 定稿裁定③）：迁移页追踪列对齐契约页 /trace/{traceId}，不再跳旧 shim /Monitors/Trace/Detail
+  return toUrl('/trace/' + String(row.TraceId ?? ''));
 }
 
 function handleSearch() {
@@ -356,7 +357,7 @@ onMounted(async () => {
             </template>
           </el-table-column>
 
-          <!-- 自定义链接列：追踪 → 追踪详情（对齐 MVC ListFields.TraceUrl()，WebApi 端仅取字段无 Url，需自建） -->
+          <!-- 自定义链接列：追踪 → 契约页 /trace/{traceId}（REG-03 2026-11-08 对齐；旧 shim /Monitors/Trace/Detail 退役） -->
           <el-table-column
             label="追踪"
             width="160"
@@ -370,7 +371,7 @@ onMounted(async () => {
               >
                 {{ row.TraceId }}
               </el-link>
-              <span v-else>-</span>
+              <span v-else>—</span>
             </template>
           </el-table-column>
 

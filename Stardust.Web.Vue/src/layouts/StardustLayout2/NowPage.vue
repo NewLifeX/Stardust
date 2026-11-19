@@ -27,8 +27,8 @@ import {
   type NowErrors,
   type NowResult,
 } from './now.logic.ts';
-import { openPalette } from './ui.store.ts';
-import { buildBasePalette } from './palette.items.ts';
+import { openSearchPalette, searchRuntime } from './paletteSearch.logic.ts';
+import { requestTermNode } from './ui.store.ts';
 import { toast } from './useToast.ts';
 import { environmentLabel, stardustContext } from '@/stores/stardustContext';
 import { useContextReload } from './useContextReload.ts';
@@ -38,7 +38,7 @@ const props = defineProps<{
   deps?: { request?: Req };
 }>();
 
-const emit = defineEmits<{ go: [path: string] }>();
+const emit = defineEmits<{ go: [path: string]; 'go-trace': [ids: string] }>();
 
 /** 取数入口：默认 cube-vue request，story/CT 注入桩 */
 function req(): Req {
@@ -71,7 +71,13 @@ async function load(isStale: () => boolean): Promise<void> {
   } catch {
     result = null;
   }
-  if (isStale()) return;
+  if (isStale()) {
+    // DEF-02 同族收口：响应已判废（REG-07 项目链双维连跳后无后续 reload 时），
+    // 不收口会让 loading 骨架与 refreshing 旋转永挂——落回旧数据态，终态由最新 loader 负责覆写。
+    loading.value = false;
+    refreshing.value = false;
+    return;
+  }
   if (result) {
     data.value = result.data;
     errors.value = result.errors;
@@ -102,9 +108,18 @@ const lede = computed(() => {
     : '过去一小时没有未处理的告警。';
 });
 
-/** ⌘K 搜索框：打开基础命令面板（与顶栏搜索、⌘K 同一个 openPalette） */
+/** ⌘K 搜索框：与顶栏搜索同一入口 openSearchPalette（页面+追踪即时可用，应用/节点由外壳共享运行时补入）；
+ *  跳转走 emit（薄壳接路由，gallery 无 router 也能挂）；节点结果经 ui.store 通道请求外壳开终端。 */
 function onSearch(): void {
-  openPalette(buildBasePalette({ go: (p) => emit('go', p) }));
+  openSearchPalette(
+    {
+      go: (p) => emit('go', p),
+      goTrace: (ids) => emit('go-trace', ids),
+      openNode: (id) => requestTermNode(id),
+      warn: toast,
+    },
+    searchRuntime(),
+  );
 }
 
 const VERBS: ReadonlyArray<{ k: string; label: string }> = [

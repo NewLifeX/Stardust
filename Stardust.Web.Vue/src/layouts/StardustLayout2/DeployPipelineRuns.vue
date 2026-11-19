@@ -4,18 +4,21 @@
  * 纯 UI：只收 props、只发 select(runId)/rollback；取步骤的请求在 useDeployData，stages 与 view 由容器算好传入。
  * F09 一键回滚：头部按钮，候选版本挑选与 Guard 确认在容器（rollbackCandidates + rollbackNotice）。
  * 格子、四段进度的样式常量在 deployPipeline.styles.ts；图例与选中行都由传入的数据在本组件内推出。
+ * CARD-DEP-02（2026-11-07）：运行表上方加筛选条（状态下拉 7 项 + 时间区间 + 重置，逐字对齐旧壳 0-6 中文），
+ * 行尾加「重跑/详情」操作（确认与请求在容器）；6 列不动，行尾加操作列。
  */
 import { computed } from 'vue';
 import Btn from './Btn.vue';
 import Card from './Card.vue';
 import KIcon from './KIcon.vue';
 import Tag from './Tag.vue';
-import { H3, TD, TH } from './deployView.styles.ts';
+import { H3, SELECT, TD, TH } from './deployView.styles.ts';
 import { CELL_BASE, CELL_CLASS, DOT_BASE, DOT_CLASS, STEP_BASE, STEP_CLASS } from './deployPipeline.styles.ts';
 import type { PipelineView, StageItem } from './deployPipeline.styles.ts';
-import type { NodeCell, ShipRunRow } from './ship.logic.ts';
+import { isRunFilterActive, RUN_STATUS_FILTERS } from './ship.logic.ts';
+import type { NodeCell, RunFilter, ShipRunRow } from './ship.logic.ts';
 
-const props = withDefaults(defineProps<{
+const props = defineProps<{
   runRows: ShipRunRow[];
   /** 当前选中的运行 Id，没有选中为 null */
   selectedRunId: number | null;
@@ -27,17 +30,20 @@ const props = withDefaults(defineProps<{
   rollbackTitle: string;
   /** 回滚请求进行中 */
   rollingBack: boolean;
-  /** 选中的运行不是失败/已取消，或正在忙时置灰 */
-  reprocessDisabled?: boolean;
-  reprocessTitle?: string;
-  reprocessing?: boolean;
-}>(), {
-  reprocessDisabled: true,
-  reprocessTitle: '先选择一条失败或已取消的运行',
-  reprocessing: false,
-});
+  /** 运行筛选（容器持有，静默重取语义与 5s 轮询共存） */
+  runFilter: RunFilter;
+  /** 正在重跑的行（busyKey 形如 rerun:{id}）；非空时行操作禁用（AGENTS.md §11） */
+  rerunKey: string;
+}>();
 
-const emit = defineEmits<{ select: [runId: number]; rollback: []; reprocess: [] }>();
+const emit = defineEmits<{
+  select: [runId: number];
+  rollback: [];
+  rerun: [row: ShipRunRow];
+  detail: [row: ShipRunRow];
+  filterChange: [patch: Partial<RunFilter>];
+  filterReset: [];
+}>();
 
 const selectedRow = computed(() => props.runRows.find((r) => r.id === props.selectedRunId));
 
@@ -47,6 +53,18 @@ const legend = computed(() => {
   for (const it of props.view?.items ?? []) if (!seen.has(it.cell)) seen.set(it.cell, it.label);
   return [...seen.entries()];
 });
+
+const filterActive = computed(() => isRunFilterActive(props.runFilter));
+
+function onStatusChange(e: Event): void {
+  emit('filterChange', { status: Number((e.target as HTMLSelectElement).value) || 0 });
+}
+function onDateStart(e: Event): void {
+  emit('filterChange', { dtStart: (e.target as HTMLInputElement).value });
+}
+function onDateEnd(e: Event): void {
+  emit('filterChange', { dtEnd: (e.target as HTMLInputElement).value });
+}
 </script>
 
 <template>
@@ -79,24 +97,6 @@ const legend = computed(() => {
           </span>
         </template>
         {{ rollingBack ? '回滚中…' : '一键回滚' }}
-      </Btn>
-      <Btn
-        size="sm"
-        variant="default"
-        :disabled="reprocessDisabled || reprocessing"
-        :title="reprocessTitle || '先选择一条失败或已取消的运行'"
-        data-spec="ship-reprocess"
-        @click="emit('reprocess')"
-      >
-        <template #icon>
-          <span :class="reprocessing ? 'inline-flex animate-spin' : 'inline-flex'">
-            <KIcon
-              name="Rotate"
-              :size="12"
-            />
-          </span>
-        </template>
-        {{ reprocessing ? '重跑中…' : '重跑' }}
       </Btn>
     </div>
 
@@ -168,6 +168,57 @@ const legend = computed(() => {
       <span class="flex-1" />
     </div>
 
+    <!-- CARD-DEP-02：筛选条（状态 0-6 七项 + 时间区间 + 重置），插在运行表上方 -->
+    <div
+      class="mb-[10px] flex flex-wrap items-center gap-2"
+      data-spec="ship-runs-filter"
+    >
+      <span class="text-[11.5px] text-[var(--el-text-color-secondary)]">状态</span>
+      <select
+        :class="SELECT"
+        :value="runFilter.status"
+        data-spec="ship-runs-filter-status"
+        aria-label="按状态筛选"
+        @change="onStatusChange"
+      >
+        <option
+          v-for="o in RUN_STATUS_FILTERS"
+          :key="o.value"
+          :value="o.value"
+        >
+          {{ o.label }}
+        </option>
+      </select>
+      <span class="text-[11.5px] text-[var(--el-text-color-secondary)]">时间</span>
+      <input
+        type="date"
+        :class="SELECT"
+        :value="runFilter.dtStart"
+        aria-label="开始日期"
+        data-spec="ship-runs-filter-start"
+        @change="onDateStart"
+      >
+      <span class="text-[11.5px] text-[var(--el-text-color-secondary)]">~</span>
+      <input
+        type="date"
+        :class="SELECT"
+        :value="runFilter.dtEnd"
+        aria-label="结束日期"
+        data-spec="ship-runs-filter-end"
+        @change="onDateEnd"
+      >
+      <Btn
+        size="sm"
+        variant="ghost"
+        :disabled="!filterActive"
+        :title="filterActive ? '清空状态与时间筛选，恢复全量' : '当前没有生效的筛选'"
+        data-spec="ship-runs-filter-reset"
+        @click="emit('filterReset')"
+      >
+        重置
+      </Btn>
+    </div>
+
     <div class="-mx-[18px] -mb-4 mt-4 overflow-hidden rounded-b-[inherit] border-t border-[var(--el-border-color-light)]">
       <table
         class="w-full border-collapse"
@@ -192,6 +243,9 @@ const legend = computed(() => {
             </th>
             <th :class="TH">
               状态
+            </th>
+            <th :class="[TH, 'text-right']">
+              操作
             </th>
           </tr>
         </thead>
@@ -224,10 +278,43 @@ const legend = computed(() => {
                 {{ r.statusLabel }}
               </Tag>
             </td>
+            <td :class="[TD, 'text-right']">
+              <span
+                class="inline-flex justify-end gap-1"
+                @click.stop
+              >
+                <Btn
+                  size="sm"
+                  variant="ghost"
+                  :disabled="!!rerunKey"
+                  :title="rerunKey === `rerun:${r.id}` ? '重跑中…' : '基于本次运行重新触发流水线'"
+                  data-spec="ship-rerun"
+                  @click="emit('rerun', r)"
+                >
+                  <template #icon>
+                    <span :class="rerunKey === `rerun:${r.id}` ? 'inline-flex animate-spin' : 'inline-flex'">
+                      <KIcon
+                        name="Rotate"
+                        :size="12"
+                      />
+                    </span>
+                  </template>
+                  {{ rerunKey === `rerun:${r.id}` ? '重跑中…' : '重跑' }}
+                </Btn>
+                <Btn
+                  size="sm"
+                  variant="ghost"
+                  data-spec="ship-runs-detail"
+                  @click="emit('detail', r)"
+                >
+                  详情
+                </Btn>
+              </span>
+            </td>
           </tr>
           <tr v-if="!runRows.length">
             <td
-              colspan="6"
+              colspan="7"
               class="p-5 text-[12.5px] text-[var(--el-text-color-secondary)]"
               data-spec="ship-runs-empty"
             >

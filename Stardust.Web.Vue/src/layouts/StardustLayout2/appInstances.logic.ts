@@ -55,6 +55,8 @@ export interface InstanceRow {
   version: string;
   /** 是否长连接 */
   longLink: boolean;
+  /** 追踪采样 Id（REG-02 2026-11-08）；空串=无采样，展示「—」 */
+  traceId: string;
 }
 
 // ---------- 取数 ----------
@@ -68,6 +70,7 @@ export function toInstances(rows: Rec[]): InstanceRow[] {
     client: str(pick(r, 'Client', 'client')),
     version: str(pick(r, 'Version', 'version')),
     longLink: bool(pick(r, 'LongLink', 'longLink')),
+    traceId: str(pick(r, 'TraceId', 'traceId', 'TraceID', 'traceID')),
   }));
 }
 

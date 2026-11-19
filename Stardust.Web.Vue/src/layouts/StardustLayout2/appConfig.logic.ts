@@ -209,6 +209,95 @@ export async function fetchConfigHistory(request: Req, configId: number): Promis
   }
 }
 
+// ---------- 历史版本 Diff（源码 ConfigHistoryController.cs:48-73，2026-11-09 回读）----------
+// GET /Configs/ConfigHistory/Diff?id=：newJson=本条 Remark 快照；oldJson=同配置更早最近一次
+// Publish 的 Remark（无则 null）；changedKeys=两快照顶层键差异数组（按键名排序）。
+// 语义边界：这是版本快照级对比（AppConfig 字段差异），KV 级历史 diff 客观不可做（Remark 只存版本号快照）。
+
+/** 配置历史版本对比结果（GET /Configs/ConfigHistory/Diff?id=） */
+export interface ConfigHistoryDiff {
+  id: number;
+  configId: number;
+  /** 上一版快照 JSON；首次发布（无更早 Publish）为 null */
+  oldJson: string | null;
+  /** 本条快照 JSON */
+  newJson: string;
+  /** 两快照顶层键差异，按键名排序 */
+  changedKeys: string[];
+}
+
+export type ConfigDiffKind = 'added' | 'removed' | 'changed';
+
+/** Diff 抽屉逐键行：kind 归类 + 两版值（added 行 old 为 —，removed 行 newValue 为 —） */
+export interface ConfigDiffRow {
+  key: string;
+  kind: ConfigDiffKind;
+  oldValue: string;
+  newValue: string;
+}
+
+function parseJsonMap(json: string | null | undefined): Record<string, unknown> | null {
+  if (!json) return null;
+  try {
+    const o = JSON.parse(json) as unknown;
+    return o && typeof o === 'object' && !Array.isArray(o) ? (o as Record<string, unknown>) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** 快照值转展示串：字符串原样（空串=（空）），其余 JSON 序列化，null 显式 */
+function stringifyDiffValue(v: unknown): string {
+  if (v === undefined) return '—';
+  if (v === null) return 'null';
+  if (typeof v === 'string') return v || '（空）';
+  return JSON.stringify(v);
+}
+
+/** 后端 Diff 响应解析：data 内取 id/configId/oldJson/newJson/changedKeys，缺 newJson 视为无效返回 null */
+export function toConfigHistoryDiff(res: { data?: unknown } | undefined): ConfigHistoryDiff | null {
+  const d = res?.data;
+  if (!d || typeof d !== 'object' || Array.isArray(d)) return null;
+  const r = d as Rec;
+  const newJson = str(pick(r, 'newJson', 'NewJson'));
+  if (!newJson) return null;
+  const raw = pick(r, 'changedKeys', 'ChangedKeys');
+  return {
+    id: num(pick(r, 'id', 'Id')),
+    configId: num(pick(r, 'configId', 'ConfigId')),
+    oldJson: str(pick(r, 'oldJson', 'OldJson')) || null,
+    newJson,
+    changedKeys: Array.isArray(raw) ? raw.map((k) => str(k)).filter(Boolean) : [],
+  };
+}
+
+/** Diff 结果 → 抽屉逐键行。changedKeys 逐键取两版值归类；一侧 JSON 解析失败按缺键处理（整侧 null 时全键 added/removed） */
+export function buildDiffRows(diff: ConfigHistoryDiff): ConfigDiffRow[] {
+  const oldMap = parseJsonMap(diff.oldJson);
+  const newMap = parseJsonMap(diff.newJson);
+  return diff.changedKeys.map((key) => {
+    const hasOld = !!oldMap && key in oldMap;
+    const hasNew = !!newMap && key in newMap;
+    return {
+      key,
+      kind: !hasOld ? 'added' : !hasNew ? 'removed' : 'changed',
+      oldValue: hasOld ? stringifyDiffValue(oldMap[key]) : '—',
+      newValue: hasNew ? stringifyDiffValue(newMap[key]) : '—',
+    };
+  });
+}
+
+/** 拉取某条历史的版本对比；失败/缺参返回 null（抽屉显示加载失败态） */
+export async function fetchConfigHistoryDiff(request: Req, historyId: number): Promise<ConfigHistoryDiff | null> {
+  if (!historyId || historyId <= 0) return null;
+  try {
+    const res = await request({ url: '/Configs/ConfigHistory/Diff', method: 'GET', params: { id: historyId } });
+    return toConfigHistoryDiff(res);
+  } catch {
+    return null;
+  }
+}
+
 /** 在线实例数：AppOnline 列表按 appId 过滤后的行数（PageSize 500，与应用列表同一上限） */
 export async function fetchOnlineCount(request: Req, appId: number): Promise<number> {
   if (!appId || appId <= 0) return 0;
@@ -262,7 +351,8 @@ export interface ConfigItemEditTarget {
   id: number;
   /** 该行是否已发布（Version>0） */
   published: boolean;
-  enable: boolean;
+  /** 打开抽屉时该行的原始启用值（Enable 变化检测基准；表单现值走 m.enable，DEF-C12） */
+  originalEnable: boolean;
 }
 
 /** 表单校验：Key 必填；已发布行的 Key/Scope 不可改（后端也会拒绝，这里前置拦） */
@@ -295,7 +385,7 @@ export async function saveConfigItem(
     const res = await request({
       url: `/Configs/ConfigData/${target.id}`,
       method: 'PUT',
-      data: configItemPutBody(m, target.published, target.enable),
+      data: configItemPutBody(m, target.published, target.originalEnable),
     } as ReqOptions & { data: Record<string, unknown> });
     const r = okRes(res);
     return { ok: r.ok, message: r.ok ? '配置项已保存' : r.message || '配置项保存失败' };

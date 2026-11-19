@@ -13,7 +13,7 @@ import Tag from './Tag.vue';
 import { H3, TD, TH } from './deployView.styles.ts';
 import type { VersionTag } from './deployView.logic.ts';
 import { NODE_ACTIONS } from './ship.logic.ts';
-import type { NodeActionInfo, ShipNode } from './ship.logic.ts';
+import type { DeployOthers, NodeActionInfo, ShipNode } from './ship.logic.ts';
 
 const props = defineProps<{
   nodes: ShipNode[];
@@ -23,6 +23,10 @@ const props = defineProps<{
   busyKey: string;
   /** 按节点行 id 索引的版本标签；没有（停用节点）则不显示标签 */
   versionTags: Record<number, VersionTag | null | undefined>;
+  /** 当前部署集名称（CARD-DEP-08 D4 空态主句用） */
+  deployName?: string;
+  /** CARD-DEP-08 D2：同应用其余部署集摘要；count>0 才显示副行（单集应用不显示） */
+  others?: DeployOthers | null;
 }>();
 
 const emit = defineEmits<{
@@ -143,11 +147,43 @@ function checkedNames(): string {
           <th :class="TH">
             模式
           </th>
-          <th :class="TH">
-            当前版本
+          <!-- task-92 列扩展：延迟/状态/进程/进程时间 + 编译时间/最后活跃（列序对齐用户令八列 IP/延迟/启用/进程/进程时间/版本/编译时间/最后活跃；MVC 对照 Stardust.Web/Areas/Deployment/Views/AppDeployNode/_List_Data.cshtml:37-44） -->
+          <th
+            :class="[TH, 'text-right']"
+            title="延迟。发布下去后，延迟执行时间，单位秒（滚动发布用）"
+          >
+            延迟
           </th>
           <th :class="TH">
             状态
+          </th>
+          <th
+            :class="[TH, 'text-right']"
+            title="进程 ID。0 表示未上报或未运行"
+          >
+            进程
+          </th>
+          <th :class="TH">
+            进程时间
+          </th>
+          <th :class="TH">
+            当前版本
+          </th>
+          <!-- 2026-11-12 新列：应用程序版本=在线实例上报的应用入口程序集 FileVersion，随心跳更新；与「当前版本」（install 下发的部署版本）语义分开 -->
+          <th
+            :class="TH"
+            title="应用程序版本。该节点上应用在线实例上报的文件版本（应用入口程序集FileVersion），随心跳自动更新"
+          >
+            应用程序版本
+          </th>
+          <th :class="TH">
+            编译时间
+          </th>
+          <th
+            :class="TH"
+            title="最后一次上报心跳的时间"
+          >
+            最后活跃
           </th>
           <th :class="[TH, 'text-right']">
             操作
@@ -179,6 +215,20 @@ function checkedNames(): string {
           <td :class="[TD, 'text-[var(--el-text-color-secondary)]']">
             {{ n.modeLabel }}
           </td>
+          <td :class="[TD, 'text-right font-mono tabular-nums']">
+            {{ n.delay }}
+          </td>
+          <td :class="TD">
+            <Tag :tone="n.enable ? 'ok' : 'default'">
+              {{ n.enable ? '启用' : '已停用' }}
+            </Tag>
+          </td>
+          <td :class="[TD, 'text-right font-mono tabular-nums']">
+            {{ n.processId || '—' }}
+          </td>
+          <td :class="[TD, 'whitespace-nowrap font-mono text-[12px] text-[var(--el-text-color-secondary)]']">
+            {{ n.startTime }}
+          </td>
           <td :class="TD">
             <span class="font-mono tabular-nums">{{ n.version || '—' }}</span>
             <Tag
@@ -189,10 +239,14 @@ function checkedNames(): string {
               {{ versionTags[n.id]?.label }}
             </Tag>
           </td>
-          <td :class="TD">
-            <Tag :tone="n.enable ? 'ok' : 'default'">
-              {{ n.enable ? '启用' : '已停用' }}
-            </Tag>
+          <td :class="[TD, 'font-mono tabular-nums text-[var(--el-text-color-secondary)]']">
+            {{ n.appVersion || '—' }}
+          </td>
+          <td :class="[TD, 'whitespace-nowrap font-mono text-[12px] text-[var(--el-text-color-secondary)]']">
+            {{ n.compile }}
+          </td>
+          <td :class="[TD, 'whitespace-nowrap font-mono text-[12px] text-[var(--el-text-color-secondary)]']">
+            {{ n.lastActive }}
           </td>
           <td :class="[TD, 'text-right']">
             <div class="inline-flex flex-wrap items-center justify-end gap-[5px]">
@@ -239,7 +293,7 @@ function checkedNames(): string {
         </tr>
         <tr v-if="nodesFailed">
           <td
-            colspan="6"
+            colspan="12"
             class="p-5 text-[12.5px] text-[var(--el-color-danger)]"
             data-spec="ship-nodes-failed"
           >
@@ -248,11 +302,43 @@ function checkedNames(): string {
         </tr>
         <tr v-else-if="!nodes.length">
           <td
-            colspan="6"
-            class="p-5 text-[12.5px] text-[var(--el-text-color-secondary)]"
-            data-spec="ship-nodes-empty"
+            colspan="12"
+            class="p-5"
           >
-            该部署集下暂无节点，点右上「新增节点」把物理节点加入部署集
+            <!-- CARD-DEP-08 D4：空态主句点部署集名，引导按钮直接开新增抽屉 -->
+            <div
+              class="text-[12.5px] text-[var(--el-text-color-secondary)]"
+              data-spec="deploy-nodes-empty"
+            >
+              部署集「{{ deployName || '—' }}」暂无节点
+            </div>
+            <Btn
+              size="sm"
+              variant="primary"
+              class="mt-2"
+              :disabled="!!busyKey"
+              data-spec="deploy-nodes-empty-add"
+              @click="emit('create')"
+            >
+              为该部署集新增节点
+            </Btn>
+            <div
+              v-if="others && others.count > 0"
+              class="mt-2 text-[12px] text-[var(--el-text-color-secondary)]"
+              data-spec="deploy-nodes-others"
+            >
+              本应用另有 {{ others.count }} 个部署集（共 {{ others.nodes }} 个节点）
+            </div>
+          </td>
+        </tr>
+        <!-- CARD-DEP-08 D2：多集应用非空态副行（{m}=全部集启用节点数之和） -->
+        <tr v-if="!nodesFailed && nodes.length && others && others.count > 0">
+          <td
+            colspan="12"
+            class="px-5 pb-4 pt-1 text-[12px] text-[var(--el-text-color-secondary)]"
+            data-spec="deploy-nodes-others"
+          >
+            本应用另有 {{ others.count }} 个部署集（共 {{ others.nodes }} 个节点）
           </td>
         </tr>
       </tbody>

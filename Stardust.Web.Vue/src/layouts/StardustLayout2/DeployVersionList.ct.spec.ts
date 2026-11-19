@@ -99,3 +99,17 @@ test('DeployVersionList 提示条：info 与 warn 文字色不同，文案原样
   await expect(page.locator(NOTICE)).toContainText('下发 install');
   expect(warn).not.toBe(info);
 });
+
+// C18 下载包链接（task-32 升级项）：有 Url 行渲染行内「下载」<a :href>（相对路径拼 API 基址）；无 Url 行无链接
+test('DeployVersionList C18 下载链接：有 Url 行渲染，无 Url 行缺席', async ({ page }) => {
+  await openStory(page, 'DeployVersionList/Default');
+  const DL = '[data-spec="ship-version-download"]';
+  await expect(page.locator(DL)).toHaveCount(2);
+  await expect(page.locator(DL).first()).toHaveText('下载');
+  // href 形态二选一：CT gallery（ct/vite.config.ts）无 .env 桩 → 相对原文（同源部署可达，降级分支）；
+  // 开发态 5188 有 VITE_APP_BASE_API → 拼基址（前缀分支，单测 versionDownloadHref 五例已证）。
+  await expect(page.locator(ROW).nth(0).locator(DL)).toHaveAttribute('href', /(http:\/\/localhost:6681)?\/cube\/file\?id=7500000000000000003\.zip/);
+  await expect(page.locator(ROW).nth(1).locator(DL)).toHaveAttribute('href', /(http:\/\/localhost:6681)?\/cube\/file\?id=7500000000000000002\.zip/);
+  // 「没有文件地址」行不渲染链接
+  await expect(page.locator(ROW).nth(2).locator(DL)).toHaveCount(0);
+});

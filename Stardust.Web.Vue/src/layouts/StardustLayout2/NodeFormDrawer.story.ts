@@ -30,6 +30,24 @@ const buildInitial: BuildNodeForm = {
   remark: '',
 };
 
+// task-91：212 旧构建真身映射（Cube 投影只发 nodeName 缺关联键 nodeId → toDeployNodeForm 回填 0）
+const missingNodeInitial: DeployNodeForm = {
+  nodeId: 0,
+  enable: true,
+  port: 0,
+  fileName: '',
+  arguments: '',
+  workingDirectory: '',
+  userName: '',
+  environments: '',
+  maxMemory: 0,
+  delay: 0,
+  healthCheck: '',
+  remark: '',
+  logDirectory: '',
+  logFilePattern: '*.log',
+};
+
 export const stories = [
   // F07 新增部署节点：空表单 + 节点选择器（加载完成）
   {
@@ -114,6 +132,26 @@ export const stories = [
       nodeOptions: [{ id: 3, name: 'node-build-a', ip: '10.0.0.11' }],
       nodesLoading: false,
       busy: true,
+    },
+  },
+
+  // task-91 节点回显警示：编辑打开但详情缺 nodeId（212 旧构建投影缺关联键）→ 选择器旁可见提示；
+  // ct.spec 用 setStoryProps 驱动 missing → unavailable（绑定节点不在可选项）→ 选项补齐后消失 三态转换
+  {
+    id: 'NodeFormDrawer/DeployEditMissingNode',
+    component: NodeFormDrawer,
+    props: {
+      open: true,
+      kind: 'deploy',
+      initial: missingNodeInitial,
+      title: '编辑部署节点 · 212-cwiocap01',
+      sub: 'IP 10.188.32.212 · 编号 76',
+      nodeOptions: [
+        { id: 1, name: 'node-a', ip: '10.0.0.1' },
+        { id: 2, name: 'node-b', ip: '10.0.0.2' },
+      ],
+      nodesLoading: false,
+      busy: false,
     },
   },
 ];

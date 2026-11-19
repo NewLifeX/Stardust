@@ -129,8 +129,11 @@ const trendPath = computed(() => sparklinePath((props.row.trend ?? []).map((p) =
       />
     </span>
 
+    <!-- 快捷栏显隐用 visibility（invisible/group-hover:visible）而非 hidden/group-hover:flex：
+         cube-vue core/global.css 注入 `.hidden { display:none !important }` 会击穿 group-hover:flex
+         （真实宿主快捷栏永不显示；CT 不加载该 css 故漏网）。状态列 :98 同理弃 display 切换。 -->
     <span
-      class="absolute right-[10px] top-1/2 hidden -translate-y-1/2 gap-[4px] rounded-[8px] border border-[var(--el-border-color-light)] bg-[var(--el-bg-color-overlay)] p-[3px] group-hover:flex group-focus-within:flex"
+      class="absolute right-[10px] top-1/2 flex invisible -translate-y-1/2 gap-[4px] rounded-[8px] border border-[var(--el-border-color-light)] bg-[var(--el-bg-color-overlay)] p-[3px] group-hover:visible group-focus-within:visible"
       @click.stop
     >
       <Btn

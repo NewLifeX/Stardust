@@ -69,4 +69,14 @@ describe('/trace 路由契约', () => {
     const page = readFileSync(resolve(fileURLToPath(import.meta.url), '../../../../apps/stardust/src/views/Console/TraceDetail.vue'), 'utf8');
     expect(page).toContain('query?.id');
   });
+
+  // CARD-PLT-05 -1 防假：McpTokenResource 无独立路由（Drawer 承载=设计决策，维持缺·待接入）
+  it('防假：consoleRoutes 无 McpTokenResource 独立路由（Drawer 承载）', () => {
+    const hit = consoleRoutes.find(
+      (r) =>
+        r.path.toLowerCase().includes('mcptokenresource') ||
+        String(r.name ?? '').toLowerCase().includes('mcptokenresource'),
+    );
+    expect(hit).toBeUndefined();
+  });
 });

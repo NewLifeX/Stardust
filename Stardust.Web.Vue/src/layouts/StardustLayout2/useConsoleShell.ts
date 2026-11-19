@@ -1,6 +1,6 @@
-﻿// StardustLayout2 外壳的接线层：把路由、主题、用户、项目上下文接到纯逻辑上，给 index.vue 用。
+// StardustLayout2 外壳的接线层：把路由、主题、用户、项目上下文接到纯逻辑上，给 index.vue 用。
 // 判断逻辑都在 nav.logic.ts / useProjectSwitcher.ts / avatar.logic.ts，这里只负责组装。
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { request } from '@newlifex/cube-vue/core/utils/request';
 import { useUserStore } from '@newlifex/cube-vue/core/stores/user';
@@ -22,7 +22,9 @@ export function useConsoleShell() {
 
   const selectProject = (p: GalaxyProject) => setStardustProject(p.id ?? null, p.name ?? '');
 
-  onMounted(async () => {
+  // 首轮与重拉共用：拉 /Platform/GalaxyProject 刷新顶栏项目下拉。
+  // 重拉时当前选中项仍在列表 → resolveProjects 不动选择；不在（如被删）→ 其兜底逻辑接管。
+  async function reloadProjects(): Promise<void> {
     projects.value = await resolveProjects({
       fetchProjects: async () => (await request({ url: '/Platform/GalaxyProject', method: 'GET', params: { PageSize: 200 } }))?.data,
       currentName: () => stardustContext.projectName,
@@ -30,7 +32,19 @@ export function useConsoleShell() {
       markReady: markStardustContextReady,
       warn: (e) => console.warn('加载项目列表失败，使用静态兜底', e),
     });
+  }
+
+  onMounted(() => {
+    void reloadProjects();
   });
+
+  // CARD-PLT-01 顶栏联动：项目管理增删改项目成功 → projectsVersion 递增 → 重拉下拉
+  watch(
+    () => stardustContext.projectsVersion,
+    () => {
+      void reloadProjects();
+    },
+  );
 
   return {
     projects,

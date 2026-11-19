@@ -5,7 +5,9 @@
  * 实例=Service.Providers、消费者=Service.Consumers（后端聚合数）；健康条按 Enable 在线/停用二态渲染，
  * 不编造百分比；「负载均衡」在 Service/Gateway 之间无对应路由级字段，固定显示「待接入」。
  * F13：服务名可点（button），emit open(serviceId) → 容器打开 ServiceDetailDrawer。
+ * REG-09（2026-11-08）：头部「新建服务」按钮 emit create → 容器开 ServiceDetailDrawer create 态。
  */
+import Btn from './Btn.vue';
 import Card from './Card.vue';
 import Tag from './Tag.vue';
 import { H3, TD, TH } from './deployView.styles.ts';
@@ -20,7 +22,7 @@ withDefaults(
   { loading: false, error: '' },
 );
 
-const emit = defineEmits<{ retry: []; open: [serviceId: number] }>();
+const emit = defineEmits<{ retry: []; open: [serviceId: number]; create: [] }>();
 </script>
 
 <template>
@@ -36,6 +38,16 @@ const emit = defineEmits<{ retry: []; open: [serviceId: number] }>();
           负载均衡待接入
         </Tag>
       </h3>
+      <Btn
+        variant="primary"
+        size="sm"
+        class="ml-auto"
+        data-spec="mesh-service-create"
+        title="新建服务"
+        @click="emit('create')"
+      >
+        新建服务
+      </Btn>
     </div>
 
     <div

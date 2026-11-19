@@ -18,11 +18,12 @@ import { stories as appTabsStories } from '../src/layouts/StardustLayout2/AppTab
 import { stories as deployVersionBarStories } from '../src/layouts/StardustLayout2/DeployVersionBar.story';
 import { stories as deployVersionListStories } from '../src/layouts/StardustLayout2/DeployVersionList.story';
 import { stories as deployNodesStories } from '../src/layouts/StardustLayout2/DeployNodes.story';
+import { stories as appLovStories } from '../src/layouts/StardustLayout2/AppLov.story';
+import { stories as nodeLovStories } from '../src/layouts/StardustLayout2/NodeLov.story';
 import { stories as buildNodesStories } from '../src/layouts/StardustLayout2/BuildNodes.story';
 import { stories as deployHistoryStories } from '../src/layouts/StardustLayout2/DeployHistory.story';
 import { stories as deployPipelineRunsStories } from '../src/layouts/StardustLayout2/DeployPipelineRuns.story';
-import { stories as pipelineBoardStories } from '../src/layouts/StardustLayout2/PipelineBoard.story';
-import { stories as pipelineFormDrawerStories } from '../src/layouts/StardustLayout2/PipelineFormDrawer.story';
+import { stories as deployFeedbackStripStories } from '../src/layouts/StardustLayout2/DeployFeedbackStrip.story';
 import { stories as attentionListStories } from '../src/layouts/StardustLayout2/AttentionList.story';
 import { stories as traceListStories } from '../src/layouts/StardustLayout2/TraceList.story';
 import { stories as appLogStories } from '../src/layouts/StardustLayout2/AppLog.story';
@@ -32,28 +33,49 @@ import { stories as appObserveStories } from '../src/layouts/StardustLayout2/App
 import { stories as changesListStories } from '../src/layouts/StardustLayout2/ChangesList.story';
 import { stories as registryTabStories } from '../src/layouts/StardustLayout2/RegistryTab.story';
 import { stories as gatewayTabStories } from '../src/layouts/StardustLayout2/GatewayTab.story';
+import { stories as gatewayClusterStories } from '../src/layouts/StardustLayout2/GatewayCluster.story';
+import { stories as gatewayCertStories } from '../src/layouts/StardustLayout2/GatewayCert.story';
+import { stories as gatewayNodeStories } from '../src/layouts/StardustLayout2/GatewayNode.story';
 import { stories as mcpTabStories } from '../src/layouts/StardustLayout2/McpTab.story';
 import { stories as platformTabStories } from '../src/layouts/StardustLayout2/PlatformTab.story';
+import { stories as middlewareTabStories } from '../src/layouts/StardustLayout2/MiddlewareTab.story';
+import { stories as galaxyProjectFormDrawerStories } from '../src/layouts/StardustLayout2/GalaxyProjectFormDrawer.story';
 import { stories as nowPageStories } from '../src/layouts/StardustLayout2/NowPage.story';
 import { stories as nodesPageStories } from '../src/layouts/StardustLayout2/NodesPage.story';
+import { stories as agentDeployPageStories } from '../src/layouts/StardustLayout2/AgentDeployPage.story';
 import { stories as appRowStories } from '../src/layouts/StardustLayout2/AppRow.story';
 import { stories as installWizardStories } from '../src/layouts/StardustLayout2/InstallWizard.story';
 import { stories as configCenterListStories } from '../src/layouts/StardustLayout2/ConfigCenterList.story';
 import { stories as configDetailDrawerStories } from '../src/layouts/StardustLayout2/ConfigDetailDrawer.story';
 import { stories as alarmsListStories } from '../src/layouts/StardustLayout2/AlarmsList.story';
+import { stories as alarmsGroupsStories } from '../src/layouts/StardustLayout2/AlarmsGroups.story';
+import { stories as alarmRecordDrawerStories } from '../src/layouts/StardustLayout2/AlarmRecordDrawer.story';
 import { stories as mcpTokenFormStories } from '../src/layouts/StardustLayout2/McpTokenForm.story';
 import { stories as mcpTokenResourcePanelStories } from '../src/layouts/StardustLayout2/McpTokenResourcePanel.story';
+import { stories as starServerSettingsFormStories } from '../src/layouts/StardustLayout2/StarServerSettingsForm.story';
 import { stories as mcpServerFormStories } from '../src/layouts/StardustLayout2/McpServerForm.story';
 import { stories as appTracerTabStories } from '../src/layouts/StardustLayout2/AppTracerTab.story';
 import { stories as dayStatTabStories } from '../src/layouts/StardustLayout2/DayStatTab.story';
+import { stories as traceStatCardStories } from '../src/layouts/StardustLayout2/TraceStatCard.story';
+import { stories as traceDataPanelStories } from '../src/layouts/StardustLayout2/TraceDataPanel.story';
+import { stories as traceItemsPanelStories } from '../src/layouts/StardustLayout2/TraceItemsPanel.story';
+import { stories as traceItemDrawerStories } from '../src/layouts/StardustLayout2/TraceItemDrawer.story';
 import { stories as nodeFormDrawerStories } from '../src/layouts/StardustLayout2/NodeFormDrawer.story';
+import { stories as deployLogDrawerStories } from '../src/layouts/StardustLayout2/DeployLogDrawer.story';
 import { stories as deployEditDrawerStories } from '../src/layouts/StardustLayout2/DeployEditDrawer.story';
+import { stories as pipelineConfigCardStories } from '../src/layouts/StardustLayout2/PipelineConfigCard.story';
+import { stories as pipelineConfigDrawerStories } from '../src/layouts/StardustLayout2/PipelineConfigDrawer.story';
+import { stories as pipelineRunDetailDrawerStories } from '../src/layouts/StardustLayout2/PipelineRunDetailDrawer.story';
+import { stories as pipelineStepDrawerStories } from '../src/layouts/StardustLayout2/PipelineStepDrawer.story';
+import { stories as pipelineWebhookCardStories } from '../src/layouts/StardustLayout2/PipelineWebhookCard.story';
 import { stories as configItemDrawerStories } from '../src/layouts/StardustLayout2/ConfigItemDrawer.story';
 import { stories as appRuleDrawerStories } from '../src/layouts/StardustLayout2/AppRuleDrawer.story';
+import { stories as configHistoryDiffDrawerStories } from '../src/layouts/StardustLayout2/ConfigHistoryDiffDrawer.story';
 import { stories as appRuleTableStories } from '../src/layouts/StardustLayout2/AppRuleTable.story';
 import { stories as appFormDrawerStories } from '../src/layouts/StardustLayout2/AppFormDrawer.story';
 import { stories as serviceDetailDrawerStories } from '../src/layouts/StardustLayout2/ServiceDetailDrawer.story';
 import { stories as traceDetailStories } from '../src/layouts/StardustLayout2/TraceDetail.story';
+import { stories as alarmsRulesStories } from '../apps/stardust/src/views/Console/AlarmsRules.story';
 
 export const stories: Array<{
   id: string;
@@ -73,11 +95,12 @@ export const stories: Array<{
   ...deployVersionBarStories,
   ...deployVersionListStories,
   ...deployNodesStories,
+  ...appLovStories,
+  ...nodeLovStories,
   ...buildNodesStories,
   ...deployHistoryStories,
   ...deployPipelineRunsStories,
-  ...pipelineBoardStories,
-  ...pipelineFormDrawerStories,
+  ...deployFeedbackStripStories,
   ...attentionListStories,
   ...traceListStories,
   ...appLogStories,
@@ -87,26 +110,47 @@ export const stories: Array<{
   ...changesListStories,
   ...registryTabStories,
   ...gatewayTabStories,
+  ...gatewayClusterStories,
+  ...gatewayCertStories,
+  ...gatewayNodeStories,
   ...mcpTabStories,
   ...platformTabStories,
+  ...middlewareTabStories,
+  ...galaxyProjectFormDrawerStories,
   ...nowPageStories,
   ...nodesPageStories,
+  ...agentDeployPageStories,
   ...appRowStories,
   ...installWizardStories,
   ...configCenterListStories,
   ...configDetailDrawerStories,
   ...alarmsListStories,
+  ...alarmsGroupsStories,
+  ...alarmRecordDrawerStories,
   ...mcpTokenFormStories,
   ...mcpTokenResourcePanelStories,
+  ...starServerSettingsFormStories,
   ...mcpServerFormStories,
   ...appTracerTabStories,
   ...dayStatTabStories,
+  ...traceStatCardStories,
+  ...traceDataPanelStories,
+  ...traceItemsPanelStories,
+  ...traceItemDrawerStories,
   ...nodeFormDrawerStories,
+  ...deployLogDrawerStories,
   ...deployEditDrawerStories,
+  ...pipelineConfigCardStories,
+  ...pipelineConfigDrawerStories,
+  ...pipelineRunDetailDrawerStories,
+  ...pipelineStepDrawerStories,
+  ...pipelineWebhookCardStories,
   ...configItemDrawerStories,
   ...appRuleDrawerStories,
   ...appRuleTableStories,
   ...appFormDrawerStories,
   ...serviceDetailDrawerStories,
   ...traceDetailStories,
+  ...alarmsRulesStories,
+  ...configHistoryDiffDrawerStories,
 ];

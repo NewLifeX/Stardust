@@ -45,3 +45,16 @@ test('ServiceDetailDrawer 保存中：提交按钮禁用写「保存中…」', 
   await expect(submit).toBeDisabled();
   await expect(submit).toHaveText('保存中…');
 });
+
+// REG-09 新建服务：标题/服务名输入/单例默认勾选/无提供者消费者段；服务名空提交被拦
+test('ServiceDetailDrawer 新建态：空表单单例默认勾选，服务名必填', async ({ page }) => {
+  await openStory(page, 'ServiceDetailDrawer/Create');
+  await expect(page.locator('[data-spec="drawer"]')).toContainText('新建服务');
+  await expect(page.locator('[data-spec="service-form-name"]')).toHaveValue('');
+  await expect(page.locator('[data-spec="service-form-displayname"]')).toHaveValue('');
+  await expect(page.locator('[data-spec="service-form-singleton"]')).toBeChecked();
+  await expect(page.locator('[data-spec="service-detail"]')).not.toContainText('提供者');
+  await expect(page.locator('[data-spec="service-detail"]')).not.toContainText('消费者');
+  await page.locator('[data-spec="service-form-submit"]').click();
+  await expect(page.locator('[data-spec="service-form-error"]')).toContainText('服务名必填');
+});

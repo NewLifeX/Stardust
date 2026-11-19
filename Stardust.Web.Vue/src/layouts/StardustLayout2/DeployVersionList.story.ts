@@ -3,13 +3,15 @@ import type { VersionOption } from './ship.logic.ts';
 
 function ver(id: number, patch: Partial<VersionOption> = {}): VersionOption {
   const version = patch.version ?? `v1.0.${id}`;
-  return { id, version, disabled: false, reason: '', current: false, label: version, ...patch };
+  // C18 下载链接：默认给相对 /cube/file 地址；「没有文件地址」的行显式传 url: ''
+  const url = patch.url ?? `/cube/file?id=750000000000000000${id}.zip`;
+  return { id, version, disabled: false, reason: '', current: false, label: version, url, ...patch };
 }
 
 const THREE: VersionOption[] = [
   ver(3, { version: 'v1.4.2', current: true }),
   ver(2, { version: 'v1.4.1' }),
-  ver(1, { version: 'v1.3.9', disabled: true, reason: '没有文件地址' }),
+  ver(1, { version: 'v1.3.9', disabled: true, reason: '没有文件地址', url: '' }),
 ];
 
 // 12 个版本，用来测「默认只显示前 8 个、可展开」

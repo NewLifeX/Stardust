@@ -1,8 +1,9 @@
-﻿// StardustLayout2 的界面开关：命令面板、生产确认（GuardModal）、底部控制台。
+// StardustLayout2 的界面开关：命令面板、生产确认（GuardModal）、底部控制台。
 // 只放需要同步读写的状态（hotkeys.logic.ts 的 Esc 与 ⌘K 依赖它）。
 // Drawer 与 GuardModal 都不走 useModal（输入-1027）；抽屉、接入向导的“是否打开”等接入页面时再定。
 // 对照原型 kit-app.jsx：palette 是 {placeholder, items} | null，⌘K 只会打开、没有关闭分支；
-// guard 是 {label, fn} | null，确认时先关弹窗再执行回调。
+// guard 是 {label, detail?, fn} | null，确认时先关弹窗再执行回调（detail 可选正文，
+// 标题+正文两段确认的卡用，2026-11-09 CARD-MON-11 接 GuardModal 的 GW-03 两段式）。
 import { computed, reactive, shallowRef } from 'vue';
 import type { PaletteGroup } from './palette.logic';
 
@@ -10,11 +11,17 @@ import type { PaletteGroup } from './palette.logic';
 export interface PaletteConfig {
   placeholder: string;
   groups: PaletteGroup[];
+  /**
+   * 追踪跳转：按当前查询追加「链路追踪」组（输入像 TraceId 时返回组，否则 null）。
+   * 该组不参与子串过滤，由 usePaletteState 追加在过滤结果之后；不传则面板无追踪能力。
+   */
+  traceJump?: (query: string) => PaletteGroup | null;
 }
 
-/** 一次生产确认：label 是弹窗标题，fn 在用户点“确认执行”后调用 */
+/** 一次生产确认：label 是弹窗标题，detail 是可选正文（不传保持默认警示文案），fn 在用户点“确认执行”后调用 */
 export interface GuardRequest {
   label: string;
+  detail?: string;
   fn: () => void | Promise<void>;
 }
 
@@ -52,9 +59,9 @@ export function closePalette(): void {
   paletteConfig.value = null;
 }
 
-/** 打开生产确认；已打开时用新请求替换（原型 doGuard 就是 setGuard） */
-export function openGuard(label: string, fn: GuardRequest['fn']): void {
-  guardRequest.value = { label, fn };
+/** 打开生产确认；已打开时用新请求替换（原型 doGuard 就是 setGuard）；detail 可选正文（两段式确认） */
+export function openGuard(label: string, fn: GuardRequest['fn'], detail?: string): void {
+  guardRequest.value = detail === undefined ? { label, fn } : { label, detail, fn };
 }
 
 /** 取消：遮罩、取消按钮、Esc 都走这里，不执行回调 */

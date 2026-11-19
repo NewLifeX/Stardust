@@ -1,4 +1,6 @@
 import McpTokenResourcePanel from './McpTokenResourcePanel.vue';
+import { request } from '@newlifex/cube-vue/core/utils/request';
+import type { Req } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
 import type { McpResourceRow, McpTokenFullRow } from './mcpToken.logic.ts';
 
 const TOKEN: McpTokenFullRow = {
@@ -17,11 +19,13 @@ const PROJECTS = [{ id: 7, name: '默认项目' }, { id: 12, name: '支付网关
 const NODES = [{ id: 11, name: 'node-a' }, { id: 12, name: 'node-b' }];
 const APPS = [{ id: 21, name: 'Orders.Api' }];
 
+const REQ: Req = request;
+
 export const stories = [
   // 选中令牌 + 已有授权
-  { id: 'McpTokenResourcePanel/WithToken', component: McpTokenResourcePanel, props: { token: TOKEN, resources: RESOURCES, projects: PROJECTS, nodes: NODES, apps: APPS, busy: false } },
+  { id: 'McpTokenResourcePanel/WithToken', component: McpTokenResourcePanel, props: { req: REQ, token: TOKEN, resources: RESOURCES, projects: PROJECTS, nodes: NODES, apps: APPS, busy: false } },
   // 未选令牌：提示在上方选择
-  { id: 'McpTokenResourcePanel/NoToken', component: McpTokenResourcePanel, props: { token: null, resources: RESOURCES, projects: PROJECTS, nodes: NODES, apps: APPS, busy: false } },
+  { id: 'McpTokenResourcePanel/NoToken', component: McpTokenResourcePanel, props: { req: REQ, token: null, resources: RESOURCES, projects: PROJECTS, nodes: NODES, apps: APPS, busy: false } },
   // 选中令牌但无授权：空态说明
-  { id: 'McpTokenResourcePanel/EmptyResources', component: McpTokenResourcePanel, props: { token: TOKEN, resources: [], projects: PROJECTS, nodes: NODES, apps: APPS, busy: false } },
+  { id: 'McpTokenResourcePanel/EmptyResources', component: McpTokenResourcePanel, props: { req: REQ, token: TOKEN, resources: [], projects: PROJECTS, nodes: NODES, apps: APPS, busy: false } },
 ];

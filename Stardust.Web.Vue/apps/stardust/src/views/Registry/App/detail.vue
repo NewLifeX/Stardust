@@ -9,6 +9,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { usePageApi } from '@newlifex/cube-vue/core/composables/useCubeApi';
+import { pickField } from '../registryCase';
 
 const route = useRoute();
 const api = usePageApi('Registry', 'App');
@@ -78,22 +79,22 @@ watch(
           border
         >
           <el-descriptions-item label="编号">
-            {{ formatVal(detail.Id) }}
+            {{ formatVal(pickField(detail, 'Id')) }}
           </el-descriptions-item>
           <el-descriptions-item label="名称">
-            {{ formatVal(detail.Name) }}
+            {{ formatVal(pickField(detail, 'Name')) }}
           </el-descriptions-item>
           <el-descriptions-item label="显示名">
-            {{ formatVal(detail.DisplayName) }}
+            {{ formatVal(pickField(detail, 'DisplayName')) }}
           </el-descriptions-item>
           <el-descriptions-item label="类别">
-            {{ formatVal(detail.Category) }}
+            {{ formatVal(pickField(detail, 'Category')) }}
           </el-descriptions-item>
           <el-descriptions-item label="状态">
-            {{ formatVal(detail.Enable) }}
+            {{ formatVal(pickField(detail, 'Enable')) }}
           </el-descriptions-item>
           <el-descriptions-item label="项目ID">
-            {{ formatVal(detail.ProjectId) }}
+            {{ formatVal(pickField(detail, 'ProjectId')) }}
           </el-descriptions-item>
         </el-descriptions>
       </template>
