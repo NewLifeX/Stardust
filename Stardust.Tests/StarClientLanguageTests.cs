@@ -113,6 +113,24 @@ public class StarClientLanguageTests
         Assert.Equal("", NewLife.Setting.Current.DefaultLanguage);
     }
 
+    [Fact(DisplayName = "StarClient 关闭接受平台语言后忽略下发语言")]
+    public void AcceptPlatformLanguageFalse()
+    {
+        using var state = new StateSnapshot();
+        Localization.SetLanguage(null);
+        Localization.SetDefaultLanguage(null);
+        NewLife.Setting.Current.Language = "";
+        NewLife.Setting.Current.DefaultLanguage = "";
+
+        var set = new StarSetting { Server = "http://127.0.0.1:1" };
+        using var client = new TestStarClient(set) { AcceptPlatformLanguage = false };
+
+        client.Apply("en-US");
+
+        Assert.Null(Localization.DefaultCulture);
+        Assert.Null(Localization.Culture);
+    }
+
     [Fact(DisplayName = "StarClient /api auto 只清进程内语言")]
     public void ResetsDefaultLanguageOnAuto()
     {

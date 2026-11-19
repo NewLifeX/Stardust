@@ -33,6 +33,10 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
     /// <summary>插件列表</summary>
     public String[]? Plugins { get; set; }
 
+    /// <summary>接受平台下发的默认语言。默认true</summary>
+    /// <remarks>桌面宿主应同时关闭 <see cref="StarClient"/> 与 AppClient 的平台语言，避免节点通道覆盖本地用户语言。</remarks>
+    public Boolean AcceptPlatformLanguage { get; set; } = true;
+
     private FrameworkManager _frameworkManager = new();
     #endregion
 
@@ -75,6 +79,7 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
     protected override void ApplyDefaultLanguage(String? language, Boolean save = true)
     {
         if (language.IsNullOrWhiteSpace()) return;
+        if (!AcceptPlatformLanguage) return;
         if (StarLocalization.HasFixedLanguage()) return;
 
         if (language.EqualIgnoreCase(StarLocalization.AutoLanguage))

@@ -1,4 +1,4 @@
-﻿using NewLife.Remoting.Models;
+using NewLife.Remoting.Models;
 
 namespace Stardust.Models;
 
@@ -16,4 +16,7 @@ public class AppModel : LoginRequest
 
     /// <summary>项目名。新应用默认所需要加入的项目</summary>
     public String? Project { get; set; }
+
+    /// <summary>应用类型。客户端声明的应用形态，服务端仅在管理员未设置时采用</summary>
+    public AppKinds Kind { get; set; }
 }

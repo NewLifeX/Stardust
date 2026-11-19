@@ -17,6 +17,9 @@ public class StarOptions
     /// <summary>应用密钥。为空时沿用原有补全链</summary>
     public String? Secret { get; set; }
 
+    /// <summary>应用类型。客户端声明的应用形态，服务端仅在管理员未设置时采用</summary>
+    public Models.AppKinds Kind { get; set; }
+
     /// <summary>延迟启动。为 true 时不立即登录服务端，由宿主在就绪后调用 <see cref="StarFactory.Open"/></summary>
     public Boolean DelayStart { get; set; }
 
@@ -24,6 +27,7 @@ public class StarOptions
     /// <remarks>
     /// 控制台应用与后台服务没有面向用户的界面，跟随平台语言便于统一日志与提示；
     /// 桌面应用的语言属于本机用户，设为 false 后忽略平台下发的默认语言，使用系统或本地配置。
+    /// 服务端对 Desktop/Mobile/Frontend 类型默认不下发语言；本开关用于节点通道或服务端尚未识别类型时兜底。
     /// 登录与心跳下发的语言会保存到核心配置 <see cref="NewLife.Setting.DefaultLanguage"/>，匿名 /api 的语言只影响当前进程。
     /// </remarks>
     public Boolean AcceptPlatformLanguage { get; set; } = true;

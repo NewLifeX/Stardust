@@ -314,6 +314,7 @@ public class StarFactory : DisposeBase
                 NodeCode = Local?.Info?.Code,
                 Setting = set,
                 AcceptPlatformLanguage = Options.AcceptPlatformLanguage,
+                Kind = Options.Kind,
 
                 Log = Log,
             };

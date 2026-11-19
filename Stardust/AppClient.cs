@@ -62,6 +62,9 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
     /// </remarks>
     public Boolean AcceptPlatformLanguage { get; set; } = true;
 
+    /// <summary>应用类型。客户端声明的应用形态，服务端仅在管理员未设置时采用</summary>
+    public Models.AppKinds Kind { get; set; }
+
     /// <summary>星尘工厂</summary>
     public StarFactory? Factory { get; set; }
 
@@ -171,6 +174,7 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
         request.ClientId = ActualClientId;
         request.NodeCode = NodeCode;
         request.Project = Project;
+        request.Kind = Kind;
 
         return request;
     }
