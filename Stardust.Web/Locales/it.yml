@@ -319,7 +319,7 @@
 "DotNetSyncService.Sync {0}": "DotNetSyncService sta sincronizzando {0}"
 "DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService non è riuscito a sincronizzare {0}: {1}"
 "DotNetSyncService.Error {0}": "Errore di DotNetSyncService: {0}"
-"Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; empty uses the core configuration DefaultLanguage.": "Lingua predefinita. Inviata ai client al login e all'heartbeat, ad es. zh-Hans o en; vuoto usa DefaultLanguage dalla configurazione principale."
+"Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; application channel skips Desktop/Mobile/Frontend kinds; empty uses the core configuration DefaultLanguage.": "Lingua predefinita. Inviata ai client al login e all'heartbeat, ad es. zh-Hans o en; vuoto usa DefaultLanguage dalla configurazione principale."
 "Please select at least one item.": "Please select at least one item."
 "Command cannot be empty.": "Command cannot be empty."
 "Dispatched {0}, replied {1}, no reply {2}": "Dispatched {0}, replied {1}, no reply {2}"
