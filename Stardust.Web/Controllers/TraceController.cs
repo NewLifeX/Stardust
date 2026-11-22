@@ -293,7 +293,7 @@ public class TraceController : ControllerBaseX
                 foreach (var item in traceIds)
                 {
                     // 备份调用链，用于将来查询
-                    SampleData2.Backup(item, list, user?.ID ?? 0, user + "");
+                    SampleData2.Backup(item, list, user?.Id ?? 0, user + "");
                 }
             }
         }

@@ -280,7 +280,7 @@ public class DashboardController(DashboardService service) : ControllerBaseX
 
     /// <summary>当前用户可见范围</summary>
     /// <returns>可见范围</returns>
-    private ScopeInfo ResolveScope() => _service.ResolveScope(ManageProvider.User?.ID ?? 0);
+    private ScopeInfo ResolveScope() => _service.ResolveScope(ManageProvider.User?.Id ?? 0);
 
     /// <summary>准备看板布局所需的公共视图数据</summary>
     /// <param name="model">看板模型</param>
