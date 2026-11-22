@@ -110,7 +110,7 @@
     <CompilerVisibleProperty Include="NewLifeLocalizationLanguages" />
   </ItemGroup>
   <ItemGroup Condition="'$(UseLocalNewLifeSource)' != 'true'">
-    <PackageReference Include="NewLife.Agent" Version="10.18.2026.1107-beta1336" />
+    <PackageReference Include="NewLife.Agent" Version="10.18.2026.1116-beta0311" />
   </ItemGroup>
 
   <ItemGroup>

@@ -49,7 +49,7 @@
 
   <ItemGroup Condition="'$(UseLocalNewLifeSource)' != 'true'">
     <!-- 待 NewLife.Cube.Core 发布包含 AddConfigSync 的版本后升级此版本号；在此之前本地联调用 -p:UseLocalNewLifeSource=true -->
-    <PackageReference Include="NewLife.Cube.Core" Version="6.16.2026.1105-beta0802" />
+    <PackageReference Include="NewLife.Cube.Core" Version="6.16.2026.1122-beta1026" />
   </ItemGroup>
 
   <!-- 本地联调：NewLife 源码仓库与本仓库同处一个根目录（默认 C:\X）时，
@@ -69,7 +69,7 @@
   <ItemGroup>
     <PackageReference Include="NewLife.IP" Version="2.6.2026.1024" />
     <PackageReference Include="NewLife.Redis" Version="7.0.2026.1026-beta0931" />
-    <PackageReference Include="NewLife.Remoting.Extensions" Version="4.0.2026.1115-beta0408" />
+    <PackageReference Include="NewLife.Remoting.Extensions" Version="4.0.2026.1122-beta1417" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,0 +1,14 @@
+<Project>
+  <!--
+    .NET 11 SDK（11.0.100）的 Hot Reload 浏览器工具静态资源存在缺陷：
+    含 Razor 视图的 Web 项目会在 Razor 准备阶段再次触发 _DefineHotReloadBrowserToolsAssetsCore，
+    初始器 JS 模块被重复登记进 JS 模块清单，StaticWebAssets.JSModules 因端点失配报错，Debug 构建失败。
+    这里改为让初始器直接定义端点（不走 JS 模块清单），保留浏览器工具能力的同时规避重复登记；
+    上游修复后可删除本文件。
+  -->
+  <Target Name="_FixHotReloadBrowserToolsInitializer" BeforeTargets="_DefineHotReloadBrowserToolsAssetsCore">
+    <PropertyGroup>
+      <HotReloadBrowserToolsRegisterInitializerAsJSModule>false</HotReloadBrowserToolsRegisterInitializerAsJSModule>
+    </PropertyGroup>
+  </Target>
+</Project>
