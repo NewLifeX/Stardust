@@ -34,6 +34,8 @@ public static class LocalApiServer
         {
             Encoder = CreateEncoder(),
             ReuseAddress = true,
+            // 本机 API 是码神工具等外部工具的既有契约，需要 LocalIP/FileVersion 等完整诊断字段
+            EnableDiagnostics = true,
         };
         if (tracer != null) svr.Tracer = tracer;
         if (log != null)
