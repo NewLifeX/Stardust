@@ -133,6 +133,10 @@ public class AppDeployController : DeploymentEntityController<AppDeploy>
     /// <summary>全视图统一掩码（原行为：五路出参全掩）。</summary>
     protected override IDictionary<String, Object> GetRowMasks(ViewKinds view) => _masks;
 
+    /// <summary>列表行移除 appId：新管线 MapField 会把 AppName 的关联键回填成 appId，而字段集已裁掉该列；
+    /// 前端 ship.logic 按缺键形状回退后端过滤首行</summary>
+    protected override ICollection<String> GetRowHiddenFields(ViewKinds view) => view == ViewKinds.List ? ["AppId"] : null;
+
     protected override Boolean Valid(AppDeploy entity, DataObjectMethodType type, Boolean post)
     {
         if (!post)

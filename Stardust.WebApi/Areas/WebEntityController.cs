@@ -27,8 +27,19 @@ public class WebEntityController<T> : EntityController<T> where T : Entity<T>, n
     protected override IList<DataField> OnGetOutputFields(ViewKinds kind, T entity = null)
     {
         _maskView = kind;
-        return base.OnGetOutputFields(kind, entity);
+
+        var fields = base.OnGetOutputFields(kind, entity);
+
+        // 详情面裁剪凭据类字段（如 Secret），避免密钥随详情回传；列表与表单字段不受影响
+        var hidden = GetDetailHiddenFields();
+        if (kind == ViewKinds.Detail && hidden != null && hidden.Count > 0)
+            return fields.Where(e => !hidden.Any(n => n.EqualIgnoreCase(e.Name))).ToList();
+
+        return fields;
     }
+
+    /// <summary>详情投影需要裁掉的字段名。默认不裁剪，凭据类字段由业务控制器声明</summary>
+    protected virtual ICollection<String> GetDetailHiddenFields() => null;
 
     /// <summary>视图感知的行级掩码规则。键大小写不敏感；值 null=键在值 null（键不删）；
     /// 非空字符串=原值非空时替换为该哨兵。返回 null 表示该视图不掩码。缺省实现=不掩码。</summary>
@@ -38,9 +49,18 @@ public class WebEntityController<T> : EntityController<T> where T : Entity<T>, n
     protected override ApiRow OnProject(T entity, IList<DataField> fields = null, Boolean camelCase = true)
     {
         var row = base.OnProject(entity, fields, camelCase);
-        if (row != null) WebEntityCompat.ApplyRowMasks(row, GetRowMasks(_maskView ?? ViewKinds.List));
+        if (row == null) return null;
+
+        var view = _maskView ?? ViewKinds.List;
+        WebEntityCompat.ApplyRowMasks(row, GetRowMasks(view));
+        WebEntityCompat.RemoveRowKeys(row, GetRowHiddenFields(view));
         return row;
     }
+
+    /// <summary>投影行需要移除的键。默认不移除；用于还原字段集裁剪契约（如 MapField 回填的外键列）</summary>
+    /// <param name="view">视图类型</param>
+    /// <returns>键集合，大小写不敏感</returns>
+    protected virtual ICollection<String> GetRowHiddenFields(ViewKinds view) => null;
 
     /// <summary>导出数据源：Csv/Excel 导出直写实体索引器值、不经 OnProject 投影，无法走行掩码；
     /// 此处按列表掩码规则克隆脱敏，保证 Json/Xml/Csv/Excel 四类导出与列表口径一致（Json/Xml 另经 OnProject 掩码，幂等）。</summary>
@@ -268,8 +288,19 @@ public class WebReadOnlyEntityController<T> : ReadOnlyEntityController<T> where 
     protected override IList<DataField> OnGetOutputFields(ViewKinds kind, T entity = null)
     {
         _maskView = kind;
-        return base.OnGetOutputFields(kind, entity);
+
+        var fields = base.OnGetOutputFields(kind, entity);
+
+        // 详情面裁剪凭据类字段，语义同 WebEntityController
+        var hidden = GetDetailHiddenFields();
+        if (kind == ViewKinds.Detail && hidden != null && hidden.Count > 0)
+            return fields.Where(e => !hidden.Any(n => n.EqualIgnoreCase(e.Name))).ToList();
+
+        return fields;
     }
+
+    /// <summary>详情投影需要裁掉的字段名，语义同 WebEntityController</summary>
+    protected virtual ICollection<String> GetDetailHiddenFields() => null;
 
     /// <summary>视图感知的行级掩码规则，语义同 WebEntityController。</summary>
     protected virtual IDictionary<String, Object> GetRowMasks(ViewKinds view) => null;
@@ -278,9 +309,16 @@ public class WebReadOnlyEntityController<T> : ReadOnlyEntityController<T> where 
     protected override ApiRow OnProject(T entity, IList<DataField> fields = null, Boolean camelCase = true)
     {
         var row = base.OnProject(entity, fields, camelCase);
-        if (row != null) WebEntityCompat.ApplyRowMasks(row, GetRowMasks(_maskView ?? ViewKinds.List));
+        if (row == null) return null;
+
+        var view = _maskView ?? ViewKinds.List;
+        WebEntityCompat.ApplyRowMasks(row, GetRowMasks(view));
+        WebEntityCompat.RemoveRowKeys(row, GetRowHiddenFields(view));
         return row;
     }
+
+    /// <summary>投影行需要移除的键，语义同 WebEntityController</summary>
+    protected virtual ICollection<String> GetRowHiddenFields(ViewKinds view) => null;
 
     /// <summary>导出数据源：按列表掩码规则克隆脱敏，语义同 WebEntityController（只读基类无写响应）。</summary>
     protected override IEnumerable<T> ExportData(Int32 max = 0)
@@ -382,6 +420,20 @@ static class WebEntityCompat
             {
                 row[kv.Key] = null;
             }
+        }
+    }
+
+    /// <summary>从投影行移除指定键（大小写不敏感）。用于还原字段集裁剪契约，被裁掉的字段不得因派生逻辑回流。</summary>
+    /// <param name="row">投影行</param>
+    /// <param name="keys">要移除的键集合</param>
+    public static void RemoveRowKeys(IDictionary<String, Object> row, ICollection<String> keys)
+    {
+        if (row == null || keys == null || keys.Count == 0) return;
+
+        foreach (var key in keys)
+        {
+            if (key.IsNullOrEmpty()) continue;
+            if (row.TryGetValue(key, out _)) row.Remove(key);
         }
     }
 

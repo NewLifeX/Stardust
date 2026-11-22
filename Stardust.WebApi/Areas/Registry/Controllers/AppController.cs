@@ -78,6 +78,9 @@ public class AppController : RegistryEntityController<App>
     /// <summary>全视图统一掩码（原行为：五路出参全掩）。</summary>
     protected override IDictionary<String, Object> GetRowMasks(ViewKinds view) => _masks;
 
+    /// <summary>详情面裁掉 Secret（密钥不随详情回传），WebHook 保留键、掩码为 null</summary>
+    protected override ICollection<String> GetDetailHiddenFields() => ["Secret"];
+
     /// <summary>写入校验：GET 回显掩码 + POST 守卫（task-95 刀2，AppDeployController.RepoPassword 先例同款）。
     /// Vue 编辑走 partial-PUT：Secret 留空不提交、WebHook 不在表单（不 Dirty）→ 天然安全；守卫双键仍拦 "*****"
     /// （lead 补令：防未来表单演进引入 Dirty 路径）。MVC 编辑表单回填 "*****" 原样提交 → 此处从库恢复原值并清脏标记。</summary>

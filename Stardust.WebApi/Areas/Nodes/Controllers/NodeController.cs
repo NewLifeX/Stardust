@@ -136,6 +136,9 @@ public class NodeController : NodesEntityController<Node>
         _ => null,
     };
 
+    /// <summary>详情面裁掉 Secret（密钥不随详情回传），WebHook 保留键、掩码为 null</summary>
+    protected override ICollection<String> GetDetailHiddenFields() => ["Secret"];
+
     /// <summary>搜索</summary>
     /// <param name="category"></param>
     /// <param name="key"></param>
