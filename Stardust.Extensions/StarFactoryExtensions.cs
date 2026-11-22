@@ -30,6 +30,15 @@ public static class StarFactoryExtensions
     /// <returns></returns>
     public static StarFactory AddStardust(this IServiceCollection services, String? appId) => AddStardust(services, new StarOptions { AppId = appId });
 
+    /// <summary>添加星尘，服务端地址、应用标识与密钥全部使用默认配置。先后从 appsettings.json、本机 StarAgent 和 star.config 读取</summary>
+    /// <remarks>
+    /// 未指定应用标识时回退入口程序集名称，未找到服务端地址时不连接服务端。
+    /// 需要显式指定时改用 <see cref="AddStardust(IServiceCollection, String)"/> 或 <see cref="AddStardust(IServiceCollection, StarOptions)"/>。
+    /// </remarks>
+    /// <param name="services"></param>
+    /// <returns></returns>
+    public static StarFactory AddStardust(this IServiceCollection services) => AddStardust(services, new StarOptions());
+
     /// <summary>添加星尘，提供监控、配置和服务注册发现能力。先后从参数配置和本机StarAgent读取星尘平台地址</summary>
     /// <param name="services"></param>
     /// <param name="server">服务端地址。为空时先后读取appsettings.json、本地StarAgent、star.config，初始值为空，不连接服务端</param>

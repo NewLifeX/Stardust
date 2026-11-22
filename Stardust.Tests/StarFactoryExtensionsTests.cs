@@ -25,6 +25,21 @@ public class StarFactoryExtensionsTests
         Assert.Contains(services, e => e.ServiceType == typeof(IStartupFilter) && e.ImplementationType?.Name == "StartupFilter");
     }
 
+    /// <summary>无参 AddStardust 全部使用默认配置，无需再写 AddStardust(null)。</summary>
+    [Fact]
+    [DisplayName("无参 AddStardust 使用默认配置")]
+    public void AddStardustWithoutArguments()
+    {
+        var services = new ServiceCollection();
+        services.AddStardust();
+
+        var star = services.First(e => e.ServiceType == typeof(StarFactory)).ImplementationInstance as StarFactory;
+        Assert.NotNull(star);
+        Assert.False(star!.DelayStart);
+        Assert.True(star.Options.AcceptPlatformLanguage);
+        Assert.Contains(services, e => e.ServiceType == typeof(ITracer));
+    }
+
     /// <summary>AddStardust 传入选项后可关闭平台语言。</summary>
     [Fact]
     [DisplayName("AddStardust 选项可关闭平台语言")]

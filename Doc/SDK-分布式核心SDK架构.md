@@ -75,6 +75,9 @@ SDK 提供：配置拉取、服务注册与发现、调用追踪（APM）、性�
 // HttpClient / WebApi / 数据库 / Redis 自动埋点。
 var star = builder.Services.AddStardust("MyApp");
 
+// 不指定应用标识时，全部走默认配置（appsettings.json / 本机 StarAgent / star.config）
+// var star = builder.Services.AddStardust();
+
 // 可选：需要自定义中间件顺序时再显式调用；重复调用是幂等的。
 // app.UseStardust();
 
