@@ -72,7 +72,7 @@ public class NodeTests
         }
         finally
         {
-            NodeHistory.Delete(NodeHistory._.NodeID == node.ID);
+            DeleteHistories(node);
             node.Delete();
         }
     }
@@ -102,7 +102,7 @@ public class NodeTests
         }
         finally
         {
-            NodeHistory.Delete(NodeHistory._.NodeID == node.ID);
+            DeleteHistories(node);
             node.Delete();
         }
     }
@@ -124,6 +124,16 @@ public class NodeTests
 
         Assert.Equal(2, node.UpgradeAttempts);
         Assert.Equal("agent60-1106:7:ABCDEF0123456789", node.LastUpgradeKey);
+    }
+
+    /// <summary>清理节点历史。按时间分表且首次写入前分表不存在，删除会报 no such table，此时本就无数据可清</summary>
+    private static void DeleteHistories(Node node)
+    {
+        try
+        {
+            NodeHistory.Delete(NodeHistory._.NodeID == node.ID);
+        }
+        catch (XCode.Exceptions.XSqlException) { }
     }
 }
 

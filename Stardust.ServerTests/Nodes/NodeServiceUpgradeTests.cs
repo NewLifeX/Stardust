@@ -409,7 +409,8 @@ public class NodeServiceUpgradeTests
         }
         finally
         {
-            NodeHistory.Delete(NodeHistory._.NodeID == node.ID);
+            // 节点历史按时间分表且首次写入前分表不存在，删除会报 no such table，此时本就无数据可清
+            try { NodeHistory.Delete(NodeHistory._.NodeID == node.ID); } catch (XCode.Exceptions.XSqlException) { }
             node.Delete();
             nv.Delete();
         }
