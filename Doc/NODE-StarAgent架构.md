@@ -176,6 +176,12 @@ StarServer 通过 `Node.ProductCode` 区分产品：标准 .NET Agent 为 `StarA
 
 > **运行环境**：.NET 版本在 Linux 上依赖 ICU（安装 `libicu`）。无 ICU 的老旧/嵌入式系统可设置 `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1` 降级运行，此时只有英文界面与日志。界面语言优先跟随平台下发的默认语言（`Setting.DefaultLanguage`，随登录/心跳到达），浏览器声明语言优先于它；也可在面板右上角切换并写入 Core 全局配置 `NewLife.Setting.Language` 固定，详见 [多语言本地化](多语言本地化.md)。
 
+### 4.1 证书下发与 Nginx
+
+平台通过 `cert/sync` 指令下发 SSL 证书。节点侧 `CertManager` 下载证书到 `../certs`（默认即 `/root/certs`），文件命名 `{证书名}.pem` 与 `{证书名}.privatekey.pem`，私钥权限 600；文件变化后执行 `nginx -t` 并 reload。
+
+Nginx 站点配置里的 `{CertDir}`、`{CertName}` 占位符在发布站点时解析为绝对路径；监听 443 但缺少 `ssl_certificate` 时自动补全。详见 [PUB-24-证书下发](PUB-24-证书下发.md)。
+
 ---
 
 ## 5. 关键配置
@@ -193,6 +199,7 @@ StarServer 通过 `Node.ProductCode` 区分产品：标准 .NET Agent 为 `StarA
 | `StopTimeout` | 应用停止超时（默认 10 秒） |
 | `MemoryLimit` | 内存限制（MB，0 不限制） |
 | `AutoStart` | 开机自启 |
+| `CertPath` | 证书目录，默认 `../certs`（相对安装目录） |
 
 ## 6. Web 管理面板
 

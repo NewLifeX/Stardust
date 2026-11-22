@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model202509.xsd" Document="https://newlifex.com/xcode/model" ModelVersion="2.0.2026.130" xmlns="https://newlifex.com/Model202509.xsd">
   <Option>
     <!--类名模板。其中{name}替换为Table.Name，如{name}Model/I{name}Dto等-->
@@ -231,7 +231,7 @@
         <Column Name="Source" DataType="String" Length="500" Description="来源。用于远程抓取的附件来源地址，本地文件不存在时自动依次抓取" />
         <Column Name="Downloads" DataType="Int32" Description="下载次数" />
         <Column Name="LastDownload" DataType="DateTime" Description="最后下载。最后一次下载的时间" />
-        <Column Name="Storage" DataType="String" Length="50" Description="存储类型。Local本地磁盘，Oss阿里云，Cos腾讯云，Qiniu七牛，EasyIO，默认Local" />
+        <Column Name="Storage" DataType="String" Description="存储类型。Local本地磁盘，Oss阿里云，Cos腾讯云，Qiniu七牛，EasyIO，默认Local" />
         <Column Name="TraceId" DataType="String" Description="追踪。链路追踪，用于APM性能追踪定位，还原该事件的调用链" Category="扩展" />
         <Column Name="CreateUser" DataType="String" Description="创建者" Category="扩展" />
         <Column Name="CreateUserID" DataType="Int32" Description="创建用户" Category="扩展" />
@@ -253,6 +253,9 @@
       <Columns>
         <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
         <Column Name="Domain" DataType="String" Master="True" Nullable="False" Description="域名。支持通配符，如*.newlifex.com，用于匹配应用Urls" />
+        <Column Name="CertName" DataType="String" Description="证书名。下发到节点的文件前缀，空则取域名去掉通配符，如 *.newlifex.com 使用 newlifex.com" />
+        <Column Name="TargetPath" DataType="String" Length="200" Description="目标目录。证书下发到节点的目录，空则使用 ../certs（相对StarAgent安装目录）" />
+        <Column Name="Nodes" DataType="Int32" Description="节点。该证书已关联的节点数" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
         <Column Name="PfxFile" DataType="String" ItemType="file" Description="PFX文件。Windows/IIS使用，包含私钥" />
         <Column Name="PfxPassword" DataType="String" Description="PFX密码。加密存储" />
@@ -279,6 +282,30 @@
       <Indexes>
         <Index Columns="Domain,NotAfter" />
         <Index Columns="NotAfter" />
+      </Indexes>
+    </Table>
+    <Table Name="SslCertificateNode" Description="证书节点。SSL证书与节点服务器的关联，控制证书下发到哪些节点">
+      <Columns>
+        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="CertId" DataType="Int32" Map="SslCertificate@Id@Domain" Description="证书。对应SslCertificate" />
+        <Column Name="NodeId" DataType="Int32" Map="Stardust.Data.Nodes.Node@ID@Name" Description="节点。节点服务器" />
+        <Column Name="IP" DataType="String" Description="IP地址。节点所在内网IP地址" />
+        <Column Name="Enable" DataType="Boolean" Description="启用" />
+        <Column Name="TargetPath" DataType="String" Length="200" Description="目标目录。证书下发到该节点的目录，空则使用证书配置或默认 ../certs" />
+        <Column Name="Version" DataType="String" Description="版本。最近一次下发成功的证书标识" />
+        <Column Name="LastPush" DataType="DateTime" Description="最后下发。最近一次下发时间" />
+        <Column Name="Status" DataType="String" Length="500" Description="状态。最近一次下发结果" />
+        <Column Name="CreateUserId" DataType="Int32" Description="创建者" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+        <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+        <Column Name="UpdateUserId" DataType="Int32" Description="更新者" Category="扩展" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+        <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
+        <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="CertId,NodeId" Unique="True" />
+        <Index Columns="NodeId" />
       </Indexes>
     </Table>
     <Table Name="AppPipeline" Description="流水线。流水线配置，关联一个应用部署集与一个编译节点，监听指定分支的 webhook 触发，自动完成代码拉取、编译、上传、部署的全流程">

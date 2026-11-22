@@ -39,6 +39,30 @@ public partial class SslCertificate
     [BindColumn("Domain", "域名。支持通配符，如*.newlifex.com，用于匹配应用Urls", "", Master = true)]
     public String Domain { get => _Domain; set { if (OnPropertyChanging("Domain", value)) { _Domain = value; OnPropertyChanged("Domain"); } } }
 
+    private String _CertName;
+    /// <summary>证书名。下发到节点的文件前缀，空则取域名去掉通配符，如 *.newlifex.com 使用 newlifex.com</summary>
+    [DisplayName("证书名")]
+    [Description("证书名。下发到节点的文件前缀，空则取域名去掉通配符，如 *.newlifex.com 使用 newlifex.com")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("CertName", "证书名。下发到节点的文件前缀，空则取域名去掉通配符，如 *.newlifex.com 使用 newlifex.com", "")]
+    public String CertName { get => _CertName; set { if (OnPropertyChanging("CertName", value)) { _CertName = value; OnPropertyChanged("CertName"); } } }
+
+    private String _TargetPath;
+    /// <summary>目标目录。证书下发到节点的目录，空则使用 ../certs（相对StarAgent安装目录）</summary>
+    [DisplayName("目标目录")]
+    [Description("目标目录。证书下发到节点的目录，空则使用 ../certs（相对StarAgent安装目录）")]
+    [DataObjectField(false, false, true, 200)]
+    [BindColumn("TargetPath", "目标目录。证书下发到节点的目录，空则使用 ../certs（相对StarAgent安装目录）", "")]
+    public String TargetPath { get => _TargetPath; set { if (OnPropertyChanging("TargetPath", value)) { _TargetPath = value; OnPropertyChanged("TargetPath"); } } }
+
+    private Int32 _Nodes;
+    /// <summary>节点。该证书已关联的节点数</summary>
+    [DisplayName("节点")]
+    [Description("节点。该证书已关联的节点数")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("Nodes", "节点。该证书已关联的节点数", "")]
+    public Int32 Nodes { get => _Nodes; set { if (OnPropertyChanging("Nodes", value)) { _Nodes = value; OnPropertyChanged("Nodes"); } } }
+
     private Boolean _Enable;
     /// <summary>启用</summary>
     [DisplayName("启用")]
@@ -233,6 +257,9 @@ public partial class SslCertificate
         {
             "Id" => _Id,
             "Domain" => _Domain,
+            "CertName" => _CertName,
+            "TargetPath" => _TargetPath,
+            "Nodes" => _Nodes,
             "Enable" => _Enable,
             "PfxFile" => _PfxFile,
             "PfxPassword" => _PfxPassword,
@@ -263,6 +290,9 @@ public partial class SslCertificate
             {
                 case "Id": _Id = value.ToInt(); break;
                 case "Domain": _Domain = Convert.ToString(value); break;
+                case "CertName": _CertName = Convert.ToString(value); break;
+                case "TargetPath": _TargetPath = Convert.ToString(value); break;
+                case "Nodes": _Nodes = value.ToInt(); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
                 case "PfxFile": _PfxFile = Convert.ToString(value); break;
                 case "PfxPassword": _PfxPassword = Convert.ToString(value); break;
@@ -344,6 +374,15 @@ public partial class SslCertificate
         /// <summary>域名。支持通配符，如*.newlifex.com，用于匹配应用Urls</summary>
         public static readonly Field Domain = FindByName("Domain");
 
+        /// <summary>证书名。下发到节点的文件前缀，空则取域名去掉通配符，如 *.newlifex.com 使用 newlifex.com</summary>
+        public static readonly Field CertName = FindByName("CertName");
+
+        /// <summary>目标目录。证书下发到节点的目录，空则使用 ../certs（相对StarAgent安装目录）</summary>
+        public static readonly Field TargetPath = FindByName("TargetPath");
+
+        /// <summary>节点。该证书已关联的节点数</summary>
+        public static readonly Field Nodes = FindByName("Nodes");
+
         /// <summary>启用</summary>
         public static readonly Field Enable = FindByName("Enable");
 
@@ -421,6 +460,15 @@ public partial class SslCertificate
 
         /// <summary>域名。支持通配符，如*.newlifex.com，用于匹配应用Urls</summary>
         public const String Domain = "Domain";
+
+        /// <summary>证书名。下发到节点的文件前缀，空则取域名去掉通配符，如 *.newlifex.com 使用 newlifex.com</summary>
+        public const String CertName = "CertName";
+
+        /// <summary>目标目录。证书下发到节点的目录，空则使用 ../certs（相对StarAgent安装目录）</summary>
+        public const String TargetPath = "TargetPath";
+
+        /// <summary>节点。该证书已关联的节点数</summary>
+        public const String Nodes = "Nodes";
 
         /// <summary>启用</summary>
         public const String Enable = "Enable";

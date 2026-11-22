@@ -94,6 +94,10 @@ internal class Program
         // 用户模式存储配置，方便服务模式读取。因为服务模式无法读取用户和分辨率等信息
         var set2 = StarAgentSetting.Current;
 
+        // 证书目录。平台下发的 HTTPS 证书默认放在代理安装目录的上级 certs，即 /root/agent → /root/certs
+        CertManager.Current.CertPath = set2.CertPath.IsNullOrEmpty() ? CertManager.DefaultCertPath : set2.CertPath;
+        CertManager.Current.Log = XTrace.Log;
+
         if (!"-s".EqualIgnoreCase(args) && !"-restart".EqualIgnoreCase(args))
             ThreadPoolX.QueueUserWorkItem(() => LoadUser(set2));
 

@@ -74,6 +74,7 @@ public class Startup
         services.AddSingleton<ConfigService>();
         services.AddSingleton<AppOnlineService>();
         services.AddSingleton<DeployService>();
+        services.AddSingleton<CertService>();
         services.AddSingleton<PipelineService>();
         services.AddSingleton<HotAppService>();
         services.AddSingleton<TraceShareTokenService>();

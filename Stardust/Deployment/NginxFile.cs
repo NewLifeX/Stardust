@@ -37,6 +37,12 @@ namespace Stardust.Deployment;
 public class NginxFile
 {
     #region 属性
+    /// <summary>证书目录占位符。StarAgent 发布站点时替换为本机证书目录的绝对路径</summary>
+    public const String CertDirToken = "{CertDir}";
+
+    /// <summary>证书名占位符。StarAgent 发布站点时按站点域名匹配本地证书后替换</summary>
+    public const String CertNameToken = "{CertName}";
+
     /// <summary>服务名。一般是域名</summary>
     public String ServerName { get; set; } = "localhost";
 

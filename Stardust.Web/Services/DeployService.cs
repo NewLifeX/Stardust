@@ -452,7 +452,18 @@ public class DeployService(StarFactory starFactory, ITracer tracer)
                 ServerName = uri.Host
             };
             if (uri.Port % 1000 == 443)
+            {
                 nginx.Ports = [uri.Port / 1000 + 80, uri.Port];
+
+                // HTTPS 站点必须带证书指令，否则 nginx -t 失败。
+                // 证书在节点上的绝对路径只有节点自己知道，这里写占位符，由 StarAgent 发布站点时替换。
+                var cert = SslCertificate.FindByHost(uri.Host);
+                var name = cert?.GetCertName();
+                if (name.IsNullOrEmpty()) name = NginxFile.CertNameToken;
+
+                nginx.SslCertificate = $"{NginxFile.CertDirToken}/{name}.pem";
+                nginx.SslCertificateKey = $"{NginxFile.CertDirToken}/{name}.privatekey.pem";
+            }
             else
                 nginx.Ports = [uri.Port];
 

@@ -23,6 +23,7 @@ using XCode.Configuration;
 using XCode.DataAccessLayer;
 using XCode.Membership;
 using XCode.Shards;
+using Stardust.Deployment;
 
 namespace Stardust.Data.Deployment;
 
@@ -62,6 +63,14 @@ public partial class SslCertificate : Entity<SslCertificate>
 
         // 这里验证参数范围，建议抛出参数异常，指定参数名，前端用户界面可以捕获参数异常并聚焦到对应的参数输入框
         if (Domain.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Domain), L.T("Domain cannot be empty."));
+
+        // 证书名会拼进节点文件路径，必须过滤到安全字符
+        if (!CertName.IsNullOrEmpty())
+        {
+            var name = CertManager.GetSafeName(CertName);
+            if (name.IsNullOrEmpty()) throw new ArgumentException(L.T("The certificate name contains invalid characters."), nameof(CertName));
+            CertName = name;
+        }
 
         // 建议先调用基类方法，基类方法会做一些统一处理
         if (!base.Valid(method)) return false;
@@ -146,5 +155,86 @@ public partial class SslCertificate : Entity<SslCertificate>
     #endregion
 
     #region 业务操作
+    /// <summary>证书名。用于生成下发到节点后的文件名前缀；未显式配置时取域名去掉通配符，如 *.newlifex.com → newlifex.com</summary>
+    /// <returns>文件前缀，如 newlifex.com</returns>
+    public String GetCertName()
+    {
+        var name = CertName?.Trim();
+        if (!name.IsNullOrEmpty()) return name;
+
+        name = (Domain + "").Trim();
+        if (name.StartsWith("*."))
+            name = name[2..];
+        else if (name.StartsWith("*"))
+            name = name.TrimStart('*').TrimStart('.');
+
+        return name;
+    }
+
+    /// <summary>目标目录。为空时使用默认目录 ../certs（相对 StarAgent 安装目录）</summary>
+    /// <returns></returns>
+    public String GetTargetPath() => TargetPath.IsNullOrEmpty() ? CertManager.DefaultCertPath : TargetPath.Trim();
+
+    /// <summary>证书版本标识。优先使用指纹，其次使用更新时间，用于判断节点上的证书是否需要更新</summary>
+    /// <returns></returns>
+    public String GetVersion() => !Thumbprint.IsNullOrEmpty() ? Thumbprint : UpdateTime.ToInt().ToString();
+
+    /// <summary>判断证书域名是否匹配指定主机名。支持逗号/分号分隔的多域名与 *.example.com 通配符</summary>
+    /// <param name="host">主机名，如 sso.newlifex.com</param>
+    /// <returns></returns>
+    public Boolean MatchHost(String host)
+    {
+        if (host.IsNullOrEmpty()) return false;
+
+        host = host.Trim().TrimEnd('.');
+        foreach (var item in (Domain + "").Split(',', ';'))
+        {
+            var domain = item.Trim().TrimEnd('.');
+            if (domain.IsNullOrEmpty()) continue;
+
+            if (domain.EqualIgnoreCase(host)) return true;
+
+            // 通配符只匹配一级或多级子域名，不匹配裸域
+            if (domain.StartsWith("*."))
+            {
+                var suffix = domain[1..];
+                if (host.Length > suffix.Length && host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)) return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>查找匹配指定主机名的启用证书。精确域名优先，其次才使用通配符</summary>
+    /// <param name="host">主机名，如 sso.newlifex.com</param>
+    /// <returns></returns>
+    public static SslCertificate FindByHost(String host)
+    {
+        if (host.IsNullOrEmpty()) return null;
+
+        host = host.Trim().TrimEnd('.');
+        var list = FindAllEnabled();
+
+        // 精确域名优先
+        foreach (var cert in list)
+        {
+            foreach (var item in (cert.Domain + "").Split(',', ';'))
+            {
+                if (item.Trim().TrimEnd('.').EqualIgnoreCase(host)) return cert;
+            }
+        }
+
+        // 通配符兜底
+        return list.FirstOrDefault(e => e.MatchHost(host));
+    }
+
+    /// <summary>修正关联节点数</summary>
+    /// <returns></returns>
+    public Int32 Fix()
+    {
+        Nodes = SslCertificateNode.FindAllByCertId(Id).Count(e => e.Enable);
+
+        return Update();
+    }
     #endregion
 }

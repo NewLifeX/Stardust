@@ -199,6 +199,9 @@ public class ServiceController : DisposeBase
                 // 获取实际部署模式（兼容旧版）
                 var actualMode = DeployStrategyFactory.GetActualMode(deployMode);
 
+                // 发布 nginx 站点配置。放在启动进程之前，托管模式（由 nginx 承载）同样需要；一次性任务不发布
+                if (actualMode != DeployMode.Task) PublishNginxConfig(workDir);
+
                 // 托管模式，不执行
                 if (actualMode == DeployMode.Hosted)
                 {
@@ -264,9 +267,6 @@ public class ServiceController : DisposeBase
                 // 定时检查文件是否有改变
                 StartMonitor();
 
-                // 检查nginx配置文件
-                PublishNginxConfig(workDir);
-
                 // 开放防火墙端口
                 OpenFirewallPorts(workDir, args);
 
@@ -299,8 +299,16 @@ public class ServiceController : DisposeBase
                 {
                     WriteLog("Site: {0}", site.SiteFile);
                     site.Log = new ActionLog(WriteLog);
-                    var rs = site.Publish();
-                    WriteLog(rs ? "Site published successfully: {0}" : "Site is unchanged: {0}", site.SiteFile);
+                    try
+                    {
+                        var rs = site.Publish();
+                        WriteLog(rs ? "Site published successfully: {0}" : "Site is unchanged: {0}", site.SiteFile);
+                    }
+                    catch (Exception ex)
+                    {
+                        // 站点配置或证书有问题时只记录日志，不能阻断应用本身的启动
+                        WriteLog("Failed to publish site {0}: {1}", site.SiteFile, ex.Message);
+                    }
                 }
             }
         }

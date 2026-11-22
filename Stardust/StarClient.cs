@@ -559,6 +559,14 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
     /// <returns></returns>
     public Task<Int32> UploadDeploy(ServiceInfo[] services) => InvokeAsync<Int32>("Deploy/Upload", services);
 
+    /// <summary>获取分配给本节点的证书信息。服务端只返回与该节点关联的证书</summary>
+    /// <param name="certId">证书编号。0 表示该节点全部关联证书</param>
+    /// <returns></returns>
+    public Task<CertInfo[]?> GetCerts(Int32 certId = 0) => InvokeAsync<CertInfo[]>("Deploy/GetCerts", new Dictionary<String, Object?>
+    {
+        ["certId"] = certId,
+    });
+
     /// <summary>应用心跳。上报应用信息</summary>
     /// <param name="inf"></param>
     /// <returns></returns>

@@ -378,4 +378,54 @@ public class DeployControllerTests : StarTestBase
             StarServerSetting.Current.MaxUploadSize = original;
         }
     }
+
+    [Fact(DisplayName = "证书下发：只返回与当前节点关联的证书")]
+    public async Task GetCerts_OnlyReturnsAssociatedCertificates()
+    {
+        var (token, node) = await LoginAndGetNodeAsync();
+        var tag = Guid.NewGuid().ToString("N")[..8];
+        var cert = new SslCertificate
+        {
+            Domain = "*.cert-" + tag + ".example.com",
+            Enable = true,
+            PemFile = "/cube/file?id=9001.pem",
+            KeyFile = "/cube/file?id=9002.pem",
+        };
+        cert.Insert();
+
+        var other = new SslCertificate
+        {
+            Domain = "*.other-" + tag + ".example.com",
+            Enable = true,
+            PemFile = "/cube/file?id=9003.pem",
+            KeyFile = "/cube/file?id=9004.pem",
+        };
+        other.Insert();
+
+        var link = new SslCertificateNode { CertId = cert.Id, NodeId = node.ID, Enable = true };
+        link.Insert();
+
+        try
+        {
+            var client = _server.CreateClient();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var body = await client.GetStringAsync($"/Deploy/GetCerts?certId={cert.Id}");
+            Assert.Contains("cert-" + tag, body);
+            Assert.Contains("cert-" + tag + ".example.com", body);
+            Assert.Contains("token=", body);
+            Assert.DoesNotContain("other-" + tag, body);
+
+            // 未关联的证书不可取，按 404 拒绝
+            var body2 = await client.GetStringAsync($"/Deploy/GetCerts?certId={other.Id}");
+            Assert.Contains("\"code\":404", body2);
+        }
+        finally
+        {
+            foreach (var item in SslCertificateNode.FindAllByCertId(cert.Id)) item.Delete();
+            foreach (var item in SslCertificateNode.FindAllByCertId(other.Id)) item.Delete();
+            cert.Delete();
+            other.Delete();
+        }
+    }
 }

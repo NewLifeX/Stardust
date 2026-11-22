@@ -6,6 +6,7 @@ using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
 using NewLife.Log;
 using NewLife.Web;
+using Stardust.Web.Services;
 using XCode.Membership;
 using static Stardust.Data.Deployment.SslCertificate;
 
@@ -27,6 +28,32 @@ public class SslCertificateController : EntityController<SslCertificate>
         ListFields.RemoveField("PfxPassword");
         EditFormFields.RemoveField("PfxPassword");
 
+        {
+            var df = ListFields.GetField("Nodes") as ListField;
+            if (df != null)
+            {
+                df.Header = "节点";
+                df.Url = "/Deployment/SslCertificateNode?certId={Id}";
+                df.Target = "_frame";
+            }
+        }
+        {
+            var df = ListFields.AddListField("Push", null, "UpdateTime");
+            df.Header = "下发";
+            df.DisplayName = "下发";
+            df.Title = "把证书文件下发到关联节点";
+            df.Url = "/Deployment/SslCertificate/Push?id={Id}";
+            df.DataAction = "action";
+        }
+        {
+            var df = ListFields.AddListField("AddAllNodes", null, "UpdateTime");
+            df.Header = "关联全部节点";
+            df.DisplayName = "关联全部";
+            df.Title = "把证书关联到全部启用节点";
+            df.Url = "/Deployment/SslCertificate/AddAllNodes?id={Id}";
+            df.DataAction = "action";
+        }
+
         //{
         //    var df = ListFields.GetField("Code") as ListField;
         //    df.Url = "?code={Code}";
@@ -46,12 +73,42 @@ public class SslCertificateController : EntityController<SslCertificate>
         //ListFields.TraceUrl("TraceId");
     }
 
-    //private readonly ITracer _tracer;
+    private readonly CertService _certService;
 
-    //public SslCertificateController(ITracer tracer)
-    //{
-    //    _tracer = tracer;
-    //}
+    /// <summary>实例化</summary>
+    /// <param name="certService">证书下发服务</param>
+    public SslCertificateController(CertService certService) => _certService = certService;
+
+    /// <summary>下发证书到关联节点</summary>
+    /// <param name="id">证书编号</param>
+    /// <returns></returns>
+    [EntityAuthorize(PermissionFlags.Update)]
+    public async Task<ActionResult> Push(Int32 id)
+    {
+        var cert = SslCertificate.FindById(id);
+        if (cert == null) return Json(500, L.T("Certificate not found."));
+
+        var links = SslCertificateNode.FindAllByCertId(id).Where(e => e.Enable).ToList();
+        if (links.Count == 0) return JsonRefresh(L.T("This certificate is not associated with any node."), 0);
+
+        var rs = await _certService.PushAsync(cert, links, HttpContext.RequestAborted);
+
+        return JsonRefresh(L.T("Push completed: {0} succeeded, {1} failed, {2} timed out.", rs.Success, rs.Failed, rs.Timeout));
+    }
+
+    /// <summary>把证书关联到全部启用节点</summary>
+    /// <param name="id">证书编号</param>
+    /// <returns></returns>
+    [EntityAuthorize(PermissionFlags.Update)]
+    public ActionResult AddAllNodes(Int32 id)
+    {
+        var cert = SslCertificate.FindById(id);
+        if (cert == null) return Json(500, L.T("Certificate not found."));
+
+        var count = _certService.AddAllNodes(cert);
+
+        return JsonRefresh(L.T("Associated {0} node(s).", count));
+    }
 
     /// <summary>高级搜索。列表页查询、导出Excel、导出Json、分享页等使用</summary>
     /// <param name="p">分页器。包含分页排序参数，以及Http请求参数</param>

@@ -1,5 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using StarAgent.Managers;
+using Stardust.Deployment;
+using Stardust.Models;
 
 namespace StarAgent;
 
@@ -15,6 +18,10 @@ internal static class AotRoots
     [DynamicDependency(DynamicallyAccessedMemberTypes.PublicConstructors, typeof(CommandHandler.StartService))]
     [DynamicDependency(DynamicallyAccessedMemberTypes.PublicConstructors, typeof(CommandHandler.StopService))]
     [DynamicDependency(DynamicallyAccessedMemberTypes.PublicConstructors, typeof(CommandHandler.RestartService))]
+    // 证书下发通过反射序列化，保留属性元数据，避免 AOT 裁剪后指令参数/本地清单为空
+    [DynamicDependency(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicConstructors, typeof(CertInfo))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicConstructors, typeof(CertManifest))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicConstructors, typeof(CertSyncArg))]
 #endif
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal static void Ensure() { }

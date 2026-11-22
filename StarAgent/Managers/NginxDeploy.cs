@@ -1,6 +1,8 @@
+using System.Text;
 using System.Text.RegularExpressions;
 using NewLife;
 using NewLife.Log;
+using Stardust.Deployment;
 
 namespace StarAgent.Managers;
 
@@ -196,22 +198,89 @@ internal class NginxDeploy
         var targetFile = targetDir.CombinePath(Path.GetFileName(SiteFile));
         if (!Extension.IsNullOrEmpty()) targetFile = Path.ChangeExtension(targetFile, Extension);
 
-        // 目标文件不存在，或者两者MD5不一致时，才进行拷贝
-        if (File.Exists(targetFile) && File.ReadAllText(SiteFile).MD5() == File.ReadAllText(targetFile).MD5())
-            return false;
+        // 解析证书路径。应用包里的证书占位符在这里替换为本机绝对路径，缺少证书指令时自动补全
+        var text = CertManager.Current.ResolveConfig(File.ReadAllText(SiteFile));
+
+        // 目标文件不存在，或者内容不一致时，才进行拷贝
+        if (File.Exists(targetFile) && File.ReadAllText(targetFile) == text) return false;
 
         WriteLog("Publishing site configuration to nginx: {0} => {1}", SiteFile, targetFile);
-        File.Copy(SiteFile, targetFile, true);
+
+        // 先备份旧配置，nginx -t 校验失败时回滚，避免把可用站点改坏
+        var backup = targetFile + ".bak";
+        var existed = File.Exists(targetFile);
+        if (existed) File.Copy(targetFile, backup, true);
+
+        try
+        {
+            File.WriteAllText(targetFile, text);
+
+            var (code, output) = ExecuteNginx("-t");
+            if (code != 0)
+            {
+                if (existed)
+                    File.Copy(backup, targetFile, true);
+                else if (File.Exists(targetFile))
+                    File.Delete(targetFile);
+
+                WriteLog("Nginx configuration test failed, the previous configuration has been restored: {0}", output);
+                throw new InvalidOperationException(L.T("Nginx configuration test failed, the previous configuration has been restored."));
+            }
+        }
+        finally
+        {
+            try
+            {
+                if (File.Exists(backup)) File.Delete(backup);
+            }
+            catch { }
+        }
 
         // 重新加载nginx配置
         WriteLog("Reloading nginx configuration...");
-        if (Runtime.Windows)
-            targetDir.CombinePath("../nginx.exe").Run("-s reload", 5_000);
-        else
-            "nginx".Run("-s reload", 5_000);
+        ExecuteNginx("-s reload");
         WriteLog("nginx configuration reloaded.");
 
         return true;
+    }
+
+    /// <summary>重新加载 Nginx 配置。证书下发后调用，使新证书立即生效</summary>
+    /// <returns>是否执行了重载</returns>
+    public static Boolean Reload()
+    {
+        if (_nginxConfig.IsNullOrEmpty()) return false;
+
+        var (code, output) = ExecuteNginx("-t");
+        if (code != 0)
+        {
+            XTrace.WriteLine("Nginx configuration test failed, reload skipped: {0}", output);
+            return false;
+        }
+
+        var (code2, output2) = ExecuteNginx("-s reload");
+        if (code2 != 0) XTrace.WriteLine("Nginx reload failed: {0}", output2);
+
+        return code2 == 0;
+    }
+
+    /// <summary>执行 nginx 命令，合并标准输出与错误输出</summary>
+    private static (Int32 code, String output) ExecuteNginx(String arguments)
+    {
+        var sb = new StringBuilder();
+
+        var exe = "nginx";
+        if (Runtime.Windows)
+        {
+            var path = _nginxConfig.CombinePath("../nginx.exe");
+            exe = File.Exists(path) ? path : "nginx.exe";
+        }
+
+        var code = exe.Run(arguments, 10_000, line =>
+        {
+            if (!line.IsNullOrEmpty()) lock (sb) sb.AppendLine(line);
+        });
+
+        return (code, sb.ToString().Trim());
     }
 
     /// <summary>

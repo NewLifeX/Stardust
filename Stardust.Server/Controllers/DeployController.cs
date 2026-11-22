@@ -71,6 +71,89 @@ public class DeployController(NodeService nodeService, DeployService deployServi
         return rs.ToArray();
     }
 
+    /// <summary>获取分配给本节点的证书信息。只返回与该节点关联且启用的证书</summary>
+    /// <param name="certId">证书编号。0 表示该节点全部关联证书</param>
+    /// <returns></returns>
+    public CertInfo[] GetCerts(Int32 certId)
+    {
+        var node = Context.Device as Node;
+        if (node == null) return [];
+
+        var list = new List<CertInfo>();
+        var linked = false;
+        foreach (var link in SslCertificateNode.FindAllByNodeId(node.ID))
+        {
+            if (!link.Enable) continue;
+            if (certId > 0 && link.CertId != certId) continue;
+
+            var cert = link.Cert ?? SslCertificate.FindById(link.CertId);
+            if (cert == null || !cert.Enable) continue;
+
+            linked = true;
+
+            var inf = BuildCertInfo(cert, link, node);
+            if (inf != null) list.Add(inf);
+        }
+
+        if (certId > 0 && !linked) throw new ApiException(404, L.T("Certificate [{0}] is not associated with node [{1}].", certId, node.Name));
+
+        return list.ToArray();
+    }
+
+    /// <summary>构造证书下发信息。按节点操作系统选择证书格式，并给下载地址附加短时令牌</summary>
+    private CertInfo BuildCertInfo(SslCertificate cert, SslCertificateNode link, Node node)
+    {
+        var inf = new CertInfo
+        {
+            Id = cert.Id,
+            Domain = cert.Domain,
+            Name = cert.GetCertName(),
+            TargetPath = link.GetTargetPath(),
+            Version = cert.GetVersion(),
+        };
+
+        if (OSKindHelper.ToOSKind(node.OSKind) == OSKind.Windows)
+        {
+            if (!cert.PfxFile.IsNullOrEmpty())
+            {
+                inf.PfxFile = cert.PfxFile;
+                inf.PfxHash = GetAttachmentHash(cert.PfxFile);
+            }
+        }
+        else
+        {
+            var certFile = !cert.PemFile.IsNullOrEmpty() ? cert.PemFile : cert.CrtFile;
+            if (!certFile.IsNullOrEmpty())
+            {
+                inf.CertFile = certFile;
+                inf.CertHash = GetAttachmentHash(certFile);
+            }
+            if (!cert.KeyFile.IsNullOrEmpty())
+            {
+                inf.KeyFile = cert.KeyFile;
+                inf.KeyHash = GetAttachmentHash(cert.KeyFile);
+            }
+        }
+
+        // 没有可下发的文件
+        if (inf.CertFile.IsNullOrEmpty() && inf.PfxFile.IsNullOrEmpty()) return null;
+
+        // 安全V-11：私钥下载地址附带短时令牌
+        var expire = StarServerSetting.Current.AttachmentTokenExpire;
+        if (!inf.CertFile.IsNullOrEmpty()) inf.CertFile = downloadTokenService.AppendToken(inf.CertFile, expire);
+        if (!inf.KeyFile.IsNullOrEmpty()) inf.KeyFile = downloadTokenService.AppendToken(inf.KeyFile, expire);
+        if (!inf.PfxFile.IsNullOrEmpty()) inf.PfxFile = downloadTokenService.AppendToken(inf.PfxFile, expire);
+
+        return inf;
+    }
+
+    /// <summary>从附件下载地址取得文件哈希</summary>
+    private static String GetAttachmentHash(String url)
+    {
+        var id = Stardust.Server.Services.DownloadTokenService.GetAttachmentId(url);
+        return id > 0 ? Attachment.FindById(id)?.Hash : null;
+    }
+
     /// <summary>上传本节点的所有应用服务信息</summary>
     /// <param name="services"></param>
     /// <returns></returns>

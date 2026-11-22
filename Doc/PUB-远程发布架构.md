@@ -18,7 +18,7 @@
 | 分布式部署 | 单应用多节点部署，滚动发布 |
 | 四种部署模式 | Standard / Shadow / Hosted / Task |
 | 进程守护 | 崩溃自动重启，内存超限重启，文件变化重启 |
-| SSL 证书管理 | 按域名自动匹配，支持多格式，自动续期 |
+| SSL 证书管理 | 按域名自动匹配，支持多格式；证书独立关联节点并下发到 `/root/certs`，不随应用包携带 |
 | CI/CD 流水线 | Webhook 触发 → 编译 → 打包 → 上传 → 部署 |
 
 ### 设计原则
@@ -88,8 +88,8 @@
 
 ```
 AppDeploy（部署集）           SslCertificate（证书）
-  ├── AppDeployNode（1:N）       └── 通过 Domain 匹配 AppDeploy.Urls
-  │     └── Node（目标机器）
+  ├── AppDeployNode（1:N）       ├── SslCertificateNode（1:N）→ Node（目标机器）
+  │     └── Node（目标机器）      └── 通过 Domain 匹配 AppDeploy.Urls
   ├── AppDeployVersion（1:N）  AppPipeline（流水线）
   │     └── Attachment（zip包）   ├── AppPipelineRun（1:N）
   ├── AppDeployHistory（1:N）     │     └── AppPipelineStep（1:N）
@@ -116,6 +116,8 @@ AppDeploy（部署集）           SslCertificate（证书）
 ### 3.5 SSL 证书（SslCertificate）
 
 按域名管理证书。部署时通过 `AppDeploy.Urls` 自动提取域名，匹配有效期内的证书，根据节点 OS 选择 Pfx（Windows）或 Pem（Linux）格式。
+
+证书下发与应用发布解耦：`SslCertificateNode` 记录证书与节点的关联，控制台点「下发」后向节点发送 `cert/sync`，节点拉到 `/root/certs`（即代理目录的 `../certs`）并重载 Nginx。详见 [PUB-24-证书下发](PUB-24-证书下发.md)。
 
 ### 3.6 流水线（AppPipeline）
 
@@ -226,6 +228,8 @@ ServiceManager（总管）
 | 节点级配置覆盖 | AppDeployNode 可覆盖 FileName/Arguments 等 | 同一应用不同节点可能需要不同参数 |
 | 部署模式兼容 | 旧版 0-4 映射为新版 10-13 | 平滑升级，无需同时升级所有 Agent |
 | 证书格式选择 | Windows → Pfx，Linux → Pem | 自动适配，减少人工配置 |
+| 证书下发 | 独立「证书节点」关联 + `cert/sync`，不混入应用包 | 避免"主包/资源包"两套概念；续期只需重新下发证书 |
+| Nginx 证书路径 | 配置写 `{CertDir}`/`{CertName}` 占位符，节点发布时解析 | 服务端不知道节点证书绝对路径，节点才知道 |
 | 数据清理 | Truncate / Delete 双模式 | 灵活适配不同数据库权限 |
 | 通信双通道 | HTTP 心跳 + WebSocket 指令 | 实时性 + 可靠性 |
 | 流水线状态 | Pending → Building → UploadSucceeded → Deploying → Success/Failed | 细粒度追踪，快速定位失败环节 |
