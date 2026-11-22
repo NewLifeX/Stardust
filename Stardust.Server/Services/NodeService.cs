@@ -51,6 +51,11 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         _installService = installService;
 
         Name = "Node";
+
+        // 密钥校验失败时仍交由本类 Register 按自动注册策略（AutoRegister/NodeCodeLevel）决定是否放行，
+        // 硬件变更校验由 CheckNode 负责，避免框架默认直接拒绝、绕过平台自身的接入策略
+        AllowSecretResetOnAuthFailure = true;
+        AllowIdentityMismatch = true;
     }
 
     #region 登录注销

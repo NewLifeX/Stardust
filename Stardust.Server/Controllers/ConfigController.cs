@@ -210,7 +210,7 @@ public class ConfigController(ConfigService configService, ITokenService tokenSe
 
         // 验证
         var (app, _) = Valid(model.AppId, model.Secret, model.ClientId, token);
-        if (app.Readonly) throw new Exception(L.T("Application [{0}] is in read-only mode; modification is forbidden.", app));
+        if (app.Readonly) throw new ApiException(ApiCode.Forbidden, L.T("Application [{0}] is in read-only mode; modification is forbidden.", app));
 
         return configService.SetConfigs(app, model.Configs);
     }

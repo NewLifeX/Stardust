@@ -177,6 +177,10 @@ public class Startup
         // 启用接口响应压缩
         services.AddResponseCompression();
 
+        // 兼容既有接入约定：令牌可通过 URL 参数 ?Token=、Authorization: Bearer 或 X-Token 头传递（见 Doc/APM-17）
+        ApiFilterAttribute.AllowTokenInQuery = true;
+        ApiFilterAttribute.AllowTokenInHeader = true;
+
         services.AddControllers();
 
         //services.Configure<KestrelServerOptions>(options =>

@@ -17,7 +17,7 @@ using Service = Stardust.Data.Service;
 namespace Stardust.Server.Services;
 
 /// <summary>注册服务。处理应用注册、登录认证、服务注册与发现的核心服务</summary>
-public class RegistryService : DefaultDeviceService<Node, NodeOnline>
+public class RegistryService : DefaultDeviceService<App, AppOnline>
 {
     private readonly AppOnlineService _appOnline;
     private readonly IPasswordProvider _passwordProvider;
@@ -44,6 +44,10 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
         _tracer = tracer;
 
         Name = "App";
+
+        // 密钥校验失败时仍交由本类 Register 按应用的重注册模式（ReRegister）决定是否放行，
+        // 避免框架默认直接拒绝、绕过平台自身的重注册策略
+        AllowSecretResetOnAuthFailure = true;
     }
 
     #region 登录注销
