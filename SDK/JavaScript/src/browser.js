@@ -308,6 +308,11 @@
         }
     }
 
+    function isAbsoluteUrl(url) {
+        var text = String(url || '');
+        return /^[a-z][a-z0-9+.-]*:/i.test(text) || text.indexOf('//') === 0;
+    }
+
     function resolveRequestUrl(input) {
         if (input && typeof input === 'object' && typeof input.url === 'string') return input.url;
         try {
@@ -317,11 +322,16 @@
         }
     }
 
-    function isIgnoredUrl(url) {
+    function isIgnoredUrl(url, tracer) {
         var text = String(url || '');
         if (text.indexOf('/Trace/') !== -1) return true;
         if (text.indexOf('/App/Login') !== -1) return true;
         if (text.indexOf('/App/Ping') !== -1) return true;
+
+        // 上报地址本身必须忽略，否则中转模式下会把自己转发的请求再次采集
+        var report = tracer && tracer._reportUrl;
+        if (report && text.indexOf(String(report)) !== -1) return true;
+
         return false;
     }
 
@@ -500,6 +510,11 @@
             this.appName = opts.appName === undefined || opts.appName === null ? this.appId : String(opts.appName);
             this.secret = opts.secret === undefined || opts.secret === null ? '' : String(opts.secret);
             this.version = opts.version ? String(opts.version) : VERSION;
+            this.mode = opts.mode === 'relay' ? 'relay' : 'direct';
+            this.relay = this.mode === 'relay';
+            this.reportUrl = opts.reportUrl ? String(opts.reportUrl) : '';
+            this.credentials = opts.credentials || 'same-origin';
+            this._reportUrl = this._resolveReportUrl();
             this._tokenProvider = typeof opts.tokenProvider === 'function' ? opts.tokenProvider : null;
 
             this.clientId = this._resolveClientId(opts);
@@ -557,6 +572,18 @@
         }
 
         /**
+         * 解析上报地址。直报模式下相对地址按星尘地址展开；中转模式或未配置星尘地址时按页面地址展开。
+         * @returns {String} 上报地址
+         * @private
+         */
+        _resolveReportUrl() {
+            var url = this.reportUrl || '/Trace/Report';
+            if (this.relay || !this.server || isAbsoluteUrl(url)) return url;
+
+            return this.server + (url.charAt(0) === '/' ? '' : '/') + url;
+        }
+
+        /**
          * 启动追踪器。
          * @returns {Promise<StardustTracer>} 当前实例
          */
@@ -567,9 +594,10 @@
             this._installDomListeners();
             if (this.autoInstrument) installBrowserInterceptors(this);
 
-            await this._ensureToken(false);
+            // 中转模式由应用后端自行鉴权并转发，浏览器不登录、不申请星尘令牌
+            if (!this.relay) await this._ensureToken(false);
             this._scheduleTimers();
-            this._log('started for ' + this.appId);
+            this._log('started for ' + this.appId + ' (' + this.mode + ')');
 
             return this;
         }
@@ -775,7 +803,7 @@
          */
         _isIgnoredName(name) {
             if (!name) return false;
-            if (isIgnoredUrl(name)) return true;
+            if (isIgnoredUrl(name, this)) return true;
 
             var lower = name.toLowerCase();
             for (var i = 0; i < this.excludes.length; i++) {
@@ -1020,17 +1048,30 @@
          * @returns {Promise<*>} data
          * @private
          */
-        async _post(path, payload, withToken) {
+        _post(path, payload, withToken) {
+            return this._postUrl(this.server + path, payload, withToken);
+        }
+
+        /**
+         * 向指定地址发送 POST 请求。令牌优先放在 Authorization 头，避免进入 URL 访问日志。
+         * @param {String} url 完整或相对地址
+         * @param {*} payload 负载
+         * @param {Boolean} withToken 是否附加 Token
+         * @returns {Promise<*>} data
+         * @private
+         */
+        async _postUrl(url, payload, withToken) {
             if (!this._fetchImpl) throw new Error('fetch is not available');
 
-            var url = this.server + path;
-            if (withToken) url += '?Token=' + encodeURIComponent(this._token || '');
+            var headers = { 'Content-Type': 'application/json' };
+            if (withToken && this._token) headers.Authorization = 'Bearer ' + this._token;
 
             var body = typeof payload === 'string' ? payload : JSON.stringify(payload);
             var response = await this._fetchImpl(url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: headers,
                 body: body,
+                credentials: this.credentials,
             });
 
             var status = response && typeof response.status === 'number' ? response.status : 0;
@@ -1103,6 +1144,8 @@
          * @private
          */
         _ping() {
+            // 中转模式没有星尘令牌，心跳交给应用后端自己的 SDK
+            if (this.relay) return Promise.resolve();
             if (this._pingPromise) return this._pingPromise;
 
             var self = this;
@@ -1149,7 +1192,13 @@
                 if (builders.length === 0) return;
 
                 var payload = this._buildReportPayload(builders);
-                var data = await this._requestWithAuth('/Trace/Report', payload);
+                var data;
+                if (this.relay) {
+                    // 中转模式：不携带星尘令牌，由应用后端鉴权后转发
+                    data = await this._postUrl(this._reportUrl, payload, false);
+                } else {
+                    data = await this._requestWithAuth('/Trace/Report', payload);
+                }
 
                 if (data) this._applyResponse(data);
                 this._log('report sent, builders=' + builders.length);
@@ -1288,9 +1337,11 @@
             this._reportTimer = setInterval(function () {
                 self.flush();
             }, Math.max(1, this.period) * 1000);
-            this._pingTimer = setInterval(function () {
-                if (!self._isHidden()) self._ping();
-            }, Math.max(1, this.heartbeatPeriod) * 1000);
+            if (!this.relay) {
+                this._pingTimer = setInterval(function () {
+                    if (!self._isHidden()) self._ping();
+                }, Math.max(1, this.heartbeatPeriod) * 1000);
+            }
         }
 
         /**
@@ -1336,7 +1387,7 @@
             this._onVisibilityChange = function () {
                 if (self._isHidden()) {
                     self._beaconFlush();
-                } else if (self._running) {
+                } else if (self._running && !self.relay) {
                     var now = Date.now();
                     if (!self._lastVisiblePing || now - self._lastVisiblePing > 1000) {
                         self._lastVisiblePing = now;
@@ -1403,7 +1454,8 @@
 
                 var payload = this._buildReportPayload(builders);
                 var json = JSON.stringify(payload);
-                var url = this.server + '/Trace/Report?Token=' + encodeURIComponent(this._token || '');
+                var url = this._reportUrl;
+                if (this._token) url += (url.indexOf('?') === -1 ? '?' : '&') + 'Token=' + encodeURIComponent(this._token || '');
 
                 var nav = this._nav;
                 var BlobCtor = getBlobConstructor(this._win);
@@ -1537,7 +1589,7 @@
                 try {
                     url = resolveAbsoluteUrl(resolveRequestUrl(input), win);
                     method = String((init && init.method) || (input && input.method) || 'GET').toUpperCase();
-                    if (!isIgnoredUrl(url)) {
+                    if (!isIgnoredUrl(url, tracer)) {
                         span = tracer.newSpan(buildSpanName(method, url, win));
                         span.setTag(truncate(url, tracer._tagLimit()));
                         if (shouldPropagateTrace(tracer, url)) actualInit = buildFetchInit(win, input, init, span);
@@ -1664,7 +1716,7 @@
 
                 try {
                     var absolute = resolveAbsoluteUrl(xhr.__stardustUrl, win);
-                    if (!isIgnoredUrl(absolute)) {
+                    if (!isIgnoredUrl(absolute, tracer)) {
                         var method = String(xhr.__stardustMethod || 'GET').toUpperCase();
                         span = tracer.newSpan(buildSpanName(method, absolute, win));
                         span.setTag(truncate(absolute, tracer._tagLimit()));

@@ -8,6 +8,10 @@ export interface LoaderConfig {
     appId?: string;
     appName?: string;
     server?: string;
+    mode?: string;
+    report?: string;
+    reportUrl?: string;
+    credentials?: string;
     configUrl?: string;
     token?: string;
     tokenUrl?: string;

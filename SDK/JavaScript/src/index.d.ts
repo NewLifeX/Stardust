@@ -64,12 +64,18 @@ export interface TracerOptions {
 }
 
 export interface BrowserTracerOptions {
-    /** 星尘服务器地址 */
-    server: string;
+    /** 星尘服务器地址。直报模式必填；中转模式可省略 */
+    server?: string;
     /** 应用ID */
     appId: string;
     /** 应用显示名，默认同 appId */
     appName?: string;
+    /** 接入模式。direct=浏览器直报星尘（默认）；relay=上报到应用后端由其转发 */
+    mode?: 'direct' | 'relay';
+    /** 上报地址。默认 server + /Trace/Report；中转模式通常为应用后端的 /stardust/collect */
+    reportUrl?: string;
+    /** fetch 凭据策略，默认 same-origin；中转模式可依赖应用自身 Cookie 会话 */
+    credentials?: 'omit' | 'same-origin' | 'include';
     /** 应用密钥；公网部署建议改用 tokenProvider，避免前端泄露 */
     secret?: string;
     /** 应用版本，默认 1.1.0 */

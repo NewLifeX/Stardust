@@ -386,7 +386,7 @@ async function main() {
             const call = pings[pings.length - 1];
             const body = parseBody(call);
 
-            assert.ok(call.url.indexOf('Token=') !== -1, '心跳应携带令牌');
+            assert.strictEqual(call.init.headers.Authorization, 'Bearer browser-token', '心跳应携带令牌');
             assert.strictEqual(body.Id, 0, 'Id 应为 0');
             assert.strictEqual(body.Name, 'Browser App', 'Name 应匹配');
             assert.strictEqual(body.Version, '2.3.4', 'Version 应匹配');
@@ -655,7 +655,7 @@ async function main() {
 
                 const reports = findCalls('/Trace/Report');
                 assert.ok(reports.length > 0, '应上报');
-                assert.ok(reports[reports.length - 1].url.indexOf('Token=provider-token') !== -1, '应使用 provider 令牌');
+                assert.strictEqual(reports[reports.length - 1].init.headers.Authorization, 'Bearer provider-token', '应使用 provider 令牌');
                 const body = parseBody(reports[reports.length - 1]);
                 assert.strictEqual(body.AppId, 'ProviderApp', 'AppId 应匹配');
 
@@ -665,6 +665,68 @@ async function main() {
                 await providerTracer.stop();
                 fakeWindow.fetch = previousFetch;
             }
+        });
+
+        await test('中转模式不登录、按配置地址上报且不带令牌', async () => {
+            const before = loginCalls;
+            const relayTracer = new BrowserTracer({
+                mode: 'relay',
+                appId: 'RelayApp',
+                appName: 'Relay App',
+                reportUrl: SERVER + '/stardust/collect',
+                period: 120,
+            });
+
+            try {
+                await relayTracer.start();
+                assert.strictEqual(loginCalls, before, '中转模式不应登录星尘');
+                assert.strictEqual(relayTracer._pingTimer, null, '中转模式不应发送心跳');
+
+                const span = relayTracer.newSpan('relay.op');
+                span.finish();
+                fetchCalls.length = 0;
+                await relayTracer.flush();
+
+                const reports = findCalls('/stardust/collect');
+                assert.strictEqual(reports.length, 1, '应上报到中转地址');
+                assert.ok(reports[0].url.indexOf('Token=') === -1, '中转模式不应携带星尘令牌');
+                assert.strictEqual(getHeaderValue(reports[0].init.headers, 'Authorization'), null, '中转模式不应带 Authorization 头');
+                const body = parseBody(reports[0]);
+                assert.strictEqual(body.AppId, 'RelayApp', '报文应保留 AppId');
+                assert.ok(findBuilder(body, 'relay.op'), '应包含埋点项');
+
+                assert.strictEqual(relayTracer._isIgnoredName(SERVER + '/stardust/collect'), true, '上报地址应被自身埋点忽略');
+            } finally {
+                await relayTracer.stop();
+            }
+        });
+
+        await test('中转模式离页冲刷使用 reportUrl 且不带令牌', async () => {
+            const relayTracer = new BrowserTracer({
+                mode: 'relay',
+                appId: 'RelayBeaconApp',
+                reportUrl: SERVER + '/stardust/collect',
+            });
+            const before = beaconCalls.length;
+            try {
+                const span = relayTracer.newSpan('relay.beacon');
+                span.finish();
+                relayTracer._beaconFlush();
+
+                assert.strictEqual(beaconCalls.length, before + 1, '应使用 sendBeacon');
+                const call = beaconCalls[beaconCalls.length - 1];
+                assert.strictEqual(call.url, SERVER + '/stardust/collect', 'Beacon 地址应为中转地址');
+            } finally {
+                await relayTracer.stop();
+            }
+        });
+
+        await test('相对上报地址在直报模式按星尘地址展开，中转模式保持页面相对', () => {
+            const direct = new BrowserTracer({ server: SERVER, appId: 'ResolveApp', reportUrl: '/Trace/Report' });
+            assert.strictEqual(direct._reportUrl, SERVER + '/Trace/Report');
+
+            const relay = new BrowserTracer({ mode: 'relay', appId: 'ResolveRelay', server: SERVER, reportUrl: '/stardust/collect' });
+            assert.strictEqual(relay._reportUrl, '/stardust/collect');
         });
 
         await test('localStorage 不可用时回退到内存 clientId', async () => {

@@ -71,6 +71,8 @@
             appId: get('app', 'app-id'),
             appName: get('app-name'),
             server: get('server'),
+            mode: get('mode'),
+            report: get('report'),
             configUrl: get('config', 'config-url'),
             token: get('token-value'),
             tokenUrl: get('token', 'token-url'),
@@ -200,31 +202,41 @@
             initialTraceparent: config.traceparent || undefined
         };
 
+        if (config.mode) options.mode = String(config.mode);
+        var reportUrl = config.report || config.reportUrl;
+        if (reportUrl) options.reportUrl = String(reportUrl);
+        if (config.credentials) options.credentials = String(config.credentials);
+
+        var relay = String(config.mode || '').toLowerCase() === 'relay';
         var tokenUrl = config.tokenUrl;
-        if (tokenUrl) {
-            // 与服务端 POST /stardust/browser-token 契约对齐：JSON 报文携带 appId
-            options.tokenProvider = function (info) {
-                var appId = (info && info.appId) || config.appId;
-                return root.fetch(tokenUrl, {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ appId: appId })
-                }).then(function (response) {
-                    if (!response || !response.ok) throw new Error('stardust token HTTP ' + (response && response.status));
-                    return response.json();
-                }).then(function (body) {
-                    if (body && typeof body === 'object' && Object.prototype.hasOwnProperty.call(body, 'code')) {
-                        if (Number(body.code) !== 0) throw new Error(body.message || 'stardust token error');
-                        body = body.data || {};
-                    }
-                    return body && body.token ? { token: body.token, expire: body.expire } : body;
-                });
-            };
-        } else if (config.token) {
-            options.tokenProvider = function () {
-                return { token: config.token, expire: config.expire };
-            };
+
+        // 中转模式不申请星尘令牌，由应用后端负责鉴权与转发
+        if (!relay) {
+            if (tokenUrl) {
+                // 与服务端 POST /stardust/browser-token 契约对齐：JSON 报文携带 appId
+                options.tokenProvider = function (info) {
+                    var appId = (info && info.appId) || config.appId;
+                    return root.fetch(tokenUrl, {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ appId: appId })
+                    }).then(function (response) {
+                        if (!response || !response.ok) throw new Error('stardust token HTTP ' + (response && response.status));
+                        return response.json();
+                    }).then(function (body) {
+                        if (body && typeof body === 'object' && Object.prototype.hasOwnProperty.call(body, 'code')) {
+                            if (Number(body.code) !== 0) throw new Error(body.message || 'stardust token error');
+                            body = body.data || {};
+                        }
+                        return body && body.token ? { token: body.token, expire: body.expire } : body;
+                    });
+                };
+            } else if (config.token) {
+                options.tokenProvider = function () {
+                    return { token: config.token, expire: config.expire };
+                };
+            }
         }
 
         var tracer = root.Stardust.createTracer(options);

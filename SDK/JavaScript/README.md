@@ -54,6 +54,23 @@ cp -r SDK/JavaScript/src /your-project/node_modules/@newlifex/stardust
 
 `data-stardust-token` 指向星尘的 Token 端点（默认 `/stardust/browser-token`，同域反代或直连均可），令牌由星尘签发，应用后端不参与。`data-stardust-token-value` 适合静态页面，配合 `data-stardust-expire="300"` 指定有效期；Token 应短有效期且仅具备上报权限。跨域链路传播需显式配置 `data-stardust-trace-targets="https://api.example.com,..."`，默认仅同源注入 `traceparent`。
 
+### 中转模式（经应用后端）
+
+当页面受 CSP 限制、星尘域名被广告拦截，或企业要求所有出站流量经过自家后端时，可以改为上报到应用后端，由其转发给星尘：
+
+```html
+<script src="/stardust/loader.js"
+        data-stardust-app="MyWebApp"
+        data-stardust-mode="relay"
+        data-stardust-report="/stardust/collect"
+        defer></script>
+```
+
+- 中转模式**不申请星尘令牌、不发送心跳**，由应用后端用自己的 AppId+Secret 登录并转发。
+- 浏览器请求默认带 `credentials: 'same-origin'`，应用后端可直接复用自身 Cookie 会话做鉴权。
+- 应用后端把浏览器原始报文转发到星尘 `POST /Trace/ReportRelay`；服务端强制把数据归属到令牌对应的应用，报文里的 `AppId` 会被忽略。
+- 直报仍是推荐方式：应用后端故障时，前端异常恰恰最需要被回收。
+
 npm 用户可以使用一行 `init`：
 
 ```js

@@ -150,7 +150,7 @@ span.Finish()
 |------|------|
 | 登录 | `POST /App/Login`，`AppId + Secret + ClientId + Version` |
 | 心跳 | `POST /App/Ping?Token=...`，请求体为 `AppInfo`，含 CPU/内存/堆/线程/GC 等性能字段 |
-| 埋点 | `POST /Trace/Report`，超过 1KB 用 `/Trace/ReportRaw` + GZip |
+| 埋点 | `POST /Trace/Report`，超过 1KB 用 `/Trace/ReportRaw` + GZip；浏览器可经应用后端 `POST /Trace/ReportRelay` 中转 |
 | `Version` | **必传**；服务端据此返回 `Excludes`、`EnableMeter` 等动态参数 |
 | 令牌 | 到期前 5 分钟重登录；心跳可续签；`code=401` 重登录并重试一次 |
 | 时间 | 埋点与 `Info.Time` 为 Unix 毫秒；`Info.StartTime` 为 ISO 8601 字符串 |

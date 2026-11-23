@@ -262,6 +262,83 @@ async function main() {
         assert.strictEqual(tokenRequestUrl, 'https://star.example.com:6600/stardust/browser-token');
     });
 
+    await test('readConfig 读取中转模式与上报地址', () => {
+        const config = loader.readConfig(
+            fakeScript({
+                'data-stardust-app': 'MyWeb',
+                'data-stardust-mode': 'relay',
+                'data-stardust-report': '/stardust/collect'
+            }),
+            fakeDocument(null)
+        );
+
+        assert.strictEqual(config.mode, 'relay');
+        assert.strictEqual(config.report, '/stardust/collect');
+    });
+
+    await test('start 在中转模式不创建 tokenProvider', () => {
+        let captured = null;
+        const fakeTracer = { start() {} };
+        const root = {
+            Stardust: {
+                createTracer(options) {
+                    captured = options;
+                    return fakeTracer;
+                }
+            }
+        };
+
+        loader.start(root, {
+            appId: 'MyWeb',
+            mode: 'relay',
+            report: '/stardust/collect',
+            tokenUrl: '/stardust/browser-token'
+        });
+
+        assert.strictEqual(captured.mode, 'relay');
+        assert.strictEqual(captured.reportUrl, '/stardust/collect');
+        assert.strictEqual(captured.tokenProvider, undefined, '中转模式不应申请星尘令牌');
+    });
+
+    await test('配置端点可把接入模式切换为中转', async () => {
+        let captured = null;
+        const fakeTracer = { start() {} };
+        const root = {
+            fetch() {
+                return Promise.resolve({
+                    ok: true,
+                    json() {
+                        return Promise.resolve({
+                            code: 0,
+                            data: {
+                                appId: 'MyWeb',
+                                mode: 'relay',
+                                reportUrl: '/stardust/collect',
+                                tokenUrl: '/stardust/browser-token'
+                            }
+                        });
+                    }
+                });
+            },
+            Stardust: {
+                createTracer(options) {
+                    captured = options;
+                    return fakeTracer;
+                }
+            }
+        };
+        const doc = {
+            currentScript: fakeScript({ 'data-config-url': '/stardust/browser-config' }),
+            querySelector() { return null; }
+        };
+
+        await loader.bootstrap(root, doc);
+
+        assert.strictEqual(captured.mode, 'relay');
+        assert.strictEqual(captured.reportUrl, '/stardust/collect');
+        assert.strictEqual(captured.tokenProvider, undefined);
+    });
+
     console.log('\n==================================================');
     console.log(`Loader 测试完成: ${passed} 通过, ${failed} 失败`);
     console.log('==================================================');
