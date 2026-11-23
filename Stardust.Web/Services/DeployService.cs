@@ -140,11 +140,11 @@ public class DeployService(StarFactory starFactory, ITracer tracer)
         {
             await PublishEnabledNodes(app, ip);
             if (app.Enable && app.AutoPublish)
-                return "已切换版本，并按自动发布向启用节点下发安装";
+                return "Version switched; install commands were dispatched to enabled nodes by auto-publish";
         }
         return publishEnabledNodes
-            ? "已切换版本号，未开启自动发布，未下发节点"
-            : "已切换版本号，未下发节点";
+            ? "Version switched; auto-publish is off, so no nodes were dispatched"
+            : "Version switched; no nodes were dispatched";
     }
 
     /// <summary>自动发布。应用版本后向启用节点下发安装。</summary>

@@ -90,7 +90,7 @@ public class AppDeployVersionUseTests
             Assert.True(missing.Message.Contains("not found", StringComparison.OrdinalIgnoreCase) || missing.Message.Contains("找不到"), missing.Message);
 
             var message = await svc.UseVersion(ver.Id, "127.0.0.1", publishEnabledNodes: false);
-            Assert.Equal("已切换版本号，未下发节点", message);
+            Assert.Equal("Version switched; no nodes were dispatched", message);
             Assert.Equal("2.0.0", AppDeploy.FindById(app.Id).Version);
 
             await Assert.ThrowsAnyAsync<Exception>(() => svc.UseVersion(ver.Id, "127.0.0.1"));

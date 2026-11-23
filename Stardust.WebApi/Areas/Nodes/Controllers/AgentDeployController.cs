@@ -65,7 +65,7 @@ public class AgentDeployController : ControllerBaseX
                 // 守卫信封用本宿主 ControllerBaseX.Json(code,message)（MVC 孪生匿名 Json(Object) 重载在 API 版 Cube 不存在）
                 var serverUrl = _starFactory?.Server;
                 if (serverUrl.IsNullOrEmpty())
-                    return Json(500, L.T("StarServer 地址未配置（appsettings StarServer 键），无法转发部署请求。"));
+                    return Json(500, L.T("StarServer address is not configured (appsettings StarServer key); the deploy request cannot be forwarded."));
 
                 var json = JsonSerializer.Serialize(model);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -103,9 +103,9 @@ public class AgentDeployController : ControllerBaseX
     {
         // 兼容窗：旧调用以查询串提交凭据（如 ?password=xxx），返回明确指引而非静默失败
         if (Request.Query.ContainsKey("password"))
-            return Json(400, L.T("TestConnection 凭据已改走 POST JSON body {host,port,userName,password,executeOn}；查询串提交密码已停用（安全 N3）。"));
+            return Json(400, L.T("TestConnection credentials must be sent in the POST JSON body {host,port,userName,password,executeOn}; passwords in the query string are disabled (security N3)."));
 
-        if (model == null) return Json(400, L.T("缺少请求体：请以 JSON {host,port,userName,password,executeOn} 提交。"));
+        if (model == null) return Json(400, L.T("Missing request body. Submit as JSON {host,port,userName,password,executeOn}."));
 
         var host = model.Host;
         var port = model.Port;
@@ -130,7 +130,7 @@ public class AgentDeployController : ControllerBaseX
                 // 守卫信封用本宿主 ControllerBaseX.Json(code,message)（MVC 孪生匿名 Json(Object) 重载在 API 版 Cube 不存在）
                 var serverUrl = _starFactory?.Server;
                 if (serverUrl.IsNullOrEmpty())
-                    return Json(500, L.T("StarServer 地址未配置（appsettings StarServer 键），无法转发连接测试。"));
+                    return Json(500, L.T("StarServer address is not configured (appsettings StarServer key); the connection test cannot be forwarded."));
 
                 // N3 落地（2026-11-12 lead 批）：StarServer TestConnection 已改 [FromBody] DTO，转发改纯 JSON body，凭据零经查询串
                 var json = JsonSerializer.Serialize(new { host, port, userName, password });

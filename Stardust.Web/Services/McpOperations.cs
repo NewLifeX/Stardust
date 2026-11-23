@@ -62,14 +62,14 @@ public class McpOperations : IMcpOperations
 
     public async Task<Object> ReadDeployLogFilesAsync(Int32 deployNodeId)
     {
-        var dn = AppDeployNode.FindById(deployNodeId) ?? throw new InvalidOperationException($"部署节点[{deployNodeId}]不存在");
+        var dn = AppDeployNode.FindById(deployNodeId) ?? throw new InvalidOperationException($"Deploy node [{deployNodeId}] does not exist");
         var rs = await _deploy.ListLogFilesAsync(dn);
         return new { files = rs.Files.Select(f => new { name = f.Name, size = f.Size, last_write_utc = f.LastWriteUtc }).ToArray() };
     }
 
     public async Task<Object> ReadDeployLogTailAsync(Int32 deployNodeId, String file, Int64 offset, Int32 maxBytes)
     {
-        var dn = AppDeployNode.FindById(deployNodeId) ?? throw new InvalidOperationException($"部署节点[{deployNodeId}]不存在");
+        var dn = AppDeployNode.FindById(deployNodeId) ?? throw new InvalidOperationException($"Deploy node [{deployNodeId}] does not exist");
         var rs = await _deploy.TailLogFileAsync(dn, file, offset, maxBytes);
         return new { content = rs.Content, offset = rs.Offset, file_size = rs.FileSize, truncated = rs.Truncated };
     }

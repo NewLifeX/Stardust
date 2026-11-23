@@ -123,7 +123,7 @@ public class WebEntityController<T> : EntityController<T> where T : Entity<T>, n
             {
                 var pi = typeof(T).GetProperty(uk.Name, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase);
                 var id = pi != null && pi.CanRead ? (pi.GetValue(entity) + "").Trim() : "";
-                if (!id.IsNullOrEmpty() && id != "0") throw new Exception("添加数据不能带主键");
+                if (!id.IsNullOrEmpty() && id != "0") throw new Exception("Adding data must not include a primary key");
             }
 
             // OnInsert 为持久化钩子（McpTokenController 等在此生成业务字段）
@@ -133,16 +133,16 @@ public class WebEntityController<T> : EntityController<T> where T : Entity<T>, n
             SyncValues(entity);
 
             if (rows <= 0) rows = entity.Insert();
-            if (rows <= 0) throw new Exception("数据库无变更");
+            if (rows <= 0) throw new Exception("No changes were made to the database");
 
             rs.Code = 0;
-            rs.Message = "添加成功！";
+            rs.Message = "Add succeeded!";
             rs.Data = OnProject(entity, OnGetOutputFields(ViewKinds.EditForm, entity));
         }
         catch (Exception ex)
         {
             rs.Code = 500;
-            rs.Message = "添加失败！ " + ex.Message;
+            rs.Message = "Add failed! " + ex.Message;
             rs.Data = OnProject(entity, OnGetOutputFields(ViewKinds.EditForm, entity));
         }
 
@@ -199,7 +199,7 @@ public class WebEntityController<T> : EntityController<T> where T : Entity<T>, n
         }
         catch (Exception ex)
         {
-            var rs = new ApiResponse<ApiRow> { Code = 500, Message = "保存失败！ [Sync] " + ex.Message, Data = OnProject(entity, OnGetOutputFields(ViewKinds.EditForm, entity)) };
+            var rs = new ApiResponse<ApiRow> { Code = 500, Message = "Save failed! [Sync] " + ex.Message, Data = OnProject(entity, OnGetOutputFields(ViewKinds.EditForm, entity)) };
             return await Task.FromResult(rs);
         }
 

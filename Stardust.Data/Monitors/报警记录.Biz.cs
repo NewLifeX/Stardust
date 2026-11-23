@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using NewLife;
 using NewLife.Data;
@@ -188,7 +188,7 @@ public partial class AlarmRecord : Entity<AlarmRecord>
     /// <returns>是否保存成功</returns>
     public Boolean Resolve(String note)
     {
-        if (note.IsNullOrEmpty()) throw new ArgumentNullException(nameof(note), "处置意见不能为空");
+        if (note.IsNullOrEmpty()) throw new ArgumentNullException(nameof(note), "Resolution note cannot be empty.");
 
         const String mark = "\nMCP处置：";
         var limit = _.Content.Length;

@@ -63,6 +63,6 @@ public class ProjectUserPutTests
         var rs = await _api.PutApiEnvelopeAsync<ProjectUser>("Platform/ProjectUser", new { id = 2_000_000_000, enable = true });
 
         Assert.NotEqual(0, rs.Code);
-        Assert.Contains("不存在", rs.Message);
+        Assert.Contains("does not exist", rs.Message);
     }
 }

@@ -301,15 +301,15 @@ public partial class AppConfig : Entity<AppConfig>
     {
         if (historyId <= 0) throw new ArgumentNullException(nameof(historyId));
 
-        var hi = ConfigHistory.FindById(historyId) ?? throw new InvalidOperationException("历史不存在！");
-        if (!hi.Action.EqualIgnoreCase("Publish")) throw new InvalidOperationException("仅发布历史支持回滚！");
+        var hi = ConfigHistory.FindById(historyId) ?? throw new InvalidOperationException("History record does not exist.");
+        if (!hi.Action.EqualIgnoreCase("Publish")) throw new InvalidOperationException("Only publish history supports rollback.");
 
-        var cfg = FindById(hi.ConfigId) ?? throw new InvalidOperationException("应用配置不存在！");
-        var snap = hi.Remark.ToJsonEntity<AppConfig>() ?? throw new InvalidOperationException("历史快照解析失败！");
+        var cfg = FindById(hi.ConfigId) ?? throw new InvalidOperationException("Application configuration does not exist.");
+        var snap = hi.Remark.ToJsonEntity<AppConfig>() ?? throw new InvalidOperationException("Failed to parse the history snapshot.");
 
         // 回滚到该次 Publish 引入的版本（NextVersion），无效（<=0）时用快照版本兜底
         var version = snap.NextVersion > 0 ? snap.NextVersion : snap.Version;
-        if (version <= 0) throw new InvalidOperationException("历史快照缺少有效版本号，无法回滚！");
+        if (version <= 0) throw new InvalidOperationException("The history snapshot has no valid version number; rollback is not possible.");
 
         var before = cfg.Version;
         cfg.Version = version;

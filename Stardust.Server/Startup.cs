@@ -235,7 +235,7 @@ public class Startup
 
         // 服务启动时全量回修部署集节点计数与真实启用节点数的偏差
         var fixedDeploys = AppDeploy.FixAll();
-        if (fixedDeploys > 0) XTrace.WriteLine("AppDeploy.FixAll 修正了 {0} 个部署集的节点计数", fixedDeploys);
+        if (fixedDeploys > 0) XTrace.WriteLine("AppDeploy.FixAll corrected node counts for {0} deployments", fixedDeploys);
 
         // 多语言。配置了固定语言时全进程生效，否则按请求语言识别
         app.UseStardustLocalization();

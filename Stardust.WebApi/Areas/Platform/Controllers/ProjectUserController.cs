@@ -79,23 +79,23 @@ public class ProjectUserController : WebEntityController<ProjectUser>
         var rs = new ApiResponse<ProjectUser>();
         try
         {
-            if (model == null || model.Id == 0) throw new ArgumentException("请传入编号");
+            if (model == null || model.Id == 0) throw new ArgumentException("The record ID is required");
 
             var old = ProjectUser.FindById(model.Id);
-            if (old == null) throw new ArgumentException($"记录 #{model.Id} 不存在");
+            if (old == null) throw new ArgumentException($"Record #{model.Id} does not exist");
 
             // 契约式部分更新：仅复制 Enable，未提交字段保持库中原值（绑定模型其它属性为默认值，不可整体落库）
             old.Enable = model.Enable;
             old.Update();
 
             rs.Code = 0;
-            rs.Message = "更新成功！";
+            rs.Message = "Update succeeded!";
             rs.Data = old;
         }
         catch (Exception ex)
         {
             rs.Code = 500;
-            rs.Message = "更新失败！ " + ex.Message;
+            rs.Message = "Update failed! " + ex.Message;
             rs.Data = model;
         }
         return rs;

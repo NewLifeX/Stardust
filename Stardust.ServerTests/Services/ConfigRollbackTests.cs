@@ -79,7 +79,7 @@ public class ConfigRollbackTests
         try
         {
             var ex = Assert.Throws<InvalidOperationException>(() => AppConfig.Rollback(history.Id));
-            Assert.Contains("仅发布历史", ex.Message);
+            Assert.Contains("Only publish history", ex.Message);
         }
         finally
         {
