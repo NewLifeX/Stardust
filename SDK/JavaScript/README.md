@@ -54,7 +54,7 @@ cp -r SDK/JavaScript/src /your-project/node_modules/@newlifex/stardust
 
 `data-stardust-token` 指向星尘的 Token 端点（默认 `/stardust/browser-token`，同域反代或直连均可），令牌由星尘签发，应用后端不参与。`data-stardust-token-value` 适合静态页面，配合 `data-stardust-expire="300"` 指定有效期；Token 应短有效期且仅具备上报权限。跨域链路传播需显式配置 `data-stardust-trace-targets="https://api.example.com,..."`，默认仅同源注入 `traceparent`。
 
-采样与降噪可用 `data-stardust-sample`（0~1，默认 1）、`data-stardust-ignore`（逗号分隔 URL 子串或正则）与 `data-stardust-disabled`（`page`/`route`/`error`/`resource`/`fetch`/`xhr`）：
+采样与降噪可用 `data-stardust-sample`（0~1，默认 1）、`data-stardust-ignore`（逗号分隔 URL 子串或正则）与 `data-stardust-disabled`（`page`/`route`/`error`/`resource`/`fetch`/`xhr`/`vitals`）：
 
 ```html
 <script src="https://cdn.example.com/stardust/loader.js"
@@ -69,6 +69,8 @@ cp -r SDK/JavaScript/src /your-project/node_modules/@newlifex/stardust
 - 未命中采样时只丢弃正常埋点，异常埋点始终上报。
 - `ignoreUrls` 命中的地址不生成 fetch/XHR/资源错误埋点。
 - 配置端点返回的 `sampleRate`/`ignoreUrls`/`disabled` 会被自动消费。
+
+Web Vitals 默认开启，离页时汇总 LCP/CLS/INP/FCP/TTFB 为 `web.vital.*`（标签含 `value` 与 `rating`）。需要关闭时用 `data-stardust-vitals="false"`、`disabled: ['vitals']` 或 `enableWebVitals: false`。
 
 ### 中转模式（经应用后端）
 

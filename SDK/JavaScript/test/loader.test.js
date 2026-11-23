@@ -381,6 +381,28 @@ async function main() {
         assert.strictEqual(captured.disabled, 'fetch,page');
     });
 
+    await test('readConfig 与 start 支持 Web Vitals 开关', () => {
+        const off = loader.readConfig(fakeScript({ 'data-stardust-app': 'A', 'data-stardust-vitals': 'false' }), fakeDocument(null));
+        assert.strictEqual(off.vitals, false);
+
+        const on = loader.readConfig(fakeScript({ 'data-stardust-app': 'A', 'data-stardust-vitals': 'true' }), fakeDocument(null));
+        assert.strictEqual(on.vitals, true);
+
+        let captured = null;
+        const fakeTracer = { start() {} };
+        const root = {
+            Stardust: {
+                createTracer(options) {
+                    captured = options;
+                    return fakeTracer;
+                }
+            }
+        };
+
+        loader.start(root, { appId: 'A', vitals: false, token: 'tk' });
+        assert.strictEqual(captured.enableWebVitals, false);
+    });
+
     console.log('\n==================================================');
     console.log(`Loader 测试完成: ${passed} 通过, ${failed} 失败`);
     console.log('==================================================');

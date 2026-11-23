@@ -112,8 +112,10 @@ export interface BrowserTracerOptions {
     sampleRate?: number | string;
     /** 忽略的 URL 规则（子串或正则），命中后不采集 fetch/XHR/资源错误 */
     ignoreUrls?: string | string[] | RegExp | Array<string | RegExp>;
-    /** 关闭的自动埋点类别：page/route/error/resource/fetch/xhr */
+    /** 关闭的自动埋点类别：page/route/error/resource/fetch/xhr/vitals */
     disabled?: string | string[];
+    /** 是否采集 Web Vitals（LCP/CLS/INP/FCP/TTFB），默认 true */
+    enableWebVitals?: boolean;
     /** 排除的埋点名称（子串匹配） */
     excludes?: string[];
 }

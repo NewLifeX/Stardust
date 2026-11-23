@@ -595,6 +595,7 @@
             this.disabled = normalizeExcludes(opts.disabled).map(function (item) {
                 return item.toLowerCase();
             });
+            this.enableWebVitals = opts.enableWebVitals !== false;
 
             this._token = '';
             this._tokenExpire = 0;
@@ -622,6 +623,8 @@
             this._routeListeners = null;
             this._errorListeners = null;
             this._spanStack = [];
+            this._vitals = null;
+            this._vitalsEmitted = false;
             this._initialTraceparent = opts.initialTraceparent ? parseTraceparent(opts.initialTraceparent) : null;
             this._pageTraceId = this._initialTraceparent ? this._initialTraceparent.traceId : generateTraceId();
 
@@ -675,6 +678,7 @@
 
             this._running = false;
             this._clearTimers();
+            this._emitWebVitals();
             this._removeDomListeners();
 
             var self = this;
@@ -872,6 +876,54 @@
             if (!name || !this.disabled || this.disabled.length === 0) return false;
 
             return this.disabled.indexOf(String(name).toLowerCase()) !== -1;
+        }
+
+        /**
+         * 汇总并上报 Web Vitals。只在离页或停止时调用，每个页面只上报一次。
+         * @private
+         */
+        _emitWebVitals() {
+            if (this._vitalsEmitted || !this._vitals) return;
+            this._vitalsEmitted = true;
+
+            var v = this._vitals;
+            this._emitVital('ttfb', v.ttfb, 800, 1800, 0);
+            this._emitVital('fcp', v.fcp, 1800, 3000, 0);
+            this._emitVital('lcp', v.lcp, 2500, 4000, 0);
+            this._emitVital('cls', v.cls, 0.1, 0.25, 3);
+            this._emitVital('inp', v.inp, 200, 500, 0);
+
+            // 指标已定稿，断开观察者释放资源
+            var observers = v.observers || [];
+            for (var i = 0; i < observers.length; i++) {
+                try {
+                    observers[i].disconnect();
+                } catch (err) {
+                    // 忽略
+                }
+            }
+            v.observers = [];
+        }
+
+        /**
+         * 生成单个 Web Vital 埋点。值为 0 或非法时跳过。
+         * @param {String} name 指标名
+         * @param {Number} value 指标值
+         * @param {Number} good 良好阈值
+         * @param {Number} needs 待改进阈值
+         * @param {Number} digits 小数位
+         * @private
+         */
+        _emitVital(name, value, good, needs, digits) {
+            var num = Number(value);
+            if (!isFinite(num) || num <= 0) return;
+
+            var rating = num <= good ? 'good' : (num <= needs ? 'needs-improvement' : 'poor');
+            var text = digits > 0 ? num.toFixed(digits) : String(Math.round(num));
+
+            var span = this.newSpan('web.vital.' + name);
+            span.setTag('value=' + text + ';rating=' + rating);
+            span.finish();
         }
 
         /**
@@ -1461,10 +1513,12 @@
 
             var self = this;
             this._onPageHide = function () {
+                self._emitWebVitals();
                 self._beaconFlush();
             };
             this._onVisibilityChange = function () {
                 if (self._isHidden()) {
+                    self._emitWebVitals();
                     self._beaconFlush();
                 } else if (self._running && !self.relay) {
                     var now = Date.now();
@@ -2080,6 +2134,98 @@
     }
 
     /**
+     * 安装 Web Vitals 采集。LCP/CLS/INP 依赖 PerformanceObserver，TTFB/FCP 取性能条目。
+     * @param {StardustTracer} tracer 追踪器
+     */
+    function installWebVitalsInstrumentation(tracer) {
+        try {
+            var win = tracer._win || getRootWindow();
+            var perf = tracer._perf || getWindowProperty(win, 'performance');
+            if (!perf) return;
+
+            var state = {
+                lcp: 0,
+                cls: 0,
+                inp: 0,
+                fcp: 0,
+                ttfb: 0,
+                observers: [],
+            };
+            tracer._vitals = state;
+
+            // TTFB 与 FCP 来自导航与绘制条目，无需观察者
+            try {
+                var navs = typeof perf.getEntriesByType === 'function' ? perf.getEntriesByType('navigation') : null;
+                var nav = navs && navs.length > 0 ? navs[0] : null;
+                if (nav) {
+                    var ttfb = Number(nav.responseStart) || 0;
+                    if (ttfb > 0) state.ttfb = Math.round(ttfb);
+                }
+
+                var paints = typeof perf.getEntriesByType === 'function' ? perf.getEntriesByType('paint') : null;
+                if (paints) {
+                    for (var i = 0; i < paints.length; i++) {
+                        if (paints[i] && paints[i].name === 'first-contentful-paint') {
+                            state.fcp = Math.round(Number(paints[i].startTime) || 0);
+                            break;
+                        }
+                    }
+                }
+            } catch (err) {
+                // 忽略
+            }
+
+            var Observer = win && win.PerformanceObserver
+                ? win.PerformanceObserver
+                : (typeof PerformanceObserver !== 'undefined' ? PerformanceObserver : null);
+            if (typeof Observer !== 'function') return;
+
+            var observe = function (type, handler, options) {
+                try {
+                    var po = new Observer(function (list) {
+                        try {
+                            handler(list && typeof list.getEntries === 'function' ? list.getEntries() : []);
+                        } catch (err) {
+                            // 忽略
+                        }
+                    });
+                    var opts = { type: type, buffered: true };
+                    if (options) {
+                        for (var key in options) {
+                            if (Object.prototype.hasOwnProperty.call(options, key)) opts[key] = options[key];
+                        }
+                    }
+                    po.observe(opts);
+                    state.observers.push(po);
+                } catch (err) {
+                    // 浏览器不支持该条目类型时忽略
+                }
+            };
+
+            observe('largest-contentful-paint', function (entries) {
+                if (entries.length > 0) state.lcp = Math.round(Number(entries[entries.length - 1].startTime) || 0);
+            });
+            observe('layout-shift', function (entries) {
+                for (var i = 0; i < entries.length; i++) {
+                    var entry = entries[i];
+                    if (entry && !entry.hadRecentInput) state.cls += Number(entry.value) || 0;
+                }
+            });
+            observe('event', function (entries) {
+                for (var i = 0; i < entries.length; i++) {
+                    var duration = Number(entries[i] && entries[i].duration) || 0;
+                    if (duration > state.inp) state.inp = Math.round(duration);
+                }
+            }, { durationThreshold: 40 });
+            observe('first-input', function (entries) {
+                if (entries.length > 0 && state.inp <= 0) state.inp = Math.round(Number(entries[0].duration) || 0);
+            });
+        } catch (err) {
+            tracer._log('web vitals instrumentation failed: ' + formatError(err));
+        }
+    }
+
+    /**
      * 安装全部浏览器拦截器。
      * @param {StardustTracer} tracer 追踪器
      */
@@ -2120,6 +2266,13 @@
                 installErrorInstrumentation(tracer);
             } catch (err) {
                 tracer._log('install error failed: ' + formatError(err));
+            }
+        }
+        if (tracer.enableWebVitals && !tracer._isDisabled('vitals')) {
+            try {
+                installWebVitalsInstrumentation(tracer);
+            } catch (err) {
+                tracer._log('install web vitals failed: ' + formatError(err));
             }
         }
 

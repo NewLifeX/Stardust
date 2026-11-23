@@ -124,12 +124,34 @@ const performanceObject = {
         totalJSHeapSize: 23456789,
     },
     getEntriesByType(type) {
-        return type === 'navigation' ? [navigationEntry] : [];
+        if (type === 'navigation') return [navigationEntry];
+        if (type === 'paint') return [{ name: 'first-contentful-paint', startTime: 250 }];
+        return [];
     },
     now() {
         return 0;
     },
 };
+
+const performanceObservers = [];
+class FakePerformanceObserver {
+    constructor(callback) {
+        this.callback = callback;
+        this.types = [];
+        this.disconnected = false;
+        performanceObservers.push(this);
+    }
+    observe(options) {
+        if (options && options.type) this.types.push(options.type);
+    }
+    disconnect() {
+        this.disconnected = true;
+    }
+    emit(type, entries) {
+        if (this.disconnected || this.types.indexOf(type) === -1) return;
+        this.callback({ getEntries: () => entries });
+    }
+}
 
 class FakeBlob {
     constructor(parts, options) {
@@ -229,6 +251,7 @@ const fakeWindow = createEventTarget({
     fetch: fakeFetch,
     XMLHttpRequest: FakeXMLHttpRequest,
     Blob: FakeBlob,
+    PerformanceObserver: FakePerformanceObserver,
 });
 
 function setGlobal(name, value) {
@@ -249,6 +272,7 @@ setGlobal('sessionStorage', fakeWindow.sessionStorage);
 setGlobal('fetch', fakeFetch);
 setGlobal('XMLHttpRequest', FakeXMLHttpRequest);
 setGlobal('Blob', FakeBlob);
+setGlobal('PerformanceObserver', FakePerformanceObserver);
 
 // 必须在前面的全局伪造完成后再加载 SDK
 const BrowserTracer = require('../src/browser');
@@ -771,6 +795,54 @@ async function main() {
             assert.strictEqual(disabled._isDisabled('fetch'), true);
             assert.strictEqual(disabled._isDisabled('PAGE'), true);
             assert.strictEqual(disabled._isDisabled('xhr'), false);
+        });
+
+        await test('Web Vitals 离页时汇总上报并支持关闭', async () => {
+            const vitalsTracer = new BrowserTracer({ server: SERVER, appId: 'VitalsApp', period: 120 });
+            try {
+                await vitalsTracer.start();
+                assert.ok(vitalsTracer._vitals, '应安装 Web Vitals 采集');
+
+                performanceObservers.slice().forEach(function (observer) {
+                    observer.emit('largest-contentful-paint', [{ startTime: 1234 }]);
+                    observer.emit('layout-shift', [{ value: 0.05 }, { value: 0.5, hadRecentInput: true }]);
+                    observer.emit('event', [{ duration: 180 }]);
+                });
+
+                vitalsTracer._emitWebVitals();
+                fetchCalls.length = 0;
+                await vitalsTracer.flush();
+
+                const reports = findCalls('/Trace/Report');
+                assert.strictEqual(reports.length, 1, '应上报一次');
+                const body = parseBody(reports[0]);
+                ['ttfb', 'fcp', 'lcp', 'cls', 'inp'].forEach(function (name) {
+                    assert.ok(findBuilder(body, 'web.vital.' + name), '应包含 ' + name);
+                });
+
+                const cls = findBuilder(body, 'web.vital.cls');
+                assert.strictEqual(cls.Samples[0].Tag, 'value=0.050;rating=good');
+                const lcp = findBuilder(body, 'web.vital.lcp');
+                assert.strictEqual(lcp.Samples[0].Tag, 'value=1234;rating=good');
+            } finally {
+                await vitalsTracer.stop();
+            }
+
+            const off = new BrowserTracer({ server: SERVER, appId: 'VitalsOff', enableWebVitals: false, period: 120 });
+            try {
+                await off.start();
+                assert.strictEqual(off._vitals, null, '关闭后不应安装采集');
+            } finally {
+                await off.stop();
+            }
+
+            const disabled = new BrowserTracer({ server: SERVER, appId: 'VitalsDisabled', disabled: ['vitals'], period: 120 });
+            try {
+                await disabled.start();
+                assert.strictEqual(disabled._vitals, null, 'disabled=vitals 时不应安装采集');
+            } finally {
+                await disabled.stop();
+            }
         });
 
         await test('localStorage 不可用时回退到内存 clientId', async () => {

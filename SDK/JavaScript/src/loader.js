@@ -82,6 +82,7 @@
             sampleRate: get('sample'),
             ignore: get('ignore'),
             disabled: get('disabled'),
+            vitals: bool('vitals', null, null),
             tracePropagationTargets: get('trace-targets'),
             debug: bool('debug', null, false),
             autoInstrument: bool('auto-instrument', null, true),
@@ -211,6 +212,8 @@
         if (config.sampleRate !== undefined && config.sampleRate !== null && config.sampleRate !== '') options.sampleRate = config.sampleRate;
         if (config.ignoreUrls || config.ignore) options.ignoreUrls = config.ignoreUrls || config.ignore;
         if (config.disabled) options.disabled = config.disabled;
+        if (config.enableWebVitals !== undefined && config.enableWebVitals !== null) options.enableWebVitals = config.enableWebVitals !== false;
+        else if (config.vitals !== undefined && config.vitals !== null) options.enableWebVitals = config.vitals !== false;
 
         var relay = String(config.mode || '').toLowerCase() === 'relay';
         var tokenUrl = config.tokenUrl;

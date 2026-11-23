@@ -22,6 +22,8 @@ export interface LoaderConfig {
     ignore?: string;
     ignoreUrls?: string | string[];
     disabled?: string | string[];
+    vitals?: boolean | null;
+    enableWebVitals?: boolean;
     tracePropagationTargets?: string | string[];
     debug?: boolean;
     autoInstrument?: boolean;

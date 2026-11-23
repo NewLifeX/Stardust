@@ -250,15 +250,18 @@ bw_{Base64Url(appId)}.{Base64Url(origin)}.{过期Unix秒}.{HMAC-SHA256 签名}
 | JS 错误 | `js.error`，含未处理 Promise |
 | 资源错误 | `resource.error` |
 | fetch/XHR | 出站 Span、状态码/异常、`traceparent` 注入 |
+| Web Vitals | 离页时汇总 LCP/CLS/INP/FCP/TTFB 为 `web.vital.*`，标签含 `value` 与 `rating` |
 | 离页冲刷 | `sendBeacon`，回退 `fetch keepalive` |
 
 `traceparent` 默认只注入同源请求；跨域目标需通过 `tracePropagationTargets` 显式配置，避免自定义头触发 CORS 预检并阻断业务请求。
 
 只提供 `disabled`/`ignoreUrls`/`excludes` 等关闭开关，不要求用户逐个配置集成。
 
-- `disabled` 按类别关闭自动埋点：`page`/`route`/`error`/`resource`/`fetch`/`xhr`。
+- `disabled` 按类别关闭自动埋点：`page`/`route`/`error`/`resource`/`fetch`/`xhr`/`vitals`。
 - `ignoreUrls` 按 URL 子串或正则跳过 fetch/XHR 与资源错误，适合健康检查、指标等噪声地址。
 - `sampleRate` 按页面采样：未命中采样时只丢弃正常埋点，异常埋点始终上报。
+
+Web Vitals 的 INP 取 `event` 条目最大处理耗时近似，LCP/CLS 依赖浏览器支持；不支持的环境只上报 TTFB/FCP。评级阈值：LCP 2500/4000ms、CLS 0.1/0.25、INP 200/500ms、FCP 1800/3000ms、TTFB 800/1800ms。
 
 ### 3.6 最小公开 API
 
@@ -276,6 +279,7 @@ Stardust.tracer                   // 高级用法
 ### 3.7 隐私与采样默认值
 
 - 默认不采集 Cookie、Authorization、请求/响应体、表单值和 DOM 文本。
+- Web Vitals 只采集性能数值，不含 DOM 文本、用户输入或资源内容。
 - URL 默认去掉查询串与 fragment；提供 `ignoreUrls`/`beforeSend`。
 - 页面采样与链路采样分离；`sampleRate` 默认 1，小于 1 时按页面决定是否采集正常埋点，异常始终保留；未采样链路发送 `traceparent` 的 `00` 标志。
 - 默认不采集用户身份；`setUser` 需显式调用。
@@ -371,6 +375,7 @@ Content-Type: application/json        # 或 application/x-gzip
 - 直报令牌升级为无状态 HMAC 签名令牌（应用 + 来源 + 过期）；上报优先走 `Authorization` 头；新增来源校验、上报限流与单次条数上限；旧随机令牌继续兼容。
 - 新增 `POST /Trace/ReportRelay` 与 `Stardust.Monitors.BrowserRelayClient`；浏览器 SDK 支持 `mode=relay` + `reportUrl`，loader 支持 `data-stardust-mode` / `data-stardust-report`。
 - 配置端点的 `sampleRate`/`ignoreUrls`/`disabled` 已被 SDK 消费：页面级采样保留异常，按 URL 与类别关闭自动埋点。
+- 新增 Web Vitals 采集：LCP/CLS/INP/FCP/TTFB 在离页时汇总为 `web.vital.*`，默认开启，可用 `enableWebVitals:false` 或 `disabled:['vitals']` 关闭。
 - 测试：`BrowserEndpointsTests`（配置下发、来源校验、令牌签发与上报、Authorization/查询串两种上报、来源不一致拒绝、冒名拒绝、令牌不得用于其它接口）+ `BrowserTokenServiceTests`（无状态签名、过期、篡改、来源绑定、旧令牌兼容、签发与上报限流）+ `TraceRelayTests` 5 例（强制归属、客户端IP、浏览器令牌与匿名拒绝、GZip、条数上限）+ 跨域预检 `CorsTests`；`BrowserRelayClientTests` 3 例；`npm test`（浏览器 relay 模式与 loader 用例）。
 
 已知边界：
@@ -391,7 +396,7 @@ Content-Type: application/json        # 或 application/x-gzip
 | 阶段 | 内容 |
 |------|------|
 | P1（MVP） | loader + `data-stardust-*`、`Stardust.init`、配置端点回退、页面/路由/错误/fetch/XHR、`traceparent`、开关与采样、令牌契约对齐与跨域预检 |
-| P2 | Web Vitals、懒加载 loader、Source Map（配置/Token 服务端端点已完成） |
+| P2 | Web Vitals（已完成）、懒加载 loader、Source Map |
 | P3 | Session Replay、OTLP/OpenTelemetry 桥接、跨域链路、React/Vue 封装 |
 
 > 原则：一行接入、默认自动、前端无 secret、W3C `traceparent` 唯一跨端契约。
