@@ -1,28 +1,42 @@
 # APM-18 浏览器埋点方案
 
-> 版本：v1.0 | 日期：2026-10-20
-> 对应需求：浏览器 RUM 一行接入、跨服务链路关联
+> 版本：v1.1 | 日期：2026-11-23
+> 对应需求：浏览器 RUM 一行接入、跨服务链路关联、支持"直报星尘"与"应用后端中转"两条链路（[Issue #17](https://github.com/NewLifeX/Stardust/issues/17)）
 > 相关文档：[APM-17 监控接入 API](APM-17-监控接入API.md) | [SDK/JavaScript](../SDK/JavaScript/README.md)
 
 ---
 
 ## 0. 一分钟看懂
 
-三条请求，全部打到星尘，应用后端一条都不经过：
+两条链路都支持，默认走直报；需要时切换为中转，只改一个 `mode`。
+
+**直报（默认，推荐）**：
 
 ```
 浏览器页面
-  │ ① GET  /stardust/browser-config?appId=MyWeb    拿"怎么报"的配置（采样率、地址…）
-  │ ② POST /stardust/browser-token  {appId}         拿"门禁卡"（bw_ 前缀，10 分钟有效）
-  │ ③ POST /Trace/Report?Token=bw_xxx               投递埋点
+  │ ① GET  /stardust/browser-config?appId=MyWeb    拿"怎么报"的配置（模式、地址、采样…）
+  │ ② POST /stardust/browser-token  {appId}         拿"门禁卡"（bw_ 签名令牌，10 分钟有效）
+  │ ③ POST /Trace/Report                           投递埋点（令牌走 Authorization 头）
   ▼
 星尘服务端（监控中心）
 ```
 
-- **数据发给谁**：星尘。埋点不经应用后端转发——后端故障时恰恰是最需要异常数据的时候。
-- **令牌找谁要**：星尘。`BrowserController` 与 `BrowserTokenService` 都在 `Stardust.Server` 内，不是客户后端。
-- **前端有什么凭据**：只有 10 分钟有效的 `bw_` 令牌，只能投递，不能读数据、不能调用其它接口；App Secret 永不出现在浏览器。
-- **应用后端要不要改代码**：不要。同域反代由网关（nginx 等）承担，直连跨域由星尘 CORS 承担。
+**中转（应用后端转发）**：
+
+```
+浏览器页面
+  │ ① POST /stardust/collect                       投递到你自己的后端（可用 Cookie 会话鉴权）
+  ▼
+应用后端（持有 AppId + Secret）
+  │ ② POST /Trace/ReportRelay?Token=<应用令牌>     原样转发，可带 clientIp
+  ▼
+星尘服务端（强制归属到应用令牌对应的应用）
+```
+
+- **直报的数据发给谁**：星尘。埋点不经应用后端转发——后端故障时恰恰是最需要异常数据的时候。
+- **中转的数据发给谁**：先到应用后端，再由它转发。适合 CSP 限制、星尘域名被广告拦截、或企业要求出站流量统一走自家后端的场景。
+- **前端有什么凭据**：直报只有 10 分钟有效的 `bw_` 令牌，只能投递，不能读数据、不能调用其它接口；App Secret 永不出现在浏览器。中转模式前端不带星尘令牌，可用应用自身会话。
+- **应用后端要不要改代码**：直报不要；中转需要加一个转发端点（.NET 用 `BrowserRelayClient` 约 5 行）。
 
 安全边界一句话：前端埋点是**公开可写通道**，数据能当"信号"，不能当"审计证据"（详见 §3.3）。
 
@@ -34,26 +48,28 @@
 
 1. **一行接入**：一个 `<script>` 标签自动初始化，不写 `createTracer().start()`。
 2. **服务端可控配置**：可选的 `/stardust/browser-config`，集中控制开关、采样与排除项。
-3. **公开写入凭据**：短期匿名 Token，前端永远不出现 App Secret。
+3. **公开写入凭据**：短期签名 Token，前端永远不出现 App Secret。
 4. **页面级链路**：后端渲染 HTML 时注入 `traceparent`，让 `page.load` 与后端请求处于同一条链路。
+5. **两条接入链路**：默认浏览器直报星尘；受 CSP、广告拦截或企业出网策略限制时，可切换为应用后端中转，二者共用同一套埋点与安全模型。
 
-推荐的最小方案：**一个 loader 脚本 + `data-stardust-*` 属性 + 可选配置端点 + 短期 Token + W3C `traceparent`**，其余能力（Web Vitals、Session Replay、OTLP）后置。
+推荐的最小方案：**一个 loader 脚本 + `data-stardust-*` 属性 + 可选配置端点 + 短期签名 Token + 中转模式 + W3C `traceparent`**，其余能力（Web Vitals、Session Replay、OTLP）后置。
 
-### 1.1 为什么不走应用后端
+### 1.1 直报与中转如何取舍
 
-"浏览器 → 自己的后端 → 星尘"看起来能隐藏星尘地址、复用登录态，但代价是致命的：
+两种链路都支持，默认直报。"浏览器 → 自己的后端 → 星尘"能隐藏星尘地址、复用登录态，也能绕开浏览器侧限制，代价是把监控绑到了业务后端的可用性上：
 
-| 维度 | 直报星尘 | 经应用后端转发 |
-|------|---------|----------------|
-| 可用性 | 后端故障不影响采集 | 后端故障时，最需要的前端异常恰好全部丢失 |
-| 密钥 | 前端无 secret，由星尘签发短期令牌 | 后端必须持有应用 secret，泄露面更大 |
-| 排障 | 少一跳，链路断点清晰 | 多一跳，难以判断断在前端、后端还是星尘 |
-| 成本 | 无额外代码 | 每个业务后端都要实现转发与缓冲 |
-| 同行 | Sentry/Datadog/New Relic/Elastic/Faro 全部直报 | 仅作为可选同域透传（Sentry `tunnel`），用于绕开广告拦截，不是安全要求 |
+| 维度 | 直报星尘（默认） | 经应用后端转发（中转） |
+|------|-----------------|------------------------|
+| 可用性 | 后端故障不影响采集 | 后端故障时，最需要的后端异常恰好全部丢失 |
+| 密钥 | 前端无 secret，由星尘签发短期令牌 | 前端不带星尘令牌；后端持有应用 secret |
+| 排障 | 少一跳，链路断点清晰 | 多一跳，需同时看后端转发日志 |
+| 成本 | 无额外代码 | 每个业务后端加一个转发端点 |
+| 适用 | 绝大多数公网/内网站点 | CSP 限制、星尘域名被广告拦截、企业出网统一代理 |
+| 同行 | Sentry/Datadog/New Relic/Elastic/Faro 默认直报 | Sentry `tunnel` 等作为可选透传，用于绕开拦截 |
 
 **同域反代不等于"经应用后端"**：nginx 把 `/stardust/*` 转发给星尘的独立 upstream，不含业务代码；应用后端进程挂了，反代照常工作。它解决的是 CSP `connect-src` 与广告拦截，不会把监控绑到业务可用性上。反代必须指向星尘独立 upstream，不能落在应用后端的路由上。
 
-> 架构决策：前端埋点链路 = 浏览器直报星尘，应用后端不参与。见《架构设计》关键决策表。
+> 架构决策：前端埋点默认浏览器直报星尘；支持应用后端中转作为可控降级，中转时由服务端强制归属 `AppId` 并保留真实客户端 IP。见《架构设计》关键决策表。
 
 ---
 
@@ -148,9 +164,9 @@ init({
 - 建议在 `sessionStorage` 缓存 5 分钟。
 - 星尘服务端已实现该端点（`GET /stardust/browser-config`，`BrowserController`）：有 `appId` 时校验应用存在且启用，未知应用返回错误码；响应带 `Cache-Control: public, max-age=300`，不含任何密钥，`server` 取当前请求的协议与主机，便于同源代理场景直接回连。
 - `tokenUrl` 允许相对地址；SDK 按**配置端点地址**解析，因此直连跨域时指向星尘、同域反代时指向页面同源，两种拓扑无需改配置。
-- 当前 SDK 消费 `appId`/`server`/`tokenUrl`/`version`/`environment`/`debug` 等字段；`sampleRate`/`ignoreUrls`/`disabled` 为预留字段，P2 接入。
+- 当前 SDK 消费 `appId`/`server`/`mode`/`reportUrl`/`tokenUrl`/`version`/`environment`/`debug` 等字段；`sampleRate`/`ignoreUrls`/`disabled` 为预留字段，P2 接入。
 
-### 3.3 短期匿名 Token
+### 3.3 短期签名令牌（证书令牌）
 
 **签发方是星尘服务端**（`BrowserController` + `BrowserTokenService`，均在 `Stardust.Server` 内），不是客户后端。浏览器直接按下面的契约取令牌：
 
@@ -166,32 +182,46 @@ Content-Type: application/json
 { "appId": "MyWeb", "token": "bw_xxxxxxxxxxxxxxxxxxxxxxxx", "expire": 600, "server": "https://star.example.com:6600" }
 ```
 
-令牌随后以查询串形式出现在上报地址上（`POST /Trace/Report?Token=bw_xxx`）。前端只持有短期 Token，永不出现 App Secret；`401` 时刷新一次并重试。离页冲刷优先 `sendBeacon`（no-cors，不触发预检），失败退回 `fetch keepalive`。
+令牌是**服务端签名的自包含凭据**（“证书令牌”），格式：
 
-安全防线共六层，全部已实现：
+```
+bw_{Base64Url(appId)}.{Base64Url(origin)}.{过期Unix秒}.{HMAC-SHA256 签名}
+```
+
+- 只被 `Trace/Report` 接受，不能当作应用令牌调用配置、部署等接口。
+- 默认 10 分钟过期；前端缓存于 `sessionStorage`，关标签页即失效。
+- 绑定签发时的页面来源；上报来源不一致时令牌视为无效。
+- 校验不依赖共享缓存，多实例无需 Redis；`BrowserTokenSecret` 需各实例一致。
+- 兼容旧版随机令牌：不是签名结构的 `bw_` 令牌继续按缓存校验，自然过期后退出。
+
+上报时优先使用 `Authorization: Bearer bw_xxx`，避免令牌进入 URL 访问日志；`sendBeacon` 无法加头，离页冲刷仍用 `?Token=`。
+
+安全防线：
 
 | 层 | 机制 | 挡住什么 |
 |----|------|---------|
-| 1 | 令牌为 `bw_` + 随机串，不可解析、不可延展，只被 `Trace/Report` 接受 | 被当作应用令牌调用配置、部署等受保护接口 |
-| 2 | 默认 10 分钟过期，前端存 `sessionStorage`，关标签页即失效 | 长期窃用 |
+| 1 | 签名令牌不可伪造、不可延展，只被 `Trace/Report` 接受 | 被当作应用令牌调用其它受保护接口 |
+| 2 | 默认 10 分钟过期，签名内含过期时间 | 长期窃用 |
 | 3 | 申请必须带 `Origin`（缺失回退 `Referer`）并命中 `CorsOrigins`；应用须存在且启用 | 其它网站盗用应用名申请令牌 |
-| 4 | 同一应用与来源 IP 在有效期内最多 60 次申请；应用还需通过 `WhiteIP` 校验 | 令牌接口被打爆 |
-| 5 | 令牌主体必须与上报 `appId` 一致 | 拿 A 应用令牌向 B 应用灌数据 |
-| 6 | 应用禁用后令牌申请与上报立即失效 | 下线应用继续被写入 |
+| 4 | 令牌绑定申请来源，上报来源不一致即失效 | 令牌被抄到其它站点使用 |
+| 5 | 签发限流（应用 + IP，默认 300 次/有效期）与上报限流（应用 + IP，默认 600 次/分钟） | 令牌接口与公开写通道被刷 |
+| 6 | 单次上报最多 100 个埋点项；应用还需通过 `WhiteIP` 校验 | 单请求塞入超大批量数据 |
+| 7 | 令牌主体必须与上报 `AppId` 一致；应用禁用后申请与上报立即失效 | 拿 A 应用令牌向 B 应用灌数据 |
 
 **残余风险（必须承认，与同行一致）**：
 
 - 令牌是公开可写凭据。访客可从自己浏览器里抄走令牌，在 10 分钟内伪造该应用的埋点。Sentry 的 DSN、Datadog 的 clientToken 同样如此，因为写入通道必须匿名。
-- `Origin` 白名单挡不住恶意脚本（curl 可任意伪造），它只防"别的正常站点误用你的应用名"。
+- `Origin` 与来源绑定挡不住 curl 等非浏览器客户端（可任意伪造），它只防"别的正常站点误用你的应用名"。
 - 因此按限流、采样、数据保留期来控制影响面，而不是指望"防伪"；**前端埋点数据不能作为审计证据**。
 
 服务端实现要点（`BrowserTokenService` + `BrowserController`）：
 
-- 令牌是 `bw_` 前缀的不透明随机串，寄存于 `ICacheProvider`（单机内存、分布式为 Redis），默认 10 分钟过期。刻意不用 JWT，避免被当作应用令牌去调用配置、部署等其它受保护接口。
+- 签名密钥 `StarServerSetting.BrowserTokenSecret`，为空时自动生成并持久化；多实例部署需配置同一密钥，轮换后存量令牌最多 10 分钟内自然失效。
 - 来源校验取 `Origin`，缺失时回退 `Referer`；未配置 `CorsOrigins` 时放行任意来源（与 CORS 策略一致），配置后仅白名单来源可申请。**未配置是兼容期默认值，生产环境必须配置。**
-- 限流：同一应用与来源 IP 在有效期内最多 60 次，超出返回 403；应用还需通过 `WhiteIP` 校验。
+- 签发限流与上报限流使用 `ICacheProvider`；多实例未共享 Redis 时按节点计数，精度下降但不会失效。
 - `Trace/Report` 在令牌不是 JWT 时尝试按浏览器令牌校验，令牌主体必须与上报应用一致，防止冒名灌数据。
-- CORS 策略显式允许 `GET`/`POST`：跨域 JSON POST 会先发 `OPTIONS` 预检，缺少 `Access-Control-Allow-Methods` 时浏览器直接拦截。
+- CORS 策略显式允许 `GET`/`POST` 与任意请求头：跨域 JSON POST 与 `Authorization` 头都会触发预检。
+- 令牌与埋点报文必须走 HTTPS。直连或反代都应启用 TLS，否则令牌与页面数据会在链路上明文暴露。
 
 ### 3.4 链路关联
 
@@ -247,14 +277,15 @@ Stardust.tracer                   // 高级用法
 - 默认不采集用户身份；`setUser` 需显式调用。
 - 支持 `optIn`/`optOut` 与 Do Not Track（按项目合规要求）。
 
-### 3.8 两种部署拓扑
+### 3.8 三种部署拓扑
 
 | 拓扑 | 页面配置 | 需要什么 | 适用 |
 |------|---------|---------|------|
-| **同域反代**（生产推荐） | `data-stardust-config="/stardust/browser-config"` | 网关把 `/stardust/*` 与 `/Trace/Report` 指向星尘独立 upstream | 规避 CORS、CSP `connect-src` 与广告拦截 |
-| **直连跨域** | `data-stardust-server="https://star.example.com:6600"` | 星尘配置 `CorsOrigins` 白名单；页面 CSP `connect-src` 放行星尘域名 | 静态站点、无自有网关 |
+| **同域反代**（直报，生产推荐） | `data-stardust-config="/stardust/browser-config"` | 网关把 `/stardust/*` 与 `/Trace/Report` 指向星尘独立 upstream | 规避 CORS、CSP `connect-src` 与广告拦截 |
+| **直连跨域**（直报） | `data-stardust-server="https://star.example.com:6600"` | 星尘配置 `CorsOrigins` 白名单；页面 CSP `connect-src` 放行星尘域名 | 静态站点、无自有网关 |
+| **应用后端中转** | `data-stardust-mode="relay" data-stardust-report="/stardust/collect"` | 应用后端加一个转发端点（见 §3.9） | 星尘域名不可达、企业要求出站统一走自家后端 |
 
-两种拓扑都由星尘签发令牌并接收数据，应用后端不参与。反代只做透传，不解析、不缓存、不缓冲埋点报文。
+前两种拓扑由星尘签发令牌并接收数据，应用后端不参与。反代只做透传，不解析、不缓存、不缓冲埋点报文。
 
 同域反代的 nginx 片段：
 
@@ -269,7 +300,56 @@ location = /Trace/Report {
 }
 ```
 
-> 广告拦截器可能拦截监控域名。若直连被拦截，优先补同域反代，而不是改走应用后端。
+> 广告拦截器可能拦截监控域名。若直连被拦截，优先补同域反代，再考虑应用后端中转（中转会多一跳后端依赖）。
+
+### 3.9 应用后端中转
+
+页面只改两个属性：
+
+```html
+<script src="/stardust/loader.js"
+        data-stardust-app="MyWebApp"
+        data-stardust-mode="relay"
+        data-stardust-report="/stardust/collect"
+        defer></script>
+```
+
+浏览器行为：
+
+- 不调用 `/App/Login`、不申请 `bw_` 令牌、不发送心跳。
+- 上报请求默认 `credentials: 'same-origin'`，可直接复用应用自身 Cookie 会话鉴权。
+- 报文结构与直报一致（`TraceModel`），`AppId` 会被服务端忽略并强制归属到应用令牌主体。
+- 上报地址本身会被自动埋点忽略，避免自采集递归。
+
+应用后端最小实现（.NET，`Stardust.Monitors.BrowserRelayClient`）：
+
+```csharp
+var relay = new BrowserRelayClient(); // 读取 StarSetting.Current 的 Server/AppKey/Secret
+
+app.MapPost("/stardust/collect", async (HttpContext ctx) =>
+{
+    var ip = ctx.Request.Headers["X-Forwarded-For"].ToString().Split(',')[0].Trim();
+    await relay.ForwardAsync(ctx.Request.Body, ip, ctx.RequestAborted);
+    return Results.Ok(new { code = 0 });
+});
+```
+
+服务端契约：
+
+```http
+POST /Trace/ReportRelay?Token=<应用JWT>&clientIp=203.0.113.7
+Content-Type: application/json        # 或 application/x-gzip
+
+<浏览器原始埋点报文>
+```
+
+- 只接受应用 JWT（`App/Login` 或 `OAuth/Token` 换取）；浏览器 `bw_` 令牌与匿名请求一律 401。
+- 服务端解码 JWT，取 `Subject` 作为应用名，**强制覆盖** `model.AppId`；中转方无法向其它应用写数据。
+- `clientIp` 参与 `TraceData.CreateIP`、`AppOnline` 与 `AppMeter`；非法 IP 回退请求来源 IP。应用只能为自己的应用指定 IP。
+- 报文上限默认 1 MB（`StarServerSetting.RelayMaxBodySize`），支持 GZip。
+- 中转请求共用应用令牌，不按令牌复用在线会话，避免把应用自身的在线记录覆盖成浏览器。
+
+中转的代价：应用后端故障时前端异常全部丢失；因此默认仍推荐直报，中转作为可控降级。
 
 ---
 
@@ -283,12 +363,16 @@ location = /Trace/Report {
 - 支持 `initialTraceparent`：`page.load` 可复用后端注入的 TraceId/ParentId。
 - 页面级链路连续性：`page.load`、`page.view`、fetch/XHR、手动 Span 共用同一页面 TraceId；有初始 `traceparent` 时整体挂到后端链路。
 - 保留页面/路由/JS 错误/资源错误/fetch/XHR/离页冲刷。
-- 服务端 `GET /stardust/browser-config` 与 `POST /stardust/browser-token` 已实现（`BrowserController`）。`loader.js` 的令牌申请已与端点契约对齐（`POST` + JSON `{appId}`）。服务端测试：`BrowserEndpointsTests` 7 例（配置下发、来源校验、令牌签发与上报、查询串上报全流程、冒名拒绝、令牌不得用于其它接口）+ `BrowserTokenServiceTests` 3 例（限流、过期、主体绑定）+ 跨域预检 `CorsTests` 2 例。
+- 服务端 `GET /stardust/browser-config` 与 `POST /stardust/browser-token` 已实现（`BrowserController`）。`loader.js` 的令牌申请已与端点契约对齐（`POST` + JSON `{appId}`）。
+- 直报令牌升级为无状态 HMAC 签名令牌（应用 + 来源 + 过期）；上报优先走 `Authorization` 头；新增来源校验、上报限流与单次条数上限；旧随机令牌继续兼容。
+- 新增 `POST /Trace/ReportRelay` 与 `Stardust.Monitors.BrowserRelayClient`；浏览器 SDK 支持 `mode=relay` + `reportUrl`，loader 支持 `data-stardust-mode` / `data-stardust-report`。
+- 测试：`BrowserEndpointsTests`（配置下发、来源校验、令牌签发与上报、Authorization/查询串两种上报、来源不一致拒绝、冒名拒绝、令牌不得用于其它接口）+ `BrowserTokenServiceTests`（无状态签名、过期、篡改、来源绑定、旧令牌兼容、签发与上报限流）+ `TraceRelayTests` 5 例（强制归属、客户端IP、浏览器令牌与匿名拒绝、GZip、条数上限）+ 跨域预检 `CorsTests`；`BrowserRelayClientTests` 3 例；`npm test`（浏览器 relay 模式与 loader 用例）。
 
 已知边界：
 
-- 跨域直连要求星尘配置 `CorsOrigins` 白名单、CORS 显式允许 `POST`（已实现），且页面 CSP `connect-src` 放行星尘域名。
+- 跨域直连要求星尘配置 `CorsOrigins` 白名单、CORS 显式允许 `POST` 与 `Authorization` 头（已实现），且页面 CSP `connect-src` 放行星尘域名。
 - `bw_` 令牌可被访客复制，在有效期内伪造该应用埋点。这是公开可写凭据的固有边界，见 §3.3 残余风险。
+- 中转模式前端不带星尘令牌，安全性取决于应用自身的会话鉴权与防刷；应用后端应自行限流并校验报文大小。
 - 配置端点的 `sampleRate`/`ignoreUrls`/`disabled` 目前仅下发，SDK 尚未消费；采样与排除仍走 `data-stardust-*` 与 `autoInstrument`。
 
 待后续：

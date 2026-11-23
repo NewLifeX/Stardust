@@ -210,6 +210,7 @@ WebApi 请求的埋点名称由 `TracerMiddleware`（`Stardust.Extensions\Tracer
 |------|------|------|
 | `/Trace/Report` | POST | 接收普通埋点数据（JSON） |
 | `/Trace/ReportRaw` | POST | 接收压缩后的大数据量（GZip） |
+| `/Trace/ReportRelay` | POST | 应用后端中转浏览器埋点（需应用 JWT，强制归属令牌主体并保留客户端 IP） |
 
 #### ProcessData 核心处理流程
 

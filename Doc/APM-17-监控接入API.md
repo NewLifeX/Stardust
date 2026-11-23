@@ -1,6 +1,6 @@
 # APM-17 监控接入 API
 
-> 版本：v1.2 | 日期：2026-10-19
+> 版本：v1.3 | 日期：2026-11-23
 > 对应需求：APM-17 非 .NET 平台接入 API
 
 ---
@@ -258,6 +258,23 @@ SDK 必须检查 `code`，不能只看 HTTP 状态码。遇到 `code=401` 时应
 
 与 Report 接口相同，但请求体为 GZip 压缩的 JSON 数据，`Content-Type: application/x-gzip`。适合埋点数据超过 1KB 的场景。
 
+### 5. 应用后端中转 - POST /Trace/ReportRelay
+
+浏览器埋点可以先上报到应用后端，再由应用后端转发给星尘。此接口只接受**应用令牌**（JWT），用于把浏览器原始报文原样转发：
+
+```http
+POST /Trace/ReportRelay?Token=<应用JWT>&clientIp=203.0.113.7
+Content-Type: application/json        # 或 application/x-gzip
+
+<浏览器原始埋点报文，字段同 /Trace/Report>
+```
+
+- `Token` 必须是 `/App/Login` 或 `/OAuth/Token` 换取的 JWT；浏览器短期令牌 `bw_` 与匿名请求一律 401。
+- 服务端以令牌主体作为应用归属，**忽略报文中的 `AppId`**，中转方无法向其它应用写数据。
+- `clientIp` 为浏览器真实客户端 IP，参与追踪数据、在线记录与应用性能记录；非法时回退请求来源 IP。
+- 报文上限默认 1 MB（`RelayMaxBodySize`），支持 GZip，超出返回 400。
+- .NET 客户端用 `Stardust.Monitors.BrowserRelayClient`，浏览器端用 `mode=relay` + `reportUrl`（见 [APM-18 §3.9](APM-18-浏览器埋点方案.md)）。
+
 ---
 
 ## 令牌生命周期
@@ -266,7 +283,7 @@ SDK 必须检查 `code`，不能只看 HTTP 状态码。遇到 `code=401` 时应
 2. 心跳时若令牌剩余有效期不足 10 分钟，服务端会在响应中返回新 `Token`，SDK 应替换旧令牌。
 3. SDK 应在到期前（建议 5 分钟）主动重新登录，避免请求失败。
 4. 任意接口返回 `code=401` 时，SDK 应重新登录并重试一次；仍失败则丢弃本批数据并等待下个周期。
-5. 令牌只具备该应用的写入权限，不应写入日志或暴露给无关页面。浏览器场景推荐由后端签发短期令牌（`tokenProvider`）。
+5. 令牌只具备该应用的写入权限，不应写入日志或暴露给无关页面。浏览器场景使用星尘 `/stardust/browser-token` 签发的短期签名令牌，详见 [APM-18 浏览器埋点方案](APM-18-浏览器埋点方案.md)。
 
 ---
 
