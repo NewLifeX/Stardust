@@ -85,6 +85,56 @@
         return [];
     }
 
+    /**
+     * 归一化 URL 忽略规则。支持字符串子串、逗号分隔字符串与正则。
+     * @param {*} value 原始配置
+     * @returns {Array} 规则列表
+     */
+    function normalizeUrlTargets(value) {
+        if (value === null || value === undefined) return [];
+
+        var list = Array.isArray(value) ? value : (typeof value === 'string' ? value.split(/[,;]/) : [value]);
+        var result = [];
+        for (var i = 0; i < list.length; i++) {
+            var item = list[i];
+            if (item === null || item === undefined) continue;
+            if (typeof item === 'object' && typeof item.test === 'function') {
+                result.push(item);
+                continue;
+            }
+            var text = String(item).trim();
+            if (text) result.push(text);
+        }
+        return result;
+    }
+
+    /**
+     * 归一化页面采样率。非法值按 1 处理，保证默认全量。
+     * @param {*} value 原始配置
+     * @returns {Number} 0~1
+     */
+    function normalizeSampleRate(value) {
+        var num = Number(value);
+        if (!isFinite(num) || num >= 1) return 1;
+        if (num <= 0) return 0;
+        return num;
+    }
+
+    /**
+     * 判断 URL 是否命中忽略规则。
+     * @param {String} url 目标地址
+     * @param {*} item 字符串子串或正则
+     * @returns {Boolean} 是否命中
+     */
+    function matchesUrlTarget(url, item) {
+        if (item && typeof item === 'object' && typeof item.test === 'function') return item.test(url);
+
+        var value = String(item || '');
+        if (!value) return false;
+
+        return String(url).indexOf(value) !== -1;
+    }
+
     function formatError(err) {
         if (err === null || err === undefined) return 'Unknown error';
         if (typeof err === 'string') return err;
@@ -332,6 +382,14 @@
         var report = tracer && tracer._reportUrl;
         if (report && text.indexOf(String(report)) !== -1) return true;
 
+        // 业务自定义忽略规则：默认忽略健康检查、指标等噪声地址
+        var targets = tracer && tracer.ignoreUrls;
+        if (targets) {
+            for (var i = 0; i < targets.length; i++) {
+                if (matchesUrlTarget(text, targets[i])) return true;
+            }
+        }
+
         return false;
     }
 
@@ -531,6 +589,12 @@
             this.tracePropagationTargets = opts.tracePropagationTargets === undefined ? null : opts.tracePropagationTargets;
             this.debug = opts.debug === true;
             this.excludes = normalizeExcludes(opts.excludes);
+            this.sampleRate = normalizeSampleRate(opts.sampleRate);
+            this.sampled = Math.random() < this.sampleRate;
+            this.ignoreUrls = normalizeUrlTargets(opts.ignoreUrls);
+            this.disabled = normalizeExcludes(opts.disabled).map(function (item) {
+                return item.toLowerCase();
+            });
 
             this._token = '';
             this._tokenExpire = 0;
@@ -780,6 +844,9 @@
             var name = String(span.name || '');
             if (this._isIgnoredName(name)) return;
 
+            // 页面级采样：未命中采样时只保留异常，正常埋点全部丢弃，异常永远上报
+            if (!this.sampled && !span.error) return;
+
             var limit = this.maxTagLength;
             if (span.tag && span.tag.length > limit) span.tag = span.tag.substring(0, limit);
 
@@ -793,6 +860,18 @@
             }
 
             builder.addSpan(span);
+        }
+
+        /**
+         * 判断某类自动埋点是否被禁用。
+         * @param {String} name 类别：page/route/error/resource/fetch/xhr
+         * @returns {Boolean} 是否禁用
+         * @private
+         */
+        _isDisabled(name) {
+            if (!name || !this.disabled || this.disabled.length === 0) return false;
+
+            return this.disabled.indexOf(String(name).toLowerCase()) !== -1;
         }
 
         /**
@@ -1943,7 +2022,11 @@
                     var isResource = target && target !== win && tagName;
 
                     if (isResource) {
+                        if (tracer._isDisabled('resource')) return;
+
                         var resourceUrl = target.currentSrc || target.src || target.href || '';
+                        if (isIgnoredUrl(resourceUrl, tracer)) return;
+
                         var resourceSpan = tracer.newSpan('resource.error');
                         resourceSpan.setError('Resource failed: ' + String(tagName) + ' ' + resourceUrl);
                         resourceSpan.setTag(truncate(resourceUrl || getHref(win), tracer._tagLimit()));
@@ -1952,6 +2035,8 @@
                     }
 
                     var err = event && event.error;
+                    if (tracer._isDisabled('error')) return;
+
                     var message = err ? formatError(err) : ((event && event.message) || 'Unknown script error');
                     var source = (event && event.filename) || '';
                     var line = (event && event.lineno) || 0;
@@ -1970,6 +2055,8 @@
 
             var onRejection = function (event) {
                 try {
+                    if (tracer._isDisabled('error')) return;
+
                     var reason = event && event.reason;
                     var span = tracer.newSpan('js.error');
                     span.setError(reason ? formatError(reason) : 'Unhandled promise rejection');
@@ -2000,30 +2087,40 @@
         if (!tracer || tracer._instrumented) return;
         tracer._instrumented = true;
 
-        try {
-            installFetchInterceptor(tracer);
-        } catch (err) {
-            tracer._log('install fetch failed: ' + formatError(err));
+        if (!tracer._isDisabled('fetch')) {
+            try {
+                installFetchInterceptor(tracer);
+            } catch (err) {
+                tracer._log('install fetch failed: ' + formatError(err));
+            }
         }
-        try {
-            installXHRInterceptor(tracer);
-        } catch (err) {
-            tracer._log('install xhr failed: ' + formatError(err));
+        if (!tracer._isDisabled('xhr')) {
+            try {
+                installXHRInterceptor(tracer);
+            } catch (err) {
+                tracer._log('install xhr failed: ' + formatError(err));
+            }
         }
-        try {
-            installPageLoadInstrumentation(tracer);
-        } catch (err) {
-            tracer._log('install page load failed: ' + formatError(err));
+        if (!tracer._isDisabled('page')) {
+            try {
+                installPageLoadInstrumentation(tracer);
+            } catch (err) {
+                tracer._log('install page load failed: ' + formatError(err));
+            }
         }
-        try {
-            installRouteInstrumentation(tracer);
-        } catch (err) {
-            tracer._log('install route failed: ' + formatError(err));
+        if (!tracer._isDisabled('route')) {
+            try {
+                installRouteInstrumentation(tracer);
+            } catch (err) {
+                tracer._log('install route failed: ' + formatError(err));
+            }
         }
-        try {
-            installErrorInstrumentation(tracer);
-        } catch (err) {
-            tracer._log('install error failed: ' + formatError(err));
+        if (!tracer._isDisabled('error') || !tracer._isDisabled('resource')) {
+            try {
+                installErrorInstrumentation(tracer);
+            } catch (err) {
+                tracer._log('install error failed: ' + formatError(err));
+            }
         }
 
         tracer._log('browser interceptors installed');

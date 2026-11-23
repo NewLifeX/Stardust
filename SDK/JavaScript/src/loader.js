@@ -80,6 +80,8 @@
             version: get('release', 'version'),
             environment: get('env'),
             sampleRate: get('sample'),
+            ignore: get('ignore'),
+            disabled: get('disabled'),
             tracePropagationTargets: get('trace-targets'),
             debug: bool('debug', null, false),
             autoInstrument: bool('auto-instrument', null, true),
@@ -206,6 +208,9 @@
         var reportUrl = config.report || config.reportUrl;
         if (reportUrl) options.reportUrl = String(reportUrl);
         if (config.credentials) options.credentials = String(config.credentials);
+        if (config.sampleRate !== undefined && config.sampleRate !== null && config.sampleRate !== '') options.sampleRate = config.sampleRate;
+        if (config.ignoreUrls || config.ignore) options.ignoreUrls = config.ignoreUrls || config.ignore;
+        if (config.disabled) options.disabled = config.disabled;
 
         var relay = String(config.mode || '').toLowerCase() === 'relay';
         var tokenUrl = config.tokenUrl;

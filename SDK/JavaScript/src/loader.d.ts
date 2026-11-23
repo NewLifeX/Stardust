@@ -18,7 +18,10 @@ export interface LoaderConfig {
     expire?: string;
     version?: string;
     environment?: string;
-    sampleRate?: string;
+    sampleRate?: string | number;
+    ignore?: string;
+    ignoreUrls?: string | string[];
+    disabled?: string | string[];
     tracePropagationTargets?: string | string[];
     debug?: boolean;
     autoInstrument?: boolean;

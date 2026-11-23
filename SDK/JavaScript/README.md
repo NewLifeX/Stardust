@@ -54,6 +54,22 @@ cp -r SDK/JavaScript/src /your-project/node_modules/@newlifex/stardust
 
 `data-stardust-token` 指向星尘的 Token 端点（默认 `/stardust/browser-token`，同域反代或直连均可），令牌由星尘签发，应用后端不参与。`data-stardust-token-value` 适合静态页面，配合 `data-stardust-expire="300"` 指定有效期；Token 应短有效期且仅具备上报权限。跨域链路传播需显式配置 `data-stardust-trace-targets="https://api.example.com,..."`，默认仅同源注入 `traceparent`。
 
+采样与降噪可用 `data-stardust-sample`（0~1，默认 1）、`data-stardust-ignore`（逗号分隔 URL 子串或正则）与 `data-stardust-disabled`（`page`/`route`/`error`/`resource`/`fetch`/`xhr`）：
+
+```html
+<script src="https://cdn.example.com/stardust/loader.js"
+        data-stardust-app="MyWebApp"
+        data-stardust-config="/stardust/browser-config"
+        data-stardust-sample="0.2"
+        data-stardust-ignore="/health,/metrics"
+        data-stardust-disabled="resource"
+        defer></script>
+```
+
+- 未命中采样时只丢弃正常埋点，异常埋点始终上报。
+- `ignoreUrls` 命中的地址不生成 fetch/XHR/资源错误埋点。
+- 配置端点返回的 `sampleRate`/`ignoreUrls`/`disabled` 会被自动消费。
+
 ### 中转模式（经应用后端）
 
 当页面受 CSP 限制、星尘域名被广告拦截，或企业要求所有出站流量经过自家后端时，可以改为上报到应用后端，由其转发给星尘：

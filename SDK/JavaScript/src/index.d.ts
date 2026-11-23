@@ -108,6 +108,12 @@ export interface BrowserTracerOptions {
     tracePropagationTargets?: string | RegExp | Array<string | RegExp>;
     /** 输出调试日志，默认 false */
     debug?: boolean;
+    /** 页面采样率 0~1，默认 1；未命中采样时仍上报异常 */
+    sampleRate?: number | string;
+    /** 忽略的 URL 规则（子串或正则），命中后不采集 fetch/XHR/资源错误 */
+    ignoreUrls?: string | string[] | RegExp | Array<string | RegExp>;
+    /** 关闭的自动埋点类别：page/route/error/resource/fetch/xhr */
+    disabled?: string | string[];
     /** 排除的埋点名称（子串匹配） */
     excludes?: string[];
 }

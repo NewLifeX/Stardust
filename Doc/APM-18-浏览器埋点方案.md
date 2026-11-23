@@ -164,7 +164,7 @@ init({
 - 建议在 `sessionStorage` 缓存 5 分钟。
 - 星尘服务端已实现该端点（`GET /stardust/browser-config`，`BrowserController`）：有 `appId` 时校验应用存在且启用，未知应用返回错误码；响应带 `Cache-Control: public, max-age=300`，不含任何密钥，`server` 取当前请求的协议与主机，便于同源代理场景直接回连。
 - `tokenUrl` 允许相对地址；SDK 按**配置端点地址**解析，因此直连跨域时指向星尘、同域反代时指向页面同源，两种拓扑无需改配置。
-- 当前 SDK 消费 `appId`/`server`/`mode`/`reportUrl`/`tokenUrl`/`version`/`environment`/`debug` 等字段；`sampleRate`/`ignoreUrls`/`disabled` 为预留字段，P2 接入。
+- 当前 SDK 消费 `appId`/`server`/`mode`/`reportUrl`/`tokenUrl`/`version`/`environment`/`debug`/`sampleRate`/`ignoreUrls`/`disabled`。
 
 ### 3.3 短期签名令牌（证书令牌）
 
@@ -256,6 +256,10 @@ bw_{Base64Url(appId)}.{Base64Url(origin)}.{过期Unix秒}.{HMAC-SHA256 签名}
 
 只提供 `disabled`/`ignoreUrls`/`excludes` 等关闭开关，不要求用户逐个配置集成。
 
+- `disabled` 按类别关闭自动埋点：`page`/`route`/`error`/`resource`/`fetch`/`xhr`。
+- `ignoreUrls` 按 URL 子串或正则跳过 fetch/XHR 与资源错误，适合健康检查、指标等噪声地址。
+- `sampleRate` 按页面采样：未命中采样时只丢弃正常埋点，异常埋点始终上报。
+
 ### 3.6 最小公开 API
 
 ```js
@@ -273,7 +277,7 @@ Stardust.tracer                   // 高级用法
 
 - 默认不采集 Cookie、Authorization、请求/响应体、表单值和 DOM 文本。
 - URL 默认去掉查询串与 fragment；提供 `ignoreUrls`/`beforeSend`。
-- 页面采样与链路采样分离；未采样链路发送 `traceparent` 的 `00` 标志。
+- 页面采样与链路采样分离；`sampleRate` 默认 1，小于 1 时按页面决定是否采集正常埋点，异常始终保留；未采样链路发送 `traceparent` 的 `00` 标志。
 - 默认不采集用户身份；`setUser` 需显式调用。
 - 支持 `optIn`/`optOut` 与 Do Not Track（按项目合规要求）。
 
@@ -366,6 +370,7 @@ Content-Type: application/json        # 或 application/x-gzip
 - 服务端 `GET /stardust/browser-config` 与 `POST /stardust/browser-token` 已实现（`BrowserController`）。`loader.js` 的令牌申请已与端点契约对齐（`POST` + JSON `{appId}`）。
 - 直报令牌升级为无状态 HMAC 签名令牌（应用 + 来源 + 过期）；上报优先走 `Authorization` 头；新增来源校验、上报限流与单次条数上限；旧随机令牌继续兼容。
 - 新增 `POST /Trace/ReportRelay` 与 `Stardust.Monitors.BrowserRelayClient`；浏览器 SDK 支持 `mode=relay` + `reportUrl`，loader 支持 `data-stardust-mode` / `data-stardust-report`。
+- 配置端点的 `sampleRate`/`ignoreUrls`/`disabled` 已被 SDK 消费：页面级采样保留异常，按 URL 与类别关闭自动埋点。
 - 测试：`BrowserEndpointsTests`（配置下发、来源校验、令牌签发与上报、Authorization/查询串两种上报、来源不一致拒绝、冒名拒绝、令牌不得用于其它接口）+ `BrowserTokenServiceTests`（无状态签名、过期、篡改、来源绑定、旧令牌兼容、签发与上报限流）+ `TraceRelayTests` 5 例（强制归属、客户端IP、浏览器令牌与匿名拒绝、GZip、条数上限）+ 跨域预检 `CorsTests`；`BrowserRelayClientTests` 3 例；`npm test`（浏览器 relay 模式与 loader 用例）。
 
 已知边界：
@@ -373,7 +378,6 @@ Content-Type: application/json        # 或 application/x-gzip
 - 跨域直连要求星尘配置 `CorsOrigins` 白名单、CORS 显式允许 `POST` 与 `Authorization` 头（已实现），且页面 CSP `connect-src` 放行星尘域名。
 - `bw_` 令牌可被访客复制，在有效期内伪造该应用埋点。这是公开可写凭据的固有边界，见 §3.3 残余风险。
 - 中转模式前端不带星尘令牌，安全性取决于应用自身的会话鉴权与防刷；应用后端应自行限流并校验报文大小。
-- 配置端点的 `sampleRate`/`ignoreUrls`/`disabled` 目前仅下发，SDK 尚未消费；采样与排除仍走 `data-stardust-*` 与 `autoInstrument`。
 
 待后续：
 

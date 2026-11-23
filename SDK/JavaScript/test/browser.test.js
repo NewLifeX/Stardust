@@ -729,6 +729,50 @@ async function main() {
             assert.strictEqual(relay._reportUrl, '/stardust/collect');
         });
 
+        await test('页面采样率为0时丢弃正常埋点但保留异常', async () => {
+            const sampled = new BrowserTracer({ server: SERVER, appId: 'SampleApp', sampleRate: 0, period: 120 });
+            try {
+                assert.strictEqual(sampled.sampled, false, '采样率0时应判定为未采样');
+
+                const normal = sampled.newSpan('sample.normal');
+                normal.finish();
+                const error = sampled.newSpan('sample.error');
+                error.setError('boom');
+                error.finish();
+
+                fetchCalls.length = 0;
+                await sampled.flush();
+
+                const reports = findCalls('/Trace/Report');
+                assert.strictEqual(reports.length, 1, '应上报异常数据');
+                const body = parseBody(reports[0]);
+                assert.strictEqual(findBuilder(body, 'sample.normal'), null, '正常埋点应被采样丢弃');
+                assert.ok(findBuilder(body, 'sample.error'), '异常埋点应始终保留');
+            } finally {
+                await sampled.stop();
+            }
+        });
+
+        await test('ignoreUrls 命中的地址不生成埋点', () => {
+            const ignored = new BrowserTracer({
+                server: SERVER,
+                appId: 'IgnoreApp',
+                ignoreUrls: ['/health', /metrics/],
+            });
+
+            assert.strictEqual(ignored._isIgnoredName('https://api.example.com/health'), true);
+            assert.strictEqual(ignored._isIgnoredName('https://api.example.com/metrics'), true);
+            assert.strictEqual(ignored._isIgnoredName('https://api.example.com/users'), false);
+        });
+
+        await test('disabled 关闭指定自动埋点类别', () => {
+            const disabled = new BrowserTracer({ server: SERVER, appId: 'DisabledApp', disabled: ['fetch', 'page'] });
+
+            assert.strictEqual(disabled._isDisabled('fetch'), true);
+            assert.strictEqual(disabled._isDisabled('PAGE'), true);
+            assert.strictEqual(disabled._isDisabled('xhr'), false);
+        });
+
         await test('localStorage 不可用时回退到内存 clientId', async () => {
             const originalWindowStorage = fakeWindow.localStorage;
             const originalGlobalStorage = global.localStorage;

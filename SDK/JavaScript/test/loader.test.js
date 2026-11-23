@@ -339,6 +339,48 @@ async function main() {
         assert.strictEqual(captured.tokenProvider, undefined);
     });
 
+    await test('readConfig 读取采样、忽略与关闭项', () => {
+        const config = loader.readConfig(
+            fakeScript({
+                'data-stardust-app': 'MyWeb',
+                'data-stardust-sample': '0.25',
+                'data-stardust-ignore': '/health,/metrics',
+                'data-stardust-disabled': 'page,route'
+            }),
+            fakeDocument(null)
+        );
+
+        assert.strictEqual(config.sampleRate, '0.25');
+        assert.strictEqual(config.ignore, '/health,/metrics');
+        assert.strictEqual(config.disabled, 'page,route');
+    });
+
+    await test('start 把采样、忽略与关闭项传给追踪器', () => {
+        let captured = null;
+        const fakeTracer = { start() {} };
+        const root = {
+            Stardust: {
+                createTracer(options) {
+                    captured = options;
+                    return fakeTracer;
+                }
+            }
+        };
+
+        loader.start(root, {
+            appId: 'MyWeb',
+            sampleRate: '0.5',
+            ignore: '/health',
+            disabled: 'fetch,page',
+            server: 'http://star.example.com:6600',
+            token: 'tk'
+        });
+
+        assert.strictEqual(captured.sampleRate, '0.5');
+        assert.strictEqual(captured.ignoreUrls, '/health');
+        assert.strictEqual(captured.disabled, 'fetch,page');
+    });
+
     console.log('\n==================================================');
     console.log(`Loader 测试完成: ${passed} 通过, ${failed} 失败`);
     console.log('==================================================');
