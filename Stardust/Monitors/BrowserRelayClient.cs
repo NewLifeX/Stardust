@@ -60,8 +60,8 @@ public class BrowserRelayClient : DisposeBase
         if (setting == null) throw new ArgumentNullException(nameof(setting));
 
         Server = setting.Server;
-        AppId = setting.AppKey;
-        Secret = setting.Secret;
+        AppId = setting.AppKey ?? "";
+        Secret = setting.Secret ?? "";
     }
 
     /// <summary>实例化中转客户端</summary>

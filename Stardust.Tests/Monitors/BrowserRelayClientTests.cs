@@ -21,8 +21,8 @@ public class BrowserRelayClientTests
         public String Server { get; }
         public Int32 TokenCalls { get; private set; }
         public Int32 RelayCalls { get; private set; }
-        public String LastQuery { get; private set; }
-        public String LastAuthorization { get; private set; }
+        public String? LastQuery { get; private set; }
+        public String? LastAuthorization { get; private set; }
         public String LastBody { get; private set; }
 
         public RelayServerStub()
