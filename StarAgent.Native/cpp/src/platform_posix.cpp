@@ -3,6 +3,7 @@
 // 这些逻辑在两个 POSIX 平台完全一致，集中一份避免复制粘贴后各自漂移。
 #include "platform.hpp"
 
+#include "config.hpp"
 #include "output_buffer.hpp"
 #include "platform_posix.hpp"
 #include "util.hpp"

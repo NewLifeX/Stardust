@@ -52,12 +52,6 @@ std::string FileNameOf(const BootstrapPackage& package, const char* fallback)
     return fallback;
 }
 
-bool EndsWith(const std::string& value, const std::string& suffix)
-{
-    return value.size() >= suffix.size() &&
-           value.compare(value.size() - suffix.size(), suffix.size(), suffix) == 0;
-}
-
 } // namespace
 
 Bootstrapper::Bootstrapper(HttpClient& client, Logger& logger, const Config& config)
