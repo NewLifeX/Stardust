@@ -1,0 +1,38 @@
+{
+  "iterations": 15,
+  "machines": [
+    {
+      "name": "PC(Win10)",
+      "kind": "windows",
+      "rid": "win-x64",
+      "workDir": "C:\\X\\Stardust\\.tmp\\bench\\remote\\win-local"
+    },
+    {
+      "name": "WSL",
+      "kind": "wsl",
+      "rid": "linux-x64",
+      "workDir": "/root/bench/staragent"
+    },
+    {
+      "name": "10.0.0.1",
+      "kind": "ssh",
+      "host": "root@10.0.0.1",
+      "rid": "linux-x64",
+      "workDir": "/root/bench/staragent"
+    },
+    {
+      "name": "A2",
+      "kind": "ssh",
+      "host": "root@10.0.0.10",
+      "rid": "linux-arm64",
+      "workDir": "/root/bench/staragent"
+    },
+    {
+      "name": "sh14.newlifex.com",
+      "kind": "ssh",
+      "host": "root@sh14.newlifex.com",
+      "rid": "linux-x64",
+      "workDir": "/root/bench/staragent"
+    }
+  ]
+}

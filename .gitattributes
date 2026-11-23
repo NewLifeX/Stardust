@@ -1,0 +1,2 @@
+# 跨平台脚本强制 LF，避免 Windows 检出后带到 Linux 执行失败
+*.sh text eol=lf
