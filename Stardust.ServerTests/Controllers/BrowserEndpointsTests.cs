@@ -64,6 +64,9 @@ public class BrowserEndpointsTests : StarTestBase
             Assert.Contains("/stardust/browser-token", body);
             Assert.Contains(app.Name, body);
             Assert.Contains("\"sampleRate\"", body);
+            Assert.Contains("\"mode\":\"direct\"", body);
+            Assert.Contains("\"reportUrl\":\"/Trace/Report\"", body);
+            Assert.Contains("\"tokenExpire\"", body);
         }
         finally
         {
@@ -116,6 +119,63 @@ public class BrowserEndpointsTests : StarTestBase
 
             Assert.DoesNotContain("\"message\"", reportBody);
             Assert.Contains("\"code\":0", reportBody);
+        }
+        finally
+        {
+            tracer.Delete();
+            app.Delete();
+        }
+    }
+
+    [Fact(DisplayName = "短期令牌可经 Authorization 头上报，避免令牌进入 URL")]
+    public async Task Token_ReportTrace_ByAuthorizationHeader_Success()
+    {
+        var app = CreateApp(out var tracer);
+        try
+        {
+            var origin = "https://demo.example.com";
+            var (token, body) = await IssueTokenAsync(app.Name, origin);
+            Assert.False(token.IsNullOrEmpty(), "应签发令牌：" + body);
+
+            var client = _server.CreateClient();
+            var req = new HttpRequestMessage(HttpMethod.Post, "/Trace/Report")
+            {
+                Content = JsonContent.Create(new { AppId = app.Name, ClientId = "browser-header" }),
+            };
+            req.Headers.Authorization = new("Bearer", token);
+            req.Headers.Add("Origin", origin);
+            var resp = await client.SendAsync(req);
+            var reportBody = await resp.Content.ReadAsStringAsync();
+
+            Assert.Contains("\"code\":0", reportBody);
+        }
+        finally
+        {
+            tracer.Delete();
+            app.Delete();
+        }
+    }
+
+    [Fact(DisplayName = "令牌绑定的来源与上报来源不一致时拒绝")]
+    public async Task Token_OriginMismatch_Rejected()
+    {
+        var app = CreateApp(out var tracer);
+        try
+        {
+            var (token, body) = await IssueTokenAsync(app.Name, "https://demo.example.com");
+            Assert.False(token.IsNullOrEmpty(), "应签发令牌：" + body);
+
+            var client = _server.CreateClient();
+            var req = new HttpRequestMessage(HttpMethod.Post, "/Trace/Report")
+            {
+                Content = JsonContent.Create(new { AppId = app.Name, ClientId = "browser-evil" }),
+            };
+            req.Headers.Authorization = new("Bearer", token);
+            req.Headers.Add("Origin", "https://evil.example.com");
+            var resp = await client.SendAsync(req);
+            var reportBody = await resp.Content.ReadAsStringAsync();
+
+            Assert.Contains("\"code\":401", reportBody);
         }
         finally
         {

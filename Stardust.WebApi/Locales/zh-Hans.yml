@@ -262,3 +262,4 @@
 "DotNetSyncService.Sync {0}": "DotNetSyncService 正在同步 {0}"
 "DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService 同步 {0} 失败：{1}"
 "DotNetSyncService.Error {0}": "DotNetSyncService 异常：{0}"
+"The telemetry payload is too large.": "埋点报文超出大小限制。"

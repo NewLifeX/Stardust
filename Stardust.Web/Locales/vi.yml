@@ -327,3 +327,4 @@
 "Skipped {0} offline": "Skipped {0} offline"
 "The specified version does not exist.": "The specified version does not exist."
 "No matched package for the selected nodes; skipped {0}": "No matched package for the selected nodes; skipped {0}"
+"The telemetry payload is too large.": "The telemetry payload is too large."

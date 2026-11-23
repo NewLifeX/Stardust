@@ -294,6 +294,14 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     [Description("CORS allowed origins. Comma-separated; empty allows any origin; when specified, only whitelisted origins may cross-origin")]
     public String CorsOrigins { get; set; }
 
+    /// <summary>浏览器埋点令牌密钥。签名短期令牌的HMAC密钥，为空时自动生成并持久化；多实例部署需配置同一密钥，轮换后存量令牌立即失效（最长10分钟自动恢复）</summary>
+    [Description("Browser telemetry token secret. HMAC secret for signing short-lived browser tokens; auto-generated and persisted when empty. Multiple instances must share the same value.")]
+    public String BrowserTokenSecret { get; set; }
+
+    /// <summary>埋点中转报文上限。应用后端通过 Trace/ReportRelay 转发的请求体最大字节数，默认1048576（1MB）</summary>
+    [Description("Maximum relayed telemetry payload size in bytes for Trace/ReportRelay; default 1048576 (1 MB)")]
+    public Int32 RelayMaxBodySize { get; set; } = 1024 * 1024;
+
     /// <summary>附件下载鉴权。是否校验 /cube/file 附件下载身份/令牌（安全V-11），默认false兼容存量，开启后需配合下载令牌签发链路</summary>
     [Description("Attachment download authentication. Whether to verify the attachment download token for /cube/file. Default false.")]
     public Boolean ValidateAttachment { get; set; }

@@ -233,3 +233,4 @@
 "默认": "預設"
 "Deleted {1:n0} AppCommand records before [{0}]": "已刪除[{0}]之前的{1:n0}條應用命令記錄"
 "Deleted {1:n0} NodeCommand records before [{0}]": "已刪除[{0}]之前的{1:n0}條節點命令記錄"
+"The telemetry payload is too large.": "埋點報文超出大小限制。"

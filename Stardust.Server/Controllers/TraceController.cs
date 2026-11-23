@@ -1,4 +1,5 @@
 ﻿using System.IO.Compression;
+using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Caching;
@@ -32,16 +33,70 @@ public class TraceController(ITraceStatService stat, IAppDayStatService appStat,
         // 报文解析失败时明确报错，避免整份埋点数据被静默丢弃（时间字段必须为 Unix 毫秒数值）
         if (model == null) throw new ApiException(ApiCode.BadRequest, L.T("Failed to parse the tracing payload. Check field types: StartTime/EndTime must be Unix millisecond values."));
 
+        return ReportCore(model, token, GetRequestIP());
+    }
+
+    /// <summary>接收应用后端中转的浏览器埋点数据</summary>
+    /// <remarks>
+    /// 浏览器不能持有应用密钥，但应用后端可以。应用后端用 AppId+Secret 登录取得应用令牌后，
+    /// 把浏览器上报的原始报文转发到本接口，服务端强制将 AppId 归属为令牌主体，
+    /// 因此报文中的 AppId 会被忽略，杜绝中转方冒名写入其它应用。
+    /// 仅接受应用令牌，浏览器短期令牌与匿名请求一律拒绝。
+    /// </remarks>
+    /// <param name="token">应用访问令牌（JWT）</param>
+    /// <param name="clientIp">浏览器真实客户端IP。仅应用令牌可用，非法时回退请求来源IP</param>
+    /// <returns>追踪响应</returns>
+    [ApiFilter]
+    [HttpPost(nameof(ReportRelay))]
+    public async Task<TraceResponse> ReportRelay(String token, String clientIp)
+    {
+        // 中转必须使用应用令牌；浏览器短期令牌是不透明串，不具备 JWT 的三段结构
+        if (token.IsNullOrEmpty() || token.Split('.').Length != 3)
+            throw new ApiException(ApiCode.Unauthorized, L.T("Invalid application token"));
+
+        var (jwt, ex) = tokenService.DecodeToken(token);
+        if (ex != null) throw ex;
+
+        var appName = jwt?.Subject;
+        if (appName.IsNullOrEmpty()) throw new ApiException(ApiCode.Unauthorized, L.T("Invalid application token"));
+
+        var model = await ReadRelayModelAsync();
+        if (model == null) throw new ApiException(ApiCode.BadRequest, L.T("Failed to parse the tracing payload. Check field types: StartTime/EndTime must be Unix millisecond values."));
+
+        // 强制归属令牌主体，忽略报文中的 AppId，防止中转方冒名写入其它应用
+        model.AppId = appName;
+
+        var ip = GetRequestIP();
+        if (!clientIp.IsNullOrEmpty() && IPAddress.TryParse(clientIp.Trim(), out _)) ip = clientIp.Trim();
+
+        return ReportCore(model, token, ip, true);
+    }
+
+    /// <summary>埋点上报核心处理。直报、压缩上报与中转上报共用同一落库与统计管线</summary>
+    /// <param name="model">埋点数据模型</param>
+    /// <param name="token">访问令牌</param>
+    /// <param name="ip">客户端IP。中转场景为浏览器真实IP</param>
+    /// <param name="isRelay">是否来自应用后端中转。中转时共用应用令牌，不能按令牌复用在线会话</param>
+    /// <returns>追踪响应</returns>
+    private TraceResponse ReportCore(TraceModel model, String token, String ip, Boolean isRelay = false)
+    {
         var builders = model.Builders;
         if (model.AppId.IsNullOrEmpty()) return null;
-
-        var ip = HttpContext.GetUserHost();
-        if (ip.IsNullOrEmpty()) ip = ManageProvider.UserHost;
 
         using var span = tracer?.NewSpan($"traceReport-{model.AppId}", new { ip, model.ClientId, count = model.Builders?.Length, names = model.Builders?.Join(",", e => e.Name) }, builders?.Length ?? 0);
 
         // 验证
-        var (app, online) = Valid(model.AppId, model, model.ClientId, ip, token);
+        var (app, online, isBrowser) = Valid(model.AppId, model, model.ClientId, ip, token, isRelay);
+
+        // 浏览器埋点是公开写通道，限制单次条数与上报频率，避免被脚本刷爆
+        if (isBrowser)
+        {
+            if (builders != null && builders.Length > browserToken.MaxBuilders)
+                throw new ApiException(ApiCode.BadRequest, L.T("The telemetry payload is too large."));
+
+            if (!browserToken.CheckReportLimit(app.Name, ip))
+                throw new ApiException(ApiCode.TooManyRequests, L.T("Too many requests; please try again later."));
+        }
 
         // 插入数据
         //if (builders != null && builders.Length > 0) Task.Run(() => ProcessData(app, model, online?.NodeId ?? 0, ip, builders));
@@ -101,10 +156,11 @@ public class TraceController(ITraceStatService stat, IAppDayStatService appStat,
         return Report(model, token);
     }
 
-    private (AppTracer, AppOnline) Valid(String appId, TraceModel model, String clientId, String ip, String token)
+    private (AppTracer, AppOnline, Boolean) Valid(String appId, TraceModel model, String clientId, String ip, String token, Boolean isRelay = false)
     {
         // 新版验证方式，访问令牌
         App ap = null;
+        var isBrowser = false;
         var validToken = !token.IsNullOrEmpty() && token.Split(".").Length == 3;
         if (validToken)
         {
@@ -126,7 +182,7 @@ public class TraceController(ITraceStatService stat, IAppDayStatService appStat,
         // 浏览器短期令牌。不透明令牌，仅能用于埋点上报，不能当作应用令牌访问其它接口
         else if (!token.IsNullOrEmpty() && browserToken != null)
         {
-            var ap2 = browserToken.Validate(token);
+            var ap2 = browserToken.Validate(token, GetRequestOrigin());
             if (ap2 != null)
             {
                 // 令牌主体必须与上报应用一致，防止冒名向其它应用灌数据
@@ -136,6 +192,7 @@ public class TraceController(ITraceStatService stat, IAppDayStatService appStat,
                 if (appId.IsNullOrEmpty()) appId = ap2.Name;
 
                 ap = ap2;
+                isBrowser = true;
             }
             else if (!setting.AnonymousReport)
                 throw new ApiException(ApiCode.Unauthorized, L.T("No valid token provided; anonymous reporting is forbidden. Enable AnonymousReport in StarServer to allow multi-level cascading."));
@@ -206,8 +263,8 @@ public class TraceController(ITraceStatService stat, IAppDayStatService appStat,
         //var ip = HttpContext.GetUserHost();
         if (clientId.IsNullOrEmpty()) clientId = ip;
 
-        // 更新心跳信息
-        var online = appOnline.UpdateOnline(ap, clientId, ip, token, model.Info);
+        // 更新心跳信息。中转时所有浏览器共用应用令牌，不能按令牌匹配在线会话，否则会把应用自身的在线记录覆盖成浏览器
+        var online = appOnline.UpdateOnline(ap, clientId, ip, isRelay ? null : token, model.Info);
 
         // 收集应用性能信息
         if (app.EnableMeter) App.WriteMeter(model, ip, online?.NodeId ?? 0);
@@ -215,7 +272,57 @@ public class TraceController(ITraceStatService stat, IAppDayStatService appStat,
         // 检查应用有效性
         if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), L.T("Application [{0}] is disabled.", appId));
 
-        return (app, online);
+        return (app, online, isBrowser);
+    }
+
+    /// <summary>获取请求来源IP。优先代理头，其次来源地址</summary>
+    /// <returns>来源IP</returns>
+    private String GetRequestIP()
+    {
+        var ip = HttpContext.GetUserHost();
+        if (ip.IsNullOrEmpty()) ip = ManageProvider.UserHost;
+
+        return ip;
+    }
+
+    /// <summary>获取请求页面来源。用于浏览器令牌的来源绑定校验</summary>
+    /// <returns>规范化来源，缺失或非法时返回 null</returns>
+    private String GetRequestOrigin()
+    {
+        var origin = BrowserTokenService.NormalizeOrigin(Request.Headers["Origin"].ToString());
+
+        return origin ?? BrowserTokenService.NormalizeOrigin(Request.Headers["Referer"].ToString());
+    }
+
+    /// <summary>读取中转报文。支持 GZip 与明文，限制解压前后大小，避免压缩炸弹</summary>
+    /// <returns>埋点数据模型</returns>
+    private async Task<TraceModel> ReadRelayModelAsync()
+    {
+        var req = Request;
+        var max = setting.RelayMaxBodySize;
+        if (req.ContentLength > max) throw new ApiException(ApiCode.BadRequest, L.T("The telemetry payload is too large."));
+
+        var ms = Pool.MemoryStream.Get();
+        if (req.ContentType == "application/x-gzip")
+        {
+            using var gs = new GZipStream(req.Body, CompressionMode.Decompress);
+            await gs.CopyToAsync(ms);
+        }
+        else
+        {
+            await req.Body.CopyToAsync(ms);
+        }
+
+        if (ms.Length > max)
+        {
+            Pool.MemoryStream.Return(ms);
+            throw new ApiException(ApiCode.BadRequest, L.T("The telemetry payload is too large."));
+        }
+
+        ms.Position = 0;
+        var body = ms.Return(true).ToStr();
+
+        return body.ToJsonEntity<TraceModel>();
     }
 
     private void ProcessData(AppTracer app, TraceModel model, Int32 nodeId, String ip, ISpanBuilder[] builders)

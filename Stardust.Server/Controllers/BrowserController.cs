@@ -42,6 +42,9 @@ public class BrowserController(BrowserTokenService browserToken, StarServerSetti
         {
             appId = app?.Name ?? appId,
             server = $"{Request.Scheme}://{Request.Host}",
+            mode = "direct",
+            reportUrl = "/Trace/Report",
+            tokenExpire = browserToken.Expire,
             release = "",
             environment = "",
             tokenUrl = "/stardust/browser-token",
@@ -73,7 +76,7 @@ public class BrowserController(BrowserTokenService browserToken, StarServerSetti
         if (ip.IsNullOrEmpty()) ip = ManageProvider.UserHost;
         if (!app.MatchIp(ip)) throw new ApiException(ApiCode.Forbidden, L.T("Application [{0}] forbids access from {1}.", appId, ip));
 
-        var token = browserToken.Issue(app, ip);
+        var token = browserToken.Issue(app, ip, origin);
 
         return new
         {
@@ -88,14 +91,9 @@ public class BrowserController(BrowserTokenService browserToken, StarServerSetti
     /// <returns>来源字符串或 null</returns>
     private String GetOrigin()
     {
-        var origin = Request.Headers["Origin"].ToString();
-        if (origin.IsNullOrEmpty()) origin = Request.Headers["Referer"].ToString();
-        if (origin.IsNullOrEmpty()) return null;
-
-        // Origin 形如 https://a.com[:port]，Referer 为完整地址，统一取协议+主机+端口比较
-        if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri)) return null;
-
-        var source = $"{uri.Scheme}://{uri.Authority}";
+        var source = BrowserTokenService.NormalizeOrigin(Request.Headers["Origin"].ToString());
+        if (source == null) source = BrowserTokenService.NormalizeOrigin(Request.Headers["Referer"].ToString());
+        if (source == null) return null;
 
         // 未配置白名单时与 CORS 策略保持一致，放行任意来源
         var allowed = setting.CorsOrigins;

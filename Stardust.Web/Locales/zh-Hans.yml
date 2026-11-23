@@ -326,3 +326,4 @@
 "Skipped {0} offline": "跳过离线{0}个"
 "The specified version does not exist.": "指定版本不存在！"
 "No matched package for the selected nodes; skipped {0}": "选中节点均无匹配的包，跳过{0}个"
+"The telemetry payload is too large.": "埋点报文超出大小限制。"
