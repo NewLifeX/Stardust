@@ -460,13 +460,8 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
 
             if (Runtime.Windows)
             {
-                if (timeout > 0)
-                    "shutdown".ShellExecute($"-r -t {timeout}");
-                else
-                    "shutdown".ShellExecute($"-r");
-
-                Thread.Sleep(5000);
-                "shutdown".ShellExecute($"-r -f");
+                // 单次带 /f 下发，不能先排定关机再补发，详见 PowerCommands.GetWindowsRebootArgs
+                "shutdown".ShellExecute(PowerCommands.GetWindowsRebootArgs(timeout));
             }
             else if (Runtime.Linux)
             {
