@@ -10,7 +10,7 @@ import { toUrl } from '@/utils/routeLink';
  *    - Name → 链接 /Nodes/Node/Detail?id=<ID>（Url 字段，自建）
  *    - ProjectName → 链接 /Platform/GalaxyProject?projectId=<ProjectId>（Url 字段，自建）
  *    - Log → 链接 /Admin/Log?category=节点&linkId=<ID>（Url 字段，自建）
- *  - 批量工具栏：选中行后启用「启用告警/重置告警/修复」按钮
+ *  - 批量工具栏：选中行后启用「唤醒/启用告警/重置告警/修复」按钮
  *    -> GET /Nodes/Node/<Action>?keys=<选中id 逗号串>（后端读 SelectKeys）
  *  - 「追踪」操作：每行按钮 → confirm → GET /Nodes/Node/Trace?id=<行Id> → ElMessage「已发送命令」→ 刷新
  *  - 「唤醒」操作：每行按钮 → confirm → GET /Nodes/Node/WakeUp?id=<行Id> → 同网段在线节点代发 WOL
@@ -87,6 +87,7 @@ const ALL_COLUMNS: Col[] = [
 ];
 
 const BATCH_ACTIONS = [
+  { act: 'WakeUpBatch', label: '唤醒', params: {} },
   { act: 'SetAlarm', label: '启用告警', params: { enable: 'true' } },
   { act: 'SetAlarm', label: '禁用告警', params: { enable: 'false' } },
   { act: 'ResetAlarm', label: '重置告警', params: {} },
@@ -279,14 +280,14 @@ function onPageChange(p: number) {
 const alarmRate = ref<number>(80);
 
 /** 批量操作：GET /Nodes/Node/<Action>?keys=id1,id2&enable/alarmRate */
-async function onBatchAction(act: string, params: Record<string, unknown> = {}) {
+async function onBatchAction(act: string, params: Record<string, unknown> = {}, label = act) {
   if (selectedIds.value.length === 0) {
     ElMessage.warning('请先选择要操作的节点');
     return;
   }
   try {
     await ElMessageBox.confirm(
-      `确认对选中的 ${selectedIds.value.length} 个节点执行「${act}」？`,
+      `确认对选中的 ${selectedIds.value.length} 个节点执行「${label}」？`,
       '批量操作',
       { type: 'warning', confirmButtonText: '确认', cancelButtonText: '取消' },
     );
@@ -550,7 +551,7 @@ watch(
           size="small"
           :disabled="selectedIds.length === 0 || batchActing"
           :loading="batchActing"
-          @click="onBatchAction(a.act, a.params)"
+          @click="onBatchAction(a.act, a.params, a.label)"
         >
           {{ a.label }}
         </el-button>

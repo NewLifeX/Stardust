@@ -230,6 +230,25 @@ public class NodeController : NodesEntityController<Node>
         return JsonRefresh(L.T("Wake-on-LAN command sent to {0} node(s).", count));
     }
 
+    /// <summary>批量唤醒。对选中节点逐个挑选同网段在线节点代发 Wake-on-LAN 魔术包</summary>
+    /// <returns></returns>
+    [EntityAuthorize(PermissionFlags.Update)]
+    public async Task<ActionResult> WakeUpBatch()
+    {
+        var count = 0;
+        foreach (var item in SelectKeys)
+        {
+            var node = ProjectScopeRules.FilterVisible(FindByID(item.ToInt()));
+            if (node == null || node.MACs.IsNullOrEmpty()) continue;
+
+            if (await _wakeService.WakeAsync(node, HttpContext.RequestAborted) > 0) count++;
+        }
+
+        if (count == 0) return Json(400, L.T("No online node in the same LAN; unable to wake the node."));
+
+        return JsonRefresh(L.T("Wake-on-LAN command sent to {0} node(s).", count));
+    }
+
     [EntityAuthorize(PermissionFlags.Update)]
     public ActionResult SetAlarm(Boolean enable = true)
     {
