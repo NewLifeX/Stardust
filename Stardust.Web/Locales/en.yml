@@ -113,7 +113,7 @@
 "根据节点规则修正埋点显示名，主要针对客户端对边缘服务的多样接口调用": "Correct trace display names by node rules, mainly for diverse interface calls from clients to edge services"
 "更新时间": "Update time"
 "勾选授权该Token可访问的资源": "Select the resources this token may access"
-"勾选授权该Token可访问的资源。勾选\"全部\"则授权该类型所有资源，无需逐个选择。": "Select the resources this token may access. Selecting \"All\" authorizes every resource of that type without selecting them one by one."
+"勾选授权该Token可访问的资源。勾选\"全部\"则授权该类型所有资源，无需逐个选择。": "Select the resources this token can access. Selecting \"All\" grants every resource of that type, without picking them one by one."
 "关闭": "Close"
 "关系环": "Relationship ring"
 "关系图": "Relationship graph"
@@ -459,3 +459,6 @@
 "级别：": "Level:"
 "客户端：": "Client:"
 "上报日志": "Report logs"
+# 界面元数据词条
+"支持单个IP、多个IP（逗号或换行分隔）、或CIDR网段（如192": "Supports a single IP, multiple IPs (comma or newline separated), or a CIDR range (e.g., 192"
+"Linux系统下载tar": "Linux system download tar"
