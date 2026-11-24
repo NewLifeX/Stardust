@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"strings"
 	"sync"
 	"time"
@@ -40,6 +41,8 @@ type Options struct {
 	Bootstrap func() error
 	// RunShell 覆盖 shell 执行器，主要用于测试。
 	RunShell ShellRunner
+	// WakeOnLan 发送局域网唤醒魔术包，主要用于测试；nil 时使用 SendWakeOnLan。
+	WakeOnLan func(macs []net.HardwareAddr) (int, error)
 	// Now 覆盖时钟，主要用于测试。
 	Now func() time.Time
 	// Logger 记录审计日志。
@@ -50,10 +53,12 @@ type Options struct {
 type Executor struct {
 	opts Options
 
-	mu      sync.Mutex
-	seen    map[int64]time.Time
-	sem     chan struct{}
-	shellMu sync.Mutex
+	mu        sync.Mutex
+	seen      map[int64]time.Time
+	sem       chan struct{}
+	shellMu   sync.Mutex
+	wakeMu    sync.Mutex
+	wakeTimes map[string]time.Time
 }
 
 // New 创建命令执行器。
@@ -75,9 +80,10 @@ func New(opts Options) *Executor {
 	}
 
 	return &Executor{
-		opts: opts,
-		seen: make(map[int64]time.Time),
-		sem:  make(chan struct{}, maxConcurrency),
+		opts:      opts,
+		seen:      make(map[int64]time.Time),
+		sem:       make(chan struct{}, maxConcurrency),
+		wakeTimes: make(map[string]time.Time),
 	}
 }
 
@@ -177,6 +183,8 @@ func (e *Executor) dispatch(ctx context.Context, cmd protocol.CommandModel) prot
 		return e.setChannel(cmd)
 	case "node/restart":
 		return e.restart(cmd)
+	case "node/wakeonlan":
+		return e.wakeOnLan(cmd)
 	case "node/bootstrap":
 		return e.bootstrap(cmd)
 	case "node/reboot":
@@ -331,6 +339,47 @@ func (e *Executor) restart(cmd protocol.CommandModel) protocol.CommandReplyModel
 	}()
 
 	return reply(protocol.StatusCompleted, "正在重启")
+}
+
+// wakeOnLan 在局域网广播魔术包。目标机器离线时无法接收平台指令，由同网段在线节点代发。
+func (e *Executor) wakeOnLan(cmd protocol.CommandModel) protocol.CommandReplyModel {
+	macs := ParseMacs(extractMacs(cmd.Argument))
+	if len(macs) == 0 {
+		return reply(protocol.StatusError, "No valid MAC address.")
+	}
+
+	// 限频，避免命令重试或批量误操作造成广播风暴；按目标 MAC 区分，连续唤醒多台机器互不影响
+	if !e.allowWake(wakeKey(macs)) {
+		return reply(protocol.StatusCanceled, "Too frequent; the wake request was ignored.")
+	}
+
+	send := e.opts.WakeOnLan
+	if send == nil {
+		send = SendWakeOnLan
+	}
+	count, err := send(macs)
+	if err != nil {
+		return reply(protocol.StatusError, "WOL failed: "+err.Error())
+	}
+
+	return reply(protocol.StatusCompleted, fmt.Sprintf("WOL sent: %d MAC(s), %d packet(s)", len(macs), count))
+}
+
+func (e *Executor) allowWake(key string) bool {
+	e.wakeMu.Lock()
+	defer e.wakeMu.Unlock()
+
+	now := e.opts.Now()
+	if last, ok := e.wakeTimes[key]; ok && now.Sub(last) < 3*time.Second {
+		return false
+	}
+	// 命令目标通常只有少量机器，超过上限时整体清空，避免长期运行后字典无限增长
+	if len(e.wakeTimes) > 64 {
+		e.wakeTimes = make(map[string]time.Time)
+	}
+	e.wakeTimes[key] = now
+
+	return true
 }
 
 // bootstrap 引导安装 .NET 运行时与完整版 StarAgent。未开启时回复“引导安装未启用”。
