@@ -537,7 +537,7 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
         return "success";
     }
 
-    private static Int64 _lastWakeOnLan;
+    private static readonly Dictionary<String, Int64> _wakeTimes = new(StringComparer.OrdinalIgnoreCase);
     /// <summary>局域网唤醒。向本机所在局域网广播魔术包，由同网段在线节点代发</summary>
     /// <remarks>
     /// 参数为 JSON <c>{"macs":"AA-BB-CC-DD-EE-FF","code":"目标节点编码","name":"目标节点名"}</c>，
@@ -548,11 +548,6 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
     /// <returns>发送结果</returns>
     private String? WakeOnLanCommand(String? argument)
     {
-        // 限频，避免命令重试或批量误操作造成广播风暴
-        var now = Runtime.TickCount64;
-        var last = Interlocked.Exchange(ref _lastWakeOnLan, now);
-        if (last > 0 && now - last < 3_000) return "Too frequent; the wake request was ignored.";
-
         var text = argument;
         if (!text.IsNullOrEmpty() && text[0] == '{')
         {
@@ -580,6 +575,18 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
 
         var macs = WakeOnLan.ParseMacs(text);
         if (macs.Count == 0) return "No valid MAC address.";
+
+        // 限频，避免命令重试或批量误操作造成广播风暴；按目标 MAC 区分，连续唤醒多台机器互不影响
+        var key = String.Join(",", macs.Select(e => e.ToHex("-")));
+        var now = Runtime.TickCount64;
+        lock (_wakeTimes)
+        {
+            if (_wakeTimes.TryGetValue(key, out var last) && now - last < 3_000) return "Too frequent; the wake request was ignored.";
+
+            // 命令目标通常只有少量机器，超过上限时整体清空，避免长期运行后字典无限增长
+            if (_wakeTimes.Count > 64) _wakeTimes.Clear();
+            _wakeTimes[key] = now;
+        }
 
         var count = WakeOnLan.Send(macs, XTrace.Log);
         WriteLog("Wake-on-LAN sent: {0} MAC(s), {1} packet(s)", macs.Count, count);
