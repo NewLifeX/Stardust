@@ -147,6 +147,8 @@ CI/CD 自动化：Webhook 触发 → 编译节点拉代码编译打包 → 上�
 
 **兼容性**：旧版模式值 0-4 被新版客户端自动映射为 10-13，新旧客户端共存平滑过渡。
 
+**包内目录**：zip 内的子目录（如 `zh-Hans` 卫星程序集、`wwwroot`、`Locales`）原样解压到目标目录，不做顶层平铺或按扩展名过滤；打包侧的 `PackageFilters` 只按文件名通配匹配，匹配到的子目录文件同样保留相对路径。
+
 策略实现：
 - `StandardDeployStrategy` / `ShadowDeployStrategy` / `HostedStrategy` / `TaskStrategy`
 - 统一接口 `IDeployStrategy`，`ServiceController` 通过工厂创建
