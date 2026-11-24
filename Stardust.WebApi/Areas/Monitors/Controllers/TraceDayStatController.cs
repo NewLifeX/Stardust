@@ -8,6 +8,7 @@ using Stardust.Web.Services;
 using XCode.Membership;
 using static Stardust.Data.Monitors.TraceDayStat;
 
+using Stardust.Data.Platform;
 namespace Stardust.Web.Areas.Monitors.Controllers;
 
 /// <summary>追踪天统计。按天汇总的接口调用指标</summary>
@@ -71,7 +72,7 @@ public class TraceDayStatController : WebReadOnlyEntityController<TraceDayStat>
     [EntityAuthorize(PermissionFlags.Detail)]
     public ActionResult Trace(Int32 id)
     {
-        var st = FindByID(id);
+        var st = ProjectScopeRules.FilterVisible(FindByID(id));
         if (st == null) return JsonRefresh("找不到统计数据");
 
         var traceId = st.TraceId;
@@ -82,7 +83,7 @@ public class TraceDayStatController : WebReadOnlyEntityController<TraceDayStat>
             var ds = TraceData.Search(st.AppId, st.ItemId, "day", st.StatDate, 20);
             if (ds.Count == 0) return JsonRefresh("找不到追踪数据");
 
-            var list = SampleData.FindAllByDataIds(ds.Select(e => e.LinkId > 0 ? e.LinkId : e.Id).ToArray(), st.StatDate);
+            var list = ProjectScopeRules.FilterVisible(SampleData.FindAllByDataIds(ds.Select(e => e.LinkId > 0 ? e.LinkId : e.Id).ToArray(), st.StatDate));
             if (list.Count == 0) return JsonRefresh(L.T("Sample data not found."));
 
             traceId = list[0].TraceId;

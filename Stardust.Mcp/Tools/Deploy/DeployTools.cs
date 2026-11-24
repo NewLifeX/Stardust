@@ -2,6 +2,7 @@ using System.Text.Json;
 using NewLife;
 using NewLife.Data;
 using Stardust.Data.Deployment;
+using Stardust.Data.Platform;
 
 namespace Stardust.Mcp.Tools.Deploy;
 
@@ -34,7 +35,7 @@ public class DeployStatusTool : McpToolBase
     public override Task<Object> InvokeAsync(JsonElement args, McpContext ctx)
     {
         var deploy = args.TryGetProperty("deploy_id", out _) ? McpGuard.Deploy(ctx, GetInt32(args, "deploy_id")) : McpGuard.DeployByApp(ctx, GetInt32(args, "app_id"));
-        var nodes = AppDeployNode.FindAllByDeployId(deploy.Id);
+        var nodes = ProjectScopeRules.FilterVisible(AppDeployNode.FindAllByDeployId(deploy.Id));
         var behind = nodes.Where(e => e.Enable && e.Version != deploy.Version).Select(e => new { e.Id, e.NodeId, e.IP, current = e.Version, target = deploy.Version }).ToArray();
         var alive = nodes.Count(e => e.ProcessId > 0);
         return Task.FromResult<Object>(McpResult.Ok($"{deploy.Name} 当前版本 {deploy.Version}，{behind.Length} 台落后，{alive} 台进程存活", new
@@ -132,10 +133,10 @@ public class PipelineRunDetailTool : McpToolBase
 
     public override Task<Object> InvokeAsync(JsonElement args, McpContext ctx)
     {
-        var run = AppPipelineRun.FindById(GetInt32(args, "run_id")) ?? throw new McpException(-32602, "流水线运行不存在。");
-        var pipeline = AppPipeline.FindById(run.PipelineId) ?? throw new McpException(-32602, "流水线不存在。");
+        var run = ProjectScopeRules.FilterVisible(AppPipelineRun.FindById(GetInt32(args, "run_id"))) ?? throw new McpException(-32602, "流水线运行不存在。");
+        var pipeline = ProjectScopeRules.FilterVisible(AppPipeline.FindById(run.PipelineId)) ?? throw new McpException(-32602, "流水线不存在。");
         McpGuard.Deploy(ctx, pipeline.DeployId);
-        var steps = AppPipelineStep.FindAllByRunId(run.Id).OrderBy(e => e.StepIndex).ToList();
+        var steps = ProjectScopeRules.FilterVisible(AppPipelineStep.FindAllByRunId(run.Id)).OrderBy(e => e.StepIndex).ToList();
         var allSkipped = steps.Count > 0 && steps.All(e => e.Status.EqualIgnoreCase("Skipped"));
         return Task.FromResult<Object>(McpResult.Ok(allSkipped ? "该运行标记成功，但所有步骤都被跳过，没有节点实际部署" : $"运行 {run.Id} 状态 {run.Status}", new
         {
@@ -167,7 +168,7 @@ public class UseVersionTool : McpToolBase
 
     public override async Task<Object> InvokeAsync(JsonElement args, McpContext ctx)
     {
-        var ver = AppDeployVersion.FindById(GetInt32(args, "version_id")) ?? throw new McpException(-32602, "版本不存在。");
+        var ver = ProjectScopeRules.FilterVisible(AppDeployVersion.FindById(GetInt32(args, "version_id"))) ?? throw new McpException(-32602, "版本不存在。");
         var deploy = McpGuard.Deploy(ctx, ver.DeployId);
         var ops = ctx.Services.GetService(typeof(IMcpOperations)) as IMcpOperations ?? throw new McpException(-32000, "宿主未注册 MCP 写操作适配器。");
         var message = await ops.UseVersionAsync(ver.Id, ctx.CallerIp);
@@ -198,7 +199,7 @@ public class NodeOperateTool : McpToolBase
 
     internal static async Task<Object> Operate(JsonElement args, McpContext ctx)
     {
-        var node = AppDeployNode.FindById(GetInt32(args, "deploy_node_id")) ?? throw new McpException(-32602, "部署节点不存在。");
+        var node = ProjectScopeRules.FilterVisible(AppDeployNode.FindById(GetInt32(args, "deploy_node_id"))) ?? throw new McpException(-32602, "部署节点不存在。");
         var deploy = McpGuard.Deploy(ctx, node.DeployId);
         var act = GetString(args, "action");
         if (!new[] { "install", "start", "restart", "stop", "uninstall" }.Contains(act))
@@ -243,7 +244,7 @@ public class DeployReleaseTool : McpToolBase
             : McpGuard.DeployByApp(ctx, McpGuard.FindApp(ctx, GetInt32(args, "app_id"), GetString(args, "app_name")).Id);
         AppDeployVersion ver;
         if (GetInt32(args, "version_id") > 0)
-            ver = AppDeployVersion.FindById(GetInt32(args, "version_id")) ?? throw new McpException(-32602, "版本不存在。");
+            ver = ProjectScopeRules.FilterVisible(AppDeployVersion.FindById(GetInt32(args, "version_id"))) ?? throw new McpException(-32602, "版本不存在。");
         else
         {
             var version = GetString(args, "version");
@@ -253,8 +254,8 @@ public class DeployReleaseTool : McpToolBase
         }
         if (ver.DeployId != deploy.Id) throw new McpException(-32602, "版本不属于该部署集。");
         var nodes = args.TryGetProperty("deploy_node_ids", out var idEl) && idEl.ValueKind == JsonValueKind.Array
-            ? idEl.EnumerateArray().Select(e => AppDeployNode.FindById(e.GetInt32())).Where(e => e != null && e.DeployId == deploy.Id).ToArray()
-            : AppDeployNode.FindAllByDeployId(deploy.Id).Where(e => e.Enable).ToArray();
+            ? idEl.EnumerateArray().Select(e => ProjectScopeRules.FilterVisible(AppDeployNode.FindById(e.GetInt32()))).Where(e => e != null && e.DeployId == deploy.Id).ToArray()
+            : ProjectScopeRules.FilterVisible(AppDeployNode.FindAllByDeployId(deploy.Id)).Where(e => e.Enable).ToArray();
         if (nodes.Length == 0) throw new McpException(-32602, "没有可发布的启用节点。");
         var plan = nodes.Select(e => new { e.Id, e.NodeId, from = e.Version, to = ver.Version }).ToArray();
         if (GetBoolean(args, "dry_run")) return McpResult.Ok($"发布计划 {plan.Length} 台，未执行", new { plan });
@@ -290,8 +291,8 @@ public class PipelineCancelTool : McpToolBase
 
     public override async Task<Object> InvokeAsync(JsonElement args, McpContext ctx)
     {
-        var run = AppPipelineRun.FindById(GetInt32(args, "run_id")) ?? throw new McpException(-32602, "流水线运行不存在。");
-        var pipeline = AppPipeline.FindById(run.PipelineId) ?? throw new McpException(-32602, "流水线不存在。");
+        var run = ProjectScopeRules.FilterVisible(AppPipelineRun.FindById(GetInt32(args, "run_id"))) ?? throw new McpException(-32602, "流水线运行不存在。");
+        var pipeline = ProjectScopeRules.FilterVisible(AppPipeline.FindById(run.PipelineId)) ?? throw new McpException(-32602, "流水线不存在。");
         McpGuard.Deploy(ctx, pipeline.DeployId);
         var ops = ctx.Services.GetService(typeof(IMcpOperations)) as IMcpOperations ?? throw new McpException(-32000, "宿主未注册 MCP 写操作适配器。");
         var rs = await ops.CancelPipelineAsync(run.Id, ctx.CallerIp);
@@ -319,7 +320,7 @@ public class PipelineTriggerTool : McpToolBase
 
     public override async Task<Object> InvokeAsync(JsonElement args, McpContext ctx)
     {
-        var pipeline = AppPipeline.FindById(GetInt32(args, "pipeline_id")) ?? throw new McpException(-32602, "流水线不存在。");
+        var pipeline = ProjectScopeRules.FilterVisible(AppPipeline.FindById(GetInt32(args, "pipeline_id"))) ?? throw new McpException(-32602, "流水线不存在。");
         McpGuard.Deploy(ctx, pipeline.DeployId);
         var ops = ctx.Services.GetService(typeof(IMcpOperations)) as IMcpOperations ?? throw new McpException(-32000, "宿主未注册 MCP 写操作适配器。");
         try

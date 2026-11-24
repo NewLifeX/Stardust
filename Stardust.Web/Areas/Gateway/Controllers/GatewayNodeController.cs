@@ -12,7 +12,7 @@ namespace Stardust.Web.Areas.Gateway.Controllers;
 /// <summary>网关节点。集群中的后端服务器节点</summary>
 [Menu(30, true, Icon = "fa-server")]
 [GatewayArea]
-public class GatewayNodeController : EntityController<GatewayNode>
+public class GatewayNodeController : ProjectScopedEntityController<GatewayNode>
 {
     static GatewayNodeController()
     {

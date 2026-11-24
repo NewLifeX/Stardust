@@ -4,6 +4,7 @@ using Stardust.Data.Configs;
 using Stardust.Data.Deployment;
 using XCode;
 
+using Stardust.Data.Platform;
 namespace Stardust.Mcp.Tools.Now;
 
 public class ChangesTool : McpToolBase
@@ -30,8 +31,8 @@ public class ChangesTool : McpToolBase
     {
         McpGuard.NeedProject(ctx);
         var start = Since(args);
-        var deploys = AppDeploy.FindAllByProjectId(ctx.ProjectId);
-        var configs = AppConfig.FindAllByProjectId(ctx.ProjectId);
+        var deploys = ProjectScopeRules.FilterVisible(AppDeploy.FindAllByProjectId(ctx.ProjectId));
+        var configs = ProjectScopeRules.FilterVisible(AppConfig.FindAllByProjectId(ctx.ProjectId));
 
         var rows = new List<(DateTime Time, Object Item)>();
         rows.AddRange(TakeNewest(DeployRows(deploys, start)));
@@ -63,7 +64,7 @@ public class ChangesTool : McpToolBase
         foreach (var deploy in deploys)
         {
             if (deploy.Id <= 0) continue;
-            foreach (var pipeline in AppPipeline.FindAllByDeployId(deploy.Id))
+            foreach (var pipeline in ProjectScopeRules.FilterVisible(AppPipeline.FindAllByDeployId(deploy.Id)))
             {
                 if (pipeline.Id <= 0) continue;
                 var pipelineId = pipeline.Id;

@@ -4,6 +4,7 @@ using NewLife.Cube;
 using NewLife.Remoting;
 using Stardust.Data;
 using Stardust.Data.Configs;
+using Stardust.Data.Platform;
 using Stardust.Models;
 using Stardust.Server.Services;
 using XCode.Membership;
@@ -55,7 +56,7 @@ public class ConfigController(ConfigService configService, AppTokenService token
         var ip = HttpContext.GetUserHost();
         var ap = tokenService.Authorize(appId, secret, false, ip);
 
-        var app = AppConfig.FindByName(appId);
+        var app = ProjectScopeRules.FilterVisible(AppConfig.FindByName(appId));
         app ??= AppConfig.Find(AppConfig._.Name == appId);
         if (app == null)
         {

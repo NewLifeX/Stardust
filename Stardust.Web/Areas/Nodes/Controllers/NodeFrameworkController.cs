@@ -12,13 +12,14 @@ using XCode;
 using XCode.Membership;
 using XCode.Model;
 
+using Stardust.Data.Platform;
 namespace Stardust.Web.Areas.Nodes.Controllers;
 
 /// <summary>节点框架。管理各节点上的 .NET 运行时版本，支持安装新版框架和卸载旧版框架</summary>
 [DisplayName("节点框架")]
 [Menu(70)]
 [NodesArea]
-public class NodeFrameworkController : EntityController<Node>
+public class NodeFrameworkController : ProjectScopedEntityController<Node>
 {
     private readonly StarFactory _starFactory;
 
@@ -90,7 +91,7 @@ public class NodeFrameworkController : EntityController<Node>
         var skips = new List<String>();
         foreach (var item in SelectKeys)
         {
-            var node = bf.FindByKey(item.ToInt());
+            var node = ProjectScopeRules.FilterVisible(bf.FindByKey(item.ToInt()));
             if (node == null || node.Code.IsNullOrEmpty()) continue;
 
             // 为每个节点按 OS/Arch 解析匹配的安装包，并检查操作系统与GLIBC兼容性。
@@ -154,7 +155,7 @@ public class NodeFrameworkController : EntityController<Node>
         var ts = new List<(String name, Task<CommandReplyModel?> task)>();
         foreach (var item in SelectKeys)
         {
-            var node = bf.FindByKey(item.ToInt());
+            var node = ProjectScopeRules.FilterVisible(bf.FindByKey(item.ToInt()));
             if (node != null && !node.Code.IsNullOrEmpty())
             {
                 ts.Add((node.Name, _starFactory.SendNodeCommandAsync(node.Code, "framework/uninstall", args, 0, 30 * 24 * 3600, 0, HttpContext.RequestAborted)));

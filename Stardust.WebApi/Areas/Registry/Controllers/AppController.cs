@@ -6,6 +6,7 @@ using NewLife.Cube.ViewModels;
 using NewLife.Data;
 using NewLife.Web;
 using Stardust.Data;
+using Stardust.Data.Platform;
 using XCode;
 using XCode.Membership;
 
@@ -55,7 +56,7 @@ public class AppController : RegistryEntityController<App>
         var id = p["Id"].ToInt(-1);
         if (id > 0)
         {
-            var node = App.FindById(id);
+            var node = ProjectScopeRules.FilterVisible(App.FindById(id));
             if (node != null) return [node];
         }
 
@@ -104,7 +105,7 @@ public class AppController : RegistryEntityController<App>
         {
             if (ent.Dirtys[name] && (String?)entity[name] == "*****")
             {
-                var old = App.FindById(entity.Id);
+                var old = ProjectScopeRules.FilterVisible(App.FindById(entity.Id));
                 if (old != null)
                 {
                     entity[name] = old[name];
@@ -147,7 +148,7 @@ public class AppController : RegistryEntityController<App>
     {
         foreach (var item in SelectKeys)
         {
-            var dt = App.FindById(item.ToInt());
+            var dt = ProjectScopeRules.FilterVisible(App.FindById(item.ToInt()));
             if (dt != null)
             {
                 dt.AlarmOnOffline = enable;

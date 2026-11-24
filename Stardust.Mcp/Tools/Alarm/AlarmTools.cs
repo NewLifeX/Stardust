@@ -3,6 +3,7 @@ using NewLife;
 using NewLife.Data;
 using Stardust.Data;
 using Stardust.Data.Monitors;
+using Stardust.Data.Platform;
 
 namespace Stardust.Mcp.Tools.Alarm;
 
@@ -64,7 +65,7 @@ public class AlarmDetailTool : McpToolBase
     public override Task<Object> InvokeAsync(JsonElement args, McpContext ctx)
     {
         McpGuard.NeedProject(ctx);
-        var alarm = AlarmRecord.FindById(GetInt64(args, "alarm_id"));
+        var alarm = ProjectScopeRules.FilterVisible(AlarmRecord.FindById(GetInt64(args, "alarm_id")));
         if (alarm == null) throw new McpException(-32602, "告警不存在。");
         if (!AlarmProject.Contains(alarm, ctx.ProjectId))
             throw new McpException(-32003, $"告警 {alarm.Id} 不属于当前令牌绑定的项目。");
@@ -105,7 +106,7 @@ public class AlarmResolveTool : McpToolBase
         McpGuard.NeedProject(ctx);
         var note = GetString(args, "note");
         if (note.IsNullOrEmpty()) throw new McpException(-32602, "无效参数：处置意见 note 必填。");
-        var alarm = AlarmRecord.FindById(GetInt64(args, "alarm_id"));
+        var alarm = ProjectScopeRules.FilterVisible(AlarmRecord.FindById(GetInt64(args, "alarm_id")));
         if (alarm == null) throw new McpException(-32602, "告警不存在。");
         if (!AlarmProject.Contains(alarm, ctx.ProjectId))
             throw new McpException(-32003, $"告警 {alarm.Id} 不属于当前令牌绑定的项目。");
@@ -125,7 +126,7 @@ static class AlarmProject
         if (FindApp(alarm, projectId) != null) return true;
         if (alarm.GroupId <= 0) return false;
 
-        var group = AlarmGroup.FindById(alarm.GroupId);
+        var group = ProjectScopeRules.FilterVisible(AlarmGroup.FindById(alarm.GroupId));
         return group != null && group.ProjectId == projectId;
     }
 
@@ -141,7 +142,7 @@ static class AlarmProject
     {
         if (name.IsNullOrEmpty() || projectId <= 0) return null;
 
-        var app = App.FindByName(name);
+        var app = ProjectScopeRules.FilterVisible(App.FindByName(name));
         return app != null && app.ProjectId == projectId ? app : null;
     }
 

@@ -6,6 +6,7 @@ using NewLife.Web;
 using Stardust.Data.Monitors;
 using Stardust.Web.Areas;
 using Stardust.Web.Services;
+using Stardust.Data.Platform;
 using XCode;
 using XCode.Membership;
 using static Stardust.Data.Monitors.TraceData;
@@ -78,7 +79,7 @@ public class TraceDataController : WebReadOnlyEntityController<TraceData>
     [EntityAuthorize(PermissionFlags.Detail)]
     public ActionResult Trace(Int64 id)
     {
-        var td = TraceData.FindById(id);
+        var td = ProjectScopeRules.FilterVisible(TraceData.FindById(id));
         if (td != null && td.LinkId > 0) id = td.LinkId;
 
         //var list = SampleData.FindAllByDataId(id);
@@ -94,7 +95,7 @@ public class TraceDataController : WebReadOnlyEntityController<TraceData>
     [EntityAuthorize(PermissionFlags.Detail)]
     public ActionResult Exclude(Int64 id)
     {
-        var td = FindById(id);
+        var td = ProjectScopeRules.FilterVisible(FindById(id));
         var app = td?.App;
         if (app != null && !td.Name.IsNullOrEmpty())
         {

@@ -12,6 +12,7 @@ using NewLife.Remoting.Models;
 using Stardust.Data;
 using Stardust.Managers;
 using Stardust.Server;
+using Stardust.Data.Platform;
 using XCode.Membership;
 
 namespace Stardust.Web.Areas.Registry.Controllers;
@@ -118,7 +119,7 @@ public class AppOnlineController : RegistryEntityController<AppOnline>
         var skipped = 0;
         foreach (var item in keys)
         {
-            var online = AppOnline.FindById(item.ToInt());
+            var online = ProjectScopeRules.FilterVisible(AppOnline.FindById(item.ToInt()));
             if (online != null && online.App != null)
             {
                 // 单例应用会保留最近2天的历史会话，离线会话不再下发，避免无谓等待
@@ -149,7 +150,7 @@ public class AppOnlineController : RegistryEntityController<AppOnline>
         var skipped = 0;
         foreach (var item in keys)
         {
-            var online = AppOnline.FindById(item.ToInt());
+            var online = ProjectScopeRules.FilterVisible(AppOnline.FindById(item.ToInt()));
             if (online != null && online.App != null)
             {
                 // 单例应用会保留最近2天的历史会话，离线会话不再下发，避免无谓等待
@@ -186,7 +187,7 @@ public class AppOnlineController : RegistryEntityController<AppOnline>
         var missing = 0;
         foreach (var item in keys)
         {
-            var online = AppOnline.FindById(item.ToInt());
+            var online = ProjectScopeRules.FilterVisible(AppOnline.FindById(item.ToInt()));
             if (online?.App == null)
             {
                 missing++;

@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
-using Stardust.Data.Platform;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
 using NewLife.Log;
 using NewLife.Web;
+using Stardust.Data.Platform;
 using XCode.Membership;
 using static Stardust.Data.Platform.McpAudit;
 
@@ -14,7 +14,7 @@ namespace Stardust.Web.Areas.Platform.Controllers;
 /// <summary>MCP审计日志。记录每次MCP工具调用</summary>
 [Menu(10, true, Icon = "fa-table")]
 [PlatformArea]
-public class McpAuditController : EntityController<McpAudit>
+public class McpAuditController : ProjectScopedEntityController<McpAudit>
 {
     static McpAuditController()
     {

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Stardust.Data.Gateway;
 using NewLife;
 using NewLife.Cube;
@@ -12,7 +12,7 @@ namespace Stardust.Web.Areas.Gateway.Controllers;
 /// <summary>网关路由。请求匹配规则，定义如何将请求转发到目标集群</summary>
 [Menu(20, true, Icon = "fa-route")]
 [GatewayArea]
-public class GatewayRouteController : EntityController<GatewayRoute>
+public class GatewayRouteController : ProjectScopedEntityController<GatewayRoute>
 {
     static GatewayRouteController()
     {

@@ -49,7 +49,7 @@ public class FixDataHostedService : IHostedService
             // 修正所属项目
             foreach (var entity in list.Where(e => e.ProjectId == 0 && !e.Category.IsNullOrEmpty()))
             {
-                var prj = GalaxyProject.FindByName(entity.Category);
+                var prj = ProjectScopeRules.FilterVisible(GalaxyProject.FindByName(entity.Category));
                 if (prj != null)
                 {
                     entity.ProjectId = prj.Id;
@@ -73,7 +73,7 @@ public class FixDataHostedService : IHostedService
             // 修正所属项目
             foreach (var entity in list.Where(e => e.ProjectId == 0 && !e.Category.IsNullOrEmpty()))
             {
-                var prj = GalaxyProject.FindByName(entity.Category);
+                var prj = ProjectScopeRules.FilterVisible(GalaxyProject.FindByName(entity.Category));
                 if (prj != null)
                 {
                     entity.ProjectId = prj.Id;
@@ -97,7 +97,7 @@ public class FixDataHostedService : IHostedService
             // 修正所属项目
             foreach (var entity in list.Where(e => e.ProjectId == 0 && !e.Category.IsNullOrEmpty()))
             {
-                var prj = GalaxyProject.FindByName(entity.Category);
+                var prj = ProjectScopeRules.FilterVisible(GalaxyProject.FindByName(entity.Category));
                 if (prj != null)
                 {
                     entity.ProjectId = prj.Id;
@@ -121,7 +121,7 @@ public class FixDataHostedService : IHostedService
             // 修正所属项目
             foreach (var entity in list.Where(e => e.ProjectId == 0 && !e.Category.IsNullOrEmpty()))
             {
-                var prj = GalaxyProject.FindByName(entity.Category);
+                var prj = ProjectScopeRules.FilterVisible(GalaxyProject.FindByName(entity.Category));
                 if (prj != null)
                 {
                     entity.ProjectId = prj.Id;
@@ -145,7 +145,7 @@ public class FixDataHostedService : IHostedService
             // 修正所属项目
             foreach (var entity in list.Where(e => e.ProjectId == 0 && !e.Category.IsNullOrEmpty()))
             {
-                var prj = GalaxyProject.FindByName(entity.Category);
+                var prj = ProjectScopeRules.FilterVisible(GalaxyProject.FindByName(entity.Category));
                 if (prj != null)
                 {
                     entity.ProjectId = prj.Id;

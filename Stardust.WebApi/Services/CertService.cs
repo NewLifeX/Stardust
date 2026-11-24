@@ -3,6 +3,7 @@ using NewLife.Log;
 using NewLife.Remoting.Models;
 using NewLife.Serialization;
 using Stardust.Data.Deployment;
+using Stardust.Data.Platform;
 
 namespace Stardust.Web.Services;
 
@@ -79,7 +80,7 @@ public class CertService(StarFactory starFactory, ITracer? tracer)
         if (cert == null) return 0;
 
         var count = 0;
-        foreach (var node in Stardust.Data.Nodes.Node.FindAll())
+        foreach (var node in ProjectScopeRules.FilterVisible(Stardust.Data.Nodes.Node.FindAll()))
         {
             if (!node.Enable) continue;
 

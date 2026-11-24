@@ -9,6 +9,7 @@ using Stardust.Data;
 using Stardust.Data.Monitors;
 using Stardust.Server.Services;
 using Stardust.Web.Areas;
+using Stardust.Data.Platform;
 using XCode;
 using XCode.Membership;
 
@@ -87,16 +88,16 @@ public class AppTracerController : WebEntityController<AppTracer>
         if (id <= 0) id = p["id"].ToInt(-1);
         if (id > 0)
         {
-            var app = AppTracer.FindByKey(id);
+            var app = ProjectScopeRules.FilterVisible(AppTracer.FindByKey(id));
             if (app != null) return [app];
         }
         var appId = p["appId"].ToInt(-1);
         if (appId > 0)
         {
-            var list = AppTracer.FindAllByAppId(appId);
+            var list = ProjectScopeRules.FilterVisible(AppTracer.FindAllByAppId(appId));
             if (list.Count == 0)
             {
-                var app = App.FindById(appId);
+                var app = ProjectScopeRules.FilterVisible(App.FindById(appId));
                 if (app != null)
                 {
                     var entity = new AppTracer
@@ -129,7 +130,7 @@ public class AppTracerController : WebEntityController<AppTracer>
 
         var rs = base.OnDelete(entity);
 
-        var list = AppDayStat.FindAllByAppId(entity.ID);
+        var list = ProjectScopeRules.FilterVisible(AppDayStat.FindAllByAppId(entity.ID));
         list.Delete();
 
         //var list2 = TraceDayStat.FindAllByAppId(entity.ID);
@@ -156,7 +157,7 @@ public class AppTracerController : WebEntityController<AppTracer>
         var ent = entity as IEntity;
         if (ent.Dirtys[nameof(AppTracer._.WebHook)] && entity.WebHook == MaskPlaceholder)
         {
-            var old = AppTracer.FindByKey(entity.ID);
+            var old = ProjectScopeRules.FilterVisible(AppTracer.FindByKey(entity.ID));
             if (old != null)
             {
                 entity.WebHook = old.WebHook;
@@ -173,7 +174,7 @@ public class AppTracerController : WebEntityController<AppTracer>
                 case DataObjectMethodType.Insert:
                     if (entity.AppId == 0)
                     {
-                        var app = App.FindByName(entity.Name);
+                        var app = ProjectScopeRules.FilterVisible(App.FindByName(entity.Name));
                         if (app != null) entity.AppId = app.Id;
                     }
 
@@ -195,10 +196,10 @@ public class AppTracerController : WebEntityController<AppTracer>
 
         if (post && type == DataObjectMethodType.Delete)
         {
-            var list = AppDayStat.FindAllByAppId(entity.ID);
+            var list = ProjectScopeRules.FilterVisible(AppDayStat.FindAllByAppId(entity.ID));
             list.Delete();
 
-            var list2 = TraceItem.FindAllByApp(entity.ID);
+            var list2 = ProjectScopeRules.FilterVisible(TraceItem.FindAllByApp(entity.ID));
             list2.Delete();
 
             TraceDayStat.DeleteByAppAndItem(entity.ID, 0);
@@ -212,7 +213,7 @@ public class AppTracerController : WebEntityController<AppTracer>
     {
         foreach (var item in SelectKeys)
         {
-            var app = AppTracer.FindByID(item.ToInt());
+            var app = ProjectScopeRules.FilterVisible(AppTracer.FindByID(item.ToInt()));
             if (app != null)
             {
                 XTrace.WriteLine("Correcting {0}/{1}", app.Name, app.ID);
@@ -233,13 +234,13 @@ public class AppTracerController : WebEntityController<AppTracer>
     {
         foreach (var item in SelectKeys)
         {
-            var app = AppTracer.FindByID(item.ToInt());
+            var app = ProjectScopeRules.FilterVisible(AppTracer.FindByID(item.ToInt()));
             if (app != null)
             {
                 XTrace.WriteLine("Correcting legacy data {0}/{1}", app.Name, app.ID);
 
                 {
-                    var list = TraceDayStat.FindAllByAppId(app.ID);
+                    var list = ProjectScopeRules.FilterVisible(TraceDayStat.FindAllByAppId(app.ID));
                     foreach (var st in list)
                     {
                         var ti = app.GetOrAddItem(st.Name);
@@ -259,7 +260,7 @@ public class AppTracerController : WebEntityController<AppTracer>
                     app.Total = list.Sum(e => e.Total);
                 }
                 {
-                    var list = TraceHourStat.FindAllByAppId(app.ID);
+                    var list = ProjectScopeRules.FilterVisible(TraceHourStat.FindAllByAppId(app.ID));
                     foreach (var st in list)
                     {
                         if (st.ItemId == 0 && !st.Name.IsNullOrEmpty())

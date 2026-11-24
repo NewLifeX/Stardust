@@ -10,6 +10,7 @@ using NewLife.Web;
 using Stardust.Data;
 using Stardust.Data.Deployment;
 using Stardust.Server;
+using Stardust.Data.Platform;
 using XCode;
 using XCode.Membership;
 
@@ -89,17 +90,17 @@ public class AppDeployController : DeploymentEntityController<AppDeploy>
         if (id <= 0) id = p["id"].ToInt(-1);
         if (id > 0)
         {
-            var entity = AppDeploy.FindByKey(id);
+            var entity = ProjectScopeRules.FilterVisible(AppDeploy.FindByKey(id));
             if (entity != null) return [entity];
         }
         var appId = p["appId"].ToInt(-1);
         if (appId > 0)
         {
-            var list = AppDeploy.FindAllByAppId(appId);
+            var list = ProjectScopeRules.FilterVisible(AppDeploy.FindAllByAppId(appId));
             if (list.Count == 0)
             {
                 // 自动新建发布集
-                var app = App.FindById(appId);
+                var app = ProjectScopeRules.FilterVisible(App.FindById(appId));
                 if (app != null)
                 {
                     var entity = new AppDeploy
@@ -160,7 +161,7 @@ public class AppDeployController : DeploymentEntityController<AppDeploy>
         if (entity.Id == 0)
         {
             // 从应用表继承ID
-            var app = App.FindByName(entity.Name);
+            var app = ProjectScopeRules.FilterVisible(App.FindByName(entity.Name));
             if (app != null) entity.Id = app.Id;
         }
 
@@ -170,7 +171,7 @@ public class AppDeployController : DeploymentEntityController<AppDeploy>
             if (entity.RepoPassword == "*****")
             {
                 // 未修改密码：从数据库读取原密文回填，清除脏标记
-                var old = AppDeploy.FindById(entity.Id);
+                var old = ProjectScopeRules.FilterVisible(AppDeploy.FindById(entity.Id));
                 if (old != null)
                 {
                     entity.RepoPassword = old.RepoPassword;

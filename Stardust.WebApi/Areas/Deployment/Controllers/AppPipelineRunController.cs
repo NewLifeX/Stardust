@@ -7,6 +7,7 @@ using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
 using NewLife.Web;
+using Stardust.Data.Platform;
 using XCode;
 using XCode.Membership;
 
@@ -117,14 +118,14 @@ public class AppPipelineRunController : DeploymentEntityController<AppPipelineRu
     [EntityAuthorize(PermissionFlags.Detail)]
     public ActionResult Detail(Int32 id)
     {
-        var run = AppPipelineRun.FindById(id);
+        var run = ProjectScopeRules.FilterVisible(AppPipelineRun.FindById(id));
         if (run == null)
         {
             // 契约固定文案，便于前端识别空运行
             return Json(500, "Run record does not exist.");
         }
 
-        var steps = AppPipelineStep.FindAllByRunId(id).OrderBy(e => e.StepIndex).ToList();
+        var steps = ProjectScopeRules.FilterVisible(AppPipelineStep.FindAllByRunId(id)).OrderBy(e => e.StepIndex).ToList();
 
         return Json(0, null, new
         {

@@ -4,6 +4,7 @@ using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data.Deployment;
+using Stardust.Data.Platform;
 using XCode.Membership;
 
 namespace Stardust.Web.Areas.Deployment.Controllers;
@@ -38,7 +39,7 @@ public class AppDeployHistoryController : DeploymentEntityController<AppDeployHi
         var id = p["id"].ToInt(-1);
         if (id > 0)
         {
-            var entity = AppDeployHistory.FindById(id);
+            var entity = ProjectScopeRules.FilterVisible(AppDeployHistory.FindById(id));
             if (entity != null) return [entity];
         }
 

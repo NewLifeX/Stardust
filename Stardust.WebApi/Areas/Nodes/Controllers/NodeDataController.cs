@@ -5,6 +5,7 @@ using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Web;
 using Stardust.Data.Nodes;
+using Stardust.Data.Platform;
 using XCode;
 using static Stardust.Data.Nodes.NodeData;
 
@@ -39,7 +40,7 @@ public class NodeDataController : NodesEntityController<NodeData>
                 p.PageSize = 24 * 60;
 
                 // 默认查询最近24小时。如果指定了应用，还需要根据节点心跳间隔来调整
-                var node = Node.FindByID(nodeId);
+                var node = ProjectScopeRules.FilterVisible(Node.FindByID(nodeId));
                 if (node != null && node.Period > 0)
                 {
                     p.PageSize = 24 * 3600 / node.Period;

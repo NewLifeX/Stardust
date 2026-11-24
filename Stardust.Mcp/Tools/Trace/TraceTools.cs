@@ -4,6 +4,7 @@ using NewLife.Data;
 using Stardust.Data;
 using Stardust.Data.Monitors;
 
+using Stardust.Data.Platform;
 namespace Stardust.Mcp.Tools.Trace;
 
 public class TraceSearchTool : McpToolBase
@@ -34,7 +35,7 @@ public class TraceSearchTool : McpToolBase
         var errorOnly = GetBoolean(args, "error_only");
         var since = Since(args).Date;
         // 复用实体 Biz 层查询（与 MVC/WebApi 同一份）：跨天逐分片聚合，避免只查 since 起始分片而漏掉今天
-        var list = TraceData.FindAllByAppIdAndTime(app.Id, since, DateTime.Today, errorOnly ? 1 : -1);
+        var list = ProjectScopeRules.FilterVisible(TraceData.FindAllByAppIdAndTime(app.Id, since, DateTime.Today, errorOnly ? 1 : -1));
         var rows = list.Where(e => e.Cost >= min)
             .OrderByDescending(e => e.Cost).Take(PageSize(args))
             .Select(e => new { e.Id, e.Name, e.Cost, e.Errors, e.Total, client = e.ClientId, node_id = e.NodeId }).ToArray();
@@ -74,9 +75,9 @@ public class TraceDetailTool : McpToolBase
 
         // 项目隔离：SampleData 本身无 AppId，需经 DataId 反查 TraceData.AppId，只保留属于当前项目的片段。
         // TraceData 同样按天分表，复用实体 Biz 层的分片感知查询（与 MVC/WebApi 同一份）
-        var projectAppIds = App.FindAllByProjectId(ctx.ProjectId).Select(e => e.Id).ToHashSet();
+        var projectAppIds = ProjectScopeRules.FilterVisible(App.FindAllByProjectId(ctx.ProjectId)).Select(e => e.Id).ToHashSet();
         var dataIds = samples.Select(e => e.DataId).Distinct().ToArray();
-        var appIdByDataId = TraceData.FindAllByIds(dataIds).ToDictionary(e => e.Id, e => e.AppId);
+        var appIdByDataId = ProjectScopeRules.FilterVisible(TraceData.FindAllByIds(dataIds)).ToDictionary(e => e.Id, e => e.AppId);
         var filtered = samples.Where(e => appIdByDataId.TryGetValue(e.DataId, out var appId) && projectAppIds.Contains(appId)).ToList();
         if (filtered.Count == 0) throw new McpException(-32003, "未找到该调用链，或它不属于当前令牌绑定的项目。");
 

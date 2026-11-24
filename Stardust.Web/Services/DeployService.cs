@@ -13,6 +13,7 @@ using Stardust.Deployment;
 using Stardust.Managers;
 using Stardust.Models;
 using Stardust.Server;
+using Stardust.Data.Platform;
 using Attachment = NewLife.Cube.Entity.Attachment;
 
 namespace Stardust.Web.Services;
@@ -139,7 +140,7 @@ public class DeployService(StarFactory starFactory, ITracer tracer)
     /// <param name="publishEnabledNodes">为 false 时只改版本号，由调用方自己决定向哪些节点下发。</param>
     public async Task<String> UseVersion(Int32 versionId, String ip, Boolean publishEnabledNodes = true)
     {
-        var ver = AppDeployVersion.FindById(versionId) ?? throw new Exception(L.T("Version not found."));
+        var ver = ProjectScopeRules.FilterVisible(AppDeployVersion.FindById(versionId)) ?? throw new Exception(L.T("Version not found."));
         var app = ver.UseAsCurrent();
         if (publishEnabledNodes)
         {
@@ -162,7 +163,7 @@ public class DeployService(StarFactory starFactory, ITracer tracer)
         try
         {
             var ts = new List<Task>();
-            var appNodes = AppDeployNode.FindAllByAppId(app.Id);
+            var appNodes = ProjectScopeRules.FilterVisible(AppDeployNode.FindAllByAppId(app.Id));
             foreach (var item in appNodes)
             {
                 if (item.Enable) ts.Add(Control(app, item, "install", ip, item.Delay, 0));

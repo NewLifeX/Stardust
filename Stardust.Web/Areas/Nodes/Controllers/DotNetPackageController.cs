@@ -13,7 +13,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers;
 /// <summary>dotNet安装包管理。管理面向不同操作系统和CPU架构的.NET运行时安装包</summary>
 [Menu(44)]
 [NodesArea]
-public class DotNetPackageController : EntityController<DotNetPackage>
+public class DotNetPackageController : ProjectScopedEntityController<DotNetPackage>
 {
     static DotNetPackageController()
     {

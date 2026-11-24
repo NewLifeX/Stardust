@@ -5,6 +5,7 @@ using NewLife.Log;
 using NewLife.Web;
 using Stardust.Data.Nodes;
 using Stardust.Storages;
+using Stardust.Data.Platform;
 using XCode.Membership;
 using Attachment = NewLife.Cube.Entity.Attachment;
 
@@ -54,7 +55,7 @@ public class NodeVersionController : NodesEntityController<NodeVersion>
         {
             //取 Id@Attachment 唯一
             var id = Path.GetFileNameWithoutExtension(entity.Source.Replace("/cube/file?id=", String.Empty));
-            var att = Attachment.FindById(id.ToLong());
+            var att = ProjectScopeRules.FilterVisible(Attachment.FindById(id.ToLong()));
             if (att != null)
             {
                 var attPath = att.GetFilePath();

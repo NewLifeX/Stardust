@@ -6,6 +6,7 @@ using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data.Deployment;
 using Stardust.Web.Services;
+using Stardust.Data.Platform;
 using XCode.Membership;
 
 namespace Stardust.Web.Areas.Deployment.Controllers;
@@ -79,7 +80,7 @@ public class AppBuildNodeController : DeploymentEntityController<AppBuildNode>
     [EntityAuthorize(PermissionFlags.Update)]
     public async Task<ActionResult> Operate(String act, Int32 id)
     {
-        var bn = AppBuildNode.FindById(id);
+        var bn = ProjectScopeRules.FilterVisible(AppBuildNode.FindById(id));
         if (bn == null || bn.Node == null) return Json(500, $"编译节点[{id}]不存在");
 
         var app = bn.Deploy;

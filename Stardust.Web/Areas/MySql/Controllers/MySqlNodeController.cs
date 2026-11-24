@@ -7,6 +7,7 @@ using NewLife.Cube.ViewModels;
 using NewLife.Data;
 using NewLife.Log;
 using NewLife.Web;
+using Stardust.Data.Platform;
 using XCode.Membership;
 using Stardust.Server.Services;
 
@@ -15,7 +16,7 @@ namespace Stardust.Web.Areas.MySql.Controllers;
 /// <summary>MySQL 节点。监控的 MySQL 实例</summary>
 [Menu(50)]
 [MySqlArea]
-public class MySqlNodeController : EntityController<MySqlNode>
+public class MySqlNodeController : ProjectScopedEntityController<MySqlNode>
 {
     private readonly IMySqlService _mySqlService;
 
@@ -64,7 +65,7 @@ public class MySqlNodeController : EntityController<MySqlNode>
         var nodeId = p["Id"].ToInt(-1);
         if (nodeId > 0)
         {
-            var node = MySqlNode.FindById(nodeId);
+            var node = ProjectScopeRules.FilterVisible(MySqlNode.FindById(nodeId));
             if (node != null) return new[] { node };
         }
 
@@ -82,7 +83,7 @@ public class MySqlNodeController : EntityController<MySqlNode>
     [EntityAuthorize(PermissionFlags.Update)]
     public ActionResult Refresh(Int32 id)
     {
-        var node = MySqlNode.FindById(id);
+        var node = ProjectScopeRules.FilterVisible(MySqlNode.FindById(id));
         if (node != null)
         {
             XTrace.WriteLine("Refreshing {0}/{1} {2}:{3}", node.Name, node.Id, node.Server, node.Port);

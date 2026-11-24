@@ -4,6 +4,7 @@ using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data.Monitors;
 using Stardust.Web.Areas;
+using Stardust.Data.Platform;
 using XCode;
 using XCode.Membership;
 
@@ -106,7 +107,7 @@ public class SampleDataController : WebReadOnlyEntityController<SampleData>
         var entity = SampleData.FindByKeyForEdit(key);
         if (entity != null) return entity;
 
-        var entity2 = SampleData2.FindById(key.ToLong());
+        var entity2 = ProjectScopeRules.FilterVisible(SampleData2.FindById(key.ToLong()));
         if (entity2 != null)
         {
             entity = new SampleData();

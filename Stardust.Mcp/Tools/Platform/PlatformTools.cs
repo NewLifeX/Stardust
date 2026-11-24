@@ -16,7 +16,7 @@ public class ProjectListTool : McpToolBase
     public override Task<Object> InvokeAsync(JsonElement args, McpContext ctx)
     {
         // 令牌只绑定一个项目。控制台没有「当前令牌项目」页，这里按编号取那一条实体。
-        var project = ctx.ProjectId > 0 ? GalaxyProject.FindById(ctx.ProjectId) : null;
+        var project = ctx.ProjectId > 0 ? ProjectScopeRules.FilterVisible(GalaxyProject.FindById(ctx.ProjectId)) : null;
         var data = project == null ? null : new { id = project.Id, name = project.Name, enable = project.Enable, nodes = project.Nodes, apps = project.Apps };
         return Task.FromResult<Object>(McpResult.Ok(project == null ? "当前令牌未绑定项目" : $"当前项目：{project.Name}", new { project = data }));
     }

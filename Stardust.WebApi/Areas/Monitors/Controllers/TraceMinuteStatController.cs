@@ -3,6 +3,7 @@ using NewLife;
 using NewLife.Cube;
 using NewLife.Web;
 using Stardust.Data.Monitors;
+using Stardust.Data.Platform;
 using Stardust.Web.Areas;
 using Stardust.Web.Services;
 using XCode.Membership;
@@ -62,7 +63,7 @@ public class TraceMinuteStatController : WebReadOnlyEntityController<TraceMinute
             // Minute 实体无 Type 列，由 TraceItem.GetKind(Name) 派生种类判定筛出 ItemId 集，
             // 交实体集合重载 In 过滤。EqualIgnoreCase 对齐 Day 先例。
             // 空集短路：无匹配埋点返回空列表，非退化全量。
-            var items = appId >= 0 ? TraceItem.FindAll(TraceItem._.AppId == appId) : TraceItem.FindAll();
+            var items = ProjectScopeRules.FilterVisible(appId >= 0 ? TraceItem.FindAll(TraceItem._.AppId == appId) : TraceItem.FindAll());
             var itemIds = items.Where(e => TraceItem.GetKind(e.Name).EqualIgnoreCase(type)).Select(e => e.Id).ToArray();
             if (itemIds.Length == 0) return Array.Empty<TraceMinuteStat>();
 
@@ -88,7 +89,7 @@ public class TraceMinuteStatController : WebReadOnlyEntityController<TraceMinute
     [EntityAuthorize(PermissionFlags.Detail)]
     public ActionResult Trace(Int32 id)
     {
-        var st = FindByID(id);
+        var st = ProjectScopeRules.FilterVisible(FindByID(id));
         if (st == null) return JsonRefresh("找不到统计数据");
 
         var traceId = st.TraceId;
@@ -99,7 +100,7 @@ public class TraceMinuteStatController : WebReadOnlyEntityController<TraceMinute
             var ds = TraceData.Search(st.AppId, st.ItemId, "minute", st.StatTime, 20);
             if (ds.Count == 0) return JsonRefresh("找不到追踪数据");
 
-            var list = SampleData.FindAllByDataIds(ds.Select(e => e.LinkId > 0 ? e.LinkId : e.Id).ToArray(), st.StatTime);
+            var list = ProjectScopeRules.FilterVisible(SampleData.FindAllByDataIds(ds.Select(e => e.LinkId > 0 ? e.LinkId : e.Id).ToArray(), st.StatTime));
             if (list.Count == 0) return JsonRefresh(L.T("Sample data not found."));
 
             traceId = list[0].TraceId;

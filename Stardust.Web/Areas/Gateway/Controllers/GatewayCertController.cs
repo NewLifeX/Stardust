@@ -11,7 +11,7 @@ namespace Stardust.Web.Areas.Gateway.Controllers;
 /// <summary>网关证书。SSL证书配置，统一使用星尘部署中心的 SslCertificate 管理</summary>
 [Menu(10, true, Icon = "fa-lock")]
 [GatewayArea]
-public class GatewayCertController : EntityController<SslCertificate>
+public class GatewayCertController : ProjectScopedEntityController<SslCertificate>
 {
     static GatewayCertController()
     {

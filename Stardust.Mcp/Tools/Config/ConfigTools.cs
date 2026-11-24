@@ -1,6 +1,7 @@
 using System.Text.Json;
 using NewLife;
 using Stardust.Data.Configs;
+using Stardust.Data.Platform;
 
 namespace Stardust.Mcp.Tools.Config;
 
@@ -123,7 +124,7 @@ public class ConfigRollbackTool : McpToolBase
     {
         var historyId = GetInt32(args, "history_id");
         if (historyId <= 0) throw new McpException(-32602, "无效参数：缺少 history_id。");
-        var history = ConfigHistory.FindById(historyId) ?? throw new McpException(-32602, "配置历史不存在。");
+        var history = ProjectScopeRules.FilterVisible(ConfigHistory.FindById(historyId)) ?? throw new McpException(-32602, "配置历史不存在。");
         McpGuard.Config(ctx, history.ConfigId);
         if (!history.Action.EqualIgnoreCase("Publish")) throw new McpException(-32602, "只有发布历史可以回滚。");
 

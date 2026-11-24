@@ -7,12 +7,13 @@ using NewLife.Web;
 using Stardust.Data.Nodes;
 using XCode.Membership;
 
+using Stardust.Data.Platform;
 namespace Stardust.Web.Areas.Nodes.Controllers;
 
 /// <summary>产品版本管理。产品发布版本，一个版本包含多个面向不同.NET运行时的包</summary>
 [Menu(42)]
 [NodesArea]
-public class ProductReleaseController : EntityController<ProductRelease>
+public class ProductReleaseController : ProjectScopedEntityController<ProductRelease>
 {
     static ProductReleaseController()
     {
@@ -67,7 +68,7 @@ public class ProductReleaseController : EntityController<ProductRelease>
     protected override Int32 OnDelete(ProductRelease entity)
     {
         // 删除关联的所有发布包
-        var packages = ProductPackage.FindAllByReleaseId(entity.Id);
+        var packages = ProjectScopeRules.FilterVisible(ProductPackage.FindAllByReleaseId(entity.Id));
         foreach (var pkg in packages)
         {
             pkg.Delete();

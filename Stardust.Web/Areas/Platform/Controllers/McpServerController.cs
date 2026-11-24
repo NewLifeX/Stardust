@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
-using Stardust.Data.Platform;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
 using NewLife.Log;
 using NewLife.Web;
+using Stardust.Data.Platform;
 using XCode.Membership;
 using static Stardust.Data.Platform.McpServer;
 
@@ -14,7 +14,7 @@ namespace Stardust.Web.Areas.Platform.Controllers;
 /// <summary>MCP服务器。远端MCP服务端点注册表</summary>
 [Menu(25, true, Icon = "fa-server")]
 [PlatformArea]
-public class McpServerController : EntityController<McpServer>
+public class McpServerController : ProjectScopedEntityController<McpServer>
 {
     static McpServerController()
     {

@@ -81,7 +81,7 @@ public class ProjectUserController : WebEntityController<ProjectUser>
         {
             if (model == null || model.Id == 0) throw new ArgumentException("The record ID is required");
 
-            var old = ProjectUser.FindById(model.Id);
+            var old = ProjectScopeRules.FilterVisible(ProjectUser.FindById(model.Id));
             if (old == null) throw new ArgumentException($"Record #{model.Id} does not exist");
 
             // 契约式部分更新：仅复制 Enable，未提交字段保持库中原值（绑定模型其它属性为默认值，不可整体落库）

@@ -5,8 +5,8 @@ using Stardust.Data;
 using Stardust.Data.Deployment;
 using Stardust.Data.Monitors;
 using Stardust.Data.Nodes;
-using Stardust.Data.Platform;
 using Stardust.Web.Models.Dashboard;
+using Stardust.Data.Platform;
 using XCode;
 using XCode.Membership;
 
@@ -28,7 +28,7 @@ public class DashboardService
         var projects = ProjectCache;
         if (userId <= 0) return DashboardScope.Resolve(projects, false, []);
 
-        var user = XCode.Membership.User.FindByID(userId);
+        var user = ProjectScopeRules.FilterVisible(XCode.Membership.User.FindByID(userId));
         var isAdmin = user != null && IsSystemRole(user);
         var members = user == null ? [] : ProjectUser.FindAllByUserId(userId).Where(e => e.Enable).Select(e => e.ProjectId).ToList();
 
@@ -321,7 +321,7 @@ public class DashboardService
         var model = new ProjectDashboardModel { Page = "project", Scope = scope, Range = range, Id = projectId };
         if (scope.IsNone) return model;
 
-        var project = GalaxyProject.FindById(projectId);
+        var project = ProjectScopeRules.FilterVisible(GalaxyProject.FindById(projectId));
         if (project == null || !IsVisible(scope, project.Id)) return model;
 
         model.Project = new ProjectInfo
@@ -456,7 +456,7 @@ public class DashboardService
         var model = new AppDashboardModel { Page = "app", Scope = scope, Range = range, Id = appId };
         if (scope.IsNone) return model;
 
-        var app = App.FindById(appId);
+        var app = ProjectScopeRules.FilterVisible(App.FindById(appId));
         if (app == null || !IsVisible(scope, app.ProjectId)) return model;
 
         var now = DateTime.Now;
@@ -609,7 +609,7 @@ public class DashboardService
         var model = new NodeDashboardModel { Page = "node", Scope = scope, Range = range, Id = nodeId };
         if (scope.IsNone) return model;
 
-        var node = Node.FindByID(nodeId);
+        var node = ProjectScopeRules.FilterVisible(Node.FindByID(nodeId));
         if (node == null || !IsVisible(scope, node.ProjectId)) return model;
 
         var online = NodeOnline.FindAllByNodeId(nodeId).OrderByDescending(e => e.UpdateTime).FirstOrDefault();

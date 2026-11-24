@@ -3,6 +3,7 @@ using NewLife.Cube;
 using NewLife.Cube.Charts;
 using NewLife.Web;
 using Stardust.Data.Nodes;
+using Stardust.Data.Platform;
 using XCode;
 using static Stardust.Data.Nodes.RedisData;
 
@@ -11,7 +12,7 @@ namespace Stardust.Web.Areas.Redis.Controllers;
 /// <summary>Redis 数据。浏览监控实例中的键值数据</summary>
 [Menu(40, false)]
 [RedisArea]
-public class RedisDataController : ReadOnlyEntityController<RedisData>
+public class RedisDataController : ProjectScopedReadOnlyEntityController<RedisData>
 {
     static RedisDataController()
     {
@@ -46,7 +47,7 @@ public class RedisDataController : ReadOnlyEntityController<RedisData>
         if (list.Count > 0)
         {
             // 绘制日期曲线图
-            var node = RedisNode.FindById(redisId);
+            var node = ProjectScopeRules.FilterVisible(RedisNode.FindById(redisId));
             if (redisId >= 0 && node != null)
             {
                 var list2 = list.OrderBy(e => e.Id).ToList();

@@ -6,6 +6,7 @@ using NewLife.Cube.Charts;
 using NewLife.Cube.Extensions;
 using NewLife.Web;
 using Stardust.Data.Nodes;
+using Stardust.Data.Platform;
 using XCode;
 using static Stardust.Data.Nodes.NodeData;
 
@@ -43,7 +44,7 @@ public class NodeDataController : NodesEntityController<NodeData>
                 p.PageSize = 1440;
 
                 // 默认查询最近24小时。如果指定了应用，还需要根据节点心跳间隔来调整
-                var node = Node.FindByID(nodeId);
+                var node = ProjectScopeRules.FilterVisible(Node.FindByID(nodeId));
                 if (node != null && node.Period > 0)
                 {
                     p.PageSize = Math.Min(24 * 3600 / node.Period, 1000);
@@ -73,7 +74,7 @@ public class NodeDataController : NodesEntityController<NodeData>
             var nodeId = p["nodeId"].ToInt(-1);
 
             // 绘制日期曲线图
-            var node = Node.FindByID(nodeId);
+            var node = ProjectScopeRules.FilterVisible(Node.FindByID(nodeId));
             if (nodeId >= 0 && node != null)
             {
                 var list2 = list.OrderBy(e => e.LocalTime).ToList();

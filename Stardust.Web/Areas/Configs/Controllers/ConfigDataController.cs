@@ -5,6 +5,7 @@ using NewLife.Log;
 using NewLife.Web;
 using Stardust.Data.Configs;
 using Stardust.Server.Services;
+using Stardust.Data.Platform;
 using XCode;
 
 namespace Stardust.Web.Areas.Configs.Controllers;
@@ -74,7 +75,7 @@ public class ConfigDataController : ConfigsEntityController<ConfigData>
             //PageSetting.EnableAdd = true;
 
             // 控制发布按钮
-            var app = AppConfig.FindById(configId);
+            var app = ProjectScopeRules.FilterVisible(AppConfig.FindById(configId));
             PageSetting.EnableSelect = list.Any(e => e.NewVersion > app.Version);
         }
 

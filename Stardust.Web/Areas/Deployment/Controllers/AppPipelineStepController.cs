@@ -11,7 +11,7 @@ namespace Stardust.Web.Areas.Deployment.Controllers;
 /// <summary>流水线步骤。一次运行的每一个阶段（拉代码/编译/打包/上传/部署等）都对应一条步骤记录，承载阶段级状态、输出与耗时。只读子表视图</summary>
 [Menu(35, false)]
 [DeploymentArea]
-public class AppPipelineStepController : ReadOnlyEntityController<AppPipelineStep>
+public class AppPipelineStepController : ProjectScopedReadOnlyEntityController<AppPipelineStep>
 {
     static AppPipelineStepController()
     {

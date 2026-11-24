@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
-using Stardust.Data.Platform;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
 using NewLife.Log;
 using NewLife.Web;
+using Stardust.Data.Platform;
 using XCode.Membership;
 using static Stardust.Data.Platform.McpTokenResource;
 
@@ -14,7 +14,7 @@ namespace Stardust.Web.Areas.Platform.Controllers;
 /// <summary>MCP令牌资源授权。Token与项目/节点/应用的授权关系</summary>
 [Menu(20, true, Icon = "fa-table")]
 [PlatformArea]
-public class McpTokenResourceController : EntityController<McpTokenResource>
+public class McpTokenResourceController : ProjectScopedEntityController<McpTokenResource>
 {
     static McpTokenResourceController()
     {

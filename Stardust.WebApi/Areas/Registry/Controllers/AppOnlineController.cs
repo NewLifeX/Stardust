@@ -9,6 +9,7 @@ using NewLife.Web;
 using NewLife.Remoting.Models;
 using Stardust.Data;
 using Stardust.Data.Nodes;
+using Stardust.Data.Platform;
 using XCode.Membership;
 
 namespace Stardust.Web.Areas.Registry.Controllers;
@@ -113,7 +114,7 @@ public class AppOnlineController : RegistryEntityController<AppOnline>
 
         // 在线判定复用 IsOnline（心跳 SessionTimeout，兜底 600 秒，与 MVC 一致）
 
-        var list = AppOnline.FindAllByApp(appId);
+        var list = ProjectScopeRules.FilterVisible(AppOnline.FindAllByApp(appId));
         var rs = new List<Object>();
         foreach (var item in list)
         {
@@ -159,7 +160,7 @@ public class AppOnlineController : RegistryEntityController<AppOnline>
         var skipped = 0;
         foreach (var item in SelectKeys)
         {
-            var online = AppOnline.FindById(item.ToInt());
+            var online = ProjectScopeRules.FilterVisible(AppOnline.FindById(item.ToInt()));
             if (online != null && online.App != null)
             {
                 // 单例应用会保留最近2天的历史会话，离线会话不再下发，避免无谓等待
@@ -197,7 +198,7 @@ public class AppOnlineController : RegistryEntityController<AppOnline>
         var skipped = 0;
         foreach (var item in SelectKeys)
         {
-            var online = AppOnline.FindById(item.ToInt());
+            var online = ProjectScopeRules.FilterVisible(AppOnline.FindById(item.ToInt()));
             if (online != null && online.App != null)
             {
                 // 单例应用会保留最近2天的历史会话，离线会话不再下发，避免无谓等待

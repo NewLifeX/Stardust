@@ -7,6 +7,7 @@ using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
 using NewLife.Web;
+using Stardust.Data.Platform;
 using XCode;
 using XCode.Membership;
 
@@ -15,7 +16,7 @@ namespace Stardust.Web.Areas.Deployment.Controllers;
 /// <summary>流水线运行。每次 webhook 触发或手动触发，都会产生一条运行记录，记录状态、关联步骤、TraceId 等信息</summary>
 [Menu(40, false)]
 [DeploymentArea]
-public class AppPipelineRunController : EntityController<AppPipelineRun>
+public class AppPipelineRunController : ProjectScopedEntityController<AppPipelineRun>
 {
     private readonly PipelineService _pipelineService;
 
@@ -80,7 +81,7 @@ public class AppPipelineRunController : EntityController<AppPipelineRun>
     /// <returns></returns>
     public ActionResult Detail(Int32 id)
     {
-        var entity = AppPipelineRun.FindById(id);
+        var entity = ProjectScopeRules.FilterVisible(AppPipelineRun.FindById(id));
         if (entity == null) return Json(500, L.T("Run record does not exist."));
 
         // 取消轮询        // 注入前端轮询脚本：状态为 Pending/Building/Deploying 时每 5 秒自动刷新一次

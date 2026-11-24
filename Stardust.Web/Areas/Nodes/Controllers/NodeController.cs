@@ -11,6 +11,7 @@ using Stardust.Models;
 using Stardust.Dns;
 using Stardust.Server.Services;
 using Stardust.Services;
+using Stardust.Data.Platform;
 using XCode;
 using XCode.Membership;
 using XCode.Model;
@@ -111,7 +112,7 @@ public class NodeController : NodesEntityController<Node>
         // 检测域名变更
         if ((entity as IEntity).Dirtys["Domains"])
         {
-            var old = Node.FindByID(entity.ID);
+            var old = ProjectScopeRules.FilterVisible(Node.FindByID(entity.ID));
             if (old != null && old.Domains != entity.Domains)
             {
                 entity.WriteHistory(HistoryAction.DomainChanged, true, L.TLog("Domains changed: {0} -> {1}", old.Domains, entity.Domains), ManageProvider.UserHost);
@@ -129,7 +130,7 @@ public class NodeController : NodesEntityController<Node>
         var nodeId = p["Id"].ToInt(-1);
         if (nodeId > 0)
         {
-            var node = Node.FindByKey(nodeId);
+            var node = ProjectScopeRules.FilterVisible(Node.FindByKey(nodeId));
             if (node != null) return new[] { node };
         }
 
@@ -198,7 +199,7 @@ public class NodeController : NodesEntityController<Node>
 
     public async Task<ActionResult> Trace(Int32 id)
     {
-        var node = FindByID(id);
+        var node = ProjectScopeRules.FilterVisible(FindByID(id));
         if (node != null)
         {
             //NodeCommand.Add(node, "截屏");
@@ -232,7 +233,7 @@ public class NodeController : NodesEntityController<Node>
     {
         foreach (var item in SelectKeys)
         {
-            var dt = FindByID(item.ToInt());
+            var dt = ProjectScopeRules.FilterVisible(FindByID(item.ToInt()));
             if (dt != null)
             {
                 dt.AlarmCpuRate = alarmRate;
@@ -254,7 +255,7 @@ public class NodeController : NodesEntityController<Node>
         var list = new List<Node>();
         foreach (var item in SelectKeys)
         {
-            var node = bf.FindByKey(item.ToInt());
+            var node = ProjectScopeRules.FilterVisible(bf.FindByKey(item.ToInt()));
             if (node != null)
             {
                 node.OSKind = OSKindHelper.Parse(node.OS, node.OSVersion);
@@ -279,7 +280,7 @@ public class NodeController : NodesEntityController<Node>
     [EntityAuthorize(PermissionFlags.Update)]
     public ActionResult FrameworkRecommend(Int32 id)
     {
-        var node = Node.FindByID(id);
+        var node = ProjectScopeRules.FilterVisible(Node.FindByID(id));
         if (node == null) return Content(L.T("Node does not exist."));
 
         ViewBag.Node = node;
@@ -293,7 +294,7 @@ public class NodeController : NodesEntityController<Node>
     [EntityAuthorize(PermissionFlags.Update)]
     public async Task<ActionResult> RefreshDns(Int32 id)
     {
-        var node = FindByID(id);
+        var node = ProjectScopeRules.FilterVisible(FindByID(id));
         if (node == null) throw new InvalidOperationException(L.T("Node does not exist."));
 
         await _dnsService.RefreshNodeDomainsAsync(node);

@@ -14,7 +14,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers;
 /// <summary>域名供应商。域名对应的DNS供应商凭据配置</summary>
 [Menu(120, true, Icon = "fa-table")]
 [NodesArea]
-public class DomainProviderController : EntityController<DomainProvider>
+public class DomainProviderController : ProjectScopedEntityController<DomainProvider>
 {
     static DomainProviderController()
     {

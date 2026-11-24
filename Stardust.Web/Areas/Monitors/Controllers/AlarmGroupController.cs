@@ -4,6 +4,7 @@ using NewLife.Cube;
 using NewLife.Web;
 using Stardust.Data;
 using Stardust.Data.Monitors;
+using Stardust.Data.Platform;
 using XCode.Membership;
 
 namespace Stardust.Web.Areas.Monitors.Controllers;
@@ -11,7 +12,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers;
 /// <summary>告警组。多个告警项组合成群，统一设置告警动作与接收对象</summary>
 [Menu(20)]
 [MonitorsArea]
-public class AlarmGroupController : EntityController<AlarmGroup>
+public class AlarmGroupController : ProjectScopedEntityController<AlarmGroup>
 {
     static AlarmGroupController()
     {
@@ -46,7 +47,7 @@ public class AlarmGroupController : EntityController<AlarmGroup>
         var id = p["Id"].ToInt(-1);
         if (id > 0)
         {
-            var app = AlarmGroup.FindById(id);
+            var app = ProjectScopeRules.FilterVisible(AlarmGroup.FindById(id));
             if (app != null) return new[] { app };
         }
 
@@ -67,7 +68,7 @@ public class AlarmGroupController : EntityController<AlarmGroup>
     {
         try
         {
-            var entity = AlarmGroup.FindById(id.ToInt());
+            var entity = ProjectScopeRules.FilterVisible(AlarmGroup.FindById(id.ToInt()));
             if (entity != null && entity.Enable)
             {
                 var hi = RobotHelper.SendAlarm(entity.Name, entity.WebHook, "报警测试", entity.Content);

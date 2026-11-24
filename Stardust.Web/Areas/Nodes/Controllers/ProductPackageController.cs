@@ -15,7 +15,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers;
 /// <summary>产品发布包。隶属于发布版本的安装包，面向不同.NET运行时目标</summary>
 [Menu(20, true, Icon = "fa-table")]
 [NodesArea]
-public class ProductPackageController : EntityController<ProductPackage>
+public class ProductPackageController : ProjectScopedEntityController<ProductPackage>
 {
     static ProductPackageController()
     {

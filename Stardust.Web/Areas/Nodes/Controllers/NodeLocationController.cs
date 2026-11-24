@@ -15,7 +15,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers;
 /// <summary>节点定位。根据网关IP和MAC规则，自动匹配节点所在地理位置</summary>
 [Menu(10, true, Icon = "fa-table")]
 [NodesArea]
-public class NodeLocationController : EntityController<NodeLocation>
+public class NodeLocationController : ProjectScopedEntityController<NodeLocation>
 {
     static NodeLocationController()
     {

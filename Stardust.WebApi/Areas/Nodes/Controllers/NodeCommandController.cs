@@ -8,6 +8,7 @@ using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data.Nodes;
 using Stardust.Models;
+using Stardust.Data.Platform;
 using XCode.Membership;
 
 namespace Stardust.Web.Areas.Nodes.Controllers;
@@ -76,7 +77,7 @@ public class NodeCommandController : NodesEntityController<NodeCommand>
         if (nodeId <= 0) return Json(400, "节点编号无效");
         if (command.IsNullOrEmpty()) return Json(400, "命令不能为空");
 
-        var node = Node.FindByID(nodeId);
+        var node = ProjectScopeRules.FilterVisible(Node.FindByID(nodeId));
         if (node == null) return Json(400, $"节点不存在（{nodeId}）");
 
         try

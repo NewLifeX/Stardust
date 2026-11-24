@@ -8,6 +8,7 @@ using NewLife.Cube;
 using NewLife.Cube.ViewModels;
 using NewLife.Reflection;
 using XCode;
+using XCode.DataAccessLayer;
 
 namespace Stardust.Web.Areas;
 
@@ -18,7 +19,7 @@ namespace Stardust.Web.Areas;
 /// 本基类在唯一投影出口 OnProject 统一应用，语义与原 CropRow 一致：值 null=键在值 null（键不删）；
 /// 非空字符串=原值非空时替换为哨兵（条件哨兵，如 WebHook "••••••"）。永不触碰共享缓存中的实体本体。
 /// </remarks>
-public class WebEntityController<T> : EntityController<T> where T : Entity<T>, new()
+public class WebEntityController<T> : ProjectScopedEntityController<T> where T : Entity<T>, new()
 {
     private ViewKinds? _maskView;
 
@@ -125,6 +126,9 @@ public class WebEntityController<T> : EntityController<T> where T : Entity<T>, n
                 var id = pi != null && pi.CanRead ? (pi.GetValue(entity) + "").Trim() : "";
                 if (!id.IsNullOrEmpty() && id != "0") throw new Exception("Adding data must not include a primary key");
             }
+
+            // 项目范围在业务钩子之前校验并补全项目编号
+            ValidateProjectScope(entity, DataMethod.Insert);
 
             // OnInsert 为持久化钩子（McpTokenController 等在此生成业务字段）
             var rows = OnInsert(entity);
@@ -280,7 +284,7 @@ public class WebEntityController<T> : EntityController<T> where T : Entity<T>, n
 /// 在 MVC 版继承 ReadOnlyEntityController，不提供 Add/Edit/Delete 端点，API 版必须保持同样的只读边界。
 /// 本基类在只读语义之上补充本地 NewLife.Cube(API版) 缺失的 JsonRefresh 兼容方法。
 /// </summary>
-public class WebReadOnlyEntityController<T> : ReadOnlyEntityController<T> where T : Entity<T>, new()
+public class WebReadOnlyEntityController<T> : ProjectScopedReadOnlyEntityController<T> where T : Entity<T>, new()
 {
     private ViewKinds? _maskView;
 

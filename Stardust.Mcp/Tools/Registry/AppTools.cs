@@ -3,6 +3,7 @@ using NewLife;
 using NewLife.Data;
 using Stardust.Data;
 
+using Stardust.Data.Platform;
 namespace Stardust.Mcp.Tools.Registry;
 
 public class AppListTool : McpToolBase
@@ -37,7 +38,7 @@ public class AppListTool : McpToolBase
             RetrieveTotalCount = true,
         };
         var apps = App.Search(ctx.ProjectId, category, null, DateTime.MinValue, DateTime.MinValue, key, page);
-        var onlineByApp = AppOnline.FindAllByProjectId(ctx.ProjectId)
+        var onlineByApp = ProjectScopeRules.FilterVisible(AppOnline.FindAllByProjectId(ctx.ProjectId))
             .GroupBy(e => e.AppId)
             .ToDictionary(g => g.Key, g => g.Count());
         var rows = apps.Select(a => new
@@ -112,8 +113,8 @@ public class AppTopologyTool : McpToolBase
     public override Task<Object> InvokeAsync(JsonElement args, McpContext ctx)
     {
         var app = McpGuard.App(ctx, GetInt32(args, "app_id"));
-        var provides = AppService.FindAllByAppId(app.Id).Select(e => new { e.ServiceName, e.Address, e.Healthy, e.Enable }).ToArray();
-        var consumes = AppConsume.FindAllByAppId(app.Id).Select(e => new { e.ServiceName, e.Address, e.Enable }).ToArray();
+        var provides = ProjectScopeRules.FilterVisible(AppService.FindAllByAppId(app.Id)).Select(e => new { e.ServiceName, e.Address, e.Healthy, e.Enable }).ToArray();
+        var consumes = ProjectScopeRules.FilterVisible(AppConsume.FindAllByAppId(app.Id)).Select(e => new { e.ServiceName, e.Address, e.Enable }).ToArray();
         return Task.FromResult<Object>(McpResult.Ok($"{app.Name}：提供 {provides.Length} 个服务，消费 {consumes.Length} 个依赖", new { provides, consumes }));
     }
 }
@@ -190,9 +191,9 @@ public class ServiceLookupTool : McpToolBase
         McpGuard.NeedProject(ctx);
         var name = GetString(args, "service_name");
         if (name.IsNullOrEmpty()) throw new McpException(-32602, "无效参数：缺少 service_name");
-        var providers = AppService.FindAllByServiceName(name, ctx.ProjectId)
+        var providers = ProjectScopeRules.FilterVisible(AppService.FindAllByServiceName(name, ctx.ProjectId))
             .Select(e => new { e.AppId, e.ServiceName, e.Address, e.Healthy }).ToArray();
-        var consumers = AppConsume.FindAllByServiceName(name, ctx.ProjectId)
+        var consumers = ProjectScopeRules.FilterVisible(AppConsume.FindAllByServiceName(name, ctx.ProjectId))
             .Select(e => new { e.AppId, e.ServiceName, e.Address }).ToArray();
         return Task.FromResult<Object>(McpResult.Ok($"服务 {name}：提供者 {providers.Length}，消费者 {consumers.Length}", new { providers, consumers }));
     }

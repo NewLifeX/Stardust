@@ -3,6 +3,7 @@ using Stardust.Data.Deployment;
 using Stardust.Mcp;
 using Stardust.Server.Services;
 using Stardust.Web.Services;
+using Stardust.Data.Platform;
 
 namespace Stardust.Web.Services;
 
@@ -24,7 +25,7 @@ public class McpOperations : IMcpOperations
 
     public Task<Int32> SetConfigAsync(Int32 configId, IDictionary<String, Object> configs)
     {
-        var cfg = AppConfig.FindById(configId) ?? throw new InvalidOperationException("Configuration does not exist.");
+        var cfg = ProjectScopeRules.FilterVisible(AppConfig.FindById(configId)) ?? throw new InvalidOperationException("Configuration does not exist.");
         return Task.FromResult(_config.SetConfigs(cfg, configs));
     }
 
@@ -37,8 +38,8 @@ public class McpOperations : IMcpOperations
 
     public async Task<Int32> ControlDeployAsync(Int32 deployId, Int32 deployNodeId, String action, String ip)
     {
-        var app = AppDeploy.FindById(deployId);
-        var node = AppDeployNode.FindById(deployNodeId);
+        var app = ProjectScopeRules.FilterVisible(AppDeploy.FindById(deployId));
+        var node = ProjectScopeRules.FilterVisible(AppDeployNode.FindById(deployNodeId));
         return await _deploy.Control(app, node, action, ip, 0, 0);
     }
 
@@ -64,14 +65,14 @@ public class McpOperations : IMcpOperations
 
     public async Task<Object> ReadDeployLogFilesAsync(Int32 deployNodeId)
     {
-        var dn = AppDeployNode.FindById(deployNodeId) ?? throw new InvalidOperationException($"Deploy node [{deployNodeId}] does not exist");
+        var dn = ProjectScopeRules.FilterVisible(AppDeployNode.FindById(deployNodeId)) ?? throw new InvalidOperationException($"Deploy node [{deployNodeId}] does not exist");
         var rs = await _deploy.ListLogFilesAsync(dn);
         return new { files = rs.Files.Select(f => new { name = f.Name, size = f.Size, last_write_utc = f.LastWriteUtc }).ToArray() };
     }
 
     public async Task<Object> ReadDeployLogTailAsync(Int32 deployNodeId, String file, Int64 offset, Int32 maxBytes)
     {
-        var dn = AppDeployNode.FindById(deployNodeId) ?? throw new InvalidOperationException($"Deploy node [{deployNodeId}] does not exist");
+        var dn = ProjectScopeRules.FilterVisible(AppDeployNode.FindById(deployNodeId)) ?? throw new InvalidOperationException($"Deploy node [{deployNodeId}] does not exist");
         var rs = await _deploy.TailLogFileAsync(dn, file, offset, maxBytes);
         return new { content = rs.Content, offset = rs.Offset, file_size = rs.FileSize, truncated = rs.Truncated };
     }

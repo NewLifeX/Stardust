@@ -8,6 +8,7 @@ using NewLife.Web;
 using Stardust.Data;
 using Stardust.Data.Configs;
 using Stardust.Server.Services;
+using Stardust.Data.Platform;
 using XCode;
 using XCode.Membership;
 
@@ -118,16 +119,16 @@ public class AppConfigController : ConfigsEntityController<AppConfig>
         if (id <= 0) id = p["id"].ToInt(-1);
         if (id > 0)
         {
-            var entity = AppConfig.FindByKey(id);
+            var entity = ProjectScopeRules.FilterVisible(AppConfig.FindByKey(id));
             if (entity != null) return [entity];
         }
         var appId = p["appId"].ToInt(-1);
         if (appId > 0)
         {
-            var list = AppConfig.FindAllByAppId(appId);
+            var list = ProjectScopeRules.FilterVisible(AppConfig.FindAllByAppId(appId));
             if (list.Count == 0)
             {
-                var app = App.FindById(appId);
+                var app = ProjectScopeRules.FilterVisible(App.FindById(appId));
                 if (app != null)
                 {
                     var entity = new AppConfig
@@ -163,7 +164,7 @@ public class AppConfigController : ConfigsEntityController<AppConfig>
                 case DataObjectMethodType.Insert:
                     if (entity.AppId == 0)
                     {
-                        var app = App.FindByName(entity.Name);
+                        var app = ProjectScopeRules.FilterVisible(App.FindByName(entity.Name));
                         if (app != null) entity.AppId = app.Id;
                     }
                     break;

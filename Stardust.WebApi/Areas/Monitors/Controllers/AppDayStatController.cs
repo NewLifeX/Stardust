@@ -5,6 +5,7 @@ using NewLife.Cube;
 using NewLife.Log;
 using NewLife.Web;
 using Stardust.Data.Monitors;
+using Stardust.Data.Platform;
 using Stardust.Server.Services;
 using Stardust.Web.Areas;
 using Stardust.Web.Services;
@@ -72,7 +73,7 @@ public class AppDayStatController : WebEntityController<AppDayStat>
     {
         foreach (var item in SelectKeys)
         {
-            var stat = FindByID(item.ToInt());
+            var stat = ProjectScopeRules.FilterVisible(FindByID(item.ToInt()));
             if (stat != null)
             {
                 XTrace.WriteLine("Recomputing statistics {0}/{1} {2}", stat.AppName, stat.AppId, stat.StatDate);

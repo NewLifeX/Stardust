@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
-using Stardust.Data.Platform;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.ViewModels;
 using NewLife.Log;
 using NewLife.Web;
+using Stardust.Data.Platform;
 using XCode.Membership;
 using static Stardust.Data.Platform.McpToken;
 
@@ -88,7 +88,7 @@ public class McpTokenController : WebEntityController<McpToken>
     protected override Int32 OnUpdate(McpToken entity)
     {
         // Token创建后不可修改，恢复原值
-        var old = McpToken.FindById(entity.Id);
+        var old = ProjectScopeRules.FilterVisible(McpToken.FindById(entity.Id));
         if (old != null) entity.Token = old.Token;
 
         var result = base.OnUpdate(entity);
@@ -113,7 +113,7 @@ public class McpTokenController : WebEntityController<McpToken>
     [HttpGet("/api/[area]/[controller]/Reset")]
     public ActionResult Reset([FromQuery] Int32 id)
     {
-        var entity = McpToken.FindById(id);
+        var entity = ProjectScopeRules.FilterVisible(McpToken.FindById(id));
         if (entity == null) throw new Exception(L.T("Token record not found."));
 
         var oldToken = entity.Token;

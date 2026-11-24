@@ -5,6 +5,7 @@ using NewLife.Cube.Charts;
 using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data;
+using Stardust.Data.Platform;
 using XCode;
 using XCode.Membership;
 using static Stardust.Data.AppMeter;
@@ -59,7 +60,7 @@ public class AppMeterController : RegistryEntityController<AppMeter>
                 p.PageSize = 1440;
 
                 // 默认查询最近24小时。如果指定了应用，还需要根据应用心跳间隔来调整
-                var app = App.FindById(appId);
+                var app = ProjectScopeRules.FilterVisible(App.FindById(appId));
                 if (app != null)
                 {
                     p.PageSize = Math.Min(24 * 3600 / app.EffectivePeriod, 1000);
@@ -96,7 +97,7 @@ public class AppMeterController : RegistryEntityController<AppMeter>
         if (list.Count > 0 && !clientId.IsNullOrEmpty())
         {
             // 绘制日期曲线图
-            var app = App.FindById(appId);
+            var app = ProjectScopeRules.FilterVisible(App.FindById(appId));
             if (appId >= 0 && app != null)
             {
                 var list2 = list.OrderBy(e => e.Id).ToList();

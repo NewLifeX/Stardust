@@ -9,7 +9,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers;
 /// <summary>跟踪规则。全局黑白名单，白名单放行，黑名单拦截</summary>
 [Menu(50, true, Icon = "fa-table")]
 [MonitorsArea]
-public class TraceRuleController : EntityController<TraceRule>
+public class TraceRuleController : ProjectScopedEntityController<TraceRule>
 {
     static TraceRuleController()
     {

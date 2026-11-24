@@ -7,6 +7,7 @@ using NewLife.Web;
 using Stardust.Data;
 using Stardust.Data.Monitors;
 using Stardust.Web.Areas;
+using Stardust.Data.Platform;
 using XCode;
 using XCode.Membership;
 
@@ -50,7 +51,7 @@ public class AlarmGroupController : WebEntityController<AlarmGroup>
         var id = p["Id"].ToInt(-1);
         if (id > 0)
         {
-            var app = AlarmGroup.FindById(id);
+            var app = ProjectScopeRules.FilterVisible(AlarmGroup.FindById(id));
             if (app != null) return new[] { app };
         }
 
@@ -71,7 +72,7 @@ public class AlarmGroupController : WebEntityController<AlarmGroup>
     {
         try
         {
-            var entity = AlarmGroup.FindById(id.ToInt());
+            var entity = ProjectScopeRules.FilterVisible(AlarmGroup.FindById(id.ToInt()));
             if (entity != null && entity.Enable)
             {
                 var hi = RobotHelper.SendAlarm(entity.Name, entity.WebHook, "报警测试", entity.Content);
@@ -118,7 +119,7 @@ public class AlarmGroupController : WebEntityController<AlarmGroup>
         var ent = entity as IEntity;
         if (ent.Dirtys[nameof(AlarmGroup._.WebHook)] && entity.WebHook == MaskPlaceholder)
         {
-            var old = AlarmGroup.FindById(entity.Id);
+            var old = ProjectScopeRules.FilterVisible(AlarmGroup.FindById(entity.Id));
             if (old != null)
             {
                 entity.WebHook = old.WebHook;

@@ -12,7 +12,7 @@ namespace Stardust.Web.Areas.Gateway.Controllers;
 /// <summary>网关集群。后端服务器集群，定义了负载均衡策略和健康检查配置</summary>
 [Menu(40, true, Icon = "fa-cubes")]
 [GatewayArea]
-public class GatewayClusterController : EntityController<GatewayCluster>
+public class GatewayClusterController : ProjectScopedEntityController<GatewayCluster>
 {
     static GatewayClusterController()
     {

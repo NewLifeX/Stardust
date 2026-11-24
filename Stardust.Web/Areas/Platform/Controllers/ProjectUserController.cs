@@ -9,7 +9,7 @@ namespace Stardust.Web.Areas.Platform.Controllers;
 /// <summary>项目用户关系。每个项目拥有哪些用户</summary>
 [Menu(10, false, Icon = "fa-table")]
 [PlatformArea]
-public class ProjectUserController : EntityController<ProjectUser>
+public class ProjectUserController : ProjectScopedEntityController<ProjectUser>
 {
     static ProjectUserController()
     {

@@ -10,6 +10,7 @@ using NewLife.Web;
 using Stardust.Data.Deployment;
 using Stardust.Storages;
 using Stardust.Web.Services;
+using Stardust.Data.Platform;
 using XCode.Membership;
 using Attachment = NewLife.Cube.Entity.Attachment;
 
@@ -63,7 +64,7 @@ public class AppDeployVersionController : DeploymentEntityController<AppDeployVe
         var id = p["id"].ToInt(-1);
         if (id > 0)
         {
-            var entity = AppDeployVersion.FindByKey(id);
+            var entity = ProjectScopeRules.FilterVisible(AppDeployVersion.FindByKey(id));
             if (entity != null) return [entity];
         }
 
@@ -172,7 +173,7 @@ public class AppDeployVersionController : DeploymentEntityController<AppDeployVe
         if (!entity.Url.IsNullOrEmpty())
         {
             var id = Path.GetFileNameWithoutExtension(entity.Url.Replace("/cube/file?id=", String.Empty));
-            var att = Attachment.FindById(id.ToLong());
+            var att = ProjectScopeRules.FilterVisible(Attachment.FindById(id.ToLong()));
             if (att != null)
             {
                 var attPath = att.GetFilePath();

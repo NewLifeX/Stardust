@@ -6,6 +6,7 @@ using NewLife.Log;
 using NewLife.Web;
 using Stardust.Data.Monitors;
 using Stardust.Data.Nodes;
+using Stardust.Data.Platform;
 using XCode.Membership;
 
 namespace Stardust.Web.Areas.Monitors.Controllers;
@@ -13,7 +14,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers;
 /// <summary>埋点项。每个应用各自的埋点名清单，用于配置采样率、超时与告警</summary>
 [Menu(65, false)]
 [MonitorsArea]
-public class TraceItemController : EntityController<TraceItem>
+public class TraceItemController : ProjectScopedEntityController<TraceItem>
 {
     static TraceItemController()
     {
@@ -47,7 +48,7 @@ public class TraceItemController : EntityController<TraceItem>
         var id = p["Id"].ToInt(-1);
         if (id > 0)
         {
-            var entity = TraceItem.FindById(id);
+            var entity = ProjectScopeRules.FilterVisible(TraceItem.FindById(id));
             if (entity != null) return new[] { entity };
         }
 
@@ -78,13 +79,13 @@ public class TraceItemController : EntityController<TraceItem>
     {
         foreach (var item in SelectKeys)
         {
-            var ti = TraceItem.FindById(item.ToInt());
+            var ti = ProjectScopeRules.FilterVisible(TraceItem.FindById(item.ToInt()));
             if (ti != null)
             {
                 XTrace.WriteLine("Correcting {0}/{1}", ti.Name, ti.Id);
 
                 {
-                    var list = TraceDayStat.FindAllByAppAndItem(ti.AppId, ti.Id);
+                    var list = ProjectScopeRules.FilterVisible(TraceDayStat.FindAllByAppAndItem(ti.AppId, ti.Id));
                     ti.Days = list.DistinctBy(e => e.StatDate.Date).Count();
                     ti.Total = list.Sum(e => e.Total);
                 }
@@ -104,7 +105,7 @@ public class TraceItemController : EntityController<TraceItem>
         {
             foreach (var item in SelectKeys)
             {
-                var ti = TraceItem.FindById(item.ToInt());
+                var ti = ProjectScopeRules.FilterVisible(TraceItem.FindById(item.ToInt()));
                 if (ti != null && ti.DisplayName.IsNullOrEmpty())
                 {
                     // 去掉 http:// https:// 等前缀

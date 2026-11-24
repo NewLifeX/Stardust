@@ -9,7 +9,7 @@ namespace Stardust.Web.Areas.Registry.Controllers;
 /// <summary>应用日志</summary>
 [Menu(10, true, Icon = "fa-table")]
 [RegistryArea]
-public class AppClientLogController : EntityController<AppClientLog>
+public class AppClientLogController : ProjectScopedEntityController<AppClientLog>
 {
     static AppClientLogController()
     {

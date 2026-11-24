@@ -4,6 +4,7 @@ using NewLife.Cube;
 using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data;
+using Stardust.Data.Platform;
 using XCode;
 using XCode.Membership;
 using static Stardust.Data.AppMeter;
@@ -59,7 +60,7 @@ public class AppMeterController : RegistryEntityController<AppMeter>
                 p.PageSize = 1440;
 
                 // 默认查询最近24小时。如果指定了应用，还需要根据应用心跳间隔来调整
-                var app = App.FindById(appId);
+                var app = ProjectScopeRules.FilterVisible(App.FindById(appId));
                 if (app != null)
                 {
                     p.PageSize = 24 * 3600 / app.EffectivePeriod;

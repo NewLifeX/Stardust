@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
-using Stardust.Data.Platform;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
 using NewLife.Log;
 using NewLife.Web;
+using Stardust.Data.Platform;
 using XCode.Membership;
 using static Stardust.Data.Platform.McpToken;
 
@@ -14,7 +14,7 @@ namespace Stardust.Web.Areas.Platform.Controllers;
 /// <summary>MCP令牌。用于LLM/智能体调用MCP服务的资源授权凭证</summary>
 [Menu(30, true, Icon = "fa-table")]
 [PlatformArea]
-public class McpTokenController : EntityController<McpToken>
+public class McpTokenController : ProjectScopedEntityController<McpToken>
 {
     static McpTokenController()
     {
@@ -80,7 +80,7 @@ public class McpTokenController : EntityController<McpToken>
     protected override Int32 OnUpdate(McpToken entity)
     {
         // Token创建后不可修改，恢复原值
-        var old = McpToken.FindById(entity.Id);
+        var old = ProjectScopeRules.FilterVisible(McpToken.FindById(entity.Id));
         if (old != null) entity.Token = old.Token;
 
         var result = base.OnUpdate(entity);
@@ -103,7 +103,7 @@ public class McpTokenController : EntityController<McpToken>
     [HttpGet("/api/[area]/[controller]/Reset")]
     public ActionResult Reset([FromQuery] Int32 id)
     {
-        var entity = McpToken.FindById(id);
+        var entity = ProjectScopeRules.FilterVisible(McpToken.FindById(id));
         if (entity == null) throw new Exception(L.T("Token record not found."));
 
         var oldToken = entity.Token;

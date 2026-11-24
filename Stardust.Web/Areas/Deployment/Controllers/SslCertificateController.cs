@@ -7,6 +7,7 @@ using NewLife.Cube.ViewModels;
 using NewLife.Log;
 using NewLife.Web;
 using Stardust.Web.Services;
+using Stardust.Data.Platform;
 using XCode.Membership;
 using static Stardust.Data.Deployment.SslCertificate;
 
@@ -15,7 +16,7 @@ namespace Stardust.Web.Areas.Deployment.Controllers;
 /// <summary>SSL证书。HTTPS证书管理，支持多域名、自动续期、多格式导出</summary>
 [Menu(10, true, Icon = "fa-table")]
 [DeploymentArea]
-public class SslCertificateController : EntityController<SslCertificate>
+public class SslCertificateController : ProjectScopedEntityController<SslCertificate>
 {
     static SslCertificateController()
     {
@@ -85,10 +86,10 @@ public class SslCertificateController : EntityController<SslCertificate>
     [EntityAuthorize(PermissionFlags.Update)]
     public async Task<ActionResult> Push(Int32 id)
     {
-        var cert = SslCertificate.FindById(id);
+        var cert = ProjectScopeRules.FilterVisible(SslCertificate.FindById(id));
         if (cert == null) return Json(500, L.T("Certificate not found."));
 
-        var links = SslCertificateNode.FindAllByCertId(id).Where(e => e.Enable).ToList();
+        var links = ProjectScopeRules.FilterVisible(SslCertificateNode.FindAllByCertId(id)).Where(e => e.Enable).ToList();
         if (links.Count == 0) return JsonRefresh(L.T("This certificate is not associated with any node."), 0);
 
         var rs = await _certService.PushAsync(cert, links, HttpContext.RequestAborted);
@@ -102,7 +103,7 @@ public class SslCertificateController : EntityController<SslCertificate>
     [EntityAuthorize(PermissionFlags.Update)]
     public ActionResult AddAllNodes(Int32 id)
     {
-        var cert = SslCertificate.FindById(id);
+        var cert = ProjectScopeRules.FilterVisible(SslCertificate.FindById(id));
         if (cert == null) return Json(500, L.T("Certificate not found."));
 
         var count = _certService.AddAllNodes(cert);

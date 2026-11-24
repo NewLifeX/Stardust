@@ -5,6 +5,7 @@ using NewLife.Cube.Charts;
 using NewLife.Web;
 using Stardust.Data.Monitors;
 using Stardust.Web.Services;
+using Stardust.Data.Platform;
 using XCode.Membership;
 using static Stardust.Data.Monitors.TraceHourStat;
 
@@ -13,7 +14,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers;
 /// <summary>追踪小时统计。按小时汇总的接口调用指标</summary>
 [Menu(0, false)]
 [MonitorsArea]
-public class TraceHourStatController : ReadOnlyEntityController<TraceHourStat>
+public class TraceHourStatController : ProjectScopedReadOnlyEntityController<TraceHourStat>
 {
     private readonly HotAppService _hotApp;
 
@@ -116,12 +117,12 @@ public class TraceHourStatController : ReadOnlyEntityController<TraceHourStat>
             }
         }
 
-        var ti = TraceItem.FindById(itemId);
+        var ti = ProjectScopeRules.FilterVisible(TraceItem.FindById(itemId));
         if (ti != null)
             ViewBag.Title = $"{ti}每小时统计";
         else
         {
-            var ar = AppTracer.FindByID(appId);
+            var ar = ProjectScopeRules.FilterVisible(AppTracer.FindByID(appId));
             if (ar != null) ViewBag.Title = $"{ar}每小时统计";
         }
 
@@ -131,7 +132,7 @@ public class TraceHourStatController : ReadOnlyEntityController<TraceHourStat>
     [EntityAuthorize(PermissionFlags.Detail)]
     public ActionResult Trace(Int32 id)
     {
-        var st = FindByID(id);
+        var st = ProjectScopeRules.FilterVisible(FindByID(id));
         if (st == null) return Content("找不到统计数据");
 
         var traceId = st.TraceId;
@@ -142,7 +143,7 @@ public class TraceHourStatController : ReadOnlyEntityController<TraceHourStat>
             var ds = TraceData.Search(st.AppId, st.ItemId, "hour", st.StatTime, 20);
             if (ds.Count == 0) return Content("找不到追踪数据");
 
-            var list = SampleData.FindAllByDataIds(ds.Select(e => e.LinkId > 0 ? e.LinkId : e.Id).ToArray(), st.StatTime);
+            var list = ProjectScopeRules.FilterVisible(SampleData.FindAllByDataIds(ds.Select(e => e.LinkId > 0 ? e.LinkId : e.Id).ToArray(), st.StatTime));
             if (list.Count == 0) return Content(L.T("Sample data not found."));
 
             traceId = list[0].TraceId;

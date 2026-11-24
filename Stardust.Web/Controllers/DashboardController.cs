@@ -1,9 +1,10 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
 using NewLife.Cube;
 using Stardust.Data.Monitors;
+using Stardust.Data.Platform;
 using Stardust.Web.Models.Dashboard;
 using Stardust.Web.Services;
 using XCode.Membership;
@@ -205,7 +206,7 @@ public class DashboardController(DashboardService service) : ControllerBaseX
     [Route("[controller]/Alarm/Ack")]
     public ActionResult AckAlarm([FromForm] Int64 id)
     {
-        var record = AlarmRecord.FindByKey(id);
+        var record = ProjectScopeRules.FilterVisible(AlarmRecord.FindByKey(id));
         if (record == null) return NotFound();
         if (record.Status == AlarmStatuses.Recovered) return StatusCode(400, new { message = "The alarm has already recovered." });
 
@@ -227,7 +228,7 @@ public class DashboardController(DashboardService service) : ControllerBaseX
     [Route("[controller]/Alarm/Silence")]
     public ActionResult SilenceAlarm([FromForm] Int64 id, [FromForm] Int32 hours = 24)
     {
-        var record = AlarmRecord.FindByKey(id);
+        var record = ProjectScopeRules.FilterVisible(AlarmRecord.FindByKey(id));
         if (record == null) return NotFound();
         if (record.Status == AlarmStatuses.Recovered) return StatusCode(400, new { message = "The alarm has already recovered." });
 

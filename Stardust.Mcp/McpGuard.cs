@@ -52,7 +52,7 @@ public static class McpGuard
     public static App App(McpContext ctx, Int32 appId)
     {
         NeedProject(ctx);
-        var app = Stardust.Data.App.FindById(appId);
+        var app = ProjectScopeRules.FilterVisible(Stardust.Data.App.FindById(appId));
         if (app == null || app.ProjectId != ctx.ProjectId)
             throw new McpException(-32003, $"应用 {appId} 不存在，或不属于当前令牌绑定的项目。");
         CheckResource(ctx, "App", app.Id);
@@ -62,7 +62,7 @@ public static class McpGuard
     public static Node Node(McpContext ctx, Int32 nodeId)
     {
         NeedProject(ctx);
-        var node = Stardust.Data.Nodes.Node.FindByID(nodeId);
+        var node = ProjectScopeRules.FilterVisible(Stardust.Data.Nodes.Node.FindByID(nodeId));
         if (node == null || node.ProjectId != ctx.ProjectId)
             throw new McpException(-32003, $"节点 {nodeId} 不存在，或不属于当前令牌绑定的项目。");
         CheckResource(ctx, "Node", node.ID);
@@ -72,7 +72,7 @@ public static class McpGuard
     public static AppDeploy Deploy(McpContext ctx, Int32 deployId)
     {
         NeedProject(ctx);
-        var deploy = AppDeploy.FindById(deployId);
+        var deploy = ProjectScopeRules.FilterVisible(AppDeploy.FindById(deployId));
         if (deploy == null || deploy.ProjectId != ctx.ProjectId)
             throw new McpException(-32003, $"部署集 {deployId} 不存在，或不属于当前令牌绑定的项目。");
         CheckResource(ctx, "App", deploy.AppId);
@@ -91,7 +91,7 @@ public static class McpGuard
     public static AppConfig Config(McpContext ctx, Int32 configId)
     {
         NeedProject(ctx);
-        var cfg = AppConfig.FindById(configId);
+        var cfg = ProjectScopeRules.FilterVisible(AppConfig.FindById(configId));
         if (cfg == null || cfg.ProjectId != ctx.ProjectId)
             throw new McpException(-32003, $"配置 {configId} 不存在，或不属于当前令牌绑定的项目。");
         CheckResource(ctx, "App", cfg.AppId);

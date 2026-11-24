@@ -8,7 +8,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers;
 /// <summary>报警记录。记录报警的开始、持续和恢复，统计报警持续时间</summary>
 [Menu(15, true, Icon = "fa-bell")]
 [MonitorsArea]
-public class AlarmRecordController : EntityController<AlarmRecord>
+public class AlarmRecordController : ProjectScopedEntityController<AlarmRecord>
 {
     static AlarmRecordController()
     {

@@ -6,6 +6,7 @@ using NewLife.Data;
 using NewLife.Web;
 using Stardust.Data.Monitors;
 using Stardust.Web.Services;
+using Stardust.Data.Platform;
 using XCode;
 using XCode.Membership;
 using static Stardust.Data.Monitors.TraceData;
@@ -15,7 +16,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers;
 /// <summary>追踪数据。按应用与埋点项聚合的调用统计，支撑调用链可视化与性能分析</summary>
 [Menu(0, false)]
 [MonitorsArea]
-public class TraceDataController : ReadOnlyEntityController<TraceData>
+public class TraceDataController : ProjectScopedReadOnlyEntityController<TraceData>
 {
     private readonly HotAppService _hotApp;
 
@@ -70,7 +71,7 @@ public class TraceDataController : ReadOnlyEntityController<TraceData>
             var list2 = list.OrderBy(e => e.StartTime).ToList();
 
             // 绘制日期曲线图
-            var app = AppTracer.FindByID(appId);
+            var app = ProjectScopeRules.FilterVisible(AppTracer.FindByID(appId));
             if (appId >= 0)
             {
                 var chart = new ECharts
@@ -117,7 +118,7 @@ public class TraceDataController : ReadOnlyEntityController<TraceData>
             }
         }
 
-        var ar = AppTracer.FindByID(appId);
+        var ar = ProjectScopeRules.FilterVisible(AppTracer.FindByID(appId));
         if (ar != null) ViewBag.Title = $"{ar}追踪";
 
         return list;
@@ -126,7 +127,7 @@ public class TraceDataController : ReadOnlyEntityController<TraceData>
     [EntityAuthorize(PermissionFlags.Detail)]
     public ActionResult Trace(Int64 id)
     {
-        var td = TraceData.FindById(id);
+        var td = ProjectScopeRules.FilterVisible(TraceData.FindById(id));
         if (td != null && td.LinkId > 0) id = td.LinkId;
 
         //var list = SampleData.FindAllByDataId(id);
@@ -142,7 +143,7 @@ public class TraceDataController : ReadOnlyEntityController<TraceData>
     [EntityAuthorize(PermissionFlags.Detail)]
     public ActionResult Exclude(Int64 id)
     {
-        var td = FindById(id);
+        var td = ProjectScopeRules.FilterVisible(FindById(id));
         var app = td?.App;
         if (app != null && !td.Name.IsNullOrEmpty())
         {

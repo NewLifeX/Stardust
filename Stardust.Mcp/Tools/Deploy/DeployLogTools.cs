@@ -1,6 +1,7 @@
 using System.Text.Json;
 using NewLife;
 using Stardust.Data.Deployment;
+using Stardust.Data.Platform;
 
 namespace Stardust.Mcp.Tools.Deploy;
 
@@ -13,7 +14,7 @@ internal static class DeployLogToolHelper
     {
         var id = McpToolBase.ReadInt(args, "deploy_node_id");
         if (id <= 0) throw new McpException(-32602, "无效参数：缺少 deploy_node_id");
-        var node = AppDeployNode.FindById(id) ?? throw new McpException(-32602, "部署节点不存在。");
+        var node = ProjectScopeRules.FilterVisible(AppDeployNode.FindById(id)) ?? throw new McpException(-32602, "部署节点不存在。");
         var deploy = McpGuard.Deploy(ctx, node.DeployId);
         return (node, deploy);
     }

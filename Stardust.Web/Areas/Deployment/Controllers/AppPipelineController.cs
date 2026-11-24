@@ -9,6 +9,7 @@ using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
 using NewLife.Log;
 using NewLife.Web;
+using Stardust.Data.Platform;
 using XCode;
 using XCode.Membership;
 
@@ -17,7 +18,7 @@ namespace Stardust.Web.Areas.Deployment.Controllers;
 /// <summary>流水线。流水线配置，关联一个应用部署集与一个编译节点，监听指定分支的 webhook 触发，自动完成代码拉取、编译、上传、部署的全流程</summary>
 [Menu(30, true, Icon = "fa-code-fork")]
 [DeploymentArea]
-public class AppPipelineController : EntityController<AppPipeline>
+public class AppPipelineController : ProjectScopedEntityController<AppPipeline>
 {
     private readonly PipelineService _pipelineService;
 
@@ -88,7 +89,7 @@ public class AppPipelineController : EntityController<AppPipeline>
     [EntityAuthorize(PermissionFlags.Detail)]
     public ActionResult CopyWebhook(Int32 id)
     {
-        var entity = AppPipeline.FindById(id);
+        var entity = ProjectScopeRules.FilterVisible(AppPipeline.FindById(id));
         if (entity == null) return Json(500, L.T("Pipeline does not exist."));
 
         // webhook 入口位于 Deployment 区域，路由为 /Deployment/Pipeline/Webhook，此处必须带上区域前缀
@@ -123,7 +124,7 @@ public class AppPipelineController : EntityController<AppPipeline>
     [EntityAuthorize(PermissionFlags.Detail)]
     public ActionResult GetDeployNodes(Int32 deployId)
     {
-        var nodes = AppDeployNode.FindAllByDeployId(deployId);
+        var nodes = ProjectScopeRules.FilterVisible(AppDeployNode.FindAllByDeployId(deployId));
         var data = nodes.Where(e => e.Enable).Select(e => new { e.Id, name = $"{e.NodeName} ({e.IP})" });
         return Json(0, null, data);
     }
@@ -134,7 +135,7 @@ public class AppPipelineController : EntityController<AppPipeline>
     [EntityAuthorize(PermissionFlags.Detail)]
     public ActionResult GetDeployProject(Int32 deployId)
     {
-        var deploy = AppDeploy.FindById(deployId);
+        var deploy = ProjectScopeRules.FilterVisible(AppDeploy.FindById(deployId));
         return Json(0, null, deploy?.ProjectId ?? 0);
     }
 }

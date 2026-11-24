@@ -10,6 +10,7 @@ using NewLife.Web;
 using Stardust.Data.Deployment;
 using Stardust.Storages;
 using Stardust.Web.Services;
+using Stardust.Data.Platform;
 using XCode.Membership;
 using Attachment = NewLife.Cube.Entity.Attachment;
 
@@ -63,7 +64,7 @@ public class AppDeployVersionController : DeploymentEntityController<AppDeployVe
         var id = p["id"].ToInt(-1);
         if (id > 0)
         {
-            var entity = AppDeployVersion.FindByKey(id);
+            var entity = ProjectScopeRules.FilterVisible(AppDeployVersion.FindByKey(id));
             if (entity != null) return [entity];
         }
 
@@ -93,7 +94,7 @@ public class AppDeployVersionController : DeploymentEntityController<AppDeployVe
         if (deployId <= 0) throw new ArgumentNullException(nameof(deployId), L.T("Deployment is required."));
         if (file == null || file.Length <= 0) throw new ArgumentNullException(nameof(file), L.T("No file was uploaded."));
 
-        var deploy = AppDeploy.FindById(deployId);
+        var deploy = ProjectScopeRules.FilterVisible(AppDeploy.FindById(deployId));
         if (deploy == null) throw new InvalidOperationException(L.T("Deployment [{0}] does not exist.", deployId));
 
         // 包名校验，与表单上传一致：避免误传其它应用包
@@ -213,7 +214,7 @@ public class AppDeployVersionController : DeploymentEntityController<AppDeployVe
 
         // API 版 Cube 的 Attachment 为 NewLife.Cube.Entity.Attachment，
         // 而 DeployService 需要 Stardust.Data.Deployment.Attachment（同一张附件表，按 Id 重新查询桥接）
-        var dAtt = Stardust.Data.Deployment.Attachment.FindById(att.Id);
+        var dAtt = ProjectScopeRules.FilterVisible(Stardust.Data.Deployment.Attachment.FindById(att.Id));
         if (dAtt != null)
         {
             _deployService.ReadDotNet(entity, dAtt, uploadPath);

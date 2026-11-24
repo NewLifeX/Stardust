@@ -5,6 +5,7 @@ using Stardust.Data;
 using Stardust.Data.Nodes;
 using Stardust.Models;
 
+using Stardust.Data.Platform;
 namespace Stardust.Mcp.Tools.Nodes;
 
 public class NodeListTool : McpToolBase
@@ -84,7 +85,7 @@ public class NodeDetailTool : McpToolBase
     public override Task<Object> InvokeAsync(JsonElement args, McpContext ctx)
     {
         var node = McpGuard.Node(ctx, GetInt32(args, "node_id"));
-        var online = NodeOnline.FindAllByNodeId(node.ID).OrderByDescending(e => e.UpdateTime).FirstOrDefault();
+        var online = ProjectScopeRules.FilterVisible(NodeOnline.FindAllByNodeId(node.ID)).OrderByDescending(e => e.UpdateTime).FirstOrDefault();
         var commands = NodeCommand.Search(node.ID, null, default, default, null, new PageParameter
         {
             PageIndex = 1,

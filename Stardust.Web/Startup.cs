@@ -24,6 +24,7 @@ using Stardust.Services;
 using Stardust.Server.Services;
 using Stardust.Web.Services;
 using Stardust.Web.Filters;
+using Stardust.Web.Infrastructure;
 using XCode;
 using XCode.DataAccessLayer;
 using Stardust.Mcp;
@@ -208,6 +209,11 @@ public class Startup
         // 将 CubeAreas 约定路由（api/{area}/{controller}/{action}）直接注册进端点路由；
         // 否则走旧式 IRouter，而下方 MapControllers 激活端点路由后旧式约定路由会失效（/api 404）。
         app.UseRouting();
+
+        // 项目数据范围：中间件为每个请求设置当前用户可见项目，控制器基类通过 Cube 数据权限管道应用过滤。
+        // 必须位于 UseCube 之前：Cube 在未启用端点路由时会用旧式路由在 UseCube 内直接短路执行，后续中间件不会执行。
+        // 中间件内部用令牌解析当前用户，不依赖 Cube 的认证中间件。
+        app.UseMiddleware<ProjectScopeMiddleware>();
 
         app.UseCube(env);
 

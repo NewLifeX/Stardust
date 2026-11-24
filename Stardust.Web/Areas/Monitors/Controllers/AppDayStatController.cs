@@ -8,6 +8,7 @@ using NewLife.Web;
 using Stardust.Data.Monitors;
 using Stardust.Server.Services;
 using Stardust.Web.Services;
+using Stardust.Data.Platform;
 using XCode.Membership;
 using static Stardust.Data.Monitors.AppDayStat;
 
@@ -120,7 +121,7 @@ public class AppDayStatController : MonitorsEntityController<AppDayStat>
             }
         }
 
-        var ar = AppTracer.FindByID(appId);
+        var ar = ProjectScopeRules.FilterVisible(AppTracer.FindByID(appId));
         if (ar != null) ViewBag.Title = $"{ar}每日统计";
 
         return list;
@@ -131,7 +132,7 @@ public class AppDayStatController : MonitorsEntityController<AppDayStat>
     {
         foreach (var item in SelectKeys)
         {
-            var stat = FindByID(item.ToInt());
+            var stat = ProjectScopeRules.FilterVisible(FindByID(item.ToInt()));
             if (stat != null)
             {
                 XTrace.WriteLine("Recomputing statistics {0}/{1} {2}", stat.AppName, stat.AppId, stat.StatDate);

@@ -14,7 +14,7 @@ namespace Stardust.Web.Areas.Deployment.Controllers;
 /// <summary>附件。用于记录各系统模块使用的文件，可以是Local/NAS/OSS等，对应魔方附件表</summary>
 [Menu(50, true, Icon = "fa-table")]
 [DeploymentArea]
-public class AttachmentController : EntityController<Attachment>
+public class AttachmentController : ProjectScopedEntityController<Attachment>
 {
     static AttachmentController()
     {

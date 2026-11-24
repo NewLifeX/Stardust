@@ -9,6 +9,7 @@ using NewLife.Remoting.Models;
 using NewLife.Serialization;
 using NewLife.Web;
 using Stardust.Data.Nodes;
+using Stardust.Data.Platform;
 using XCode.Membership;
 using static Stardust.Data.Nodes.NodeOnline;
 using Node = Stardust.Data.Nodes.Node;
@@ -81,7 +82,7 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
 
     public async Task<ActionResult> Trace(Int32 id)
     {
-        var node = Node.FindByID(id);
+        var node = ProjectScopeRules.FilterVisible(Node.FindByID(id));
         if (node != null)
         {
             //NodeCommand.Add(node, "截屏");
@@ -111,7 +112,7 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
         var ts = new List<(String name, Task<CommandReplyModel?> task)>();
         foreach (var item in keys)
         {
-            var online = NodeOnline.FindById(item.ToInt());
+            var online = ProjectScopeRules.FilterVisible(NodeOnline.FindById(item.ToInt()));
             if (online?.Node != null)
             {
                 // 错峰执行：每个节点依次延后 3 秒开始，接口本身不等待
@@ -135,14 +136,14 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
         var keys = SelectKeys;
         if (keys == null || keys.Length == 0) return JsonRefresh(L.T("Please select at least one item."));
 
-        var release = ProductRelease.FindById(releaseId.ToInt());
+        var release = ProjectScopeRules.FilterVisible(ProductRelease.FindById(releaseId.ToInt()));
         if (release == null) return JsonRefresh(L.T("The specified version does not exist."));
 
         var ts = new List<(String name, Task<CommandReplyModel?> task)>();
         var skipCount = 0;
         foreach (var item in keys)
         {
-            var online = NodeOnline.FindById(item.ToInt());
+            var online = ProjectScopeRules.FilterVisible(NodeOnline.FindById(item.ToInt()));
             if (online?.Node != null)
             {
                 var pkg = release.MatchPackage(online.Node);
@@ -178,7 +179,7 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
         var ts = new List<(String name, Task<CommandReplyModel?> task)>();
         foreach (var item in keys)
         {
-            var online = NodeOnline.FindById(item.ToInt());
+            var online = ProjectScopeRules.FilterVisible(NodeOnline.FindById(item.ToInt()));
             if (online?.Node != null)
             {
                 ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/syncTime", null, 0, 600, 5, HttpContext.RequestAborted)));
@@ -200,7 +201,7 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
         var ts = new List<(String name, Task<CommandReplyModel?> task)>();
         foreach (var item in keys)
         {
-            var online = NodeOnline.FindById(item.ToInt());
+            var online = ProjectScopeRules.FilterVisible(NodeOnline.FindById(item.ToInt()));
             if (online?.Node != null)
             {
                 ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/restart", null, 0, 600, 5, HttpContext.RequestAborted)));
@@ -222,7 +223,7 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
         var ts = new List<(String name, Task<CommandReplyModel?> task)>();
         foreach (var item in keys)
         {
-            var online = NodeOnline.FindById(item.ToInt());
+            var online = ProjectScopeRules.FilterVisible(NodeOnline.FindById(item.ToInt()));
             if (online?.Node != null)
             {
                 ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/reboot", null, 0, 600, 5, HttpContext.RequestAborted)));
@@ -245,7 +246,7 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
         var ts = new List<(String name, Task<CommandReplyModel?> task)>();
         foreach (var item in keys)
         {
-            var online = NodeOnline.FindById(item.ToInt());
+            var online = ProjectScopeRules.FilterVisible(NodeOnline.FindById(item.ToInt()));
             if (online != null && online.Node != null)
             {
                 // 交互式命令等待短回执，便于页面直接展示执行结果

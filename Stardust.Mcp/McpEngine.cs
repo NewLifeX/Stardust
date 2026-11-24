@@ -278,7 +278,17 @@ public class McpEngine
                 }
             }
 
-            content = await tool.InvokeAsync(arguments, ctx);
+            // MCP 请求在 Cube 中间件之前短路，工具执行期间显式设置项目范围
+            var oldScope = ProjectScopeContext.Current;
+            try
+            {
+                ProjectScopeContext.Current = ResolveProjectScope(ctx);
+                content = await tool.InvokeAsync(arguments, ctx);
+            }
+            finally
+            {
+                ProjectScopeContext.Current = oldScope;
+            }
         }
         catch (McpException ex)
         {
@@ -316,6 +326,22 @@ public class McpEngine
         }
 
         return new { content = new[] { new { type = "text", text = JsonSerializer.Serialize(content) } } };
+    }
+
+    /// <summary>解析令牌对应的项目范围。未绑定用户与项目时返回 null，保持原有全量访问语义</summary>
+    /// <param name="ctx">MCP调用上下文</param>
+    /// <returns>项目范围</returns>
+    private static ProjectScope ResolveProjectScope(McpContext ctx)
+    {
+        if (ctx == null) return null;
+
+        if (ctx.UserId <= 0)
+            return ctx.ProjectId > 0 ? new ProjectScope { ProjectIds = [ctx.ProjectId], SelectedProjectId = ctx.ProjectId } : null;
+
+        var scope = ProjectScope.Resolve(ctx.UserId);
+        if (ctx.ProjectId > 0 && (scope.IsAdmin || scope.Contains(ctx.ProjectId))) scope.SelectedProjectId = ctx.ProjectId;
+
+        return scope;
     }
 
     /// <summary>工具所需scope后缀</summary>

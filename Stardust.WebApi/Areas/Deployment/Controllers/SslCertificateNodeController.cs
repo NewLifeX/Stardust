@@ -7,6 +7,7 @@ using NewLife.Cube.ViewModels;
 using NewLife.Log;
 using NewLife.Web;
 using Stardust.Web.Services;
+using Stardust.Data.Platform;
 using XCode.Membership;
 using static Stardust.Data.Deployment.SslCertificateNode;
 
@@ -70,7 +71,7 @@ public class SslCertificateNodeController : DeploymentEntityController<SslCertif
     [EntityAuthorize(PermissionFlags.Update)]
     public async Task<ActionResult> Push(Int32 id)
     {
-        var link = SslCertificateNode.FindById(id);
+        var link = ProjectScopeRules.FilterVisible(SslCertificateNode.FindById(id));
         if (link?.Cert == null) return Json(500, L.T("Certificate node association not found."));
 
         var rs = await _certService.PushAsync(link.Cert, [link], HttpContext.RequestAborted);
@@ -83,7 +84,7 @@ public class SslCertificateNodeController : DeploymentEntityController<SslCertif
     [EntityAuthorize(PermissionFlags.Update)]
     public async Task<ActionResult> BatchPush()
     {
-        var links = SelectKeys.Select(e => SslCertificateNode.FindById(e.ToInt())).Where(e => e?.Cert != null).ToList();
+        var links = SelectKeys.Select(e => ProjectScopeRules.FilterVisible(SslCertificateNode.FindById(e.ToInt()))).Where(e => e?.Cert != null).ToList();
         if (links.Count == 0) return JsonRefresh(L.T("No certificate node association is selected."), 0);
 
         var success = 0;

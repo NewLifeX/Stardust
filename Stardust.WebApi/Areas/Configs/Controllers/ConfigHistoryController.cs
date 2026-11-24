@@ -7,6 +7,7 @@ using NewLife.Serialization;
 using NewLife.Web;
 using Stardust.Data.Configs;
 using Stardust.Server.Services;
+using Stardust.Data.Platform;
 
 namespace Stardust.Web.Areas.Configs.Controllers;
 
@@ -57,7 +58,7 @@ public class ConfigHistoryController : ConfigsEntityController<ConfigHistory>
     /// <returns>返回Json，包含id、configId、newJson（本条Remark）、oldJson（上一版Remark，无则为null）、changedKeys（两JSON顶层键差异数组）</returns>
     public ActionResult Diff(Int32 id)
     {
-        var hi = ConfigHistory.FindById(id);
+        var hi = ProjectScopeRules.FilterVisible(ConfigHistory.FindById(id));
         if (hi == null) return JsonRefresh("历史不存在！");
 
         // 找同一配置更早的最近一次发布历史，作为上一版本

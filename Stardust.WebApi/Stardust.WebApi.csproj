@@ -24,6 +24,12 @@
     <AssemblyOriginatorKeyFile>..\Doc\newlife.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
+  <!-- 项目数据范围中间件与控制器基类与 Web 共用同一份源码：Compile Include 引用，不复制文件 -->
+  <ItemGroup>
+    <Compile Include="..\Stardust.Web\Infrastructure\ProjectScopeMiddleware.cs" Link="Infrastructure\ProjectScopeMiddleware.cs" />
+    <Compile Include="..\Stardust.Web\Areas\ProjectScopedController.cs" Link="Areas\ProjectScopedController.cs" />
+  </ItemGroup>
+
   <!-- 与 Web 一致：通过 Compile Include 引用 Stardust.Server 的服务源码，不复制文件 -->
   <ItemGroup>
     <Compile Include="..\Stardust.Server\Services\ApolloService.cs" Link="Services\ApolloService.cs" />

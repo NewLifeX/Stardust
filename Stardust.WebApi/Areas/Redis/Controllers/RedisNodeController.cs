@@ -9,6 +9,7 @@ using NewLife.Log;
 using NewLife.Web;
 using Stardust.Data.Nodes;
 using Stardust.Server.Services;
+using Stardust.Data.Platform;
 using XCode;
 using XCode.Membership;
 
@@ -73,7 +74,7 @@ public class RedisNodeController : WebEntityController<RedisNode>
         var nodeId = p["Id"].ToInt(-1);
         if (nodeId > 0)
         {
-            var node = RedisNode.FindById(nodeId);
+            var node = ProjectScopeRules.FilterVisible(RedisNode.FindById(nodeId));
             if (node != null) return new[] { node };
         }
 
@@ -114,7 +115,7 @@ public class RedisNodeController : WebEntityController<RedisNode>
     [EntityAuthorize(PermissionFlags.Update)]
     public ActionResult Refresh(Int32 id)
     {
-        var node = RedisNode.FindById(id);
+        var node = ProjectScopeRules.FilterVisible(RedisNode.FindById(id));
         if (node != null)
         {
             XTrace.WriteLine("Refreshing {0}/{1} {2}", node.Name, node.Id, node.Server);
@@ -123,7 +124,7 @@ public class RedisNodeController : WebEntityController<RedisNode>
             {
                 _redisService.TraceNode(node);
 
-                var queues = RedisMessageQueue.FindAllByRedisId(node.Id);
+                var queues = ProjectScopeRules.FilterVisible(RedisMessageQueue.FindAllByRedisId(node.Id));
                 foreach (var item in queues.Where(e => e.Enable))
                 {
                     _redisService.TraceQueue(item);
@@ -180,7 +181,7 @@ public class RedisNodeController : WebEntityController<RedisNode>
             if (!(entity as IEntity).Dirtys[name]) continue;
             if (entity[name] as String == "*****")
             {
-                var old = RedisNode.FindById(entity.Id);
+                var old = ProjectScopeRules.FilterVisible(RedisNode.FindById(entity.Id));
                 if (old != null)
                 {
                     entity[name] = old[name];

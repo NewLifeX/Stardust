@@ -8,6 +8,7 @@ using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data.Deployment;
 using Stardust.Web.Services;
+using Stardust.Data.Platform;
 using XCode;
 using XCode.Membership;
 
@@ -50,7 +51,7 @@ public class AppDeployNodeController : DeploymentEntityController<AppDeployNode>
         var id = p["id"].ToInt(-1);
         if (id > 0)
         {
-            var entity = AppDeployNode.FindById(id);
+            var entity = ProjectScopeRules.FilterVisible(AppDeployNode.FindById(id));
             if (entity != null) return [entity];
         }
 
@@ -68,7 +69,7 @@ public class AppDeployNodeController : DeploymentEntityController<AppDeployNode>
         // 按应用：先换取该应用全部部署集 Id，再按集合过滤；应用无部署集即无节点
         if (appId > 0)
         {
-            var setIds = AppDeploy.FindAllByAppId(appId).Select(e => e.Id).ToArray();
+            var setIds = ProjectScopeRules.FilterVisible(AppDeploy.FindAllByAppId(appId)).Select(e => e.Id).ToArray();
             if (setIds.Length == 0) return [];
 
             return AppDeployNode.Search(setIds, nodeId, enable, p["Q"], p);
@@ -94,7 +95,7 @@ public class AppDeployNodeController : DeploymentEntityController<AppDeployNode>
             if (entity.UserName == "*****")
             {
                 // 未修改用户名：从数据库读取原值回填，清除脏标记
-                var old = AppDeployNode.FindById(entity.Id);
+                var old = ProjectScopeRules.FilterVisible(AppDeployNode.FindById(entity.Id));
                 if (old != null)
                 {
                     entity.UserName = old.UserName;
@@ -141,7 +142,7 @@ public class AppDeployNodeController : DeploymentEntityController<AppDeployNode>
     [EntityAuthorize(PermissionFlags.Update)]
     public async Task<ActionResult> Operate(String act, Int32 id)
     {
-        var dn = AppDeployNode.FindById(id);
+        var dn = ProjectScopeRules.FilterVisible(AppDeployNode.FindById(id));
         if (dn == null || dn.Node == null || dn.Deploy == null) return Json(500, $"[{id}]不存在");
 
         var deployName = dn.DeployName;
@@ -161,7 +162,7 @@ public class AppDeployNodeController : DeploymentEntityController<AppDeployNode>
         var ids = SelectKeys.Select(e => e.ToInt()).Where(e => e > 0).Distinct().ToList();
         foreach (var id in ids)
         {
-            var dn = AppDeployNode.FindById(id);
+            var dn = ProjectScopeRules.FilterVisible(AppDeployNode.FindById(id));
             if (dn != null && dn.Node != null && dn.Deploy != null)
             {
                 ts.Add(_deployService.Control(dn.Deploy, dn, act, UserHost, dn.Delay, 0, cancellationToken: HttpContext.RequestAborted));

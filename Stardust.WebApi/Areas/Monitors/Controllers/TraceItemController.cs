@@ -7,6 +7,7 @@ using NewLife.Web;
 using Stardust.Data.Monitors;
 using Stardust.Data.Nodes;
 using Stardust.Web.Areas;
+using Stardust.Data.Platform;
 using XCode.Membership;
 
 namespace Stardust.Web.Areas.Monitors.Controllers;
@@ -48,7 +49,7 @@ public class TraceItemController : WebEntityController<TraceItem>
         var id = p["Id"].ToInt(-1);
         if (id > 0)
         {
-            var entity = TraceItem.FindById(id);
+            var entity = ProjectScopeRules.FilterVisible(TraceItem.FindById(id));
             if (entity != null) return new[] { entity };
         }
 
@@ -79,13 +80,13 @@ public class TraceItemController : WebEntityController<TraceItem>
     {
         foreach (var item in SelectKeys)
         {
-            var ti = TraceItem.FindById(item.ToInt());
+            var ti = ProjectScopeRules.FilterVisible(TraceItem.FindById(item.ToInt()));
             if (ti != null)
             {
                 XTrace.WriteLine("Correcting {0}/{1}", ti.Name, ti.Id);
 
                 {
-                    var list = TraceDayStat.FindAllByAppAndItem(ti.AppId, ti.Id);
+                    var list = ProjectScopeRules.FilterVisible(TraceDayStat.FindAllByAppAndItem(ti.AppId, ti.Id));
                     ti.Days = list.DistinctBy(e => e.StatDate.Date).Count();
                     ti.Total = list.Sum(e => e.Total);
                 }
@@ -105,7 +106,7 @@ public class TraceItemController : WebEntityController<TraceItem>
         {
             foreach (var item in SelectKeys)
             {
-                var ti = TraceItem.FindById(item.ToInt());
+                var ti = ProjectScopeRules.FilterVisible(TraceItem.FindById(item.ToInt()));
                 if (ti != null && ti.DisplayName.IsNullOrEmpty())
                 {
                     // 去掉 http:// https:// 等前缀

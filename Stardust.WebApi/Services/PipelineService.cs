@@ -5,6 +5,7 @@ using NewLife.Log;
 using Stardust.Data.Deployment;
 using Stardust.Models;
 using Stardust.Server;
+using Stardust.Data.Platform;
 using XCode;
 
 namespace Stardust.Web.Services;
@@ -61,7 +62,7 @@ public class PipelineService
     /// <returns>新创建的排队运行记录</returns>
     public Task<AppPipelineRun> Reprocess(Int32 runId, String userHost)
     {
-        var src = AppPipelineRun.FindById(runId);
+        var src = ProjectScopeRules.FilterVisible(AppPipelineRun.FindById(runId));
         if (src == null) throw new ArgumentNullException(nameof(runId), L.T("Run record does not exist."));
 
         var (pipeline, app, _) = GetContext(src.PipelineId);
@@ -127,10 +128,10 @@ public class PipelineService
             return Task.FromResult<Object>(new { result = "skipped", reason = "duplicate" });
 
         // 关联实体校验，避免创建无法执行的 run
-        var app = AppDeploy.FindById(pipeline.DeployId);
+        var app = ProjectScopeRules.FilterVisible(AppDeploy.FindById(pipeline.DeployId));
         if (app == null) return Task.FromResult<Object>(new { result = "error", reason = "deploy not found" });
 
-        var buildNode = AppBuildNode.FindAllByNodeId(pipeline.BuildNodeId).FirstOrDefault(e => e.DeployId == pipeline.DeployId);
+        var buildNode = ProjectScopeRules.FilterVisible(AppBuildNode.FindAllByNodeId(pipeline.BuildNodeId)).FirstOrDefault(e => e.DeployId == pipeline.DeployId);
         if (buildNode == null || !buildNode.Enable) return Task.FromResult<Object>(new { result = "error", reason = "build node unavailable" });
 
         // 队列深度保护，避免推送风暴无限堆积
@@ -167,7 +168,7 @@ public class PipelineService
     /// <returns>是否取消成功（run 不存在或已终态返回 false）</returns>
     public Boolean Cancel(Int32 runId, String userHost)
     {
-        var run = AppPipelineRun.FindById(runId);
+        var run = ProjectScopeRules.FilterVisible(AppPipelineRun.FindById(runId));
         if (run == null) throw new ArgumentNullException(nameof(runId), L.T("Run record does not exist."));
 
         // 仅允许取消未到终态的 run
@@ -333,14 +334,14 @@ public class PipelineService
     /// <summary>加载并校验流水线、部署集与编译节点</summary>
     private static (AppPipeline pipeline, AppDeploy app, AppBuildNode buildNode) GetContext(Int32 pipelineId)
     {
-        var pipeline = AppPipeline.FindById(pipelineId);
+        var pipeline = ProjectScopeRules.FilterVisible(AppPipeline.FindById(pipelineId));
         if (pipeline == null) throw new ArgumentNullException(nameof(pipelineId), L.T("Pipeline does not exist."));
         if (!pipeline.Enable) throw new InvalidOperationException(L.T("Pipeline is not enabled."));
 
-        var app = AppDeploy.FindById(pipeline.DeployId);
+        var app = ProjectScopeRules.FilterVisible(AppDeploy.FindById(pipeline.DeployId));
         if (app == null) throw new InvalidOperationException(L.T("Application deployment set [{0}] does not exist.", pipeline.DeployId));
 
-        var buildNode = AppBuildNode.FindAllByNodeId(pipeline.BuildNodeId).FirstOrDefault(e => e.DeployId == pipeline.DeployId);
+        var buildNode = ProjectScopeRules.FilterVisible(AppBuildNode.FindAllByNodeId(pipeline.BuildNodeId)).FirstOrDefault(e => e.DeployId == pipeline.DeployId);
         if (buildNode == null) throw new InvalidOperationException(L.T("Build node [{0}] does not exist or is not associated with deployment set [{1}].", pipeline.BuildNodeId, pipeline.DeployId));
         if (!buildNode.Enable) throw new InvalidOperationException(L.T("Build node [{0}] is not enabled.", buildNode));
 

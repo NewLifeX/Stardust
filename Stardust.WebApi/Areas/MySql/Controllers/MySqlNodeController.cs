@@ -8,6 +8,7 @@ using NewLife.Cube.ViewModels;
 using NewLife.Data;
 using NewLife.Log;
 using NewLife.Web;
+using Stardust.Data.Platform;
 using XCode;
 using XCode.Membership;
 using Stardust.Server.Services;
@@ -67,7 +68,7 @@ public class MySqlNodeController : WebEntityController<MySqlNode>
         var nodeId = p["Id"].ToInt(-1);
         if (nodeId > 0)
         {
-            var node = MySqlNode.FindById(nodeId);
+            var node = ProjectScopeRules.FilterVisible(MySqlNode.FindById(nodeId));
             if (node != null) return new[] { node };
         }
 
@@ -85,7 +86,7 @@ public class MySqlNodeController : WebEntityController<MySqlNode>
     [EntityAuthorize(PermissionFlags.Update)]
     public ActionResult Refresh(Int32 id)
     {
-        var node = MySqlNode.FindById(id);
+        var node = ProjectScopeRules.FilterVisible(MySqlNode.FindById(id));
         if (node != null)
         {
             XTrace.WriteLine("Refreshing {0}/{1} {2}:{3}", node.Name, node.Id, node.Server, node.Port);
@@ -144,7 +145,7 @@ public class MySqlNodeController : WebEntityController<MySqlNode>
             if (!(entity as IEntity).Dirtys[name]) continue;
             if (entity[name] as String == "*****")
             {
-                var old = MySqlNode.FindById(entity.Id);
+                var old = ProjectScopeRules.FilterVisible(MySqlNode.FindById(entity.Id));
                 if (old != null)
                 {
                     entity[name] = old[name];

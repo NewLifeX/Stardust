@@ -5,6 +5,7 @@ using NewLife.Web;
 using Stardust.Data.Monitors;
 using Stardust.Web.Areas.Monitors.Charts;
 using Stardust.Web.Services;
+using Stardust.Data.Platform;
 using static Stardust.Data.Monitors.AppMinuteStat;
 
 namespace Stardust.Web.Areas.Monitors.Controllers;
@@ -12,7 +13,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers;
 /// <summary>应用分钟统计。按分钟汇总的应用性能指标</summary>
 [Menu(0, false)]
 [MonitorsArea]
-public class AppMinuteStatController : ReadOnlyEntityController<AppMinuteStat>
+public class AppMinuteStatController : ProjectScopedReadOnlyEntityController<AppMinuteStat>
 {
     private readonly HotAppService _hotApp;
 
@@ -136,7 +137,7 @@ public class AppMinuteStatController : ReadOnlyEntityController<AppMinuteStat>
             ViewBag.Charts = new[] { chart };
         }
 
-        var ar = AppTracer.FindByID(appId);
+        var ar = ProjectScopeRules.FilterVisible(AppTracer.FindByID(appId));
         if (ar != null) ViewBag.Title = $"{ar}分钟统计";
 
         return list;

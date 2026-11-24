@@ -4,6 +4,7 @@ using NewLife;
 using NewLife.Cube;
 using NewLife.Web;
 using Stardust.Data.Monitors;
+using Stardust.Data.Platform;
 using Stardust.Web.Filters;
 using Stardust.Web.Models;
 using Stardust.Web.Services;
@@ -130,7 +131,7 @@ public class TraceController : ControllerBaseX
             // 关联TraceData，获取NodeName等信息
             if (!traceDatas.TryGetValue(item.DataId, out var td))
             {
-                td = TraceData.FindById(item.DataId);
+                td = ProjectScopeRules.FilterVisible(TraceData.FindById(item.DataId));
                 traceDatas.Add(item.DataId, td);
             }
             if (td != null && !td.NodeName.IsNullOrEmpty())
