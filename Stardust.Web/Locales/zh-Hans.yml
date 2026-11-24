@@ -341,3 +341,6 @@
 "Pipeline deploy timed out.": "流水线部署超时。"
 "The pipeline queue is full ({0}); wait for the running tasks to finish.": "流水线队列已满（{0}），请等待运行中的任务完成。"
 "Run is already in a terminal state.": "运行已处于终态。"
+"The node has no MAC address and cannot be woken.": "节点没有 MAC 地址，无法唤醒。"
+"No online node in the same LAN; unable to wake the node.": "同一局域网内没有在线节点，无法唤醒。"
+"Wake-on-LAN command sent to {0} node(s).": "唤醒命令已发送到 {0} 个节点。"

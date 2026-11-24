@@ -343,3 +343,6 @@
 "Pipeline deploy timed out.": "Pipeline deploy timed out."
 "The pipeline queue is full ({0}); wait for the running tasks to finish.": "The pipeline queue is full ({0}); wait for the running tasks to finish."
 "Run is already in a terminal state.": "Run is already in a terminal state."
+"The node has no MAC address and cannot be woken.": "The node has no MAC address and cannot be woken."
+"No online node in the same LAN; unable to wake the node.": "No online node in the same LAN; unable to wake the node."
+"Wake-on-LAN command sent to {0} node(s).": "Wake-on-LAN command sent to {0} node(s)."
