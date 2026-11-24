@@ -490,6 +490,7 @@ NewLife is a layered ecosystem of independently versioned open-source projects. 
 | [NODE-9-Command Dispatch](Doc/NODE-9-指令下发.md) | NODE-9 command dispatch flow (WebSocket dual channel) |
 | [NODE-31-Multi-Language Startup Benchmark](Doc/NODE-StarAgent-多语言性能对比.md) | .NET JIT/R2R/AOT vs Go/Rust/C++ startup, first heartbeat, CPU, RSS and package size across 5 machines |
 | [NODE-32-StarAgent Release Plan](Doc/NODE-StarAgent发布计划.md) | AOT for win-x64/linux-x64/linux-arm64, any for other targets, and any↔AOT upgrade rules |
+| [StarServer/StarWeb/StarAgent Publish Evaluation](Doc/服务端发布方式评估.md) | JIT vs R2R vs composite R2R vs AOT, steady CPU/memory and NGEN limitations |
 | [StarAgent.Native Protocol Specification](StarAgent.Native/spec/protocol.md) | Go/Rust/C++ native agent protocol, schema, and conformance tests |
 | [APM-3-Trace Statistics](Doc/APM-3-链路追踪统计.md) | APM-3 trace statistics performance bottlenecks and optimization |
 | [NODE-15-StarAgent Remote Deployment](Doc/NODE-15-StarAgent远程部署.md) | NODE-15 remote deployment solution |
