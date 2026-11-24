@@ -58,12 +58,6 @@ public class DeployAgentSetting : Config<DeployAgentSetting>, IClientSetting
                 Secret = star.Secret;
                 changed = true;
             }
-            if (star.DisableSshStrictChecking)
-            {
-                DisableSshStrictChecking = true;
-                changed = true;
-            }
-
             if (changed) Save();
         }
 

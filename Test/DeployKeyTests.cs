@@ -132,26 +132,6 @@ class DeployKeyTests
     }
 
     /// <summary>
-    /// 测试 StarSetting.DisableSshStrictChecking 默认值
-    /// </summary>
-    public static void TestDisableSshStrictCheckingDefault()
-    {
-        XTrace.WriteLine("=== 测试 DisableSshStrictChecking 默认值 ===");
-
-        var setting = StarSetting.Current;
-
-        // 默认值应为 false（启用 SSH 严格校验）
-        if (setting.DisableSshStrictChecking)
-        {
-            XTrace.WriteLine("警告：DisableSshStrictChecking 默认值为 true，建议修改为 false");
-        }
-        else
-        {
-            XTrace.WriteLine("✓ DisableSshStrictChecking 默认值为 false（启用校验）");
-        }
-    }
-
-    /// <summary>
     /// 测试 Repository URL 中的凭据被正确脱敏
     /// </summary>
     public static void TestRepositoryCredentialRedaction()
@@ -209,7 +189,6 @@ class DeployKeyTests
             TestDeployKeySanitization();
             TestRepositoryCredentialRedaction();
             TestSshKeyFormatValidation();
-            TestDisableSshStrictCheckingDefault();
 
             XTrace.WriteLine("");
             XTrace.WriteLine("========== 所有 DeployKey 测试通过 ✓ ==========");
