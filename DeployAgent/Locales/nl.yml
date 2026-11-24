@@ -85,3 +85,5 @@
 "Node secret": "Nodegeheim"
 "Source directory does not exist: {0}": "De bronmap bestaat niet: {0}"
 "Artifact directory does not exist: {0}. The build step was skipped (Build Project is disabled on the build node); enable it or correct the output path.": "Artefactmap bestaat niet: {0}. De build-stap is overgeslagen (Build Project is uitgeschakeld op het buildknooppunt); schakel het in of corrigeer het uitvoerpad."
+"Unable to read HEAD after checking out commit {0}.": "Unable to read HEAD after checking out commit {0}."
+"HEAD {0} does not match the requested commit {1}.": "HEAD {0} does not match the requested commit {1}."

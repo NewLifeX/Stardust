@@ -85,3 +85,5 @@
 "Node secret": "Klucz węzła"
 "Source directory does not exist: {0}": "Katalog źródłowy nie istnieje: {0}"
 "Artifact directory does not exist: {0}. The build step was skipped (Build Project is disabled on the build node); enable it or correct the output path.": "Katalog artefaktów nie istnieje: {0}. Krok budowania został pominięty (Build Project jest wyłączony na węźle budowania); włącz go lub popraw ścieżkę wyjściową."
+"Unable to read HEAD after checking out commit {0}.": "Unable to read HEAD after checking out commit {0}."
+"HEAD {0} does not match the requested commit {1}.": "HEAD {0} does not match the requested commit {1}."

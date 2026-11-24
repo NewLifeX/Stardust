@@ -263,3 +263,8 @@
 "DotNetSyncService.Error {0}": "Ошибка DotNetSyncService: {0}"
 "Default language. Pushed to clients on login and heartbeat, e.g. zh-Hans or en; application channel skips Desktop/Mobile/Frontend kinds; empty uses the core configuration DefaultLanguage.": "Язык по умолчанию. Передаётся клиентам при входе и heartbeat, например zh-Hans или en; пустое значение использует DefaultLanguage из основной конфигурации."
 "The telemetry payload is too large.": "The telemetry payload is too large."
+"Pipeline queue timed out.": "Pipeline queue timed out."
+"Pipeline build timed out.": "Pipeline build timed out."
+"Pipeline deploy timed out.": "Pipeline deploy timed out."
+"The pipeline queue is full ({0}); wait for the running tasks to finish.": "The pipeline queue is full ({0}); wait for the running tasks to finish."
+"Run is already in a terminal state.": "Run is already in a terminal state."

@@ -85,3 +85,5 @@
 "Node secret": "Secret du nœud"
 "Source directory does not exist: {0}": "Le répertoire source n'existe pas : {0}"
 "Artifact directory does not exist: {0}. The build step was skipped (Build Project is disabled on the build node); enable it or correct the output path.": "Le répertoire des artefacts n'existe pas : {0}. L'étape de compilation a été ignorée (Build Project est désactivé sur le nœud de compilation) ; activez-la ou corrigez le chemin de sortie."
+"Unable to read HEAD after checking out commit {0}.": "Unable to read HEAD after checking out commit {0}."
+"HEAD {0} does not match the requested commit {1}.": "HEAD {0} does not match the requested commit {1}."

@@ -85,3 +85,5 @@
 "Node secret": "Секрет узла"
 "Source directory does not exist: {0}": "Каталог исходников не существует: {0}"
 "Artifact directory does not exist: {0}. The build step was skipped (Build Project is disabled on the build node); enable it or correct the output path.": "Каталог артефактов не существует: {0}. Шаг сборки был пропущен (Build Project отключён на сборочном узле); включите его или исправьте путь вывода."
+"Unable to read HEAD after checking out commit {0}.": "Unable to read HEAD after checking out commit {0}."
+"HEAD {0} does not match the requested commit {1}.": "HEAD {0} does not match the requested commit {1}."

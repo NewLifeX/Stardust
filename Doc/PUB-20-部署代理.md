@@ -29,6 +29,9 @@ stardeploy pack app.zip -r ./publish/
 
 不带命令行参数直接运行，DeployAgent 将连接星尘服务端，等待接收 `deploy/compile` 编译命令。
 
+- **节点内串行**：同一编译节点同时只执行一个编译任务，后续命令在进程内排队；避免多个流水线命中同一源码目录时并发 `git pull` / `publish` 清空互相破坏。
+- **按提交构建**：命令携带 `CommitId` 时，先 `git fetch` 再 `git checkout --force <commit>`，并校验 `HEAD` 与目标提交一致；未携带时按分支执行 `fetch + reset --hard origin/<branch>` 拉取最新。
+
 ## 项目类型与编译方式（ProjectKind）
 
 AppDeploy 实体上的「项目类型」（`ProjectKind`，默认 `DotNet=1`）决定编译节点上的编译方式

@@ -85,3 +85,5 @@
 "Node secret": "Rahasia node"
 "Source directory does not exist: {0}": "Direktori sumber tidak ada: {0}"
 "Artifact directory does not exist: {0}. The build step was skipped (Build Project is disabled on the build node); enable it or correct the output path.": "Direktori artefak tidak ada: {0}. Langkah build dilewati (Build Project dinonaktifkan pada node build); aktifkan item tersebut atau perbaiki path output."
+"Unable to read HEAD after checking out commit {0}.": "Unable to read HEAD after checking out commit {0}."
+"HEAD {0} does not match the requested commit {1}.": "HEAD {0} does not match the requested commit {1}."

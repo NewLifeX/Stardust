@@ -85,3 +85,5 @@
 "Node secret": "নোড সিক্রেট"
 "Source directory does not exist: {0}": "সোর্স ডিরেক্টরি বিদ্যমান নেই: {0}"
 "Artifact directory does not exist: {0}. The build step was skipped (Build Project is disabled on the build node); enable it or correct the output path.": "আর্টিফ্যাক্ট ডিরেক্টরি বিদ্যমান নেই: {0}. বিল্ড ধাপটি এড়ানো হয়েছে (বিল্ড নোডে Build Project নিষ্ক্রিয়); এটি সক্রিয় করুন অথবা আউটপুট পথ ঠিক করুন।"
+"Unable to read HEAD after checking out commit {0}.": "Unable to read HEAD after checking out commit {0}."
+"HEAD {0} does not match the requested commit {1}.": "HEAD {0} does not match the requested commit {1}."

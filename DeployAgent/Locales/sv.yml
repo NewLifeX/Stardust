@@ -85,3 +85,5 @@
 "Node secret": "Node-hemlighet"
 "Source directory does not exist: {0}": "Källkatalogen finns inte: {0}"
 "Artifact directory does not exist: {0}. The build step was skipped (Build Project is disabled on the build node); enable it or correct the output path.": "Artefaktkatalogen finns inte: {0}. Byggsteget hoppades över (Build Project är inaktiverat på byggnoden); aktivera det eller korrigera utdatasökvägen."
+"Unable to read HEAD after checking out commit {0}.": "Unable to read HEAD after checking out commit {0}."
+"HEAD {0} does not match the requested commit {1}.": "HEAD {0} does not match the requested commit {1}."

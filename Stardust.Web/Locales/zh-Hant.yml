@@ -338,3 +338,8 @@
 "上报日志": "上報日誌"
 "Reported {0} ({1:n0} bytes, {2} lines). Opening the log list.": "已上报 {0}（{1:n0} 字节，{2} 行），正在打开日志列表。"
 "Log report requested. Opening the log list.": "已要求实例上报日志，正在打开日志列表。"
+"Pipeline queue timed out.": "流水線排隊逾時。"
+"Pipeline build timed out.": "流水線建置逾時。"
+"Pipeline deploy timed out.": "流水線部署逾時。"
+"The pipeline queue is full ({0}); wait for the running tasks to finish.": "流水線佇列已滿（{0}），請等待執行中的任務完成。"
+"Run is already in a terminal state.": "執行已處於終態。"

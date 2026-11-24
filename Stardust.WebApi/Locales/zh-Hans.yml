@@ -263,3 +263,8 @@
 "DotNetSyncService failed to sync {0}: {1}": "DotNetSyncService 同步 {0} 失败：{1}"
 "DotNetSyncService.Error {0}": "DotNetSyncService 异常：{0}"
 "The telemetry payload is too large.": "埋点报文超出大小限制。"
+"Pipeline queue timed out.": "流水线排队超时。"
+"Pipeline build timed out.": "流水线构建超时。"
+"Pipeline deploy timed out.": "流水线部署超时。"
+"The pipeline queue is full ({0}); wait for the running tasks to finish.": "流水线队列已满（{0}），请等待运行中的任务完成。"
+"Run is already in a terminal state.": "运行已处于终态。"

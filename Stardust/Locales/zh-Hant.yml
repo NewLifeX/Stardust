@@ -230,5 +230,5 @@
 "Application [{0}] has been stable for {1} minutes; saved as the rollback package": "應用[{0}]已穩定運行{1}分鐘；已儲存為回滾包"
 "Rolled back application [{0}] from version [{1}] to [{2}]": "已回滾應用[{0}]：版本[{1}] → [{2}]"
 # 运行时消息补充词条
-"Server address does not support HTTP log upload.": "Server address does not support HTTP log upload."
-"Log upload failed: {0}": "Log upload failed: {0}"
+"Server address does not support HTTP log upload.": "伺服器位址不支援 HTTP 日誌上傳。"
+"Log upload failed: {0}": "日誌上傳失敗：{0}"

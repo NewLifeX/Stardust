@@ -85,3 +85,5 @@
 "Node secret": "سر العقدة"
 "Source directory does not exist: {0}": "دليل المصدر غير موجود: {0}"
 "Artifact directory does not exist: {0}. The build step was skipped (Build Project is disabled on the build node); enable it or correct the output path.": "دليل المخرجات غير موجود: {0}. تمت تخطي خطوة البناء (مشروع البناء معطّل على عقدة البناء); فعّله أو صحّح مسار الإخراج."
+"Unable to read HEAD after checking out commit {0}.": "Unable to read HEAD after checking out commit {0}."
+"HEAD {0} does not match the requested commit {1}.": "HEAD {0} does not match the requested commit {1}."

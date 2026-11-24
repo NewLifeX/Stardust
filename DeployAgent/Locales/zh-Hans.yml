@@ -85,3 +85,5 @@
 "Artifact directory does not exist: {0}. The build step was skipped (Build Project is disabled on the build node); enable it or correct the output path.": "产物目录不存在：{0}。编译步骤被跳过（编译节点未启用编译项目），请启用该项或修正输出路径。"
 "Stardust server address. For example http://star.newlifex.com:6600; empty by default": "星尘服务端地址。如http://star.newlifex.com:6600，默认为空"
 "Disable strict SSH host key checking. Default false (checking enabled)": "禁用 SSH 严格主机密钥校验。默认false（启用校验）"
+"Unable to read HEAD after checking out commit {0}.": "检出提交 {0} 后无法读取 HEAD。"
+"HEAD {0} does not match the requested commit {1}.": "HEAD {0} 与目标提交 {1} 不一致。"

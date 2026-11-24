@@ -248,6 +248,8 @@ ServiceManager（总管）
 | 数据清理 | Truncate / Delete 双模式 | 灵活适配不同数据库权限 |
 | 通信双通道 | HTTP 心跳 + WebSocket 指令 | 实时性 + 可靠性 |
 | 流水线状态 | Pending → Building → UploadSucceeded → Deploying → Success/Failed | 细粒度追踪，快速定位失败环节 |
+| 流水线触发 | 统一入队 + 同流水线串行 + 提交级构建 | 避免并发构建互相破坏、避免编译“分支最新”而非触发提交 |
+| 产物归属 | 按提交号 + 构建开始时间匹配版本 | 并发/手工上传时不会误部署其它版本的包 |
 
 ---
 

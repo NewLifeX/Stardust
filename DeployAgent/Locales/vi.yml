@@ -85,3 +85,5 @@
 "Node secret": "Khóa bí mật nút"
 "Source directory does not exist: {0}": "Thư mục mã nguồn không tồn tại: {0}"
 "Artifact directory does not exist: {0}. The build step was skipped (Build Project is disabled on the build node); enable it or correct the output path.": "Thư mục sản phẩm không tồn tại: {0}. Bước build đã bị bỏ qua (Build Project bị tắt trên node build); hãy bật nó hoặc sửa đường dẫn đầu ra."
+"Unable to read HEAD after checking out commit {0}.": "Unable to read HEAD after checking out commit {0}."
+"HEAD {0} does not match the requested commit {1}.": "HEAD {0} does not match the requested commit {1}."

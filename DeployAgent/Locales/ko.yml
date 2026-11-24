@@ -85,3 +85,5 @@
 "Node secret": "노드 보안 비밀"
 "Source directory does not exist: {0}": "소스 디렉터리가 없습니다: {0}"
 "Artifact directory does not exist: {0}. The build step was skipped (Build Project is disabled on the build node); enable it or correct the output path.": "산출물 디렉터리가 없습니다: {0}. 빌드 단계가 건너뛰어졌습니다 (빌드 노드에서 Build Project이 비활성화되었습니다). 활성화하거나 출력 경로를 수정하세요."
+"Unable to read HEAD after checking out commit {0}.": "Unable to read HEAD after checking out commit {0}."
+"HEAD {0} does not match the requested commit {1}.": "HEAD {0} does not match the requested commit {1}."

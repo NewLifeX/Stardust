@@ -85,3 +85,5 @@
 "Node secret": "Düğüm gizli anahtarı"
 "Source directory does not exist: {0}": "Kaynak dizin mevcut değil: {0}"
 "Artifact directory does not exist: {0}. The build step was skipped (Build Project is disabled on the build node); enable it or correct the output path.": "Çıktı dizini yok: {0}. Oluşturma adımı atlandı (Oluşturma düğümünde Build Project devre dışı); etkinleştirin veya çıktı yolunu düzeltin."
+"Unable to read HEAD after checking out commit {0}.": "Unable to read HEAD after checking out commit {0}."
+"HEAD {0} does not match the requested commit {1}.": "HEAD {0} does not match the requested commit {1}."

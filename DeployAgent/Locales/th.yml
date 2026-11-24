@@ -85,3 +85,5 @@
 "Node secret": "คีย์ลับโหนด"
 "Source directory does not exist: {0}": "ไม่มีไดเรกทอรีต้นทาง: {0}"
 "Artifact directory does not exist: {0}. The build step was skipped (Build Project is disabled on the build node); enable it or correct the output path.": "ไม่มีไดเรกทอรีอาร์ทิแฟกต์: {0}. ขั้นตอนการบิลด์ถูกข้าม (Build Project ไม่ได้เปิดใช้งานบนโหนดบิลด์) กรุณาเปิดใช้งานหรือแก้ไขเส้นทางเอาต์พุต"
+"Unable to read HEAD after checking out commit {0}.": "Unable to read HEAD after checking out commit {0}."
+"HEAD {0} does not match the requested commit {1}.": "HEAD {0} does not match the requested commit {1}."
