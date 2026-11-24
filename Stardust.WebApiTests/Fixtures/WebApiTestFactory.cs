@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Stardust.Server;
 using XCode;
 using XCode.DataAccessLayer;
 using XCode.Membership;
@@ -65,6 +66,9 @@ public class WebApiTestFactory : WebApplicationFactory<Program>
 
         // 星尘客户端按环境变量读取服务端地址，避免连接到本机 StarAgent 下发的外部地址
         SetEnvironment("StarServer", "http://127.0.0.1:1");
+
+        // 流水线后台队列会周期性修改共享测试库中的运行状态，测试中关闭，避免干扰断言
+        StarServerSetting.Current.PipelineQueueEnabled = false;
 
         _token = new Lazy<Task<String>>(LoginAsync);
     }
