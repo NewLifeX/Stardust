@@ -462,3 +462,6 @@
 # 界面元数据词条
 "支持单个IP、多个IP（逗号或换行分隔）、或CIDR网段（如192": "Supports a single IP, multiple IPs (comma or newline separated), or a CIDR range (e.g., 192"
 "Linux系统下载tar": "Linux system download tar"
+"唤醒": "Wake"
+"确认唤醒该节点？需要同网段在线节点代发，目标机器需开启 WOL。": "Wake this node? An online node in the same LAN must relay the magic packet; the target must have Wake-on-LAN enabled."
+"节点离线时，由同局域网在线节点广播唤醒魔术包": "When the node is offline, an online node in the same LAN broadcasts the Wake-on-LAN magic packet"
