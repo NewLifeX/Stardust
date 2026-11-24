@@ -40,7 +40,7 @@
 
   <ItemGroup Condition="'$(UseLocalNewLifeSource)' != 'true'">
     <!-- 待 NewLife.XCode 发布包含 ConfigSync 的版本后升级此版本号；在此之前本地联调用 -p:UseLocalNewLifeSource=true -->
-    <PackageReference Include="NewLife.XCode" Version="12.3.2026.1122-beta1034" />
+    <PackageReference Include="NewLife.XCode" Version="12.3.2026.1124-beta0604" />
   </ItemGroup>
 
   <!-- 本地联调：NewLife 源码仓库与本仓库同处一个根目录（默认 C:\X）时，
