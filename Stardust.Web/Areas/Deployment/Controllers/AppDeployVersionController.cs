@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
@@ -27,7 +28,7 @@ public class AppDeployVersionController : DeploymentEntityController<AppDeployVe
 
         AddFormFields.RemoveCreateField();
         AddFormFields.RemoveField("Hash");
-        ListFields.LocalizedTraceUrl();
+                ListFields.LocalizedTraceUrl();
 
         LogOnChange = true;
 
@@ -102,6 +103,14 @@ public class AppDeployVersionController : DeploymentEntityController<AppDeployVe
                     //    throw new InvalidOperationException($"文件名[{name}]对应另一个应用[{deploy}]，请确保是否上传错误！");
                 }
             }
+
+            var zip = Request.Form.Files.FirstOrDefault(e => e.FileName.EndsWithIgnoreCase(".zip"));
+            if (zip != null)
+            {
+                using var stream = zip.OpenReadStream();
+                AppPackageHelper.ApplyStarPackage(entity, stream);
+            }
+            if (entity.Version.IsNullOrEmpty()) entity.Version = DateTime.Now.ToString("yyyyMMdd-HHmmss");
 
             entity.TraceId = DefaultSpan.Current?.TraceId;
         }

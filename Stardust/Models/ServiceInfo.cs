@@ -1,4 +1,4 @@
-﻿using System.Xml.Serialization;
+using System.Xml.Serialization;
 
 namespace Stardust.Models;
 
@@ -74,6 +74,18 @@ public class ServiceInfo
     /// <summary>压缩包文件</summary>
     [XmlIgnore]
     public String? ZipFile { get; set; }
+
+    /// <summary>应用包。来自星尘包清单 star.json 的 name，如 NewLife/StarServer</summary>
+    [XmlAttribute]
+    public String? Package { get; set; }
+
+    /// <summary>应用包版本。来自星尘包清单</summary>
+    [XmlAttribute]
+    public String? PackageVersion { get; set; }
+
+    /// <summary>包内应用名。对应 star.json 的 apps[].name</summary>
+    [XmlAttribute]
+    public String? PackageApp { get; set; }
     #endregion
 
     /// <summary>克隆当前对象</summary>

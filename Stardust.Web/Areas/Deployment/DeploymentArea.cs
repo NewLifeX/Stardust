@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using NewLife;
 using NewLife.Cube;
 using XCode;
@@ -6,7 +6,7 @@ using XCode;
 namespace Stardust.Web.Areas.Deployment;
 
 [DisplayName("发布中心")]
-[Menu(555, true, LastUpdate = "20260115")]
+[Menu(555, true, LastUpdate = "20261124")]
 public class DeploymentArea : AreaBase
 {
     public DeploymentArea() : base(nameof(DeploymentArea).TrimSuffix("Area")) { }

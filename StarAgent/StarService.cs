@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.IO;
 using NewLife;
 using NewLife.Agent;
 using NewLife.Data;
@@ -10,6 +11,7 @@ using NewLife.Remoting;
 using NewLife.Remoting.Models;
 using NewLife.Threading;
 using Stardust;
+using Stardust.Deployment;
 using Stardust.Managers;
 using Stardust.Models;
 
@@ -324,6 +326,357 @@ public class StarService : DisposeBase, IApi
             return L.T("Service restart failed: unable to start service [{0}]", serviceName);
         }
     }
+
+    #region 应用包
+    /// <summary>搜索应用包</summary>
+    /// <param name="key">关键字</param>
+    /// <param name="pageIndex">页码</param>
+    /// <param name="pageSize">页大小</param>
+    /// <param name="token">本机 RPC 令牌</param>
+    /// <returns>包列表</returns>
+    [Api(nameof(PackageSearch))]
+    public PackageInfo[] PackageSearch(String? key, Int32 pageIndex, Int32 pageSize, String? token)
+    {
+        CheckLocal();
+        CheckToken(token);
+
+        var client = GetServerClient() ?? throw new InvalidOperationException(L.T("StarAgent is not connected to the server."));
+
+        return client.SearchPackage(key, pageIndex, pageSize).GetAwaiter().GetResult() ?? [];
+    }
+
+    /// <summary>获取应用包信息</summary>
+    /// <param name="name">完整包名或唯一短名</param>
+    /// <param name="token">本机 RPC 令牌</param>
+    /// <returns>包信息</returns>
+    [Api(nameof(PackageGet))]
+    public PackageInfo? PackageGet(String name, String? token)
+    {
+        CheckLocal();
+        CheckToken(token);
+
+        var client = GetServerClient() ?? throw new InvalidOperationException(L.T("StarAgent is not connected to the server."));
+
+        return client.GetPackage(name).GetAwaiter().GetResult();
+    }
+
+    /// <summary>获取应用包最新匹配版本</summary>
+    /// <param name="name">完整包名或唯一短名</param>
+    /// <param name="os">目标操作系统。0表示使用节点平台</param>
+    /// <param name="arch">目标架构。0表示使用节点平台</param>
+    /// <param name="version">指定版本。为空时取最新版本</param>
+    /// <param name="token">本机 RPC 令牌</param>
+    /// <returns>版本信息</returns>
+    [Api(nameof(PackageGetLatest))]
+    public PackageVersionInfo? PackageGetLatest(String name, Int32 os, Int32 arch, String? version, String? token)
+    {
+        CheckLocal();
+        CheckToken(token);
+
+        var client = GetServerClient() ?? throw new InvalidOperationException(L.T("StarAgent is not connected to the server."));
+
+        return client.GetLatestPackage(name, os, arch, version).GetAwaiter().GetResult();
+    }
+
+    /// <summary>下载包 zip 到本机临时目录。调用方负责复制并清理</summary>
+    /// <param name="name">完整包名或唯一短名</param>
+    /// <param name="version">版本。为空时取最新匹配版本</param>
+    /// <param name="token">本机 RPC 令牌</param>
+    /// <returns>下载结果</returns>
+    [Api(nameof(PackageFetch))]
+    public StarPackageFetchResult PackageFetch(String name, String? version, String? token)
+    {
+        CheckLocal();
+        CheckToken(token);
+
+        try
+        {
+            var client = GetServerClient() ?? throw new InvalidOperationException(L.T("StarAgent is not connected to the server."));
+            var ver = FindVersion(client, name, version);
+            if (ver == null || ver.Url.IsNullOrEmpty()) return new StarPackageFetchResult { Success = false, Message = L.T("Package [{0}] version [{1}] was not found.", name, version), Name = name, Version = version };
+
+            var store = CreatePackageStore();
+            var zip = store.DownloadAsync(client.BuildUrl(ver.Url), ver.Hash).GetAwaiter().GetResult();
+
+            return new StarPackageFetchResult
+            {
+                Success = true,
+                Name = ver.Name,
+                Version = ver.Version,
+                ZipPath = zip,
+                Hash = ver.Hash,
+                Manifest = ver.Manifest,
+            };
+        }
+        catch (Exception ex)
+        {
+            return new StarPackageFetchResult { Success = false, Message = ex.Message, Name = name, Version = version };
+        }
+    }
+
+    /// <summary>下载并安装应用包，交给服务管理器守护</summary>
+    /// <param name="name">完整包名或唯一短名</param>
+    /// <param name="version">版本。为空时取当前匹配版本</param>
+    /// <param name="arguments">追加到主应用的启动参数</param>
+    /// <param name="token">本机 RPC 令牌</param>
+    /// <returns>安装结果</returns>
+    [Api(nameof(PackageInstall))]
+    public StarPackageInstallResult PackageInstall(String name, String? version, String? arguments, String? token)
+    {
+        CheckLocal();
+        CheckToken(token);
+
+        try
+        {
+            var manager = Manager ?? throw new InvalidOperationException(L.T("Service manager not available."));
+            var client = GetServerClient() ?? throw new InvalidOperationException(L.T("StarAgent is not connected to the server."));
+            var ver = FindVersion(client, name, version);
+            if (ver == null || ver.Url.IsNullOrEmpty()) return new StarPackageInstallResult { Success = false, Message = L.T("Package [{0}] version [{1}] was not found.", name, version), Name = name, Version = version };
+
+            var store = CreatePackageStore();
+            var manifest = ver.Manifest.IsNullOrEmpty()
+                ? store.InstallAsync(ver.Name, ver.Version, client.BuildUrl(ver.Url), ver.Hash).GetAwaiter().GetResult()
+                : store.InstallAsync(ver.Name, ver.Version, client.BuildUrl(ver.Url), StarPackage.Parse(ver.Manifest!), ver.Hash).GetAwaiter().GetResult();
+            var services = manifest.ToServices(store.GetVersionDir(manifest.Name, manifest.Version));
+
+            // 追加命令行参数到主应用
+            var main = manifest.GetMainApp();
+            if (main != null && !arguments.IsNullOrEmpty())
+            {
+                var svc = services.FirstOrDefault(e => e.PackageApp.EqualIgnoreCase(main.Name));
+                if (svc != null) svc.Arguments = $"{svc.Arguments} {arguments}".Trim();
+            }
+
+            // 记录旧版本，安装失败时回滚
+            var old = manager.Services?.Where(e => e.Package.EqualIgnoreCase(manifest.Name)).Select(e => e.Clone()).ToList() ?? [];
+            foreach (var item in old)
+            {
+                manager.Uninstall(item.Name, L.TLog("Upgrading package {0}", manifest.Name));
+            }
+
+            var installed = new List<ServiceInfo>();
+            try
+            {
+                foreach (var item in services)
+                {
+                    var pi = manager.Install(item);
+                    if (pi == null) throw new InvalidOperationException(L.T("Failed to start application [{0}].", item.Name));
+
+                    installed.Add(item);
+                }
+            }
+            catch (Exception ex)
+            {
+                // 回滚：删除新服务，恢复旧服务
+                foreach (var item in installed)
+                {
+                    manager.Uninstall(item.Name, L.TLog("Package install failed; rolling back"));
+                }
+                foreach (var item in old)
+                {
+                    manager.Add(item);
+                    manager.Start(item.Name);
+                }
+
+                PersistServices();
+
+                return new StarPackageInstallResult { Success = false, Message = ex.Message, Name = manifest.Name, Version = manifest.Version };
+            }
+
+            PersistServices();
+
+            return new StarPackageInstallResult
+            {
+                Success = true,
+                Name = manifest.Name,
+                Version = manifest.Version,
+                Services = installed.ToArray(),
+            };
+        }
+        catch (Exception ex)
+        {
+            return new StarPackageInstallResult { Success = false, Message = ex.Message, Name = name, Version = version };
+        }
+    }
+
+    /// <summary>停止应用包的全部应用，并禁止自动启动</summary>
+    /// <param name="name">完整包名</param>
+    /// <param name="token">本机 RPC 令牌</param>
+    /// <returns>操作结果</returns>
+    [Api(nameof(PackageStop))]
+    public StarPackageOperationResult PackageStop(String name, String? token) => SetPackageEnable(name, false, token);
+
+    /// <summary>启动应用包的全部应用</summary>
+    /// <param name="name">完整包名</param>
+    /// <param name="token">本机 RPC 令牌</param>
+    /// <returns>操作结果</returns>
+    [Api(nameof(PackageStart))]
+    public StarPackageOperationResult PackageStart(String name, String? token) => SetPackageEnable(name, true, token);
+
+    /// <summary>删除应用包的服务与本地文件</summary>
+    /// <param name="name">完整包名</param>
+    /// <param name="version">版本。为空时删除整个包</param>
+    /// <param name="token">本机 RPC 令牌</param>
+    /// <returns>操作结果</returns>
+    [Api(nameof(PackageRemove))]
+    public StarPackageOperationResult PackageRemove(String name, String? version, String? token)
+    {
+        CheckLocal();
+        CheckToken(token);
+
+        try
+        {
+            var manager = Manager ?? throw new InvalidOperationException(L.T("Service manager not available."));
+
+            var list = manager.Services?
+                .Where(e => e.Package.EqualIgnoreCase(name) && (version.IsNullOrEmpty() || e.PackageVersion.EqualIgnoreCase(version)))
+                .ToList() ?? [];
+            var running = manager.RunningServices?
+                .Where(e => list.Any(s => s.Name.EqualIgnoreCase(e.Name)))
+                .ToArray() ?? [];
+            foreach (var item in list)
+            {
+                manager.Uninstall(item.Name, L.TLog("Removing package {0}", name));
+            }
+
+            PersistServices();
+
+            // 确保进程真正退出，Windows 下进程占用工作目录会导致包目录删不掉
+            StopOrphanProcesses(running);
+
+            var store = CreatePackageStore();
+            var removed = store.Remove(name, version);
+
+            return new StarPackageOperationResult
+            {
+                Success = removed,
+                Name = name,
+                Message = removed ? L.T("Package [{0}] removed.", name) : L.T("Package [{0}] was not found.", name),
+            };
+        }
+        catch (Exception ex)
+        {
+            return new StarPackageOperationResult { Success = false, Message = ex.Message, Name = name };
+        }
+    }
+
+    /// <summary>列出本机已安装的应用包与运行状态</summary>
+    /// <param name="token">本机 RPC 令牌</param>
+    /// <returns>包列表</returns>
+    [Api(nameof(PackageList))]
+    public StarPackageListResult PackageList(String? token)
+    {
+        CheckLocal();
+        CheckToken(token);
+
+        var store = CreatePackageStore();
+        var services = Manager?.Services?.Where(e => !e.Package.IsNullOrEmpty()).ToArray() ?? [];
+        var running = Manager?.RunningServices ?? [];
+
+        return new StarPackageListResult
+        {
+            Packages = store.List().ToArray(),
+            Services = services,
+            Running = running.Select(e => new StarPackageProcessInfo { Name = e.Name, ProcessId = e.ProcessId }).ToArray(),
+        };
+    }
+
+    private StarPackageOperationResult SetPackageEnable(String name, Boolean enable, String? token)
+    {
+        CheckLocal();
+        CheckToken(token);
+
+        try
+        {
+            var manager = Manager ?? throw new InvalidOperationException(L.T("Service manager not available."));
+
+            var list = manager.Services?.Where(e => e.Package.EqualIgnoreCase(name)).ToList() ?? [];
+            if (list.Count == 0) return new StarPackageOperationResult { Success = false, Message = L.T("Package [{0}] is not installed.", name), Name = name };
+
+            foreach (var item in list)
+            {
+                var svc = item.Clone();
+                svc.Enable = enable;
+                manager.Add(svc);
+
+                if (enable)
+                    manager.Start(svc.Name);
+                else
+                    manager.Stop(svc.Name, L.TLog("Package {0} stopped", name));
+            }
+
+            PersistServices();
+
+            return new StarPackageOperationResult
+            {
+                Success = true,
+                Name = name,
+                Message = enable ? L.T("Package [{0}] started.", name) : L.T("Package [{0}] stopped.", name),
+            };
+        }
+        catch (Exception ex)
+        {
+            return new StarPackageOperationResult { Success = false, Message = ex.Message, Name = name };
+        }
+    }
+
+    /// <summary>查找指定平台的最新启用版本。version 为空时取最新，否则按版本与平台双重匹配</summary>
+    private static PackageVersionInfo? FindVersion(StarClient client, String name, String? version) => client.GetLatestPackage(name, (Int32)OSKind.Any, (Int32)CpuArch.Any, version).GetAwaiter().GetResult();
+
+    private StarClient? GetServerClient() => Provider?.GetService<StarClient>();
+
+    private StarPackageStore CreatePackageStore()
+    {
+        var set = AgentSetting ?? StarAgentSetting.Current;
+        var path = set.PackagePath.IsNullOrEmpty() ? "../packages" : set.PackagePath;
+
+        return new StarPackageStore(path.GetBasePath())
+        {
+            Log = Log,
+            Tracer = Tracer,
+        };
+    }
+
+    /// <summary>等待卸载后的进程退出，超时后强制结束。避免进程占用包目录导致删除失败</summary>
+    /// <param name="processes">卸载前记录的运行进程</param>
+    private static void StopOrphanProcesses(ProcessInfo[] processes)
+    {
+        foreach (var item in processes)
+        {
+            if (item.ProcessId <= 0) continue;
+
+            for (var i = 0; i < 50; i++)
+            {
+                try
+                {
+                    using var p = Process.GetProcessById(item.ProcessId);
+                    if (p.HasExited) break;
+                    if (!item.ProcessName.IsNullOrEmpty() && !p.ProcessName.EqualIgnoreCase(item.ProcessName)) break;
+                    Thread.Sleep(100);
+                }
+                catch (ArgumentException) { break; }
+            }
+
+            try
+            {
+                using var p = Process.GetProcessById(item.ProcessId);
+                if (!p.HasExited && (item.ProcessName.IsNullOrEmpty() || p.ProcessName.EqualIgnoreCase(item.ProcessName)))
+                {
+                    p.Kill();
+                    p.WaitForExit(3_000);
+                }
+            }
+            catch { }
+        }
+    }
+
+    private void PersistServices()
+    {
+        var set = AgentSetting ?? StarAgentSetting.Current;
+        set.Services = Manager?.Services;
+        set.Save();
+    }
+    #endregion
 
     private void DoRefreshLocal(Object state)
     {

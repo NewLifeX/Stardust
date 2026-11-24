@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "name": "NewLife/StarServer",
+  "version": "4.0.0",
+  "displayName": "星尘服务端",
+  "description": "StarServer 服务端，一条命令拉起",
+  "apps": [
+    {
+      "name": "starserver",
+      "displayName": "StarServer",
+      "fileName": "StarServer.dll",
+      "arguments": "--urls http://*:6600",
+      "ports": [ 6600 ],
+      "main": true
+    }
+  ]
+}

@@ -35,6 +35,9 @@ public partial class AppDeployVersion : Entity<AppDeployVersion>
         // 这里验证参数范围，建议抛出参数异常，指定参数名，前端用户界面可以捕获参数异常并聚焦到对应的参数输入框
         if (Version.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Version), L.T("Version cannot be empty."));
 
+        // 目标框架统一落为空字符串，便于平台匹配与展示
+        TargetFramework ??= "";
+
         // 建议先调用基类方法，基类方法会做一些统一处理
         base.Valid(isNew);
 
@@ -85,7 +88,48 @@ public partial class AppDeployVersion : Entity<AppDeployVersion>
         //// 实体缓存
         //if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.DeployId == deployId && e.Version.EqualIgnoreCase(version));
 
-        return Find(_.DeployId == deployId & _.Version == version);
+        // 同版本可能有多个 RID/TFM 行，旧调用方取第一行；需要平台匹配时用 FindAllByDeployIdAndVersion
+        return FindAll(_.DeployId == deployId & _.Version == version).FirstOrDefault();
+    }
+
+    /// <summary>根据部署集和版本查找全部平台</summary>
+    /// <param name="deployId">部署集</param>
+    /// <param name="version">版本</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppDeployVersion> FindAllByDeployIdAndVersion(Int32 deployId, String version)
+    {
+        if (deployId <= 0 || version.IsNullOrEmpty()) return [];
+
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.DeployId == deployId && e.Version.EqualIgnoreCase(version));
+
+        return FindAll(_.DeployId == deployId & _.Version == version);
+    }
+
+    /// <summary>检查版本的目标框架是否被节点运行时支持</summary>
+    /// <param name="targetFramework">版本目标框架</param>
+    /// <param name="frameworks">节点已安装运行时框架</param>
+    /// <returns>是否匹配</returns>
+    public static Boolean MatchFramework(String? targetFramework, IEnumerable<String>? frameworks)
+    {
+        if (targetFramework.IsNullOrEmpty() || frameworks == null) return true;
+
+        var fms = frameworks.Where(e => !e.IsNullOrEmpty())
+            .Select(e => e.TrimPrefix("netcoreapp").TrimPrefix("net").TrimPrefix("v"))
+            .ToArray();
+        if (fms.Length == 0) return true;
+
+        var tfm = targetFramework.TrimPrefix("netcoreapp").TrimPrefix("net").TrimPrefix("v");
+        var index = tfm.IndexOf('-');
+        if (index > 0) tfm = tfm[..index];
+
+        // 特殊处理4.x，例如net4.6.1可以运行在net4.7/net4.8上
+        if (tfm.StartsWith("4."))
+        {
+            var v = new Version(tfm);
+            return fms.Any(e => e.StartsWith("4.") && new Version(e) >= v);
+        }
+
+        return fms.Any(e => e.StartsWith(tfm));
     }
 
     /// <summary>根据应用查找</summary>

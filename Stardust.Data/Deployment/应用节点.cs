@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -200,7 +200,7 @@ public partial class AppDeployNode
     [DisplayName("日志文件匹配")]
     [Description("日志文件匹配。为空时使用部署集配置，默认 *.log")]
     [DataObjectField(false, false, true, 200)]
-    [BindColumn("LogFilePattern", "日志文件匹配。为空时使用部署集配置，默认 *.log", "*.log")]
+    [BindColumn("LogFilePattern", "日志文件匹配。为空时使用部署集配置，默认 *.log", "", DefaultValue = "*.log")]
     public String LogFilePattern { get => _LogFilePattern; set { if (OnPropertyChanging("LogFilePattern", value)) { _LogFilePattern = value; OnPropertyChanged("LogFilePattern"); } } }
 
     private Int32 _ProcessId;
@@ -621,6 +621,9 @@ public partial class AppDeployNode
 
         /// <summary>版本。当前使用的部署版本，开启MultiVersion时可能不同节点使用不同版本</summary>
         public const String Version = "Version";
+
+        /// <summary>应用程序版本。该节点上应用在线实例上报的文件版本（应用入口程序集FileVersion），随心跳自动更新</summary>
+        public const String AppVersion = "AppVersion";
 
         /// <summary>应用端口。应用自身监听的端口，如果是dotnet应用会增加urls参数</summary>
         public const String Port = "Port";

@@ -32,6 +32,9 @@ internal class Program
 {
     private static void Main(String[] args)
     {
+        // 帮助/版本命令不初始化日志与运行时，保持 star 输出干净
+        if (PackageCommand.TryRunMeta(args)) return;
+
         // 必须最先执行：工作线程尚未创建，此时调整运行时参数才有效
         TuneRuntime(args);
 
@@ -64,6 +67,11 @@ internal class Program
         // 用不到的配置不要输出
         Runtime.CreateConfigOnMissing = false;
 #endif
+
+        // star 命令：应用包管理入口。放在控制台日志初始化之前，避免输出日志横幅。
+        // 不是 star 命令时返回 false，继续原有服务逻辑
+        if (PackageCommand.TryRun(args)) return;
+
         XTrace.UseConsole();
 
         var msWait = 3_000;
@@ -447,6 +455,9 @@ internal class MyService : ServiceBase, IServiceProvider
             // 检查并修正旧版KillMode
             FixSystemdService(set);
         }
+
+        // 创建 star 命令别名。失败不影响服务启动
+        StarLauncher.EnsureAlias();
     }
 
     private void FixSystemdService(SystemdSetting set)

@@ -26,6 +26,8 @@ public class AppDeployController : DeploymentEntityController<AppDeploy>
         ListFields.RemoveField("AppId", "MultiVersion", "Repository", "Branch", "ProjectPath", "PackageFilters", "WorkingDirectory", "UserName", "Environments", "MaxMemory", "Mode", "Remark");
         ListFields.RemoveField("RepoPassword");
         AddFormFields.RemoveCreateField();
+        AddFormFields.RemoveField("Nodes");
+        EditFormFields.RemoveField("Nodes");
 
         LogOnChange = true;
 
@@ -35,12 +37,19 @@ public class AppDeployController : DeploymentEntityController<AppDeploy>
             df.Target = "_frame";
         }
         {
+            var df = ListFields.GetField("PackageName") as ListField;
+            df.Header = "文件匹配";
+        }
+        {
             var df = ListFields.GetField("AppName") as ListField;
             df.Url = "/Registry/App?Id={AppId}";
             df.Target = "_blank";
         }
         {
             var df = ListFields.GetField("Name") as ListField;
+            df.Header = "包名";
+            // 包名 = 项目名/应用名，与 star 命令使用的全名一致
+            df.GetValue = e => e is AppDeploy entity ? entity.FullName : null;
             df.Url = "/Deployment/AppDeploy?appId={AppId}&deployId={Id}";
             df.Target = "_blank";
         }
@@ -56,7 +65,7 @@ public class AppDeployController : DeploymentEntityController<AppDeploy>
         }
         {
             var df = ListFields.GetField("Version") as ListField;
-            df.Header = "版本";
+            df.Header = "当前版本";
             df.Title = "管理应用版本";
             df.Url = "/Deployment/AppDeployVersion?deployId={Id}";
         }

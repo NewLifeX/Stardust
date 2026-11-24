@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
@@ -27,7 +28,7 @@ public class AppDeployVersionController : DeploymentEntityController<AppDeployVe
 
         AddFormFields.RemoveCreateField();
         AddFormFields.RemoveField("Hash");
-        ListFields.TraceUrl();
+                ListFields.TraceUrl();
 
         LogOnChange = true;
 
@@ -108,6 +109,9 @@ public class AppDeployVersionController : DeploymentEntityController<AppDeployVe
             Remark = remark,
         };
 
+        using (var stream = file.OpenReadStream())
+            AppPackageHelper.ApplyStarPackage(entity, stream);
+
         // 与 MVC 表单上传一致：Valid(post) 显式写入当前追踪 ID（除实体 TraceInterceptor 兜底外再保证一次语义一致）
         entity.TraceId = DefaultSpan.Current?.TraceId;
 
@@ -154,83 +158,17 @@ public class AppDeployVersionController : DeploymentEntityController<AppDeployVe
                 }
             }
 
+            var zip = Request.Form.Files.FirstOrDefault(e => e.FileName.EndsWithIgnoreCase(".zip"));
+            if (zip != null)
+            {
+                using var stream = zip.OpenReadStream();
+                AppPackageHelper.ApplyStarPackage(entity, stream);
+            }
+
             entity.TraceId = DefaultSpan.Current?.TraceId;
         }
 
         return base.Valid(entity, type, post);
-    }
-
-    protected override Int32 OnInsert(AppDeployVersion entity)
-    {
-        var app = entity.Deploy;
-        var rs = base.OnInsert(entity);
-        app?.Fix();
-
-        // 上传完成即发布
-        //if (!entity.Url.IsNullOrEmpty() && app != null && app.Enable && app.AutoPublish)
-        //// 插入的时候，还没有保存文件
-        //if (app != null && app.Enable && app.AutoPublish)
-        //{
-        //    app.Version = entity.Version;
-        //    app.Update();
-
-        //    // 文件还没保存，所以需要延迟发布
-        //    Task.Run(async () =>
-        //    {
-        //        await Task.Delay(1000);
-        //        await Publish(entity.App);
-        //    });
-        //}
-
-        return rs;
-    }
-
-    protected override Int32 OnUpdate(AppDeployVersion entity)
-    {
-        entity.TraceId = DefaultSpan.Current?.TraceId;
-
-        //var changed = (entity as IEntity).Dirtys[nameof(entity.Url)];
-
-        var app = entity.Deploy;
-        var rs = base.OnUpdate(entity);
-        app?.Fix();
-
-        //// 上传完成即发布。即使新增，也是插入后保存文件，然后再来OnUpdate
-        //if (entity.Enable && !entity.Url.IsNullOrEmpty() && app != null && app.Enable && app.AutoPublish)
-        //{
-        //    app.Version = entity.Version;
-        //    app.Update();
-
-        //    Publish(entity.App).Wait();
-        //}
-
-        return rs;
-    }
-
-    protected override Int32 OnDelete(AppDeployVersion entity)
-    {
-        //删除Attachment记录和文件，同文件有可能被多次上传，Hash查询不一定唯一
-        //根据当前表Url(/cube/file?id=7185535436880961536.zip)取 Id@Attachment 唯一
-        if (!entity.Url.IsNullOrEmpty())
-        {
-            var id = Path.GetFileNameWithoutExtension(entity.Url.Replace("/cube/file?id=", String.Empty));
-            var att = Attachment.FindById(id.ToLong());
-            if (att != null)
-            {
-                var attPath = att.GetFilePath();
-                //防意外丢失
-                if (System.IO.File.Exists(attPath))
-                {
-                    System.IO.File.Delete(attPath);
-                }
-                //删除记录
-                att.DeleteAsync();
-            }
-        }
-
-        var rs = base.OnDelete(entity);
-        entity.Deploy?.Fix();
-        return rs;
     }
 
     protected override async Task<Attachment> SaveFile(AppDeployVersion entity, IFormFile file, String uploadPath, String fileName)

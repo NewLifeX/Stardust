@@ -80,11 +80,11 @@ public partial class AppDeploy
     public Int32 Nodes { get => _Nodes; set { if (OnPropertyChanging("Nodes", value)) { _Nodes = value; OnPropertyChanged("Nodes"); } } }
 
     private String _Version;
-    /// <summary>版本。应用正在使用的版本号</summary>
+    /// <summary>版本。应用正在使用的版本号，star 拉取此版本</summary>
     [DisplayName("版本")]
-    [Description("版本。应用正在使用的版本号")]
+    [Description("版本。应用正在使用的版本号，star 拉取此版本")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("Version", "版本。应用正在使用的版本号", "")]
+    [BindColumn("Version", "版本。应用正在使用的版本号，star 拉取此版本", "")]
     public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
 
     private Boolean _MultiVersion;
@@ -331,7 +331,7 @@ public partial class AppDeploy
     [DisplayName("日志文件匹配")]
     [Description("日志文件匹配。列目录与默认选中时使用，如 *.log 或 app-*.log")]
     [DataObjectField(false, false, true, 200)]
-    [BindColumn("LogFilePattern", "日志文件匹配。列目录与默认选中时使用，如 *.log 或 app-*.log", "*.log")]
+    [BindColumn("LogFilePattern", "日志文件匹配。列目录与默认选中时使用，如 *.log 或 app-*.log", "", DefaultValue = "*.log")]
     public String LogFilePattern { get => _LogFilePattern; set { if (OnPropertyChanging("LogFilePattern", value)) { _LogFilePattern = value; OnPropertyChanged("LogFilePattern"); } } }
 
     private Int32 _CreateUserId;
@@ -581,7 +581,7 @@ public partial class AppDeploy
         /// <summary>节点。该应用部署集所拥有的节点数</summary>
         public static readonly Field Nodes = FindByName("Nodes");
 
-        /// <summary>版本。应用正在使用的版本号</summary>
+        /// <summary>版本。应用正在使用的版本号，star 拉取此版本</summary>
         public static readonly Field Version = FindByName("Version");
 
         /// <summary>多版本。支持多运行时版本，此时只认可部署版本中符合运行时要求的最新可用版本</summary>
@@ -716,7 +716,7 @@ public partial class AppDeploy
         /// <summary>节点。该应用部署集所拥有的节点数</summary>
         public const String Nodes = "Nodes";
 
-        /// <summary>版本。应用正在使用的版本号</summary>
+        /// <summary>版本。应用正在使用的版本号，star 拉取此版本</summary>
         public const String Version = "Version";
 
         /// <summary>多版本。支持多运行时版本，此时只认可部署版本中符合运行时要求的最新可用版本</summary>

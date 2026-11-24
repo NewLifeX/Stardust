@@ -495,6 +495,7 @@ NewLife is a layered ecosystem of independently versioned open-source projects. 
 | [PUB-21-Distributed File Storage](https://github.com/NewLifeX/Stardust/blob/master/Doc/PUB-21-分布式文件存储.md) | File storage design |
 | [PUB-23-Pipeline Deployment Flow](https://github.com/NewLifeX/Stardust/blob/master/Doc/PUB-23-流水线部署流程.md) | Pipeline build → upload → deployment flow |
 | [PUB-19-Application Package Specification](https://github.com/NewLifeX/Stardust/blob/master/Doc/PUB-19-应用包规范.md) | Application package format and specification |
+| [PUB-25-Application Package Management](https://github.com/NewLifeX/Stardust/blob/master/Doc/PUB-25-应用包管理.md) | Enterprise-internal packages: upload zip + star.json, nodes pull/install/run with the star CLI |
 | [SVR-8-Remote Command Execution Security](https://github.com/NewLifeX/Stardust/blob/master/Doc/SVR-8-远程命令执行安全.md) | Security solution |
 | [PUB-20-Deployment Agent](https://github.com/NewLifeX/Stardust/blob/master/Doc/PUB-20-部署代理.md) | Deployment agent usage guide |
 | [GW-8-Gateway User Guide](https://github.com/NewLifeX/Stardust/blob/master/Doc/GW-8-网关使用指南.md) | Gateway usage guide |

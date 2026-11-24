@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "name": "NewLife/StarWeb",
+  "version": "4.0.0",
+  "displayName": "星尘管理后台",
+  "description": "StarWeb 管理后台，一条命令拉起",
+  "apps": [
+    {
+      "name": "starweb",
+      "displayName": "StarWeb",
+      "fileName": "StarWeb.dll",
+      "arguments": "--urls http://*:8080",
+      "ports": [ 8080 ],
+      "main": true
+    }
+  ]
+}

@@ -46,6 +46,10 @@ public class StarAgentSetting : Config<StarAgentSetting>, IClientSetting
     [Description("Certificate directory. Default ../certs, relative to the StarAgent installation directory.")]
     public String? CertPath { get; set; }
 
+    /// <summary>应用包目录。默认 ../packages（相对 StarAgent 安装目录）</summary>
+    [Description("Package directory. Default ../packages, relative to the StarAgent installation directory.")]
+    public String? PackagePath { get; set; }
+
     /// <summary>Windows自启动。自启动需要用户登录桌面，默认false使用系统服务</summary>
     [Description("Windows auto-start. Auto-start requires a user logged in to the desktop; default false uses a system service")]
     public Boolean UseAutorun { get; set; }

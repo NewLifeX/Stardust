@@ -61,6 +61,9 @@ public partial class AppDeploy : Entity<AppDeploy>
     [Map(__.AppId, typeof(App), "Id")]
     public String AppName => App?.Name;
 
+    /// <summary>完整包名。项目名/部署集名，项目为空时只用部署集名</summary>
+    public String FullName => ProjectName.IsNullOrEmpty() ? Name : $"{ProjectName}/{Name}";
+
     /// <summary>节点集合</summary>
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]
     public IList<AppDeployNode> DeployNodes => Extends.Get(nameof(DeployNodes), k => AppDeployNode.FindAllByAppId(Id));
@@ -157,6 +160,21 @@ public partial class AppDeploy : Entity<AppDeploy>
         return FindAll(exp, page);
     }
 
+    /// <summary>搜索可被 star 拉取的应用包。只返回已设置当前版本并且启用的部署集</summary>
+    /// <param name="key">关键字</param>
+    /// <param name="page">分页参数</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppDeploy> SearchPackages(String? key, PageParameter page)
+    {
+        var exp = new WhereExpression();
+        exp &= _.Enable == true;
+        // 新上传版本可能尚未应用，只有管理员显式设置为当前版本后，star 才可拉取
+        exp &= _.Version != "";
+        if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.Category.Contains(key) | _.PackageName.Contains(key) | _.Remark.Contains(key);
+
+        return FindAll(exp, page);
+    }
+
     // Select Count(Id) as Id,Category From AppDeploy Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
     static readonly FieldCache<AppDeploy> _CategoryCache = new(nameof(Category));
 
@@ -194,19 +212,11 @@ public partial class AppDeploy : Entity<AppDeploy>
         return count;
     }
 
-    /// <summary>刷新</summary>
+    /// <summary>刷新节点计数。当前版本只由管理员通过“使用版本”显式设置，上传新版本不会自动生效</summary>
     public void Refresh()
     {
         var nodes = AppDeployNode.FindAllByAppId(Id);
         Nodes = nodes.Count(e => e.Enable);
-
-        if (Version.IsNullOrEmpty())
-        {
-            var vers = AppDeployVersion.FindAllByDeployId(Id, 100);
-            vers = vers.Where(e => e.Enable).ToList();
-            if (vers.Count == 0) vers = AppDeployVersion.Search(Id, null, true, DateTime.MinValue, DateTime.MinValue, null, null);
-            if (vers.Count > 0) Version = vers[0].Version;
-        }
     }
 
     /// <summary>获取本部署集在目标节点上应使用的部署版本。支持多版本匹配（按操作系统/架构/框架运行时筛选）。
@@ -215,90 +225,43 @@ public partial class AppDeploy : Entity<AppDeploy>
     /// <returns>匹配的部署版本，未找到时返回 null</returns>
     public AppDeployVersion GetDeployVersion(Node node)
     {
+        // 目标节点的操作系统和架构
+        var (nodeOS, nodeArch) = PlatformHelper.GetNodePlatform(node);
+        var fms = node.Frameworks?.Split(',', StringSplitOptions.RemoveEmptyEntries) ?? [];
+
         if (MultiVersion)
         {
             // 查找最新的一批版本，挑选符合目标节点的最新版本
             var vers = AppDeployVersion.FindAllByDeployId(Id, 100);
             vers = vers.Where(e => e.Enable).OrderByDescending(e => e.Id).ToList();
 
-            // 目标节点的操作系统和架构
-            var (nodeOS, nodeArch) = GetNodePlatform(node);
-
             // 可能有多个版本，挑选最新的适合目标节点操作系统、指令集和框架运行时的版本
-            var fms = node.Frameworks?.Split(',', StringSplitOptions.RemoveEmptyEntries) ?? [];
             foreach (var ver in vers)
             {
-                // 检查操作系统和架构是否匹配
-                if (!MatchPlatform(ver.OS, ver.Arch, nodeOS, nodeArch)) continue;
-
-                if (!ver.TargetFramework.IsNullOrEmpty() && fms.Length > 0)
-                {
-                    var tfm = ver.TargetFramework.TrimPrefix("netcoreapp").TrimPrefix("net").TrimPrefix("v");
-
-                    // 特殊处理4.x，例如net4.6.1可以运行在net4.7/net4.8上
-                    if (tfm.StartsWith("4."))
-                    {
-                        var v = new Version(tfm);
-                        if (!fms.Any(e => e.StartsWith("4.") && new Version(e) >= v))
-                            continue;
-                    }
-                    else if (!fms.Any(e => e.StartsWith(tfm)))
-                        continue;
-                }
-
-                return ver;
+                if (MatchVersion(ver, nodeOS, nodeArch, fms)) return ver;
             }
 
             return null;
         }
 
-        return AppDeployVersion.FindByDeployIdAndVersion(Id, Version);
+        // 同一个版本可能有多个 RID/TFM 行，按节点平台挑选
+        var list = AppDeployVersion.FindAllByDeployIdAndVersion(Id, Version);
+        if (list.Count == 0) return null;
+        if (list.Count == 1) return list[0];
+
+        foreach (var ver in list.Where(e => e.Enable).OrderByDescending(e => e.Id))
+        {
+            if (MatchVersion(ver, nodeOS, nodeArch, fms)) return ver;
+        }
+
+        return null;
     }
 
-    /// <summary>获取节点的操作系统和架构</summary>
-    private static (OSKind, CpuArch) GetNodePlatform(Node node)
+    private static Boolean MatchVersion(AppDeployVersion ver, OSKind nodeOS, CpuArch nodeArch, String[] fms)
     {
-        var os = node.OSKind switch
-        {
-            >= OSKinds.iOS => OSKind.iOS,
-            >= OSKinds.Android => OSKind.Android,
-            >= OSKinds.MacOSX => OSKind.OSX,
-            // Linux 各发行版（100+）属于 glibc，必须排在 Alpine（90）之前判断，
-            // 否则 Ubuntu/CentOS 等会被误判为 musl，导致多版本部署选不到 Linux 包
-            >= OSKinds.Linux or OSKinds.SmartOS => OSKind.Linux,
-            >= OSKinds.Alpine => OSKind.LinuxMusl,
-            >= OSKinds.Win10 => OSKind.Windows,
-            _ => OSKind.Any,
-        };
+        if (!PlatformHelper.MatchPlatform(ver.OS, ver.Arch, nodeOS, nodeArch)) return false;
 
-        var arch = node.Architecture?.ToLower() switch
-        {
-            "x86" => CpuArch.X86,
-            "x64" => CpuArch.X64,
-            "arm" => CpuArch.Arm,
-            "arm64" => CpuArch.Arm64,
-            "loongarch64" => CpuArch.LA64,
-            "riscv64" => CpuArch.RiscV64,
-            "mips64" => CpuArch.Mips64,
-            _ => CpuArch.Any,
-        };
-
-        return (os, arch);
-    }
-
-    /// <summary>检查版本的平台是否匹配目标节点</summary>
-    private static Boolean MatchPlatform(OSKind verOS, CpuArch verArch, OSKind nodeOS, CpuArch nodeArch)
-    {
-        // 版本未指定平台，匹配所有
-        if (verOS == OSKind.Any && verArch == CpuArch.Any) return true;
-
-        // 操作系统匹配：版本未指定或与节点相同
-        if (verOS != OSKind.Any && verOS != nodeOS) return false;
-
-        // 架构匹配：版本未指定或与节点相同
-        if (verArch != CpuArch.Any && verArch != nodeArch) return false;
-
-        return true;
+        return AppDeployVersion.MatchFramework(ver.TargetFramework, fms);
     }
 
     /// <summary>复制应用数据</summary>
@@ -308,6 +271,7 @@ public partial class AppDeploy : Entity<AppDeploy>
         AppId = app.Id;
         Name = app.Name;
         Category = app.Category;
+        if (ProjectId == 0 && app.ProjectId > 0) ProjectId = app.ProjectId;
 
         if (!app.Enable) Enable = false;
     }

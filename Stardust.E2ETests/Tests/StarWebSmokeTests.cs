@@ -120,6 +120,14 @@ public class StarWebSmokeTests : IAsyncLifetime
         await context.DisposeAsync();
     }
 
+    [Fact(DisplayName = "应用包旧路由已移除，返回 404")]
+    public async Task LegacyPackageRoute_Returns404()
+    {
+        var resp = await _page!.GotoAsync("/Deployment/AppPackageVersion/Add?packageId=1", new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 30_000 });
+
+        Assert.Equal(404, resp?.Status);
+    }
+
     [Fact(DisplayName = "全部菜单页面：可访问、无服务端错误、无 JS 崩溃")]
     public async Task AllMenuPages_LoadNormally()
     {

@@ -50,7 +50,7 @@
         <Column Name="Name" DataType="String" Master="True" Description="名称。应用名" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
         <Column Name="Nodes" DataType="Int32" Description="节点。该应用部署集所拥有的节点数" />
-        <Column Name="Version" DataType="String" Description="版本。应用正在使用的版本号" />
+        <Column Name="Version" DataType="String" Description="版本。应用正在使用的版本号，star 拉取此版本" />
         <Column Name="MultiVersion" DataType="Boolean" Description="多版本。支持多运行时版本，此时只认可部署版本中符合运行时要求的最新可用版本" />
         <Column Name="AutoPublish" DataType="Boolean" Description="自动发布。应用版本后自动发布到启用节点，加快发布速度" />
         <Column Name="PackageName" DataType="String" Description="包名。用于判断上传包名是否正确，避免错误上传其它应用包，支持*模糊匹配" />
@@ -165,7 +165,7 @@
         <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
       </Columns>
       <Indexes>
-        <Index Columns="DeployId,Version" Unique="True" />
+        <Index Columns="DeployId,Version" />
       </Indexes>
     </Table>
     <Table Name="AppDeployHistory" Description="部署历史。记录应用集部署历史" ConnName="StardustData">

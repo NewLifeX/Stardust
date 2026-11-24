@@ -573,6 +573,65 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
     public Task<Int32> AppPing(AppInfo inf) => InvokeAsync<Int32>("Deploy/Ping", inf);
     #endregion
 
+    #region 应用包
+    /// <summary>搜索应用包</summary>
+    /// <param name="key">关键字</param>
+    /// <param name="pageIndex">页码，从1开始</param>
+    /// <param name="pageSize">页大小</param>
+    /// <returns>包列表</returns>
+    public Task<PackageInfo[]?> SearchPackage(String? key, Int32 pageIndex = 1, Int32 pageSize = 20) => InvokeAsync<PackageInfo[]>("Package/Search", new Dictionary<String, Object?>
+    {
+        ["key"] = key,
+        ["pageIndex"] = pageIndex,
+        ["pageSize"] = pageSize,
+    });
+
+    /// <summary>获取应用包信息</summary>
+    /// <param name="name">完整包名或唯一短名</param>
+    /// <returns>包信息</returns>
+    public Task<PackageInfo?> GetPackage(String name) => InvokeAsync<PackageInfo>("Package/Get", new Dictionary<String, Object?>
+    {
+        ["name"] = name,
+    });
+
+    /// <summary>获取应用包的启用版本列表</summary>
+    /// <param name="name">完整包名或唯一短名</param>
+    /// <returns>版本列表</returns>
+    public Task<PackageVersionInfo[]?> GetPackageVersions(String name) => InvokeAsync<PackageVersionInfo[]>("Package/GetVersions", new Dictionary<String, Object?>
+    {
+        ["name"] = name,
+    });
+
+    /// <summary>获取目标平台的当前版本</summary>
+    /// <param name="name">完整包名或唯一短名</param>
+    /// <param name="os">目标操作系统。0表示使用节点平台</param>
+    /// <param name="arch">目标架构。0表示使用节点平台</param>
+    /// <returns>版本信息</returns>
+    public Task<PackageVersionInfo?> GetLatestPackage(String name, Int32 os = 0, Int32 arch = 0) => GetLatestPackage(name, os, arch, null);
+
+    /// <summary>获取目标平台的当前版本</summary>
+    /// <param name="name">完整包名或唯一短名</param>
+    /// <param name="os">目标操作系统。0表示使用节点平台</param>
+    /// <param name="arch">目标架构。0表示使用节点平台</param>
+    /// <param name="version">指定版本。为空时取部署集当前版本</param>
+    /// <returns>版本信息</returns>
+    public Task<PackageVersionInfo?> GetLatestPackage(String name, Int32 os, Int32 arch, String? version) => InvokeAsync<PackageVersionInfo>("Package/GetLatest", new Dictionary<String, Object?>
+    {
+        ["name"] = name,
+        ["os"] = os,
+        ["arch"] = arch,
+        ["version"] = version,
+    });
+
+    /// <summary>获取指定版本的下载地址</summary>
+    /// <param name="id">版本编号</param>
+    /// <returns>版本信息</returns>
+    public Task<PackageVersionInfo?> DownloadPackage(Int32 id) => InvokeAsync<PackageVersionInfo>("Package/Download", new Dictionary<String, Object?>
+    {
+        ["id"] = id,
+    });
+    #endregion
+
     #region 升级
     private Int32 _upgrading;
     /// <summary>获取更新信息。如有更新，则下载解压覆盖并重启应用</summary>

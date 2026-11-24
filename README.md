@@ -492,7 +492,8 @@ NewLife is a layered ecosystem of independently versioned open-source projects. 
 | [NODE-14-Firewall Management](Doc/NODE-14-防火墙管理.md) | NODE-14 firewall port management |
 | [PUB-21-Distributed File Storage](Doc/PUB-21-分布式文件存储.md) | File storage design |
 | [PUB-23-Pipeline Deployment Flow](Doc/PUB-23-流水线部署流程.md) | Pipeline build → upload → deployment flow |
-| [PUB-19-Application Package Specification](Doc/PUB-19-应用包规范.md) | Application package format and specification |
+| [PUB-19-Application Package Specification](Doc/PUB-19-应用包规范.md) | Single-app package format with optional star.json |
+| [PUB-25-Application Package Management](Doc/PUB-25-应用包管理.md) | Enterprise-internal packages reusing AppDeploy/AppDeployVersion; nodes pull/install/run with the star CLI |
 | [SVR-8-Remote Command Execution Security](Doc/SVR-8-远程命令执行安全.md) | Security solution |
 | [PUB-20-Deployment Agent](Doc/PUB-20-部署代理.md) | Deployment agent usage guide |
 | [GW-8-Gateway User Guide](Doc/GW-8-网关使用指南.md) | Gateway usage guide |
