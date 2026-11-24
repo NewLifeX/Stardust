@@ -172,6 +172,63 @@ public class NodeWakeServiceTests
     }
 
     [Fact]
+    [DisplayName("同私有网段优先于同公网出口")]
+    public void SelectRelays_PreferSubnetOverPublicIp()
+    {
+        // 目标换过路由器，网关 MAC 已过期；此时同网段的节点不能被同 NAT 下异网段节点挤掉
+        var target = CreateTarget(gateway: "192.168.1.1/99-99-99-99-99-99", ip: "192.168.1.10", lastLoginIp: "1.2.3.4");
+        var nodes = new List<Node>
+        {
+            CreateNode(2, "192.168.1.1/AA-BB-CC-DD-EE-EE", "192.168.1.20", "1.2.3.4"),
+            CreateNode(3, "10.0.0.1/AA-BB-CC-DD-EE-EE", "10.0.0.30", "1.2.3.4"),
+        };
+        var onlines = new List<NodeOnline>
+        {
+            CreateOnline(2, "192.168.1.1/AA-BB-CC-DD-EE-EE", "192.168.1.20"),
+            CreateOnline(3, "10.0.0.1/AA-BB-CC-DD-EE-EE", "10.0.0.30"),
+        };
+
+        var relays = NodeWakeService.SelectRelays(target, onlines, nodes);
+
+        var online = Assert.Single(relays);
+        Assert.Equal(2, online.NodeID);
+    }
+
+    [Fact]
+    [DisplayName("排除移动端与部署代理，自定义产品放行")]
+    public void SelectRelays_ExcludeUnsupportedProducts()
+    {
+        var target = CreateTarget();
+        var nodes = new List<Node>
+        {
+            CreateNode(2, "192.168.1.1/AA-BB-CC-DD-EE-FF", "192.168.1.20"),
+            CreateNode(3, "192.168.1.1/AA-BB-CC-DD-EE-FF", "192.168.1.30"),
+            CreateNode(4, "192.168.1.1/AA-BB-CC-DD-EE-FF", "192.168.1.40"),
+            CreateNode(5, "192.168.1.1/AA-BB-CC-DD-EE-FF", "192.168.1.50"),
+        };
+        nodes[0].ProductCode = "StarAgent";
+        nodes[2].ProductCode = "StarDeploy";
+        nodes[3].ProductCode = "StarAgent-Custom";
+
+        var onlines = new List<NodeOnline>
+        {
+            CreateOnline(2, "192.168.1.1/AA-BB-CC-DD-EE-FF", "192.168.1.20"),
+            CreateOnline(3, "192.168.1.1/AA-BB-CC-DD-EE-FF", "192.168.1.30"),
+            CreateOnline(4, "192.168.1.1/AA-BB-CC-DD-EE-FF", "192.168.1.40"),
+            CreateOnline(5, "192.168.1.1/AA-BB-CC-DD-EE-FF", "192.168.1.50"),
+        };
+        // 在线记录的产品编码优先于节点记录，避免登录信息未刷新的旧记录混入
+        onlines[0].ProductCode = "StarAgent";
+        onlines[1].ProductCode = "StarAgent-Mobile";
+
+        var relays = NodeWakeService.SelectRelays(target, onlines, nodes);
+
+        Assert.Equal(2, relays.Count);
+        Assert.Contains(relays, e => e.NodeID == 2);
+        Assert.Contains(relays, e => e.NodeID == 5);
+    }
+
+    [Fact]
     [DisplayName("没有任何同网段节点时返回空")]
     public void SelectRelays_NoMatch()
     {

@@ -10,7 +10,8 @@ namespace Stardust.Server.Services;
 /// <summary>节点唤醒服务。挑选同网段在线节点代发 Wake-on-LAN 魔术包</summary>
 /// <remarks>
 /// 广播只能在二层广播域内生效，因此由目标所在局域网内的在线节点代发。
-/// 代发节点按“网关 MAC → 网关 IP → 公网 IP → 私有网段 /24”逐级兜底挑选。
+/// 代发节点按“网关 MAC → 网关 IP → 私有网段 /24 → 公网 IP”逐级兜底挑选，
+/// 并排除移动端、部署代理等未实现该命令的产品。
 /// </remarks>
 /// <param name="starFactory">星尘工厂，用于向代发节点下发命令</param>
 public class NodeWakeService(StarFactory starFactory)
@@ -23,6 +24,10 @@ public class NodeWakeService(StarFactory starFactory)
     /// <summary>最多挑选的代发节点数</summary>
     public Int32 MaxRelays { get; set; } = 5;
 
+    /// <summary>不支持局域网唤醒的产品编码。移动端与部署代理没有实现 node/wakeonlan 命令</summary>
+    /// <remarks>未知或自定义产品编码默认放行，第三方代理只要实现同名命令即可参与代发</remarks>
+    public static String[] UnsupportedRelayProducts { get; set; } = ["StarAgent-Mobile", "StarDeploy"];
+
     /// <summary>查找同网段的在线节点</summary>
     /// <param name="target">目标节点</param>
     /// <returns>代发节点在线记录，没有则返回空列表</returns>
@@ -31,7 +36,11 @@ public class NodeWakeService(StarFactory starFactory)
         if (target == null || target.MACs.IsNullOrEmpty()) return [];
 
         // 在线表由后台清理过期记录，这里再加时间窗，避免清理滞后时把早已离线的节点当成代发节点
-        var onlines = NodeOnline.FindAllOnline(DateTime.Now.AddMinutes(-30));
+        var since = DateTime.Now.AddMinutes(-30);
+        // 代发节点必须与目标同项目，先在数据层缩小范围，避免大部署下把全部在线记录读进内存
+        var onlines = target.ProjectId > 0
+            ? NodeOnline.FindAllByProjectId(target.ProjectId).Where(e => e != null && e.UpdateTime >= since).ToList()
+            : NodeOnline.FindAllOnline(since);
         if (onlines.Count == 0) return [];
 
         var nodes = Node.FindAllByIds(onlines.Select(e => e.NodeID));
@@ -105,6 +114,11 @@ public class NodeWakeService(StarFactory starFactory)
             if (candidates.Any(e => e.Online.NodeID == online.NodeID)) continue;
 
             map.TryGetValue(online.NodeID, out var node);
+
+            // 移动端与部署代理没有实现 node/wakeonlan，选中它们只会空跑一条命令，直接排除
+            var product = !online.ProductCode.IsNullOrEmpty() ? online.ProductCode : node?.ProductCode;
+            if (IsUnsupportedProduct(product)) continue;
+
             var gateway = !online.Gateway.IsNullOrEmpty() ? online.Gateway : node?.Gateway;
             ParseGateway(gateway, out var gwIp, out var gwMac);
 
@@ -144,15 +158,17 @@ public class NodeWakeService(StarFactory starFactory)
         {
             tier = candidates.Where(e => e.GatewayIp.EqualIgnoreCase(targetGwIp)).ToList();
         }
-        if (tier.Count == 0 && !target.LastLoginIP.IsNullOrEmpty())
-        {
-            // 同一 NAT 出口，家庭宽带常见；企业 NAT 下可能匹配到不同 VLAN，但广播不出网段，最多多发几个无用包
-            tier = candidates.Where(e => e.Node != null && e.Node.LastLoginIP.EqualIgnoreCase(target.LastLoginIP)).ToList();
-        }
         if (tier.Count == 0 && targetIps.Count > 0)
         {
-            // 换路由器导致网关 MAC 变化，或部分 Linux 机器取不到网关 MAC 时，退回私有网段 /24 匹配
+            // 换路由器导致网关 MAC 变化，或部分 Linux 机器取不到网关 MAC 时，按私有网段 /24 匹配。
+            // 同网段比同公网出口更能说明处于同一广播域，因此排在公网 IP 兜底之前，
+            // 避免网关记录过期时把真正同网段的节点挤掉、却选中同 NAT 下不同 VLAN 的节点
             tier = candidates.Where(e => e.Ips.Any(ip => targetIps.Any(t => SameSubnet(ip, t)))).ToList();
+        }
+        if (tier.Count == 0 && !target.LastLoginIP.IsNullOrEmpty())
+        {
+            // 最后才用同一 NAT 出口兜底，家庭宽带常见；企业 NAT 下可能匹配到不同 VLAN，但广播不出网段，最多多发几个无用包
+            tier = candidates.Where(e => e.Node != null && e.Node.LastLoginIP.EqualIgnoreCase(target.LastLoginIP)).ToList();
         }
         if (tier.Count == 0) return result;
 
@@ -167,6 +183,18 @@ public class NodeWakeService(StarFactory starFactory)
         }
 
         return result;
+    }
+
+    private static Boolean IsUnsupportedProduct(String? productCode)
+    {
+        if (productCode.IsNullOrEmpty()) return false;
+
+        foreach (var item in UnsupportedRelayProducts)
+        {
+            if (item.EqualIgnoreCase(productCode)) return true;
+        }
+
+        return false;
     }
 
     private static void ParseGateway(String? gateway, out String? ip, out String? mac)
