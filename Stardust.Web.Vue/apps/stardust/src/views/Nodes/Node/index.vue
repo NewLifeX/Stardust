@@ -13,6 +13,7 @@ import { toUrl } from '@/utils/routeLink';
  *  - 批量工具栏：选中行后启用「启用告警/重置告警/修复」按钮
  *    -> GET /Nodes/Node/<Action>?keys=<选中id 逗号串>（后端读 SelectKeys）
  *  - 「追踪」操作：每行按钮 → confirm → GET /Nodes/Node/Trace?id=<行Id> → ElMessage「已发送命令」→ 刷新
+ *  - 「唤醒」操作：每行按钮 → confirm → GET /Nodes/Node/WakeUp?id=<行Id> → 同网段在线节点代发 WOL
  *  - 搜索：启用 + 关键字 Q + 时间范围（加分项）
  *
  * 前端经 usePageApi + request，自定义 Action 写相对无前缀路径 /Nodes/Node/<Action>
@@ -344,6 +345,36 @@ async function onTrace(row: Row) {
   }
 }
 
+/** 「唤醒」：confirm → GET /Nodes/Node/WakeUp?id= → ElMessage → 刷新 */
+async function onWake(row: Row) {
+  if (row.Id == null) return;
+  try {
+    await ElMessageBox.confirm('确认唤醒该节点？需要同网段在线节点代发，目标机器需开启 WOL。', '唤醒节点', {
+      type: 'warning',
+      confirmButtonText: '确认',
+      cancelButtonText: '取消',
+    });
+  } catch {
+    return; // 用户取消
+  }
+  try {
+    const res: any = await request({
+      url: `/Nodes/Node/WakeUp`,
+      method: 'get',
+      params: { id: row.Id },
+    });
+    if (res && (res.code === 0 || res.code === 200 || res.success)) {
+      ElMessage.success(res.message || '已下发唤醒命令');
+    } else {
+      ElMessage.error(res?.message || '唤醒失败');
+    }
+  } catch (e: any) {
+    ElMessage.error(e?.response?.data?.message || e?.message || '唤醒失败');
+  } finally {
+    await fetchList();
+  }
+}
+
 onMounted(async () => {
   projectId.value = route.query.projectId ? Number(route.query.projectId) : undefined;
   await fetchSelectOptions();
@@ -604,10 +635,10 @@ watch(
             </template>
           </el-table-column>
 
-          <!-- 操作列：追踪 / 详情 / 编辑 / 删除 -->
+          <!-- 操作列：追踪 / 唤醒 / 详情 / 编辑 / 删除 -->
           <el-table-column
             label="操作"
-            min-width="280"
+            min-width="340"
             fixed="right"
             align="center"
           >
@@ -620,6 +651,14 @@ watch(
                   @click="onTrace(row)"
                 >
                   追踪
+                </el-button>
+                <el-button
+                  size="small"
+                  type="warning"
+                  plain
+                  @click="onWake(row)"
+                >
+                  唤醒
                 </el-button>
                 <el-link
                   type="primary"
