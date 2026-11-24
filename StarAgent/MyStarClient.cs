@@ -65,6 +65,7 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
         this.RegisterCommand("node/reboot", Reboot);
         this.RegisterCommand("node/setchannel", SetChannel);
         this.RegisterCommand("node/synctime", SyncTime);
+        this.RegisterCommand("node/wakeonlan", WakeOnLanCommand);
         this.RegisterCommand("bash", RunBash);
         this.RegisterCommand("cmd", RunCmd);
 
@@ -534,6 +535,56 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
         }, TaskCreationOptions.LongRunning);
 
         return "success";
+    }
+
+    private static Int64 _lastWakeOnLan;
+    /// <summary>局域网唤醒。向本机所在局域网广播魔术包，由同网段在线节点代发</summary>
+    /// <remarks>
+    /// 参数为 JSON <c>{"macs":"AA-BB-CC-DD-EE-FF","code":"目标节点编码","name":"目标节点名"}</c>，
+    /// 也接受纯 MAC 文本。只使用 macs 字段，code/name 仅用于命令记录排查。
+    /// 广播只能在二层广播域内生效，目标机器还需在 BIOS/网卡中开启 WOL。
+    /// </remarks>
+    /// <param name="argument">MAC 地址参数</param>
+    /// <returns>发送结果</returns>
+    private String? WakeOnLanCommand(String? argument)
+    {
+        // 限频，避免命令重试或批量误操作造成广播风暴
+        var now = Runtime.TickCount64;
+        var last = Interlocked.Exchange(ref _lastWakeOnLan, now);
+        if (last > 0 && now - last < 3_000) return "Too frequent; the wake request was ignored.";
+
+        var text = argument;
+        if (!text.IsNullOrEmpty() && text[0] == '{')
+        {
+            try
+            {
+                var dic = JsonParser.Decode(text);
+                if (dic != null)
+                {
+                    // 兼容不同序列化策略产生的 Macs/macs
+                    foreach (var item in dic)
+                    {
+                        if (item.Key.EqualIgnoreCase("macs"))
+                        {
+                            text = item.Value + "";
+                            break;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // 解析失败则按普通 MAC 文本处理
+            }
+        }
+
+        var macs = WakeOnLan.ParseMacs(text);
+        if (macs.Count == 0) return "No valid MAC address.";
+
+        var count = WakeOnLan.Send(macs, XTrace.Log);
+        WriteLog("Wake-on-LAN sent: {0} MAC(s), {1} packet(s)", macs.Count, count);
+
+        return $"WOL sent: {macs.Count} MAC(s), {count} packet(s)";
     }
 
     /// <summary>设置通道</summary>
