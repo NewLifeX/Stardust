@@ -15,7 +15,9 @@
 | A6 | linux-arm | systemd | 17.3 MB 单文件 | 0.25 s | 31~34 MB | 16~20 | ✅ | ✅ | ✅ | ✅ |
 
 > 原生包为「默认档」，已开启 `OptimizationPreference=Size` 等体积开关，比首轮 19~20 MB 小 15%（Linux ARM 上约 4%）。
-> 需要更小可用 Slim 档（win-x64 12.9 MB / arm64 15.4 MB / arm 13.5 MB），代价是只保留中英词表且异常无堆栈行号，见 §7。
+> 需要更小可用 Slim 档，代价是只保留中英词表且异常无堆栈行号，见 §7。
+>
+> **2026-11-24 复测**：当前代码的默认档为 win-x64 16.1 MB / linux-x64 18.0 MB / linux-arm64 18.5 MB，Slim 档 14.8 / 17.5 / 18.0 MB（zip 6.9~8.0 MB）。§7 的 2026-11-08 数字保留为历史对比；以 [NODE-StarAgent-多语言性能对比](NODE-StarAgent-多语言性能对比.md) §3.1 与 `Tools/pack-agent.ps1` 的 `BUILD-INFO.json` 为准。
 
 对照 JIT 版（同机型历史数据：A6 73 MB / A4 95 MB / A2 88 MB，启动 8~16 秒），**常驻内存约降 50%~60%，启动从秒级十位数降到亚秒级**。
 
@@ -116,7 +118,7 @@ AOT 适配涉及上游三个仓库，发布时用 `-p:UseLocalNewLifeSource=true
 | `Program.StartLocalServer` | `ApiServer.Register(Object, String)` 宽面入口动作被裁剪，本机 UDP RPC 全丢（`IL2026`） | 改泛型入口 `Register<StarService>()`，再把实例回填给已注册动作（不依赖容器反射构造） |
 | `WebPanel/StarApi.cs` | 51 处匿名类型响应，AOT 下全部退化为 `{}`（面板列表/本机信息空白） | 统一改字典封套；键名与原匿名属性一致，前端零改动 |
 | `StarAgent.csproj` | `runtimeconfig.template.json` 不被 PublishAot 支持，GC 开关失效并告警 | 迁移为 `RuntimeHostConfigurationOption` 项，JIT/AOT 双端生效 |
-| `MyStarClient` | 平台下发的是托管程序集包，覆盖原生可执行文件会静默退回 JIT 版 | AOT 下禁用自动升级并打印一次说明日志，改由人工部署原生包 |
+| `MyStarClient` | 平台下发的是托管程序集包，覆盖原生可执行文件会静默退回 JIT 版 | 已改为跨形态升级：AOT 接受原生包；若平台下发托管包，则备份原生入口、切换服务入口并回到 JIT 形态，失败可回滚（见 [发布计划](NODE-StarAgent发布计划.md)） |
 | 新增 `AotRoots.cs` | 自定义命令处理器被裁剪，反射发现失效（未静态注册的构建形态） | `DynamicDependency` 保留 4 个命令处理器的公开构造 |
 
 ## 4. 部署
@@ -168,7 +170,7 @@ Invoke-WebRequest "http://127.0.0.1:5500/api/control?action=restart" -Headers @{
 | `/star/services`、`/star/machine`（字典封套） | ✅ | ✅ | ✅ | ✅ |
 | 本机 UDP RPC（`-ListServices`） | ✅ | ✅ | ✅ | ✅ |
 | 子服务增删/启停（面板 → 进程拉起） | ✅ | ✅ | ✅ | ✅ |
-| 升级检查（AOT 下跳过自动覆盖） | ✅ 日志说明 | ✅ | ✅ | ✅ |
+| 升级检查（跨形态可覆盖） | ✅ 逻辑已改 | ✅ | ✅ | ✅ |
 | 插件加载 | 无外部插件，无异常 | 同左 | 同左 | 同左 |
 
 回归测试：Core 3663 通过、Remoting 867 通过、Agent 377 通过、Stardust 218 通过（0 失败）。
@@ -178,10 +180,10 @@ Invoke-WebRequest "http://127.0.0.1:5500/api/control?action=restart" -Headers @{
 | 项 | 现状 | 后续 |
 |----|------|------|
 | 外部插件（`Plugins` 目录的 DLL） | NativeAOT 无法加载新托管程序集，只能使用编译进代理本体的插件；AOT 启动时会打印一次说明 | 需要外部扩展时用 JIT 版，或把插件源码并入代理构建 |
-| 平台自动升级 | 平台下发托管程序集包，不能覆盖原生可执行文件；AOT 下已禁用并说明 | 平台侧提供「原生包」发布类型，或由发布流水线按 RID 分发 |
+| 平台自动升级 | 平台下发托管程序集包，不能覆盖原生可执行文件 | 已支持 any↔AOT 跨形态升级：按 RID 分发原生包时保持 AOT；下发托管包时切回 JIT。发布矩阵见 [发布计划](NODE-StarAgent发布计划.md) |
 | NuGet 包版本 | 本轮改动在本地源码仓库（Core 12.0.2026.1108、Remoting 4.0.2026.1108、Agent 10.18.2026.1108） | 发布新版本包后，可去掉 `UseLocalNewLifeSource` 与 `LOCAL_NEWLIFE_SOURCE` 条件，直接 `dotnet publish` |
 | 其他 RID | 本轮只验证 win-x64 / linux-arm64 / linux-arm | osx-x64/osx-arm64、linux-musl-*、loongarch64 按同一路径发布验证 |
-| 包体积 | 默认档 16.4~19.0 MB（Slim 档 12.9~15.4 MB），JIT 版为 6 MB 程序集 + 需装运行时 | 体积构成与开关收益见 §7；再往下压需裁剪功能面（面板资源、BCL 子系统） |
+| 包体积 | 默认档 16.1~18.5 MB（Slim 档 14.8~18.0 MB）；2026-11-24 复测，JIT 版为 6 MB 程序集 + 需装运行时 | 体积构成与开关收益见 §7；再往下压需裁剪功能面（面板资源、BCL 子系统） |
 
 ## 7. 体积构成与优化（2026-11-08 第二轮）
 

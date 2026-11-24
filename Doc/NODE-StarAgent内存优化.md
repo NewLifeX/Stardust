@@ -245,7 +245,7 @@ LimitSTACK=4194304
 功能面与 JIT 版对齐：服务宿主、登录心跳、配置中心、Web 面板、本机 UDP RPC、子服务管理、指标采集均正常。
 线程数 17（JIT 版 23），虚拟内存 arm64 约 1.2 GB、armv7 约 230 MB。
 
-两个已知边界：外部插件 DLL 无法在 AOT 下加载（只能编译进代理本体）；平台自动升级下发的是托管程序集包，AOT 版已禁用自动覆盖并打印说明。
+两个已知边界：外部插件 DLL 无法在 AOT 下加载（只能编译进代理本体）；平台自动升级现支持 any↔AOT 跨形态覆盖，AOT 节点收到托管包时会切回 JIT，详见 [NODE-StarAgent发布计划](NODE-StarAgent发布计划.md)。
 
 发布命令、跨仓库改造清单、部署与回滚步骤见 [NODE-StarAgent-AOT适配](NODE-StarAgent-AOT适配.md)。
 

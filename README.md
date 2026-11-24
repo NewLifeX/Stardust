@@ -76,9 +76,12 @@ dotnet publish StarAgent/StarAgent.csproj -c Release -f net10.0 -r linux-arm64 `
 # or use the publish script (cross-compile args + two size profiles)
 pwsh Tools/Scripts/publish-aot.ps1 -Rid linux-arm64 -Compiler clang -ObjCopy aarch64-linux-gnu-objcopy
 pwsh Tools/Scripts/publish-aot.ps1 -Rid win-x64 -Slim      # smaller: zh/en word tables only, no stack line numbers
+
+# release packaging: AOT for win-x64/linux-x64/linux-arm64, framework-dependent any for the rest
+pwsh Tools/pack-agent.ps1
 ```
 
-Measured on PC / A2 / A4 / A6: 16.4 / 19.0 / 19.0 / 17.3 MB single file (Slim 12.9 / 15.4 / 15.4 / 13.5 MB), RSS 31–45 MB (JIT build 73–95 MB), startup 0.14–1 s. See [NODE-StarAgent-AOT适配](Doc/NODE-StarAgent-AOT适配.md).
+Measured on PC / A2: 16.1 / 18.5 MB single file (Slim 14.8 / 18.0 MB), first heartbeat RSS 64 / 42 MB (JIT 115 / 121 MB), first heartbeat 4.6 / 3.5 s. See [NODE-StarAgent-多语言性能对比](Doc/NODE-StarAgent-多语言性能对比.md) and [NODE-StarAgent发布计划](Doc/NODE-StarAgent发布计划.md).
 
 #### Other platforms
 
@@ -485,7 +488,8 @@ NewLife is a layered ecosystem of independently versioned open-source projects. 
 | Document | Description |
 |------|------|
 | [NODE-9-Command Dispatch](Doc/NODE-9-指令下发.md) | NODE-9 command dispatch flow (WebSocket dual channel) |
-| [NODE-31-Multi-Language Startup Benchmark](Doc/NODE-StarAgent-多语言性能对比.md) | .NET JIT/R2R/AOT vs Go/Rust/C++ startup, CPU, RSS and package size across 5 machines |
+| [NODE-31-Multi-Language Startup Benchmark](Doc/NODE-StarAgent-多语言性能对比.md) | .NET JIT/R2R/AOT vs Go/Rust/C++ startup, first heartbeat, CPU, RSS and package size across 5 machines |
+| [NODE-32-StarAgent Release Plan](Doc/NODE-StarAgent发布计划.md) | AOT for win-x64/linux-x64/linux-arm64, any for other targets, and any↔AOT upgrade rules |
 | [StarAgent.Native Protocol Specification](StarAgent.Native/spec/protocol.md) | Go/Rust/C++ native agent protocol, schema, and conformance tests |
 | [APM-3-Trace Statistics](Doc/APM-3-链路追踪统计.md) | APM-3 trace statistics performance bottlenecks and optimization |
 | [NODE-15-StarAgent Remote Deployment](Doc/NODE-15-StarAgent远程部署.md) | NODE-15 remote deployment solution |
