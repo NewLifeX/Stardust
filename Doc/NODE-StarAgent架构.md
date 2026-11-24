@@ -93,6 +93,7 @@ StarAgent 是部署在每台应用服务器上的节点代理程序，以系统�
 | `UninstallService` | 卸载系统服务 |
 | `ExecuteCommand` | 执行 Shell 命令 |
 | `Upgrade` | 升级 StarAgent 自身 |
+| `node/wakeonlan` | 局域网唤醒。向本机所在局域网广播 WOL 魔术包，由同网段在线节点代发，见 [NODE-33-局域网唤醒](NODE-33-局域网唤醒.md) |
 
 ### 2.5 产品编码与升级匹配
 
