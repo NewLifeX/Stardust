@@ -24,7 +24,11 @@ public class DeployService(StarFactory starFactory, ITracer tracer)
     /// <param name="buildNode">编译节点</param>
     /// <param name="action">操作。Build-Upload/Package-Upload</param>
     /// <param name="ip">客户端IP</param>
-    public async Task<Int32> Compile(AppDeploy app, AppBuildNode buildNode, String action, String ip, CancellationToken cancellationToken = default, Boolean writeHistory = true)
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <param name="writeHistory">是否写部署历史。流水线传 false，由命令回包与节点事件负责</param>
+    /// <param name="branch">构建分支。为空时使用部署集分支；webhook 触发时传入实际推送分支</param>
+    /// <param name="commitId">构建提交。指定后编译节点检出该提交，保证构建内容与触发事件一致</param>
+    public async Task<Int32> Compile(AppDeploy app, AppBuildNode buildNode, String action, String ip, CancellationToken cancellationToken = default, Boolean writeHistory = true, String? branch = null, String? commitId = null)
     {
         if (buildNode == null) throw new ArgumentNullException(nameof(buildNode));
 
@@ -73,7 +77,8 @@ public class DeployService(StarFactory starFactory, ITracer tracer)
                 Repository = app.Repository,
                 DeployKey = app.DeployKey,
                 RepoUserName = app.RepoUserName,
-                Branch = app.Branch,
+                Branch = branch.IsNullOrEmpty() ? app.Branch : branch,
+                CommitId = commitId,
                 SourcePath = buildNode.SourcePath,
                 ProjectPath = app.ProjectPath,
                 ProjectKind = app.ProjectKind,

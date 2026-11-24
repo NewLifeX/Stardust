@@ -21,6 +21,9 @@ public class CompileCommand
     /// <summary>分支</summary>
     public String? Branch { get; set; }
 
+    /// <summary>提交标识。指定后检出该提交，确保构建的是触发本次流水线的代码</summary>
+    public String? CommitId { get; set; }
+
     /// <summary>源代码目录。本地已有源码的路径，优先使用</summary>
     public String? SourcePath { get; set; }
 

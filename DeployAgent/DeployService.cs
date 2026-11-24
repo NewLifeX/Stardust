@@ -18,6 +18,7 @@ internal class DeployService : ServiceBase
 {
     private StarClient _client = null!;
     private StarFactory _factory;
+    private readonly SemaphoreSlim _buildLock = new(1, 1);
 
     public DeployService()
     {
@@ -147,6 +148,25 @@ internal class DeployService : ServiceBase
     {
         if (args.IsNullOrEmpty()) throw new ArgumentNullException(nameof(args));
 
+        // 同一编译节点串行执行：多个流水线可能同时命中同一节点与同一源码目录，
+        // 并发 git pull / publish 目录清空会互相破坏，统一在此排队
+        if (!_buildLock.Wait(0))
+        {
+            XTrace.WriteLine("Another build task is running on this node; waiting in queue...");
+            _buildLock.Wait();
+        }
+        try
+        {
+            return RunCompile(args);
+        }
+        finally
+        {
+            _buildLock.Release();
+        }
+    }
+
+    private String? RunCompile(String args)
+    {
         var cmd = ParseCompileCommand(args);
 
         // 解密仓库密码并用凭据组装克隆 URL
@@ -155,12 +175,14 @@ internal class DeployService : ServiceBase
         XTrace.WriteLine("========== Starting build task ==========");
         XTrace.WriteLine("Repository: {0}", Stardust.Models.CompileCommand.RedactUrlForLog(cloneUrl));
         XTrace.WriteLine("Branch: {0}", cmd.Branch ?? "main");
+        if (!cmd.CommitId.IsNullOrEmpty()) XTrace.WriteLine("Commit: {0}", cmd.CommitId);
 
         var sshKeyFile = SetupSshKey(cmd.DeployKey);
 
         // 累计构建日志，便于回传服务端写入部署历史
         var buildLog = new StringBuilder();
         buildLog.AppendLine($"任务启动：仓库={Stardust.Models.CompileCommand.RedactUrlForLog(cloneUrl)} 分支={cmd.Branch ?? "main"}");
+        if (!cmd.CommitId.IsNullOrEmpty()) buildLog.AppendLine($"目标提交：{cmd.CommitId}");
 
         var workDir = "";
         try
@@ -171,6 +193,9 @@ internal class DeployService : ServiceBase
             // 确定源代码目录，统一走 EnsureAndSyncRepo 处理 clone/pull
             var repoDir = EnsureAndSyncRepo(cmd, cloneUrl, buildLog, sshKeyFile, ref workDir);
             buildLog.AppendLine($"源代码目录：{GetDisplayPath(repoDir)}");
+
+            // 按触发的提交检出，避免分支已前进时构建出与触发事件不一致的代码
+            CheckoutCommit(cmd, repoDir, buildLog, sshKeyFile);
 
             // 编译项目
             var publishDir = BuildOrResolvePublishDir(cmd, repoDir, outputPath, buildLog);
@@ -529,6 +554,42 @@ internal class DeployService : ServiceBase
         XTrace.WriteLine("Git clone succeeded");
     }
 
+    /// <summary>检出指定提交。流水线按触发事件构建，确保构建内容与该次推送一致</summary>
+    /// <param name="cmd">编译命令</param>
+    /// <param name="repoDir">仓库目录</param>
+    /// <param name="buildLog">构建日志</param>
+    /// <param name="sshKeyFile">SSH 密钥临时文件</param>
+    private void CheckoutCommit(CompileCommand cmd, String repoDir, StringBuilder buildLog, String? sshKeyFile)
+    {
+        var commitId = cmd.CommitId;
+        if (commitId.IsNullOrEmpty()) return;
+        if (!Directory.Exists(Path.Combine(repoDir, ".git"))) return;
+
+        XTrace.WriteLine("Checking out commit: {0}", commitId);
+        buildLog.AppendLine($"检出提交：{commitId}");
+
+        try
+        {
+            ExecuteProcess("git", $"fetch --depth 1 origin {commitId}", repoDir, buildLog, sshKeyFile);
+        }
+        catch (Exception ex)
+        {
+            // 部分服务端禁止按 SHA 直接取，退回拉取分支（保留一段历史以便命中触发提交）
+            XTrace.WriteLine("Fetching the commit directly failed, falling back to the branch: {0}", ex.Message);
+            var branch = cmd.Branch ?? "main";
+            ExecuteProcess("git", $"fetch --depth 50 origin {branch}", repoDir, buildLog, sshKeyFile);
+        }
+
+        ExecuteProcess("git", $"checkout --force {commitId}", repoDir, buildLog, sshKeyFile);
+
+        var (head, _, _) = GetGitCommitInfo(repoDir);
+        if (head.IsNullOrEmpty()) throw new InvalidOperationException(L.T("Unable to read HEAD after checking out commit {0}.", commitId));
+        if (!head.StartsWithIgnoreCase(commitId) && !commitId.StartsWithIgnoreCase(head))
+            throw new InvalidOperationException(L.T("HEAD {0} does not match the requested commit {1}.", head, commitId));
+
+        buildLog.AppendLine($"当前提交：{head}");
+    }
+
     /// <summary>Git 拉取最新代码</summary>
     /// <param name="repoDir">本地仓库目录</param>
     /// <param name="branch">分支名称</param>
@@ -539,10 +600,15 @@ internal class DeployService : ServiceBase
         // 如果指定了分支则先切换
         if (!branch.IsNullOrEmpty())
         {
-            ExecuteProcess("git", $"checkout {branch}", repoDir, log, sshKeyFile);
+            ExecuteProcess("git", $"checkout -f {branch}", repoDir, log, sshKeyFile);
+            // fetch + reset 比 pull 更确定：不受本地分叉影响，也能覆盖上次构建残留的已跟踪文件修改
+            ExecuteProcess("git", $"fetch origin {branch}", repoDir, log, sshKeyFile);
+            ExecuteProcess("git", $"reset --hard origin/{branch}", repoDir, log, sshKeyFile);
         }
-
-        ExecuteProcess("git", "pull", repoDir, log, sshKeyFile);
+        else
+        {
+            ExecuteProcess("git", "pull", repoDir, log, sshKeyFile);
+        }
 
         XTrace.WriteLine("Git pull succeeded");
     }
