@@ -1,5 +1,7 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.Text;
+using Microsoft.Data.Sqlite;
 using Microsoft.Playwright;
 using Stardust.E2ETests.Fixtures;
 using Xunit;
@@ -103,6 +105,49 @@ public class StarWebSmokeTests : IAsyncLifetime
         var enNode = await _page.Locator("body").InnerTextAsync();
         Assert.Contains("Node management", enNode);
         Assert.DoesNotContain("节点管理", enNode);
+    }
+
+    [Fact(DisplayName = "节点列表：有 MAC 的节点显示唤醒入口")]
+    public async Task NodeList_ShowsWakeAction()
+    {
+        if (_fixture.StardustDb is not { Length: > 0 } db || !File.Exists(db)) return;
+
+        // 直接写入一台带 MAC 的节点，避免依赖站点初始数据；时间按 XCode 的 SQLite 文本格式写入
+        var code = "E2E-WAKE-" + Guid.NewGuid().ToString("N")[..8];
+        var now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fffffff", CultureInfo.InvariantCulture);
+        using (var conn = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = db }.ToString()))
+        {
+            conn.Open();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "insert into Node (Name, Code, Enable, MACs, LastActive, CreateTime, UpdateTime) values ($name, $code, 1, 'AA-BB-CC-DD-EE-FF', $now, $now, $now)";
+            cmd.Parameters.AddWithValue("$name", "E2E唤醒节点");
+            cmd.Parameters.AddWithValue("$code", code);
+            cmd.Parameters.AddWithValue("$now", now);
+            cmd.ExecuteNonQuery();
+        }
+
+        try
+        {
+            var resp = await _page!.GotoAsync("/Nodes/Node", new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 30_000 });
+            Assert.Equal(200, resp?.Status);
+
+            var row = _page.Locator("table tbody tr", new() { HasTextString = "E2E唤醒节点" });
+            Assert.Equal(1, await row.CountAsync());
+
+            var link = row.Locator("a[data-action='action']", new() { HasTextString = "唤醒" });
+            Assert.Equal(1, await link.CountAsync());
+            Assert.Contains("WakeUp", await link.GetAttributeAsync("href") ?? "");
+            Assert.Contains("同网段在线节点代发", await link.GetAttributeAsync("data-confirm") ?? "");
+        }
+        finally
+        {
+            using var conn = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = db }.ToString());
+            conn.Open();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "delete from Node where Code=$code";
+            cmd.Parameters.AddWithValue("$code", code);
+            cmd.ExecuteNonQuery();
+        }
     }
 
     [Fact(DisplayName = "未登录访问业务页面被重定向到登录页")]

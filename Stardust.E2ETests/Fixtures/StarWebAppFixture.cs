@@ -32,6 +32,9 @@ public sealed class StarWebAppFixture : IDisposable
     /// <summary>Membership 数据库路径。外部站点模式下为空</summary>
     public String? MembershipDb { get; }
 
+    /// <summary>Stardust 业务库路径。外部站点模式下为空，可通过 <c>STARWEB_STARDUST_DB</c> 指定</summary>
+    public String? StardustDb { get; }
+
     /// <summary>登录用户名</summary>
     public String UserName { get; } = Environment.GetEnvironmentVariable(EnvUser) is { Length: > 0 } u ? u : "admin";
 
@@ -48,6 +51,7 @@ public sealed class StarWebAppFixture : IDisposable
         {
             BaseUrl = external.TrimEnd('/');
             MembershipDb = Environment.GetEnvironmentVariable("STARWEB_MEMBERSHIP_DB");
+            StardustDb = Environment.GetEnvironmentVariable("STARWEB_STARDUST_DB");
             return;
         }
 
@@ -65,6 +69,7 @@ public sealed class StarWebAppFixture : IDisposable
         RewriteAppSettings(Path.Combine(_root, "appsettings.json"), dataDir.Replace('\\', '/'));
 
         MembershipDb = Path.Combine(dataDir, "Membership.db");
+        StardustDb = Path.Combine(dataDir, "Stardust.db");
         var port = GetFreePort();
         BaseUrl = $"http://127.0.0.1:{port}";
 
