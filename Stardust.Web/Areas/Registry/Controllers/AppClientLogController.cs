@@ -35,13 +35,15 @@ public class AppClientLogController : EntityController<AppClientLog>
         //ListFields.TraceUrl("TraceId");
     }
 
-    /// <summary>高级搜索。按应用、线程、时间范围与关键字分页查询，未指定时间时默认查当天（按时间分表）</summary>
+    /// <summary>高级搜索。按应用、实例、级别、线程、时间范围与关键字分页查询，未指定时间时默认查当天（按时间分表）</summary>
     /// <param name="p">分页器。包含分页排序参数，以及Http请求参数</param>
     /// <returns>实体列表</returns>
     protected override IEnumerable<AppClientLog> Search(Pager p)
     {
         var appId = p["appId"].ToInt(-1);
+        var clientId = p["clientId"];
         var threadId = p["threadId"];
+        var kind = p["kind"];
         //var deviceId = p["deviceId"].ToInt(-1);
 
         var start = p["dtStart"].ToDateTime();
@@ -55,6 +57,6 @@ public class AppClientLogController : EntityController<AppClientLog>
             p["dtEnd"] = end.ToString("yyyy-MM-dd");
         }
 
-        return AppClientLog.Search(threadId, appId, start, end, p["Q"], p);
+        return AppClientLog.Search(appId, clientId, threadId, start, end, p["Q"], kind, p);
     }
 }

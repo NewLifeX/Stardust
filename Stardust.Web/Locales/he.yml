@@ -328,3 +328,13 @@
 "The specified version does not exist.": "The specified version does not exist."
 "No matched package for the selected nodes; skipped {0}": "No matched package for the selected nodes; skipped {0}"
 "The telemetry payload is too large.": "The telemetry payload is too large."
+# 运行时消息补充词条
+"No reply.": "No reply."
+"级别：": "Level:"
+"Log report finished: {0} succeeded, {1} failed, {2} offline skipped.": "Log report finished: {0} succeeded, {1} failed, {2} offline skipped."
+"No log lines were recognized; check the log format.": "No log lines were recognized; check the log format."
+"The instance SDK version is too old to report logs. Please upgrade Stardust.": "The instance SDK version is too old to report logs. Please upgrade Stardust."
+"客户端：": "Client:"
+"上报日志": "Report logs"
+"Reported {0} ({1:n0} bytes, {2} lines). Opening the log list.": "Reported {0} ({1:n0} bytes, {2} lines). Opening the log list."
+"Log report requested. Opening the log list.": "Log report requested. Opening the log list."

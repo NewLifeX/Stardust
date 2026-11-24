@@ -1,0 +1,27 @@
+@using NewLife;
+@using NewLife.Web;
+@using NewLife.Cube;
+@using XCode;
+@using Stardust.Data;
+@{
+    var page = ViewBag.Page as Pager;
+}
+<div class="form-group">
+    <label for="appId" class="control-label">@L.T("应用：")</label>
+    @Html.ForDropDownList("appId", App.FindAllWithCache(), page["appId"], L.T("全部"), true)
+</div>
+<div class="form-group">
+    <label for="clientId" class="control-label">@L.T("客户端：")</label>
+    @Html.TextBox("clientId", page["clientId"])
+</div>
+<div class="form-group">
+    <label for="kind" class="control-label">@L.T("级别：")</label>
+    <select id="kind" name="kind" class="form-control">
+        <option value="">@L.T("全部")</option>
+        @foreach (var item in new[] { "Info", "Warn", "Error", "Fatal" })
+        {
+            <option value="@item" selected="@(page["kind"] == item ? "selected" : null)">@item</option>
+        }
+    </select>
+</div>
+@await Html.PartialAsync("_DateRange")

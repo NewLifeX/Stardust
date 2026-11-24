@@ -51,4 +51,28 @@ public class AppOnlineControllerTests
             Localization.Culture = old;
         }
     }
+
+    [Fact]
+    [DisplayName("旧版 SDK 未注册日志上报指令时给出升级提示")]
+    public void FriendlyReportError_OldSdk_PromptsUpgrade()
+    {
+        var old = Localization.Culture;
+        try
+        {
+            Localization.Culture = CultureInfo.GetCultureInfo("en");
+
+            var method = typeof(web::Stardust.Web.Areas.Registry.Controllers.AppOnlineController)
+                .GetMethod("FriendlyReportError", BindingFlags.NonPublic | BindingFlags.Static);
+            Assert.NotNull(method);
+
+            var reply = new NewLife.Remoting.Models.CommandReplyModel { Data = "Cannot find service [app/reportLog]" };
+            var rs = (String)method.Invoke(null, [reply])!;
+
+            Assert.Contains("SDK version is too old", rs);
+        }
+        finally
+        {
+            Localization.Culture = old;
+        }
+    }
 }

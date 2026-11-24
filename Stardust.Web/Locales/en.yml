@@ -455,3 +455,7 @@
 "AI对话": "AI chat"
 "心跳次数": "Heartbeat count"
 "The telemetry payload is too large.": "The telemetry payload is too large."
+# 运行时消息补充词条
+"级别：": "Level:"
+"客户端：": "Client:"
+"上报日志": "Report logs"
