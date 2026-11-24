@@ -28,15 +28,19 @@ public static class UpgradeHealer
 
         var msgs = new List<String>();
 
-        // 1，清理升级备份。当前进程已经加载真实文件，.del 不再被占用（占用发生在旧进程里）
+        // 1，清理升级备份。当前进程已经加载真实文件，.del 不再被占用（占用发生在旧进程里）。
+        // 保留最近 10 分钟的备份：新进程可能刚通过冒烟启动，旧进程还要靠它回滚。
         var deleted = 0;
         var failed = 0;
+        var cutoff = DateTime.UtcNow.AddMinutes(-10);
         try
         {
             foreach (var file in Directory.GetFiles(dir, "*.del", SearchOption.TopDirectoryOnly))
             {
                 try
                 {
+                    if (File.GetLastWriteTimeUtc(file) > cutoff) continue;
+
                     File.Delete(file);
                     deleted++;
                 }
@@ -59,7 +63,7 @@ public static class UpgradeHealer
         {
             var cfg = service?.Host?.QueryConfig(service.ServiceName);
             var path = cfg?.FilePath;
-            if (!path.IsNullOrEmpty() && path.Contains(".del"))
+            if (!path.IsNullOrEmpty() && path.Contains(".del") && IsServicePathInDir(path, dir))
             {
                 log?.Warn("Upgrade self-heal: service points to backup file {0}; re-registering", path);
 
@@ -69,6 +73,33 @@ public static class UpgradeHealer
         catch (Exception ex)
         {
             log?.Debug("Upgrade self-heal: repair service registration failed: {0}", ex.Message);
+        }
+
+        // 2.1，校正 any（dotnet DLL）与 AOT/自包含（原生入口）互切后的服务入口
+        // Windows 两种形态都通过 StarAgent.exe 启动，不能把服务改成 dotnet.exe
+        if (Runtime.Linux)
+        {
+            try
+            {
+                var cfg = service?.Host?.QueryConfig(service.ServiceName);
+                var path = cfg?.FilePath;
+                if (!path.IsNullOrEmpty() && IsServicePathInDir(path, dir))
+                {
+                    var isDotnet = path.IndexOf(".dll", StringComparison.OrdinalIgnoreCase) >= 0;
+                    var expected = IsFrameworkDependent(dir);
+                    if (isDotnet != expected)
+                    {
+                        log?.Warn("Upgrade self-heal: service entry form mismatch ({0}); re-registering", path);
+
+                        if (service.Host.Install(BuildServiceModel(service, dir, expected)))
+                            msgs.Add(L.TLog("service entry switched to {0}", expected ? "dotnet StarAgent.dll" : "native StarAgent"));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log?.Debug("Upgrade self-heal: repair service entry form failed: {0}", ex.Message);
+            }
         }
 
         // 3，修复 SysVinit/systemd 仍指向旧 apphost 的启动入口
@@ -132,6 +163,23 @@ public static class UpgradeHealer
 
         var host = Process.GetCurrentProcess().MainModule?.FileName + "";
         if (host.IsNullOrEmpty() || !File.Exists(host)) return null;
+
+        // 宿主必须是 dotnet/mono。自包含 apphost 的进程路径就是 StarAgent，若把它替换成 shim 会递归调用自身
+        var hostName = Path.GetFileName(host);
+        if (!hostName.EqualIgnoreCase("dotnet", "dotnet.exe", "mono", "mono.exe", "mono-sgen")) return null;
+
+        // 自包含部署含 includedFrameworks，apphost 与程序集是配套的，不能替换；
+        // AOT/原生部署没有 runtimeconfig.json，同样跳过
+        var runtimeConfig = Path.Combine(dir, Path.GetFileNameWithoutExtension(entryName) + ".runtimeconfig.json");
+        if (!File.Exists(runtimeConfig)) return null;
+        try
+        {
+            if (File.ReadAllText(runtimeConfig).IndexOf("includedFrameworks", StringComparison.OrdinalIgnoreCase) >= 0) return null;
+        }
+        catch
+        {
+            return null;
+        }
 
         return HealEntry(dir, entryName, host, log);
     }
@@ -199,6 +247,88 @@ public static class UpgradeHealer
         {
             log?.Debug("Upgrade self-heal: set executable mode failed: {0}", ex.Message);
         }
+    }
+
+    /// <summary>判断服务入口是否属于当前部署目录，避免误改其它同名服务</summary>
+    /// <param name="path">服务入口命令行</param>
+    /// <param name="dir">部署目录</param>
+    /// <returns>属于当前目录时返回 true</returns>
+    private static Boolean IsServicePathInDir(String path, String dir)
+    {
+        if (path.IsNullOrEmpty() || dir.IsNullOrEmpty()) return false;
+
+        return path.IndexOf(dir.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
+    /// <summary>判断部署目录是否为框架依赖（any）形态</summary>
+    /// <param name="dir">部署目录</param>
+    /// <returns>需要 dotnet 主机启动时返回 true</returns>
+    /// <remarks>自包含包含 includedFrameworks，AOT/原生没有 runtimeconfig.json，两者都返回 false。</remarks>
+    public static Boolean IsFrameworkDependent(String dir)
+    {
+        if (dir.IsNullOrEmpty()) return false;
+
+        var file = Path.Combine(dir, "StarAgent.runtimeconfig.json");
+        if (!File.Exists(file)) return false;
+
+        try
+        {
+            return File.ReadAllText(file).IndexOf("includedFrameworks", StringComparison.OrdinalIgnoreCase) < 0;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>按部署目录的实际形态构造服务定义</summary>
+    /// <param name="service">当前服务实例</param>
+    /// <param name="dir">部署目录</param>
+    /// <param name="useDotnet">true 表示 any（dotnet StarAgent.dll），false 表示原生/自包含（StarAgent）</param>
+    /// <returns>服务定义</returns>
+    public static ServiceModel BuildServiceModel(ServiceBase service, String dir, Boolean useDotnet)
+    {
+        String fileName;
+        String arguments;
+        if (useDotnet)
+        {
+            fileName = ResolveDotNetPath();
+            arguments = $"\"{Path.Combine(dir, "StarAgent.dll")}\" -s";
+        }
+        else
+        {
+            fileName = Path.Combine(dir, Runtime.Windows ? "StarAgent.exe" : "StarAgent");
+            arguments = "-s";
+        }
+
+        return new ServiceModel
+        {
+            ServiceName = service.ServiceName,
+            DisplayName = service.DisplayName,
+            Description = service.Description,
+            FileName = fileName,
+            Arguments = arguments,
+        };
+    }
+
+    /// <summary>解析 dotnet 主机路径</summary>
+    /// <returns></returns>
+    private static String ResolveDotNetPath()
+    {
+        var root = Environment.GetEnvironmentVariable("DOTNET_ROOT");
+        if (!root.IsNullOrEmpty())
+        {
+            var path = Path.Combine(root, Runtime.Windows ? "dotnet.exe" : "dotnet");
+            if (File.Exists(path)) return path;
+        }
+
+        if (Runtime.Linux)
+        {
+            if (File.Exists("/usr/bin/dotnet")) return "/usr/bin/dotnet";
+            if (File.Exists("/usr/local/bin/dotnet")) return "/usr/local/bin/dotnet";
+        }
+
+        return "dotnet";
     }
 
     /// <summary>按当前进程的实际文件构造服务定义</summary>

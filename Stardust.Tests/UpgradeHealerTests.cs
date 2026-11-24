@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using Moq;
+using NewLife.Agent;
 using NewLife.Log;
 using StarAgent;
 using Xunit;
@@ -19,8 +21,15 @@ public class UpgradeHealerTests
             // 旧版升级失败留下的备份（改名后未重启，老进程占用）
             var del = Path.Combine(dir, "StarAgent.exe.del");
             File.WriteAllText(del, "old");
+            File.SetLastWriteTimeUtc(del, DateTime.UtcNow.AddHours(-1));
             var del2 = Path.Combine(dir, "Stardust.dll.del");
             File.WriteAllText(del2, "old");
+            File.SetLastWriteTimeUtc(del2, DateTime.UtcNow.AddHours(-1));
+
+            // 刚刚生成的备份要保留，供冒烟失败回滚
+            var recent = Path.Combine(dir, "StarAgent.del");
+            File.WriteAllText(recent, "recent");
+            File.SetLastWriteTimeUtc(recent, DateTime.UtcNow);
 
             // 过期的升级包与新下载的升级包
             var update = Path.Combine(dir, "Update");
@@ -35,6 +44,7 @@ public class UpgradeHealerTests
 
             Assert.False(File.Exists(del));
             Assert.False(File.Exists(del2));
+            Assert.True(File.Exists(recent));
             Assert.False(File.Exists(stale));
             Assert.True(File.Exists(fresh));
             Assert.NotNull(msg);
@@ -103,6 +113,54 @@ public class UpgradeHealerTests
         finally
         {
             Directory.Delete(dir, true);
+        }
+    }
+
+    [Fact(DisplayName = "按 runtimeconfig 判定框架依赖形态")]
+    public void IsFrameworkDependent_DistinguishesAnyFromSelfContained()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "staragent-form-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            Assert.False(UpgradeHealer.IsFrameworkDependent(dir));
+
+            var file = Path.Combine(dir, "StarAgent.runtimeconfig.json");
+            File.WriteAllText(file, """{"runtimeOptions":{"framework":{"name":"Microsoft.NETCore.App","version":"10.0.0"}}}""");
+            Assert.True(UpgradeHealer.IsFrameworkDependent(dir));
+
+            File.WriteAllText(file, """{"runtimeOptions":{"includedFrameworks":[{"name":"Microsoft.NETCore.App","version":"10.0.0"}]}}""");
+            Assert.False(UpgradeHealer.IsFrameworkDependent(dir));
+        }
+        finally
+        {
+            Directory.Delete(dir, true);
+        }
+    }
+
+    [Fact(DisplayName = "服务定义按 any 或原生形态选择启动入口")]
+    public void BuildServiceModel_UsesExpectedEntry()
+    {
+        var service = new Mock<ServiceBase> { CallBase = true }.Object;
+        service.ServiceName = "StarAgent";
+        service.DisplayName = "StarAgent";
+        service.Description = "StarAgent";
+
+        var dir = Path.Combine(Path.GetTempPath(), "staragent-model-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var any = UpgradeHealer.BuildServiceModel(service, dir, true);
+            Assert.StartsWith("dotnet", Path.GetFileName(any.FileName), StringComparison.OrdinalIgnoreCase);
+            Assert.Contains(Path.Combine(dir, "StarAgent.dll"), any.Arguments);
+            Assert.Contains("-s", any.Arguments);
+
+            var native = UpgradeHealer.BuildServiceModel(service, dir, false);
+            Assert.Equal(Path.Combine(dir, OperatingSystem.IsWindows() ? "StarAgent.exe" : "StarAgent"), native.FileName);
+            Assert.Equal("-s", native.Arguments);
+        }
+        finally
+        {
+            if (Directory.Exists(dir)) Directory.Delete(dir, true);
         }
     }
 

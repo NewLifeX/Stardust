@@ -147,6 +147,13 @@ internal class Program
             return;
         }
 
+        // 单次运行：启动完整代理，等待首次心跳后退出。用于诊断、冒烟与性能测试
+        if ("-once".EqualIgnoreCase(args))
+        {
+            svc.RunOnce();
+            return;
+        }
+
         svc.Main(args);
     }
 
@@ -280,7 +287,7 @@ internal class Program
         foreach (var item in args)
         {
             if (item.IsNullOrEmpty()) continue;
-            if (item.EqualIgnoreCase("-s", "-run", "-restart", "-delay", "-upgrade", "-repair")) return true;
+            if (item.EqualIgnoreCase("-s", "-run", "-restart", "-delay", "-upgrade", "-repair", "-once")) return true;
         }
 
         return false;
@@ -485,6 +492,41 @@ internal class MyService : ServiceBase, IServiceProvider
     private PluginManager _PluginManager;
     //private String _lastVersion;
     private AliyunDnsClient? _AliyunDns;
+
+    /// <summary>单次运行。启动完整代理，等待首次心跳后停止并退出</summary>
+    /// <remarks>
+    /// 与 <c>-run</c>（控制台模拟，等待按键）不同，这里不依赖控制台输入，适合 systemd/SCL 之外的冒烟测试、
+    /// 诊断与性能基准。原生 Agent 的 <c>once</c> 子命令与此对应。
+    /// </remarks>
+    public void RunOnce()
+    {
+        WriteLog("Once mode: starting the full agent and waiting for the first heartbeat");
+
+        try
+        {
+            StartWork("Once");
+
+            var ok = MyStarClient.WaitFirstHeartbeat(120_000);
+            WriteLog("Once mode: first heartbeat {0}", ok ? "succeeded" : "timed out");
+            if (!ok) Environment.ExitCode = 1;
+        }
+        catch (Exception ex)
+        {
+            Environment.ExitCode = 1;
+            XTrace.WriteException(ex);
+        }
+        finally
+        {
+            try
+            {
+                StopWork("Once");
+            }
+            catch (Exception ex)
+            {
+                XTrace.WriteException(ex);
+            }
+        }
+    }
 
     #region 调度核心
     /// <summary>服务启动</summary>

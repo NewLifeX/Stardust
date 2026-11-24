@@ -94,6 +94,13 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
     #region 心跳
     private DateTime _lastSync;
     private DateTime _lastClockWarn;
+    private Boolean _firstPingLogged;
+    private static readonly ManualResetEventSlim _firstHeartbeat = new(false);
+
+    /// <summary>等待首次心跳成功</summary>
+    /// <param name="timeout">超时时间（毫秒）</param>
+    /// <returns>是否在超时前成功</returns>
+    public static Boolean WaitFirstHeartbeat(Int32 timeout) => _firstHeartbeat.Wait(timeout);
     protected override async Task OnPing(Object state)
     {
         await base.OnPing(state);
@@ -137,6 +144,12 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
     public override async Task<IPingResponse?> Ping(CancellationToken cancellationToken = default)
     {
         var rs = await base.Ping(cancellationToken);
+        if (rs != null && !_firstPingLogged)
+        {
+            _firstPingLogged = true;
+            _firstHeartbeat.Set();
+            WriteLog("First heartbeat succeeded; server time={0}, period={1}s", rs.ServerTime, rs.Period);
+        }
         if (rs is MyPingResponse mpr)
         {
             var set = AgentSetting;
@@ -170,11 +183,55 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
         }
     }
 
-    public override Task<IUpgradeInfo?> Upgrade(String? channel, CancellationToken cancellationToken = default)
+    public override async Task<IUpgradeInfo?> Upgrade(String? channel, CancellationToken cancellationToken = default)
     {
         if (channel.IsNullOrEmpty()) channel = AgentSetting.Channel;
 
-        return base.Upgrade(channel, cancellationToken);
+        var rs = await base.Upgrade(channel, cancellationToken).ConfigureAwait(false);
+        ReRegisterServiceForCurrentForm();
+
+        return rs;
+    }
+
+    public override async Task<IUpgradeInfo?> Upgrade(String? channel, String? version, CancellationToken cancellationToken = default)
+    {
+        var rs = await base.Upgrade(channel, version, cancellationToken).ConfigureAwait(false);
+        ReRegisterServiceForCurrentForm();
+
+        return rs;
+    }
+
+    /// <summary>升级对象。原生包与托管包互相覆盖时，需要额外备份 Linux 原生入口</summary>
+    /// <returns></returns>
+    protected override Upgrade CreateUpgrade() => new StarUpgrade { Log = Log, Tracer = Tracer };
+
+    /// <summary>any（dotnet DLL）与 AOT/自包含（原生入口）互切后，修正 systemd 启动入口</summary>
+    /// <remarks>只处理 Linux 服务模式；Windows 两种形态都使用 StarAgent.exe，无需切换。</remarks>
+    private void ReRegisterServiceForCurrentForm()
+    {
+        if (!Runtime.Linux) return;
+
+        try
+        {
+            if (!InService && !(Service.Host is DefaultHost host && host.InService)) return;
+
+            var dir = AppDomain.CurrentDomain.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar);
+            var useDotnet = UpgradeHealer.IsFrameworkDependent(dir);
+
+            var cfg = Service.Host.QueryConfig(Service.ServiceName);
+            var currentDotnet = cfg?.FilePath?.IndexOf(".dll", StringComparison.OrdinalIgnoreCase) >= 0;
+            if (cfg == null || currentDotnet == useDotnet) return;
+
+            var model = UpgradeHealer.BuildServiceModel(Service, dir, useDotnet);
+            if (Service.Host.Install(model))
+                WriteLog("Upgrade: service entry switched to {0}", useDotnet ? "dotnet StarAgent.dll" : "native StarAgent");
+            else
+                WriteLog("Upgrade: failed to switch the service entry; the startup self-heal will retry");
+        }
+        catch (Exception ex)
+        {
+            WriteLog("Upgrade: re-register service failed: {0}", ex.Message);
+        }
     }
 
     /// <summary>向服务端查询升级信息。在基类纯查询前后输出本地版本、服务端返回与对比结论，让日志能直接回答「要不要更新」</summary>
@@ -184,16 +241,11 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
     /// <returns>服务端升级信息，无更新时为空</returns>
     protected override async Task<IUpgradeInfo?> UpgradeAsync(String? channel, CancellationToken cancellationToken = default)
     {
-        // NativeAOT 单体程序不能被平台下发的托管程序集包覆盖（覆盖后会静默退回 JIT 版），自动更新直接跳过
-        if (IsNativeAot)
+        // NativeAOT 也能接收平台下发的原生包；若平台仍下发托管包，则按跨形态升级切回 JIT。
+        if (IsNativeAot && !_aotUpgradeWarned)
         {
-            if (!_aotUpgradeWarned)
-            {
-                _aotUpgradeWarned = true;
-                WriteLog("NativeAOT build: automatic upgrade is disabled because the platform distributes managed assembly packages that cannot replace a native executable. Deploy the native package manually instead.");
-            }
-
-            return null;
+            _aotUpgradeWarned = true;
+            WriteLog("NativeAOT build: updates accept native packages for this RID; a managed package will switch the agent back to the JIT form.");
         }
 
         var local = GetLocalVersion();
@@ -237,6 +289,9 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
 
     protected override void Restart(Upgrade upgrade)
     {
+        // 强制更新会在基类 Upgrade 返回前重启，必须先按新形态改写服务入口，否则 systemd 仍用旧入口启动
+        ReRegisterServiceForCurrentForm();
+
         // 带有-s参数就算是服务中运行
         var inService = "-s".EqualIgnoreCase(Environment.GetCommandLineArgs());
         var pid = Process.GetCurrentProcess().Id;
