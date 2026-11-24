@@ -106,6 +106,11 @@ public partial class NodeOnline : Entity<NodeOnline>, IOnlineModel2
     /// <returns></returns>
     public static IList<NodeOnline> FindAllByNodeId(Int32 nodeId) => FindAll(_.NodeID == nodeId);
 
+    /// <summary>查找指定时间之后仍有心跳的在线记录</summary>
+    /// <param name="start">起始时间</param>
+    /// <returns>实体列表</returns>
+    public static IList<NodeOnline> FindAllOnline(DateTime start) => FindAll(_.UpdateTime >= start);
+
     /// <summary>根据令牌查找</summary>
     /// <param name="token">令牌</param>
     /// <returns>实体列表</returns>

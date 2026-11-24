@@ -140,6 +140,17 @@ public partial class Node : Entity<Node>, IDeviceModel2, ILogProvider
         return Find(_.MACs.Contains(mac));
     }
 
+    /// <summary>根据编号集合查找</summary>
+    /// <param name="ids">编号集合</param>
+    /// <returns>实体列表</returns>
+    public static IList<Node> FindAllByIds(IEnumerable<Int32> ids)
+    {
+        var keys = ids?.Where(e => e > 0).Distinct().ToArray();
+        if (keys == null || keys.Length == 0) return new List<Node>();
+
+        return FindAll(_.ID.In(keys));
+    }
+
     /// <summary>根据名称查找</summary>
     /// <param name="code">名称</param>
     /// <param name="cache">是否走缓存</param>
