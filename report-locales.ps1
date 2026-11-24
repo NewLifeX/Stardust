@@ -38,6 +38,25 @@ function Read-Locale([string]$path) {
     return $entries
 }
 
+# 同形词条白名单：与英文源文逐字相同但确为该语言正确译文的通用词（Status、Server、Commit 等）
+function Read-AllowList([string]$dir) {
+    $map = @{}
+    $path = Join-Path $dir "identical.allow.json"
+    if (!(Test-Path -LiteralPath $path)) { return $map }
+    $json = Get-Content -LiteralPath $path -Raw -Encoding UTF8 | ConvertFrom-Json
+    foreach ($p in $json.PSObject.Properties) {
+        $set = [System.Collections.Generic.HashSet[String]]::new([StringComparer]::Ordinal)
+        foreach ($v in @($p.Value)) { [void]$set.Add([String]$v) }
+        $map[$p.Name] = $set
+    }
+    return $map
+}
+
+# 中文源文（界面元数据键）在中文与日文中与源文同形即为正确译文，不算漏译
+function Test-CjkSameForm([string]$locale, [string]$key) {
+    return ($key -match '[\u4e00-\u9fff]') -and ($locale -eq "zh-Hans" -or $locale -eq "zh-Hant" -or $locale -eq "ja")
+}
+
 $baseline = "zh-Hans.yml"
 $locales = @()
 $stats = @{}
@@ -47,11 +66,15 @@ foreach ($name in $projects.Keys) {
     if (!(Test-Path $dir)) { continue }
 
     $reference = Read-Locale (Join-Path $dir $baseline)
+    $allowMap = Read-AllowList $dir
     $project = @{ Name = $name; Total = $reference.Count; Languages = @{} }
 
     foreach ($file in Get-ChildItem $dir -Filter *.yml | Sort-Object Name) {
         $locale = $file.BaseName
         if ($locales -notcontains $locale) { $locales += $locale }
+
+        $allow = $null
+        if ($allowMap.ContainsKey($locale)) { $allow = $allowMap[$locale] }
 
         $entries = Read-Locale $file.FullName
         $translated = 0
@@ -59,7 +82,8 @@ foreach ($name in $projects.Keys) {
             # 元数据键（菜单名、字段描述等中文源文）不计入运行时消息覆盖率
             if (!$reference.Contains($key)) { continue }
             $value = $entries[$key]
-            if (![string]::IsNullOrWhiteSpace($value) -and $value -ne $key) { $translated++ }
+            if ([string]::IsNullOrWhiteSpace($value)) { continue }
+            if ($value -ne $key -or (Test-CjkSameForm $locale $key) -or ($null -ne $allow -and $allow.Contains($key))) { $translated++ }
         }
         $project.Languages[$locale] = $translated
 
@@ -67,7 +91,8 @@ foreach ($name in $projects.Keys) {
         foreach ($key in $entries.Keys) {
             if (!$reference.Contains($key)) { continue }
             $value = $entries[$key]
-            if (![string]::IsNullOrWhiteSpace($value) -and $value -ne $key) { $stats[$locale].Keys[$key] = $true }
+            if ([string]::IsNullOrWhiteSpace($value)) { continue }
+            if ($value -ne $key -or (Test-CjkSameForm $locale $key) -or ($null -ne $allow -and $allow.Contains($key))) { $stats[$locale].Keys[$key] = $true }
         }
     }
 
@@ -85,7 +110,7 @@ foreach ($name in $projects.Keys) {
 $lines = @()
 $lines += "# 多语言覆盖"
 $lines += ""
-$lines += "> 自动生成：``pwsh -File report-locales.ps1``。已翻译指译文与英文源文不同，英文为源文与兜底不计入。"
+$lines += "> 自动生成：``pwsh -File report-locales.ps1``。已翻译指译文与英文源文不同；``en`` 为源文语言（只登记界面元数据的英文译文，不计入覆盖率），``zh-Hans`` 为基准词表。中文源文（菜单名、字段描述）在中文与日文中同形即视为译文；``identical.allow.json`` 登记的同形通用词（Status、Server、Commit 等）同样计入已翻译。"
 $lines += ""
 $lines += "## 1. 按语言汇总"
 $lines += ""
@@ -94,7 +119,8 @@ $lines += "|------|--------|----------|--------|"
 foreach ($locale in $locales) {
     $count = $stats[$locale].Keys.Count
     $ratio = if ($allKeys.Count -gt 0) { [math]::Round($count * 100.0 / $allKeys.Count, 1) } else { 0 }
-    $lines += "| $locale | $count | $($allKeys.Count) | $ratio% |"
+    $label = if ($locale -eq "en") { "en（源文）" } else { $locale }
+    $lines += "| $label | $count | $($allKeys.Count) | $ratio% |"
 }
 $lines += ""
 $lines += "## 2. 按组件统计"

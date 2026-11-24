@@ -190,7 +190,8 @@ foreach ($file in Get-ChildItem $localeDir -Filter *.yml | Sort-Object Name) {
 }
 
 # 严格模式：译文不得与英文源文完全相同（值等于键即视为未翻译），
-# 同形词（如德语 Status、荷兰语 Systeem）在 Locales/identical.allow.json 中按语言登记后放行。
+# 中文源文（界面元数据）在中文/日文中同形即正确译文；其余同形词（如德语 Status、荷兰语 Systeem）
+# 在 Locales/identical.allow.json 中按语言登记后放行。
 if ($Strict) {
     $allowPath = Join-Path $localeDir "identical.allow.json"
     $allow = @{}
@@ -213,6 +214,8 @@ if ($Strict) {
         $count = 0
         foreach ($key in $locale.Entries.Keys) {
             if ($locale.Entries[$key] -cne $key) { continue }
+            # 中文源文在中文与日文中同形即为译文（如「版本」「操作」「成功」）
+            if ($key -match '[\u4e00-\u9fff]' -and ($lang -eq "zh-Hant" -or $lang -eq "ja")) { continue }
             if ($null -ne $allowed -and $allowed.Contains($key)) { continue }
             $allErrors += "$($file.Name): 未翻译（值等于英文源文）→ $key"
             if ($count++ -ge 20) { $allErrors += "$($file.Name): 未翻译条目过多，仅列出前 20 条"; break }
