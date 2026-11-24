@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
+using NewLife.Remoting.Extensions;
 using NewLife.Security;
 using Stardust.Data;
 using Stardust.Server;
@@ -105,6 +106,68 @@ public class RegistryFlowTests : StarTestBase
         }
         finally
         {
+            Cleanup(serviceName, secret);
+        }
+    }
+
+    [Fact(DisplayName = "外网服务注册时回环地址替换为公网IP")]
+    public async Task RegisterExtranet_LoopbackAddress_UsesPublicIp()
+    {
+        var serviceName = "reg_extranet_" + Rand.NextString(8);
+        var appName = "reg_app_" + Rand.NextString(8);
+        var secret = "reg-secret-" + Rand.NextString(6);
+        var app = new App { Name = appName, Secret = secret, Enable = true };
+        app.Insert();
+
+        var info = new Service { Name = serviceName, Enable = true, Extranet = true };
+        info.Insert();
+
+        var oldTrusted = WebHelper.TrustedProxies;
+        WebHelper.TrustedProxies = ["*"];
+
+        try
+        {
+            var token = await LoginAsync(appName, secret);
+            var client = _server.CreateClient();
+            client.DefaultRequestHeaders.Authorization = new("Bearer", token);
+            client.DefaultRequestHeaders.Add("X-Forwarded-For", "8.8.8.8");
+
+            var clientId = "10.1.2.3@9527";
+
+            // 发布服务。ASP.NET Core 默认监听回环地址，外网服务应把回环主机替换为提供者公网IP
+            var registerResp = await client.PostAsync("App/RegisterService", JsonContent.Create(new
+            {
+                ServiceName = serviceName,
+                ClientId = clientId,
+                IP = "10.1.2.3",
+                Version = "1.0.0",
+                Address = "http://localhost:5000,http://127.0.0.1:5001,http://[::1]:5002",
+            }));
+            var registerBody = await registerResp.Content.ReadAsStringAsync();
+
+            Assert.True(registerResp.IsSuccessStatusCode, "注册服务应成功，实际响应：" + registerBody);
+            Assert.True(registerBody.Contains("http://8.8.8.8:5000"), "外网服务应使用公网IP注册，实际响应：" + registerBody);
+            Assert.True(registerBody.Contains("http://8.8.8.8:5001"), "IPv4回环地址应替换为公网IP，实际响应：" + registerBody);
+            Assert.True(registerBody.Contains("http://8.8.8.8:5002"), "IPv6回环地址应替换为公网IP，实际响应：" + registerBody);
+
+            var svc = AppService.FindAllByService(info.Id).FirstOrDefault(e => e.AppId == app.Id);
+            Assert.NotNull(svc);
+            Assert.Equal("http://8.8.8.8:5000,http://8.8.8.8:5001,http://8.8.8.8:5002", svc!.Address);
+
+            // 发现服务，消费者应拿到公网地址
+            var resolveResp = await client.PostAsync("App/ResolveService", JsonContent.Create(new
+            {
+                ServiceName = serviceName,
+                ClientId = clientId,
+            }));
+            var resolveBody = await resolveResp.Content.ReadAsStringAsync();
+
+            Assert.True(resolveResp.IsSuccessStatusCode, "解析服务应成功，实际响应：" + resolveBody);
+            Assert.Contains("http://8.8.8.8:5000", resolveBody);
+        }
+        finally
+        {
+            WebHelper.TrustedProxies = oldTrusted;
             Cleanup(serviceName, secret);
         }
     }

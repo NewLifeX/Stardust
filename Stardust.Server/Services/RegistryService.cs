@@ -419,7 +419,8 @@ public class RegistryService : DefaultDeviceService<App, AppOnline>
 
         // 地址处理。本地任意地址，更换为IP地址
         var serverAddress = "";
-        if (service.Extranet && ip != "127.0.0.1" && ip != "::1")
+        var extranet = service.Extranet && !ip.IsNullOrEmpty() && ip != "127.0.0.1" && ip != "::1" && ip != "[::1]";
+        if (extranet)
         {
             serverAddress = ip;
         }
@@ -436,12 +437,22 @@ public class RegistryService : DefaultDeviceService<App, AppOnline>
             var addrs = model.Address
                 ?.Replace("://*", $"://{item}")
                 ?.Replace("://+", $"://{item}")
-                .Replace("://0.0.0.0", $"://{item}")
-                .Replace("://[::]", $"://{item}")
-                .Split(",");
-            if (addrs != null)
+                ?.Replace("://0.0.0.0", $"://{item}")
+                ?.Replace("://[::]", $"://{item}");
+
+            // 外网服务：监听在回环地址（如 ASP.NET Core 默认的 http://localhost:5000）时，替换为提供者公网IP
+            if (extranet && addrs != null)
             {
-                foreach (var elm in addrs)
+                addrs = addrs
+                    .Replace("://localhost", $"://{item}", StringComparison.OrdinalIgnoreCase)
+                    .Replace("://127.0.0.1", $"://{item}")
+                    .Replace("://[::1]", $"://{item}");
+            }
+
+            var list = addrs?.Split(",");
+            if (list != null)
+            {
+                foreach (var elm in list)
                 {
                     var url = elm;
                     if (url.StartsWithIgnoreCase("http://", "https://")) url = new Uri(url).ToString().TrimEnd('/');
