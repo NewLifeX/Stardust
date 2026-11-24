@@ -147,7 +147,13 @@ public class WebApiTestFactory : WebApplicationFactory<Program>
     }
 
     /// <summary>真实登录拿 token。用裸 client 调用，避免递归进 CreateAuthenticatedClient。</summary>
-    private async Task<String> LoginAsync()
+    private Task<String> LoginAsync() => LoginAsync(DefaultUserName, DefaultPassword);
+
+    /// <summary>用指定账号登录并返回令牌</summary>
+    /// <param name="username">用户名</param>
+    /// <param name="password">明文密码</param>
+    /// <returns>访问令牌</returns>
+    public async Task<String> LoginAsync(String username, String password)
     {
         using var bareClient = CreateClient();
 
@@ -156,8 +162,8 @@ public class WebApiTestFactory : WebApplicationFactory<Program>
 
         var resp = await bareClient.PostAsJsonAsync("/Auth/Login", new
         {
-            Username = DefaultUserName,
-            Password = DefaultPassword,
+            Username = username,
+            Password = password,
         });
 
         var body = await resp.Content.ReadAsStringAsync();
