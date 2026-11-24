@@ -25,6 +25,7 @@ public class NodeController : NodesEntityController<Node>
 {
     private readonly StarFactory _starFactory;
     private readonly DnsService _dnsService;
+    private readonly NodeWakeService _wakeService;
 
     static NodeController()
     {
@@ -58,12 +59,13 @@ public class NodeController : NodesEntityController<Node>
         // Domains 已通过 [Category("参数设置")] 自动渲染，无需重复 AddField
     }
 
-    public NodeController(StarFactory starFactory, DnsService dnsService)
+    public NodeController(StarFactory starFactory, DnsService dnsService, NodeWakeService wakeService)
     {
         LogOnChange = true;
 
         _starFactory = starFactory;
         _dnsService = dnsService;
+        _wakeService = wakeService;
     }
 
     /// <summary>更新时检测域名变更并记录历史</summary>
@@ -190,12 +192,28 @@ public class NodeController : NodesEntityController<Node>
         return JsonRefresh("已发送命令");
     }
 
+    /// <summary>唤醒。由同网段在线节点代发 Wake-on-LAN 魔术包</summary>
+    /// <param name="id">节点编号</param>
+    /// <returns></returns>
+    [EntityAuthorize(PermissionFlags.Update)]
+    public async Task<ActionResult> WakeUp(Int32 id)
+    {
+        var node = ProjectScopeRules.FilterVisible(FindByID(id));
+        if (node == null) return Json(400, L.T("Node does not exist."));
+        if (node.MACs.IsNullOrEmpty()) return Json(400, L.T("The node has no MAC address and cannot be woken."));
+
+        var count = await _wakeService.WakeAsync(node, HttpContext.RequestAborted);
+        if (count == 0) return Json(400, L.T("No online node in the same LAN; unable to wake the node."));
+
+        return JsonRefresh(L.T("Wake-on-LAN command sent to {0} node(s).", count));
+    }
+
     [EntityAuthorize(PermissionFlags.Update)]
     public ActionResult SetAlarm(Boolean enable = true)
     {
         foreach (var item in SelectKeys)
         {
-            var dt = FindByID(item.ToInt());
+            var dt = ProjectScopeRules.FilterVisible(FindByID(item.ToInt()));
             if (dt != null)
             {
                 dt.AlarmOnOffline = enable;

@@ -87,6 +87,9 @@ public class Startup
         services.AddSingleton<DnsProviderFactory>();
         services.AddSingleton<DnsService>();
 
+        // 节点唤醒
+        services.AddSingleton<NodeWakeService>();
+
         services.AddCubeFileStorage("Star");
 
         //services.AddResponseCompression();
