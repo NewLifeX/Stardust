@@ -187,7 +187,6 @@
 "Failed to clean up IIS deployment files: {0}": "清理 IIS 部署文件失败: {0}"
 # 设置页字段（英文源文，中文提供译文，其余语言回退英文）
 "Debug switch. Default false": "调试开关。默认false"
-"Disable strict SSH host key checking. Default false (checking enabled)": "禁用 SSH 严格主机密钥校验。默认false（启用校验）"
 "Stardust server address. For example http://star.newlifex.com:6600; empty by default": "星尘服务端地址。如http://star.newlifex.com:6600，默认为空"
 "App key. English name used to register with the Stardust registry": "应用标识。接入星尘注册中心，英文名"
 "App secret. Used to register with the Stardust registry": "应用密钥。接入星尘注册中心"
