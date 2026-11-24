@@ -2,7 +2,7 @@
 
 > 版本：v1.0 | 日期：2026-11-24
 > 适用：StarAgent 3.7.2026.1124、.NET 10、NativeAOT
-> 关联：[NODE-StarAgent-AOT适配](NODE-StarAgent-AOT适配.md) | [NODE-StarAgent-多语言性能对比](NODE-StarAgent-多语言性能对比.md)
+> 关联：[NODE-StarAgent-AOT适配](NODE-StarAgent-AOT适配.md) | [NODE-StarAgent-多语言性能对比](NODE-StarAgent-多语言性能对比.md) | [服务端发布方式评估](服务端发布方式评估.md)
 
 ## 1. 结论
 
@@ -130,7 +130,7 @@ pwsh Tools/pack-agent.ps1 -SlimAot
 
 - **文件层**：`StarUpgradeTests` 覆盖 Linux 原生入口 `.old` 备份、基类 `DeleteBackup` 不会误删、更新成功后提升 `.del`、更新失败还原，以及 any→AOT、AOT→any 两种方向的 `Update + Rollback`。
 - **服务入口**：WSL + systemd 实测 `dotnet StarAgent.dll -s` ↔ 原生 `StarAgent -s` 互切；启动自愈把 `ExecStart` 从 `dotnet ...dll -s` 改成 `/tmp/agent-any/StarAgent -s`，再切回 `dotnet ...dll -s`，两次服务都能正常启动。
-- **真实心跳**：WSL、10.0.0.1、A2、sh14、Windows 均用 `-once`/`once` 连 `http://star.newlifex.com:6600` 完成登录 + 首次心跳；AOT Slim 包在 WSL x64 与 A2 arm64 上均验证通过。
+- **真实心跳**：WSL、10.0.0.1、A2、sh14、Windows 均用 `-run`/`once` 连 `http://star.newlifex.com:6600` 完成登录 + 首次心跳；AOT Slim 包在 WSL x64 与 A2 arm64 上均验证通过。
 
 ## 7. 分阶段落地
 

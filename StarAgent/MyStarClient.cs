@@ -95,12 +95,6 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
     private DateTime _lastSync;
     private DateTime _lastClockWarn;
     private Boolean _firstPingLogged;
-    private static readonly ManualResetEventSlim _firstHeartbeat = new(false);
-
-    /// <summary>等待首次心跳成功</summary>
-    /// <param name="timeout">超时时间（毫秒）</param>
-    /// <returns>是否在超时前成功</returns>
-    public static Boolean WaitFirstHeartbeat(Int32 timeout) => _firstHeartbeat.Wait(timeout);
     protected override async Task OnPing(Object state)
     {
         await base.OnPing(state);
@@ -147,7 +141,6 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
         if (rs != null && !_firstPingLogged)
         {
             _firstPingLogged = true;
-            _firstHeartbeat.Set();
             WriteLog("First heartbeat succeeded; server time={0}, period={1}s", rs.ServerTime, rs.Period);
         }
         if (rs is MyPingResponse mpr)

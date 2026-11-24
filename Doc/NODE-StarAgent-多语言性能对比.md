@@ -2,7 +2,7 @@
 
 > 版本：v3.0 | 日期：2026-11-24
 > 适用：StarAgent 3.7.2026.1124（net10.0）、StarAgent.Native（Go/Rust/C++）、NewLife.Agent 10.18.2026.1116-beta0311
-> 关联：[NODE-StarAgent-AOT适配](NODE-StarAgent-AOT适配.md) | [NODE-StarAgent发布计划](NODE-StarAgent发布计划.md) | [NODE-StarAgent内存优化](NODE-StarAgent内存优化.md) | [NODE-StarAgent架构](NODE-StarAgent架构.md)
+> 关联：[NODE-StarAgent-AOT适配](NODE-StarAgent-AOT适配.md) | [NODE-StarAgent发布计划](NODE-StarAgent发布计划.md) | [服务端发布方式评估](服务端发布方式评估.md) | [NODE-StarAgent内存优化](NODE-StarAgent内存优化.md) | [NODE-StarAgent架构](NODE-StarAgent架构.md)
 
 > 本版新增“真实服务端完整生命周期”（登录/注册 → 首次心跳 → 性能上报）与 AOT 包裁剪实测。启动数据保留，用于解释完整生命周期的差异来源。
 
@@ -37,15 +37,16 @@
 
 | 变体 | 实现 | 空载启动 | 完整初始化 | 完整生命周期 |
 |------|------|----------|------------|--------------|
-| .NET 通用 | 框架依赖，需目标机 .NET 10 | `dotnet StarAgent.dll --version` | `dotnet StarAgent.dll -status` | `dotnet StarAgent.dll -once -server http://star.newlifex.com:6600` |
-| .NET JIT 自包含 | 纯 IL + 自带运行时 | `./StarAgent --version` | `./StarAgent -status` | `./StarAgent -once -server ...` |
-| .NET R2R 自包含 | 发布时预编译机器码 | `./StarAgent --version` | `./StarAgent -status` | `./StarAgent -once -server ...` |
-| .NET AOT | NativeAOT 原生镜像 | `./StarAgent --version` | `./StarAgent -status` | `./StarAgent -once -server ...` |
+| .NET 通用 | 框架依赖，需目标机 .NET 10 | `dotnet StarAgent.dll --version` | `dotnet StarAgent.dll -status` | `dotnet StarAgent.dll -run -server http://star.newlifex.com:6600` |
+| .NET JIT 自包含 | 纯 IL + 自带运行时 | `./StarAgent --version` | `./StarAgent -status` | `./StarAgent -run -server ...` |
+| .NET R2R 自包含 | 发布时预编译机器码 | `./StarAgent --version` | `./StarAgent -status` | `./StarAgent -run -server ...` |
+| .NET AOT | NativeAOT 原生镜像 | `./StarAgent --version` | `./StarAgent -status` | `./StarAgent -run -server ...` |
 | Go 原生 | `StarAgent.Native/go` | `./staragent version` | — | `./staragent once --server ...` |
 | Rust 原生 | `StarAgent.Native/rust` | `./staragent version` | — | `./staragent once --server ...` |
 | C++ 原生 | `StarAgent.Native/cpp` | `./staragent version` | — | `./staragent once --server ...` |
 
-- `-once` / `once` 是本次新增的单次运行模式：启动完整代理，登录/注册后等待 **第一次心跳成功**，随后停止并退出。它让“代理真正开始工作”有了统一起点，而不是只看启动或 `-status`。
+- `-run` 是直接执行 `StartWork` 业务主流程的前台模式：启动完整代理、登录/注册并持续心跳；交互终端按键停止，输入/输出重定向时保持运行，由外部在首次心跳后终止。它没有新增“单次模式”，测试程序只负责在 `First heartbeat succeeded` 出现时停表并杀进程。
+- 原生实现的 `once` 是登录 + 一次心跳后退出；这次对比里 .NET 用 `-run` 由外部终止，原生用 `once` 自行退出。完成条件统一为“首次心跳成功”。
 - .NET 的首次心跳由 `ClientBase` 的定时器在登录后约 **3 秒**触发，原生实现登录后立即发心跳。因此墙钟包含这 3 秒固定等待；跨语言对比时更应看 CPU、RSS 和相对变化。
 
 - `--version` / `version` 是各界面的空载路径：只做进程创建、语言运行时初始化、命令行解析和版本输出，不读配置、不建日志、不碰网络。它衡量的是“运行时与二进制的启动地板”。
@@ -57,8 +58,8 @@
 - 空载与完整初始化：每个变体先预热一次（生成配置、日志并触发热缓存），再连续运行 **15 次取中位数**。
 - 完整生命周期：每台机器先跑一次预热（节点已完成注册、配置已落盘），再连续运行 **3 次取中位数**。节点身份在各机器上复用，避免把“首次注册”的一次性成本混进稳态。
 - Linux：`Tools/Benchmarks/bench-run.c` 编译成小工具，`fork` + `execvp` 后由父进程 `wait4` 取 `ru_utime`/`ru_stime`/`ru_maxrss`，墙钟用 `CLOCK_MONOTONIC`；子进程输出丢弃，不污染数据。
-- 完整生命周期使用 `Tools/Benchmarks/bench-heartbeat.c`：先截断旧日志，再启动代理，命中 `First heartbeat succeeded` 或进程退出后统计墙钟/CPU/RSS；超时会杀掉整个进程组，避免残留。
-- Windows：`Process.Start` 后每 1 ms 采样工作集/私有内存，退出后读 `TotalProcessorTime` 与 `PeakWorkingSet64`；`-once` 启动前会清理 `Log/*.log`，防止把上一次的心跳误判成本次。
+- 完整生命周期使用 `Tools/Benchmarks/bench-heartbeat.c`：先截断旧日志，再启动代理，命中 `First heartbeat succeeded` 或进程退出后统计墙钟/CPU/RSS；命中后杀掉整个进程组，避免 .NET `-run` 继续常驻。
+- Windows：`Process.Start` 后每 1 ms 采样工作集/私有内存，退出后读 `TotalProcessorTime` 与 `PeakWorkingSet64`；`-run` 启动前会清理 `Log/*.log`，防止把上一次的心跳误判成本次。
 - 所有数据由 [Tools/Benchmarks](../Tools/Benchmarks/README.md) 生成，原始 CSV 在 `.tmp/bench/results/`。
 
 ### 2.4 不可直接横向比较的部分
@@ -67,7 +68,7 @@
 - Linux 的 `ru_maxrss` 含共享/文件页；Windows 的 `PeakWorkingSet64` 口径不同；内存只做同环境对比。
 - 原生 `version` 与 .NET `-status` 不是同一工作量：前者只测运行时启动，后者含完整初始化。**跨语言比较看空载表，.NET 内部比较看完整初始化表。**
 - 完整生命周期已经统一到“登录 + 首次心跳”，但两边的功能面仍不同：.NET 代理还会启动 Web 面板、本地 API、插件、服务管理和机器信息采集；原生只做登录/心跳/指标/命令，因此原生数据应视为“轻量接入层”的成本，而不是同一功能集的等价实现。
-- .NET `-once` 的墙钟包含约 3 秒的首次心跳定时器等待；原生登录后立即心跳。**跨语言墙钟不能直接当成运行时差距**，请看 CPU、RSS 和 .NET 内部相对变化。
+- .NET `-run` 的墙钟包含约 3 秒的首次心跳定时器等待；原生登录后立即心跳。**跨语言墙钟不能直接当成运行时差距**，请看 CPU、RSS 和 .NET 内部相对变化。
 - A2 是 1 GB 内存的低功耗 ARM 设备，绝对时间远高于 x64 服务器，重点看相对收益。
 
 ## 3. 包大小
@@ -189,7 +190,7 @@ CPU 时间中位数，单位 ms：
 
 ## 6. 完整生命周期（真实服务端：登录/注册 → 首次心跳）
 
-服务端：`http://star.newlifex.com:6600`。每台机器预热一次（节点已注册、配置已落盘），再连续运行 3 次取中位数。.NET 使用 `-once`，原生使用 `once`；两者都以“首次心跳成功”作为完成条件。
+服务端：`http://star.newlifex.com:6600`。每台机器预热一次（节点已注册、配置已落盘），再连续运行 3 次取中位数。.NET 使用 `-run`，命中首次心跳日志后由测量程序终止；原生使用 `once`，心跳后自行退出。两者都以“首次心跳成功”作为完成条件。
 
 ### 6.1 墙钟时间（ms）
 
@@ -322,7 +323,7 @@ pwsh Tools/Benchmarks/staragent-bench.ps1 -SkipBuild -SkipDeploy
 ## 11. 限制与后续
 
 - 完整生命周期已用真实服务端测过，但**没有覆盖远程发布、文件下发、面板 RPC、命令执行**等非日常路径；这些路径的 JIT/AOT 差异需要单独专项。
-- .NET `-once` 含约 3 秒首次心跳定时器，原生 `once` 立即心跳；跨语言墙钟不能直接相减。本文用 CPU/RSS 和 .NET 内部相对值来抵消这个差异。
+- .NET `-run` 含约 3 秒首次心跳定时器，原生 `once` 立即心跳；跨语言墙钟不能直接相减。本文用 CPU/RSS 和 .NET 内部相对值来抵消这个差异。
 - 原生数据只代表“轻量接入层”的能力集；它们不做服务安装、插件、Web 面板和完整机器信息采集，跨语言比较应带此前提。
 - C++ 基准构建关闭了 OpenSSL（TLS），Windows 侧没有可用的 OpenSSL 开发包；这不影响启动指标，但生产包应开启 TLS 后重新测体积。
 - Windows 原生空载与完整生命周期墙钟受安全软件、WMI 和进程调度影响；Linux 数据更适合做语言间对比。

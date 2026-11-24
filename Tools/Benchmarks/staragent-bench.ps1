@@ -430,16 +430,16 @@ function New-Manifest([Object]$Machine) {
             if ($Modes -contains 'full') { $lines.Add("$($v.Id)`tfull`t$exe`t$dll`t-status`t") }
             if ($Modes -contains 'run') {
                 if ($v.Id -eq 'dotnet-universal') {
-                    $lines.Add("$($v.Id)`trun`t$exe`tStarAgent.dll`t-once -server $AgentServer`t")
+                    $lines.Add("$($v.Id)`trun`t$exe`tStarAgent.dll`t-run -server $AgentServer`tFirst heartbeat succeeded")
                 }
                 else {
-                    $lines.Add("$($v.Id)`trun`t$exe`t-once`t-server $AgentServer`t")
+                    $lines.Add("$($v.Id)`trun`t$exe`t-run`t-server $AgentServer`tFirst heartbeat succeeded")
                 }
             }
         }
         else {
             if ($Modes -contains 'empty') { $lines.Add("$($v.Id)`tempty`t./staragent`tversion`t`t") }
-            if ($Modes -contains 'run') { $lines.Add("$($v.Id)`trun`t./staragent`tonce`t--server $AgentServer`t") }
+            if ($Modes -contains 'run') { $lines.Add("$($v.Id)`trun`t./staragent`tonce`t--server $AgentServer`tonce ping completed") }
         }
     }
     return ($lines -join "`n") + "`n"
@@ -496,15 +496,15 @@ function Invoke-WindowsBench([Object]$Machine) {
         }
 
         if ($Modes -contains 'run') {
-            $marker = ''
+            $marker = if ($v.Kind -eq 'dotnet') { 'First heartbeat succeeded' } else { '' }
             $runArg = if ($v.Id -eq 'dotnet-universal') {
-                "`"$dir\StarAgent.dll`" -once -server $AgentServer"
+                "`"$dir\StarAgent.dll`" -run -server $AgentServer"
             }
             elseif ($v.Kind -eq 'native') {
                 "once --server $AgentServer"
             }
             else {
-                "-once -server $AgentServer"
+                "-run -server $AgentServer"
             }
 
             $null = Measure-WindowsHeartbeat $exe $runArg $dir $marker 120
@@ -693,7 +693,7 @@ function Write-Summary([Object[]]$Rows) {
         $title = switch ($mode) {
             'empty' { '空载启动（--version / version）' }
             'full' { '完整初始化（-status，仅 .NET）' }
-            default { '完整生命周期（真实服务端：登录 → 首次心跳，-once / once）' }
+            default { '完整生命周期（真实服务端：登录 → 首次心跳，-run / once）' }
         }
         [void]$sb.AppendLine("## $title")
         [void]$sb.AppendLine()

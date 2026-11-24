@@ -1,6 +1,7 @@
 /* 测量代理从进程启动到「首次心跳」的墙钟、CPU 与峰值 RSS。
  * 用法：bench-heartbeat <timeout_ms> <marker> <logfile> <exe> [args...]
- *   marker 为空表示等待子进程自行退出（原生 once 模式）。
+ *   .NET 传 -run，marker 为 First heartbeat succeeded，命中后终止常驻进程；
+ *   原生 once 自行退出时 marker 可为空。
  * 输出：wall_ms cpu_ms max_rss_kb exit marker_found（空格分隔，单行）
  *   marker_found：1=命中，0=等待进程自行退出，-1=超时。
  */
@@ -89,6 +90,14 @@ int main(int argc, char** argv)
             dup2(fd, STDOUT_FILENO);
             dup2(fd, STDERR_FILENO);
             close(fd);
+        }
+
+        /* 无控制台运行时，-run 靠 stdin 重定向判断不要 ReadKey */
+        const int nullfd = open("/dev/null", O_RDONLY);
+        if (nullfd >= 0)
+        {
+            dup2(nullfd, STDIN_FILENO);
+            close(nullfd);
         }
         execvp(childArgs[0], childArgs);
         _exit(127);

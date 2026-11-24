@@ -147,13 +147,6 @@ internal class Program
             return;
         }
 
-        // 单次运行：启动完整代理，等待首次心跳后退出。用于诊断、冒烟与性能测试
-        if ("-once".EqualIgnoreCase(args))
-        {
-            svc.RunOnce();
-            return;
-        }
-
         svc.Main(args);
     }
 
@@ -287,7 +280,7 @@ internal class Program
         foreach (var item in args)
         {
             if (item.IsNullOrEmpty()) continue;
-            if (item.EqualIgnoreCase("-s", "-run", "-restart", "-delay", "-upgrade", "-repair", "-once")) return true;
+            if (item.EqualIgnoreCase("-s", "-run", "-restart", "-delay", "-upgrade", "-repair")) return true;
         }
 
         return false;
@@ -493,41 +486,6 @@ internal class MyService : ServiceBase, IServiceProvider
     //private String _lastVersion;
     private AliyunDnsClient? _AliyunDns;
 
-    /// <summary>单次运行。启动完整代理，等待首次心跳后停止并退出</summary>
-    /// <remarks>
-    /// 与 <c>-run</c>（控制台模拟，等待按键）不同，这里不依赖控制台输入，适合 systemd/SCL 之外的冒烟测试、
-    /// 诊断与性能基准。原生 Agent 的 <c>once</c> 子命令与此对应。
-    /// </remarks>
-    public void RunOnce()
-    {
-        WriteLog("Once mode: starting the full agent and waiting for the first heartbeat");
-
-        try
-        {
-            StartWork("Once");
-
-            var ok = MyStarClient.WaitFirstHeartbeat(120_000);
-            WriteLog("Once mode: first heartbeat {0}", ok ? "succeeded" : "timed out");
-            if (!ok) Environment.ExitCode = 1;
-        }
-        catch (Exception ex)
-        {
-            Environment.ExitCode = 1;
-            XTrace.WriteException(ex);
-        }
-        finally
-        {
-            try
-            {
-                StopWork("Once");
-            }
-            catch (Exception ex)
-            {
-                XTrace.WriteException(ex);
-            }
-        }
-    }
-
     #region 调度核心
     /// <summary>服务启动</summary>
     /// <remarks>
@@ -716,8 +674,54 @@ internal class MyService : ServiceBase, IServiceProvider
         _server = null;
     }
 
+    /// <summary>无控制台的前台运行。直接执行 StartWork 的业务主流程并保持进程运行</summary>
+    /// <remarks>
+    /// CI、SSH、面板与服务冒烟通常没有可读控制台，<see cref="Console.ReadKey(Boolean)"/> 会直接抛异常。
+    /// 这类场景保持进程运行，由外部在命中首次心跳后终止；交互终端仍走 NewLife.Agent 的 RunSimulation。
+    /// </remarks>
+    private void RunForeground(String[] args)
+    {
+        if ("-delay".EqualIgnoreCase(args)) Thread.Sleep(5_000);
+
+        try
+        {
+            WriteLog("Run mode: starting business logic");
+            StartWork("Run");
+            Running = true;
+
+            WriteLog("Run mode: no interactive console; keep running until stopped");
+            Thread.Sleep(Timeout.Infinite);
+        }
+        catch (Exception ex)
+        {
+            Environment.ExitCode = 1;
+            XTrace.WriteException(ex);
+        }
+        finally
+        {
+            try
+            {
+                Running = false;
+                StopWork("Run");
+                FreeMemory();
+            }
+            catch (Exception ex)
+            {
+                XTrace.WriteException(ex);
+            }
+        }
+    }
+
     protected override void ProcessCommand(String cmd, String[] args)
     {
+        // 交互终端继续走 NewLife.Agent 的 RunSimulation（StartWork + DoLoop + 按键停止）；
+        // 重定向输入/输出时没有可读控制台，改为直接执行 StartWork 并保持进程运行。
+        if (cmd.EqualIgnoreCase("-run") && (Console.IsInputRedirected || Console.IsOutputRedirected))
+        {
+            RunForeground(args);
+            return;
+        }
+
         var source = new CancellationTokenSource();
         Task? task = null;
 
