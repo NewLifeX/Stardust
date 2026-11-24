@@ -42,6 +42,15 @@ public class AppPipelineRunController : DeploymentEntityController<AppPipelineRu
             df.Url = "/Deployment/AppPipelineRun/Reprocess?id={Id}";
             df.DataAction = "action";
         }
+
+        // 取消按钮：仅未到终态的运行会真正取消
+        {
+            var df = ListFields.AddListField("Cancel", "UpdateUserId");
+            df.DisplayName = "取消";
+            df.Description = "取消未完成的运行";
+            df.Url = "/Deployment/AppPipelineRun/Cancel?id={Id}";
+            df.DataAction = "action";
+        }
     }
 
     public AppPipelineRunController(PipelineService pipelineService)
@@ -75,7 +84,25 @@ public class AppPipelineRunController : DeploymentEntityController<AppPipelineRu
         try
         {
             var run = await _pipelineService.Reprocess(id, UserHost);
-            return JsonRefresh($"流水线已重新触发，运行编号[{run.Id}]", 1);
+            return JsonRefresh($"流水线已重新排队，运行编号[{run.Id}]", 1);
+        }
+        catch (Exception ex)
+        {
+            return Json(500, ex.Message);
+        }
+    }
+
+    /// <summary>取消运行。仅对未到终态的流水线运行有效，取消后不再续发部署</summary>
+    /// <param name="id">运行编号</param>
+    /// <returns></returns>
+    [EntityAuthorize(PermissionFlags.Update)]
+    public ActionResult Cancel(Int32 id)
+    {
+        try
+        {
+            var rs = _pipelineService.Cancel(id, UserHost);
+            if (!rs) return Json(500, L.T("Run is already in a terminal state."));
+            return JsonRefresh($"流水线运行[{id}]已取消", 1);
         }
         catch (Exception ex)
         {

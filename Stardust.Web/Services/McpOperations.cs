@@ -48,6 +48,8 @@ public class McpOperations : IMcpOperations
         return new { run_id = run.Id, status = run.Status.ToString() };
     }
 
+    public Task<Boolean> CancelPipelineAsync(Int32 runId, String ip) => Task.FromResult(_pipeline.Cancel(runId, ip));
+
     public async Task<Object> SendNodeCommandAsync(String nodeCode, String command, String args)
     {
         var reply = await _star.SendNodeCommandAsync(nodeCode, command, args, 0, 3600, 5);

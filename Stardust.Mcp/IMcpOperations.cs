@@ -14,6 +14,9 @@ public interface IMcpOperations
     Task<String> UseVersionAsync(Int32 versionId, String ip, Boolean publishEnabledNodes = true);
     Task<Int32> ControlDeployAsync(Int32 deployId, Int32 deployNodeId, String action, String ip);
     Task<Object> TriggerPipelineAsync(Int32 pipelineId, String ip);
+
+    /// <summary>取消流水线运行。逻辑取消：阻止后续续跑与自动部署，不中断节点上已开始的进程。</summary>
+    Task<Boolean> CancelPipelineAsync(Int32 runId, String ip);
     Task<Object> SendNodeCommandAsync(String nodeCode, String command, String args);
     Task<Object> SendAppCommandAsync(String appName, String clientId, String command, String args);
 

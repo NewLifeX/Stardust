@@ -17,6 +17,7 @@ using NewLife.Model;
 using NewLife.Reflection;
 using NewLife.Threading;
 using NewLife.Web;
+using Stardust.Models;
 using XCode;
 using XCode.Cache;
 using XCode.Configuration;
@@ -140,6 +141,37 @@ public partial class AppPipelineStep : Entity<AppPipelineStep>
         if (runId < 0) return [];
         if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.RunId == runId);
         return FindAll(_.RunId == runId);
+    }
+
+    /// <summary>命令过期或取消时联动失败对应步骤与运行。节点离线导致命令无人取走时，步骤不能一直停留在 Running。</summary>
+    /// <param name="commandId">命令编号</param>
+    /// <param name="message">失败原因</param>
+    /// <returns>更新的步骤数</returns>
+    public static Int32 FailByCommandId(Int32 commandId, String message)
+    {
+        if (commandId <= 0) return 0;
+
+        var step = FindAllByCommandId(commandId).FirstOrDefault();
+        if (step == null || step.Status != "Running") return 0;
+
+        var rs = Update(
+            [nameof(Status), nameof(FinishedTime), nameof(Message)],
+            ["Failed", DateTime.Now, CutMessage(message)],
+            [nameof(Id), nameof(Status)],
+            [step.Id, "Running"]);
+        if (rs == 0) return 0;
+
+        var run = AppPipelineRun.FindById(step.RunId);
+        if (run != null && run.Status is PipelineStatus.Pending or PipelineStatus.Building or PipelineStatus.Deploying)
+        {
+            run.Status = PipelineStatus.Failed;
+            run.Remark = CutMessage(message, 480);
+            if (run.BuildStartedTime != default && run.BuildFinishedTime == default) run.BuildFinishedTime = DateTime.Now;
+            if (run.DeployStartedTime != default && run.DeployFinishedTime == default) run.DeployFinishedTime = DateTime.Now;
+            run.Update();
+        }
+
+        return rs;
     }
     #endregion
 }

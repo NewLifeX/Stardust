@@ -272,10 +272,39 @@ public class DeployReleaseTool : McpToolBase
     }
 }
 
+public class PipelineCancelTool : McpToolBase
+{
+    public override String Name => "stardust_pipeline_cancel";
+    public override String Description => "Cancel a pipeline run. Cancelling prevents further steps and auto deploy; a build already running on the node is not interrupted.";
+    public override McpRiskLevel Risk => McpRiskLevel.L1;
+    public override String ScopeDomain => "deploy";
+    public override JsonElement InputSchema => JsonSerializer.SerializeToElement(new
+    {
+        type = "object",
+        properties = new
+        {
+            run_id = new { type = "integer", description = "流水线运行编号" },
+        },
+        required = new[] { "run_id" },
+    });
+
+    public override async Task<Object> InvokeAsync(JsonElement args, McpContext ctx)
+    {
+        var run = AppPipelineRun.FindById(GetInt32(args, "run_id")) ?? throw new McpException(-32602, "流水线运行不存在。");
+        var pipeline = AppPipeline.FindById(run.PipelineId) ?? throw new McpException(-32602, "流水线不存在。");
+        McpGuard.Deploy(ctx, pipeline.DeployId);
+        var ops = ctx.Services.GetService(typeof(IMcpOperations)) as IMcpOperations ?? throw new McpException(-32000, "宿主未注册 MCP 写操作适配器。");
+        var rs = await ops.CancelPipelineAsync(run.Id, ctx.CallerIp);
+        return rs
+            ? McpResult.Ok("流水线运行已取消", new { cancelled = true, run_id = run.Id, status = "Cancelled" })
+            : McpResult.Ok("运行已处于终态，无需取消", new { cancelled = false, run_id = run.Id, status = run.Status.ToString() });
+    }
+}
+
 public class PipelineTriggerTool : McpToolBase
 {
     public override String Name => "stardust_pipeline_trigger";
-    public override String Description => "Manually trigger a pipeline. The result distinguishes a created run from a rejected trigger and includes the reason.";
+    public override String Description => "Queue a pipeline run manually. The run is dispatched by the pipeline runner; the result distinguishes a created run from a rejected trigger and includes the reason.";
     public override McpRiskLevel Risk => McpRiskLevel.L1;
     public override String ScopeDomain => "deploy";
     public override JsonElement InputSchema => JsonSerializer.SerializeToElement(new
@@ -296,7 +325,7 @@ public class PipelineTriggerTool : McpToolBase
         try
         {
             var run = await ops.TriggerPipelineAsync(pipeline.Id, ctx.CallerIp);
-            return McpResult.Ok("流水线已创建运行", new { created = true, run },
+            return McpResult.Ok("流水线已排队", new { created = true, run },
                 null, "如构建失败，调用 stardust_pipeline_run_detail 查看失败步骤，修正后重新触发");
         }
         catch (Exception ex)

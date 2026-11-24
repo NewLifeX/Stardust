@@ -6,23 +6,23 @@ using Xunit.Abstractions;
 
 namespace Stardust.McpApiTests;
 
-/// <summary>34 工具全覆盖测试：从 tools/list 拿全部工具清单，逐工具正路径调用并断言成功。
+/// <summary>35 工具全覆盖测试：从 tools/list 拿全部工具清单，逐工具正路径调用并断言成功。
 /// 使用初始化数据（mcpapi-* 前缀，属于「MCP 测试」项目 Id=4）。写工具使用低副作用参数。</summary>
 [Collection(nameof(McpApiTestCollection))]
 public class McpToolCoverageTests : McpSdkTestBase
 {
     public McpToolCoverageTests(ITestOutputHelper output) : base(output) { }
 
-    /// <summary>tools/list 应返回全部 34 个工具（与代码库 IMcpTool 实现数量一致，G5 口径）</summary>
-    [Fact(DisplayName = "覆盖-1：tools/list 返回全部 34 个工具")]
-    public async Task ListTools_Count34()
+    /// <summary>tools/list 应返回全部 35 个工具（与代码库 IMcpTool 实现数量一致，G5 口径）</summary>
+    [Fact(DisplayName = "覆盖-1：tools/list 返回全部 35 个工具")]
+    public async Task ListTools_Count35()
     {
         await RunSdkAsync(McpTestDataInitializer.Tokens["mcpapi-full"], async client =>
         {
             var tools = await client.ListToolsAsync();
             var names = tools.Select(t => t.Name).OrderBy(n => n, StringComparer.Ordinal).ToArray();
             Output.WriteLine($"✅ tools/list 共 {tools.Count} 个工具：{String.Join(", ", names)}");
-            Assert.Equal(34, tools.Count);
+            Assert.Equal(35, tools.Count);
         });
     }
 
@@ -43,7 +43,7 @@ public class McpToolCoverageTests : McpSdkTestBase
     /// Agent 依赖工具（node_command/app_command/app_process/deploy_node_operate/deploy_log_*）在无真实节点 Agent 的测试环境会
     /// -32000「工具执行失败：目标不可达」或优雅空数据，属环境限制而非网关缺陷；对它们断言调用被网关正确受理（不抛 -32001/-32003/-32602）。
     /// deploy_log_* 对未配置日志目录的部署节点快速失败（配置合并处拦截，不下发指令），返回空数据+note。</summary>
-    [Fact(DisplayName = "覆盖-3：34 个工具逐个正路径调用")]
+    [Fact(DisplayName = "覆盖-3：35 个工具逐个正路径调用")]
     public async Task CallAllTools_PositivePath()
     {
         var token = McpTestDataInitializer.Tokens["mcpapi-full"];
@@ -98,6 +98,7 @@ public class McpToolCoverageTests : McpSdkTestBase
             ["stardust_deploy_log_tail"] = new() { ["deploy_node_id"] = deployNodeId, ["file"] = "app.log" },
             ["stardust_deploy_release"] = new() { ["deploy_id"] = deployId, ["version"] = "1.0.0", ["dry_run"] = true },
             ["stardust_pipeline_trigger"] = new() { ["pipeline_id"] = pipelineId },
+            ["stardust_pipeline_cancel"] = new() { ["run_id"] = runId },
             ["stardust_config_list"] = new() { ["app_id"] = appId },
             ["stardust_config_get"] = new() { ["config_id"] = configId },
             ["stardust_config_set"] = new() { ["config_id"] = configId, ["configs"] = new Dictionary<String, Object?> { ["McpApiTestKey"] = "value" } },
@@ -108,7 +109,7 @@ public class McpToolCoverageTests : McpSdkTestBase
             ["stardust_trace_search"] = new() { ["app_id"] = appId },
             ["stardust_trace_detail"] = new() { ["data_id"] = traceDataId },
         };
-        Assert.Equal(34, calls.Count);
+        Assert.Equal(35, calls.Count);
 
         var failed = new List<String>();
         var success = new List<String>();

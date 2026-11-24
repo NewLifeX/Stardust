@@ -7,6 +7,7 @@ using NewLife;
 using NewLife.Data;
 using NewLife.Log;
 using NewLife.Remoting.Models;
+using Stardust.Data.Deployment;
 using Stardust.Models;
 using XCode;
 
@@ -168,6 +169,9 @@ public partial class NodeCommand : Entity<NodeCommand>
             item.Status = CommandStatus.取消;
             item.Result = "命令已过期";
             item.Update();
+
+            // 联动流水线：命令过期后不会再收到回包，步骤与运行必须同步失败，避免永远停在 Building/Deploying
+            AppPipelineStep.FailByCommandId(item.Id, "命令已过期");
         }
 
         return list.Count;

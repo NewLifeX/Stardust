@@ -94,6 +94,7 @@ public class Startup
         services.AddHostedService<ApolloService>();
         services.AddHostedService<NodeStatService>();
         services.AddHostedService<FixDataHostedService>();
+        services.AddHostedService<PipelineRunner>();
 
         // 启用接口响应压缩
         services.AddResponseCompression();

@@ -164,6 +164,26 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     [Description("Maximum upload package size. Applies only to the maximum allowed request body bytes for the Deploy/UploadBuildFile endpoint; default 100000000 (100MB), 0 means use the Kestrel default limit, max 1GB.")]
     public Int64 MaxUploadSize { get; set; } = 100000000;
 
+    /// <summary>流水线队列开关。开启后由后台服务按流水线串行派发排队运行；关闭后仅创建排队记录不自动派发，默认true</summary>
+    [Description("Enable the pipeline queue. When enabled, a background service dispatches queued runs one at a time per pipeline; when disabled, runs stay pending. Default true.")]
+    public Boolean PipelineQueueEnabled { get; set; } = true;
+
+    /// <summary>流水线队列长度。同一流水线允许排队的最大运行数，0表示不限制，默认20</summary>
+    [Description("Maximum queued runs per pipeline; 0 means unlimited. Default 20.")]
+    public Int32 PipelineQueueLength { get; set; } = 20;
+
+    /// <summary>流水线排队超时。运行停留排队状态的超时时间，单位秒，默认3600；小于等于0表示不检查</summary>
+    [Description("Pipeline queue timeout in seconds; default 3600. 0 or less disables the check.")]
+    public Int32 PipelineQueueTimeout { get; set; } = 3600;
+
+    /// <summary>流水线构建超时。运行停留编译阶段的超时时间，单位秒，默认4200（编译命令超时3600秒加600秒余量）；小于等于0表示不检查</summary>
+    [Description("Pipeline build timeout in seconds; default 4200 (3600s command timeout plus 600s grace). 0 or less disables the check.")]
+    public Int32 PipelineBuildTimeout { get; set; } = 4200;
+
+    /// <summary>流水线部署超时。运行停留部署阶段的超时时间，单位秒，默认1800；小于等于0表示不检查</summary>
+    [Description("Pipeline deploy timeout in seconds; default 1800. 0 or less disables the check.")]
+    public Int32 PipelineDeployTimeout { get; set; } = 1800;
+
     /// <summary>文件缓存目录。存放数据库驱动等缓存文件，为空时不启用，默认../FileCache</summary>
     [Description("File cache directory. Stores cache files such as database drivers; disabled when empty; default ../FileCache")]
     public String FileCache { get; set; } = "../FileCache";

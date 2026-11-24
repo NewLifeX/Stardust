@@ -98,16 +98,18 @@ public class AppPipelineController : EntityController<AppPipeline>
         return Json(0, "ok", url);
     }
 
-    /// <summary>手动触发流水线运行。委托 PipelineService.Trigger，参考 BatchOperate 模式通过 DeployService 下发指令</summary>
+    /// <summary>手动触发流水线运行。委托 PipelineService.Trigger，仅创建排队记录，由后台服务串行派发</summary>
     /// <param name="id">流水线编号</param>
+    /// <param name="branch">构建分支。为空时按流水线配置推导</param>
+    /// <param name="commit">构建提交。为空时构建分支最新提交</param>
     /// <returns></returns>
     [EntityAuthorize(PermissionFlags.Update)]
-    public async Task<ActionResult> Trigger(Int32 id)
+    public async Task<ActionResult> Trigger(Int32 id, String? branch, String? commit)
     {
         try
         {
-            var run = await _pipelineService.Trigger(id, UserHost);
-            return JsonRefresh($"流水线已触发，运行编号[{run.Id}]", 1);
+            var run = await _pipelineService.Trigger(id, UserHost, branch, commit);
+            return JsonRefresh($"流水线已排队，运行编号[{run.Id}]", 1);
         }
         catch (Exception ex)
         {
