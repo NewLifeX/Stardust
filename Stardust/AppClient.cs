@@ -20,6 +20,7 @@ using NewLife.Remoting.Models;
 using NewLife.Security;
 using NewLife.Serialization;
 using NewLife.Threading;
+using Stardust.Managers;
 using Stardust.Models;
 using Stardust.Registry;
 using Stardust.Services;
@@ -38,6 +39,9 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
 
     /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
     public String? ClientId { get; set; }
+
+    /// <summary>日志上报目录。为空时使用 XTrace 的文本日志目录</summary>
+    public String? LogPath { get; set; }
 
     /// <summary>实际实例标识。优先显式设置，其次实时读取星尘工厂或全局运行时；联网后自动补全IP</summary>
     private String? ActualClientId => ClientId ?? Factory?.ClientId ?? Runtime.ClientId;
@@ -953,6 +957,7 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
         client.RegisterCommand("registry/register", DoRefresh);
         client.RegisterCommand("registry/unregister", DoRefresh);
         client.RegisterCommand("app/freeMemory", OnFreeMemory);
+        client.RegisterCommand("app/reportLog", DoReportLog);
     }
 
     private async Task<String?> DoRefresh(String? argument)
@@ -961,6 +966,70 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
 
         return L.T("Service refresh succeeded.");
     }
+    #endregion
+
+    #region 日志上报
+    /// <summary>把本地当日日志尾部上报到星尘服务端。供应用在线表按实例触发</summary>
+    /// <param name="cmd">命令模型，参数为 <see cref="AppLogReportArg"/></param>
+    /// <returns>命令回包。成功时 Data 为 <see cref="AppLogReportResult"/> JSON</returns>
+    /// <remarks>
+    /// 只读取应用自身日志目录，不接受平台传入路径；服务端地址必须是 http/https，
+    /// 日志通过 /Log 接口入库，随后可在应用日志页按 appId + clientId 查询。
+    /// </remarks>
+    private async Task<CommandReplyModel> DoReportLog(CommandModel cmd)
+    {
+        var arg = cmd.Argument?.ToJsonEntity<AppLogReportArg>() ?? new AppLogReportArg();
+        var maxBytes = arg.MaxBytes <= 0 ? AppLogCommands.DefaultTailBytes : Math.Min(arg.MaxBytes, AppLogCommands.MaxTailBytes);
+
+        var logPath = LogPath ?? GetLogPath();
+        var file = AppLogCommands.ResolveLogFile(logPath, DateTime.Now);
+        if (file.IsNullOrEmpty()) return Error(L.T("Log file not found: {0}", logPath ?? ""));
+
+        var content = AppLogCommands.ReadTail(file, maxBytes);
+        if (content == null) return Error(L.T("Log file not found: {0}", Path.GetFileName(file)));
+
+        var server = (Server ?? Setting?.Server)?.Split(',')[0].Trim();
+        if (server.IsNullOrEmpty() || !server.StartsWithIgnoreCase("http://", "https://"))
+            return Error(L.T("Server address does not support HTTP log upload."));
+
+        try
+        {
+            using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+            using var req = AppLogCommands.BuildRequest(server, AppId, ActualClientId, Client?.Token, content);
+            using var res = await http.SendAsync(req).ConfigureAwait(false);
+            var text = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            if (!res.IsSuccessStatusCode)
+                return Error(L.T("Log upload failed: {0}", $"{(Int32)res.StatusCode} {text}".Trim()));
+
+            var rs = new AppLogReportResult
+            {
+                File = Path.GetFileName(file),
+                Bytes = Encoding.UTF8.GetByteCount(content),
+                Parsed = AppLogCommands.ParseParsedCount(text),
+            };
+            WriteLog("Reported log {0} ({1} bytes) to {2}", rs.File, rs.Bytes, server);
+
+            return new CommandReplyModel { Status = CommandStatus.已完成, Data = rs.ToJson() };
+        }
+        catch (Exception ex)
+        {
+            WriteLog("Log upload failed: {0}", ex.Message);
+            return Error(L.T("Log upload failed: {0}", ex.Message));
+        }
+    }
+
+    /// <summary>获取应用日志目录。优先取文本文件日志的实际路径，其次取全局配置</summary>
+    /// <returns>日志目录或单文件路径；没有文件日志时返回空</returns>
+    private static String? GetLogPath()
+    {
+        var log = XTrace.Log;
+        if (log is TextFileLog ftl) return ftl.LogPath;
+        if (log is CompositeLog cmp && cmp.Get<TextFileLog>() is { } inner) return inner.LogPath;
+
+        return XTrace.LogPath;
+    }
+
+    private static CommandReplyModel Error(String message) => new() { Status = CommandStatus.错误, Data = message };
     #endregion
 
     #region 辅助

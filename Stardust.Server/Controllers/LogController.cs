@@ -17,10 +17,12 @@ public class LogController() : ControllerBase
     public Object Get() => "LogController";
 
     /// <summary>接收应用上报日志。解析标准日志行格式并写入应用客户端日志</summary>
-    /// <returns>空结果</returns>
+    /// <returns>已识别并入库的日志行数。非 JSON 客户端可忽略</returns>
     [HttpPost]
-    public async Task<EmptyResult> Post()
+    public async Task<ActionResult> Post()
     {
+        var parsed = 0;
+
         var r = new StreamReader(Request.Body);
         var content = await r.ReadToEndAsync();
         if (!content.IsNullOrEmpty())
@@ -33,6 +35,14 @@ public class LogController() : ControllerBase
             var app = App.FindByName(appId);
             if (app != null && app.Enable)
             {
+                // 携带令牌时校验归属，避免任意来源冒充应用灌日志；旧客户端不带令牌时保持原有行为
+                var token = Request.Headers["X-Token"] + "";
+                if (!token.IsNullOrEmpty())
+                {
+                    var online = AppOnline.FindByToken(token);
+                    if (online == null || online.AppId != app.Id) return StatusCode(403);
+                }
+
                 // 00:00:04.205  7 Y 1 NewLife.Core v8.10.2020.1020
                 var lines = content.Split(Environment.NewLine);
                 for (var i = 0; i < lines.Length; i++)
@@ -59,13 +69,14 @@ public class LogController() : ControllerBase
                         msg = sb.Return(true);
 
                         AppClientLog.Create(app.Id, clientId, ss, msg, ip);
+                        parsed++;
                         sb.Clear();
                     }
                 }
             }
         }
 
-        return new EmptyResult();
+        return Ok(new { parsed });
     }
 
     private static Int32 ReadExpect(String value, Char ch, String[] ss)

@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NewLife;
+using NewLife.Data;
 using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Remoting.Clients;
@@ -18,6 +19,7 @@ using Stardust;
 using Stardust.Data;
 using Stardust.Data.Configs;
 using Stardust.Data.Monitors;
+using Stardust.Managers;
 using Stardust.Monitors;
 using Stardust.Server.Services;
 using Xunit;
@@ -350,6 +352,74 @@ public class AppCommunicationTests
             target.Dispose();
             CleanupApp(targetName);
             CleanupApp(ctlApp.Name);
+        }
+    }
+
+    [Fact(DisplayName = "应用通讯-实例日志上报：读取本地当日日志并落库")]
+    public async Task ReportLog_UploadsLocalFile_AndPersists()
+    {
+        var (ctlApp, token) = await CreateControllerAppAsync();
+
+        var targetName = "e2e_log_" + Rand.NextString(8);
+        var clientId = "e2e_log_" + Rand.NextString(8);
+        var target = CreateClient(targetName, clientId: clientId);
+        var dir = Path.Combine(Path.GetTempPath(), "stardust-e2e-log-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        target.LogPath = dir;
+
+        try
+        {
+            // 当日 XTrace 格式日志行：时间(12) 线程 类型 名称 消息
+            File.WriteAllText(Path.Combine(dir, $"{DateTime.Now:yyyy_MM_dd}.log"), "00:00:04.205  7 Y NewLife.Core Hello Stardust\r\n");
+
+            target.Open();
+            for (var i = 0; i < 60 && !target.Logined; i++) await Task.Delay(250);
+            Assert.True(target.Logined, "目标应用未能在超时时间内登录");
+
+            var code = $"{targetName}@{clientId}";
+            var sessions = _fixture.Host.Services.GetRequiredService<AppSessionManager>();
+            for (var i = 0; i < 60 && sessions.Get(code) == null; i++) await Task.Delay(250);
+            Assert.NotNull(sessions.Get(code));
+
+            var reply = await SendAppCommandAsync(token, code, "app/reportLog", null, 15);
+            Assert.NotNull(reply);
+            Assert.Equal(CommandStatus.已完成, reply!.Status);
+
+            var result = reply.Data?.ToJsonEntity<AppLogReportResult>();
+            Assert.NotNull(result);
+            Assert.True(result!.Bytes > 0);
+            Assert.Equal(1, result.Parsed);
+
+            var app = App.FindByName(targetName);
+            Assert.NotNull(app);
+
+            IList<AppClientLog> logs = [];
+            for (var i = 0; i < 25; i++)
+            {
+                logs = AppClientLog.Search(app!.Id, clientId, 0, DateTime.Today, DateTime.Today, null, new PageParameter { PageSize = 10 });
+                if (logs.Count > 0) break;
+
+                await Task.Delay(200);
+            }
+
+            Assert.True(logs.Count > 0, "日志未落库");
+            Assert.Contains("Hello Stardust", logs[0].Message);
+            Assert.Equal(clientId, logs[0].ClientId);
+        }
+        finally
+        {
+            target.Dispose();
+            var app = App.FindByName(targetName);
+            if (app != null)
+            {
+                foreach (var item in AppClientLog.Search(app.Id, clientId, 0, DateTime.Today, DateTime.Today, null, new PageParameter { PageSize = 1000 }))
+                {
+                    item.Delete();
+                }
+            }
+            CleanupApp(targetName);
+            CleanupApp(ctlApp.Name);
+            try { Directory.Delete(dir, true); } catch { }
         }
     }
     #endregion

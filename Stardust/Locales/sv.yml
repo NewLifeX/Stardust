@@ -229,3 +229,6 @@
 "Application [{0}] failed to start {1} times; rolled back from version [{2}] to [{3}].": "Application [{0}] failed to start {1} times; rolled back from version [{2}] to [{3}]."
 "Application [{0}] has been stable for {1} minutes; saved as the rollback package": "Application [{0}] has been stable for {1} minutes; saved as the rollback package"
 "Rolled back application [{0}] from version [{1}] to [{2}]": "Rolled back application [{0}] from version [{1}] to [{2}]"
+# 运行时消息补充词条
+"Server address does not support HTTP log upload.": "Server address does not support HTTP log upload."
+"Log upload failed: {0}": "Log upload failed: {0}"

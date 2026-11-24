@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
+using NewLife;
 using NewLife.Data;
 using NewLife.Security;
 using Stardust.Data;
@@ -25,11 +26,12 @@ public class LogPostTests : StarTestBase
     private static IList<AppClientLog> SearchToday(Int32 appId)
         => AppClientLog.Search(appId, null, 0, DateTime.Today, DateTime.Today.AddDays(1), null, new PageParameter { PageSize = 100 });
 
-    private async Task<String> PostAsync(String appName, String content)
+    private async Task<String> PostAsync(String appName, String content, String token = null)
     {
         var client = _server.CreateClient();
         client.DefaultRequestHeaders.Add("X-AppId", appName);
         client.DefaultRequestHeaders.Add("X-ClientId", "log-client@1");
+        if (!token.IsNullOrEmpty()) client.DefaultRequestHeaders.Add("X-Token", token);
 
         var resp = await client.PostAsync("/Log", new StringContent(content, Encoding.UTF8, "text/plain"));
 
@@ -62,6 +64,7 @@ public class LogPostTests : StarTestBase
             // 格式：时间(12字符) 线程 类型 名称 消息，后续非日志行并入上一条消息
             var content = "00:00:04.205  7 Y NewLife.Core Hello Stardust\r\nsecond line of message\r\n";
             var status = await PostAsync(name, content);
+            Assert.Contains("\"parsed\":1", status);
 
             var list = WaitLogs(app.Id);
             Assert.True(list.Count > 0, "应写入应用客户端日志，POST 响应：" + status);
@@ -101,6 +104,43 @@ public class LogPostTests : StarTestBase
         }
         finally
         {
+            app.Delete();
+        }
+    }
+
+    [Fact(DisplayName = "携带其它应用的令牌上报日志被拒绝")]
+    public async Task Post_ForeignToken_Rejected()
+    {
+        var name = "lpt_" + Rand.NextString(8);
+        var app = new App { Name = name, Secret = "log-secret", Enable = true };
+        app.Insert();
+
+        var other = new App { Name = name + "_o", Secret = "log-secret", Enable = true };
+        other.Insert();
+
+        var token = "tok_" + Rand.NextString(16);
+        var online = new AppOnline
+        {
+            AppId = other.Id,
+            Name = other.Name,
+            Client = "other-client@1",
+            Token = token,
+            CreateTime = DateTime.Now,
+            UpdateTime = DateTime.Now,
+        };
+        online.Insert();
+
+        try
+        {
+            var status = await PostAsync(name, "00:00:04.205  7 Y NewLife.Core should be rejected\r\n", token);
+
+            Assert.StartsWith("403:", status);
+            Assert.Empty(SearchToday(app.Id));
+        }
+        finally
+        {
+            online.Delete();
+            other.Delete();
             app.Delete();
         }
     }
