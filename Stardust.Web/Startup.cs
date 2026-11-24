@@ -124,11 +124,6 @@ public class Startup
         {
             options.MultipartBodyLengthLimit = Int64.MaxValue;
         });
-        services.Configure<IISServerOptions>(options =>
-        {
-            options.MaxRequestBodySize = Int32.MaxValue;
-        });
-
         // DDNS服务
         services.AddSingleton<IDnsProvider, AliyunDnsProvider>();
         services.AddSingleton<IDnsProvider, TencentCloudDnsProvider>();
