@@ -155,6 +155,7 @@ impl Agent {
                 }),
                 cancel: cancel.clone(),
                 bootstrap: bootstrap_action,
+                wake_on_lan: None,
             })
         };
 

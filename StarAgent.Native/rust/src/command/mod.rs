@@ -3,6 +3,7 @@
 
 pub mod output;
 pub mod platform;
+pub mod wakeonlan;
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -52,6 +53,8 @@ pub struct ExecutorOptions {
     pub cancel: CancellationToken,
     /// 引导安装回调；None 表示未开启（回复“引导安装未启用”）。
     pub bootstrap: Option<Arc<dyn Fn() -> BoxFuture<'static, Result<()>> + Send + Sync>>,
+    /// 局域网唤醒发送回调；None 时使用 `wakeonlan::send`。
+    pub wake_on_lan: Option<Arc<dyn Fn(&[[u8; 6]]) -> Result<usize> + Send + Sync>>,
 }
 
 /// Executes remote commands according to the protocol rules.
@@ -60,6 +63,7 @@ pub struct Executor {
     seen: std::sync::Mutex<HashMap<i64, Instant>>,
     permits: Arc<Semaphore>,
     shell_lock: Mutex<()>,
+    wake_times: std::sync::Mutex<HashMap<String, Instant>>,
 }
 
 impl Executor {
@@ -76,6 +80,7 @@ impl Executor {
             seen: std::sync::Mutex::new(HashMap::new()),
             permits: Arc::new(Semaphore::new(MAX_CONCURRENCY)),
             shell_lock: Mutex::new(()),
+            wake_times: std::sync::Mutex::new(HashMap::new()),
         })
     }
 
@@ -206,6 +211,7 @@ impl Executor {
             "node/synctime" => self.sync_time(command),
             "node/setchannel" => self.set_channel(command),
             "node/restart" => self.restart(),
+            "node/wakeonlan" => self.wake_on_lan(command),
             "node/bootstrap" => self.bootstrap(),
             "node/reboot" | "framework/install" => unsupported(name),
             other if other.starts_with("deploy/") => unsupported(name),
@@ -371,6 +377,63 @@ impl Executor {
         reply(STATUS_COMPLETED, "正在重启")
     }
 
+    /// 在局域网广播魔术包。目标机器离线时无法接收平台指令，由同网段在线节点代发。
+    fn wake_on_lan(&self, command: &CommandModel) -> CommandReplyModel {
+        let macs = wakeonlan::parse_macs(&extract_macs(
+            command.argument.as_deref().unwrap_or_default(),
+        ));
+        if macs.is_empty() {
+            return reply(STATUS_ERROR, "No valid MAC address.");
+        }
+
+        // 限频，避免命令重试或批量误操作造成广播风暴；按目标 MAC 区分，连续唤醒多台机器互不影响
+        if !self.allow_wake(&macs) {
+            return reply(
+                STATUS_CANCELLED,
+                "Too frequent; the wake request was ignored.",
+            );
+        }
+
+        let send = match &self.opts.wake_on_lan {
+            Some(send) => send.clone(),
+            None => Arc::new(wakeonlan::send),
+        };
+        match send(&macs) {
+            Ok(count) => reply(
+                STATUS_COMPLETED,
+                &format!("WOL sent: {} MAC(s), {} packet(s)", macs.len(), count),
+            ),
+            Err(error) => reply(STATUS_ERROR, &format!("WOL failed: {error}")),
+        }
+    }
+
+    fn allow_wake(&self, macs: &[[u8; 6]]) -> bool {
+        let key = macs
+            .iter()
+            .map(|mac| {
+                format!(
+                    "{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}",
+                    mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]
+                )
+            })
+            .collect::<Vec<_>>()
+            .join(",");
+        let now = Instant::now();
+        let mut times = self.wake_times.lock().unwrap();
+        if let Some(last) = times.get(&key) {
+            if now.duration_since(*last) < Duration::from_secs(3) {
+                return false;
+            }
+        }
+        // 命令目标通常只有少量机器，超过上限时整体清空，避免长期运行后字典无限增长
+        if times.len() > 64 {
+            times.clear();
+        }
+        times.insert(key, now);
+
+        true
+    }
+
     fn bootstrap(&self) -> CommandReplyModel {
         let Some(action) = self.opts.bootstrap.clone() else {
             return reply(STATUS_CANCELLED, "引导安装未启用");
@@ -473,6 +536,28 @@ fn reply(status: i32, data: &str) -> CommandReplyModel {
     }
 }
 
+/// 从 JSON 参数中取 macs 字段（兼容 Macs/macs），非 JSON 时按纯 MAC 文本处理。
+fn extract_macs(argument: &str) -> String {
+    let text = argument.trim();
+    if !text.starts_with('{') {
+        return text.to_string();
+    }
+
+    let Ok(serde_json::Value::Object(map)) = serde_json::from_str::<serde_json::Value>(text) else {
+        return text.to_string();
+    };
+    for (key, value) in &map {
+        if key.eq_ignore_ascii_case("macs") {
+            return match value {
+                serde_json::Value::String(text) => text.clone(),
+                other => other.to_string(),
+            };
+        }
+    }
+
+    text.to_string()
+}
+
 fn unsupported(name: &str) -> CommandReplyModel {
     reply(STATUS_ERROR, &format!("不支持命令: {name}"))
 }
@@ -493,7 +578,7 @@ fn collector() -> (ReplyFn, Arc<std::sync::Mutex<Vec<CommandReplyModel>>>) {
 
 #[cfg(test)]
 fn test_executor(allow_exec: bool, allowed_commands: Vec<String>) -> Arc<Executor> {
-    build_executor(allow_exec, allowed_commands, None)
+    build_executor(allow_exec, allowed_commands, None, None)
 }
 
 #[cfg(test)]
@@ -501,6 +586,7 @@ fn build_executor(
     allow_exec: bool,
     allowed_commands: Vec<String>,
     bootstrap: Option<Arc<dyn Fn() -> BoxFuture<'static, Result<()>> + Send + Sync>>,
+    wake_on_lan: Option<Arc<dyn Fn(&[[u8; 6]]) -> Result<usize> + Send + Sync>>,
 ) -> Arc<Executor> {
     Executor::new(ExecutorOptions {
         allow_exec,
@@ -510,6 +596,7 @@ fn build_executor(
         set_channel: Arc::new(|_| Ok(())),
         cancel: CancellationToken::new(),
         bootstrap,
+        wake_on_lan,
     })
 }
 
@@ -626,7 +713,7 @@ mod tests {
                 Ok(())
             })
         });
-        let executor = build_executor(false, Vec::new(), Some(action));
+        let executor = build_executor(false, Vec::new(), Some(action), None);
         let (reply, replies) = collector();
         let command = CommandModel {
             id: 22,
@@ -756,5 +843,90 @@ mod tests {
             .as_deref()
             .unwrap_or_default()
             .contains("hello-rust"));
+    }
+
+    #[tokio::test]
+    async fn wake_on_lan_uses_injected_sender() {
+        let executor = build_executor(
+            false,
+            Vec::new(),
+            None,
+            Some(Arc::new(|macs: &[[u8; 6]]| {
+                assert_eq!(1, macs.len());
+                assert_eq!([0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF], macs[0]);
+                Ok(4)
+            })),
+        );
+        let (reply, replies) = collector();
+        let command = CommandModel {
+            id: 21,
+            command: "node/wakeonlan".into(),
+            argument: Some(r#"{"macs":"AA-BB-CC-DD-EE-FF","code":"T1"}"#.into()),
+            ..Default::default()
+        };
+
+        executor.handle(command, reply).await;
+        let replies = replies.lock().unwrap();
+        assert_eq!(1, replies.len());
+        assert_eq!(STATUS_COMPLETED, replies[0].status);
+        assert!(replies[0]
+            .data
+            .as_deref()
+            .unwrap_or_default()
+            .contains("WOL sent: 1 MAC(s), 4 packet(s)"));
+    }
+
+    #[tokio::test]
+    async fn wake_on_lan_rejects_invalid_mac() {
+        let executor = test_executor(false, Vec::new());
+        let (reply, replies) = collector();
+        let command = CommandModel {
+            id: 22,
+            command: "node/wakeonlan".into(),
+            argument: Some("hello".into()),
+            ..Default::default()
+        };
+
+        executor.handle(command, reply).await;
+        let replies = replies.lock().unwrap();
+        assert_eq!(1, replies.len());
+        assert_eq!(STATUS_ERROR, replies[0].status);
+        assert!(replies[0]
+            .data
+            .as_deref()
+            .unwrap_or_default()
+            .contains("No valid MAC address"));
+    }
+
+    #[tokio::test]
+    async fn wake_on_lan_throttles_same_mac() {
+        let executor = build_executor(
+            false,
+            Vec::new(),
+            None,
+            Some(Arc::new(|_: &[[u8; 6]]| Ok(1))),
+        );
+        let (reply, replies) = collector();
+        let command = CommandModel {
+            id: 23,
+            command: "node/wakeonlan".into(),
+            argument: Some("AA-BB-CC-DD-EE-FF".into()),
+            ..Default::default()
+        };
+
+        executor.handle(command.clone(), reply.clone()).await;
+        let mut command2 = command;
+        command2.id = 24;
+        executor.handle(command2, reply).await;
+
+        let replies = replies.lock().unwrap();
+        assert_eq!(2, replies.len());
+        assert_eq!(STATUS_COMPLETED, replies[0].status);
+        assert_eq!(STATUS_CANCELLED, replies[1].status);
+        assert!(replies[1]
+            .data
+            .as_deref()
+            .unwrap_or_default()
+            .contains("Too frequent"));
     }
 }

@@ -17,8 +17,8 @@ StarAgent 的 Rust 原生实现，遵循 [`../spec/protocol.md`](../spec/protoco
 - 命令：按 `Id` 去重 1 小时、过期取消、`StartTime` 延迟执行、默认 30s 超时（最大 300s）、
   输出 64KB 头尾截断、进程树终止、最多 4 个并发（shell 串行）
 - 内置命令：`bash`（Unix）、`cmd`（Windows）、`node/synctime`、
-  `node/setchannel`、`node/restart`；`node/reboot`、`deploy/*`、`framework/install`
-  返回“不支持命令”
+  `node/setchannel`、`node/restart`、`node/wakeonlan`；`node/reboot`、`deploy/*`、
+  `framework/install` 返回“不支持命令”
 - 安全默认 `AllowExec=false`；开启后仍受 `AllowedCommands` 白名单、8KB 参数上限、
   超时与 64KB 输出上限约束
 - 配置文件 `staragent.json` + `STARAGENT_` 环境变量覆盖；`Code`/`Secret` 原子持久化，
@@ -231,6 +231,7 @@ go build -o conformance.exe ./cmd/conformance
   状态、耗时与参数字节数。
 - shell 命令默认关闭；开启后仍受白名单、8KB 参数上限、超时与 64KB 输出上限约束。
 - `node/restart` 使用当前可执行文件与原始参数重新拉起进程后退出。
+- `node/wakeonlan` 只接受 MAC 地址，广播地址由本机网卡计算；同组 MAC 3 秒内重复调用忽略。
 - 配置、事件队列使用临时文件 + rename 原子写入；Unix 下配置权限 `0600`（Windows 依赖 ACL）。
 
 ## 已知限制
