@@ -1,0 +1,29 @@
+{
+  "cs": [
+    "Server: {0}"
+  ],
+  "de": [
+    "Server: {0}",
+    "Status"
+  ],
+  "id": [
+    "Status"
+  ],
+  "it": [
+    "Server: {0}"
+  ],
+  "ms": [
+    "Status"
+  ],
+  "nl": [
+    "Project"
+  ],
+  "pt": [
+    "Status",
+    "Site: {0}"
+  ],
+  "ro": [
+    "Server: {0}",
+    "Site: {0}"
+  ]
+}

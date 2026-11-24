@@ -76,7 +76,7 @@
 "Re-login failed: {0}": "Échec de la reconnexion : {0}"
 # 运行时消息补充词条
 "...(the log is too long and was truncated; the last {0} characters are kept)\n": "…(le journal est trop long et a été tronqué ; les {0} derniers caractères sont conservés)\n"
-"Stardust deploy": "Stardust deploy"
+"Stardust deploy": "Déploiement Stardust"
 "Stardust build and deployment tool. Automatically downloads repositories, builds, packs, and pushes artifacts to the Stardust release center, with version management and multi-platform distribution, working with StarAgent for automated deployment pipelines.": "Outil de compilation et de déploiement Stardust. Télécharge automatiquement les dépôts, compile, empaquette et pousse les artefacts vers le centre de publication Stardust, avec gestion des versions et distribution multiplateforme, en collaboration avec StarAgent pour des pipelines de déploiement automatisés."
 "Stardust server address. For example http://star.newlifex.com:6600; empty by default": "Adresse du serveur Stardust. Par exemple http://star.newlifex.com:6600 ; vide par défaut"
 "Disable strict SSH host key checking. Default false (checking enabled)": "Désactiver la vérification stricte de la clé d'hôte SSH. Par défaut false (vérification activée)"
@@ -85,5 +85,6 @@
 "Node secret": "Secret du nœud"
 "Source directory does not exist: {0}": "Le répertoire source n'existe pas : {0}"
 "Artifact directory does not exist: {0}. The build step was skipped (Build Project is disabled on the build node); enable it or correct the output path.": "Le répertoire des artefacts n'existe pas : {0}. L'étape de compilation a été ignorée (Build Project est désactivé sur le nœud de compilation) ; activez-la ou corrigez le chemin de sortie."
-"Unable to read HEAD after checking out commit {0}.": "Unable to read HEAD after checking out commit {0}."
-"HEAD {0} does not match the requested commit {1}.": "HEAD {0} does not match the requested commit {1}."
+"Unable to read HEAD after checking out commit {0}.": "Impossible de lire HEAD après l'extraction du commit {0}."
+"HEAD {0} does not match the requested commit {1}.": "HEAD {0} ne correspond pas au commit demandé {1}."
+

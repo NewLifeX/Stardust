@@ -1,0 +1,29 @@
+{
+  "de": [
+    "Repository: {0}",
+    "Branch: {0}",
+    "Commit: {0} {1} {2}"
+  ],
+  "el": [
+    "Commit: {0} {1} {2}"
+  ],
+  "es": [
+    "Commit: {0} {1} {2}"
+  ],
+  "hu": [
+    "Commit: {0} {1} {2}"
+  ],
+  "it": [
+    "Repository: {0}",
+    "Commit: {0} {1} {2}"
+  ],
+  "pt": [
+    "Commit: {0} {1} {2}"
+  ],
+  "ro": [
+    "Commit: {0} {1} {2}"
+  ],
+  "tr": [
+    "Commit: {0} {1} {2}"
+  ]
+}

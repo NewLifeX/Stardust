@@ -17,7 +17,7 @@
 # 运行时消息补充词条
 "Target network {0} is not a local network address; ignored": "대상 네트워크 {0}은(는) 로컬 네트워크 주소가 아니므로 무시합니다"
 "The number of target addresses exceeds the limit {0}; only the first {0} addresses are scanned in this round. Adjust MaxHosts or narrow Networks": "대상 주소 수가 한도 {0}을(를) 초과했습니다. 이번에는 처음 {0}개 주소만 검사합니다. MaxHosts를 조정하거나 Networks를 좁히세요"
-"Agent expansion": "Agent expansion"
+"Agent expansion": "에이전트 확장"
 "LAN extension for the Stardust agent that discovers nodes and installs StarAgent automatically.": "Stardust 에이전트용 LAN 확장으로, 노드를 검색하고 StarAgent를 자동으로 설치합니다."
 "Enable": "사용"
 "Scan period. Unit: seconds, default 3600.": "검색 주기. 단위는 초, 기본 3600."
@@ -33,3 +33,4 @@
 "Installation package hash. SHA512 string used to verify package integrity.": "설치 패키지 해시입니다. 패키지 무결성을 검증하는 SHA512 문자열입니다."
 "SSH host fingerprint. Used to verify SSH connections": "SSH 호스트 지문. SSH 연결을 검증하는 데 사용됩니다"
 "Installation directory. Leave blank to use the default path.": "설치 디렉터리입니다. 비워 두면 기본 경로를 사용합니다."
+

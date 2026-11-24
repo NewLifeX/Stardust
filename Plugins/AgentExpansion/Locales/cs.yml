@@ -17,7 +17,7 @@
 # 运行时消息补充词条
 "Target network {0} is not a local network address; ignored": "Cílová síť {0} není adresa místní sítě; přeskočeno"
 "The number of target addresses exceeds the limit {0}; only the first {0} addresses are scanned in this round. Adjust MaxHosts or narrow Networks": "Počet cílových adres překračuje limit {0}; v tomto kole se prohledá pouze prvních {0} adres. Upravte MaxHosts nebo zúžte Networks"
-"Agent expansion": "Agent expansion"
+"Agent expansion": "Rozšíření agenta"
 "LAN extension for the Stardust agent that discovers nodes and installs StarAgent automatically.": "Rozšíření LAN pro agenta Stardust, které objevuje uzly a automaticky instaluje StarAgent."
 "Enable": "Povolit"
 "Scan period. Unit: seconds, default 3600.": "Interval skenování. V sekundách, výchozí 3600."
@@ -33,3 +33,4 @@
 "Installation package hash. SHA512 string used to verify package integrity.": "Hash instalačního balíčku. Řetězec SHA512 pro ověření integrity balíčku."
 "SSH host fingerprint. Used to verify SSH connections": "Otisk hostitele SSH. Používá se k ověření připojení SSH"
 "Installation directory. Leave blank to use the default path.": "Adresář instalace. Ponechte prázdné pro výchozí cestu."
+

@@ -76,7 +76,7 @@
 "Re-login failed: {0}": "다시 로그인 실패: {0}"
 # 运行时消息补充词条
 "...(the log is too long and was truncated; the last {0} characters are kept)\n": "...(로그가 너무 길어 잘렸으며 마지막 {0}자를 유지했습니다)\n"
-"Stardust deploy": "Stardust deploy"
+"Stardust deploy": "Stardust 배포"
 "Stardust build and deployment tool. Automatically downloads repositories, builds, packs, and pushes artifacts to the Stardust release center, with version management and multi-platform distribution, working with StarAgent for automated deployment pipelines.": "Stardust 빌드 및 배포 도구입니다. 저장소를 자동으로 다운로드하고 빌드, 패키징하여 아티팩트를 Stardust 릴리스 센터로 푸시하며, 버전 관리와 멀티 플랫폼 배포를 지원하고 StarAgent와 연동하여 배포 파이프라인을 자동화합니다."
 "Stardust server address. For example http://star.newlifex.com:6600; empty by default": "Stardust 서버 주소입니다. 예: http://star.newlifex.com:6600, 기본값은 비어 있음"
 "Disable strict SSH host key checking. Default false (checking enabled)": "엄격한 SSH 호스트 키 검사를 사용하지 않습니다. 기본값 false(검사 사용)"
@@ -85,5 +85,6 @@
 "Node secret": "노드 보안 비밀"
 "Source directory does not exist: {0}": "소스 디렉터리가 없습니다: {0}"
 "Artifact directory does not exist: {0}. The build step was skipped (Build Project is disabled on the build node); enable it or correct the output path.": "산출물 디렉터리가 없습니다: {0}. 빌드 단계가 건너뛰어졌습니다 (빌드 노드에서 Build Project이 비활성화되었습니다). 활성화하거나 출력 경로를 수정하세요."
-"Unable to read HEAD after checking out commit {0}.": "Unable to read HEAD after checking out commit {0}."
-"HEAD {0} does not match the requested commit {1}.": "HEAD {0} does not match the requested commit {1}."
+"Unable to read HEAD after checking out commit {0}.": "커밋 {0}을(를) 체크아웃한 후 HEAD를 읽을 수 없습니다."
+"HEAD {0} does not match the requested commit {1}.": "HEAD {0}이(가) 요청한 커밋 {1}과(와) 일치하지 않습니다."
+

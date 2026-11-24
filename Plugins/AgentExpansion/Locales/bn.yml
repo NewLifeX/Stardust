@@ -17,7 +17,7 @@
 # 运行时消息补充词条
 "Target network {0} is not a local network address; ignored": "লক্ষ্য নেটওয়ার্ক {0} স্থানীয় নেটওয়ার্ক ঠিকানা নয়; উপেক্ষা করা হয়েছে"
 "The number of target addresses exceeds the limit {0}; only the first {0} addresses are scanned in this round. Adjust MaxHosts or narrow Networks": "লক্ষ্য ঠিকানার সংখ্যা সীমা {0} ছাড়িয়ে গেছে; এই রাউন্ডে শুধুমাত্র প্রথম {0} টি ঠিকানা স্ক্যান করা হবে। MaxHosts সামঞ্জস্য করুন বা Networks সংকীর্ণ করুন"
-"Agent expansion": "Agent expansion"
+"Agent expansion": "এজেন্ট সম্প্রসারণ"
 "LAN extension for the Stardust agent that discovers nodes and installs StarAgent automatically.": "Stardust এজেন্টের জন্য LAN এক্সটেনশন যা নোড আবিষ্কার করে এবং স্বয়ংক্রিয়ভাবে StarAgent ইনস্টল করে।"
 "Enable": "সক্ষম করুন"
 "Scan period. Unit: seconds, default 3600.": "স্ক্যান সময়কাল। একক সেকেন্ড, ডিফল্ট 3600।"
@@ -33,3 +33,4 @@
 "Installation package hash. SHA512 string used to verify package integrity.": "ইনস্টলেশন প্যাকেজ হ্যাশ। প্যাকেজের অখণ্ডতা যাচাই করতে SHA512 স্ট্রিং।"
 "SSH host fingerprint. Used to verify SSH connections": "SSH হোস্ট ফিঙ্গারপ্রিন্ট। SSH সংযোগ যাচাই করতে ব্যবহৃত হয়"
 "Installation directory. Leave blank to use the default path.": "ইনস্টলেশন ডিরেক্টরি। ডিফল্ট পথ ব্যবহার করতে খালি রাখুন।"
+

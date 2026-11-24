@@ -17,7 +17,7 @@
 # 运行时消息补充词条
 "Target network {0} is not a local network address; ignored": "Το δίκτυο προορισμού {0} δεν είναι διεύθυνση τοπικού δικτύου· αγνοείται"
 "The number of target addresses exceeds the limit {0}; only the first {0} addresses are scanned in this round. Adjust MaxHosts or narrow Networks": "Ο αριθμός των διευθύνσεων προορισμού υπερβαίνει το όριο {0}· σε αυτόν τον κύκλο σαρώνονται μόνο οι πρώτες {0} διευθύνσεις. Προσαρμόστε το MaxHosts ή περιορίστε το Networks"
-"Agent expansion": "Agent expansion"
+"Agent expansion": "Επέκταση πράκτορα"
 "LAN extension for the Stardust agent that discovers nodes and installs StarAgent automatically.": "Επέκταση LAN για τον πράκτορα Stardust που εντοπίζει κόμβους και εγκαθιστά αυτόματα το StarAgent."
 "Enable": "Ενεργοποίηση"
 "Scan period. Unit: seconds, default 3600.": "Περίοδος σάρωσης. Σε δευτερόλεπτα, προεπιλογή 3600."
@@ -33,3 +33,4 @@
 "Installation package hash. SHA512 string used to verify package integrity.": "Κατακερματισμός πακέτου εγκατάστασης. Συμβολοσειρά SHA512 για επαλήθευση της ακεραιότητας του πακέτου."
 "SSH host fingerprint. Used to verify SSH connections": "Αποτύπωμα κεντρικού υπολογιστή SSH. Χρησιμοποιείται για την επαλήθευση συνδέσεων SSH"
 "Installation directory. Leave blank to use the default path.": "Κατάλογος εγκατάστασης. Αφήστε κενό για την προεπιλεγμένη διαδρομή."
+

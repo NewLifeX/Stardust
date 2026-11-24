@@ -76,7 +76,7 @@
 "Re-login failed: {0}": "Uudelleenkirjautuminen epäonnistui: {0}"
 # 运行时消息补充词条
 "...(the log is too long and was truncated; the last {0} characters are kept)\n": "...(loki on liian pitkä ja se katkaistiin; viimeiset {0} merkkiä säilytetään)\n"
-"Stardust deploy": "Stardust deploy"
+"Stardust deploy": "Stardust-julkaisu"
 "Stardust build and deployment tool. Automatically downloads repositories, builds, packs, and pushes artifacts to the Stardust release center, with version management and multi-platform distribution, working with StarAgent for automated deployment pipelines.": "Stardust-koontityökalu. Lataa tietovarastot automaattisesti, kääntää, paketoi ja lähettää artefaktit Stardust-julkaisukeskukseen, mukana versiohallinta ja monialustainen jakelu, toimien yhdessä StarAgentin kanssa automatisoituihin käyttöönottoputkiin."
 "Stardust server address. For example http://star.newlifex.com:6600; empty by default": "Stardust-palvelimen osoite. Esimerkiksi http://star.newlifex.com:6600; oletuksena tyhjä"
 "Disable strict SSH host key checking. Default false (checking enabled)": "Poista tiukka SSH-isäntäavainten tarkistus käytöstä. Oletus false (tarkistus käytössä)"
@@ -85,5 +85,6 @@
 "Node secret": "Solmun avain"
 "Source directory does not exist: {0}": "Lähdekansiota ei ole olemassa: {0}"
 "Artifact directory does not exist: {0}. The build step was skipped (Build Project is disabled on the build node); enable it or correct the output path.": "Artefaktihakemistoa ei ole: {0}. Käännösvaihe ohitettiin (Build Project on poissa käytöstä käännössolmulla); ota se käyttöön tai korjaa tulostepolku."
-"Unable to read HEAD after checking out commit {0}.": "Unable to read HEAD after checking out commit {0}."
-"HEAD {0} does not match the requested commit {1}.": "HEAD {0} does not match the requested commit {1}."
+"Unable to read HEAD after checking out commit {0}.": "HEAD:iä ei voi lukea commitin {0} noutamisen jälkeen."
+"HEAD {0} does not match the requested commit {1}.": "HEAD {0} ei vastaa pyydettyä committia {1}."
+

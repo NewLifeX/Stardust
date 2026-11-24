@@ -76,7 +76,7 @@
 "Re-login failed: {0}": "ورود مجدد ناموفق بود: {0}"
 # 运行时消息补充词条
 "...(the log is too long and was truncated; the last {0} characters are kept)\n": "...(لاگ بیش از حد طولانی است و بریده شد؛ آخرین {0} نویسه نگه داشته می‌شود)\n"
-"Stardust deploy": "Stardust deploy"
+"Stardust deploy": "استقرار Stardust"
 "Stardust build and deployment tool. Automatically downloads repositories, builds, packs, and pushes artifacts to the Stardust release center, with version management and multi-platform distribution, working with StarAgent for automated deployment pipelines.": "ابزار ساخت و استقرار Stardust. مخزن‌ها را به‌طور خودکار دانلود می‌کند، می‌سازد، بسته‌بندی می‌کند و آرتیفکت‌ها را به مرکز انتشار Stardust ارسال می‌کند، همراه با مدیریت نسخه و توزیع چندسکویی و همکاری با StarAgent برای خطوط لوله استقرار خودکار."
 "Stardust server address. For example http://star.newlifex.com:6600; empty by default": "آدرس سرور Stardust. مثال http://star.newlifex.com:6600؛ پیش‌فرض خالی"
 "Disable strict SSH host key checking. Default false (checking enabled)": "غیرفعال‌سازی بررسی سخت‌گیرانه کلید میزبان SSH. پیش‌فرض false (بررسی فعال)"
@@ -85,5 +85,6 @@
 "Node secret": "کلید گره"
 "Source directory does not exist: {0}": "راهنمای منبع وجود ندارد: {0}"
 "Artifact directory does not exist: {0}. The build step was skipped (Build Project is disabled on the build node); enable it or correct the output path.": "دایرکتوری خروجی وجود ندارد: {0}. گام ساخت نادیده گرفته شد (Build Project در گره ساخت غیرفعال است)؛ آن را فعال کنید یا مسیر خروجی را اصلاح کنید."
-"Unable to read HEAD after checking out commit {0}.": "Unable to read HEAD after checking out commit {0}."
-"HEAD {0} does not match the requested commit {1}.": "HEAD {0} does not match the requested commit {1}."
+"Unable to read HEAD after checking out commit {0}.": "پس از واکشی کامیت {0} خواندن HEAD ممکن نیست."
+"HEAD {0} does not match the requested commit {1}.": "HEAD {0} با کامیت درخواستی {1} مطابقت ندارد."
+

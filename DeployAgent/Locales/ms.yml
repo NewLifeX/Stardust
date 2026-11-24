@@ -76,7 +76,7 @@
 "Re-login failed: {0}": "Log masuk semula gagal: {0}"
 # 运行时消息补充词条
 "...(the log is too long and was truncated; the last {0} characters are kept)\n": "...(log terlalu panjang dan telah dipotong; {0} aksara terakhir dikekalkan)\n"
-"Stardust deploy": "Stardust deploy"
+"Stardust deploy": "Deploy Stardust"
 "Stardust build and deployment tool. Automatically downloads repositories, builds, packs, and pushes artifacts to the Stardust release center, with version management and multi-platform distribution, working with StarAgent for automated deployment pipelines.": "Alat bina dan penggunaan Stardust. Memuat turun repositori secara automatik, membina, membungkus dan menolak artifak ke pusat keluaran Stardust, dengan pengurusan versi dan pengedaran berbilang platform, bekerjasama dengan StarAgent untuk saluran penggunaan automatik."
 "Stardust server address. For example http://star.newlifex.com:6600; empty by default": "Alamat pelayan Stardust. Contoh http://star.newlifex.com:6600; kosong secara lalai"
 "Disable strict SSH host key checking. Default false (checking enabled)": "Lumpuhkan semakan ketat kunci hos SSH. Lalai false (semakan didayakan)"
@@ -85,5 +85,6 @@
 "Node secret": "Rahsia nod"
 "Source directory does not exist: {0}": "Direktori sumber tidak wujud: {0}"
 "Artifact directory does not exist: {0}. The build step was skipped (Build Project is disabled on the build node); enable it or correct the output path.": "Direktori artifak tidak wujud: {0}. Langkah bina dilangkau (Build Project dimatikan pada nod bina); aktifkan item itu atau betulkan laluan output."
-"Unable to read HEAD after checking out commit {0}.": "Unable to read HEAD after checking out commit {0}."
-"HEAD {0} does not match the requested commit {1}.": "HEAD {0} does not match the requested commit {1}."
+"Unable to read HEAD after checking out commit {0}.": "Tidak dapat membaca HEAD selepas checkout commit {0}."
+"HEAD {0} does not match the requested commit {1}.": "HEAD {0} tidak sepadan dengan commit yang diminta {1}."
+

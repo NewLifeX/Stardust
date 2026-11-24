@@ -17,7 +17,7 @@
 # 运行时消息补充词条
 "Target network {0} is not a local network address; ignored": "شبکه مقصد {0} نشانی شبکه محلی نیست؛ نادیده گرفته شد"
 "The number of target addresses exceeds the limit {0}; only the first {0} addresses are scanned in this round. Adjust MaxHosts or narrow Networks": "تعداد نشانی‌های مقصد از حد {0} بیشتر است؛ در این دور فقط {0} نشانی اول پیمایش می‌شود. MaxHosts را تنظیم کنید یا Networks را محدودتر کنید"
-"Agent expansion": "Agent expansion"
+"Agent expansion": "گسترش عامل"
 "LAN extension for the Stardust agent that discovers nodes and installs StarAgent automatically.": "افزونه LAN برای عامل Stardust که گره‌ها را کشف می‌کند و StarAgent را به‌طور خودکار نصب می‌کند."
 "Enable": "فعال‌سازی"
 "Scan period. Unit: seconds, default 3600.": "دوره اسکن. بر حسب ثانیه، پیش‌فرض 3600."
@@ -33,3 +33,4 @@
 "Installation package hash. SHA512 string used to verify package integrity.": "هش بسته نصب. رشته SHA512 برای بررسی یکپارچگی بسته."
 "SSH host fingerprint. Used to verify SSH connections": "اثر انگشت میزبان SSH. برای اعتبارسنجی اتصالات SSH استفاده می‌شود"
 "Installation directory. Leave blank to use the default path.": "پوشه نصب. برای استفاده از مسیر پیش‌فرض خالی بگذارید."
+

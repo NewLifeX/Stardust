@@ -76,7 +76,7 @@
 "Re-login failed: {0}": "Az új bejelentkezés nem sikerült: {0}"
 # 运行时消息补充词条
 "...(the log is too long and was truncated; the last {0} characters are kept)\n": "...(a napló túl hosszú, ezért csonkolva lett; az utolsó {0} karakter maradt meg)\n"
-"Stardust deploy": "Stardust deploy"
+"Stardust deploy": "Stardust telepítés"
 "Stardust build and deployment tool. Automatically downloads repositories, builds, packs, and pushes artifacts to the Stardust release center, with version management and multi-platform distribution, working with StarAgent for automated deployment pipelines.": "Stardust build- és telepítőeszköz. Automatikusan letölti a tárolókat, lefordítja, csomagolja és feltölti az artefaktumokat a Stardust kiadási központba, verziókezeléssel és többplatformos terjesztéssel, a StarAgenttel együttműködve az automatizált telepítési folyamatokhoz."
 "Stardust server address. For example http://star.newlifex.com:6600; empty by default": "Stardust kiszolgáló címe. Például http://star.newlifex.com:6600; alapértelmezésben üres"
 "Disable strict SSH host key checking. Default false (checking enabled)": "Szigorú SSH-gazdagépkulcs-ellenőrzés letiltása. Alapértelmezés: false (ellenőrzés engedélyezve)"
@@ -85,5 +85,6 @@
 "Node secret": "Csomóponttitok"
 "Source directory does not exist: {0}": "A forráskönyvtár nem létezik: {0}"
 "Artifact directory does not exist: {0}. The build step was skipped (Build Project is disabled on the build node); enable it or correct the output path.": "Az összeállítási eredmények könyvtára nem létezik: {0}. A fordítási lépés kihagyásra került (a Build Project tilos van a fordító csomóponton); engedélyezze azt, vagy javítsa a kimeneti útvonalat."
-"Unable to read HEAD after checking out commit {0}.": "Unable to read HEAD after checking out commit {0}."
-"HEAD {0} does not match the requested commit {1}.": "HEAD {0} does not match the requested commit {1}."
+"Unable to read HEAD after checking out commit {0}.": "A HEAD nem olvasható a(z) {0} commit kiolvasása után."
+"HEAD {0} does not match the requested commit {1}.": "A HEAD {0} nem egyezik a kért {1} committal."
+

@@ -76,7 +76,7 @@
 "Re-login failed: {0}": "Nuovo accesso non riuscito: {0}"
 # 运行时消息补充词条
 "...(the log is too long and was truncated; the last {0} characters are kept)\n": "...(il log è troppo lungo ed è stato troncato; sono mantenuti gli ultimi {0} caratteri)\n"
-"Stardust deploy": "Stardust deploy"
+"Stardust deploy": "Distribuzione Stardust"
 "Stardust build and deployment tool. Automatically downloads repositories, builds, packs, and pushes artifacts to the Stardust release center, with version management and multi-platform distribution, working with StarAgent for automated deployment pipelines.": "Strumento di build e distribuzione Stardust. Scarica automaticamente i repository, compila, impacchetta e invia gli artefatti al centro di rilascio Stardust, con gestione delle versioni e distribuzione multipiattaforma, collaborando con StarAgent per pipeline di distribuzione automatizzate."
 "Stardust server address. For example http://star.newlifex.com:6600; empty by default": "Indirizzo del server Stardust. Ad esempio http://star.newlifex.com:6600; vuoto per impostazione predefinita"
 "Disable strict SSH host key checking. Default false (checking enabled)": "Disabilita il controllo rigoroso delle chiavi host SSH. Predefinito: false (controllo abilitato)"
@@ -85,5 +85,6 @@
 "Node secret": "Segreto del nodo"
 "Source directory does not exist: {0}": "La directory sorgente non esiste: {0}"
 "Artifact directory does not exist: {0}. The build step was skipped (Build Project is disabled on the build node); enable it or correct the output path.": "La directory degli artefatti non esiste: {0}. Il passaggio di compilazione è stato ignorato (Build Project è disabilitato sul nodo di compilazione); abilitarlo o correggere il percorso di output."
-"Unable to read HEAD after checking out commit {0}.": "Unable to read HEAD after checking out commit {0}."
-"HEAD {0} does not match the requested commit {1}.": "HEAD {0} does not match the requested commit {1}."
+"Unable to read HEAD after checking out commit {0}.": "Impossibile leggere HEAD dopo il checkout del commit {0}."
+"HEAD {0} does not match the requested commit {1}.": "HEAD {0} non corrisponde al commit richiesto {1}."
+

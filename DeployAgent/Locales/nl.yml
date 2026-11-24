@@ -76,7 +76,7 @@
 "Re-login failed: {0}": "Opnieuw aanmelden mislukt: {0}"
 # 运行时消息补充词条
 "...(the log is too long and was truncated; the last {0} characters are kept)\n": "...(het logboek is te lang en is afgekapt; de laatste {0} tekens worden bewaard)\n"
-"Stardust deploy": "Stardust deploy"
+"Stardust deploy": "Stardust-implementatie"
 "Stardust build and deployment tool. Automatically downloads repositories, builds, packs, and pushes artifacts to the Stardust release center, with version management and multi-platform distribution, working with StarAgent for automated deployment pipelines.": "Stardust-tool voor build en implementatie. Downloadt automatisch repositories, bouwt, verpakt en pusht artefacten naar het Stardust-releasecentrum, met versiebeheer en distributie naar meerdere platforms, en werkt samen met StarAgent voor geautomatiseerde implementatiepipelines."
 "Stardust server address. For example http://star.newlifex.com:6600; empty by default": "Stardust-serveradres. Bijvoorbeeld http://star.newlifex.com:6600; standaard leeg"
 "Disable strict SSH host key checking. Default false (checking enabled)": "Strikte SSH-hostsleutelcontrole uitschakelen. Standaard false (controle ingeschakeld)"
@@ -85,5 +85,6 @@
 "Node secret": "Nodegeheim"
 "Source directory does not exist: {0}": "De bronmap bestaat niet: {0}"
 "Artifact directory does not exist: {0}. The build step was skipped (Build Project is disabled on the build node); enable it or correct the output path.": "Artefactmap bestaat niet: {0}. De build-stap is overgeslagen (Build Project is uitgeschakeld op het buildknooppunt); schakel het in of corrigeer het uitvoerpad."
-"Unable to read HEAD after checking out commit {0}.": "Unable to read HEAD after checking out commit {0}."
-"HEAD {0} does not match the requested commit {1}.": "HEAD {0} does not match the requested commit {1}."
+"Unable to read HEAD after checking out commit {0}.": "Kan HEAD niet lezen na het uitchecken van commit {0}."
+"HEAD {0} does not match the requested commit {1}.": "HEAD {0} komt niet overeen met de gevraagde commit {1}."
+
