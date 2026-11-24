@@ -12,15 +12,16 @@
 
 云上的 StarServer 无法把广播送进家庭/办公室局域网，因此采用“同网段在线节点代发”的方式。
 
-控制台入口：Vue 节点列表行内「唤醒」；MVC（Cube）节点列表行内「唤醒」，节点有 MAC 且当前用户具备 `Update` 权限时显示，确认后请求 `/Nodes/Node/WakeUp?id=`。
+控制台入口：Vue 与 MVC（Cube）节点列表行内「唤醒」，节点有 MAC 且当前用户具备 `Update` 权限时显示，请求 `/Nodes/Node/WakeUp?id=`；选中多行后可用批量工具栏「唤醒」，请求 `/Nodes/Node/WakeUpBatch?keys=`，逐个节点挑选代发节点并汇总成功数量。
 
 ## 2. 流程
 
 ```
 StarWeb（Vue / MVC）
-  │  GET /Nodes/Node/WakeUp?id=
+  │  GET /Nodes/Node/WakeUp?id=            单节点
+  │  GET /Nodes/Node/WakeUpBatch?keys=     批量（逐个节点）
   ▼
-NodeController.WakeUp
+NodeController.WakeUp / WakeUpBatch
   │  1. 校验节点存在、有 MAC
   │  2. NodeWakeService.FindRelays 挑选同网段在线节点
   │  3. 对每个代发节点下发 node/wakeonlan，参数 {"macs":"...","code":"...","name":"..."}
