@@ -11,7 +11,7 @@ namespace Stardust.Server.Services;
 /// <remarks>
 /// 广播只能在二层广播域内生效，因此由目标所在局域网内的在线节点代发。
 /// 代发节点按“网关 MAC → 网关 IP → 私有网段 /24 → 公网 IP”逐级兜底挑选，
-/// 并排除移动端、部署代理等未实现该命令的产品。
+/// 并排除移动端、部署代理、C++ 原生代理等未实现该命令的产品；桌面与 Go/Rust 原生代理均可代发。
 /// </remarks>
 /// <param name="starFactory">星尘工厂，用于向代发节点下发命令</param>
 public class NodeWakeService(StarFactory starFactory)
@@ -24,9 +24,9 @@ public class NodeWakeService(StarFactory starFactory)
     /// <summary>最多挑选的代发节点数</summary>
     public Int32 MaxRelays { get; set; } = 5;
 
-    /// <summary>不支持局域网唤醒的产品编码。移动端与部署代理没有实现 node/wakeonlan 命令</summary>
+    /// <summary>不支持局域网唤醒的产品编码。移动端、部署代理与 C++ 原生代理没有实现 node/wakeonlan 命令</summary>
     /// <remarks>未知或自定义产品编码默认放行，第三方代理只要实现同名命令即可参与代发</remarks>
-    public static String[] UnsupportedRelayProducts { get; set; } = ["StarAgent-Mobile", "StarDeploy"];
+    public static String[] UnsupportedRelayProducts { get; set; } = ["StarAgent-Mobile", "StarDeploy", "StarAgent-Cpp"];
 
     /// <summary>查找同网段的在线节点</summary>
     /// <param name="target">目标节点</param>

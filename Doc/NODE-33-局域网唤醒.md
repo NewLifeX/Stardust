@@ -44,7 +44,7 @@ StarAgent（代发节点）
 
 在线节点来自 `NodeOnline`，只取最近 30 分钟仍有心跳的记录，并要求仍能查到对应 `Node`。目标有项目归属时，代发节点必须与目标同项目，避免把目标 MAC 与节点信息暴露给其它项目的命令记录；在线记录按项目从数据层过滤，大部署下不再全表扫描。
 
-代发节点必须实现了 `node/wakeonlan` 命令。移动端（`StarAgent-Mobile`）与部署代理（`StarDeploy`）没有实现该命令，会被排除；未知或自定义产品编码默认放行，第三方代理只要实现同名命令即可参与代发（`NodeWakeService.UnsupportedRelayProducts` 可调整）。
+代发节点必须实现了 `node/wakeonlan` 命令。桌面 StarAgent 与 Go（`StarAgent-Go`）、Rust（`StarAgent-Rust`）原生代理均已实现；移动端（`StarAgent-Mobile`）、部署代理（`StarDeploy`）与 C++ 原生代理（`StarAgent-Cpp`）没有实现，会被排除。未知或自定义产品编码默认放行，第三方代理只要实现同名命令即可参与代发（`NodeWakeService.UnsupportedRelayProducts` 可调整）。
 
 ## 4. Agent 命令
 
@@ -60,13 +60,15 @@ StarAgent（代发节点）
 - 同一组目标 MAC 3 秒内重复调用直接忽略，避免命令重试造成广播风暴；连续唤醒多台不同机器互不影响。
 - 返回英文技术结果（如 `WOL sent: 2 MAC(s), 4 packet(s)`），平台不等待回包。
 
+桌面 StarAgent（[WakeOnLan.cs](../StarAgent/WakeOnLan.cs)）与 Go/Rust 原生代理使用同一套规则与回复文本；原生实现只依赖系统 UDP 广播，不引入额外依赖。
+
 ## 5. 限制
 
 1. 目标机器必须在 BIOS/UEFI 与网卡驱动中启用 WOL；Windows「快速启动」可能需要在网卡电源管理里允许魔术包唤醒。
 2. 必须有同网段在线 Agent 代发；只有云上 StarServer 时无法直接唤醒。
 3. 广播不能跨 VLAN/网段；同网段判断失效时按上表逐级兜底，仍无结果会明确提示。
 4. Wi-Fi 网卡通常不支持 WOL（需 WOWLAN），有线网卡成功率高。
-5. 原生 Agent（Go/Rust/C++）暂不支持该命令，会回复“不支持命令”。
+5. C++ 原生 Agent 暂不支持该命令，会回复“不支持命令”；Go/Rust 原生代理已支持，桌面 StarAgent 默认支持。
 
 后续可选项：StarServer/StarWeb 本机直发 WOL。只有在控制台与目标处于同一局域网（例如全部自建在同一机房/家庭网络）时才有意义；云上部署发了也到不了目标网段，因此本期不做，默认也不应开启。
 

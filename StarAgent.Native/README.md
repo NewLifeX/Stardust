@@ -48,7 +48,7 @@ pwsh ./StarAgent.Native/packaging/build.ps1
 - WebSocket 命令通道 + HTTP 心跳命令降级
 - 事件上报、命令回复、指数退避重连
 - CPU/内存/磁盘/网络/进程/运行时长等基础指标
-- `bash`/`cmd`/`node/synctime`/`node/setchannel`/`node/restart`
+- `bash`/`cmd`/`node/synctime`/`node/setchannel`/`node/restart`/`node/wakeonlan`
 - 只提供前台进程（`run`/`once`/`version`），**不提供系统服务安装（install/uninstall/start/stop/status）**；systemd / procd / launchd / 计划任务由部署侧提供模板（见 `packaging/install/`）
 - 引导安装（`bootstrap`）：登录后按 OS/架构取包，安装 .NET 运行时与完整版 StarAgent，供需要完整能力的节点升格（C++/Go/Rust 均已实现）
 - 移动端由 .NET 移动代理覆盖（`StarAgent.Mobile` / `StarAgent.Android` / `StarAgent.iOS`，不在本目录）；`ProductCode=StarAgent-Mobile`，产物在 `Bin/Agent/mobile/`，构建与冒烟见各项目下的 `pack-android.ps1`、`run-android.ps1`、`run-ios.sh`

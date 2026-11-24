@@ -425,6 +425,7 @@ Authorization: Bearer <Token>
 | `node/synctime` | 全平台 | 可选参数为时间字符串；无参数时使用服务端时间 |
 | `node/setchannel` | 全平台 | 修改更新通道并持久化 |
 | `node/restart` | 全平台 | 延迟 1 秒后重启自身进程/服务 |
+| `node/wakeonlan` | 全平台 | 局域网唤醒。参数为 JSON `{"macs":"..."}` 或纯 MAC 文本；逐网卡 UDP 广播魔术包（端口 9/7），同组 MAC 3 秒内重复调用忽略 |
 | `node/bootstrap` | 全平台 | 引导安装 .NET 运行时与完整版 StarAgent；需配置 `Bootstrap=true`（默认关闭，否则回复 `取消`/“引导安装未启用”） |
 | `node/reboot` | 全平台 | 首版不实现，回复不支持 |
 | `deploy/*` | — | 首版不实现，回复不支持 |

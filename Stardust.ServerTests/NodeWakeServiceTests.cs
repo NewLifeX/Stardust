@@ -195,7 +195,7 @@ public class NodeWakeServiceTests
     }
 
     [Fact]
-    [DisplayName("排除移动端与部署代理，自定义产品放行")]
+    [DisplayName("排除移动端、部署代理与 C++ 代理，自定义产品放行")]
     public void SelectRelays_ExcludeUnsupportedProducts()
     {
         var target = CreateTarget();
@@ -205,10 +205,16 @@ public class NodeWakeServiceTests
             CreateNode(3, "192.168.1.1/AA-BB-CC-DD-EE-FF", "192.168.1.30"),
             CreateNode(4, "192.168.1.1/AA-BB-CC-DD-EE-FF", "192.168.1.40"),
             CreateNode(5, "192.168.1.1/AA-BB-CC-DD-EE-FF", "192.168.1.50"),
+            CreateNode(6, "192.168.1.1/AA-BB-CC-DD-EE-FF", "192.168.1.60"),
+            CreateNode(7, "192.168.1.1/AA-BB-CC-DD-EE-FF", "192.168.1.70"),
+            CreateNode(8, "192.168.1.1/AA-BB-CC-DD-EE-FF", "192.168.1.80"),
         };
         nodes[0].ProductCode = "StarAgent";
         nodes[2].ProductCode = "StarDeploy";
         nodes[3].ProductCode = "StarAgent-Custom";
+        nodes[4].ProductCode = "StarAgent-Go";
+        nodes[5].ProductCode = "StarAgent-Rust";
+        nodes[6].ProductCode = "StarAgent-Cpp";
 
         var onlines = new List<NodeOnline>
         {
@@ -216,16 +222,22 @@ public class NodeWakeServiceTests
             CreateOnline(3, "192.168.1.1/AA-BB-CC-DD-EE-FF", "192.168.1.30"),
             CreateOnline(4, "192.168.1.1/AA-BB-CC-DD-EE-FF", "192.168.1.40"),
             CreateOnline(5, "192.168.1.1/AA-BB-CC-DD-EE-FF", "192.168.1.50"),
+            CreateOnline(6, "192.168.1.1/AA-BB-CC-DD-EE-FF", "192.168.1.60"),
+            CreateOnline(7, "192.168.1.1/AA-BB-CC-DD-EE-FF", "192.168.1.70"),
+            CreateOnline(8, "192.168.1.1/AA-BB-CC-DD-EE-FF", "192.168.1.80"),
         };
         // 在线记录的产品编码优先于节点记录，避免登录信息未刷新的旧记录混入
         onlines[0].ProductCode = "StarAgent";
         onlines[1].ProductCode = "StarAgent-Mobile";
+        onlines[6].ProductCode = "StarAgent-Cpp";
 
         var relays = NodeWakeService.SelectRelays(target, onlines, nodes);
 
-        Assert.Equal(2, relays.Count);
+        Assert.Equal(4, relays.Count);
         Assert.Contains(relays, e => e.NodeID == 2);
         Assert.Contains(relays, e => e.NodeID == 5);
+        Assert.Contains(relays, e => e.NodeID == 6);
+        Assert.Contains(relays, e => e.NodeID == 7);
     }
 
     [Fact]
