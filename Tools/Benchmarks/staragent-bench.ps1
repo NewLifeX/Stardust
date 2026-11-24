@@ -9,7 +9,16 @@ StarAgent 启动性能基准：同一台机器上对比 .NET 通用/JIT/R2R/AOT 
 4. 汇总：输出原始 CSV 与 Markdown 汇总表。
 
 .PARAMETER Iterations
-每个变体每个模式的采样次数，默认取 machines.json 的 iterations（15）。
+每个变体的空载/完整初始化采样次数，默认取 machines.json 的 iterations（15）。
+
+.PARAMETER RunIterations
+完整生命周期（登录 → 首次心跳）每个变体的采样次数，默认 3。
+
+.PARAMETER Modes
+测量模式：empty（空载 --version）、full（完整初始化 -status）、run（真实服务端登录 + 首次心跳）。
+
+.PARAMETER AgentServer
+完整生命周期使用的星尘服务端，默认 http://star.newlifex.com:6600。
 
 .PARAMETER Machines
 只测指定机器（名称匹配 machines.json），默认全部。
@@ -34,12 +43,19 @@ pwsh Tools/Benchmarks/staragent-bench.ps1
 
 .EXAMPLE
 pwsh Tools/Benchmarks/staragent-bench.ps1 -Machines A2,sh14.newlifex.com -Iterations 10
+
+.EXAMPLE
+pwsh Tools/Benchmarks/staragent-bench.ps1 -Modes run -RunIterations 3 -SkipBuild -SkipDeploy
 #>
 [CmdletBinding()]
 param(
     [String]$RepoRoot = '',
     [Int]$Iterations = 0,
+    [Int]$RunIterations = 3,
     [String[]]$Machines = @(),
+    [ValidateSet('empty', 'full', 'run')]
+    [String[]]$Modes = @('empty', 'full'),
+    [String]$AgentServer = 'http://star.newlifex.com:6600',
     [Switch]$SkipBuild,
     [Switch]$SkipNativeLinuxBuild,
     [Switch]$SkipDeploy,
@@ -294,12 +310,16 @@ ls -l /root/bench/build
 }
 
 function Build-BenchRunner {
-    Write-Host '== 编译测量小程序 bench-run'
+    Write-Host '== 编译测量小程序 bench-run / bench-heartbeat'
     $src = Join-Path $PSScriptRoot 'bench-run.c'
+    $srcHb = Join-Path $PSScriptRoot 'bench-heartbeat.c'
     $outX64 = Join-Path $BenchRoot 'bench-run-linux-x64'
+    $outHbX64 = Join-Path $BenchRoot 'bench-heartbeat-linux-x64'
     $srcWsl = ConvertTo-WslPath $src
+    $srcHbWsl = ConvertTo-WslPath $srcHb
     $outWsl = ConvertTo-WslPath $outX64
-    & wsl -e bash -c "gcc -O2 -static -o '$outWsl' '$srcWsl'"
+    $outHbWsl = ConvertTo-WslPath $outHbX64
+    & wsl -e bash -c "gcc -O2 -static -o '$outWsl' '$srcWsl' && gcc -O2 -static -o '$outHbWsl' '$srcHbWsl'"
     if ($LASTEXITCODE -ne 0) {
         Write-Warning 'WSL 静态编译失败，将在各目标机上分别编译'
         $outX64 = $null
@@ -307,9 +327,11 @@ function Build-BenchRunner {
 
     $armHost = 'root@10.0.0.10'
     & scp -q $src "${armHost}:/root/bench-run.c"
-    & ssh $armHost 'gcc -O2 -o /root/bench-run /root/bench-run.c'
-    if ($LASTEXITCODE -ne 0) { throw 'A2 编译 bench-run 失败' }
+    & scp -q $srcHb "${armHost}:/root/bench-heartbeat.c"
+    & ssh $armHost 'gcc -O2 -o /root/bench-run /root/bench-run.c && gcc -O2 -o /root/bench-heartbeat /root/bench-heartbeat.c'
+    if ($LASTEXITCODE -ne 0) { throw 'A2 编译测量程序失败' }
     & scp -q "${armHost}:/root/bench-run" (Join-Path $BenchRoot 'bench-run-linux-arm64')
+    & scp -q "${armHost}:/root/bench-heartbeat" (Join-Path $BenchRoot 'bench-heartbeat-linux-arm64')
 
     return $outX64
 }
@@ -353,33 +375,42 @@ function Deploy-Variants([Object]$Machine) {
         Deploy-LinuxPackage $Machine $v.Id $src
     }
 
-    # 编译/上传 bench-run 与 runner 脚本
+    # 编译/上传 bench-run、bench-heartbeat 与 runner 脚本
     $runner = Join-Path $PSScriptRoot 'linux-runner.sh'
+    $helpers = @(
+        @{ Name = 'bench-run'; Source = 'bench-run.c' },
+        @{ Name = 'bench-heartbeat'; Source = 'bench-heartbeat.c' }
+    )
     if ($Machine.kind -eq 'wsl') {
         $wslRoot = ConvertTo-WslPath $Machine.workDir
         $wslRunner = ConvertTo-WslPath $runner
         & wsl -e bash -c "mkdir -p '$wslRoot' && cp '$wslRunner' '$wslRoot/linux-runner.sh' && chmod +x '$wslRoot/linux-runner.sh'"
-        $helper = Join-Path $BenchRoot 'bench-run-linux-x64'
-        if (Test-Path $helper) {
-            $wslHelper = ConvertTo-WslPath $helper
-            & wsl -e bash -c "cp '$wslHelper' '$wslRoot/bench-run' && chmod +x '$wslRoot/bench-run'"
-        }
-        else {
-            $wslSrc = ConvertTo-WslPath (Join-Path $PSScriptRoot 'bench-run.c')
-            & wsl -e bash -c "gcc -O2 -o '$wslRoot/bench-run' '$wslSrc'"
+        foreach ($h in $helpers) {
+            $helper = Join-Path $BenchRoot "$($h.Name)-linux-x64"
+            if (Test-Path $helper) {
+                $wslHelper = ConvertTo-WslPath $helper
+                & wsl -e bash -c "cp '$wslHelper' '$wslRoot/$($h.Name)' && chmod +x '$wslRoot/$($h.Name)'"
+            }
+            else {
+                $wslSrc = ConvertTo-WslPath (Join-Path $PSScriptRoot $h.Source)
+                & wsl -e bash -c "gcc -O2 -o '$wslRoot/$($h.Name)' '$wslSrc'"
+            }
         }
     }
     else {
         & scp -q $runner "$($Machine.host):$($Machine.workDir)/linux-runner.sh"
         & ssh $Machine.host "chmod +x '$($Machine.workDir)/linux-runner.sh'"
-        $helper = if ($Machine.rid -eq 'linux-arm64') { Join-Path $BenchRoot 'bench-run-linux-arm64' } else { Join-Path $BenchRoot 'bench-run-linux-x64' }
-        if (Test-Path $helper) {
-            & scp -q $helper "$($Machine.host):$($Machine.workDir)/bench-run"
-            & ssh $Machine.host "chmod +x '$($Machine.workDir)/bench-run'"
-        }
-        else {
-            & scp -q (Join-Path $PSScriptRoot 'bench-run.c') "$($Machine.host):$($Machine.workDir)/bench-run.c"
-            & ssh $Machine.host "gcc -O2 -o '$($Machine.workDir)/bench-run' '$($Machine.workDir)/bench-run.c'"
+        $rid = if ($Machine.rid -eq 'linux-arm64') { 'linux-arm64' } else { 'linux-x64' }
+        foreach ($h in $helpers) {
+            $helper = Join-Path $BenchRoot "$($h.Name)-$rid"
+            if (Test-Path $helper) {
+                & scp -q $helper "$($Machine.host):$($Machine.workDir)/$($h.Name)"
+                & ssh $Machine.host "chmod +x '$($Machine.workDir)/$($h.Name)'"
+            }
+            else {
+                & scp -q (Join-Path $PSScriptRoot $h.Source) "$($Machine.host):$($Machine.workDir)/$($h.Name).c"
+                & ssh $Machine.host "gcc -O2 -o '$($Machine.workDir)/$($h.Name)' '$($Machine.workDir)/$($h.Name).c'"
+            }
         }
     }
 }
@@ -395,11 +426,20 @@ function New-Manifest([Object]$Machine) {
         if ($v.Kind -eq 'dotnet') {
             $exe = if ($v.Id -eq 'dotnet-universal') { '/usr/bin/dotnet' } else { './StarAgent' }
             $dll = if ($v.Id -eq 'dotnet-universal') { 'StarAgent.dll' } else { '' }
-            $lines.Add("$($v.Id)`tempty`t$exe`t$dll`t--version")
-            $lines.Add("$($v.Id)`tfull`t$exe`t$dll`t-status")
+            if ($Modes -contains 'empty') { $lines.Add("$($v.Id)`tempty`t$exe`t$dll`t--version`t") }
+            if ($Modes -contains 'full') { $lines.Add("$($v.Id)`tfull`t$exe`t$dll`t-status`t") }
+            if ($Modes -contains 'run') {
+                if ($v.Id -eq 'dotnet-universal') {
+                    $lines.Add("$($v.Id)`trun`t$exe`tStarAgent.dll`t-once -server $AgentServer`t")
+                }
+                else {
+                    $lines.Add("$($v.Id)`trun`t$exe`t-once`t-server $AgentServer`t")
+                }
+            }
         }
         else {
-            $lines.Add("$($v.Id)`tempty`t./staragent`tversion`t")
+            if ($Modes -contains 'empty') { $lines.Add("$($v.Id)`tempty`t./staragent`tversion`t`t") }
+            if ($Modes -contains 'run') { $lines.Add("$($v.Id)`trun`t./staragent`tonce`t--server $AgentServer`t") }
         }
     }
     return ($lines -join "`n") + "`n"
@@ -414,14 +454,14 @@ function Invoke-LinuxBench([Object]$Machine) {
         $wslRoot = ConvertTo-WslPath $Machine.workDir
         $wslLocal = ConvertTo-WslPath $local
         & wsl -e bash -c "cp '$wslLocal' '$wslRoot/manifest.tsv'"
-        $output = & wsl -e bash -c "bash '$wslRoot/linux-runner.sh' '$wslRoot' $Iterations"
+        $output = & wsl -e bash -c "bash '$wslRoot/linux-runner.sh' '$wslRoot' $Iterations $RunIterations"
         if ($LASTEXITCODE -ne 0) { throw "WSL 运行失败" }
         return $output
     }
 
     & scp -q $local "$($Machine.host):$($Machine.workDir)/manifest.tsv"
     if ($LASTEXITCODE -ne 0) { throw "上传 manifest 失败：$($Machine.name)" }
-    $output = & ssh $Machine.host "bash '$($Machine.workDir)/linux-runner.sh' '$($Machine.workDir)' $Iterations"
+    $output = & ssh $Machine.host "bash '$($Machine.workDir)/linux-runner.sh' '$($Machine.workDir)' $Iterations $RunIterations"
     if ($LASTEXITCODE -ne 0) { throw "运行失败：$($Machine.name)" }
     return $output
 }
@@ -435,15 +475,9 @@ function Invoke-WindowsBench([Object]$Machine) {
         $exe = if ($v.Id -eq 'dotnet-universal') { $dotnet } else { Join-Path $dir 'StarAgent.exe' }
         if ($v.Kind -eq 'native') { $exe = Join-Path $dir 'staragent.exe' }
 
-        $cases = if ($v.Kind -eq 'dotnet') {
-            @(
-                [pscustomobject]@{ Mode = 'empty'; Arg = '--version' },
-                [pscustomobject]@{ Mode = 'full'; Arg = '-status' }
-            )
-        }
-        else {
-            @([pscustomobject]@{ Mode = 'empty'; Arg = 'version' })
-        }
+        $cases = @()
+        if ($Modes -contains 'empty') { $cases += [pscustomobject]@{ Mode = 'empty'; Arg = if ($v.Kind -eq 'dotnet') { '--version' } else { 'version' } } }
+        if ($Modes -contains 'full' -and $v.Kind -eq 'dotnet') { $cases += [pscustomobject]@{ Mode = 'full'; Arg = '-status' } }
 
         foreach ($case in $cases) {
             $mode = $case.Mode
@@ -456,12 +490,105 @@ function Invoke-WindowsBench([Object]$Machine) {
                 $m = Measure-WindowsProcess $exe $argLine $dir 1
                 $rows.Add([pscustomobject]@{
                     machine = $Machine.name; variant = $v.Id; mode = $mode; run = $i
-                    wall_ms = $m.WallMs; cpu_ms = $m.CpuMs; rss_kb = $m.PeakWorkingSetKb; exit = $m.ExitCode
+                    wall_ms = $m.WallMs; cpu_ms = $m.CpuMs; rss_kb = $m.PeakWorkingSetKb; exit = $m.ExitCode; marker = ''
+                })
+            }
+        }
+
+        if ($Modes -contains 'run') {
+            $marker = ''
+            $runArg = if ($v.Id -eq 'dotnet-universal') {
+                "`"$dir\StarAgent.dll`" -once -server $AgentServer"
+            }
+            elseif ($v.Kind -eq 'native') {
+                "once --server $AgentServer"
+            }
+            else {
+                "-once -server $AgentServer"
+            }
+
+            $null = Measure-WindowsHeartbeat $exe $runArg $dir $marker 120
+            for ($i = 1; $i -le $RunIterations; $i++) {
+                $m = Measure-WindowsHeartbeat $exe $runArg $dir $marker 120
+                $rows.Add([pscustomobject]@{
+                    machine = $Machine.name; variant = $v.Id; mode = 'run'; run = $i
+                    wall_ms = $m.WallMs; cpu_ms = $m.CpuMs; rss_kb = $m.PeakWorkingSetKb; exit = $m.ExitCode; marker = $m.Marker
                 })
             }
         }
     }
     return $rows
+}
+
+function Measure-WindowsHeartbeat([String]$Exe, [String]$Arguments, [String]$WorkDir, [String]$Marker, [Int]$TimeoutSec = 120) {
+    $psi = [System.Diagnostics.ProcessStartInfo]::new()
+    $psi.FileName = $Exe
+    $psi.Arguments = $Arguments
+    $psi.WorkingDirectory = $WorkDir
+    $psi.UseShellExecute = $false
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError = $true
+    $psi.CreateNoWindow = $true
+
+    $sw = [System.Diagnostics.Stopwatch]::StartNew()
+    $logDir = Join-Path $WorkDir 'Log'
+
+    # 清理上一次运行留下的日志，避免轮询到旧的心跳标记
+    if (Test-Path $logDir) {
+        Get-ChildItem $logDir -Filter '*.log' -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+    }
+
+    $p = [System.Diagnostics.Process]::Start($psi)
+    $outTask = $p.StandardOutput.ReadToEndAsync()
+    $errTask = $p.StandardError.ReadToEndAsync()
+    $peakPrivate = 0L
+    $peakWs = 0L
+    $found = $false
+
+    while (-not $p.HasExited) {
+        try {
+            $p.Refresh()
+            if ($p.WorkingSet64 -gt $peakWs) { $peakWs = $p.WorkingSet64 }
+            $priv = $p.PrivateMemorySize64
+            if ($priv -gt $peakPrivate) { $peakPrivate = $priv }
+        }
+        catch { }
+
+        if (-not [string]::IsNullOrEmpty($Marker)) {
+            try {
+                $log = Get-ChildItem $logDir -Filter '*.log' -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+                if ($log) {
+                    $text = [System.IO.File]::ReadAllText($log.FullName)
+                    if ($text.Contains($Marker)) { $found = $true; break }
+                }
+            }
+            catch { }
+        }
+
+        if ($sw.Elapsed.TotalSeconds -gt $TimeoutSec) { break }
+
+        Start-Sleep -Milliseconds 10
+    }
+
+    $wall = $sw.Elapsed.TotalMilliseconds
+    if (-not $p.HasExited) {
+        try { $p.Kill($true) } catch { try { $p.Kill() } catch { } }
+        $p.WaitForExit(5000) | Out-Null
+    }
+    $p.WaitForExit()
+    $sw.Stop()
+    try { $null = $outTask.Result } catch { }
+    try { $null = $errTask.Result } catch { }
+    try { if ($p.PeakWorkingSet64 -gt $peakWs) { $peakWs = $p.PeakWorkingSet64 } } catch { }
+
+    return [pscustomobject]@{
+        WallMs = [math]::Round($wall, 3)
+        CpuMs = [math]::Round($p.TotalProcessorTime.TotalMilliseconds, 3)
+        PeakWorkingSetKb = [int64]($peakWs / 1KB)
+        PeakPrivateKb = [int64]($peakPrivate / 1KB)
+        ExitCode = if ($p.HasExited) { $p.ExitCode } else { -1 }
+        Marker = if ($found) { '1' } elseif ([string]::IsNullOrEmpty($Marker)) { '0' } else { '-1' }
+    }
 }
 
 function Measure-WindowsProcess([String]$Exe, [String]$Arguments, [String]$WorkDir, [Int]$Count = 1) {
@@ -538,9 +665,9 @@ function Get-PackageSizes {
 function Write-Summary([Object[]]$Rows) {
     $sizes = Get-PackageSizes
     $sb = [System.Text.StringBuilder]::new()
-    [void]$sb.AppendLine("# StarAgent 启动性能原始汇总")
+    [void]$sb.AppendLine("# StarAgent 启动与完整生命周期原始汇总")
     [void]$sb.AppendLine()
-    [void]$sb.AppendLine("> 生成时间：$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') | 每变体 $Iterations 次取中位数")
+    [void]$sb.AppendLine("> 生成时间：$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') | 启动每变体 $Iterations 次、生命周期每变体 $RunIterations 次取中位数")
     [void]$sb.AppendLine()
 
     [void]$sb.AppendLine('## 包大小（MB）')
@@ -559,8 +686,15 @@ function Write-Summary([Object[]]$Rows) {
     }
     [void]$sb.AppendLine()
 
-    foreach ($mode in 'empty', 'full') {
-        $title = if ($mode -eq 'empty') { '空载启动（--version / version）' } else { '完整初始化（-status，仅 .NET）' }
+    foreach ($mode in 'empty', 'full', 'run') {
+        $modeRows = @($Rows | Where-Object { $_.mode -eq $mode })
+        if ($modeRows.Count -eq 0) { continue }
+
+        $title = switch ($mode) {
+            'empty' { '空载启动（--version / version）' }
+            'full' { '完整初始化（-status，仅 .NET）' }
+            default { '完整生命周期（真实服务端：登录 → 首次心跳，-once / once）' }
+        }
         [void]$sb.AppendLine("## $title")
         [void]$sb.AppendLine()
 
@@ -572,8 +706,8 @@ function Write-Summary([Object[]]$Rows) {
             }
             [void]$sb.AppendLine("### $metricLabel")
             [void]$sb.AppendLine()
-            $variantIds = @($Rows | Where-Object { $_.mode -eq $mode } | Select-Object -ExpandProperty variant -Unique)
-            $machineNames = @($Rows | Where-Object { $_.mode -eq $mode } | Select-Object -ExpandProperty machine -Unique)
+            $variantIds = @($modeRows | Select-Object -ExpandProperty variant -Unique)
+            $machineNames = @($modeRows | Select-Object -ExpandProperty machine -Unique)
             [void]$sb.AppendLine('| 机器 | ' + (($variantIds | ForEach-Object { $VariantDefs | Where-Object Id -eq $_ | Select-Object -ExpandProperty Label }) -join ' | ') + ' |')
             [void]$sb.AppendLine('|------|' + (($variantIds | ForEach-Object { '---:' }) -join '|') + '|')
             foreach ($m in $machineNames) {
@@ -621,9 +755,11 @@ foreach ($machine in $AllMachines) {
                     if ($line -match '^variant,') { continue }
                     if ([string]::IsNullOrWhiteSpace($line)) { continue }
                     $p = $line.Trim().Split(',')
+                    if ($p.Count -lt 7 -or [string]::IsNullOrWhiteSpace($p[3])) { continue }
+                    $marker = if ($p.Count -ge 8) { $p[7] } else { '' }
                     $allRows.Add([pscustomobject]@{
                         machine = $machine.name; variant = $p[0]; mode = $p[1]; run = [int]$p[2]
-                        wall_ms = [double]$p[3]; cpu_ms = [double]$p[4]; rss_kb = [double]$p[5]; exit = $p[6]
+                        wall_ms = [double]$p[3]; cpu_ms = [double]$p[4]; rss_kb = [double]$p[5]; exit = $p[6]; marker = $marker
                     })
                 }
             }

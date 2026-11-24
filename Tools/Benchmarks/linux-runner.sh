@@ -8,31 +8,50 @@ set -u
 
 workdir=${1:?workdir}
 iters=${2:-15}
+run_iters=${3:-3}
 
-echo "variant,mode,run,wall_ms,cpu_ms,rss_kb,exit"
+echo "variant,mode,run,wall_ms,cpu_ms,rss_kb,exit,marker"
 
-while IFS=$'\t' read -r variant mode exe a1 a2; do
+while IFS=$'\t' read -r variant mode exe a1 a2 marker; do
     [ -z "${variant:-}" ] && continue
 
     cd "$workdir/$variant" || {
-        echo "$variant,$mode,0,,,,2"
+        echo "$variant,$mode,0,,,,,2"
         continue
     }
 
     # Windows 打包的 tar 不带可执行位，部署后补上
     chmod +x ./StarAgent ./staragent 2>/dev/null || true
 
-    # 预热一次，生成配置/日志，并触发文件系统缓存
-    timeout 120 "$workdir/bench-run" "$exe" ${a1:-} ${a2:-} >/dev/null 2>&1
+    iters_this=$iters
+    if [ "$mode" = "run" ]; then iters_this=$run_iters; fi
 
-    for i in $(seq 1 "$iters"); do
-        line=$(timeout 120 "$workdir/bench-run" "$exe" ${a1:-} ${a2:-} 2>/dev/null)
-        rc=$?
-        if [ $rc -ne 0 ] || [ -z "$line" ]; then
-            echo "$variant,$mode,$i,,,,$rc"
-            continue
+    # 预热一次：生成配置/凭据，并触发热缓存
+    if [ "$mode" = "run" ]; then
+        timeout 180 "$workdir/bench-heartbeat" 120000 "$marker" "$workdir/$variant/run.log" "$exe" ${a1:-} ${a2:-} >/dev/null 2>&1
+    else
+        timeout 120 "$workdir/bench-run" "$exe" ${a1:-} ${a2:-} >/dev/null 2>&1
+    fi
+
+    for i in $(seq 1 "$iters_this"); do
+        if [ "$mode" = "run" ]; then
+            line=$(timeout 180 "$workdir/bench-heartbeat" 120000 "$marker" "$workdir/$variant/run.log" "$exe" ${a1:-} ${a2:-} 2>/dev/null)
+            rc=$?
+            if [ $rc -ne 0 ] || [ -z "$line" ]; then
+                echo "$variant,$mode,$i,,,,,$rc"
+                continue
+            fi
+            set -- $line
+            echo "$variant,$mode,$i,$1,$2,$3,$4,$5"
+        else
+            line=$(timeout 120 "$workdir/bench-run" "$exe" ${a1:-} ${a2:-} 2>/dev/null)
+            rc=$?
+            if [ $rc -ne 0 ] || [ -z "$line" ]; then
+                echo "$variant,$mode,$i,,,,,$rc"
+                continue
+            fi
+            set -- $line
+            echo "$variant,$mode,$i,$1,$2,$3,$4,"
         fi
-        set -- $line
-        echo "$variant,$mode,$i,$1,$2,$3,$4"
     done
 done < "$workdir/manifest.tsv"

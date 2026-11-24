@@ -1,17 +1,22 @@
 # NODE-StarAgent 多语言与多发布形态性能对比
 
-> 版本：v2.0 | 日期：2026-11-24
+> 版本：v3.0 | 日期：2026-11-24
 > 适用：StarAgent 3.7.2026.1124（net10.0）、StarAgent.Native（Go/Rust/C++）、NewLife.Agent 10.18.2026.1116-beta0311
-> 关联：[NODE-StarAgent-AOT适配](NODE-StarAgent-AOT适配.md) | [NODE-StarAgent内存优化](NODE-StarAgent内存优化.md) | [NODE-StarAgent架构](NODE-StarAgent架构.md)
+> 关联：[NODE-StarAgent-AOT适配](NODE-StarAgent-AOT适配.md) | [NODE-StarAgent发布计划](NODE-StarAgent发布计划.md) | [NODE-StarAgent内存优化](NODE-StarAgent内存优化.md) | [NODE-StarAgent架构](NODE-StarAgent架构.md)
+
+> 本版新增“真实服务端完整生命周期”（登录/注册 → 首次心跳 → 性能上报）与 AOT 包裁剪实测。启动数据保留，用于解释完整生命周期的差异来源。
 
 ## 1. 结论
 
-同一套测量程序、同一批机器，把 .NET 的四种发布形态与 Go/Rust/C++ 三种原生实现放在一起比较：
+同一套测量程序、同一批机器，把 .NET 的四种发布形态与 Go/Rust/C++ 三种原生实现放在一起比较。启动数据回答“运行时启动要多少成本”，完整生命周期数据回答“代理真正开始工作要多少成本”：
 
-- **.NET 内部，JIT 自包含是基线**：R2R 启动快 34%~83%，内存少 15%~28%；AOT 启动快 50%~98%，内存少 48%~66%，包最小（16~19 MB）。
-- **原生实现再低一到两个数量级**：Linux 上 C++/Rust/Go 空载启动 1~16 ms，峰值 RSS 3~10 MB，单文件 0.9~7.7 MB；比 .NET AOT 又小 8~9 成。
-- **设备越弱，差距越大**：A2（Cortex-A55、949 MB）上 JIT 完整初始化 4.20 s、AOT 0.135 s；原生 Rust 空载 8 ms。
+- **完整生命周期（真实服务端，登录 → 首次心跳）**：Linux 上 .NET AOT 3.2~6.3 s、CPU 0.16~0.69 s、RSS 41~44 MB；JIT 自包含 4.9~13.5 s、CPU 1.5~15.8 s、RSS 114~128 MB。AOT 墙钟快 13%~74%，CPU 少 89%~96%，RSS 少约 2/3。
+- **设备越弱，AOT 收益越大**：A2（Cortex-A55、949 MB）上 JIT 13.5 s / CPU 15.7 s，AOT 3.5 s / CPU 0.69 s；墙钟快 3.8 倍、CPU 少 23 倍。10.0.0.1 和 sh14 的 CPU 也少 92%~93%。
+- **Windows 上墙钟差距变小**：AOT 4.57 s、JIT 5.11 s，只快 0.54 s；因为登录、服务检测、面板启动等固定开销占了大头。CPU 仍从 2.75 s 降到 1.69 s，RSS 从 115 MB 降到 64 MB。
+- **R2R 是低风险中间档**：完整生命周期比 JIT 快 7%~53%，CPU 少 22%~63%；A2 上墙钟从 13.4 s 降到 6.3 s。不改代码、不牺牲插件/反射。
+- **原生实现资源面仍低一到两个数量级**：Linux 完整生命周期 0.11~0.49 s、CPU 14~390 ms、RSS 5.7~18.5 MB；Windows 上 C++ 0.9 s，Go/Rust 5.3/9.4 s（WMI 机器信息采集占大头，不是语言差距）。
 - **原生代理不是 .NET StarAgent 的完整替代**：它只覆盖登录/心跳/指标/事件/命令/引导安装，没有服务安装、插件、Web 面板、远程发布和自动升级。选型要按“能力面”和“资源面”分开看。
+- **包裁剪**：AOT 默认档 zip 7.4~8.3 MB；Slim 档（中英词表 + 无堆栈）6.9~8.0 MB，只省 0.3~1.3 MB（Windows 最明显）。继续加特性开关只再省约 0.27 MB，不建议为这点体积牺牲诊断能力。
 - **选型一句话**：需要完整能力 → 弱设备用 AOT、通用环境用 R2R；只需要轻量节点接入 → C++（最小）、Rust（内存安全）、Go（交叉编译最省事）。
 
 ## 2. 测试口径
@@ -30,15 +35,18 @@
 
 ### 2.2 变体与命令
 
-| 变体 | 实现 | 空载启动 | 完整初始化 |
-|------|------|----------|------------|
-| .NET 通用 | 框架依赖，需目标机 .NET 10 | `dotnet StarAgent.dll --version` | `dotnet StarAgent.dll -status` |
-| .NET JIT 自包含 | 纯 IL + 自带运行时 | `./StarAgent --version` | `./StarAgent -status` |
-| .NET R2R 自包含 | 发布时预编译机器码 | `./StarAgent --version` | `./StarAgent -status` |
-| .NET AOT | NativeAOT 原生镜像 | `./StarAgent --version` | `./StarAgent -status` |
-| Go 原生 | `StarAgent.Native/go` | `./staragent version` | — |
-| Rust 原生 | `StarAgent.Native/rust` | `./staragent version` | — |
-| C++ 原生 | `StarAgent.Native/cpp` | `./staragent version` | — |
+| 变体 | 实现 | 空载启动 | 完整初始化 | 完整生命周期 |
+|------|------|----------|------------|--------------|
+| .NET 通用 | 框架依赖，需目标机 .NET 10 | `dotnet StarAgent.dll --version` | `dotnet StarAgent.dll -status` | `dotnet StarAgent.dll -once -server http://star.newlifex.com:6600` |
+| .NET JIT 自包含 | 纯 IL + 自带运行时 | `./StarAgent --version` | `./StarAgent -status` | `./StarAgent -once -server ...` |
+| .NET R2R 自包含 | 发布时预编译机器码 | `./StarAgent --version` | `./StarAgent -status` | `./StarAgent -once -server ...` |
+| .NET AOT | NativeAOT 原生镜像 | `./StarAgent --version` | `./StarAgent -status` | `./StarAgent -once -server ...` |
+| Go 原生 | `StarAgent.Native/go` | `./staragent version` | — | `./staragent once --server ...` |
+| Rust 原生 | `StarAgent.Native/rust` | `./staragent version` | — | `./staragent once --server ...` |
+| C++ 原生 | `StarAgent.Native/cpp` | `./staragent version` | — | `./staragent once --server ...` |
+
+- `-once` / `once` 是本次新增的单次运行模式：启动完整代理，登录/注册后等待 **第一次心跳成功**，随后停止并退出。它让“代理真正开始工作”有了统一起点，而不是只看启动或 `-status`。
+- .NET 的首次心跳由 `ClientBase` 的定时器在登录后约 **3 秒**触发，原生实现登录后立即发心跳。因此墙钟包含这 3 秒固定等待；跨语言对比时更应看 CPU、RSS 和相对变化。
 
 - `--version` / `version` 是各界面的空载路径：只做进程创建、语言运行时初始化、命令行解析和版本输出，不读配置、不建日志、不碰网络。它衡量的是“运行时与二进制的启动地板”。
 - `-status` 额外走完整应用初始化（运行时、配置、日志、命令工厂、宿主检测），然后本地状态查询并退出；原生实现没有对应命令，因此完整初始化只比较 .NET 四种形态。
@@ -46,9 +54,11 @@
 
 ### 2.3 采样方法
 
-- 每个变体先预热一次（生成配置、日志并触发热缓存），再连续运行 **15 次取中位数**。
+- 空载与完整初始化：每个变体先预热一次（生成配置、日志并触发热缓存），再连续运行 **15 次取中位数**。
+- 完整生命周期：每台机器先跑一次预热（节点已完成注册、配置已落盘），再连续运行 **3 次取中位数**。节点身份在各机器上复用，避免把“首次注册”的一次性成本混进稳态。
 - Linux：`Tools/Benchmarks/bench-run.c` 编译成小工具，`fork` + `execvp` 后由父进程 `wait4` 取 `ru_utime`/`ru_stime`/`ru_maxrss`，墙钟用 `CLOCK_MONOTONIC`；子进程输出丢弃，不污染数据。
-- Windows：`Process.Start` 后每 1 ms 采样工作集/私有内存，退出后读 `TotalProcessorTime` 与 `PeakWorkingSet64`。
+- 完整生命周期使用 `Tools/Benchmarks/bench-heartbeat.c`：先截断旧日志，再启动代理，命中 `First heartbeat succeeded` 或进程退出后统计墙钟/CPU/RSS；超时会杀掉整个进程组，避免残留。
+- Windows：`Process.Start` 后每 1 ms 采样工作集/私有内存，退出后读 `TotalProcessorTime` 与 `PeakWorkingSet64`；`-once` 启动前会清理 `Log/*.log`，防止把上一次的心跳误判成本次。
 - 所有数据由 [Tools/Benchmarks](../Tools/Benchmarks/README.md) 生成，原始 CSV 在 `.tmp/bench/results/`。
 
 ### 2.4 不可直接横向比较的部分
@@ -56,6 +66,8 @@
 - Windows 的 `-status` 会查询 SCM（服务是否安装/运行），Linux 只做 systemd 检测，**Windows 的绝对时间天然更高**；只做同系统内对比。
 - Linux 的 `ru_maxrss` 含共享/文件页；Windows 的 `PeakWorkingSet64` 口径不同；内存只做同环境对比。
 - 原生 `version` 与 .NET `-status` 不是同一工作量：前者只测运行时启动，后者含完整初始化。**跨语言比较看空载表，.NET 内部比较看完整初始化表。**
+- 完整生命周期已经统一到“登录 + 首次心跳”，但两边的功能面仍不同：.NET 代理还会启动 Web 面板、本地 API、插件、服务管理和机器信息采集；原生只做登录/心跳/指标/命令，因此原生数据应视为“轻量接入层”的成本，而不是同一功能集的等价实现。
+- .NET `-once` 的墙钟包含约 3 秒的首次心跳定时器等待；原生登录后立即心跳。**跨语言墙钟不能直接当成运行时差距**，请看 CPU、RSS 和 .NET 内部相对变化。
 - A2 是 1 GB 内存的低功耗 ARM 设备，绝对时间远高于 x64 服务器，重点看相对收益。
 
 ## 3. 包大小
@@ -71,9 +83,25 @@
 | C++ 原生 | 0.9 MB | 1.6 MB | 1.5 MB |
 
 - 通用包不含运行时。WSL 上 .NET 10 运行时安装后约 79 MB，实际部署体积约 86 MB，与 JIT 自包含相当。
-- JIT/R2R/通用包大小含随包 PDB（约 0.6 MB）；AOT 按可执行文件计，`.dbg`/`.pdb` 调试符号另计（win PDB 约 56 MB、linux `.dbg` 约 28.8 MB），不建议随包发布。
+- JIT/R2R/通用包大小含随包 PDB（约 0.6 MB）；AOT 按可执行文件计，`.dbg`/`.pdb` 调试符号另计（win PDB 约 60 MB、linux `.dbg` 约 28.8 MB），不建议随包发布。
 - R2R 比 JIT 自包含大 **5.6 / 5.6 / 6.8 MB**（+6.7% / +6.5% / +7.4%）。
 - 原生单文件：C++ 约为 .NET AOT 的 **1/10**，Rust 约 **1/4**，Go 约 **2/5**。
+
+### 3.1 AOT 发布包与裁剪
+
+AOT 发布包以 zip 为主，实际分发体积远小于可执行文件。下表是本次用 `Tools/pack-agent.ps1` 实测的压缩包体积（zip/deflate；Linux tar.gz 略小 0.1~0.3 MB）：
+
+| 形态 | win-x64 | linux-x64 | linux-arm64 |
+|------|--------:|----------:|------------:|
+| AOT 默认档 zip | 7.4 MB | 8.3 MB | 8.0 MB |
+| AOT Slim 档 zip | 6.9 MB | 8.0 MB | 7.7 MB |
+| any（net10）zip | 2.2 MB | 2.2 MB | 2.2 MB |
+
+- **Slim 档** = 语言白名单（`zh-Hans;en`）+ `StackTraceSupport=false`。可执行文件：win 14.8 MB、linux-x64 17.5 MB、linux-arm64 18.0 MB；比默认档只小 **1.3 / 0.6 / 0.6 MB**（-8% / -3% / -3%）。Windows 收益最明显，Linux 两档差距很小。
+- 继续叠加 `EventSourceSupport=false`、`HttpActivityPropagationSupport=false`、`InvariantGlobalization=true`、`EnableUnsafeBinaryFormatterSerialization=false`：Windows 只从 14.81 MB 降到 14.55 MB（-0.26 MB，zip 6.92→6.80 MB），且会失去 EventSource 诊断和区域化格式，**不建议为这点体积默认开启**。
+- `IlcGenerateCompleteTypeMetadata=false` 实测体积无变化（14.81 MB），却可能破坏反射/序列化，**不采用**。
+- `UseSystemResourceKeys=true` 实测约 -0.03 MB，异常消息会变成资源键，现场排查看不到原文，**不采用**。
+- 结论：现有开关已经把 AOT 压到 7~8 MB；再往下没有低风险的大收益。**默认档优先保留完整语言与堆栈**；只有 Windows 边缘设备存储特别紧张时再用 `-SlimAot`，并接受异常堆栈信息减少。发布矩阵与跨形态升级见 [NODE-StarAgent发布计划](NODE-StarAgent发布计划.md)。
 
 ## 4. 空载启动
 
@@ -159,41 +187,99 @@ CPU 时间中位数，单位 ms：
 | A2 arm64 | 98.5 | 83.3 | 69.4 | **28.5** |
 | sh14 x64 | 99.9 | 81.4 | 68.9 | **28.6** |
 
-## 6. 解读
+## 6. 完整生命周期（真实服务端：登录/注册 → 首次心跳）
 
-### 6.1 .NET 四种形态
+服务端：`http://star.newlifex.com:6600`。每台机器预热一次（节点已注册、配置已落盘），再连续运行 3 次取中位数。.NET 使用 `-once`，原生使用 `once`；两者都以“首次心跳成功”作为完成条件。
+
+### 6.1 墙钟时间（ms）
+
+| 机器 | .NET 通用(JIT) | .NET JIT 自包含 | .NET R2R 自包含 | .NET AOT | Go 原生 | Rust 原生 | C++ 原生 |
+|------|---:|---:|---:|---:|---:|---:|---:|
+| PC(Win10) | 5,182 | 5,113 | 4,774 | **4,572** | 5,261 | 9,361 | **899** |
+| WSL | 7,430 | 7,235 | 6,682 | **6,315** | **111** | 406 | 162 |
+| 10.0.0.1 | 5,974 | 5,446 | 3,976 | **3,316** | 222 | 374 | 171 |
+| A2 | 13,533 | 13,410 | 6,257 | **3,525** | 416 | 487 | 254 |
+| sh14.newlifex.com | 4,910 | 4,747 | 3,732 | **3,202** | 144 | 325 | 162 |
+
+.NET AOT 相对 JIT 自包含：Windows -11%，WSL -13%，10.0.0.1 -39%，A2 -74%，sh14 -32%。R2R 相对 JIT 自包含：Windows -7%，WSL -8%，10.0.0.1 -27%，A2 -53%，sh14 -21%。
+
+> .NET 墙钟含登录后约 3 秒的首次心跳定时器；原生登录后立即心跳。Windows 上原生 Go/Rust 的 5.3/9.4 s 主要花在 WMI 机器信息采集，C++ 的 899 ms 是另一套轻量采集路径，不能当成语言运行时差距。
+
+### 6.2 CPU 时间（ms）
+
+| 机器 | .NET 通用(JIT) | .NET JIT 自包含 | .NET R2R 自包含 | .NET AOT | Go 原生 | Rust 原生 | C++ 原生 |
+|------|---:|---:|---:|---:|---:|---:|---:|
+| PC(Win10) | 2,781 | 2,750 | 2,156 | **1,688** | 578 | 1,234 | 516 |
+| WSL | 1,749 | 1,511 | 728 | **160** | 35 | 209 | 14 |
+| 10.0.0.1 | 4,493 | 3,913 | 1,804 | **316** | 157 | 144 | 34 |
+| A2 | 15,717 | 15,826 | 5,802 | **693** | 390 | 362 | 113 |
+| sh14.newlifex.com | 2,731 | 2,610 | 1,125 | **192** | 86 | 81 | 24 |
+
+.NET AOT 相对 JIT 自包含：Windows -39%，WSL -89%，10.0.0.1 -92%，A2 -96%，sh14 -93%。R2R 相对 JIT 自包含：Windows -22%，WSL -52%，10.0.0.1 -54%，A2 -63%，sh14 -57%。
+
+这是最能说明问题的一组：A2 上 JIT 花了 **15.8 秒 CPU** 才完成一次登录 + 首次心跳，AOT 只花 **0.69 秒**；10.0.0.1 和 sh14 也都从 2.6~3.9 秒降到 0.19~0.32 秒。JIT 的成本主要不是“启动”，而是把整条登录/心跳链路上的代码编译一遍。
+
+### 6.3 峰值 RSS（MB）
+
+| 机器 | .NET 通用(JIT) | .NET JIT 自包含 | .NET R2R 自包含 | .NET AOT | Go 原生 | Rust 原生 | C++ 原生 |
+|------|---:|---:|---:|---:|---:|---:|---:|
+| PC(Win10) | 114.6 | 120.2 | 105.5 | **64.0** | 24.7 | 36.6 | 16.8 |
+| WSL | 127.4 | 125.3 | 113.2 | **41.7** | 12.3 | 18.5 | 6.9 |
+| 10.0.0.1 | 126.6 | 123.6 | 110.4 | **41.0** | 14.4 | 11.9 | 6.2 |
+| A2 | 117.1 | 121.3 | 114.2 | **41.6** | 12.9 | 11.1 | 5.7 |
+| sh14.newlifex.com | 126.7 | 128.4 | 115.6 | **43.9** | 12.9 | 11.9 | 6.2 |
+
+AOT 的 RSS 约为 JIT 的 **1/3**（Windows 64 vs 115~120 MB，Linux 41~44 vs 114~128 MB）。R2R 只比 JIT 少 5%~12%，因为运行时和 GC 仍完整存在。
+
+### 6.4 机器差异
+
+- **A2（Cortex-A55，949 MB）**：JIT 13.5 s、CPU 15.7 s、RSS 121 MB；AOT 3.5 s、CPU 0.69 s、RSS 41.6 MB。弱 CPU 把小内存设备的 JIT 编译成本放大到不可接受，AOT 是唯一能让“启动即工作”成立的形态。
+- **10.0.0.1（Celeron J4125）**：JIT 5.4 s / CPU 3.9 s；AOT 3.3 s / CPU 0.32 s。低功耗 x64 同样值得上 AOT。
+- **sh14（Xeon 8255C，2 vCPU，1.9 GB）**：JIT 4.7 s / CPU 2.6 s；AOT 3.2 s / CPU 0.19 s。单核快，但内存小，AOT 的 44 MB RSS 更适合多开。
+- **WSL / 本机 Windows**：WSL 的 CPU 数据适合看相对收益；Windows 墙钟受服务检测、WMI、杀毒软件影响，绝对值只做同机对比。
+
+## 7. 解读
+
+### 7.1 .NET 四种形态
 
 - **通用包不是“更快的 JIT”**：它把运行时安装责任交给目标机，启动反而比 JIT 自包含慢 5%~37%（空载）和 1%~51%（完整初始化），内存也更高（Linux 上多 18%~37%）。选它只应为“包小、运行时统一管理”，不要期待性能。
 - **R2R 是低风险优选**：不改代码、插件/反射基本不受影响，完整初始化快 34%~74%，内存少 15%~28%，包只大 5.6~6.8 MB。
 - **AOT 是质变**：完整初始化在 Linux x64 上 34~65 ms（Windows 296 ms，含 SCM 查询），A2 上 135 ms；内存 27~29 MB（Windows 43 MB），包 16~19 MB。代价是每个 RID 需要原生工具链、反射/插件要静态保留、Linux 二进制依赖构建机 glibc。
 - **空载与完整初始化的差距**说明 JIT 的主要成本在“加载 + 首次编译 + 应用初始化”，不是进程创建本身；AOT 把前两项消掉后，`-status` 的 65 ms 里主要是配置/日志/宿主检测。
 
-### 6.2 原生三种实现
+### 7.2 原生三种实现
 
 - **C++**：Linux 空载 1~10 ms、RSS 3.6~4.1 MB、单文件 1.5~1.6 MB；Windows 空载 54 ms、工作集 2.5 MB、0.9 MB 单文件。资源面最小，适合 1 GB 以下、存储紧张的边缘节点。
 - **Rust**：Linux 空载 1~8 ms、RSS 3.2~4.5 MB、单文件 5.1~5.7 MB；Windows 空载 46 ms、4.8 MB。内存安全 + 无 GC，代价是二进制比 C++ 大 3~4 倍。
 - **Go**：Linux 空载 1~16 ms、RSS 5.8~9.5 MB、单文件 7.1~7.7 MB。启动同样快，但运行时自带 GC 与调度器，RSS 比 Rust/C++ 高 50%~150%；优势是交叉编译和部署最简单（`CGO_ENABLED=0` 一个文件走天下）。
 - Windows 上三者空载墙钟 46~62 ms，明显高于 Linux 的 1~16 ms；这是 Windows 进程创建/加载与安全软件的固定成本，不是语言差异。CPU 时间仍只有 0~16 ms。
 
-### 6.3 机器差异
+### 7.3 启动与初始化中的机器差异
 
 - **A2（Cortex-A55，949 MB）**：JIT 完整初始化 4.20 s、CPU 5.30 s、RSS 83 MB；AOT 0.135 s、0.17 s、28.5 MB。弱 CPU + 小内存把 JIT 的编译成本放大到不可接受，AOT 收益最大。
 - **10.0.0.1（Celeron J4125）**：JIT 0.99 s / R2R 0.31 s / AOT 0.065 s；低功耗 x64 服务器同样值得上 AOT，至少上 R2R。
 - **sh14（Xeon 8255C，2 vCPU）**：单核性能好，JIT 0.68 s / AOT 0.057 s；但只有 1.9 GB 内存，AOT 的 28.6 MB 稳态 RSS 对多开服务更友好。
 - **WSL / 本机 Windows**：绝对时间受宿主负载和 WSL 虚拟化影响，只用于横向形态对比，不作为设备性能基准。
 
-### 6.4 指标之间的关系
+### 7.4 指标之间的关系
 
 - 包大小与启动/内存不是正比：R2R 比 JIT 大 5~7 MB，却快 34%~83%；AOT 包只有 JIT 的 1/5，启动和内存也最好。
 - 原生实现的 RSS 已接近“语言运行时地板”：Go 的 5.8~9.5 MB 主要来自运行时堆与 GC 预留，Rust/C++ 的 3.2~4.1 MB 基本是二进制映射 + 少量堆。
 - 空载 CPU 在 Linux 上几乎等于墙钟（单线程短进程），说明没有明显等待；A2 的 JIT 空载 2.56 s 中 CPU 2.56 s，是纯计算（JIT 编译）。
 
-## 7. 选型建议
+### 7.5 完整生命周期说明了什么
+
+- **启动快只是第一层，CPU 才是弱设备的瓶颈**：A2 上 AOT 墙钟只比 JIT 快 3.8 倍，CPU 却少 23 倍；因为墙钟还包含登录网络往返和 3 秒定时器，而 CPU 反映的是真实的 JIT 编译与初始化成本。
+- **R2R 不是“过渡方案”，而是多数 x64 服务器的性价比选择**：A2 上 R2R 把 JIT 的 13.4 s 降到 6.3 s、CPU 从 15.8 s 降到 5.8 s；对插件兼容性要求高的节点，R2R 比 AOT 更稳。
+- **Windows 上 AOT 的收益主要在内存和 CPU，不在墙钟**：服务检测、WMI、面板启动把墙钟固定在 4.5~5.2 s；如果只按“启动秒数”评估，会低估 AOT 在 Windows 上的价值。
+- **原生实现赢在“功能面小”**：它们不做服务安装、插件、Web 面板和完整机器信息采集，所以 CPU/RSS 低一个数量级是合理的；用它们替换完整代理前，先确认这些能力是否真的不需要。
+
+## 8. 选型建议
 
 | 场景 | 推荐 | 理由 |
 |------|------|------|
-| 低功耗 ARM、1 GB 内存边缘节点（A2/A4/A6） | **.NET AOT** | 启动/内存收益最大，包最小；插件需提前验证 |
-| x64 服务器、插件较多或不确定 AOT 兼容性 | **.NET R2R** | 零代码改动，启动快 34%~83%，包只大 5~7 MB |
+| 低功耗 ARM、1 GB 内存边缘节点（A2/A4/A6） | **.NET AOT** | 完整生命周期 CPU 少 96%、RSS 少 2/3，包 7~8 MB；插件需提前验证 |
+| x64 服务器、插件较多或不确定 AOT 兼容性 | **.NET R2R** | 零代码改动，完整生命周期快 7%~53%，CPU 少 22%~63%，包只大 5~7 MB |
 | 需要动态加载第三方插件、频繁调试 | **.NET JIT / 通用** | 兼容性和可调试性最好，接受启动与内存成本 |
 | 只需节点注册/心跳/指标/命令，资源极度受限 | **C++ 原生** | 0.9~1.6 MB、2.5~4 MB RSS、1~10 ms 启动 |
 | 同上，但要求内存安全与可维护性 | **Rust 原生** | 5 MB 左右单文件，RSS 3.2~4.5 MB |
@@ -201,13 +287,18 @@ CPU 时间中位数，单位 ms：
 
 **能力边界**：原生代理没有服务安装/卸载、systemd/SCM 集成、插件、Web 面板、远程发布、自动升级、防火墙/DNS/截屏等能力；需要这些能力时必须用 .NET StarAgent（优先 AOT/R2R）。原生代理适合作为“轻量探针/边缘接入层”，或作为引导安装器把节点升格为完整代理。
 
-## 8. 复现
+**AOT 与插件**：NativeAOT 不能从 `Plugins` 目录加载新的托管程序集。少数固定插件可以编译进代理本体，用 `DynamicDependency` 或泛型注册保留类型；需要现场扩展插件的节点应继续用 R2R/JIT。
+
+## 9. 复现
 
 测试程序在 [Tools/Benchmarks](../Tools/Benchmarks/README.md)：
 
 ```powershell
-# 全量：构建 .NET 四形态 + Go/Rust/C++，部署到全部机器，采样 15 次并汇总
+# 启动基线：构建 .NET 四形态 + Go/Rust/C++，部署到全部机器，采样 15 次并汇总
 pwsh Tools/Benchmarks/staragent-bench.ps1
+
+# 完整生命周期：连真实服务端，每变体 3 次
+pwsh Tools/Benchmarks/staragent-bench.ps1 -Modes run -RunIterations 3 -SkipBuild -SkipDeploy
 
 # 只测部分机器、减少采样次数
 pwsh Tools/Benchmarks/staragent-bench.ps1 -Machines A2,sh14.newlifex.com -Iterations 10
@@ -218,7 +309,7 @@ pwsh Tools/Benchmarks/staragent-bench.ps1 -SkipBuild -SkipDeploy
 
 机器清单在 [machines.json](../Tools/Benchmarks/machines.json)（Windows 本机、WSL、10.0.0.1、A2、sh14.newlifex.com）；结果输出 `.tmp/bench/results/raw-*.csv` 与 `summary-*.md`。
 
-## 9. 与现有文档的口径差异
+## 10. 与现有文档的口径差异
 
 | 文档 | 测什么 | 本文关系 |
 |------|--------|----------|
@@ -228,9 +319,11 @@ pwsh Tools/Benchmarks/staragent-bench.ps1 -SkipBuild -SkipDeploy
 - **A2 AOT 0.135 s / 28.5 MB** 是 `-status` 短进程峰值；AOT适配文档里的 **0.14 s / 36~40 MB** 是服务稳态，两个数不矛盾，口径不同。
 - **A2 JIT 4.20 s / 83.3 MB** 是 `-status`；内存优化文档里的 **8 s / 88 MB** 是完整服务启动与稳态，同样口径不同。
 
-## 10. 限制与后续
+## 11. 限制与后续
 
-- 本文的原生数据是“空载启动”，不能代表登录/心跳/命令处理的完整链路；原生代理的完整生命周期（`once` 连本地假服务端）应作为后续专项。
+- 完整生命周期已用真实服务端测过，但**没有覆盖远程发布、文件下发、面板 RPC、命令执行**等非日常路径；这些路径的 JIT/AOT 差异需要单独专项。
+- .NET `-once` 含约 3 秒首次心跳定时器，原生 `once` 立即心跳；跨语言墙钟不能直接相减。本文用 CPU/RSS 和 .NET 内部相对值来抵消这个差异。
+- 原生数据只代表“轻量接入层”的能力集；它们不做服务安装、插件、Web 面板和完整机器信息采集，跨语言比较应带此前提。
 - C++ 基准构建关闭了 OpenSSL（TLS），Windows 侧没有可用的 OpenSSL 开发包；这不影响启动指标，但生产包应开启 TLS 后重新测体积。
-- Windows 原生空载墙钟受安全软件与进程调度影响，46~62 ms 的绝对值仅供参考；Linux 数据更适合做语言间对比。
-- 原生代理目前缺少 .NET 版的服务化与插件能力，选型时必须同时看功能清单，不能只看启动数字。
+- Windows 原生空载与完整生命周期墙钟受安全软件、WMI 和进程调度影响；Linux 数据更适合做语言间对比。
+- AOT 包体积会随 SDK、依赖和词表变化；发布前以 `Tools/pack-agent.ps1` 产出的 `BUILD-INFO.json` 为准。
