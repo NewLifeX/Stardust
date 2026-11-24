@@ -129,6 +129,7 @@ const {
   closeRunDetail,
   retryRunDetail,
   rerunRun,
+  cancelRun,
   savePipeline,
   removePipeline,
   copyWebhookFor,
@@ -478,7 +479,7 @@ const pipeProjectId = ref(0);
 const pipeCopyId = computed(() => (busyKey.value.startsWith('copy:') ? Number(busyKey.value.slice(5)) || 0 : 0));
 /** 重跑中的运行（rerun:{id}，供运行表行操作） */
 const rerunKey = computed(() => (busyKey.value.startsWith('rerun:') ? busyKey.value : ''));
-
+const cancelKey = computed(() => (busyKey.value.startsWith('cancel:') ? busyKey.value : ''));
 /** 编译节点 suggest：NodeSearch 按 GetDeployProject 级联出的项目 Id 过滤（旧壳 _Form_SelectBuildNode 同参） */
 function searchNodesFor(key: string): Promise<BuildNodeSearchItem[] | null> {
   return searchBuildNodes(request, pipeProjectId.value, key);
@@ -535,11 +536,29 @@ function askTriggerPipeline(row: PipelineRow): void {
   openGuard('启动流水线。确认手动触发该流水线运行（使用当前分支最新提交）？', () => triggerRun(row));
 }
 
+function askTriggerPipelineAdvanced(row: PipelineRow, params: { branch: string; commit: string }): void {
+  if (busyKey.value) return;
+  const branch = params.branch || '默认分支';
+  const commit = params.commit || '最新提交';
+  openGuard(`启动流水线。确认按「${branch}」的「${commit}」触发？`, () => triggerRun(row, params));
+}
+
 // ---------- CARD-DEP-02 运行筛选/重跑/详情 + CARD-DEP-03/04 ----------
 
 function askRerun(row: ShipRunRow): void {
   if (busyKey.value) return;
   openGuard('重跑流水线。确认基于本次运行重新触发流水线？', () => rerunRun(row.id));
+}
+
+function askCancelRun(row: ShipRunRow): void {
+  if (busyKey.value) return;
+  openGuard(`取消运行 #${row.id}。取消后不再续发部署，但已下发到节点的构建/部署进程不会中断。确认？`, () => cancelRun(row));
+}
+
+function askCancelRunDetail(): void {
+  const d = runDetail.value;
+  if (!d || busyKey.value) return;
+  openGuard(`取消运行 #${d.id}。取消后不再续发部署，但已下发到节点的构建/部署进程不会中断。确认？`, () => cancelRun(d));
 }
 
 function onFilterChange(patch: Partial<RunFilter>): void {
@@ -731,6 +750,7 @@ watch(
               @create="askCreatePipeline"
               @copy="onCopyWebhook"
               @trigger="askTriggerPipeline"
+              @trigger-advanced="askTriggerPipelineAdvanced"
               @edit="askEditPipeline"
               @remove="askRemovePipeline"
               @retry="load()"
@@ -747,9 +767,11 @@ watch(
               :rolling-back="rollbackBusy"
               :run-filter="runFilter"
               :rerun-key="rerunKey"
+              :cancel-key="cancelKey"
               @select="selectRun"
               @rollback="askRollback"
               @rerun="askRerun"
+              @cancel="askCancelRun"
               @detail="openRunDetail($event.id)"
               @filter-change="onFilterChange"
               @filter-reset="resetRunFilter"
@@ -820,8 +842,10 @@ watch(
       :open="runDetailOpen"
       :state="runDetailState === 'idle' ? 'loading' : runDetailState"
       :detail="runDetail"
+      :cancelling="busyKey.startsWith('cancel:')"
       @close="closeRunDetail"
       @open-steps="stepsDrawerOpen = true"
+      @cancel="askCancelRunDetail"
       @retry="retryRunDetail"
     />
 

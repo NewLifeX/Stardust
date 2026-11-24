@@ -49,6 +49,7 @@ import {
   isRunFilterActive,
   nodeNameOf,
   reprocessRun,
+  cancelRun,
   runElapsedSeconds,
   RUN_STATUS_FILTERS,
   runFilterParams,
@@ -781,8 +782,18 @@ describe('ship · 运行详情（Api Detail JSON）', () => {
   });
 
   it('reprocessRun：GET /Deployment/AppPipelineRun/Reprocess?id=，message 透传', async () => {
-    const req = mk(() => ({ code: 0, message: '流水线已重新触发，运行编号[43]' }));
-    expect(await reprocessRun(req, 42)).toEqual({ ok: true, message: '流水线已重新触发，运行编号[43]' });
+    const req = mk(() => ({ code: 0, message: '流水线已重新排队，运行编号[43]' }));
+    expect(await reprocessRun(req, 42)).toEqual({ ok: true, message: '流水线已重新排队，运行编号[43]' });
+  });
+
+  it('cancelRun：GET /Deployment/AppPipelineRun/Cancel?id=，message 透传', async () => {
+    const seen: ReqOptions[] = [];
+    const req = mk((o) => { seen.push(o); return { code: 0, message: '流水线运行[42]已取消' }; });
+    expect(await cancelRun(req, 42)).toEqual({ ok: true, message: '流水线运行[42]已取消' });
+    expect(seen[0].url).toBe('/Deployment/AppPipelineRun/Cancel');
+    expect((seen[0].params as Record<string, unknown>).id).toBe(42);
+
+    expect(await cancelRun(req, 0)).toEqual({ ok: false, message: '缺少运行编号' });
   });
 
   it('nodeNameOf：命中返回节点名，未命中兜底「节点 {Id}」，0 为 —', () => {

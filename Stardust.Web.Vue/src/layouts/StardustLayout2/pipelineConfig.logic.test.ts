@@ -201,19 +201,31 @@ describe('pipelineConfig · CRUD 与行操作', () => {
     expect(await copyWebhookUrl(bad.req, 7)).toEqual({ ok: false, message: 'nope', url: '' });
   });
 
-  it('triggerPipeline：GET Trigger?id=，成功 message 透传（含运行编号）', async () => {
-    const { req, calls } = reqWith({ code: 0, message: '流水线已触发，运行编号[42]' });
-    const r = await triggerPipeline(req, 5);
-    expect(r).toEqual({ ok: true, message: '流水线已触发，运行编号[42]' });
-    expect((calls[0].init.params as Record<string, unknown>).id).toBe(5);
+  it('triggerPipeline：GET Trigger?id=&branch=&commit=，成功 message 透传（含运行编号）', async () => {
+    const { req, calls } = reqWith({ code: 0, message: '流水线已排队，运行编号[42]' });
+    const r = await triggerPipeline(req, 5, 'release/1.0', 'abc123');
+    expect(r).toEqual({ ok: true, message: '流水线已排队，运行编号[42]' });
+    const p = calls[0].init.params as Record<string, unknown>;
+    expect(p.id).toBe(5);
+    expect(p.branch).toBe('release/1.0');
+    expect(p.commit).toBe('abc123');
+
+    // 留空不提交参数，保持旧行为（分支最新）
+    const { req: req2, calls: calls2 } = reqWith({ code: 0, message: '流水线已排队，运行编号[43]' });
+    await triggerPipeline(req2, 6, '  ', '');
+    const p2 = calls2[0].init.params as Record<string, unknown>;
+    expect(p2.id).toBe(6);
+    expect('branch' in p2).toBe(false);
+    expect('commit' in p2).toBe(false);
   });
 });
 
 // task-88（2026-11-12）：触发/重跑成功 message「运行编号[N]」→ N = AppPipelineRun.Id，用于「查看运行」直达
 describe('pipelineConfig · parseTriggerRunNo', () => {
   it('解析手动触发与重跑两种后端文案', () => {
-    expect(parseTriggerRunNo('流水线已触发，运行编号[42]')).toBe(42);
-    expect(parseTriggerRunNo('流水线已重新触发，运行编号[7]')).toBe(7);
+    expect(parseTriggerRunNo('流水线已排队，运行编号[42]')).toBe(42);
+    expect(parseTriggerRunNo('流水线已重新排队，运行编号[7]')).toBe(7);
+    expect(parseTriggerRunNo('流水线已触发，运行编号[42]')).toBe(42); // 兼容旧文案
   });
 
   it('无编号、格式异常、空串返回 0', () => {

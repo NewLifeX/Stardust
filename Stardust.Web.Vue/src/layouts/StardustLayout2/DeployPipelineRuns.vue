@@ -34,12 +34,15 @@ const props = defineProps<{
   runFilter: RunFilter;
   /** 正在重跑的行（busyKey 形如 rerun:{id}）；非空时行操作禁用（AGENTS.md §11） */
   rerunKey: string;
+  /** 正在取消的行（busyKey 形如 cancel:{id}） */
+  cancelKey?: string;
 }>();
 
 const emit = defineEmits<{
   select: [runId: number];
   rollback: [];
   rerun: [row: ShipRunRow];
+  cancel: [row: ShipRunRow];
   detail: [row: ShipRunRow];
   filterChange: [patch: Partial<RunFilter>];
   filterReset: [];
@@ -300,6 +303,17 @@ function onDateEnd(e: Event): void {
                     </span>
                   </template>
                   {{ rerunKey === `rerun:${r.id}` ? '重跑中…' : '重跑' }}
+                </Btn>
+                <Btn
+                  v-if="r.active"
+                  size="sm"
+                  variant="ghost"
+                  :disabled="!!rerunKey || !!cancelKey"
+                  :title="cancelKey === `cancel:${r.id}` ? '取消中…' : '取消本次运行（不中断节点上已开始的进程）'"
+                  data-spec="ship-cancel"
+                  @click="emit('cancel', r)"
+                >
+                  {{ cancelKey === `cancel:${r.id}` ? '取消中…' : '取消' }}
                 </Btn>
                 <Btn
                   size="sm"

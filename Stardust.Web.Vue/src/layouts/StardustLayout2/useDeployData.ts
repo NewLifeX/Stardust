@@ -7,6 +7,7 @@ import { fetchPipelines, fetchRunHistory, isRunActive } from '../../../apps/star
 import type { Req, RunHistoryRow } from '../../../apps/stardust/src/views/Stardust/appsModel.ts';
 import {
   actionInfo,
+  cancelRun,
   fetchDeploy,
   fetchDeployHistory,
   fetchRunDetail,
@@ -73,6 +74,7 @@ export interface DeployDeps {
   fetchRunHistoryFiltered: typeof fetchRunHistoryFiltered;
   fetchRunDetail: typeof fetchRunDetail;
   reprocessRun: typeof reprocessRun;
+  cancelRun: typeof cancelRun;
   createPipeline: typeof createPipeline;
   updatePipeline: typeof updatePipeline;
   deletePipeline: typeof deletePipeline;
@@ -104,6 +106,7 @@ export const DEFAULT_DEPLOY_DEPS: DeployDeps = {
   fetchRunHistoryFiltered,
   fetchRunDetail,
   reprocessRun,
+  cancelRun,
   createPipeline,
   updatePipeline,
   deletePipeline,
@@ -509,11 +512,11 @@ export function useDeployData(opt: DeployDataOptions) {
     return r;
   }
 
-  async function triggerRun(row: PipelineRow): Promise<void> {
+  async function triggerRun(row: PipelineRow, params?: { branch?: string; commit?: string }): Promise<void> {
     if (busyKey.value) return;
     busyKey.value = `trigger:${row.id}`;
     busyText.value = `正在触发流水线 ${row.name}…`;
-    const r = await deps.triggerPipeline(opt.request, row.id);
+    const r = await deps.triggerPipeline(opt.request, row.id, params?.branch, params?.commit);
     busyKey.value = '';
     busyText.value = '';
     // task-88（2026-11-12）：成功反馈带「查看运行」直达（运行编号[N] = AppPipelineRun.Id），并选中该次运行——
@@ -632,6 +635,18 @@ export function useDeployData(opt: DeployDataOptions) {
     refreshSoon();
   }
 
+  async function cancelRun(row: { id: number }): Promise<void> {
+    if (busyKey.value) return;
+    busyKey.value = `cancel:${row.id}`;
+    busyText.value = `正在取消运行 #${row.id}…`;
+    const r = await deps.cancelRun(opt.request, row.id);
+    busyKey.value = '';
+    busyText.value = '';
+    if (r.ok) pushFeedback(true, r.message);
+    else pushFeedback(false, `取消运行 #${row.id} 失败：${r.message}`);
+    refreshSoon();
+  }
+
   return {
     loading,
     loadError,
@@ -676,6 +691,7 @@ export function useDeployData(opt: DeployDataOptions) {
     closeRunDetail,
     retryRunDetail,
     rerunRun,
+    cancelRun,
     savePipeline,
     removePipeline,
     copyWebhookFor,

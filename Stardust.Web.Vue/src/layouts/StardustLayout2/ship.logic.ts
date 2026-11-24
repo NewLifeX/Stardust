@@ -803,15 +803,27 @@ export async function fetchRunDetail(request: Req, id: number): Promise<RunDetai
   }
 }
 
-/** 重跑：GET /Deployment/AppPipelineRun/Reprocess?id=（成功 message「流水线已重新触发，运行编号[N]」） */
+/** 重跑：GET /Deployment/AppPipelineRun/Reprocess?id=（成功 message「流水线已重新排队，运行编号[N]」） */
 export async function reprocessRun(request: Req, id: number): Promise<{ ok: boolean; message: string }> {
   if (!id || id <= 0) return { ok: false, message: '缺少运行编号' };
   try {
     const res = await request({ url: '/Deployment/AppPipelineRun/Reprocess', method: 'GET', params: { id } });
     const r = okRes(res);
-    return { ok: r.ok, message: r.ok ? r.message || '已重新触发流水线' : r.message || '重跑失败' };
+    return { ok: r.ok, message: r.ok ? r.message || '已重新排队流水线' : r.message || '重跑失败' };
   } catch (e) {
     return { ok: false, message: e instanceof Error && e.message ? `重跑失败：${e.message}` : '重跑失败' };
+  }
+}
+
+/** 取消运行：GET /Deployment/AppPipelineRun/Cancel?id=（逻辑取消：阻止后续自动部署，不中断节点上已开始的进程） */
+export async function cancelRun(request: Req, id: number): Promise<{ ok: boolean; message: string }> {
+  if (!id || id <= 0) return { ok: false, message: '缺少运行编号' };
+  try {
+    const res = await request({ url: '/Deployment/AppPipelineRun/Cancel', method: 'GET', params: { id } });
+    const r = okRes(res);
+    return { ok: r.ok, message: r.ok ? r.message || '已取消运行' : r.message || '取消失败' };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error && e.message ? `取消失败：${e.message}` : '取消失败' };
   }
 }
 

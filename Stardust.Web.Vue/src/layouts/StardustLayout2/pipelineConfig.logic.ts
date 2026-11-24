@@ -281,11 +281,19 @@ export async function copyWebhookUrl(request: Req, id: number): Promise<{ ok: bo
   }
 }
 
-/** 手动启动流水线（GET /Deployment/AppPipeline/Trigger?id=；成功 message 含运行编号） */
-export async function triggerPipeline(request: Req, id: number): Promise<{ ok: boolean; message: string }> {
+/** 手动启动流水线（GET /Deployment/AppPipeline/Trigger?id=&branch=&commit=；成功 message 含运行编号）。b/commit 留空 = 分支最新 */
+export async function triggerPipeline(
+  request: Req,
+  id: number,
+  branch?: string,
+  commit?: string,
+): Promise<{ ok: boolean; message: string }> {
   if (!id || id <= 0) return { ok: false, message: '缺少流水线编号' };
+  const params: Record<string, unknown> = { id };
+  if (branch?.trim()) params.branch = branch.trim();
+  if (commit?.trim()) params.commit = commit.trim();
   try {
-    const res = await request({ url: '/Deployment/AppPipeline/Trigger', method: 'GET', params: { id } });
+    const res = await request({ url: '/Deployment/AppPipeline/Trigger', method: 'GET', params });
     const r = okRes(res);
     return { ok: r.ok, message: r.ok ? r.message || '触发成功' : r.message || '触发失败' };
   } catch (e) {
@@ -295,8 +303,8 @@ export async function triggerPipeline(request: Req, id: number): Promise<{ ok: b
 
 /**
  * 从触发/重跑成功 message 中解析运行编号（task-88 2026-11-12）。
- * 后端格式：Trigger「流水线已触发，运行编号[N]」/ Reprocess「流水线已重新触发，运行编号[N]」，
- * N = AppPipelineRun.Id（WebApi AppPipelineController.Trigger → PipelineService.Trigger 新建运行记录），
+ * 后端格式：Trigger「流水线已排队，运行编号[N]」/ Reprocess「流水线已重新排队，运行编号[N]」，
+ * N = AppPipelineRun.Id（WebApi AppPipelineController.Trigger → PipelineService.Trigger 新建排队记录），
  * 即 fetchRunDetail / 运行行 / 运行详情页共用的运行 Id，可直接开详情。解析不到返回 0（不带直达动作）。
  */
 export function parseTriggerRunNo(message: string): number {

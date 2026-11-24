@@ -5,6 +5,7 @@
  * 列表列（重排 7 列）：名称/分支/编译节点/自动部署/启用/更新时间/操作；无 Id、Token、Secret、DeployNodeIds、TraceId 列（盘点隐藏清单）。
  * 空态两分支：无部署集由容器整卡兜底；这里只处理「部署集存在但无流水线」→「还没有流水线」+「创建流水线」引导（裁定 #9）。
  */
+import { ref } from 'vue';
 import Btn from './Btn.vue';
 import Card from './Card.vue';
 import KIcon from './KIcon.vue';
@@ -25,10 +26,33 @@ const emit = defineEmits<{
   create: [];
   copy: [row: PipelineRow];
   trigger: [row: PipelineRow];
+  /** 指定分支/提交触发。branch/commit 留空表示使用流水线分支最新提交 */
+  'trigger-advanced': [row: PipelineRow, params: { branch: string; commit: string }];
   edit: [row: PipelineRow];
   remove: [row: PipelineRow];
   retry: [];
 }>();
+
+// 指定分支/提交触发（默认路径不变：直接点「启动」= 分支最新）
+const advOpen = ref(false);
+const advRow = ref<PipelineRow | null>(null);
+const advBranch = ref('');
+const advCommit = ref('');
+
+function openAdvanced(row: PipelineRow): void {
+  if (!row.enable || props.busyKey) return;
+  advRow.value = row;
+  advBranch.value = '';
+  advCommit.value = '';
+  advOpen.value = true;
+}
+
+function submitAdvanced(): void {
+  const row = advRow.value;
+  if (!row) return;
+  advOpen.value = false;
+  emit('trigger-advanced', row, { branch: advBranch.value.trim(), commit: advCommit.value.trim() });
+}
 
 function busyOf(kind: 'copy' | 'trigger' | 'del', id: number): boolean {
   return props.busyKey === `${kind}:${id}`;
@@ -200,6 +224,16 @@ function busyOf(kind: 'copy' | 'trigger' | 'del', id: number): boolean {
               <Btn
                 size="sm"
                 variant="ghost"
+                :disabled="!r.enable || !!busyKey"
+                :title="!r.enable ? '流水线未启用，先编辑打开「启用」' : '指定分支或提交触发（留空则用分支最新）'"
+                data-spec="pipeline-config-trigger-advanced"
+                @click="openAdvanced(r)"
+              >
+                指定提交
+              </Btn>
+              <Btn
+                size="sm"
+                variant="ghost"
                 :disabled="!!busyKey"
                 data-spec="pipeline-config-edit"
                 @click="emit('edit', r)"
@@ -221,5 +255,48 @@ function busyOf(kind: 'copy' | 'trigger' | 'del', id: number): boolean {
         </tr>
       </tbody>
     </table>
+
+    <el-dialog
+      v-model="advOpen"
+      title="指定分支或提交触发"
+      width="420px"
+      append-to-body
+      data-spec="pipeline-trigger-advanced-dialog"
+    >
+      <div class="flex flex-col gap-3">
+        <el-input
+          v-model="advBranch"
+          size="small"
+          clearable
+          placeholder="分支（留空 = 流水线分支）"
+          data-spec="pipeline-trigger-branch"
+        />
+        <el-input
+          v-model="advCommit"
+          size="small"
+          clearable
+          placeholder="提交 SHA（留空 = 分支最新）"
+          data-spec="pipeline-trigger-commit"
+        />
+      </div>
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <Btn
+            size="sm"
+            @click="advOpen = false"
+          >
+            取消
+          </Btn>
+          <Btn
+            size="sm"
+            variant="primary"
+            data-spec="pipeline-trigger-advanced-confirm"
+            @click="submitAdvanced"
+          >
+            触发
+          </Btn>
+        </div>
+      </template>
+    </el-dialog>
   </Card>
 </template>

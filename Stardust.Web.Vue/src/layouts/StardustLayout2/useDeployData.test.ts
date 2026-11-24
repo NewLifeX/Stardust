@@ -49,6 +49,7 @@ function baseDeps(): DeployDeps {
     fetchRunHistoryFiltered: async () => [],
     fetchRunDetail: async () => 'missing' as const,
     reprocessRun: async () => ({ ok: true, message: '流水线已重新触发，运行编号[42]' }),
+    cancelRun: async () => ({ ok: true, message: '流水线运行[42]已取消' }),
     createPipeline: async () => ({ ok: true, message: '流水线已创建' }),
     updatePipeline: async () => ({ ok: true, message: '流水线已保存' }),
     deletePipeline: async () => ({ ok: true, message: '流水线已删除' }),

@@ -19,9 +19,11 @@ defineProps<{
   /** 容器状态机：loading 初载 / ready 就绪 / missing 不存在 / failed 请求失败 */
   state: RunDetailState;
   detail: RunDetail | null;
+  /** 取消请求进行中 */
+  cancelling?: boolean;
 }>();
 
-const emit = defineEmits<{ close: []; openSteps: []; retry: [] }>();
+const emit = defineEmits<{ close: []; openSteps: []; retry: []; cancel: [] }>();
 
 const ROW_CLS = 'flex items-start justify-between gap-3 border-b border-[var(--el-border-color-light)] py-[7px]';
 const LABEL_CLS = 'shrink-0 text-[12px] text-[var(--el-text-color-secondary)]';
@@ -85,6 +87,17 @@ const VALUE_CLS = 'min-w-0 break-words text-right text-[12.5px] text-[var(--el-t
           （轮询中）
         </span>
         <span class="flex-1" />
+        <Btn
+          v-if="detail.active"
+          size="sm"
+          variant="default"
+          :disabled="cancelling"
+          :title="cancelling ? '取消中…' : '取消本次运行（不中断节点上已开始的进程）'"
+          data-spec="pipeline-run-detail-cancel"
+          @click="emit('cancel')"
+        >
+          {{ cancelling ? '取消中…' : '取消运行' }}
+        </Btn>
         <Btn
           size="sm"
           variant="default"
