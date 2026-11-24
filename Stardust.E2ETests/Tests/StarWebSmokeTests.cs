@@ -115,15 +115,16 @@ public class StarWebSmokeTests : IAsyncLifetime
         // 直接写入一台带 MAC 的节点，避免依赖站点初始数据；时间按 XCode 的 SQLite 文本格式写入
         var code = "E2E-WAKE-" + Guid.NewGuid().ToString("N")[..8];
         var now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fffffff", CultureInfo.InvariantCulture);
+        Int32 id;
         using (var conn = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = db }.ToString()))
         {
             conn.Open();
             using var cmd = conn.CreateCommand();
-            cmd.CommandText = "insert into Node (Name, Code, Enable, MACs, LastActive, CreateTime, UpdateTime) values ($name, $code, 1, 'AA-BB-CC-DD-EE-FF', $now, $now, $now)";
+            cmd.CommandText = "insert into Node (Name, Code, Enable, MACs, LastActive, CreateTime, UpdateTime) values ($name, $code, 1, 'AA-BB-CC-DD-EE-FF', $now, $now, $now); select last_insert_rowid();";
             cmd.Parameters.AddWithValue("$name", "E2E唤醒节点");
             cmd.Parameters.AddWithValue("$code", code);
             cmd.Parameters.AddWithValue("$now", now);
-            cmd.ExecuteNonQuery();
+            id = Convert.ToInt32(cmd.ExecuteScalar());
         }
 
         try
@@ -138,6 +139,13 @@ public class StarWebSmokeTests : IAsyncLifetime
             Assert.Equal(1, await link.CountAsync());
             Assert.Contains("WakeUp", await link.GetAttributeAsync("href") ?? "");
             Assert.Contains("同网段在线节点代发", await link.GetAttributeAsync("data-confirm") ?? "");
+
+            // 走一次真实接口：测试库没有同网段在线节点，应返回明确提示而不是静默成功
+            var api = await _page.Context.APIRequest.GetAsync($"/Nodes/Node/WakeUp?lang=zh-Hans&id={id}");
+            Assert.Equal(200, api.Status);
+            var body = await api.TextAsync();
+            Assert.Contains("\"code\":400", body);
+            Assert.True(body.Contains("无法唤醒") || body.Contains("unable to wake", StringComparison.OrdinalIgnoreCase), $"期望明确的无法唤醒提示，实际：{body}");
         }
         finally
         {
