@@ -140,12 +140,21 @@ public class StarWebSmokeTests : IAsyncLifetime
             Assert.Contains("WakeUp", await link.GetAttributeAsync("href") ?? "");
             Assert.Contains("同网段在线节点代发", await link.GetAttributeAsync("data-confirm") ?? "");
 
+            // 批量工具栏同样提供唤醒入口
+            var batch = _page.Locator("button[data-action='action']", new() { HasTextString = "唤醒" });
+            Assert.True(await batch.CountAsync() > 0, "批量工具栏应显示唤醒按钮");
+
             // 走一次真实接口：测试库没有同网段在线节点，应返回明确提示而不是静默成功
             var api = await _page.Context.APIRequest.GetAsync($"/Nodes/Node/WakeUp?lang=zh-Hans&id={id}");
             Assert.Equal(200, api.Status);
             var body = await api.TextAsync();
             Assert.Contains("\"code\":400", body);
             Assert.True(body.Contains("无法唤醒") || body.Contains("unable to wake", StringComparison.OrdinalIgnoreCase), $"期望明确的无法唤醒提示，实际：{body}");
+
+            var batchApi = await _page.Context.APIRequest.GetAsync($"/Nodes/Node/WakeUpBatch?lang=zh-Hans&keys={id}");
+            Assert.Equal(200, batchApi.Status);
+            var batchBody = await batchApi.TextAsync();
+            Assert.Contains("\"code\":400", batchBody);
         }
         finally
         {

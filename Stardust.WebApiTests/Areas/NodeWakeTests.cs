@@ -87,6 +87,37 @@ public class NodeWakeTests
     }
 
     [Fact]
+    public async Task WakeUpBatch_NoRelay_Returns400()
+    {
+        // 随机第三段，确保临时库里没有同网段在线节点
+        var third = Rand.Next(100, 250);
+        var node = new Node
+        {
+            Code = "wake-batch-" + Rand.NextString(8),
+            Name = "wake-batch",
+            Enable = true,
+            MACs = "AA-BB-CC-DD-EE-FF",
+            Gateway = $"10.{third}.0.1/11-22-33-44-55-66",
+            IP = $"10.{third}.0.10",
+        };
+        node.Insert();
+        try
+        {
+            var resp = await _api.GetAsync($"Nodes/Node/WakeUpBatch?keys={node.ID}", auth: true);
+            var raw = await resp.Content.ReadAsStringAsync();
+            Assert.True(resp.IsSuccessStatusCode, $"WakeUpBatch 应答非 2xx：{(Int32)resp.StatusCode} {raw}");
+
+            var api = JsonSerializer.Deserialize<ApiResponse<JsonElement>>(raw, _json);
+            Assert.Equal(400, api!.Code);
+            Assert.Contains("局域网", api.Message);
+        }
+        finally
+        {
+            try { node.Delete(); } catch { }
+        }
+    }
+
+    [Fact]
     public void FindAllByIds_ReturnsOnlyExisting()
     {
         var node = new Node { Code = "wake-biz-" + Rand.NextString(8), Name = "wake-biz", Enable = true };
