@@ -1173,7 +1173,8 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
             {
                 // 原子迁移：仅当 DB 中该步骤仍为 Running 时才置终态；影响行数为 0 表示已被其他线程/实例处理，直接返回，
                 // 杜绝并发回包（网络重试）重复续跑导致双发部署/双写历史/双设版本
-                if (TransitionStepToTerminal(step.Id, targetStatus, finishedTime, isSuccess ? null : model.Data) == 0) return;
+                // 成功回包同样带上构建日志尾部，便于在步骤详情中排查
+                if (TransitionStepToTerminal(step.Id, targetStatus, finishedTime, AppPipelineStep.CutMessage(model.Data)) == 0) return;
                 // 本线程已抢到续跑权，同步内存对象供后续逻辑使用
                 step.Status = targetStatus;
                 step.FinishedTime = finishedTime;
@@ -1188,7 +1189,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
                         AppDeployHistory.Create(pipeline.DeployId, cmd.NodeID, "deploy/compile/Build-Upload", true, L.T("Build completed, run={0}", run.Id), ip).Insert();
 
                     // 取版本 + 使用版本（必须在部署下发前；等价于 Web「使用版本」按钮 app.Version=ver.Version）
-                    var version = pipeline != null ? AppDeployVersion.FindAllByDeployId(pipeline.DeployId, 1).FirstOrDefault() : null;
+                    var version = pipeline != null ? FindRunVersion(run, step, pipeline.DeployId) : null;
                     if (version != null)
                     {
                         run.AppVersionId = version.Id;
@@ -1271,7 +1272,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
             else if (step.StepType.EqualIgnoreCase("Deploy"))
             {
                 // 原子迁移：仅当 DB 中该步骤仍为 Running 时才置终态，影响行数为 0 表示已处理，直接返回
-                if (TransitionStepToTerminal(step.Id, targetStatus, finishedTime, isSuccess ? null : model.Data) == 0) return;
+                if (TransitionStepToTerminal(step.Id, targetStatus, finishedTime, AppPipelineStep.CutMessage(model.Data)) == 0) return;
                 step.Status = targetStatus;
                 step.FinishedTime = finishedTime;
 
@@ -1303,6 +1304,46 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         {
             XTrace.WriteException(ex);
         }
+    }
+
+    /// <summary>匹配本次运行产出的部署版本。优先提交号一致；提交号缺失时只接受构建开始后生成且同样无提交号的版本，
+    /// 避免并发构建或手工上传时误取其它版本的包。</summary>
+    /// <param name="run">运行记录</param>
+    /// <param name="step">构建步骤</param>
+    /// <param name="deployId">部署集编号</param>
+    /// <returns>匹配的版本，未找到返回 null</returns>
+    private static AppDeployVersion FindRunVersion(AppPipelineRun run, AppPipelineStep step, Int32 deployId)
+    {
+        // 允许 5 分钟时钟偏差：版本创建时间可能因拦截器取时与步骤取时存在毫秒级逆序
+        var since = (step.StartedTime.Year > 2000 ? step.StartedTime : run.CreateTime).AddMinutes(-5);
+        var list = AppDeployVersion.FindAll(
+            AppDeployVersion._.DeployId == deployId & AppDeployVersion._.CreateTime >= since,
+            AppDeployVersion._.Id.Desc(), null, 0, 20);
+        if (list.Count == 0) return null;
+
+        if (!run.CommitId.IsNullOrEmpty())
+        {
+            var hit = list.FirstOrDefault(e => IsSameCommit(run.CommitId, e.CommitId));
+            if (hit != null) return hit;
+
+            // 非 git 源码目录的版本没有提交号，仅当全部候选都无提交号时接受
+            if (list.All(e => e.CommitId.IsNullOrEmpty())) return list[0];
+
+            // 附注标签推送的 after 是标签对象 SHA，与提交 SHA 不同；本次窗口内只有一个候选时视为本次产物
+            if (list.Count == 1) return list[0];
+
+            return null;
+        }
+
+        return list[0];
+    }
+
+    /// <summary>提交号比对。兼容 webhook 全量与 git rev-parse 全量、以及任意一方为短号的情况</summary>
+    private static Boolean IsSameCommit(String? a, String? b)
+    {
+        if (a.IsNullOrEmpty() || b.IsNullOrEmpty()) return false;
+
+        return a.StartsWithIgnoreCase(b) || b.StartsWithIgnoreCase(a);
     }
 
     /// <summary>原子地把步骤从 Running 迁移到指定终态，保证同一命令回包（含网络重试 / 多实例）只被处理一次。

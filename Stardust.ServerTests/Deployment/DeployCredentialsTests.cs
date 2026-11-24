@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using NewLife;
 using NewLife.Security;
+using NewLife.Serialization;
 using Stardust.Data.Deployment;
 using Stardust.Models;
 using Stardust.Server;
@@ -178,6 +179,25 @@ public class DeployCredentialsTests : IDisposable
         // Repository 中的凭据也应被移除
         Assert.DoesNotContain("user:pass", safe.Repository);
         Assert.Contains("git.example.com", safe.Repository);
+    }
+
+    [Fact(DisplayName = "编译命令序列化保留提交号，脱敏副本也不丢失提交号")]
+    public void CompileCommand_CommitId_RoundTrip()
+    {
+        var cmd = new CompileCommand
+        {
+            Repository = "https://git.example.com/repo.git",
+            Branch = "release/1.0",
+            CommitId = "abcdef1234567890abcdef1234567890abcdef12",
+        };
+
+        var back = cmd.ToJson().ToJsonEntity<CompileCommand>();
+        Assert.NotNull(back);
+        Assert.Equal("release/1.0", back.Branch);
+        Assert.Equal(cmd.CommitId, back.CommitId);
+
+        // 脱敏副本用于写历史，只去掉凭据，提交号必须保留以便排查
+        Assert.Equal(cmd.CommitId, cmd.RedactForHistory().CommitId);
     }
 
     [Fact]

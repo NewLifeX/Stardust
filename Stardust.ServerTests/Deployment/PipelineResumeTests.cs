@@ -229,6 +229,63 @@ public class PipelineResumeTests
     }
 
     [Fact]
+    public async Task Build_Success_按提交匹配版本_不取更新的无关版本()
+    {
+        var data = SetupBuild("res-cm-" + Guid.NewGuid().ToString("N")[..6], autoDeploy: false, version: null);
+        data.run.CommitId = "aaaa1111bbbb2222cccc3333dddd4444eeee5555";
+        data.run.Update();
+
+        try
+        {
+            // 先插入本次提交的版本，再插入一个“更新但无关”的版本，验证实现不会盲取最新
+            var right = new AppDeployVersion { DeployId = data.app.Id, Version = "vRight", Enable = true, CommitId = data.run.CommitId };
+            right.Insert();
+            var wrong = new AppDeployVersion { DeployId = data.app.Id, Version = "vWrong", Enable = true, CommitId = "ffff9999eeee8888dddd7777cccc6666bbbb5555" };
+            wrong.Insert();
+            Assert.True(wrong.Id > right.Id);
+
+            await InvokeAsync(CreateService(), data.cmd, CommandStatus.已完成);
+
+            var run = AppPipelineRun.FindById(data.run.Id);
+            var app = AppDeploy.FindById(data.app.Id);
+            Assert.Equal(right.Id, run.AppVersionId);
+            Assert.Equal("vRight", app.Version);
+        }
+        finally
+        {
+            foreach (var v in AppDeployVersion.FindAllByDeployId(data.app.Id)) v.Delete();
+            Cleanup(data);
+        }
+    }
+
+    [Fact]
+    public async Task Build_Success_单一候选且提交不一致_仍使用该版本()
+    {
+        // 附注标签推送的 after 是标签对象 SHA，与编译节点读到的提交 SHA 不同；单一候选时仍应部署
+        var data = SetupBuild("res-tag-" + Guid.NewGuid().ToString("N")[..6], autoDeploy: false, version: null);
+        data.run.CommitId = "1111222233334444555566667777888899990000";
+        data.run.Update();
+
+        try
+        {
+            var ver = new AppDeployVersion { DeployId = data.app.Id, Version = "vTag", Enable = true, CommitId = "aaaabbbbccccddddeeeeffff0000111122223333" };
+            ver.Insert();
+
+            await InvokeAsync(CreateService(), data.cmd, CommandStatus.已完成);
+
+            var run = AppPipelineRun.FindById(data.run.Id);
+            var app = AppDeploy.FindById(data.app.Id);
+            Assert.Equal(ver.Id, run.AppVersionId);
+            Assert.Equal("vTag", app.Version);
+        }
+        finally
+        {
+            foreach (var v in AppDeployVersion.FindAllByDeployId(data.app.Id)) v.Delete();
+            Cleanup(data);
+        }
+    }
+
+    [Fact]
     public async Task Build_Success_NoAutoDeploy_使用版本并置Success()
     {
         var data = SetupBuild("res-bok-" + Guid.NewGuid().ToString("N")[..6], autoDeploy: false, version: "v20260724-000000");
