@@ -46,7 +46,7 @@
   <!-- 纯 API 后端：引用 NuGet 版 NewLife.Cube(API版)，不再链接 Stardust.Web 源码 -->
   <ItemGroup>
     <PackageReference Include="NewLife.IP" Version="2.6.2026.1024" />
-    <PackageReference Include="NewLife.Redis" Version="7.0.2026.1026-beta0931" />
+    <PackageReference Include="NewLife.Redis" Version="7.0.2026.1122-beta1520" />
     <PackageReference Include="NewLife.Remoting.Extensions" Version="4.0.2026.1122-beta1417" />
     <!-- 魔方 WebAPI 核心库，复用其 EntityController/ApiResponse/AuthController 等纯 API 能力。
          6.16.2026.1105-beta0348 起皮肤系统支持 /api 回退保护（MapFallback("/api/{**path}",404)），
