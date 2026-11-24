@@ -156,6 +156,75 @@ public class DeployStrategyTests
         }
     }
 
+    [Fact(DisplayName = "标准模式保留语言包等子目录结构")]
+    public void Standard_Extract_NestedDirectory()
+    {
+        var dir = CreateTempDir();
+        try
+        {
+            var name = "localeapp";
+            var zip = CreateZip(dir, name + ".dll", $"zh-Hans/{name}.resources.dll");
+            var workDir = Path.Combine(dir, "work");
+
+            var ctx = CreateContext(name, workDir, zip);
+            var rs = new StandardDeployStrategy().Extract(ctx);
+
+            Assert.True(rs);
+            Assert.True(File.Exists(Path.Combine(workDir, "zh-Hans", name + ".resources.dll")));
+        }
+        finally
+        {
+            Directory.Delete(dir, true);
+        }
+    }
+
+    [Fact(DisplayName = "托管模式保留语言包等子目录结构")]
+    public void Hosted_Extract_NestedDirectory()
+    {
+        var dir = CreateTempDir();
+        try
+        {
+            var name = "hostedapp";
+            var zip = CreateZip(dir, name + ".dll", $"zh-Hans/{name}.resources.dll");
+            var workDir = Path.Combine(dir, "work");
+
+            var ctx = CreateContext(name, workDir, zip);
+            var rs = new HostedStrategy().Extract(ctx);
+
+            Assert.True(rs);
+            Assert.True(File.Exists(Path.Combine(workDir, name + ".dll")));
+            Assert.True(File.Exists(Path.Combine(workDir, "zh-Hans", name + ".resources.dll")));
+        }
+        finally
+        {
+            Directory.Delete(dir, true);
+        }
+    }
+
+    [Fact(DisplayName = "影子模式保留语言包等子目录结构")]
+    public void Shadow_Extract_NestedDirectory()
+    {
+        var dir = CreateTempDir();
+        try
+        {
+            var name = "shadowlocale";
+            var zip = CreateZip(dir, name + ".dll", $"zh-Hans/{name}.resources.dll");
+            var workDir = Path.Combine(dir, "work");
+            Directory.CreateDirectory(workDir);
+
+            var ctx = CreateContext(name, workDir, zip);
+            var rs = new ShadowDeployStrategy().Extract(ctx);
+
+            Assert.True(rs);
+            Assert.False(ctx.Shadow.IsNullOrEmpty());
+            Assert.True(File.Exists(Path.Combine(ctx.Shadow, "zh-Hans", name + ".resources.dll")));
+        }
+        finally
+        {
+            Directory.Delete(dir, true);
+        }
+    }
+
     [Fact(DisplayName = "缺少压缩包时标准模式直接使用工作目录")]
     public void Standard_NoZip_UseWorkingDirectory()
     {
