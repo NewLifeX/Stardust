@@ -220,3 +220,13 @@
 "File [{0}] changed; stopping the application and starting it {1}ms later": "文件[{0}]发生改变，停止应用并延迟 {1}ms 后启动"
 "Stardust distributed core": "星尘分布式核心"
 "Stardust distributed core client library. One-line integration for configuration delivery, service registration and discovery, distributed tracing, APM and log reporting.": "星尘分布式核心客户端库。一行代码接入，提供配置下发、服务注册与发现、全链路追踪、APM 性能监控与日志上报。"
+# 发布失败自动回滚
+"Application [{0}] failed to start {1} times; automatic rollback is disabled.": "应用[{0}]连续启动失败{1}次；自动回滚已禁用。"
+"Application [{0}] failed to start {1} times; rollback was unavailable or failed. Manual intervention is required.": "应用[{0}]连续启动失败{1}次；回滚不可用或失败，请人工处理。"
+"Application [{0}] failed to start {1} times after rollback; both the new and previous packages failed. Manual intervention is required.": "应用[{0}]回滚后仍连续启动失败{1}次；新旧版本均启动失败，请人工处理。"
+"Application [{0}] failed to start {1} times; no zip package is available for rollback.": "应用[{0}]连续启动失败{1}次；没有可用于回滚的 zip 包。"
+"Application [{0}] failed to start {1} times; the current package is already the last known good version. The failure is likely caused by the environment; manual intervention is required.": "应用[{0}]连续启动失败{1}次；当前包已经是上次可用版本，失败更可能是环境问题，请人工处理。"
+"Application [{0}] failed to start {1} times; no stable rollback package is available.": "应用[{0}]连续启动失败{1}次；没有可用的稳定回滚包。"
+"Application [{0}] failed to start {1} times; rolled back from version [{2}] to [{3}].": "应用[{0}]连续启动失败{1}次；已从版本[{2}]回滚到[{3}]。"
+"Application [{0}] has been stable for {1} minutes; saved as the rollback package": "应用[{0}]已稳定运行{1}分钟；已保存为回滚包"
+"Rolled back application [{0}] from version [{1}] to [{2}]": "已回滚应用[{0}]：版本[{1}] → [{2}]"

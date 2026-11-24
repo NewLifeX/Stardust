@@ -22,6 +22,9 @@ internal static class AotRoots
     [DynamicDependency(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicConstructors, typeof(CertInfo))]
     [DynamicDependency(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicConstructors, typeof(CertManifest))]
     [DynamicDependency(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicConstructors, typeof(CertSyncArg))]
+    // deploy.json 通过反射序列化，保留属性元数据，避免 AOT 裁剪后回滚信息为空
+    [DynamicDependency(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicConstructors, typeof(ServiceInfo))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicConstructors, typeof(DeployInfo))]
 #endif
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal static void Ensure() { }

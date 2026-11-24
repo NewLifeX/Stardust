@@ -4,6 +4,7 @@ using NewLife.Log;
 using NewLife.Remoting.Clients;
 using NewLife.Threading;
 using StarAgent.Managers;
+using Stardust.Deployment;
 using Stardust.Models;
 #if !NET40
 using TaskEx = System.Threading.Tasks.Task;
@@ -72,8 +73,17 @@ public class ServiceController : DisposeBase
     /// <summary>开始时间</summary>
     public DateTime StartTime { get; set; }
 
-    /// <summary>最大失败数。超过该数时，不再尝试启动，默认20</summary>
-    public Int32 MaxFails { get; set; } = 20;
+    /// <summary>最大失败数。超过该数时，不再尝试启动，默认10</summary>
+    public Int32 MaxFails { get; set; } = 10;
+
+    /// <summary>部署备份根目录。为空时使用 Core.config 的 BackupPath</summary>
+    public String? BackupPath { get; set; }
+
+    /// <summary>稳定运行多少分钟后保存为回滚包，默认10分钟</summary>
+    public Int32 StableMinutes { get; set; } = 10;
+
+    /// <summary>是否启用启动失败自动回滚，默认true</summary>
+    public Boolean AutoRollback { get; set; } = true;
 
     /// <summary>事件客户端</summary>
     public IEventProvider? EventProvider { get; set; }
@@ -89,6 +99,13 @@ public class ServiceController : DisposeBase
     private TimerX? _timer;
     private Int32 _error;
     private AppInfo? _appInfo;
+    private Boolean _rollbackTried;
+    private Boolean _goodMarked;
+    private DateTime _goodRetryTime;
+    private String? _runZip;
+    private String? _runHash;
+    private String? _failedHash;
+    private String? _failedVersion;
     #endregion
 
     #region 构造
@@ -115,10 +132,31 @@ public class ServiceController : DisposeBase
             var service = Info;
             if (service == null) return false;
 
-            // 连续错误一定数量后，不再尝试启动
+            // 连续错误一定数量后，尝试回滚一次，再停止启动
             if (_error >= MaxFails)
             {
-                if (_error == MaxFails) WriteLog("Application [{0}] has reached the maximum error count {2} (current: {1})", Name, _error, MaxFails);
+                if (_error == MaxFails)
+                {
+                    WriteLog("Application [{0}] has reached the maximum error count {2} (current: {1})", Name, _error, MaxFails);
+
+                    if (!_rollbackTried && AutoRollback)
+                    {
+                        _rollbackTried = true;
+                        if (TryRollback())
+                        {
+                            _error = 0;
+                            return Start();
+                        }
+                    }
+                    else if (_rollbackTried)
+                    {
+                        WriteEvent("error", L.TLog("Application [{0}] failed to start {1} times after rollback; both the new and previous packages failed. Manual intervention is required.", Name, MaxFails));
+                    }
+                    else
+                    {
+                        WriteEvent("warn", L.TLog("Application [{0}] failed to start {1} times; automatic rollback is disabled.", Name, MaxFails));
+                    }
+                }
 
                 _error++;
                 return false;
@@ -148,6 +186,8 @@ public class ServiceController : DisposeBase
             workDir = workDir.GetFullPath();
             _fileName = null;
             _workdir = workDir;
+            _goodMarked = false;
+            _goodRetryTime = DateTime.MinValue;
 
             // 获取部署策略
             var strategy = _strategy = DeployStrategyFactory.Create(service);
@@ -168,6 +208,33 @@ public class ServiceController : DisposeBase
                 String? zipFile = service.ZipFile;
                 if (zipFile.IsNullOrEmpty() && file.EndsWithIgnoreCase(".zip"))
                     zipFile = file;
+
+                // 记录本次运行使用的包，稳定运行后提升为回滚包。
+                // 服务端下发了哈希就直接复用，避免连续失败重试时反复读取大文件
+                if (!zipFile.IsNullOrEmpty())
+                {
+                    var fi = zipFile.AsFile();
+                    if (fi == null || !fi.Exists) fi = workDir.CombinePath(zipFile).AsFile();
+                    if (fi != null && fi.Exists)
+                    {
+                        if (_runZip != fi.FullName || _runHash.IsNullOrEmpty())
+                        {
+                            _runZip = fi.FullName;
+                            _runHash = DeployInfo?.Hash;
+                            if (_runHash.IsNullOrEmpty()) _runHash = fi.MD5().ToHex();
+                        }
+                    }
+                    else
+                    {
+                        _runZip = null;
+                        _runHash = null;
+                    }
+                }
+                else
+                {
+                    _runZip = null;
+                    _runHash = null;
+                }
 
                 // 构建部署上下文
                 var context = new DeployContext
@@ -447,8 +514,33 @@ public class ServiceController : DisposeBase
         if (Info != info)
         {
             Info = info;
-            _error = 0;
+            ResetErrors();
         }
+    }
+
+    /// <summary>重置启动失败计数与回滚状态。新版本到达时调用</summary>
+    internal void ResetErrors()
+    {
+        _error = 0;
+        _rollbackTried = false;
+        _goodMarked = false;
+        _goodRetryTime = DateTime.MinValue;
+        _runZip = null;
+        _runHash = null;
+        _failedHash = null;
+        _failedVersion = null;
+    }
+
+    /// <summary>判断是否刚刚回滚掉的失败版本。服务端重复下发同一版本时不要清零失败计数，避免新旧包都失败后停不下来</summary>
+    /// <param name="deploy">服务端下发的部署信息</param>
+    /// <returns>是否同一失败版本</returns>
+    internal Boolean IsFailedVersion(DeployInfo? deploy)
+    {
+        if (deploy == null) return false;
+
+        // 优先按哈希判断；服务端未下发哈希时退回版本号
+        if (!deploy.Hash.IsNullOrEmpty()) return !_failedHash.IsNullOrEmpty() && deploy.Hash.EqualIgnoreCase(_failedHash);
+        return !_failedVersion.IsNullOrEmpty() && deploy.Version.EqualIgnoreCase(_failedVersion);
     }
 
     /// <summary>检查已存在进程并接管，如果进程已退出则重启</summary>
@@ -474,6 +566,7 @@ public class ServiceController : DisposeBase
 
         // 进程存在，常规判断内存
         if (p != null) p = CheckMaxMemory(p, inf);
+        if (p != null && !p.GetHasExited()) TryMarkGood();
 
         // 进程不存在，但Id存在
         if (p == null && ProcessId > 0 && ProcessId != mypid)
@@ -706,6 +799,169 @@ public class ServiceController : DisposeBase
         return p;
     }
 
+    #region 部署回滚
+    /// <summary>创建部署备份存储</summary>
+    /// <returns></returns>
+    private DeployBackupStore CreateBackupStore()
+    {
+        var root = BackupPath;
+        if (root.IsNullOrEmpty()) root = Setting.Current.BackupPath;
+        if (root.IsNullOrEmpty()) root = "Backup";
+
+        return new DeployBackupStore(root)
+        {
+            Log = Log,
+            Tracer = Tracer,
+        };
+    }
+
+    /// <summary>解析服务当前使用的 zip 路径</summary>
+    /// <param name="service">服务信息</param>
+    /// <returns>zip 完整路径，未配置时返回 null</returns>
+    private String? ResolveZipPath(ServiceInfo service)
+    {
+        var zipFile = service.ZipFile;
+        if (zipFile.IsNullOrEmpty() && !service.FileName.IsNullOrEmpty() && service.FileName.EndsWithIgnoreCase(".zip"))
+            zipFile = service.FileName;
+        if (zipFile.IsNullOrEmpty()) return null;
+
+        var fi = zipFile.AsFile();
+        if (fi != null && fi.Exists) return fi.FullName;
+
+        var workDir = _workdir;
+        if (workDir.IsNullOrEmpty()) workDir = service.WorkingDirectory;
+        if (!workDir.IsNullOrEmpty()) return workDir.CombinePath(zipFile).GetFullPath();
+
+        return zipFile.GetFullPath();
+    }
+
+    /// <summary>稳定运行足够时长后，把当前包保存为回滚包</summary>
+    internal void TryMarkGood()
+    {
+        try
+        {
+            if (_goodMarked || !AutoRollback || StableMinutes <= 0) return;
+            if (!Running) return;
+            if (Name.IsNullOrEmpty() || _goodRetryTime > DateTime.Now) return;
+            if (StartTime.Year < 2000 || StartTime.AddMinutes(StableMinutes) > DateTime.Now) return;
+
+            // 只提升本控制器实际拉起过的包，避免把刚下载但尚未运行的包误标为可用包
+            var zipFile = _runZip;
+            if (zipFile.IsNullOrEmpty() || !File.Exists(zipFile)) return;
+
+            // deploy.json 保存服务端下发的 DeployInfo，没有它就不保存备份
+            var deploy = DeployInfo;
+            if (deploy == null) return;
+
+            // 服务端未下发哈希时用本地计算的哈希补齐，保证仍能生成回滚包
+            if (deploy.Hash.IsNullOrEmpty())
+            {
+                deploy.Hash = _runHash;
+                if (deploy.Hash.IsNullOrEmpty()) deploy.Hash = DeployBackupStore.GetFileHash(zipFile);
+            }
+            if (deploy.Hash.IsNullOrEmpty()) return;
+            if (!_runHash.IsNullOrEmpty() && !deploy.Hash.EqualIgnoreCase(_runHash)) return;
+
+            var service = Info;
+            if (service == null) return;
+
+            // Hosted/Task 由外部宿主或一次性任务负责，代理无法判断稳定性
+            var strategy = _strategy ?? DeployStrategyFactory.Create(service);
+            if (strategy != null && !strategy.NeedGuardian) return;
+
+            var store = CreateBackupStore();
+            if (store.Promote(Name, zipFile, deploy))
+            {
+                _goodMarked = true;
+                _runZip = zipFile;
+                _runHash = deploy.Hash;
+
+                // 当前版本已被证明稳定，后续失败按环境问题处理，重新判断是否需要回滚
+                _rollbackTried = false;
+
+                WriteLog("Application [{0}] has been stable for {1} minutes; saved as the rollback package", Name, StableMinutes);
+            }
+            else
+            {
+                _goodRetryTime = DateTime.Now.AddMinutes(5);
+            }
+        }
+        catch (Exception ex)
+        {
+            _goodRetryTime = DateTime.Now.AddMinutes(5);
+            WriteLog("Failed to save the rollback package: {0}", ex.Message);
+        }
+    }
+
+    /// <summary>连续启动失败后尝试回滚一次</summary>
+    /// <returns>是否成功恢复并准备重新启动</returns>
+    private Boolean TryRollback()
+    {
+        try
+        {
+            return TryRollbackCore();
+        }
+        catch (Exception ex)
+        {
+            WriteLog("Rollback failed: {0}", ex.Message);
+            WriteEvent("error", L.TLog("Application [{0}] failed to start {1} times; rollback was unavailable or failed. Manual intervention is required.", Name, MaxFails));
+            return false;
+        }
+    }
+
+    private Boolean TryRollbackCore()
+    {
+        var service = Info;
+        if (service == null)
+        {
+            WriteEvent("error", L.TLog("Application [{0}] failed to start {1} times; rollback was unavailable or failed. Manual intervention is required.", Name, MaxFails));
+            return false;
+        }
+
+        var zipFile = ResolveZipPath(service);
+        if (zipFile.IsNullOrEmpty())
+        {
+            WriteEvent("warn", L.TLog("Application [{0}] failed to start {1} times; no zip package is available for rollback.", Name, MaxFails));
+            return false;
+        }
+
+        // 回滚前记下失败版本，用于告警文案与避免同版本重复下发时清零失败计数
+        var failedDeploy = DeployInfo;
+        var failedHash = failedDeploy?.Hash;
+        if (failedHash.IsNullOrEmpty()) failedHash = _runHash;
+        var fromVersion = failedDeploy?.Version ?? service.PackageVersion;
+
+        var store = CreateBackupStore();
+
+        // 先停止失败进程，避免 Windows 上文件占用影响覆盖
+        Stop("Rollback");
+
+        var result = store.Restore(Name, zipFile, out var backup);
+        if (result != DeployRestoreResult.Restored || backup == null)
+        {
+            if (result == DeployRestoreResult.AlreadyGood)
+                WriteEvent("warn", L.TLog("Application [{0}] failed to start {1} times; the current package is already the last known good version. The failure is likely caused by the environment; manual intervention is required.", Name, MaxFails));
+            else
+                WriteEvent("warn", L.TLog("Application [{0}] failed to start {1} times; no stable rollback package is available.", Name, MaxFails));
+
+            return false;
+        }
+
+        // 恢复备份的部署信息，旧包稳定后再写回 deploy.json
+        _failedHash = failedHash;
+        _failedVersion = fromVersion;
+        DeployInfo = backup;
+        _goodMarked = false;
+        _runZip = zipFile;
+        _runHash = backup.Hash;
+
+        WriteLog("Rolled back application [{0}] from version [{1}] to [{2}]", Name, fromVersion, backup.Version);
+        WriteEvent("warn", L.TLog("Application [{0}] failed to start {1} times; rolled back from version [{2}] to [{3}].", Name, MaxFails, fromVersion, backup.Version));
+
+        return true;
+    }
+    #endregion
+
     Boolean TakeOver(Process p, String reason)
     {
         using var span = Tracer?.NewSpan(nameof(TakeOver), new { p.Id, p.ProcessName, reason });
@@ -736,6 +992,7 @@ public class ServiceController : DisposeBase
 
         if (StartTime.Year < 2000) StartTime = DateTime.Now;
 
+        _error = 0;
         Running = true;
 
         return true;

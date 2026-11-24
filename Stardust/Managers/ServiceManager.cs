@@ -8,6 +8,7 @@ using NewLife.Remoting.Models;
 using NewLife.Serialization;
 using NewLife.Threading;
 using StarAgent.Managers;
+using Stardust.Deployment;
 using Stardust.Models;
 
 namespace Stardust.Managers;
@@ -35,6 +36,15 @@ public class ServiceManager : DisposeBase
     /// <summary>启动挂钩。拉起目标进程时，对dotNet应用注入星尘监控钩子，默认false</summary>
     public Boolean StartupHook { get; set; }
 
+    /// <summary>部署备份目录。为空时使用 Core.config 的 BackupPath</summary>
+    public String? BackupPath { get; set; }
+
+    /// <summary>稳定运行多少分钟后保存为回滚包，默认10分钟</summary>
+    public Int32 StableMinutes { get; set; } = 10;
+
+    /// <summary>是否启用启动失败自动回滚，默认true</summary>
+    public Boolean AutoRollback { get; set; } = true;
+
     ///// <summary>星尘服务地址</summary>
     //public String Server { get; set; }
 
@@ -48,6 +58,7 @@ public class ServiceManager : DisposeBase
     internal readonly List<ServiceController> _controllers = [];
     private CsvDb<ProcessInfo>? _db;
     private StarClient? _client;
+    private Boolean _backupCleaned;
     #endregion
 
     #region 构造
@@ -163,6 +174,10 @@ public class ServiceManager : DisposeBase
             {
                 Manager = this,
                 Delay = Delay,
+
+                BackupPath = GetBackupPath(),
+                StableMinutes = StableMinutes,
+                AutoRollback = AutoRollback,
 
                 EventProvider = _client,
                 Tracer = Tracer,
@@ -323,11 +338,29 @@ public class ServiceManager : DisposeBase
             if (controller != null)
             {
                 controller.EventProvider = _client;
+                controller.BackupPath = GetBackupPath();
+                controller.StableMinutes = StableMinutes;
+                controller.AutoRollback = AutoRollback;
                 controller.SetInfo(service);
 
                 if (deploy != null)
                 {
-                    controller.DeployInfo = deploy;
+                    // 新包到达时给控制器一个全新的失败计数，避免沿用上一个版本的失败次数。
+                    // 刚刚回滚掉的版本重复下发时不清零，否则新旧包都失败后会一直重试停不下来
+                    var changed = controller.DeployInfo == null;
+                    if (!changed)
+                    {
+                        var old = controller.DeployInfo!;
+                        changed = !deploy.Hash.IsNullOrEmpty()
+                            ? !deploy.Hash.EqualIgnoreCase(old.Hash)
+                            : !deploy.Version.IsNullOrEmpty() && deploy.Version != old.Version;
+                    }
+                    if (changed)
+                    {
+                        // 同一失败版本只更新部署信息，不清零失败计数
+                        if (!controller.IsFailedVersion(deploy)) controller.ResetErrors();
+                        controller.DeployInfo = deploy;
+                    }
                     controller.AppId = deploy.Name;
                 }
 
@@ -341,6 +374,10 @@ public class ServiceManager : DisposeBase
                 AppId = deploy?.Name,
                 //Info = service,
                 DeployInfo = deploy,
+
+                BackupPath = GetBackupPath(),
+                StableMinutes = StableMinutes,
+                AutoRollback = AutoRollback,
 
                 EventProvider = _client,
                 Tracer = Tracer,
@@ -489,6 +526,8 @@ public class ServiceManager : DisposeBase
         var svcs = Services.ToList();
         span?.AppendTag("Legacy service: " + svcs.Select(e => e.Name).Join(","));
 
+        var applied = new List<DeployInfo>();
+
         // 合并
         foreach (var item in rs)
         {
@@ -498,7 +537,6 @@ public class ServiceManager : DisposeBase
             // 外层应用名，内层部署名。主要用于单应用多部署场景
             deployName = svc.Name;
 
-            // 下载文件到工作目录
             Fix(svc);
             if (svc.Enable && !item.Url.IsNullOrEmpty()) await Download(item, svc);
 
@@ -532,6 +570,8 @@ public class ServiceManager : DisposeBase
                 old.AllowMultiple = svc.AllowMultiple;
                 old.ZipFile = svc.ZipFile;
             }
+
+            applied.Add(item);
         }
 
         // 新版服务
@@ -539,9 +579,22 @@ public class ServiceManager : DisposeBase
 
         Services = svcs.ToArray();
 
+        if (!_backupCleaned)
+        {
+            _backupCleaned = true;
+            try
+            {
+                CreateBackupStore().Cleanup(Services.Select(e => e.Name), TimeSpan.FromDays(30));
+            }
+            catch (Exception ex)
+            {
+                WriteLog("Failed to clean deploy backups: {0}", ex.Message);
+            }
+        }
+
         RaiseServiceChanged();
 
-        return rs;
+        return applied.ToArray();
     }
 
     void Fix(ServiceInfo svc)
@@ -555,6 +608,21 @@ public class ServiceManager : DisposeBase
             if (svc.WorkingDirectory.IsNullOrEmpty()) svc.WorkingDirectory = $"../apps/{name}";
         }
     }
+
+    private String GetBackupPath()
+    {
+        var path = BackupPath;
+        if (path.IsNullOrEmpty()) path = Setting.Current.BackupPath;
+        if (path.IsNullOrEmpty()) path = "Backup";
+
+        return path.GetBasePath();
+    }
+
+    private DeployBackupStore CreateBackupStore() => new(GetBackupPath())
+    {
+        Log = Log,
+        Tracer = Tracer,
+    };
 
     async Task Download(DeployInfo info, ServiceInfo svc)
     {
@@ -626,22 +694,50 @@ public class ServiceManager : DisposeBase
 
                 WriteLog("Download completed; ready to overwrite: {0}", dst.FullName);
 
-                // 删除原文件
-                if (dst.Exists)
+                // 覆盖前先尝试提升已经稳定运行满阈值的旧包，避免旧 zip 被新包覆盖后失去回滚目标
+                ServiceController? oldController;
+                lock (this)
                 {
+                    oldController = _controllers.FirstOrDefault(e => e.Name.EqualIgnoreCase(svc.Name));
+                }
+                oldController?.TryMarkGood();
+
+                // 下载覆盖与备份提升/回滚共用同一把锁，避免并发操作同一个 zip
+                lock (DeployBackupStore.SyncRoot)
+                {
+                    var bak = dst.FullName + ".del";
+                    var existed = dst.Exists;
+                    var moved = false;
                     try
                     {
-                        dst.Delete();
+                        if (existed)
+                        {
+                            if (File.Exists(bak)) File.Delete(bak);
+                            File.Move(dst.FullName, bak);
+                            moved = true;
+                        }
+
+                        dst.FullName.EnsureDirectory(true);
+                        File.Copy(tmp, dst.FullName, true);
+
+                        try { File.Delete(tmp); } catch { }
+                        try { if (File.Exists(bak)) File.Delete(bak); } catch { }
                     }
                     catch
                     {
-                        dst.MoveTo(dst.FullName + ".del");
+                        // 覆盖失败时尽量恢复原包，避免既没有新包也没有旧包
+                        if (moved)
+                        {
+                            try { if (File.Exists(dst.FullName)) File.Delete(dst.FullName); } catch { }
+                            if (File.Exists(bak)) File.Move(bak, dst.FullName);
+                        }
+                        else if (!existed)
+                        {
+                            try { if (File.Exists(dst.FullName)) File.Delete(dst.FullName); } catch { }
+                        }
+                        throw;
                     }
                 }
-
-                // 创建目录，下载到临时目录的文件拷贝到这里
-                dst.FullName.EnsureDirectory(true);
-                tmp.AsFile().MoveTo(dst.FullName);
 
                 svc.ZipFile = dst.FullName;
             }
@@ -897,7 +993,8 @@ public class ServiceManager : DisposeBase
         using var span = Tracer?.NewSpan("ServiceManager-Install", cmd.Argument);
 
         var dis = await PullService(deployId, serviceName, appName).ConfigureAwait(false);
-        if (dis == null || dis.Length == 0) throw new Exception(L.T("Failed to obtain application information from the server; installation of {0} failed.", serviceName));
+        if (dis == null || dis.Length == 0)
+            throw new Exception(L.T("Failed to obtain application information from the server; installation of {0} failed.", serviceName));
 
         // 马上停止并拉起应用服务，定时器只用于双保险
         var svc = dis[0]?.Service;
