@@ -58,9 +58,9 @@
     <!-- 魔方 WebAPI 核心库，复用其 EntityController/ApiResponse/AuthController 等纯 API 能力。
          6.16.2026.1105-beta0348 起皮肤系统支持 /api 回退保护（MapFallback("/api/{**path}",404)），
          WebApi 实现 ICubeSkin 托管内嵌控制台前端；稳定版发布后可回切 -->
-    <PackageReference Include="NewLife.Cube" Version="6.16.2026.1122-beta1026" />
+    <PackageReference Include="NewLife.Cube" Version="6.16.2026.1125-beta0849" />
     <!-- 魔方 Swagger/Scalar 依赖的 OpenAPI 文档生成（AddCubeSwagger），与 NewLife.Cube 同步升级 -->
-    <PackageReference Include="NewLife.Cube.Swagger" Version="6.16.2026.1122-beta1026" />
+    <PackageReference Include="NewLife.Cube.Swagger" Version="6.16.2026.1125-beta0849" />
   </ItemGroup>
 
   <ItemGroup>

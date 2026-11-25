@@ -96,7 +96,7 @@ Stardust distributed core client library. One-line integration for configuration
   </ItemGroup>
   <ItemGroup Condition="'$(UseLocalNewLifeSource)' != 'true'">
     <PackageReference Include="NewLife.Remoting" Version="4.0.2026.1122-beta1417" />
-    <PackageReference Include="NewLife.Core" Version="12.0.2026.1121-beta0924" />
+    <PackageReference Include="NewLife.Core" Version="12.0.2026.1125-beta0539" />
   </ItemGroup>
 
 </Project>
