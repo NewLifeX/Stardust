@@ -248,3 +248,16 @@
 "增量包": "Gedeeltelijk pakket"
 # 界面元数据词条
 "空闲": "Inactief"
+# 界面元数据词条
+"Web 服务端": "Webserver"
+"移动应用": "Mobiele applicatie"
+"桌面应用": "Desktopapplicatie"
+"任务模式": "Taakmodus"
+"托管模式": "Beheerde modus"
+"影子模式": "Schaduwmodus"
+"标准模式": "Standaardmodus"
+"默认模式": "Standaardmodus"
+"实时": "Realtime"
+"高": "Hoog"
+"较高": "Vrij hoog"
+"较低": "Vrij laag"

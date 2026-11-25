@@ -248,3 +248,16 @@
 "增量包": "Přírůstkový balíček"
 # 界面元数据词条
 "空闲": "Volný"
+# 界面元数据词条
+"Web 服务端": "Webový server"
+"移动应用": "Mobilní aplikace"
+"桌面应用": "Desktopová aplikace"
+"任务模式": "Režim úlohy"
+"托管模式": "Hostovaný režim"
+"影子模式": "Stínový režim"
+"标准模式": "Standardní režim"
+"默认模式": "Výchozí režim"
+"实时": "Reálný čas"
+"高": "Vysoká"
+"较高": "Poměrně vysoká"
+"较低": "Poměrně nízká"

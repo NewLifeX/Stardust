@@ -248,3 +248,16 @@
 "增量包": "Részleges csomag"
 # 界面元数据词条
 "空闲": "Tétlen"
+# 界面元数据词条
+"Web 服务端": "Webkiszolgáló"
+"移动应用": "Mobilalkalmazás"
+"桌面应用": "Asztali alkalmazás"
+"任务模式": "Feladatmód"
+"托管模式": "Gazdált mód"
+"影子模式": "Árnyék mód"
+"标准模式": "Normál mód"
+"默认模式": "Alapértelmezett mód"
+"实时": "Valós idejű"
+"高": "Magas"
+"较高": "Viszonylag magas"
+"较低": "Viszonylag alacsony"

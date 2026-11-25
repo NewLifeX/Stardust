@@ -248,3 +248,16 @@
 "增量包": "Delvis pakke"
 # 界面元数据词条
 "空闲": "Ledig"
+# 界面元数据词条
+"Web 服务端": "Webserver"
+"移动应用": "Mobilapplikasjon"
+"桌面应用": "Skrivebordsapplikasjon"
+"任务模式": "Oppgavemodus"
+"托管模式": "Hostet modus"
+"影子模式": "Skyggemodus"
+"标准模式": "Standardmodus"
+"默认模式": "Standardmodus"
+"实时": "Sanntid"
+"高": "Høy"
+"较高": "Forholdsvis høy"
+"较低": "Forholdsvis lav"

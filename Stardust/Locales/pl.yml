@@ -248,3 +248,16 @@
 "增量包": "Pakiet częściowy"
 # 界面元数据词条
 "空闲": "Bezczynny"
+# 界面元数据词条
+"Web 服务端": "Serwer sieciowy"
+"移动应用": "Aplikacja mobilna"
+"桌面应用": "Aplikacja desktopowa"
+"任务模式": "Tryb zadania"
+"托管模式": "Tryb hostowany"
+"影子模式": "Tryb cienia"
+"标准模式": "Tryb standardowy"
+"默认模式": "Tryb domyślny"
+"实时": "Czas rzeczywisty"
+"高": "Wysoki"
+"较高": "Dość wysoki"
+"较低": "Dość niski"

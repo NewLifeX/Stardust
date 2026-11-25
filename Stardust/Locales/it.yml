@@ -248,3 +248,16 @@
 "增量包": "Pacchetto parziale"
 # 界面元数据词条
 "空闲": "Inattivo"
+# 界面元数据词条
+"Web 服务端": "Server web"
+"移动应用": "Applicazione mobile"
+"桌面应用": "Applicazione desktop"
+"任务模式": "Modalità attività"
+"托管模式": "Modalità ospitata"
+"影子模式": "Modalità shadow"
+"标准模式": "Modalità standard"
+"默认模式": "Modalità predefinita"
+"实时": "Tempo reale"
+"高": "Alto"
+"较高": "Piuttosto alto"
+"较低": "Piuttosto basso"

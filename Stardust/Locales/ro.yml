@@ -248,3 +248,16 @@
 "增量包": "Pachet parțial"
 # 界面元数据词条
 "空闲": "Inactiv"
+# 界面元数据词条
+"Web 服务端": "Server web"
+"移动应用": "Aplicație mobilă"
+"桌面应用": "Aplicație desktop"
+"任务模式": "Mod sarcină"
+"托管模式": "Mod găzduit"
+"影子模式": "Mod umbră"
+"标准模式": "Mod standard"
+"默认模式": "Mod implicit"
+"实时": "Timp real"
+"高": "Ridicat"
+"较高": "Relativ ridicat"
+"较低": "Relativ scăzut"

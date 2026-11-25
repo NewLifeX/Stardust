@@ -248,3 +248,16 @@
 "增量包": "Teilpaket"
 # 界面元数据词条
 "空闲": "Leerlauf"
+# 界面元数据词条
+"Web 服务端": "Webserver"
+"移动应用": "Mobile Anwendung"
+"桌面应用": "Desktop-Anwendung"
+"任务模式": "Aufgabenmodus"
+"托管模式": "Verwalteter Modus"
+"影子模式": "Schattenmodus"
+"标准模式": "Standardmodus"
+"默认模式": "Standardmodus"
+"实时": "Echtzeit"
+"高": "Hoch"
+"较高": "Relativ hoch"
+"较低": "Relativ niedrig"

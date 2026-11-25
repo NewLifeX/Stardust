@@ -248,3 +248,16 @@
 "增量包": "Kısmi paket"
 # 界面元数据词条
 "空闲": "Boşta"
+# 界面元数据词条
+"Web 服务端": "Web sunucusu"
+"移动应用": "Mobil uygulama"
+"桌面应用": "Masaüstü uygulaması"
+"任务模式": "Görev modu"
+"托管模式": "Barındırılan mod"
+"影子模式": "Gölge modu"
+"标准模式": "Standart mod"
+"默认模式": "Varsayılan mod"
+"实时": "Gerçek zamanlı"
+"高": "Yüksek"
+"较高": "Oldukça yüksek"
+"较低": "Oldukça düşük"

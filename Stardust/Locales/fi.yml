@@ -248,3 +248,16 @@
 "增量包": "Osapaketti"
 # 界面元数据词条
 "空闲": "Vapaa"
+# 界面元数据词条
+"Web 服务端": "Verkkopalvelin"
+"移动应用": "Mobiilisovellus"
+"桌面应用": "Työpöytäsovellus"
+"任务模式": "Tehtävätila"
+"托管模式": "Isännöity tila"
+"影子模式": "Varjotila"
+"标准模式": "Vakiotila"
+"默认模式": "Oletustila"
+"实时": "Reaaliaika"
+"高": "Korkea"
+"较高": "Melko korkea"
+"较低": "Melko matala"
