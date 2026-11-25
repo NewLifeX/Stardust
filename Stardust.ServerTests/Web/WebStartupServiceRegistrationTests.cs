@@ -26,7 +26,7 @@ public class WebStartupServiceRegistrationTests
         Assert.Contains("var appId = p[\"appId\"].ToInt(-1);", source);
         Assert.Contains("var threadId = p[\"threadId\"];", source);
         Assert.Contains("if (start.Year < 2000 && end.Year < 2000)", source);
-        Assert.Contains("return AppClientLog.Search(threadId, appId, start, end, p[\"Q\"], p);", source);
+        Assert.Contains("return AppClientLog.Search(appId, clientId, threadId, start, end, p[\"Q\"], kind, p);", source);
     }
 }
 

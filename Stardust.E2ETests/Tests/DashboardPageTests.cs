@@ -85,9 +85,21 @@ public class DashboardPageTests : IAsyncLifetime
         var link = _page.Locator("[data-url='/Dashboard']").First;
         Assert.Equal(1, await link.CountAsync());
 
-        // 菜单默认折叠，直接派发 click 事件触发 layui 的打开逻辑
-        await link.DispatchEventAsync("click");
-        await _page.WaitForURLAsync(url => url.Contains("/Dashboard", StringComparison.OrdinalIgnoreCase), new PageWaitForURLOptions { Timeout = 30_000 });
+        // 菜单默认折叠，直接派发 click 事件触发 layui 的打开逻辑。
+        // layui 模块异步加载完成后才绑定 cube-leftmenu 事件，就绪前派发的点击会被丢弃，因此短超时轮询重试。
+        // 点击先写 hash（/Admin#/Dashboard），iframe 载入看板后才由顶层页面跳出框架，所以只认路径跳转
+        var navigated = false;
+        for (var i = 0; i < 20 && !navigated; i++)
+        {
+            await link.DispatchEventAsync("click");
+            try
+            {
+                await _page.WaitForURLAsync(url => new Uri(url).AbsolutePath.StartsWith("/Dashboard", StringComparison.OrdinalIgnoreCase), new PageWaitForURLOptions { Timeout = 2_000 });
+                navigated = true;
+            }
+            catch (TimeoutException) { }
+        }
+        Assert.True(navigated, "点击看板菜单后未跳出后台框架进入 /Dashboard");
 
         // 跳出后台内容框架：只剩看板自己的侧栏，不再套后台外壳
         Assert.Equal(1, await _page.Locator(".sd-rail").CountAsync());
@@ -245,19 +257,27 @@ values (@id, @name, 0, @category, @action, 1, @start, 0, 0, @content, null, null
             cmd.ExecuteNonQuery();
         }
 
-        // 登录跳转已经加载过默认 24h 看板并写入缓存，这里用 1h 避免命中最新的旧缓存
-        await _page!.GotoAsync("/Dashboard/System?range=1h", new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 30_000 });
-        await _page.WaitForFunctionAsync("() => !!window.SD", null, new PageWaitForFunctionOptions { Timeout = 15_000 });
+        // 登录跳转已经加载过默认 24h 看板，看板服务端对最近报警保留 10 秒快照缓存；
+        // 刚写入数据库的记录要等缓存过期后才会出现，因此轮询刷新页面直到告警卡片渲染
+        var page = _page!;
+        var actions = page.Locator($"[data-alarm-actions=\"{id}\"]");
+        var appeared = false;
+        for (var i = 0; i < 20 && !appeared; i++)
+        {
+            await page.GotoAsync("/Dashboard/System?range=1h", new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 30_000 });
+            await page.WaitForFunctionAsync("() => !!window.SD", null, new PageWaitForFunctionOptions { Timeout = 15_000 });
+            appeared = await actions.CountAsync() > 0;
+            if (!appeared) await page.WaitForTimeoutAsync(2_000);
+        }
 
-        var actions = _page.Locator($"[data-alarm-actions=\"{id}\"]");
         await actions.WaitForAsync(new LocatorWaitForOptions { Timeout = 15_000 });
 
         await actions.Locator("[data-alarm-action=\"ack\"]").ClickAsync();
-        await _page.WaitForTimeoutAsync(600);
+        await page.WaitForTimeoutAsync(600);
         Assert.Contains("已确认", await actions.InnerTextAsync());
 
         await actions.Locator("[data-alarm-action=\"silence\"]").ClickAsync();
-        await _page.WaitForTimeoutAsync(600);
+        await page.WaitForTimeoutAsync(600);
         Assert.Contains("静默至", await actions.InnerTextAsync());
 
         using var verify = new SqliteConnection($"Data Source={dbFile};Mode=ReadOnly;Default Timeout=30");
