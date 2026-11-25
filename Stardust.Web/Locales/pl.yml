@@ -755,3 +755,7 @@
 "开始部署": "Rozpocznij wdrożenie"
 "就绪": "Gotowe"
 "类型：": "Typ:"
+# 界面元数据词条
+"唤醒": "Wybudź"
+"确认唤醒该节点？需要同网段在线节点代发，目标机器需开启 WOL。": "Wybudzić ten węzeł? Pakiet musi przesłać węzeł online w tej samej podsieci, a na maszynie docelowej musi być włączone WOL."
+"节点离线时，由同局域网在线节点广播唤醒魔术包": "Gdy węzeł jest offline, węzeł online w tej samej sieci lokalnej rozgłasza pakiet magiczny wake-on"

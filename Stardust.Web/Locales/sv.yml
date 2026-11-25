@@ -755,3 +755,7 @@
 "开始部署": "Starta distribution"
 "就绪": "Klar"
 "类型：": "Typ:"
+# 界面元数据词条
+"唤醒": "Väck"
+"确认唤醒该节点？需要同网段在线节点代发，目标机器需开启 WOL。": "Väck denna nod? En online-nod i samma subnät måste vidarebefordra paketet och WOL måste vara aktiverat på målmaskinen."
+"节点离线时，由同局域网在线节点广播唤醒魔术包": "När noden är offline sänder en online-nod i samma lokala nätverk wake-on magic-paketet"

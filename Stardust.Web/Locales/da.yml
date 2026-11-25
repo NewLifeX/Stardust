@@ -755,3 +755,7 @@
 "开始部署": "Start udrulning"
 "就绪": "Klar"
 "类型：": "Type:"
+# 界面元数据词条
+"唤醒": "Væk"
+"确认唤醒该节点？需要同网段在线节点代发，目标机器需开启 WOL。": "Bekræft vækning af denne node? En online node i samme undernet skal videresende pakken, og WOL skal være aktiveret på målmaskinen."
+"节点离线时，由同局域网在线节点广播唤醒魔术包": "Når noden er offline, broadcaster en online node på samme lokale netværk wake-on magic-pakken"

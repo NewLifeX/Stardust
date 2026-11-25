@@ -755,3 +755,7 @@
 "开始部署": "Mula penggunaan"
 "就绪": "Sedia"
 "类型：": "Jenis:"
+# 界面元数据词条
+"唤醒": "Bangkitkan"
+"确认唤醒该节点？需要同网段在线节点代发，目标机器需开启 WOL。": "Bangkitkan nod ini? Nod dalam talian pada subnet yang sama perlu menghantar paket, dan WOL perlu didayakan pada mesin sasaran."
+"节点离线时，由同局域网在线节点广播唤醒魔术包": "Apabila nod luar talian, nod dalam talian pada rangkaian setempat yang sama menyiarkan paket magik wake-on"

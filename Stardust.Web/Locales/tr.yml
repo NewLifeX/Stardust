@@ -755,3 +755,7 @@
 "开始部署": "Dağıtımı başlat"
 "就绪": "Hazır"
 "类型：": "Tür:"
+# 界面元数据词条
+"唤醒": "Uyandır"
+"确认唤醒该节点？需要同网段在线节点代发，目标机器需开启 WOL。": "Bu düğüm uyandırılsın mı? Aynı alt ağdaki çevrimiçi bir düğümün paketi iletmesi ve hedef makinede WOL'ün etkin olması gerekir."
+"节点离线时，由同局域网在线节点广播唤醒魔术包": "Düğüm çevrimdışıyken aynı yerel ağdaki çevrimiçi bir düğüm wake-on magic paketini yayınlar"

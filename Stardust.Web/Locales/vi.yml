@@ -755,3 +755,7 @@
 "开始部署": "Bắt đầu triển khai"
 "就绪": "Sẵn sàng"
 "类型：": "Loại:"
+# 界面元数据词条
+"唤醒": "Đánh thức"
+"确认唤醒该节点？需要同网段在线节点代发，目标机器需开启 WOL。": "Đánh thức nút này? Cần một nút trực tuyến trong cùng subnet gửi hộ gói tin, và máy đích phải bật WOL."
+"节点离线时，由同局域网在线节点广播唤醒魔术包": "Khi nút ngoại tuyến, một nút trực tuyến trong cùng mạng nội bộ sẽ phát gói magic đánh thức"

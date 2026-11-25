@@ -755,3 +755,7 @@
 "开始部署": "Implementatie starten"
 "就绪": "Gereed"
 "类型：": "Type:"
+# 界面元数据词条
+"唤醒": "Wekken"
+"确认唤醒该节点？需要同网段在线节点代发，目标机器需开启 WOL。": "Dit knooppunt wekken? Een online knooppunt in hetzelfde subnet moet het pakket doorsturen en op de doelmachine moet WOL zijn ingeschakeld."
+"节点离线时，由同局域网在线节点广播唤醒魔术包": "Als het knooppunt offline is, zendt een online knooppunt in hetzelfde lokale netwerk het wake-on-magic-pakket uit"

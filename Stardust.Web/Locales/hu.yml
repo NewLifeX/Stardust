@@ -755,3 +755,7 @@
 "开始部署": "Telepítés indítása"
 "就绪": "Kész"
 "类型：": "Típus:"
+# 界面元数据词条
+"唤醒": "Ébresztés"
+"确认唤醒该节点？需要同网段在线节点代发，目标机器需开启 WOL。": "Ébreszti ezt a csomópontot? Azonos alhálózaton lévő online csomópontnak kell továbbítania a csomagot, és a célgépen engedélyezni kell a WOL-t."
+"节点离线时，由同局域网在线节点广播唤醒魔术包": "Ha a csomópont offline, azonos helyi hálózaton lévő online csomópont sugározza a wake-on magic csomagot"

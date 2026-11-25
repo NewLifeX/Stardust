@@ -755,3 +755,7 @@
 "开始部署": "Bereitstellung starten"
 "就绪": "Bereit"
 "类型：": "Typ:"
+# 界面元数据词条
+"唤醒": "Aufwecken"
+"确认唤醒该节点？需要同网段在线节点代发，目标机器需开启 WOL。": "Knoten aufwecken? Ein Online-Knoten im selben Subnetz muss das Paket weiterleiten, und auf dem Zielrechner muss WOL aktiviert sein."
+"节点离线时，由同局域网在线节点广播唤醒魔术包": "Ist der Knoten offline, sendet ein Online-Knoten im selben lokalen Netz das Wake-on-Magic-Paket als Broadcast"

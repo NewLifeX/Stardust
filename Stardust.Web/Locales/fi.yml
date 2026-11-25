@@ -755,3 +755,7 @@
 "开始部署": "Aloita käyttöönotto"
 "就绪": "Valmis"
 "类型：": "Tyyppi:"
+# 界面元数据词条
+"唤醒": "Herätys"
+"确认唤醒该节点？需要同网段在线节点代发，目标机器需开启 WOL。": "Herätetäänkö tämä solmu? Saman aliverkon verkkosolmun on välitettävä paketti ja kohdekoneessa on oltava WOL käytössä."
+"节点离线时，由同局域网在线节点广播唤醒魔术包": "Kun solmu on offline-tilassa, saman lähiverkon verkkosolmu lähettää wake-on magic -paketin yleislähetyksenä"

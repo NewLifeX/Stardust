@@ -755,3 +755,7 @@
 "开始部署": "Pornește implementarea"
 "就绪": "Pregătit"
 "类型：": "Tip:"
+# 界面元数据词条
+"唤醒": "Trezește"
+"确认唤醒该节点？需要同网段在线节点代发，目标机器需开启 WOL。": "Treziți acest nod? Un nod online din aceeași subrețea trebuie să retransmită pachetul, iar WOL trebuie activat pe mașina țintă."
+"节点离线时，由同局域网在线节点广播唤醒魔术包": "Când nodul este offline, un nod online din aceeași rețea locală difuzează pachetul magic de trezire"

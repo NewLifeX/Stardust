@@ -755,3 +755,7 @@
 "开始部署": "Zahájit nasazení"
 "就绪": "Připraveno"
 "类型：": "Typ:"
+# 界面元数据词条
+"唤醒": "Probudit"
+"确认唤醒该节点？需要同网段在线节点代发，目标机器需开启 WOL。": "Potvrdit probuzení tohoto uzlu? Paket musí odeslat online uzel ve stejné podsíti a na cílovém počítači musí být povoleno WOL."
+"节点离线时，由同局域网在线节点广播唤醒魔术包": "Je-li uzel offline, online uzel ve stejné místní síti vysílá probouzecí magický paket"

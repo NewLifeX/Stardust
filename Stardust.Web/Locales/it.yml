@@ -755,3 +755,7 @@
 "开始部署": "Avvia distribuzione"
 "就绪": "Pronto"
 "类型：": "Tipo:"
+# 界面元数据词条
+"唤醒": "Risveglia"
+"确认唤醒该节点？需要同网段在线节点代发，目标机器需开启 WOL。": "Risvegliare questo nodo? Un nodo online della stessa sottorete deve inoltrare il pacchetto e sulla macchina di destinazione deve essere attivo WOL."
+"节点离线时，由同局域网在线节点广播唤醒魔术包": "Quando il nodo è offline, un nodo online della stessa rete locale trasmette il pacchetto magico di risveglio"

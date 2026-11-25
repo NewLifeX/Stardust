@@ -755,3 +755,7 @@
 "开始部署": "Mulai penyebaran"
 "就绪": "Siap"
 "类型：": "Jenis:"
+# 界面元数据词条
+"唤醒": "Bangunkan"
+"确认唤醒该节点？需要同网段在线节点代发，目标机器需开启 WOL。": "Bangunkan node ini? Node online di subnet yang sama harus meneruskan paket, dan WOL harus diaktifkan pada mesin tujuan."
+"节点离线时，由同局域网在线节点广播唤醒魔术包": "Saat node offline, node online di jaringan lokal yang sama menyiarkan paket magic wake-on"

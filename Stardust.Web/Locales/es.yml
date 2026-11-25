@@ -755,3 +755,7 @@
 "开始部署": "Iniciar implementación"
 "就绪": "Listo"
 "类型：": "Tipo:"
+# 界面元数据词条
+"唤醒": "Despertar"
+"确认唤醒该节点？需要同网段在线节点代发，目标机器需开启 WOL。": "¿Despertar este nodo? Un nodo en línea de la misma subred debe reenviar el paquete y el equipo de destino debe tener WOL activado."
+"节点离线时，由同局域网在线节点广播唤醒魔术包": "Cuando el nodo está sin conexión, un nodo en línea de la misma red local difunde el paquete mágico de activación"
