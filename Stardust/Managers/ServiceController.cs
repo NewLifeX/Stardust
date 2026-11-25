@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using NewLife;
+using NewLife.Configuration;
 using NewLife.Log;
 using NewLife.Remoting.Clients;
 using NewLife.Threading;
@@ -31,6 +32,14 @@ public class ServiceController : DisposeBase
     #region 属性
     static Int32 _gid = 0;
     private readonly Int32 _id = Interlocked.Increment(ref _gid);
+
+    /// <summary>共享运行时宿主名称。一个可执行文件承载多个服务，接管时必须按入口文件精确匹配</summary>
+    /// <remarks>与 NewLife.ProcessHelper 的已知宿主保持一致，另补 nodejs/pythonw 等常见别名</remarks>
+    private static readonly String[] _hostNames = ["dotnet", "java", "mono", "node", "nodejs", "python", "python3", "pythonw", "php", "perl", "ruby", "lua", "deno", "bun"];
+
+    /// <summary>入口文件常见扩展名</summary>
+    private static readonly String[] _entryExtensions = [".dll", ".exe", ".jar", ".js", ".mjs", ".cjs", ".jsx", ".ts", ".tsx", ".mts", ".cts", ".py", ".pyw", ".php", ".pl", ".rb", ".lua", ".wasm"];
+
     /// <summary>编号</summary>
     public Int32 Id => _id;
 
@@ -633,21 +642,29 @@ public class ServiceController : DisposeBase
         var processName = ProcessName;
         if (processName.IsNullOrEmpty()) return null;
 
-        // 获取目标文件用于精确匹配（多实例模式必须，单实例dotnet/java也需要）
+        // 共享运行时宿主（dotnet/java/node/python 等）的一个可执行文件承载多个服务，必须按入口文件精确匹配
+        var isHost = IsHostProcess(processName);
+
+        // 获取目标入口文件用于精确匹配（多实例模式必须，宿主进程也需要）
         var target = _fileName ?? inf.FileName;
-        if (target.EqualIgnoreCase("dotnet", "java"))
+        if (isHost && IsHostExecutable(target, processName))
         {
-            var ss = inf.Arguments?.Split(' ');
-            if (ss != null) target = ss.FirstOrDefault(e => e.EndsWithIgnoreCase(".dll", ".jar"));
+            // 配置的可执行文件本身就是宿主时，入口文件在启动参数中
+            var entry = GetHostEntryFile(CommandParser.Split(inf.Arguments));
+            if (!entry.IsNullOrEmpty()) target = entry;
         }
 
-        // 获取目标文件的完整路径用于精确匹配
+        // 获取目标入口文件的完整路径用于精确匹配
+        var workdir = _workdir ?? inf.WorkingDirectory;
         var targetFullPath = target;
-        if (!target.IsNullOrEmpty() && !Path.IsPathRooted(target) && !_workdir.IsNullOrEmpty())
-            targetFullPath = _workdir.CombinePath(target).GetFullPath();
+        if (!target.IsNullOrEmpty() && !Path.IsPathRooted(target) && !workdir.IsNullOrEmpty())
+            targetFullPath = workdir.CombinePath(target).GetFullPath();
 
-        var isDotnetJava = processName.EqualIgnoreCase("dotnet", "java");
         span?.AppendTag($"FindProcessByName({processName}) target={target} allowMultiple={allowMultiple}");
+
+        // 无法读取路径或命令行的候选进程，单实例模式下作为兜底
+        Process? unknown = null;
+        Process? first = null;
 
         // 遍历所有同名进程
         foreach (var item in Process.GetProcessesByName(processName))
@@ -655,35 +672,31 @@ public class ServiceController : DisposeBase
             if (item.Id == mypid || item.GetHasExited()) continue;
 
             span?.AppendTag($"id={item.Id}");
+            first ??= item;
 
-            // 单实例模式且非dotnet/java，直接返回第一个
-            if (!allowMultiple && !isDotnetJava) return item;
-
-            // 需要精确匹配路径：多实例模式 或 dotnet/java进程
-            if (target.IsNullOrEmpty()) continue;
-
-            if (isDotnetJava)
+            if (isHost)
             {
-                // dotnet/java进程通过命令行参数获取实际执行的dll/jar路径
+                // 宿主进程通过命令行参数获取实际运行的入口文件
                 var args = ProcessHelper.GetCommandLineArgs(item.Id);
                 if (args == null || args.Length == 0)
                 {
                     span?.AppendTag(L.TLog("Failed to get the command line"));
+                    unknown ??= item;
                     continue;
                 }
 
-                // 从命令行参数中查找dll/jar文件
-                var dllOrJar = args.FirstOrDefault(e => e.EndsWithIgnoreCase(".dll", ".jar"));
-                if (dllOrJar.IsNullOrEmpty())
+                var entry = GetHostEntryFile(args, true);
+                if (entry.IsNullOrEmpty())
                 {
-                    span?.AppendTag(L.TLog("No dll/jar in the command line"));
+                    span?.AppendTag("No entry file in the command line");
+                    unknown ??= item;
                     continue;
                 }
 
-                span?.AppendTag($"cmdFile={dllOrJar}");
+                span?.AppendTag($"cmdFile={entry}");
 
                 // 路径匹配：完整路径比对 或 文件名比对
-                if (MatchPath(dllOrJar, target, targetFullPath, span)) return item;
+                if (MatchPath(entry, target, targetFullPath, workdir, span)) return item;
             }
             else
             {
@@ -694,31 +707,131 @@ public class ServiceController : DisposeBase
                     if (mainModule.IsNullOrEmpty())
                     {
                         span?.AppendTag(L.TLog("Failed to get MainModule"));
+                        unknown ??= item;
                         continue;
                     }
 
                     span?.AppendTag($"mainModule={mainModule}");
 
                     // 路径匹配
-                    if (MatchPath(mainModule, target, targetFullPath, span)) return item;
+                    if (MatchPath(mainModule, target, targetFullPath, workdir, span)) return item;
                 }
                 catch
                 {
                     span?.AppendTag(L.TLog("Failed to get MainModule"));
+                    unknown ??= item;
                 }
             }
+        }
+
+        // 单实例模式下保持原有宽松行为：路径信息不足（系统命令、拿不到工作目录）时退回第一个同名进程
+        if (!allowMultiple && !isHost)
+        {
+            if (target.IsNullOrEmpty() || !HasPathInfo(target) || !Path.IsPathRooted(targetFullPath)) return first;
+
+            // 可执行文件路径不可读（权限不足等）时，退回第一个无法确认的进程
+            if (unknown != null) return unknown;
         }
 
         return null;
     }
 
+    /// <summary>判断是否为共享运行时宿主进程</summary>
+    /// <param name="processName">进程名</param>
+    /// <returns>是否为宿主进程</returns>
+    private static Boolean IsHostProcess(String processName)
+    {
+        var name = Path.GetFileNameWithoutExtension(processName);
+        foreach (var item in _hostNames)
+        {
+            if (name.EqualIgnoreCase(item)) return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>判断可执行文件是否为共享运行时宿主本身。宿主本身不区分服务，入口文件需要从启动参数中取</summary>
+    /// <param name="file">可执行文件</param>
+    /// <param name="processName">进程名</param>
+    /// <returns>是否为宿主可执行文件</returns>
+    private static Boolean IsHostExecutable(String? file, String processName)
+    {
+        if (file.IsNullOrEmpty()) return false;
+
+        var name = Path.GetFileNameWithoutExtension(file);
+        return name.EqualIgnoreCase(Path.GetFileNameWithoutExtension(processName));
+    }
+
+    /// <summary>从命令行参数中提取入口文件。跳过开关参数，优先返回带入口文件扩展名的参数</summary>
+    /// <param name="args">参数数组</param>
+    /// <param name="skipFirst">是否跳过首项。进程命令行的首项是宿主可执行文件，配置参数没有</param>
+    /// <returns>入口文件；无法解析时返回 null</returns>
+    private static String? GetHostEntryFile(String[]? args, Boolean skipFirst = false)
+    {
+        if (args == null || args.Length == 0) return null;
+
+        String? fallback = null;
+        for (var i = skipFirst ? 1 : 0; i < args.Length; i++)
+        {
+            var arg = args[i];
+            if (arg.IsNullOrEmpty()) continue;
+
+            // java -jar app.jar，横杠后面紧跟入口文件
+            if (arg.EqualIgnoreCase("-jar")) return i + 1 < args.Length ? args[i + 1] : null;
+
+            // 内联代码或模块方式，没有入口文件
+            if (arg.EqualIgnoreCase("-e", "--eval", "-m", "--module")) return null;
+
+            // 取值为预加载脚本、类路径或配置文件（php -c）的开关，其值不是入口文件，连同取值跳过
+            if (arg.EqualIgnoreCase("-r", "--require", "--import", "--loader", "--experimental-loader", "-cp", "--class-path", "-classpath", "-c"))
+            {
+                i++;
+                continue;
+            }
+
+            // 其它开关跳过
+            if (arg[0] == '-') continue;
+
+            // 运行子命令，其后才是入口文件
+            if (arg.EqualIgnoreCase("exec", "run", "serve")) continue;
+
+            // 带入口文件扩展名的参数更可信，先记下普通参数作为兜底，避免把 --flag value 中的 value 当入口
+            if (HasEntryExtension(arg)) return arg;
+            fallback ??= arg;
+        }
+
+        return fallback;
+    }
+
+    /// <summary>判断是否入口文件常见扩展名</summary>
+    /// <param name="path">文件名或路径</param>
+    /// <returns>是否入口文件</returns>
+    private static Boolean HasEntryExtension(String path)
+    {
+        var ext = Path.GetExtension(path);
+        if (ext.IsNullOrEmpty()) return false;
+
+        foreach (var item in _entryExtensions)
+        {
+            if (ext.EqualIgnoreCase(item)) return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>判断目标是否提供路径信息。简单命令名（如 ping）需要从 PATH 解析，无法按路径精确匹配</summary>
+    /// <param name="path">目标文件名或路径</param>
+    /// <returns>是否包含可用于精确匹配的路径信息</returns>
+    private static Boolean HasPathInfo(String path) => path.Contains('/') || path.Contains('\\') || !Path.GetExtension(path).IsNullOrEmpty();
+
     /// <summary>匹配文件路径</summary>
     /// <param name="actualPath">进程实际文件路径（命令行或MainModule）</param>
     /// <param name="target">目标文件名或路径</param>
     /// <param name="targetFullPath">目标完整路径</param>
+    /// <param name="workdir">服务工作目录</param>
     /// <param name="span">追踪span</param>
     /// <returns>是否匹配</returns>
-    private Boolean MatchPath(String actualPath, String? target, String? targetFullPath, ISpan? span)
+    private Boolean MatchPath(String actualPath, String? target, String? targetFullPath, String? workdir, ISpan? span)
     {
         if (actualPath.IsNullOrEmpty()) return false;
 
@@ -726,8 +839,15 @@ public class ServiceController : DisposeBase
         if (!targetFullPath.IsNullOrEmpty() && actualPath.EqualIgnoreCase(targetFullPath))
             return true;
 
+        // 命令行中的相对路径，按工作目录补全后再比较
+        if (!workdir.IsNullOrEmpty() && !Path.IsPathRooted(actualPath))
+        {
+            var actualFullPath = workdir.CombinePath(actualPath).GetFullPath();
+            if (!targetFullPath.IsNullOrEmpty() && actualFullPath.EqualIgnoreCase(targetFullPath)) return true;
+        }
+
         // 工作目录匹配
-        if (!_workdir.IsNullOrEmpty() && actualPath.StartsWithIgnoreCase(_workdir))
+        if (!workdir.IsNullOrEmpty() && actualPath.StartsWithIgnoreCase(workdir))
             return true;
 
         // target本身包含路径，直接比对

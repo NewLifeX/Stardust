@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Threading;
 using NewLife;
 using NewLife.Log;
@@ -138,6 +139,121 @@ public class ServiceControllerProcessTests
             try { if (!external.HasExited) external.Kill(); } catch { }
             controller.TryDispose();
             external.Dispose();
+        }
+    }
+
+    private static MethodInfo GetPrivateMethod(String name)
+    {
+        var method = typeof(ServiceController).GetMethod(name, BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(method);
+
+        return method!;
+    }
+
+    private static String? InvokeGetHostEntryFile(String[] args, Boolean skipFirst = false)
+    {
+        var method = GetPrivateMethod("GetHostEntryFile");
+        return method.Invoke(null, [args, skipFirst]) as String;
+    }
+
+    private static Boolean InvokeIsHostProcess(String processName)
+    {
+        var method = GetPrivateMethod("IsHostProcess");
+        return (Boolean)method.Invoke(null, [processName])!;
+    }
+
+    [Fact(DisplayName = "node/python 等共享运行时被识别为宿主进程，普通进程不受影响")]
+    public void IsHostProcess_SharedRuntimes()
+    {
+        Assert.True(InvokeIsHostProcess("node"));
+        Assert.True(InvokeIsHostProcess("node.exe"));
+        Assert.True(InvokeIsHostProcess("python"));
+        Assert.True(InvokeIsHostProcess("python3"));
+        Assert.True(InvokeIsHostProcess("java"));
+        Assert.True(InvokeIsHostProcess("dotnet"));
+
+        Assert.False(InvokeIsHostProcess("nginx"));
+        Assert.False(InvokeIsHostProcess("myservice"));
+    }
+
+    [Fact(DisplayName = "node 进程命令行跳过开关后提取入口脚本")]
+    public void GetHostEntryFile_Node()
+    {
+        // 进程命令行首项是宿主可执行文件
+        Assert.Equal("server.js", InvokeGetHostEntryFile([@"C:\nvm4w\nodejs\node.exe", "server.js", "--port", "8088"], true));
+
+        // 带取值开关时仍能定位脚本，避免把开关取值当成入口
+        Assert.Equal("server.js", InvokeGetHostEntryFile([@"C:\nvm4w\nodejs\node.exe", "--max-old-space-size", "4096", "server.js"], true));
+
+        // 配置参数没有宿主可执行文件首项
+        Assert.Equal("server.js", InvokeGetHostEntryFile(["server.js", "--port", "8088"]));
+    }
+
+    [Fact(DisplayName = "python/java/dotnet 命令行提取入口文件")]
+    public void GetHostEntryFile_Hosts()
+    {
+        // -m 模块方式没有入口文件
+        Assert.Null(InvokeGetHostEntryFile(["python.exe", "-m", "http.server"], true));
+        Assert.Equal("app.py", InvokeGetHostEntryFile(["python.exe", "-u", "app.py"], true));
+
+        Assert.Equal("app.jar", InvokeGetHostEntryFile(["java", "-jar", "app.jar"], true));
+
+        Assert.Equal("app.dll", InvokeGetHostEntryFile(["dotnet", "exec", "app.dll"], true));
+        Assert.Equal("app.dll", InvokeGetHostEntryFile(["app.dll", "--urls", "http://localhost:5000"]));
+    }
+
+    [Fact(DisplayName = "单实例模式不接管可执行文件路径不一致的同名进程")]
+    public void Check_SameName_DifferentPath_NotTakeOver()
+    {
+        // 两份同名可执行文件放在不同目录，用唯一名称避免与系统其它进程混淆
+        var dirA = CreateTempDir();
+        var dirB = CreateTempDir();
+        var exeName = "sdp" + Rand.NextString(5) + ".exe";
+        var exeA = Path.Combine(dirA, exeName);
+        var exeB = Path.Combine(dirB, exeName);
+        var src = Runtime.Windows ? Path.Combine(Environment.SystemDirectory, "cmd.exe") : "/bin/sh";
+        File.Copy(src, exeA);
+        File.Copy(src, exeB);
+        if (!OperatingSystem.IsWindows())
+        {
+            const UnixFileMode mode = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute;
+            File.SetUnixFileMode(exeA, mode);
+            File.SetUnixFileMode(exeB, mode);
+        }
+
+        var (_, args) = LongRunningCommand();
+        var started = Process.Start(new ProcessStartInfo(exeA, args) { UseShellExecute = false });
+        Assert.NotNull(started);
+        var pidA = started!.Id;
+        var processName = started.ProcessName;
+        started.Dispose();
+
+        var controller = new ServiceController { Name = "proc_" + Rand.NextString(6), StartWait = 500, ProcessName = processName };
+        controller.SetInfo(new ServiceInfo
+        {
+            Name = controller.Name,
+            FileName = exeB,
+            Arguments = args,
+            WorkingDirectory = dirB,
+            Enable = true,
+            Mode = DeployMode.Standard,
+        });
+
+        try
+        {
+            // 旧逻辑在单实例模式下会直接接管第一个同名进程，即使可执行文件路径完全不同
+            Assert.True(controller.Check());
+            Assert.NotNull(controller.Process);
+            Assert.NotEqual(pidA, controller.Process!.Id);
+            Assert.Equal(exeB, controller.Process.MainModule?.FileName, true);
+        }
+        finally
+        {
+            controller.Stop("test");
+            controller.TryDispose();
+            try { Process.GetProcessById(pidA).Kill(); } catch { }
+            try { Directory.Delete(dirA, true); } catch { }
+            try { Directory.Delete(dirB, true); } catch { }
         }
     }
 }
